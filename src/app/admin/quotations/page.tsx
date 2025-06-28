@@ -1,10 +1,10 @@
-// src/app/admin/quotations/page.tsx
 import { mockQuotations } from "@/mock/mockQuotations";
 import { mockClients } from "@/mock/mockClients";
+import { Button } from "@/components/ui/button";
 
 export default function AdminQuotationsPage() {
   return (
-    <div className="p-4">
+    <div className="p-4 bg-white rounded shadow">
       <h1 className="text-xl font-bold mb-4">Quotations</h1>
       <table className="w-full border text-sm">
         <thead>
