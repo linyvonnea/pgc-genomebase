@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from 'next/navigation';
 import { z } from "zod";
 import { clientSchema, ClientFormData } from "@/schemas/clientSchema"; 
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ export default function ClientForm() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const router = useRouter();
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -46,13 +48,16 @@ export default function ClientForm() {
     } else {
       setErrors({});
       console.log("Valid data:", result.data);
+      router.push('/client/project-info'); 
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto p-4">
       <div>
-        <Label>Name</Label>
+        <Label>
+          Name <span className="text-red-500 text-sm">*</span>
+        </Label>
         <Input
           value={formData.name}
           onChange={(e) => handleChange("name", e.target.value)}
@@ -62,7 +67,9 @@ export default function ClientForm() {
       </div>
 
       <div>
-        <Label>Email</Label>
+        <Label>
+          Email <span className="text-red-500 text-sm">*</span>
+        </Label>
         <Input
           value={formData.email}
           onChange={(e) => handleChange("email", e.target.value)}
@@ -72,7 +79,9 @@ export default function ClientForm() {
       </div>
 
       <div>
-        <Label>Affiliation (Department & Institution) </Label>
+        <Label>
+          Affiliation (Department & Institution) <span className="text-red-500 text-sm">*</span>
+        </Label>
         <Input
           value={formData.institution}
           onChange={(e) => handleChange("institution", e.target.value)}
@@ -82,7 +91,9 @@ export default function ClientForm() {
       </div>
 
       <div>
-        <Label>Designation</Label>
+        <Label>
+          Designation <span className="text-red-500 text-sm">*</span>
+        </Label>
         <Input
           value={formData.designation}
           onChange={(e) => handleChange("designation", e.target.value)}
@@ -92,7 +103,9 @@ export default function ClientForm() {
       </div>
 
       <div>
-        <Label>Sex</Label>
+        <Label>
+          Sex <span className="text-red-500 text-sm">*</span>
+        </Label>
         <Select value={formData.sex} onValueChange={(val) => handleChange("sex", val)}>
           <SelectTrigger>
             <SelectValue placeholder="Select" />
@@ -106,7 +119,9 @@ export default function ClientForm() {
       </div>
 
       <div>
-        <Label>Mobile Number</Label>
+        <Label>
+          Mobile Number <span className="text-red-500 text-sm">*</span>
+        </Label>
         <Input
           value={formData.mobileNumber}
           onChange={(e) => handleChange("mobileNumber", e.target.value)}
@@ -116,12 +131,15 @@ export default function ClientForm() {
       </div>
 
       <div>
-        <Label>Institution Address</Label>
+        <Label>
+          Institution Address <span className="text-red-500 text-sm">*</span>
+        </Label>
         <Textarea
           value={formData.institutionAddress}
           onChange={(e) => handleChange("institutionAddress", e.target.value)}
           placeholder="Enter institution address here"
         />
+        {errors.institutionAddress && <p className="text-red-500 text-sm">{errors.institutionAddress}</p>}
       </div>
 
       <Button type="submit" className="w-full">

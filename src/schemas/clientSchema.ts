@@ -10,7 +10,7 @@ export const clientSchema = z.object({
  mobileNumber: z
   .string()
   .regex(/^\d{11}$/, "Enter a valid 11-digit number with no spaces"),
-  institutionAddress: z.string().optional(),
+  institutionAddress: z.string().min(1, "Address is required"),
 });
 
 export type ClientFormData = z.infer<typeof clientSchema>;
