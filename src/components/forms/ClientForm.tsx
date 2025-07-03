@@ -40,7 +40,7 @@ export default function ClientForm() {
       <input placeholder="Mobile Number" {...register("mobileNumber")} />
       {errors.mobileNumber && <p>{errors.mobileNumber.message}</p>}
 
-      <input placeholder="Mailing Address" {...register("mailingAddress")} />
+      <input placeholder="Mailing Address" {...register("institutionAddress")} />
 
       <button type="submit">Submit</button>
     </form>
