@@ -50,4 +50,5 @@ export const columns: ColumnDef<Client>[] = [
     accessorKey: "mobileNumber",
     header: "Mobile Number",
   },
+ 
 ]

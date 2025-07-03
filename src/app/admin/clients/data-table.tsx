@@ -66,31 +66,7 @@ export function DataTable<TData, TValue>({
             onChange={(event) => setGlobalFilter(event.target.value)}
             className="max-w-sm"
           />
-          {/* <Button
-            variant="outline"
-            onClick={() => {
-              table.getColumn("isApproved")?.setFilterValue(true)
-            }}
-            className="ml-2"
-          >
-            Approved Only
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => {
-              table.getColumn("isApproved")?.setFilterValue(false)
-            }}
-          >
-            Pending Only
-          </Button> */}
-          {/* <Button
-            variant="outline"
-            onClick={() => {
-              table.getColumn("isApproved")?.setFilterValue(undefined)
-            }}
-          >
-            All
-          </Button> */}
+
         </div>
         <div className="text-sm text-muted-foreground">
           {table.getFilteredRowModel().rows.length} of {table.getCoreRowModel().rows.length} clients
