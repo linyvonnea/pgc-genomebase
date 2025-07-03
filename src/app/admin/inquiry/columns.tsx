@@ -58,7 +58,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   },
   {
     accessorKey: "createdAt",
-    header: "Created At",
+    header: "Date",
     cell: ({ row }) => {
       const { isValid, data } = validateInquiry(row.original)
       
