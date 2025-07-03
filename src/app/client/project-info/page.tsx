@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from 'next/navigation';
 import { z } from "zod";
 import { clientSchema, ClientFormData } from "@/schemas/clientSchema"; 
 import { Input } from "@/components/ui/input";
@@ -48,11 +47,6 @@ export default function ClientForm() {
       setErrors({});
       console.log("Valid data:", result.data);
     }
-  };
-
-  const router = useRouter();
-  const handleClick = () => {
-    router.push('/client/project-info'); 
   };
 
   return (
@@ -130,7 +124,7 @@ export default function ClientForm() {
         />
       </div>
 
-      <Button type="submit" onClick={handleClick} className="w-full">
+      <Button type="submit" className="w-full">
         Submit
       </Button>
     </form>
