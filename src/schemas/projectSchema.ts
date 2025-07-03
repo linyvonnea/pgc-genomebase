@@ -2,12 +2,13 @@
 import { z } from "zod";
 
 export const projectSchema = z.object({
-  clientId: z.string().min(1),
   title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
-  status: z.enum(["pending", "ongoing", "completed"]),
+  projectLead: z.string().min(1, "Project Lead is required"),
   startDate: z.date(),
   endDate: z.date().nullable(),
+  sendingInstitution: z.string().min(1, "Sending institution is required"),
+  fundingInstitution: z.string().min(1, "Funding institution is required"),
+
 });
 
 export type ProjectFormData = z.infer<typeof projectSchema>;
