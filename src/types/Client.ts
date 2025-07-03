@@ -6,6 +6,7 @@ export interface Client {
   designation: string;
   sex: "Male" | "Female" | "Other";
   mobileNumber: string;
-  mailingAddress: string;
+  institutionAddress: string;
+  cid: string;
   createdAt: Date;
 }
