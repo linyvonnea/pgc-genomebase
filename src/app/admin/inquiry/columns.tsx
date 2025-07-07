@@ -16,6 +16,19 @@ const validateInquiry = (data: any) => {
   };
 };
 
+// Utility function to get status color
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "Approved Client":
+      return "bg-green-100 text-green-800";
+    case "Quotation Only":
+      return "bg-blue-100 text-blue-800";
+    case "Pending":
+    default:
+      return "bg-yellow-100 text-yellow-800";
+  }
+};
+
 export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
@@ -38,8 +51,9 @@ export const columns: ColumnDef<Inquiry>[] = [
     header: "Designation",
   },
   {
-    accessorKey: "isApproved",
+    accessorKey: "status",
     header: "Status",
+    size: 120, 
     cell: ({ row }) => {
       const { isValid, data } = validateInquiry(row.original);
       if (!isValid || !data) {
@@ -48,13 +62,11 @@ export const columns: ColumnDef<Inquiry>[] = [
 
       return (
         <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${
-            data.isApproved
-              ? "bg-green-100 text-green-800"
-              : "bg-yellow-100 text-yellow-800"
-          }`}
+          className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
+            data.status
+          )}`}
         >
-          {data.isApproved ? "Approved" : "Pending"}
+          {data.status}
         </span>
       );
     },
