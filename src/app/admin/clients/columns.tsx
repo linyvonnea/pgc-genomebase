@@ -31,12 +31,12 @@ export const columns: ColumnDef<Client>[] = [
     header: "Email",
   },
   {
-    accessorKey: "institution",
-    header: "Insitution",
+    accessorKey: "affiliation",
+    header: "Affiliation",
   },
   {
-    accessorKey: "institutionAddress",
-    header: "Insitution Address",
+    accessorKey: "affiliationAddress",
+    header: "Affiliation Address",
   },
   {
     accessorKey: "designation",

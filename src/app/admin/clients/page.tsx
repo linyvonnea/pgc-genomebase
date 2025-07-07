@@ -20,7 +20,7 @@ async function getData(): Promise<Client[]> {
     return {
       ...result.data,
       id: client.id,
-      institutionAddress: client.institutionAddress,
+      affiliationAddress: client.affiliationAddress,
       cid: client.cid
     }
   }).filter((c): c is Client => c !== null)
