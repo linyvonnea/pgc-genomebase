@@ -1,10 +1,9 @@
-// src/types/Quotation.ts
-import { ServiceItem } from "./ServiceItem";
+// src/types/QuotationRecord.ts
+import { SelectedService } from "./SelectedService";
 
-export type SelectedService = ServiceItem & {
-  quantity: number;
-};
-
+/**
+ * Represents a generated quotation record.
+ */
 export type QuotationRecord = {
   referenceNumber: string;
   clientInfo: {
@@ -16,6 +15,5 @@ export type QuotationRecord = {
   services: SelectedService[];
   isInternal: boolean;
   remarks: string;
-  dateIssued: string;
-  year: number;
+  dateIssued: string; // ISO date string
 };

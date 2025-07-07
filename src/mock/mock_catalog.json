@@ -1,7 +1,7 @@
 [
   {
     "id": "LAB-SVC-001",
-    "name": "Bacterial (spin column)",
+    "name": "Spin Column Based Extraction",
     "category": "Nucleic Acid Extraction",
     "unit": "per sample",
     "price": 940,
@@ -9,7 +9,7 @@
   },
   {
     "id": "LAB-SVC-002",
-    "name": "Magnetic Bead Extraction (Animal Blood)",
+    "name": "Magnetic Bead Based Extraction (Animal Blood)",
     "category": "Nucleic Acid Extraction",
     "unit": "per sample",
     "price": 910,
@@ -17,7 +17,7 @@
   },
   {
     "id": "LAB-SVC-003",
-    "name": "Magnetic Bead Extraction (Cell and Tissue)",
+    "name": "Magnetic Bead Based Extraction (Cell and Tissue)",
     "category": "Nucleic Acid Extraction",
     "unit": "per sample",
     "price": 1100,
@@ -57,7 +57,7 @@
   },
   {
     "id": "LAB-SVC-008",
-    "name": "Gel excision and purification (Recover kit)",
+    "name": "Gel excision (recovery kit)",
     "category": "DNA/PCR Purification",
     "unit": "per sample",
     "price": 530,
@@ -105,7 +105,7 @@
   },
   {
     "id": "LAB-SVC-014",
-    "name": "Nextera XT DNA Library Preparation",
+    "name": "Nextera XT DNA Library Preparation (small genomes, PCR amplicons, plasmids, cDNA)",
     "category": "Library Preparation",
     "unit": "per sample",
     "price": 10240,
@@ -129,7 +129,7 @@
   },
   {
     "id": "LAB-SVC-017",
-    "name": "16s Metagenomics",
+    "name": "Targeted Metagenomics/Metabarcoding",
     "category": "Library Preparation",
     "unit": "per sample",
     "price": 4750,
@@ -512,6 +512,14 @@
     "type": "equipment"
   },
   {
+        "id": "EQP-SVC-040",
+    "name": "Liquid Nitrogen Tank",
+    "category": "Equipment Use (Without Consumables)",
+    "unit": "per hour",
+    "price": 100,
+    "type": "equipment"
+  },
+  {
     "id": "RTL-SVC-001",
     "name": "Liquid Nitrogen",
     "category": "Retail Sales",
@@ -545,8 +553,8 @@
   },
   {
     "id": "BIO-SVC-001",
-    "name": "",
-    "category": "",
+    "name": "Bioinformatics Analysis",
+    "category": "Bioinformatics",
     "unit": "",
     "price": 0,
     "type": "bioinformatics"

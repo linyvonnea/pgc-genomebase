@@ -28,6 +28,11 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
   },
+  pgcLogo: {
+    width: 200,
+    height: 60,
+    objectFit: "contain",
+  },
   title: {
     fontSize: 14,
     fontWeight: "bold",
@@ -131,7 +136,7 @@ export function QuotationPDF({
         {/* Header */}
         <View style={styles.logoRow}>
           <Image src={schoolLogo} style={styles.logo} />
-          <Image src={pgcLogo} style={styles.logo} />
+          <Image src={pgcLogo} style={styles.pgcLogo} />
         </View>
         <Text style={styles.title}>COST ESTIMATE</Text>
         <Text style={styles.subtitle}>(Valid for 30 days from the date of issue)</Text>
