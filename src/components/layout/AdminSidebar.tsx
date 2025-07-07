@@ -22,6 +22,7 @@ import {
   LayoutDashboard,
   ChevronDown,
   ChevronRight,
+  LibraryBig
 } from "lucide-react";
 import { useState } from "react";
 
@@ -57,6 +58,16 @@ export function AdminSidebar() {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+
+            <SidebarMenuItem>
+              <Link href="/admin/projects">
+                <SidebarMenuButton isActive={isActive("/admin/projects")}> 
+                  <LibraryBig className="size-4" />
+                  Projects
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+
 
             {/* Quotations with submenu */}
             <SidebarMenuItem>
