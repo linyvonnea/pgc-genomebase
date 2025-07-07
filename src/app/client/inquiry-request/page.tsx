@@ -1,6 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { inquiryFormSchema, type InquiryFormData, type WorkflowOption } from "@/schemas/inquirySchema"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -9,68 +12,60 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export default function QuotationRequestForm() {
   const [selectedService, setSelectedService] = useState<string>("laboratory")
-  const [formData, setFormData] = useState({
-    name: "",
-    affiliation: "",
-    designation: "",
-    service: "laboratory",
-    // Laboratory Service fields
-    workflows: [] as string[],
-    additionalInfo: "",
-    // Research and Collaboration fields
-    projectBackground: "",
-    projectBudget: ""
-  })
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
-  }
-
-  const handleWorkflowChange = (workflow: string, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      workflows: checked 
-        ? [...prev.workflows, workflow]
-        : prev.workflows.filter(w => w !== workflow)
-    }))
-  }
-
-  const handleServiceChange = (value: string) => {
-    setSelectedService(value)
-    setFormData(prev => ({
-      ...prev,
-      service: value,
-      // Reset service-specific fields when switching
+  
+  const form = useForm<InquiryFormData>({
+    resolver: zodResolver(inquiryFormSchema),
+    defaultValues: {
+      name: "",
+      affiliation: "",
+      designation: "",
+      service: "laboratory",
       workflows: [],
       additionalInfo: "",
       projectBackground: "",
       projectBudget: ""
-    }))
+    }
+  })
+
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = form
+  const formData = watch()
+
+  const handleServiceChange = (value: string) => {
+    setSelectedService(value)
+    setValue("service", value as "laboratory" | "research")
+    // Reset service-specific fields when switching
+    setValue("workflows", [])
+    setValue("additionalInfo", "")
+    setValue("projectBackground", "")
+    setValue("projectBudget", "")
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Handle form submission
-    console.log("Form submitted:", formData)
+  const handleWorkflowChange = (workflow: string, checked: boolean) => {
+    const currentWorkflows = formData.workflows || []
+    const newWorkflows = checked 
+      ? [...currentWorkflows, workflow as WorkflowOption]
+      : currentWorkflows.filter(w => w !== workflow)
+    setValue("workflows", newWorkflows)
+  }
+
+  const onSubmit = (data: InquiryFormData) => {
+    console.log("Form submitted:", data)
   }
 
   return (
     <div className="max-w-4xl mx-auto">
       <div className="bg-white rounded-lg shadow-sm p-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Quotation Request Form</h1>
-          
-          <div className="mb-4">
-            <p className="text-gray-600 leading-relaxed text-justify mb-6">
-              Thank you for reaching out to PGC researchers for your research needs. We offer a range of 
-              services from Equipment Use, DNA Extraction, Polymerase Chain Reaction (PCR), Sample 
-              Purification, Next Generation Sequencing (NGS), and Bioinformatics Analysis. To assist 
-              you better kindly provide us with the following information:
-            </p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Quotation Request Form</h1>
+        
+        <div className="mb-4">
+          <p className="text-gray-600 leading-relaxed text-justify mb-6">
+            Thank you for reaching out to PGC researchers for your research needs. We offer a range of 
+            services from Equipment Use, DNA Extraction, Polymerase Chain Reaction (PCR), Sample 
+            Purification, Next Generation Sequencing (NGS), and Bioinformatics Analysis. To assist 
+            you better kindly provide us with the following information:
+          </p>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Required Fields Section */}
             <div className="space-y-4">
               {/* Name Field */}
@@ -82,12 +77,12 @@ export default function QuotationRequestForm() {
                   id="name"
                   type="text"
                   placeholder="Enter name here"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  {...register("name")}
                   className="mt-1"
-                  required
                 />
-                <p className="text-xs text-gray-500 mt-1">This is a hint text to help user.</p>
+                {errors.name && (
+                  <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                )}
               </div>
 
               {/* Affiliation Field */}
@@ -98,13 +93,13 @@ export default function QuotationRequestForm() {
                 <Input
                   id="affiliation"
                   type="text"
-                  placeholder="e.g. Department - Institution"
-                  value={formData.affiliation}
-                  onChange={(e) => handleInputChange("affiliation", e.target.value)}
+                  placeholder="e.g. Division of Biological Sciences - UPV CAS"
+                  {...register("affiliation")}
                   className="mt-1"
-                  required
                 />
-                <p className="text-xs text-gray-500 mt-1">This is a hint text to help user.</p>
+                {errors.affiliation && (
+                  <p className="text-red-500 text-sm mt-1">{errors.affiliation.message}</p>
+                )}
               </div>
 
               {/* Designation Field */}
@@ -116,12 +111,12 @@ export default function QuotationRequestForm() {
                   id="designation"
                   type="text"
                   placeholder="Enter designation here"
-                  value={formData.designation}
-                  onChange={(e) => handleInputChange("designation", e.target.value)}
+                  {...register("designation")}
                   className="mt-1"
-                  required
                 />
-                <p className="text-xs text-gray-500 mt-1">This is a hint text to help user.</p>
+                {errors.designation && (
+                  <p className="text-red-500 text-sm mt-1">{errors.designation.message}</p>
+                )}
               </div>
 
               {/* Select Service */}
@@ -138,6 +133,9 @@ export default function QuotationRequestForm() {
                     <SelectItem value="research">Research and Collaboration</SelectItem>
                   </SelectContent>
                 </Select>
+                {errors.service && (
+                  <p className="text-red-500 text-sm mt-1">{errors.service.message}</p>
+                )}
               </div>
             </div>
 
@@ -153,19 +151,19 @@ export default function QuotationRequestForm() {
                       Kindly choose which workflow you will be availing?
                     </Label>
                     <div className="grid grid-cols-2 gap-3">
-                      {[
+                      {([
                         { id: "dna-extraction", label: "DNA extraction" },
                         { id: "sequencing", label: "Sequencing" },
                         { id: "pcr-amplification", label: "PCR amplification" },
                         { id: "bioinformatics", label: "Bioinformatics" },
                         { id: "quantification", label: "Quantification" },
                         { id: "complete-workflow", label: "Complete Workflow" }
-                      ].map((workflow) => (
+                      ] as Array<{ id: WorkflowOption; label: string }>).map((workflow) => (
                         <div key={workflow.id} className="flex items-center space-x-2">
                           <input
                             type="checkbox"
                             id={workflow.id}
-                            checked={formData.workflows.includes(workflow.id)}
+                            checked={formData.workflows?.includes(workflow.id) || false}
                             onChange={(e) => handleWorkflowChange(workflow.id, e.target.checked)}
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
@@ -175,6 +173,9 @@ export default function QuotationRequestForm() {
                         </div>
                       ))}
                     </div>
+                    {errors.workflows && (
+                      <p className="text-red-500 text-sm mt-1">{errors.workflows.message}</p>
+                    )}
                   </div>
 
                   {/* Additional Information */}
@@ -185,12 +186,13 @@ export default function QuotationRequestForm() {
                     <Textarea
                       id="additionalInfo"
                       placeholder="Enter a description..."
-                      value={formData.additionalInfo}
-                      onChange={(e) => handleInputChange("additionalInfo", e.target.value)}
+                      {...register("additionalInfo")}
                       className="mt-1"
                       rows={4}
                     />
-                    <p className="text-xs text-gray-500 mt-1">This is a hint text to help user.</p>
+                    {errors.additionalInfo && (
+                      <p className="text-red-500 text-sm mt-1">{errors.additionalInfo.message}</p>
+                    )}
                   </div>
                 </div>
               )}
@@ -205,12 +207,13 @@ export default function QuotationRequestForm() {
                     <Textarea
                       id="projectBackground"
                       placeholder="Enter a description..."
-                      value={formData.projectBackground}
-                      onChange={(e) => handleInputChange("projectBackground", e.target.value)}
+                      {...register("projectBackground")}
                       className="mt-1"
                       rows={4}
                     />
-                    <p className="text-xs text-gray-500 mt-1">This is a hint text to help user.</p>
+                    {errors.projectBackground && (
+                      <p className="text-red-500 text-sm mt-1">{errors.projectBackground.message}</p>
+                    )}
                   </div>
 
                   {/* Project Budget */}
@@ -222,11 +225,12 @@ export default function QuotationRequestForm() {
                       id="projectBudget"
                       type="text"
                       placeholder="₱"
-                      value={formData.projectBudget}
-                      onChange={(e) => handleInputChange("projectBudget", e.target.value)}
+                      {...register("projectBudget")}
                       className="mt-1"
                     />
-                    <p className="text-xs text-gray-500 mt-1">This is a hint text to help user.</p>
+                    {errors.projectBudget && (
+                      <p className="text-red-500 text-sm mt-1">{errors.projectBudget.message}</p>
+                    )}
                   </div>
                 </div>
               )}

@@ -6,26 +6,57 @@ export const inquirySchema = z.object({
   year: z.number().int().min(2000, "Year must be at least 2000").max(2100, "Year must be at most 2100"),
   createdAt: z.date(),
   name: z.string().min(1, "Name is required").max(100, "Name must be at most 100 characters"),
-  isApproved: z.boolean(),
   affiliation: z.string().min(1, "Affiliation is required").max(200, "Affiliation must be at most 200 characters"),
   designation: z.string().min(1, "Designation is required").max(100, "Designation must be at most 100 characters"),
-  email: z.string().email("Invalid email address"),
+  service: z.enum(["laboratory", "research"], {
+    required_error: "Service selection is required",
+  }),
+  // Laboratory Service fields
+  workflows: z.array(z.enum([
+    "dna-extraction",
+    "sequencing", 
+    "pcr-amplification",
+    "bioinformatics",
+    "quantification",
+    "complete-workflow"
+  ])).optional(),
+  additionalInfo: z.string().max(1000, "Additional information must be at most 1000 characters").optional(),
+  // Research and Collaboration fields
+  projectBackground: z.string().max(2000, "Project background must be at most 2000 characters").optional(),
+  projectBudget: z.string().max(50, "Project budget must be at most 50 characters").optional(),
+  isApproved: z.boolean().default(false),
+  email: z.string().email("Invalid email address").optional(), // Made optional since it's not in your form
 });
 
-// For form data that might not include all fields (e.g., during creation)
-export const inquiryFormSchema = inquirySchema.omit({ 
-  id: true, 
-  createdAt: true, 
-  year: true 
-}).extend({
-  year: z.number().int().min(2000, "Year must be at least 2000").max(2100, "Year must be at most 2100").optional(),
-});
+// Schema for form validation (excludes auto-generated fields)
+export const inquiryFormSchema = inquirySchema
+  .omit({ 
+    id: true, 
+    createdAt: true, 
+    year: true,
+    isApproved: true,
+  })
+  .refine((data) => {
+    // If research service is selected, project background should be provided
+    if (data.service === "research") {
+      return data.projectBackground && data.projectBackground.trim().length > 0;
+    }
+    return true;
+  }, {
+    message: "Project background is required for research collaboration",
+    path: ["projectBackground"],
+  });
 
 // For updating an inquiry (all fields optional except id)
 export const inquiryUpdateSchema = inquirySchema.partial().extend({
   id: z.string().min(1, "ID is required"),
 });
 
+// Type definitions
+export type InquiryData = z.infer<typeof inquirySchema>;
 export type InquiryFormData = z.infer<typeof inquiryFormSchema>;
 export type InquiryUpdateData = z.infer<typeof inquiryUpdateSchema>;
-export type InquiryData = z.infer<typeof inquirySchema>;
+
+// Workflow options type for TypeScript
+export type WorkflowOption = "dna-extraction" | "sequencing" | "pcr-amplification" | "bioinformatics" | "quantification" | "complete-workflow";
+export type ServiceType = "laboratory" | "research";
