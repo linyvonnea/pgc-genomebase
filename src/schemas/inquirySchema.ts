@@ -1,6 +1,7 @@
 // src/schemas/inquirySchema.ts
 import { z } from "zod";
 
+// Base schema without service (for stored data)
 export const inquirySchema = z.object({
   id: z.string().min(1, "ID is required"),
   year: z.number().int().min(2000, "Year must be at least 2000").max(2100, "Year must be at most 2100"),
@@ -8,9 +9,6 @@ export const inquirySchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name must be at most 100 characters"),
   affiliation: z.string().min(1, "Affiliation is required").max(200, "Affiliation must be at most 200 characters"),
   designation: z.string().min(1, "Designation is required").max(100, "Designation must be at most 100 characters"),
-  service: z.enum(["laboratory", "research"], {
-    required_error: "Service selection is required",
-  }),
   // Laboratory Service fields
   workflows: z.array(z.enum([
     "dna-extraction",
@@ -25,16 +23,21 @@ export const inquirySchema = z.object({
   projectBackground: z.string().max(2000, "Project background must be at most 2000 characters").optional(),
   projectBudget: z.string().max(50, "Project budget must be at most 50 characters").optional(),
   isApproved: z.boolean().default(false),
-  email: z.string().email("Invalid email address").optional(), // Made optional since it's not in your form
+  email: z.string().email("Invalid email address").optional(),
 });
 
-// Schema for form validation (excludes auto-generated fields)
+// Schema specifically for form validation (includes service field)
 export const inquiryFormSchema = inquirySchema
   .omit({ 
     id: true, 
     createdAt: true, 
     year: true,
     isApproved: true,
+  })
+  .extend({
+    service: z.enum(["laboratory", "research"], {
+      required_error: "Service selection is required",
+    }),
   })
   .refine((data) => {
     // If research service is selected, project background should be provided
