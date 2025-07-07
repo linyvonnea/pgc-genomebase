@@ -20,11 +20,11 @@ export default function ClientForm() {
   const [formData, setFormData] = useState<ClientFormData>({
     name: "",
     email: "",
-    institution: "",
+    affiliation: "",
     designation: "",
     sex: "Male",
     mobileNumber: "",
-    institutionAddress: "",
+    affiliationAddress: "",
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof ClientFormData, string>>>({});
@@ -65,7 +65,7 @@ export default function ClientForm() {
               to your request, project, or collaboration with PGC.
             </p>
             </div>
-            
+
     <form onSubmit={handleSubmit} className="space-y-4 w-full p-1">
       <div>
         <Label>
@@ -96,11 +96,11 @@ export default function ClientForm() {
           Affiliation (Department & Institution) <span className="text-red-500 text-sm">*</span>
         </Label>
         <Input
-          value={formData.institution}
-          onChange={(e) => handleChange("institution", e.target.value)}
+          value={formData.affiliation}
+          onChange={(e) => handleChange("affiliation", e.target.value)}
           placeholder="e.g. Division of Biological Sciences - UPV CAS"
         />
-        {errors.institution && <p className="text-red-500 text-sm">{errors.institution}</p>}
+        {errors.affiliation && <p className="text-red-500 text-sm">{errors.affiliation}</p>}
       </div>
 
       <div>
@@ -145,14 +145,14 @@ export default function ClientForm() {
 
       <div>
         <Label>
-          Institution Address <span className="text-red-500 text-sm">*</span>
+          Affiliation Address <span className="text-red-500 text-sm">*</span>
         </Label>
         <Textarea
-          value={formData.institutionAddress}
-          onChange={(e) => handleChange("institutionAddress", e.target.value)}
-          placeholder="Enter institution address here"
+          value={formData.affiliationAddress}
+          onChange={(e) => handleChange("affiliationAddress", e.target.value)}
+          placeholder="Enter affiliation address here"
         />
-        {errors.institutionAddress && <p className="text-red-500 text-sm">{errors.institutionAddress}</p>}
+        {errors.affiliationAddress && <p className="text-red-500 text-sm">{errors.affiliationAddress}</p>}
       </div>
 
       <div className="flex justify-end pt-6">
