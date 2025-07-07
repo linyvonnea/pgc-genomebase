@@ -3,8 +3,8 @@ import { z } from "zod";
 
 // Base schema without service (for stored data)
 export const inquirySchema = z.object({
-  id: z.string().min(1, "ID is required"),
-  year: z.number().int().min(2000, "Year must be at least 2000").max(2100, "Year must be at most 2100"),
+  id: z.string(),
+  year: z.number(),
   createdAt: z.date(),
   name: z.string().min(1, "Name is required").max(100, "Name must be at most 100 characters"),
   affiliation: z.string().min(1, "Affiliation is required").max(200, "Affiliation must be at most 200 characters"),
@@ -23,6 +23,7 @@ export const inquirySchema = z.object({
   projectBackground: z.string().max(2000, "Project background must be at most 2000 characters").optional(),
   projectBudget: z.string().max(50, "Project budget must be at most 50 characters").optional(),
   isApproved: z.boolean().default(false),
+  status: z.enum(['Pending', 'Approved Client', 'Quotation Only']),
   email: z.string().email("Invalid email address").optional(),
 });
 
@@ -33,6 +34,7 @@ export const inquiryFormSchema = inquirySchema
     createdAt: true, 
     year: true,
     isApproved: true,
+    status: true,
   })
   .extend({
     service: z.enum(["laboratory", "research"], {

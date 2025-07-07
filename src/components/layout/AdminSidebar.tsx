@@ -22,7 +22,8 @@ import {
   LayoutDashboard,
   ChevronDown,
   ChevronRight,
-  LibraryBig
+  LibraryBig,
+  MessageSquare
 } from "lucide-react";
 import { useState } from "react";
 
@@ -68,6 +69,14 @@ export function AdminSidebar() {
               </Link>
             </SidebarMenuItem>
 
+            <SidebarMenuItem>
+              <Link href="/admin/inquiry">
+                <SidebarMenuButton isActive={isActive("/admin/inquiry")}> 
+                  <MessageSquare className="size-4" />
+                  Inquiries
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
 
             {/* Quotations with submenu */}
             <SidebarMenuItem>

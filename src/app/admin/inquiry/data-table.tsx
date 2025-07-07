@@ -69,24 +69,32 @@ export function DataTable<TData, TValue>({
           <Button
             variant="outline"
             onClick={() => {
-              table.getColumn("isApproved")?.setFilterValue(true)
+              table.getColumn("status")?.setFilterValue("Approved Client")
             }}
             className="ml-2"
           >
-            Approved Only
+            Approved Client
           </Button>
           <Button
             variant="outline"
             onClick={() => {
-              table.getColumn("isApproved")?.setFilterValue(false)
+              table.getColumn("status")?.setFilterValue("Quotation Only")
             }}
           >
-            Pending Only
+            Quotation Only
           </Button>
           <Button
             variant="outline"
             onClick={() => {
-              table.getColumn("isApproved")?.setFilterValue(undefined)
+              table.getColumn("status")?.setFilterValue("Pending")
+            }}
+          >
+            Pending
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              table.getColumn("status")?.setFilterValue(undefined)
             }}
           >
             All

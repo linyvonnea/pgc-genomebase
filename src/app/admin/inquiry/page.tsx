@@ -26,8 +26,9 @@ export default async function InquiryPage() {
   const data = await getData()
 
   // Calculate some stats for the header
-  const approvedCount = data.filter(inquiry => inquiry.isApproved).length
-  const pendingCount = data.filter(inquiry => !inquiry.isApproved).length
+  const approvedClientCount = data.filter(inquiry => inquiry.status === 'Approved Client').length
+  const quotationOnlyCount = data.filter(inquiry => inquiry.status === 'Quotation Only').length
+  const pendingCount = data.filter(inquiry => inquiry.status === 'Pending').length
   const totalCount = data.length
 
   return (
@@ -41,17 +42,21 @@ export default async function InquiryPage() {
         </div>
         
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="rounded-lg border p-4">
-            <div className="text-2xl font-bold text-green-600">{approvedCount}</div>
-            <div className="text-sm text-muted-foreground">Approved Inquiries</div>
+            <div className="text-2xl font-bold text-green-600">{approvedClientCount}</div>
+            <div className="text-sm text-muted-foreground">Approved Clients</div>
+          </div>
+          <div className="rounded-lg border p-4">
+            <div className="text-2xl font-bold text-blue-600">{quotationOnlyCount}</div>
+            <div className="text-sm text-muted-foreground">Quotation Only</div>
           </div>
           <div className="rounded-lg border p-4">
             <div className="text-2xl font-bold text-yellow-600">{pendingCount}</div>
-            <div className="text-sm text-muted-foreground">Pending Inquiries</div>
+            <div className="text-sm text-muted-foreground">Pending</div>
           </div>
           <div className="rounded-lg border p-4">
-            <div className="text-2xl font-bold text-blue-600">{totalCount}</div>
+            <div className="text-2xl font-bold text-gray-600">{totalCount}</div>
             <div className="text-sm text-muted-foreground">Total Inquiries</div>
           </div>
         </div>
