@@ -53,7 +53,20 @@ export default function ClientForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto p-4">
+    <div className="max-w-4xl mx-auto">
+      <div className="bg-white rounded-lg shadow-sm p-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">Client Information Form</h1>
+          
+          <div className="mb-4">
+            <p className="text-gray-600 leading-relaxed text-justify mb-6">
+              To help us serve you better, please complete this form
+              with accurate and updated details. Your information will be handled with 
+              strict confidentiality and will only be used for official purposes related 
+              to your request, project, or collaboration with PGC.
+            </p>
+            </div>
+            
+    <form onSubmit={handleSubmit} className="space-y-4 w-full p-1">
       <div>
         <Label>
           Name <span className="text-red-500 text-sm">*</span>
@@ -142,9 +155,16 @@ export default function ClientForm() {
         {errors.institutionAddress && <p className="text-red-500 text-sm">{errors.institutionAddress}</p>}
       </div>
 
-      <Button type="submit" className="w-full">
-        Submit
-      </Button>
+      <div className="flex justify-end pt-6">
+              <Button 
+                type="submit" 
+                className="bg-gray-600 hover:bg-gray-700 text-white px-8 py-2"
+              >
+                Submit
+              </Button>
+            </div>
     </form>
+    </div>
+    </div>
   );
 }

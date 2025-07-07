@@ -76,7 +76,19 @@ export default function ProjectForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto p-4">
+    <div className="max-w-4xl mx-auto">
+      <div className="bg-white rounded-lg shadow-sm p-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">Project Information Form</h1>
+          
+          <div className="mb-4">
+            <p className="text-gray-600 leading-relaxed text-justify mb-6">
+              Thank you for partnering with Philippine Genome Center Visayas.
+            To better understand and support your project, we request that you 
+            provide information through this form. 
+            </p>
+            </div>
+
+    <form onSubmit={handleSubmit} className="space-y-4 w-full p-1">
       <div>
         <Label>
           Project Title <span className="text-red-500 text-sm">*</span>
@@ -120,6 +132,8 @@ export default function ProjectForm() {
                   setStartOpen(true);
                 }
               }}
+              onFocus={() => setStartOpen(true)}
+              onClick={() => setStartOpen(true)}
             />
             <Popover open={startOpen} onOpenChange={setStartOpen}>
               <PopoverTrigger asChild>
@@ -151,7 +165,7 @@ export default function ProjectForm() {
         </div>
         <div className="flex-1">
           <Label htmlFor="endDate">
-            End Date
+            End Date (optional)
           </Label>
           <div className="relative flex gap-2">
             <Input
@@ -169,6 +183,8 @@ export default function ProjectForm() {
                   setEndOpen(true);
                 }
               }}
+              onFocus={() => setEndOpen(true)}
+              onClick={() => setEndOpen(true)}
             />
             <Popover open={endOpen} onOpenChange={setEndOpen}>
               <PopoverTrigger asChild>
@@ -221,9 +237,16 @@ export default function ProjectForm() {
         />
         {errors.fundingInstitution && <p className="text-red-500 text-sm">{errors.fundingInstitution}</p>}
       </div>
-      <Button type="submit" className="w-full">
-        Submit
-      </Button>
+      <div className="flex justify-end pt-6">
+              <Button 
+                type="submit" 
+                className="bg-gray-600 hover:bg-gray-700 text-white px-8 py-2"
+              >
+                Submit
+              </Button>
+            </div>
     </form>
+    </div>
+    </div>
   );
 }
