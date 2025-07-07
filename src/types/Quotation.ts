@@ -1,11 +1,6 @@
-import { QuotationItem } from "./QuotationItem";
+// src/types/Quotation.ts
+import { ServiceItem } from "./ServiceItem";
 
-export interface Quotation {
-  id: string;
-  clientId: string;
-  type: "Laboratory" | "Equipment";
-  items: QuotationItem[];
-  total: number;
-  status: "draft" | "submitted" | "approved" | "rejected";
-  generatedAt: Date;
+export interface SelectedService extends ServiceItem {
+  quantity: number;
 }

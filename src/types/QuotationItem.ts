@@ -1,7 +1,11 @@
+// src/types/QuotationItem.ts
+
 export interface QuotationItem {
-  serviceName: string;
-  quantity: number;
+  id: string;
+  name: string;
+  type: "laboratory" | "equipment";
   unit: string;
-  unitCost: number;
-  subtotal: number;
+  price: number;
+  internalPrice: number;
+  quantity: number;
 }
