@@ -132,6 +132,8 @@ export default function ProjectForm() {
                   setStartOpen(true);
                 }
               }}
+              onFocus={() => setStartOpen(true)}
+              onClick={() => setStartOpen(true)}
             />
             <Popover open={startOpen} onOpenChange={setStartOpen}>
               <PopoverTrigger asChild>
@@ -163,7 +165,7 @@ export default function ProjectForm() {
         </div>
         <div className="flex-1">
           <Label htmlFor="endDate">
-            End Date
+            End Date (optional)
           </Label>
           <div className="relative flex gap-2">
             <Input
@@ -181,6 +183,8 @@ export default function ProjectForm() {
                   setEndOpen(true);
                 }
               }}
+              onFocus={() => setEndOpen(true)}
+              onClick={() => setEndOpen(true)}
             />
             <Popover open={endOpen} onOpenChange={setEndOpen}>
               <PopoverTrigger asChild>
