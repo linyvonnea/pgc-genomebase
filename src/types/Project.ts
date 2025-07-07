@@ -1,9 +1,19 @@
 export interface Project {
-  id: string;
-  clientId: string;
+  pid: string;
+  cid: string;
+  year: number;
+  startDate: string;
+  endDate: string | null;
+  lead: string;
+  clientNames: string[];
   title: string;
-  description: string;
-  status: "ongoing" | "completed" | "pending";
-  startDate: Date;
-  endDate: Date | null;
+  projectTag: string;
+  status: "Ongoing" | "Completed" | "Cancelled";
+  sendingInstitution: string;
+  fundingCategory: string;
+  fundingInstitution: string;
+  serviceRequested: string[];
+  personnelAssigned: string;
+  notes: string;
 }
+
