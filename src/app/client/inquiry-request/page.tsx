@@ -4,14 +4,18 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { inquiryFormSchema, type InquiryFormData, type WorkflowOption } from "@/schemas/inquirySchema"
+import { createInquiry } from "@/services/inquiryService"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useToast } from "@/hooks/use-toast"
 
 export default function QuotationRequestForm() {
   const [selectedService, setSelectedService] = useState<string>("laboratory")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { toast } = useToast()
   
   const form = useForm<InquiryFormData>({
     resolver: zodResolver(inquiryFormSchema),
@@ -27,7 +31,7 @@ export default function QuotationRequestForm() {
     }
   })
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = form
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = form
   const formData = watch()
 
   const handleServiceChange = (value: string) => {
@@ -48,8 +52,32 @@ export default function QuotationRequestForm() {
     setValue("workflows", newWorkflows)
   }
 
-  const onSubmit = (data: InquiryFormData) => {
-    console.log("Form submitted:", data)
+  const onSubmit = async (data: InquiryFormData) => {
+    setIsSubmitting(true)
+    
+    try {
+      console.log("Submitting form data:", data)
+      const inquiryId = await createInquiry(data)
+      
+      toast({
+        title: "Success!",
+        description: `Your inquiry has been submitted successfully.`,
+      })
+      
+      // Reset form after successful submission
+      reset()
+      setSelectedService("laboratory")
+      
+    } catch (error) {
+      console.error("Error submitting form:", error)
+      toast({
+        title: "Error",
+        description: "Failed to submit your inquiry. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -241,8 +269,9 @@ export default function QuotationRequestForm() {
               <Button 
                 type="submit" 
                 className="bg-gray-600 hover:bg-gray-700 text-white px-8 py-2"
+                disabled={isSubmitting}
               >
-                Submit
+                {isSubmitting ? "Submitting..." : "Submit"}
               </Button>
             </div>
           </form>
