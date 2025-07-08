@@ -1,27 +1,17 @@
 import { columns } from "./columns"
 import { DataTable } from "./data-table"
 import { Inquiry } from "@/types/Inquiry"
-import { mockInquiries } from "@/mock/mockInquiries"
-import { inquirySchema } from "@/schemas/inquirySchema"
-
-//ADD COMMENT FOR PRACTICE
+import { getInquiries } from "@/services/inquiryService"
 
 async function getData(): Promise<Inquiry[]> {
-  // In a real app, you would fetch data from your API here.
-  // For now, we'll use mock data with a simulated delay
-  await new Promise(resolve => setTimeout(resolve, 100))
-  
-  // Validate the mock data using Zod schema before returning
-  const validatedData = mockInquiries.map(inquiry => {
-    const result = inquirySchema.safeParse(inquiry)
-    if (!result.success) {
-      console.error(`Invalid inquiry data for ${inquiry.id}:`, result.error)
-      return null
-    }
-    return result.data
-  }).filter(Boolean) as Inquiry[]
-  
-  return validatedData
+  try {
+    const inquiries = await getInquiries();
+    return inquiries;
+  } catch (error) {
+    console.error("Failed to fetch inquiries:", error);
+    // Return empty array if there's an error
+    return [];
+  }
 }
 
 export default async function InquiryPage() {

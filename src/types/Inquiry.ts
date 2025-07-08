@@ -7,5 +7,5 @@ export interface Inquiry {
   status: 'Pending' | 'Approved Client' | 'Quotation Only'; // Add this new field
   affiliation: string;
   designation: string;
-  email: string;
+  email?: string;
 }
