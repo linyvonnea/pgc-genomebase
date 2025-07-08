@@ -1,11 +1,6 @@
 [
     {
-<<<<<<< HEAD
-        "pid": "P-2024-001",
-        "iid": "Kgd2CtZwNrT1fBGkDhu2",
-=======
         "id": "P-2024-001",
->>>>>>> parent of 8287324 (import mock data in firebase)
         "year": 2024,
         "startDate": {
             "__datatype__": "timestamp",
@@ -18,24 +13,12 @@
         "sendingInstitution": "UP System",
         "fundingCategory": "",
         "fundingInstitution": "PGC Visayas",
-        "serviceRequested": [
-            "Laboratory Services",
-            "Bioinformatics Analysis"
-        ],
+        "serviceRequested": "Laboratory Services",
         "personnelAssigned": "",
-        "notes": "",
-        "clientNames": [
-            "Solomon Salazar",
-            "Dinah Malaki"
-        ]
+        "notes": ""
     },
     {
-<<<<<<< HEAD
-        "pid": "P-2024-002",
-        "iid": "CixisI0mrAN3tFqR5j8G",
-=======
         "id": "P-2024-002",
->>>>>>> parent of 8287324 (import mock data in firebase)
         "year": 2024,
         "startDate": {
             "__datatype__": "timestamp",
@@ -48,22 +31,12 @@
         "sendingInstitution": "SUC/HEI",
         "fundingCategory": "",
         "fundingInstitution": "DOST",
-        "serviceRequested": [
-            "Laboratory Services"
-        ],
+        "serviceRequested": "Laboratory Services",
         "personnelAssigned": "",
-        "notes": "",
-        "clientNames": [
-            "Nestor dela Paz"
-        ]
+        "notes": ""
     },
     {
-<<<<<<< HEAD
-        "pid": "P-2024-003",
-        "iid": "T31BqP2znaZMEmIcJNWi",
-=======
         "id": "P-2024-003",
->>>>>>> parent of 8287324 (import mock data in firebase)
         "year": 2024,
         "startDate": {
             "__datatype__": "timestamp",
@@ -76,20 +49,12 @@
         "sendingInstitution": "SUC/HEI",
         "fundingCategory": "",
         "fundingInstitution": "N/A",
-        "serviceRequested": [
-            "Equipment Use"
-        ],
+        "serviceRequested": "Equipment Use",
         "personnelAssigned": "",
-        "notes": "",
-        "clientNames": []
+        "notes": ""
     },
     {
-<<<<<<< HEAD
-        "pid": "P-2024-004",
-        "iid": "EN88lGJESwWfQwBoMwg2",
-=======
         "id": "P-2024-004",
->>>>>>> parent of 8287324 (import mock data in firebase)
         "year": 2024,
         "startDate": {
             "__datatype__": "timestamp",
@@ -102,21 +67,12 @@
         "sendingInstitution": "Government",
         "fundingCategory": "",
         "fundingInstitution": "DOST",
-        "serviceRequested": [
-            "Laboratory Services",
-            "Bioinformatics Analysis"
-        ],
+        "serviceRequested": "Equipment Use",
         "personnelAssigned": "",
-        "notes": "",
-        "clientNames": []
+        "notes": ""
     },
     {
-<<<<<<< HEAD
-        "pid": "P-2024-005",
-        "iid": "s9posE0AqN9MKvK1X2SG",
-=======
         "id": "P-2024-005",
->>>>>>> parent of 8287324 (import mock data in firebase)
         "year": 2024,
         "startDate": {
             "__datatype__": "timestamp",
@@ -129,47 +85,30 @@
         "sendingInstitution": "International",
         "fundingCategory": "",
         "fundingInstitution": "PGC Visayas",
-        "serviceRequested": [
-            "Laboratory Services"
-        ],
+        "serviceRequested": "Laboratory Services",
         "personnelAssigned": "",
-        "notes": "",
-        "clientNames": []
+        "notes": ""
     },
     {
-<<<<<<< HEAD
-        "pid": "P-2024-006",
-        "iid": "KT0gdUfAqMYvqAgUEG2z",
-=======
         "id": "P-2024-007",
->>>>>>> parent of 8287324 (import mock data in firebase)
         "year": 2024,
         "startDate": {
             "__datatype__": "timestamp",
             "value": "2024-11-14T00:00:00Z"
         },
         "lead": "Nerian Naragdao",
-        "title": "Amplicon Sequencing of Chanos chanos",
+        "title": "Amplicon Sequencing of Chanos chanos ",
         "projectTag": "",
         "status": "",
         "sendingInstitution": "SUC/HEI",
         "fundingCategory": "",
         "fundingInstitution": "DOST",
-        "serviceRequested": [
-            "Laboratory Services",
-            "Bioinformatics Analysis"
-        ],
+        "serviceRequested": "Laboratory Services",
         "personnelAssigned": "",
-        "notes": "",
-        "clientNames": []
+        "notes": ""
     },
     {
-<<<<<<< HEAD
-        "pid": "P-2024-007",
-        "iid": "jkvozyHuua3zIyDya5jq",
-=======
         "id": "P-2024-008",
->>>>>>> parent of 8287324 (import mock data in firebase)
         "year": 2024,
         "startDate": {
             "__datatype__": "timestamp",
@@ -182,20 +121,12 @@
         "sendingInstitution": "UP System",
         "fundingCategory": "",
         "fundingInstitution": "N/A",
-        "serviceRequested": [
-            "Equipment Use"
-        ],
+        "serviceRequested": "Equipment Use",
         "personnelAssigned": "",
-        "notes": "",
-        "clientNames": []
+        "notes": ""
     },
     {
-<<<<<<< HEAD
-        "pid": "P-2025-008",
-        "iid": "5cK0Ixr3TeCn7wbrOtdR",
-=======
         "id": "P-2025-009",
->>>>>>> parent of 8287324 (import mock data in firebase)
         "year": 2025,
         "startDate": {
             "__datatype__": "timestamp",
@@ -208,23 +139,12 @@
         "sendingInstitution": "UP System",
         "fundingCategory": "",
         "fundingInstitution": "PGC Visayas",
-        "serviceRequested": [
-            "Laboratory Services"
-        ],
+        "serviceRequested": "Laboratory Services",
         "personnelAssigned": "",
-        "notes": "",
-        "clientNames": [
-            "Maria Allia Buan",
-            "Isabella Noa Perez"
-        ]
+        "notes": ""
     },
     {
-<<<<<<< HEAD
-        "pid": "P-2025-009",
-        "iid": "2OfwncHl4OvqxgsZMxK0",
-=======
         "id": "P-2025-010",
->>>>>>> parent of 8287324 (import mock data in firebase)
         "year": 2025,
         "startDate": {
             "__datatype__": "timestamp",
@@ -237,24 +157,12 @@
         "sendingInstitution": "UP System",
         "fundingCategory": "",
         "fundingInstitution": "N/A",
-        "serviceRequested": [
-            "Equipment Use",
-            "Bioinformatics Analysis"
-        ],
+        "serviceRequested": "Equipment Use",
         "personnelAssigned": "",
-        "notes": "",
-        "clientNames": [
-            "Rhonin Kenshin Murata",
-            "Almiro Alejandro"
-        ]
+        "notes": ""
     },
     {
-<<<<<<< HEAD
-        "pid": "P-2025-010",
-        "iid": "cBe2DT1scGMK19SuiIbq",
-=======
         "id": "P-2025-011",
->>>>>>> parent of 8287324 (import mock data in firebase)
         "year": 2025,
         "startDate": {
             "__datatype__": "timestamp",
@@ -267,20 +175,12 @@
         "sendingInstitution": "SUC/HEI",
         "fundingCategory": "",
         "fundingInstitution": "DOST",
-        "serviceRequested": [
-            "Laboratory Services"
-        ],
+        "serviceRequested": "Laboratory Services",
         "personnelAssigned": "",
-        "notes": "",
-        "clientNames": []
+        "notes": ""
     },
     {
-<<<<<<< HEAD
-        "pid": "P-2025-011",
-        "iid": "yMyVDQamOJVh5drMXhBL",
-=======
         "id": "P-2025-012",
->>>>>>> parent of 8287324 (import mock data in firebase)
         "year": 2025,
         "startDate": {
             "__datatype__": "timestamp",
@@ -293,20 +193,12 @@
         "sendingInstitution": "Government",
         "fundingCategory": "",
         "fundingInstitution": "DOST",
-        "serviceRequested": [
-            "Laboratory Services"
-        ],
+        "serviceRequested": "Laboratory Services",
         "personnelAssigned": "",
-        "notes": "",
-        "clientNames": []
+        "notes": ""
     },
     {
-<<<<<<< HEAD
-        "pid": "P-2025-012",
-        "iid": "mgM5KMzdFxn1GY19MRSJ",
-=======
         "id": "P-2025-014",
->>>>>>> parent of 8287324 (import mock data in firebase)
         "year": 2025,
         "startDate": {
             "__datatype__": "timestamp",
@@ -319,21 +211,12 @@
         "sendingInstitution": "International",
         "fundingCategory": "",
         "fundingInstitution": "N/A",
-        "serviceRequested": [
-            "Laboratory Services",
-            "Bioinformatics Analysis"
-        ],
+        "serviceRequested": "Laboratory Services",
         "personnelAssigned": "",
-        "notes": "",
-        "clientNames": []
+        "notes": ""
     },
     {
-<<<<<<< HEAD
-        "pid": "P-2025-013",
-        "iid": "EXHtJymbsl36WgbP6GPD",
-=======
         "id": "P-2025-015",
->>>>>>> parent of 8287324 (import mock data in firebase)
         "year": 2025,
         "startDate": {
             "__datatype__": "timestamp",
@@ -346,11 +229,8 @@
         "sendingInstitution": "UP System",
         "fundingCategory": "",
         "fundingInstitution": "N/A",
-        "serviceRequested": [
-            "Equipment Use"
-        ],
+        "serviceRequested": "Equipment Use",
         "personnelAssigned": "",
-        "notes": "",
-        "clientNames": []
+        "notes": ""
     }
 ]
