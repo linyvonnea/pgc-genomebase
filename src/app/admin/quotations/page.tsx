@@ -108,7 +108,6 @@ export default function QuotationListPage() {
             <TableHead>Category</TableHead>
             <TableHead>Total</TableHead>
             <TableHead>Prepared By</TableHead>
-            <TableHead>Remarks</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -128,9 +127,6 @@ export default function QuotationListPage() {
               <TableCell>{q.categories.join(", ")}</TableCell>
               <TableCell>₱{q.total.toLocaleString()}</TableCell>
               <TableCell>{q.preparedBy}</TableCell>
-              <TableCell className="truncate max-w-[200px] text-sm text-muted-foreground">
-                {q.remarks || "—"}
-              </TableCell>
             </TableRow>
           ))}
         </TableBody>

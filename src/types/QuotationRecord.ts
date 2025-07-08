@@ -15,6 +15,5 @@ export type QuotationRecord = {
   };
   services: SelectedService[];
   isInternal: boolean;
-  remarks: string;
   dateIssued: string; // ISO date string
 };

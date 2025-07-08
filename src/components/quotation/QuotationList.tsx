@@ -20,7 +20,6 @@ export default function QuotationList() {
 
   const handleRemarkChange = (index: number, value: string) => {
     const updated = [...records];
-    updated[index].remarks = value;
     setRecords(updated);
   };
 
@@ -40,7 +39,6 @@ export default function QuotationList() {
             <TableHead>Discount</TableHead>
             <TableHead>Total</TableHead>
             <TableHead>Prepared By</TableHead>
-            <TableHead>Remarks</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -57,13 +55,6 @@ export default function QuotationList() {
                 ₱{q.total?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </TableCell>
               <TableCell>{q.preparedBy}</TableCell>
-              <TableCell className="w-[220px]">
-                <Input
-                  value={q.remarks}
-                  onChange={(e) => handleRemarkChange(i, e.target.value)}
-                  placeholder="Enter remarks..."
-                />
-              </TableCell>
             </TableRow>
           ))}
         </TableBody>

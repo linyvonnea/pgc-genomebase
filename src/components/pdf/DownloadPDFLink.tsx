@@ -16,7 +16,6 @@ interface Props {
   };
   referenceNumber: string;
   useInternalPrice: boolean;
-  remarks?: string;
 }
 
 export default function DownloadPDFLink({
@@ -24,7 +23,6 @@ export default function DownloadPDFLink({
   clientInfo,
   referenceNumber,
   useInternalPrice,
-  remarks,
 }: Props) {
   return (
     <PDFDownloadLink
@@ -34,7 +32,6 @@ export default function DownloadPDFLink({
           clientInfo={clientInfo}
           referenceNumber={referenceNumber}
           useInternalPrice={useInternalPrice}
-          remarks={remarks}
         />
       }
       fileName={`${referenceNumber}.pdf`}

@@ -1,4 +1,4 @@
-// src/components/QuotationDetailPageClient.tsx
+
 "use client";
 
 import { useState } from "react";
@@ -7,7 +7,6 @@ import { notFound } from "next/navigation";
 import { mockQuotationRecords } from "@/mock/mockQuotationRecords";
 import {
   mockQuotationHistory,
-  updateQuotationRemark,
 } from "@/mock/mockQuotationHistory";
 import DownloadButtonSection from "@/components/pdf/DownloadButtonSection";
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,6 @@ export default function QuotationDetailPageClient({
 
   if (!quotation) return notFound();
 
-  const [remarks, setRemarks] = useState(quotation.remarks || "");
 
   const {
     clientInfo,
@@ -82,17 +80,6 @@ export default function QuotationDetailPageClient({
             ₱{total.toLocaleString()}
           </span>
         </div>
-        <div>
-          <strong>Remarks:</strong>
-          <textarea
-            value={remarks}
-            onChange={(e) => {
-              setRemarks(e.target.value);
-              updateQuotationRemark(referenceNumber, e.target.value);
-            }}
-            className="w-full mt-1 text-sm border rounded px-2 py-1"
-          />
-        </div>
       </div>
 
       <DownloadButtonSection
@@ -100,7 +87,6 @@ export default function QuotationDetailPageClient({
         services={services}
         clientInfo={clientInfo}
         useInternalPrice={isInternal}
-        remarks={remarks}
       />
     </div>
   );

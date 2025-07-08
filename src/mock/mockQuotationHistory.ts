@@ -24,7 +24,6 @@ export const mockQuotationHistory: (QuotationRecord & { inquiryId: string })[] =
       },
     ],
     isInternal: true,
-    remarks: "For confirmation. Valid for 30 days.",
     dateIssued: "2025-07-08T10:00:00.000Z",
     year: 2025,
     subtotal: 5000,
@@ -54,7 +53,6 @@ export const mockQuotationHistory: (QuotationRecord & { inquiryId: string })[] =
       },
     ],
     isInternal: false,
-    remarks: "Pending fund approval.",
     dateIssued: "2025-07-01T12:00:00.000Z",
     year: 2025,
     subtotal: 4000,
@@ -69,14 +67,5 @@ export const mockQuotationHistory: (QuotationRecord & { inquiryId: string })[] =
 export function addMockQuotation(inquiryId: string, newQuotation: QuotationRecord) {
   mockQuotationHistory.push({ ...newQuotation, inquiryId });
 }
-
-export function updateQuotationRemark(refNumber: string, newRemark: string) {
-  const record = mockQuotationHistory.find((q) => q.referenceNumber === refNumber);
-  if (record) {
-    record.remarks = newRemark;
-  }
-}
-
-
 
 

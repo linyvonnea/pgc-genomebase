@@ -3,6 +3,5 @@ export interface ChargeSlip {
   projectId: string;
   preparedBy: string;
   dateIssued: Date;
-  remarks: string;
   amount: number;
 }

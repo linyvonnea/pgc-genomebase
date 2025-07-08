@@ -26,7 +26,6 @@ export function QuotationPDFViewer({ quotation }: Props) {
         services={quotation.services}
         clientInfo={quotation.clientInfo}
         useInternalPrice={quotation.isInternal}
-        remarks={quotation.remarks}
       />
     </PDFViewer>
   );

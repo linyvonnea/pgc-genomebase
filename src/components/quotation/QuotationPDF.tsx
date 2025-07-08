@@ -1,5 +1,6 @@
 // src/components/quotation/QuotationPDF.tsx
 
+
 import {
   Page,
   Text,
@@ -86,8 +87,10 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     textAlign: "right",
   },
-  remarks: {
-    marginTop: 14,
+  italicNote: {
+    fontStyle: "italic",
+    fontSize: 9,
+    marginTop: 4,
   },
   signature: {
     marginTop: 40,
@@ -100,7 +103,6 @@ export function QuotationPDF({
   clientInfo,
   referenceNumber,
   useInternalPrice,
-  remarks,
 }: {
   services: SelectedService[];
   clientInfo: {
@@ -111,7 +113,6 @@ export function QuotationPDF({
   };
   referenceNumber: string;
   useInternalPrice: boolean;
-  remarks?: string;
 }) {
   const groupedByCategory = services.reduce<Record<string, SelectedService[]>>(
     (acc, svc) => {
@@ -138,7 +139,7 @@ export function QuotationPDF({
           <Image src={schoolLogo} style={styles.logo} />
           <Image src={pgcLogo} style={styles.pgcLogo} />
         </View>
-        <Text style={styles.title}>COST ESTIMATE</Text>
+        <Text style={styles.title}>QUOTATION FORM</Text>
         <Text style={styles.subtitle}>(Valid for 30 days from the date of issue)</Text>
 
         {/* Client Info */}
@@ -165,15 +166,17 @@ export function QuotationPDF({
             <View key={category}>
               <Text style={styles.categoryHeader}>{category}</Text>
               {items.map((svc) => {
-                const unitPrice = useInternalPrice ? svc.price * 0.88 : svc.price;
+                const unitPrice = useInternalPrice
+                  ? svc.price * 0.88
+                  : svc.price;
                 const amount = unitPrice * svc.quantity;
                 return (
                   <View style={styles.tableRow} key={svc.id}>
                     <Text style={styles.cell}>{svc.name}</Text>
                     <Text style={styles.cell}>{svc.unit}</Text>
-                    <Text style={styles.cell}>₱{unitPrice.toFixed(2)}</Text>
+                    <Text style={styles.cell}> {unitPrice.toFixed(2)}</Text>
                     <Text style={styles.cell}>{svc.quantity}</Text>
-                    <Text style={styles.cell}>₱{amount.toFixed(2)}</Text>
+                    <Text style={styles.cell}> {amount.toFixed(2)}</Text>
                   </View>
                 );
               })}
@@ -183,27 +186,29 @@ export function QuotationPDF({
 
         {/* Summary */}
         <View style={styles.summary}>
-          <Text>Subtotal: ₱{totalWithoutDiscount.toFixed(2)}</Text>
+          <Text>Subtotal: PHP {totalWithoutDiscount.toFixed(2)}</Text>
           {useInternalPrice && (
             <Text>Less 12% Discount: ₱{discount.toFixed(2)}</Text>
           )}
           <Text style={{ fontWeight: "bold" }}>
-            TOTAL: ₱{finalTotal.toFixed(2)}
+            TOTAL: PHP {finalTotal.toFixed(2)}
           </Text>
         </View>
 
-        {/* Remarks */}
-        {remarks && (
-          <View style={styles.remarks}>
-            <Text style={{ fontWeight: "bold" }}>Remarks:</Text>
-            <Text>{remarks}</Text>
-          </View>
-        )}
+        <Text style={styles.italicNote}>Quote Validity: 30 days</Text>
+        <Text style={styles.italicNote}>
+          Total cost does not include re-runs (if applicable). Prices are subject to change without prior notice.
+        </Text>
+        <Text style={styles.italicNote}>
+          *12% Discount is applicable only to the following: UP Constituents, Students, Active Consortium Members of PGC Visayas
+        </Text>
 
-        {/* Signature */}
         <View style={styles.signature}>
-          <Text>Prepared by: __________________________</Text>
-          <Text>Date: ________________________________</Text>
+          <Text>Sincerely,</Text>
+          <Text style={{ fontWeight: "bold", marginTop: 24 }}>
+            MA. CARMEL F. JAVIER, M.Sc.
+          </Text>
+          <Text><Text style={{ fontStyle: "italic" }}>University Researcher 1</Text></Text>
         </View>
       </Page>
     </Document>

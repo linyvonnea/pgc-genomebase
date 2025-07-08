@@ -243,7 +243,6 @@ export default function QuotationBuilder({
                   clientInfo={clientInfo}
                   referenceNumber={nextReferenceNumber}
                   useInternalPrice={isInternal}
-                  remarks="For confirmation. Valid for 30 days."
                 />
               </PDFViewer>
               <div className="text-right mt-4">
@@ -254,7 +253,6 @@ export default function QuotationBuilder({
                       clientInfo={clientInfo}
                       referenceNumber={nextReferenceNumber}
                       useInternalPrice={isInternal}
-                      remarks="For confirmation. Valid for 30 days."
                     />
                   }
                   fileName={`${nextReferenceNumber}.pdf`}
@@ -268,7 +266,6 @@ export default function QuotationBuilder({
                             clientInfo,
                             services: selectedServices,
                             isInternal,
-                            remarks: "For confirmation. Valid for 30 days.",
                             dateIssued: new Date().toISOString(),
                             year: currentYear,
                             subtotal,

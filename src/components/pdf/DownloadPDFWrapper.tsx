@@ -11,7 +11,6 @@ export default function DownloadPDFWrapper({
   services,
   clientInfo,
   useInternalPrice,
-  remarks,
 }: {
   referenceNumber: string;
   services: SelectedService[];
@@ -22,7 +21,6 @@ export default function DownloadPDFWrapper({
     email: string;
   };
   useInternalPrice: boolean;
-  remarks?: string;
 }) {
   return (
     <PDFDownloadLink
@@ -32,7 +30,6 @@ export default function DownloadPDFWrapper({
           services={services}
           clientInfo={clientInfo}
           useInternalPrice={useInternalPrice}
-          remarks={remarks}
         />
       }
       fileName={`${referenceNumber}.pdf`}

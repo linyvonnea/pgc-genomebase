@@ -16,7 +16,6 @@ export default function DownloadButtonSection(props: {
     email: string;
   };
   useInternalPrice: boolean;
-  remarks?: string;
 }) {
   return (
     <div className="mt-4">
