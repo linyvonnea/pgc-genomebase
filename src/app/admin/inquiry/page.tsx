@@ -4,6 +4,8 @@ import { Inquiry } from "@/types/Inquiry"
 import { mockInquiries } from "@/mock/mockInquiries"
 import { inquirySchema } from "@/schemas/inquirySchema"
 
+//ADD COMMENT FOR PRACTICE
+
 async function getData(): Promise<Inquiry[]> {
   // In a real app, you would fetch data from your API here.
   // For now, we'll use mock data with a simulated delay
