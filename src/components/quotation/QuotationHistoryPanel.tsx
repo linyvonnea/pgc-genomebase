@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { FileTextIcon } from "lucide-react";
 
 export function QuotationHistoryPanel({ inquiryId }: { inquiryId: string }) {
-  const history = mockQuotationHistory[inquiryId] || [];
+  const history = mockQuotationHistory.filter((q) => q.inquiryId === inquiryId);
 
   if (history.length === 0) {
     return (
@@ -38,7 +38,7 @@ export function QuotationHistoryPanel({ inquiryId }: { inquiryId: string }) {
                 variant="ghost"
                 className="text-sm px-2 h-auto"
                 onClick={() => {
-                  // optional future PDF re-download
+                  // TODO: implement re-download or preview logic
                 }}
               >
                 <FileTextIcon className="w-4 h-4 mr-1" /> PDF

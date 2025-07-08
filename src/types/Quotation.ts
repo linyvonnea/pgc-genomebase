@@ -6,6 +6,7 @@ export type SelectedService = ServiceItem & {
 };
 
 export type QuotationRecord = {
+  inquiryId: string;
   referenceNumber: string;
   clientInfo: {
     name: string;
@@ -18,4 +19,9 @@ export type QuotationRecord = {
   remarks: string;
   dateIssued: string;
   year: number;
+  subtotal: number;
+  discount: number;
+  total: number;
+  preparedBy: string;
+  categories: string[];
 };

@@ -5,6 +5,7 @@ import { SelectedService } from "./SelectedService";
  * Represents a generated quotation record.
  */
 export type QuotationRecord = {
+    
   referenceNumber: string;
   clientInfo: {
     name: string;

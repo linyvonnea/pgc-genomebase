@@ -165,9 +165,7 @@ export function QuotationPDF({
             <View key={category}>
               <Text style={styles.categoryHeader}>{category}</Text>
               {items.map((svc) => {
-                const unitPrice = useInternalPrice
-                  ? svc.price * 0.88
-                  : svc.price;
+                const unitPrice = useInternalPrice ? svc.price * 0.88 : svc.price;
                 const amount = unitPrice * svc.quantity;
                 return (
                   <View style={styles.tableRow} key={svc.id}>

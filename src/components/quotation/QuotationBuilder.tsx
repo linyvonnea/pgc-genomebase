@@ -264,13 +264,19 @@ export default function QuotationBuilder({
                       disabled={loading}
                       onClick={() => {
                         addMockQuotation(effectiveInquiryId, {
-                          referenceNumber: nextReferenceNumber,
-                          clientInfo,
-                          services: selectedServices,
-                          isInternal,
-                          remarks: "For confirmation. Valid for 30 days.",
-                          dateIssued: new Date().toISOString(),
-                          year: currentYear,
+                            referenceNumber: nextReferenceNumber,
+                            clientInfo,
+                            services: selectedServices,
+                            isInternal,
+                            remarks: "For confirmation. Valid for 30 days.",
+                            dateIssued: new Date().toISOString(),
+                            year: currentYear,
+                            subtotal,
+                            discount,
+                            total,
+                            preparedBy: "",
+                            categories: Array.from(new Set(selectedServices.map((s) => s.type))),
+                            inquiryId: effectiveInquiryId
                         });
                       }}
                     >
