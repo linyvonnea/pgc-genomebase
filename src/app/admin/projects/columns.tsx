@@ -22,10 +22,10 @@ export const columns: ColumnDef<Project>[] = [
     accessorKey: "startDate",
     header: "Start Date",
   },
-  {
-    accessorKey: "endDate",
-    header: "End Date",
-  },
+  // {
+  //   accessorKey: "endDate",
+  //   header: "End Date",
+  // },
   {
     accessorKey: "clientNames",
     header: "Client Names",
@@ -37,6 +37,10 @@ export const columns: ColumnDef<Project>[] = [
   {
     accessorKey: "pid",
     header: "Project ID",
+  },
+    {
+    accessorKey: "iid",
+    header: "Inquiry ID",
   },
   {
     accessorKey: "title",
