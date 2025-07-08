@@ -188,7 +188,7 @@ export function QuotationPDF({
         <View style={styles.summary}>
           <Text>Subtotal: PHP {totalWithoutDiscount.toFixed(2)}</Text>
           {useInternalPrice && (
-            <Text>Less 12% Discount: ₱{discount.toFixed(2)}</Text>
+            <Text>Less 12% Discount: PHP{discount.toFixed(2)}</Text>
           )}
           <Text style={{ fontWeight: "bold" }}>
             TOTAL: PHP {finalTotal.toFixed(2)}

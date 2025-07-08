@@ -6,5 +6,7 @@ export default function QuotationDetailPage({
 }: {
   params: { referenceNumber: string };
 }) {
-  return <QuotationDetailPageClient referenceNumber={params.referenceNumber} />;
+  return <QuotationDetailPageClient referenceNumber={params.referenceNumber}/>;
+  
 }
+
