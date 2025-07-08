@@ -1,0 +1,223 @@
+{
+  "2OfwncHl4OvqxgsZMxK0": {
+    "year": 2025,
+    "createdAt": {
+      "_seconds": 1737331200,
+      "_nanoseconds": 0
+    },
+    "name": "Maria Jossana Therese Magbanua",
+    "status": "Approved Client",
+    "isApproved": true,
+    "affiliation": "Division of Biological Sciences, College of Arts and Sciences, UP Visayas",
+    "designation": "Lead",
+    "email": "mj.magbanua@up.edu.ph"
+  },
+  "5cK0Ixr3TeCn7wbrOtdR": {
+    "year": 2025,
+    "createdAt": {
+      "_seconds": 1736121600,
+      "_nanoseconds": 0
+    },
+    "name": "Ezekiel Rafael Santos",
+    "status": "Pending",
+    "isApproved": false,
+    "affiliation": "Division of Biological Sciences, College of Arts and Sciences, UP Visayas",
+    "designation": "Project Leader",
+    "email": "ezekiel.santos@up.edu.ph"
+  },
+  "CixisI0mrAN3tFqR5j8G": {
+    "year": 2024,
+    "createdAt": {
+      "_seconds": 1710547200,
+      "_nanoseconds": 0
+    },
+    "name": "Dr. Rex Sabado",
+    "status": "Approved Client",
+    "isApproved": true,
+    "affiliation": "Plant Science Department, Aklan State University",
+    "designation": "Assistant Professor",
+    "email": "rex.sabado@asu.edu.ph"
+  },
+  "EN88lGJESwWfQwBoMwg2": {
+    "year": 2024,
+    "createdAt": {
+      "_seconds": 1722470400,
+      "_nanoseconds": 0
+    },
+    "name": "Thaddeus Alvarado",
+    "status": "Approved Client",
+    "isApproved": true,
+    "affiliation": "DENR Regional Office 6",
+    "designation": "Researcher",
+    "email": "thaddeus.alvarado@denr.gov.ph"
+  },
+  "EUzM4UtwLHl5orWIWlWT": {
+    "year": 2025,
+    "createdAt": {
+      "_seconds": 1736937000,
+      "_nanoseconds": 0
+    },
+    "name": "Dr. Maria Santos",
+    "status": "Quotation Only",
+    "isApproved": false,
+    "affiliation": "University of the Philippines Manila",
+    "designation": "Research Professor",
+    "email": "maria.santos@upm.edu.ph"
+  },
+  "EXHtJymbsl36WgbP6GPD": {
+    "year": 2025,
+    "createdAt": {
+      "_seconds": 1750032000,
+      "_nanoseconds": 0
+    },
+    "name": "Veronica Dolores Navarro",
+    "status": "Pending",
+    "isApproved": false,
+    "affiliation": "Division of Biological Sciences, College of Arts and Sciences, UP Visayas",
+    "designation": "Faculty Researcher",
+    "email": "veronica.navarro@up.edu.ph"
+  },
+  "KT0gdUfAqMYvqAgUEG2z": {
+    "year": 2024,
+    "createdAt": {
+      "_seconds": 1731456000,
+      "_nanoseconds": 0
+    },
+    "name": "Nerian Naragdao",
+    "status": "Approved Client",
+    "isApproved": true,
+    "affiliation": "Samar State University",
+    "designation": "URA II",
+    "email": "nerian.naragdao@ssu.edu.ph"
+  },
+  "Kgd2CtZwNrT1fBGkDhu2": {
+    "year": 2024,
+    "createdAt": {
+      "_seconds": 1710201600,
+      "_nanoseconds": 0
+    },
+    "name": "Dr. Dominador Castigador Jr.",
+    "status": "Approved Client",
+    "isApproved": true,
+    "affiliation": "Institute of Aquaculture, College of Fisheries and Ocean Sciences, UP Visayas",
+    "designation": "University Researcher (Scientist I)",
+    "email": "dominador.castigador@up.edu.ph"
+  },
+  "T31BqP2znaZMEmIcJNWi": {
+    "year": 2024,
+    "createdAt": {
+      "_seconds": 1718841600,
+      "_nanoseconds": 0
+    },
+    "name": "Esther Mae Abellana",
+    "status": "Approved Client",
+    "isApproved": true,
+    "affiliation": "Central Philippine University",
+    "designation": "Student",
+    "email": "esther.abellana@cpu.edu.ph"
+  },
+  "cBe2DT1scGMK19SuiIbq": {
+    "year": 2025,
+    "createdAt": {
+      "_seconds": 1741564800,
+      "_nanoseconds": 0
+    },
+    "name": "Tothelyn Anne dela Cruz",
+    "status": "Approved Client",
+    "isApproved": true,
+    "affiliation": "Natural Sciences Department, University of St. La Salle",
+    "designation": "Faculty Researcher",
+    "email": "tothelyn.delacruz@usls.edu.ph"
+  },
+  "jkvozyHuua3zIyDya5jq": {
+    "year": 2024,
+    "createdAt": {
+      "_seconds": 1734307200,
+      "_nanoseconds": 0
+    },
+    "name": "Leocadio Mabinni",
+    "status": "Approved Client",
+    "isApproved": true,
+    "affiliation": "SOTECH UPV",
+    "designation": "Project Assistant",
+    "email": "leocadio.mabinni@up.edu.ph"
+  },
+  "mgM5KMzdFxn1GY19MRSJ": {
+    "year": 2025,
+    "createdAt": {
+      "_seconds": 1748822400,
+      "_nanoseconds": 0
+    },
+    "name": "PJ Sy",
+    "status": "Approved Client",
+    "isApproved": true,
+    "affiliation": "UP Los Banos",
+    "designation": "Faculty Researcher",
+    "email": "pj.sy@uplb.edu.ph"
+  },
+  "qnt84GDe0Jk9ejS86yoM": {
+    "year": 2025,
+    "createdAt": {
+      "_seconds": 1739871900,
+      "_nanoseconds": 0
+    },
+    "name": "Dr. Sarah Williams",
+    "status": "Approved Client",
+    "isApproved": true,
+    "affiliation": "International Rice Research Institute",
+    "designation": "Senior Research Scientist",
+    "email": "sarah.williams@irri.org"
+  },
+  "s9posE0AqN9MKvK1X2SG": {
+    "year": 2024,
+    "createdAt": {
+      "_seconds": 1727740800,
+      "_nanoseconds": 0
+    },
+    "name": "Rufina Rafa Cabungcal",
+    "status": "Approved Client",
+    "isApproved": true,
+    "affiliation": "DOST VI",
+    "designation": "Researcher",
+    "email": "rufina.cabungcal@dost.gov.ph"
+  },
+  "umYo88uymtMEJ5uWsnNX": {
+    "year": 2024,
+    "createdAt": {
+      "_seconds": 1731244500,
+      "_nanoseconds": 0
+    },
+    "name": "Dr. Michael Thompson",
+    "status": "Quotation Only",
+    "isApproved": false,
+    "affiliation": "Philippine General Hospital",
+    "designation": "Chief of Genetics",
+    "email": "michael.thompson@pgh.gov.ph"
+  },
+  "varZnGn42hHKLDb3ZEBj": {
+    "year": 2025,
+    "createdAt": {
+      "_seconds": 1738592100,
+      "_nanoseconds": 0
+    },
+    "name": "Dr. John Chen",
+    "status": "Pending",
+    "isApproved": false,
+    "affiliation": "Ateneo de Manila University",
+    "designation": "Associate Professor",
+    "email": "j.chen@ateneo.edu"
+  },
+  "yMyVDQamOJVh5drMXhBL": {
+    "year": 2025,
+    "createdAt": {
+      "_seconds": 1742947200,
+      "_nanoseconds": 0
+    },
+    "name": "Corazon Marquee Lopez",
+    "status": "Approved Client",
+    "isApproved": true,
+    "affiliation": "DOST Regional Office 6",
+    "designation": "Researcher",
+    "email": "corazon.lopez@dost.gov.ph"
+  }
+}

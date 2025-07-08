@@ -7,6 +7,7 @@
       "value": "2024-03-12T00:00:00Z"
     },
     "name": "Dr. Dominador Castigador Jr.",
+    "status": "Approved Client",
     "isApproved": true,
     "affiliation": "Institute of Aquaculture, College of Fisheries and Ocean Sciences, UP Visayas",
     "designation": "University Researcher (Scientist I)",
@@ -20,6 +21,7 @@
       "value": "2024-03-16T00:00:00Z"
     },
     "name": "Dr. Rex Sabado",
+    "status": "Approved Client",
     "isApproved": true,
     "affiliation": "Plant Science Department, Aklan State University",
     "designation": "Assistant Professor",
@@ -33,6 +35,7 @@
       "value": "2024-06-20T00:00:00Z"
     },
     "name": "Esther Mae Abellana",
+    "status": "Approved Client",
     "isApproved": true,
     "affiliation": "Central Philippine University",
     "designation": "Student",
@@ -46,6 +49,7 @@
       "value": "2024-08-01T00:00:00Z"
     },
     "name": "Thaddeus Alvarado",
+    "status": "Approved Client",
     "isApproved": true,
     "affiliation": "DENR Regional Office 6",
     "designation": "Researcher",
@@ -59,6 +63,7 @@
       "value": "2024-10-01T00:00:00Z"
     },
     "name": "Rufina Rafa Cabungcal",
+    "status": "Approved Client",
     "isApproved": true,
     "affiliation": "DOST VI",
     "designation": "Researcher",
@@ -72,7 +77,8 @@
       "value": "2024-11-10T13:15:00Z"
     },
     "name": "Dr. Michael Thompson",
-    "isApproved": true,
+    "status": "Quotation Only",
+    "isApproved": false,
     "affiliation": "Philippine General Hospital",
     "designation": "Chief of Genetics",
     "email": "michael.thompson@pgh.gov.ph"
@@ -85,6 +91,7 @@
       "value": "2024-11-13T00:00:00Z"
     },
     "name": "Nerian Naragdao",
+    "status": "Approved Client",
     "isApproved": true,
     "affiliation": "Samar State University",
     "designation": "URA II",
@@ -98,6 +105,7 @@
       "value": "2024-12-16T00:00:00Z"
     },
     "name": "Leocadio Mabinni",
+    "status": "Approved Client",
     "isApproved": true,
     "affiliation": "SOTECH UPV",
     "designation": "Project Assistant",
@@ -111,7 +119,8 @@
       "value": "2025-01-06T00:00:00Z"
     },
     "name": "Ezekiel Rafael Santos",
-    "isApproved": true,
+    "status": "Pending",
+    "isApproved": false,
     "affiliation": "Division of Biological Sciences, College of Arts and Sciences, UP Visayas",
     "designation": "Project Leader",
     "email": "ezekiel.santos@up.edu.ph"
@@ -124,6 +133,7 @@
       "value": "2025-01-20T00:00:00Z"
     },
     "name": "Maria Jossana Therese Magbanua",
+    "status": "Approved Client",
     "isApproved": true,
     "affiliation": "Division of Biological Sciences, College of Arts and Sciences, UP Visayas",
     "designation": "Lead",
@@ -137,6 +147,7 @@
       "value": "2025-03-10T00:00:00Z"
     },
     "name": "Tothelyn Anne dela Cruz",
+    "status": "Approved Client",
     "isApproved": true,
     "affiliation": "Natural Sciences Department, University of St. La Salle",
     "designation": "Faculty Researcher",
@@ -150,6 +161,7 @@
       "value": "2025-03-26T00:00:00Z"
     },
     "name": "Corazon Marquee Lopez",
+    "status": "Approved Client",
     "isApproved": true,
     "affiliation": "DOST Regional Office 6",
     "designation": "Researcher",
@@ -176,6 +188,7 @@
       "value": "2025-06-02T00:00:00Z"
     },
     "name": "PJ Sy",
+    "status": "Approved Client",
     "isApproved": true,
     "affiliation": "UP Los Banos",
     "designation": "Faculty Researcher",
@@ -189,7 +202,8 @@
       "value": "2025-06-16T00:00:00Z"
     },
     "name": "Veronica Dolores Navarro",
-    "isApproved": true,
+    "status": "Pending",
+    "isApproved": false,
     "affiliation": "Division of Biological Sciences, College of Arts and Sciences, UP Visayas",
     "designation": "Faculty Researcher",
     "email": "veronica.navarro@up.edu.ph"
@@ -202,7 +216,8 @@
       "value": "2025-01-15T10:30:00Z"
     },
     "name": "Dr. Maria Santos",
-    "isApproved": true,
+    "status": "Quotation Only",
+    "isApproved": false,
     "affiliation": "University of the Philippines Manila",
     "designation": "Research Professor",
     "email": "maria.santos@upm.edu.ph"
@@ -215,6 +230,7 @@
       "value": "2025-02-03T14:15:00Z"
     },
     "name": "Dr. John Chen",
+    "status": "Pending",
     "isApproved": false,
     "affiliation": "Ateneo de Manila University",
     "designation": "Associate Professor",
@@ -228,6 +244,7 @@
       "value": "2025-02-18T09:45:00Z"
     },
     "name": "Dr. Sarah Williams",
+    "status": "Approved Client",
     "isApproved": true,
     "affiliation": "International Rice Research Institute",
     "designation": "Senior Research Scientist",
