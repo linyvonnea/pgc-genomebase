@@ -2,7 +2,7 @@
 export const mockProjects = [
   {
     pid: "P-2024-001",
-    cid: "CL-2024-001",
+    iid: "CL-2024-001",
     clientNames: ["Alex Villanueva"],
     year: 2024,
     startDate: "2024-06-05",
@@ -20,7 +20,7 @@ export const mockProjects = [
   },
   {
     pid: "P-2024-002",
-    cid: "CL-2024-002",
+    iid: "CL-2024-002",
     clientNames: ["Maria Santos"],
     year: 2023,
     startDate: "2023-10-15",

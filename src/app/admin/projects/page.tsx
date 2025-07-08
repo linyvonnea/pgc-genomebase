@@ -3,6 +3,9 @@ import { DataTable } from "./data-table"
 import { Project } from "@/types/Project"
 import { mockProjects } from "@/mock/mockProjects"
 import { projectSchema } from "@/schemas/projectSchema"
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { ProjectFormModal } from "@/app/admin/projects/modalform"
 
 async function getData(): Promise<Project[]> {
   // In a real app, you would fetch data from your API here.
@@ -14,6 +17,7 @@ async function getData(): Promise<Project[]> {
     // Convert string dates to Date objects for Zod validation
     const toValidate = {
       ...project,
+      iid: project.iid || "", 
       title: project.title || "Untitled Project",
       startDate: project.startDate ? new Date(project.startDate) : undefined,
       endDate: project.endDate ? new Date(project.endDate) : null,
@@ -38,15 +42,29 @@ export default async function ProjectPage() {
   const ongoingCount = data.filter(project => project.status === "Ongoing").length;
   const totalCount = data.length
 
-
   return (
     <div className="container mx-auto py-10">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
-          <p className="text-muted-foreground">
-            Manage and review the projects submitted to the genome database.
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
+            <p className="text-muted-foreground">
+              Manage and review the projects submitted to the genome database.
+            </p>
+          </div>
+
+          {/* Add New Record Button */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="default">Add New Record</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Project</DialogTitle>
+              </DialogHeader>
+              <ProjectFormModal />
+            </DialogContent>
+          </Dialog>
         </div>
 
          {/* Stats Cards */}
@@ -64,7 +82,6 @@ export default async function ProjectPage() {
             <div className="text-sm text-muted-foreground">Total Projects</div>
           </div>
         </div>
-        
         
         {/* Data Table */}
         <DataTable columns={columns} data={data} />
