@@ -19,6 +19,10 @@ interface Props {
   };
   referenceNumber: string;
   useInternalPrice: boolean;
+  preparedBy: {
+    name: string;
+    position: string;
+  };
 }
 
 export default function DownloadPDFWrapper({
@@ -26,6 +30,7 @@ export default function DownloadPDFWrapper({
   clientInfo,
   referenceNumber,
   useInternalPrice,
+  preparedBy,
 }: Props) {
   const [open, setOpen] = useState(false);
 
@@ -45,6 +50,7 @@ export default function DownloadPDFWrapper({
             clientInfo={clientInfo}
             referenceNumber={referenceNumber}
             useInternalPrice={useInternalPrice}
+            preparedBy={preparedBy}
           />
         </div>
         <PDFDownloadLink
@@ -54,6 +60,7 @@ export default function DownloadPDFWrapper({
               clientInfo={clientInfo}
               referenceNumber={referenceNumber}
               useInternalPrice={useInternalPrice}
+              preparedBy={preparedBy}
             />
           }
           fileName={`${referenceNumber}.pdf`}

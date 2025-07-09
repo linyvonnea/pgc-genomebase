@@ -1,5 +1,4 @@
 // src/app/admin/quotations/columns.tsx
-
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
@@ -12,6 +11,7 @@ const categoryColors: Record<string, string> = {
   bioinformatics: "bg-purple-100 text-purple-800",
   retail: "bg-orange-100 text-orange-800",
 };
+
 export const columns: ColumnDef<QuotationRecord>[] = [
   {
     accessorKey: "dateIssued",
@@ -40,25 +40,25 @@ export const columns: ColumnDef<QuotationRecord>[] = [
     accessorKey: "institution",
     header: "Institution",
   },
-    {
+  {
     accessorKey: "categories",
     header: "Category",
     cell: ({ row }) => {
-        const categories = row.getValue("categories") as string[];
-        return (
+      const categories = row.getValue("categories") as string[];
+      return (
         <div className="flex flex-wrap gap-1">
-            {categories.map((cat) => {
+          {categories.map((cat) => {
             const color = categoryColors[cat.toLowerCase()] || "bg-gray-100 text-gray-800";
             return (
-                <span key={cat} className={`px-2 py-0.5 rounded-full text-xs font-medium ${color}`}>
+              <span key={cat} className={`px-2 py-0.5 rounded-full text-xs font-medium ${color}`}>
                 {cat}
-                </span>
+              </span>
             );
-            })}
+          })}
         </div>
-        );
+      );
     },
-    },
+  },
   {
     accessorKey: "total",
     header: "Total",
@@ -67,8 +67,12 @@ export const columns: ColumnDef<QuotationRecord>[] = [
       return `₱${total.toLocaleString()}`;
     },
   },
-  {
+    {
     accessorKey: "preparedBy",
     header: "Prepared By",
+    cell: ({ row }) => {
+        const preparedBy = row.getValue("preparedBy") as { name: string; position: string };
+        return preparedBy?.name || "—";
+    },
   },
 ];

@@ -43,6 +43,7 @@ import {
 import { PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
 import { QuotationPDF } from "./QuotationPDF";
 import { QuotationHistoryPanel } from "./QuotationHistoryPanel";
+import useAuth from "@/hooks/useAuth";
 
 // Allow editable quantity ("" or number)
 type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & { quantity: number | "" };
@@ -65,6 +66,7 @@ export default function QuotationBuilder({
   const [search, setSearch] = useState("");
   const [referenceNumber, setReferenceNumber] = useState<string>("");
 
+  const { adminInfo } = useAuth();
   const searchParams = useSearchParams();
   const effectiveInquiryId = inquiryId || searchParams.get("inquiryId") || "";
 
@@ -79,14 +81,14 @@ export default function QuotationBuilder({
     enabled: !!effectiveInquiryId && !initialClientInfo,
   });
 
-    useEffect(() => {
+  useEffect(() => {
     const fetchRef = async () => {
-        const year = new Date().getFullYear();
-        const next = await generateNextReferenceNumber(year);
-        setReferenceNumber(next);
+      const year = new Date().getFullYear();
+      const next = await generateNextReferenceNumber(year);
+      setReferenceNumber(next);
     };
     fetchRef();
-    }, []);
+  }, []);
 
   const clientInfo = initialClientInfo
     ? initialClientInfo
@@ -198,25 +200,23 @@ export default function QuotationBuilder({
 
   return (
     <div className="p-6 flex gap-6">
-<div className="flex-1">
-  <div className="mb-6">
-    <h1 className="text-xl font-semibold mb-1">Build Quotation for:</h1>
-    <p className="text-muted-foreground">
-      {clientInfo.name} – {clientInfo.institution}, {clientInfo.designation}
-    </p>
-  </div>
+      <div className="flex-1">
+        <div className="mb-6">
+          <h1 className="text-xl font-semibold mb-1">Build Quotation for:</h1>
+          <p className="text-muted-foreground">
+            {clientInfo.name} – {clientInfo.institution}, {clientInfo.designation}
+          </p>
+        </div>
 
-  <div className="flex items-center justify-between mb-4">
-    <div className="flex gap-4 items-center">
-      <Checkbox
-        checked={isInternal}
-        onCheckedChange={(val: boolean) => setIsInternal(!!val)}
-      />
-      <span>Internal Client (Apply 12% discount)</span>
-    </div>
-  </div>
-
-
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex gap-4 items-center">
+            <Checkbox
+              checked={isInternal}
+              onCheckedChange={(val: boolean) => setIsInternal(!!val)}
+            />
+            <span>Internal Client (Apply 12% discount)</span>
+          </div>
+        </div>
 
         <Input
           placeholder="Search services..."
@@ -274,6 +274,10 @@ export default function QuotationBuilder({
                   clientInfo={clientInfo}
                   referenceNumber={referenceNumber}
                   useInternalPrice={isInternal}
+                  preparedBy={{
+                    name: adminInfo?.name || "—",
+                    position: adminInfo?.position || "—",
+                  }}
                 />
               </PDFViewer>
               <div className="text-right mt-4">
@@ -284,6 +288,10 @@ export default function QuotationBuilder({
                       clientInfo={clientInfo}
                       referenceNumber={referenceNumber}
                       useInternalPrice={isInternal}
+                      preparedBy={{
+                        name: adminInfo?.name || "—",
+                        position: adminInfo?.position || "—",
+                      }}
                     />
                   }
                   fileName={`${referenceNumber}.pdf`}
@@ -306,7 +314,10 @@ export default function QuotationBuilder({
                             subtotal,
                             discount,
                             total,
-                            preparedBy: "MA. CARMEL F. JAVIER, M.Sc.",
+                            preparedBy: {
+                              name: adminInfo?.name || "—",
+                              position: adminInfo?.position || "—",
+                            },
                             categories: Array.from(
                               new Set(cleanedServices.map((s) => s.type))
                             ),

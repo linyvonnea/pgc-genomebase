@@ -1,4 +1,3 @@
-// File: src/components/quotation/QuotationPDF.tsx
 "use client";
 
 import {
@@ -103,6 +102,7 @@ export function QuotationPDF({
   clientInfo,
   referenceNumber,
   useInternalPrice,
+  preparedBy,
 }: {
   services: SelectedService[];
   clientInfo: {
@@ -113,6 +113,10 @@ export function QuotationPDF({
   };
   referenceNumber: string;
   useInternalPrice: boolean;
+  preparedBy: {
+    name: string;
+    position: string;
+  };
 }) {
   const groupedByCategory = services.reduce<Record<string, SelectedService[]>>(
     (acc, svc) => {
@@ -203,9 +207,11 @@ export function QuotationPDF({
         <View style={styles.signature}>
           <Text>Sincerely,</Text>
           <Text style={{ fontWeight: "bold", marginTop: 24 }}>
-            MA. CARMEL F. JAVIER, M.Sc.
+            {preparedBy.name}
           </Text>
-          <Text><Text style={{ fontStyle: "italic" }}>University Researcher 1</Text></Text>
+          <Text>
+            <Text style={{ fontStyle: "italic" }}>{preparedBy.position}</Text>
+          </Text>
         </View>
       </Page>
     </Document>

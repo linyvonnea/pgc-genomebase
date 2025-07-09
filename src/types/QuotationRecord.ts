@@ -5,7 +5,6 @@ import { SelectedService } from "./SelectedService";
  * Represents a generated quotation record.
  */
 export type QuotationRecord = {
-    
   referenceNumber: string;
   clientInfo: {
     name: string;
@@ -15,5 +14,9 @@ export type QuotationRecord = {
   };
   services: SelectedService[];
   isInternal: boolean;
-  dateIssued: string; // ISO date string
+  dateIssued: string;
+  preparedBy: {
+    name: string;
+    position: string;
+  };
 };

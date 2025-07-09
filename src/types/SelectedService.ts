@@ -10,4 +10,3 @@ export interface EditableSelectedService extends ServiceItem {
 export interface SelectedService extends ServiceItem {
   quantity: number;
 }
-

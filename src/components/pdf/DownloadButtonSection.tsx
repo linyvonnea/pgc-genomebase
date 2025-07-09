@@ -4,12 +4,18 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import type { SelectedService } from "@/types/SelectedService";
 import { QuotationPDF } from "@/components/quotation/QuotationPDF";
 import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 
-export default function DownloadButtonSection(props: {
+interface Props {
   referenceNumber: string;
   services: SelectedService[];
   clientInfo: {
@@ -19,7 +25,13 @@ export default function DownloadButtonSection(props: {
     email: string;
   };
   useInternalPrice: boolean;
-}) {
+  preparedBy: {
+    name: string;
+    position: string;
+  };
+}
+
+export default function DownloadButtonSection(props: Props) {
   const [open, setOpen] = useState(false);
 
   return (
