@@ -6,6 +6,7 @@ import {
   SidebarInset,
 } from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function AdminLayout({
   children,
