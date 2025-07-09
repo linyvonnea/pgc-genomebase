@@ -15,7 +15,7 @@ const validateClient = (data: any) => {
 
 export const columns: ColumnDef<Client>[] = [
   {
-    accessorKey: "id",
+    accessorKey: "pid",
     header: "Project ID",
   },
   {
@@ -47,8 +47,8 @@ export const columns: ColumnDef<Client>[] = [
     header: "Sex",
   },
   {
-    accessorKey: "mobileNumber",
-    header: "Mobile Number",
+    accessorKey: "phoneNumber",
+    header: "Phone Number",
   },
  
 ]
