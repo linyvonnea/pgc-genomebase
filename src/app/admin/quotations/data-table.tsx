@@ -56,11 +56,13 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const allCategories = Array.from(
-    new Set(
-      data.flatMap((row: any) => (row.categories ? row.categories : []))
-    )
-  ).sort();
+  // Static categories to always show all
+  const allCategories = [
+    "Laboratory",
+    "Equipment",
+    "Bioinformatics",
+    "Retail Sales",
+  ];
 
   const filteredRows = table
     .getRowModel()
@@ -75,7 +77,10 @@ export function DataTable<TData, TValue>({
 
       const matchesCategory =
         categoryFilter === "__all" ||
-        (row.original as any).categories?.includes(categoryFilter);
+        (row.original as any).categories?.some(
+          (cat: string) =>
+            cat.toLowerCase() === categoryFilter.toLowerCase()
+        );
 
       return matchesSearch && matchesCategory;
     });

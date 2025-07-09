@@ -50,13 +50,20 @@ export default function QuotationDetailPageClient() {
     preparedBy,
   } = quotation;
 
+  const preparedByText =
+    typeof preparedBy === "string"
+      ? preparedBy
+      : `${preparedBy?.name ?? "—"}, ${preparedBy?.position ?? ""}`;
+
   return (
     <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Quotation Details</h1>
-          <p className="text-muted-foreground">Reference No: <span className="font-medium">{referenceNumber}</span></p>
+          <p className="text-muted-foreground">
+            Reference No: <span className="font-medium">{referenceNumber}</span>
+          </p>
         </div>
         <Button variant="outline" onClick={() => router.push("/admin/quotations")}>
           ← Back to List
@@ -66,12 +73,24 @@ export default function QuotationDetailPageClient() {
       {/* Detail Section */}
       <div className="rounded-md border bg-white shadow-sm p-6 space-y-4 text-sm">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><span className="text-muted-foreground">Prepared By:</span> <strong>{preparedBy || "—"}</strong></div>
-          <div><span className="text-muted-foreground">Date Issued:</span> {new Date(dateIssued).toLocaleDateString()}</div>
-          <div><span className="text-muted-foreground">Client:</span> {name} ({email})</div>
-          <div><span className="text-muted-foreground">Designation:</span> {designation}</div>
-          <div><span className="text-muted-foreground">Institution:</span> {institution}</div>
-          <div className="flex items-center gap-1">
+          <div>
+            <span className="text-muted-foreground">Prepared By:</span>{" "}
+            <strong>{preparedByText}</strong>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Date Issued:</span>{" "}
+            {new Date(dateIssued).toLocaleDateString()}
+          </div>
+          <div>
+            <span className="text-muted-foreground">Client:</span> {name} ({email})
+          </div>
+          <div>
+            <span className="text-muted-foreground">Designation:</span> {designation}
+          </div>
+          <div>
+            <span className="text-muted-foreground">Institution:</span> {institution}
+          </div>
+          <div className="flex items-center gap-1 flex-wrap">
             <span className="text-muted-foreground">Categories:</span>
             {categories.map((cat) => (
               <Badge key={cat} className="capitalize">
@@ -83,9 +102,15 @@ export default function QuotationDetailPageClient() {
 
         {/* Financials */}
         <div className="pt-4 border-t mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><span className="text-muted-foreground">Subtotal:</span> ₱{subtotal.toLocaleString()}</div>
+          <div>
+            <span className="text-muted-foreground">Subtotal:</span> ₱
+            {subtotal.toLocaleString()}
+          </div>
           {isInternal && (
-            <div><span className="text-muted-foreground">Discount (12%):</span> ₱{discount.toLocaleString()}</div>
+            <div>
+              <span className="text-muted-foreground">Discount (12%):</span> ₱
+              {discount.toLocaleString()}
+            </div>
           )}
           <div className="col-span-full text-lg font-semibold">
             Total: <span className="text-primary">₱{total.toLocaleString()}</span>
@@ -101,6 +126,11 @@ export default function QuotationDetailPageClient() {
           services={services}
           clientInfo={{ name, email, institution, designation }}
           useInternalPrice={isInternal}
+          preparedBy={
+            typeof preparedBy === "string"
+              ? { name: preparedBy, position: "—" }
+              : preparedBy
+          }
         />
       </div>
     </div>

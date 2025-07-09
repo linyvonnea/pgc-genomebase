@@ -16,12 +16,13 @@ export default function QuotationPDFClient({
         referenceNumber={quotation.referenceNumber}
         services={quotation.services}
         clientInfo={{
-            name: quotation.name,
-            email: quotation.email,
-            institution: quotation.institution,
-            designation: quotation.designation,
-            }}
+          name: quotation.name,
+          email: quotation.email,
+          institution: quotation.institution,
+          designation: quotation.designation,
+        }}
         useInternalPrice={quotation.isInternal}
+        preparedBy={quotation.preparedBy}
       />
     </PDFViewer>
   );

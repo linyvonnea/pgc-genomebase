@@ -1,25 +1,29 @@
-// src/types/Quotation.ts
 import { ServiceItem } from "./ServiceItem";
+import { SelectedService } from "./SelectedService";
 
-export type SelectedService = ServiceItem & {
-  quantity: number;
-};
-
+/**
+ * Represents a finalized quotation record stored in Firestore.
+ */
 export interface QuotationRecord {
-  id?: string;
+  id?: string; // Optional Firestore document ID
   referenceNumber: string;
   name: string;
   institution: string;
   designation: string;
   email: string;
-  services: SelectedService[]; // Use proper type
+  services: SelectedService[]; // Each service must include a fixed quantity
   isInternal: boolean;
-  dateIssued: string;
+  dateIssued: string; // ISO 8601 string
   year: number;
   subtotal: number;
   discount: number;
   total: number;
-  preparedBy: string;
-  categories: string[];
-  inquiryId: string;
+  preparedBy: {
+    name: string;
+    position: string;
+  };
+  categories: string[]; // ["Laboratory", "Equipment", ...]
+  inquiryId: string; // Link to source inquiry
 }
+
+export type { SelectedService };

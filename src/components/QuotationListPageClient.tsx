@@ -1,4 +1,3 @@
-// src/components/quotation/QuotationListPageClient.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -58,13 +57,18 @@ export default function QuotationListPageClient() {
       .some((val) => val.toLowerCase().includes(search.toLowerCase()));
 
     const matchesCategory =
-      filterCategory && filterCategory !== "__all"
+      filterCategory !== "__all"
         ? q.categories.includes(filterCategory)
         : true;
 
+    const preparedName =
+      typeof q.preparedBy === "string"
+        ? q.preparedBy
+        : q.preparedBy?.name || "";
+
     const matchesPreparedBy =
-      filterPreparedBy && filterPreparedBy !== "__all"
-        ? q.preparedBy === filterPreparedBy
+      filterPreparedBy !== "__all"
+        ? preparedName === filterPreparedBy
         : true;
 
     return matchesSearch && matchesCategory && matchesPreparedBy;
@@ -76,8 +80,12 @@ export default function QuotationListPageClient() {
 
   const allPreparers = unique(
     allQuotations
-      .map((r) => r.preparedBy)
-      .filter((name): name is string => !!name && name.trim() !== "")
+      .map((r) =>
+        typeof r.preparedBy === "string"
+          ? r.preparedBy
+          : r.preparedBy?.name ?? ""
+      )
+      .filter((name) => name.trim() !== "")
   );
 
   return (
@@ -142,32 +150,44 @@ export default function QuotationListPageClient() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filtered.map((q) => (
-            <TableRow
-              key={q.referenceNumber}
-              className="cursor-pointer hover:bg-muted"
-              onClick={() => {
-                router.push(`/admin/quotations/${q.referenceNumber}`);
-              }}
-            >
-              <TableCell>{new Date(q.dateIssued).toLocaleDateString()}</TableCell>
-              <TableCell>{q.referenceNumber}</TableCell>
-              <TableCell>{q.name}</TableCell>
-              <TableCell>{q.designation}</TableCell>
-              <TableCell>{q.institution}</TableCell>
-              <TableCell>
-                <div className="flex flex-wrap gap-1">
-                  {q.categories.map((cat) => (
-                    <Badge key={cat} className={categoryColors[cat] || "bg-gray-100 text-gray-800"}>
-                      {cat}
-                    </Badge>
-                  ))}
-                </div>
-              </TableCell>
-              <TableCell>₱{q.total.toLocaleString()}</TableCell>
-              <TableCell>{q.preparedBy}</TableCell>
-            </TableRow>
-          ))}
+          {filtered.map((q) => {
+            const preparedName =
+              typeof q.preparedBy === "string"
+                ? q.preparedBy
+                : q.preparedBy?.name || "—";
+
+            return (
+              <TableRow
+                key={q.referenceNumber}
+                className="cursor-pointer hover:bg-muted"
+                onClick={() => {
+                  router.push(`/admin/quotations/${q.referenceNumber}`);
+                }}
+              >
+                <TableCell>
+                  {new Date(q.dateIssued).toLocaleDateString()}
+                </TableCell>
+                <TableCell>{q.referenceNumber}</TableCell>
+                <TableCell>{q.name}</TableCell>
+                <TableCell>{q.designation}</TableCell>
+                <TableCell>{q.institution}</TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {q.categories.map((cat) => (
+                      <Badge
+                        key={cat}
+                        className={categoryColors[cat] || "bg-gray-100 text-gray-800"}
+                      >
+                        {cat}
+                      </Badge>
+                    ))}
+                  </div>
+                </TableCell>
+                <TableCell>₱{q.total.toLocaleString()}</TableCell>
+                <TableCell>{preparedName}</TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

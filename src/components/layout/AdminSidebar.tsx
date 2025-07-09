@@ -1,5 +1,3 @@
-// src/components/layout/AdminSidebar.tsx
-// src/components/layout/AdminSidebar.tsx
 "use client";
 
 import Link from "next/link";
@@ -22,9 +20,11 @@ import {
   LibraryBig,
   MessageSquare,
 } from "lucide-react";
+import useAuth from "@/hooks/useAuth";
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const { user, signOut } = useAuth();
 
   const isActive = (href: string) => pathname === href;
 
@@ -73,7 +73,6 @@ export function AdminSidebar() {
               </Link>
             </SidebarMenuItem>
 
-            {/* Simplified Quotations */}
             <SidebarMenuItem>
               <Link href="/admin/quotations">
                 <SidebarMenuButton isActive={isActive("/admin/quotations")}>
@@ -101,6 +100,20 @@ export function AdminSidebar() {
               </Link>
             </SidebarMenuItem>
           </SidebarMenu>
+
+          {/* Admin Info and Logout */}
+          {user && (
+            <div className="mt-auto px-4 py-6 border-t text-sm text-muted-foreground space-y-1">
+              <div className="font-medium">{user.displayName}</div>
+              <div className="truncate">{user.email}</div>
+              <button
+                onClick={signOut}
+                className="text-blue-600 hover:underline text-sm"
+              >
+                Log out
+              </button>
+            </div>
+          )}
         </SidebarContent>
       </Sidebar>
     </SidebarProvider>

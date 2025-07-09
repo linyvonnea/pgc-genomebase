@@ -9,7 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useQuery } from "@tanstack/react-query";
 import { getAllQuotations } from "@/services/quotationService";
@@ -46,12 +45,29 @@ export default function QuotationList() {
               <TableCell>{q.name}</TableCell>
               <TableCell>{q.designation}</TableCell>
               <TableCell>{q.institution}</TableCell>
-              <TableCell>₱{q.subtotal?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
-              <TableCell>₱{q.discount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
-              <TableCell className="font-semibold text-primary">
-                ₱{q.total?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              <TableCell>
+                ₱
+                {q.subtotal?.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                })}
               </TableCell>
-              <TableCell>{q.preparedBy}</TableCell>
+              <TableCell>
+                ₱
+                {q.discount?.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                })}
+              </TableCell>
+              <TableCell className="font-semibold text-primary">
+                ₱
+                {q.total?.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                })}
+              </TableCell>
+              <TableCell>
+                {typeof q.preparedBy === "string"
+                  ? q.preparedBy
+                  : `${q.preparedBy?.name ?? "N/A"}, ${q.preparedBy?.position ?? "N/A"}`}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
