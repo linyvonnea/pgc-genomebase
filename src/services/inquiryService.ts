@@ -59,38 +59,15 @@ export async function getInquiries(): Promise<Inquiry[]> {
   }
 }
 
-export async function createInquiry(formData: InquiryFormData): Promise<string> {
+export const createInquiry = async (inquiryData: any) => {
   try {
-    const inquiriesRef = collection(db, "inquiries");
-    
-    // Prepare the data for Firebase
-    const inquiryData = {
-      name: formData.name,
-      affiliation: formData.affiliation,
-      designation: formData.designation,
-      workflows: formData.workflows || [],
-      additionalInfo: formData.additionalInfo || '',
-      projectBackground: formData.projectBackground || '',
-      projectBudget: formData.projectBudget || '',
-      status: 'Pending' as const,
-      isApproved: false,
-      year: new Date().getFullYear(),
-      createdAt: serverTimestamp(), // This will be set by Firebase server
-      email: null, // Will be set when authentication is implemented
-    };
-    
-    console.log("Creating inquiry with data:", inquiryData);
-    
-    const docRef = await addDoc(inquiriesRef, inquiryData);
-    console.log("Inquiry created with ID:", docRef.id);
-    
+    const docRef = await addDoc(collection(db, "inquiries"), inquiryData);
     return docRef.id;
   } catch (error) {
     console.error("Error creating inquiry:", error);
-    throw new Error("Failed to create inquiry");
+    throw error;
   }
-}
-
+};
 
 export async function getInquiryById(id: string): Promise<Inquiry> {
   try {
