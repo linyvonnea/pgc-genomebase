@@ -198,17 +198,25 @@ export default function QuotationBuilder({
 
   return (
     <div className="p-6 flex gap-6">
-      <div className="flex-1">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Quotation Builder</h2>
-          <div className="flex gap-4 items-center">
-            <Checkbox
-              checked={isInternal}
-              onCheckedChange={(val: boolean) => setIsInternal(!!val)}
-            />
-            <span>Internal Client (Apply 12% discount)</span>
-          </div>
-        </div>
+<div className="flex-1">
+  <div className="mb-6">
+    <h1 className="text-xl font-semibold mb-1">Build Quotation for:</h1>
+    <p className="text-muted-foreground">
+      {clientInfo.name} – {clientInfo.institution}, {clientInfo.designation}
+    </p>
+  </div>
+
+  <div className="flex items-center justify-between mb-4">
+    <div className="flex gap-4 items-center">
+      <Checkbox
+        checked={isInternal}
+        onCheckedChange={(val: boolean) => setIsInternal(!!val)}
+      />
+      <span>Internal Client (Apply 12% discount)</span>
+    </div>
+  </div>
+
+
 
         <Input
           placeholder="Search services..."

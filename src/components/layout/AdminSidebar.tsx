@@ -1,4 +1,5 @@
 // src/components/layout/AdminSidebar.tsx
+// src/components/layout/AdminSidebar.tsx
 "use client";
 
 import Link from "next/link";
@@ -11,25 +12,19 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarProvider,
-  SidebarInset,
 } from "@/components/ui/sidebar";
 import {
   Home,
   Users,
   Settings,
   FileText,
-  FileBox,
   LayoutDashboard,
-  ChevronDown,
-  ChevronRight,
   LibraryBig,
-  MessageSquare
+  MessageSquare,
 } from "lucide-react";
-import { useState } from "react";
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const [isQuotationsOpen, setIsQuotationsOpen] = useState(true);
 
   const isActive = (href: string) => pathname === href;
 
@@ -44,7 +39,7 @@ export function AdminSidebar() {
           <SidebarMenu>
             <SidebarMenuItem>
               <Link href="/admin/dashboard">
-                <SidebarMenuButton isActive={isActive("/admin/dashboard")}> 
+                <SidebarMenuButton isActive={isActive("/admin/dashboard")}>
                   <LayoutDashboard className="size-4" />
                   Dashboard
                 </SidebarMenuButton>
@@ -53,7 +48,7 @@ export function AdminSidebar() {
 
             <SidebarMenuItem>
               <Link href="/admin/clients">
-                <SidebarMenuButton isActive={isActive("/admin/clients")}> 
+                <SidebarMenuButton isActive={isActive("/admin/clients")}>
                   <Users className="size-4" />
                   Clients
                 </SidebarMenuButton>
@@ -62,7 +57,7 @@ export function AdminSidebar() {
 
             <SidebarMenuItem>
               <Link href="/admin/projects">
-                <SidebarMenuButton isActive={isActive("/admin/projects")}> 
+                <SidebarMenuButton isActive={isActive("/admin/projects")}>
                   <LibraryBig className="size-4" />
                   Projects
                 </SidebarMenuButton>
@@ -71,50 +66,26 @@ export function AdminSidebar() {
 
             <SidebarMenuItem>
               <Link href="/admin/inquiry">
-                <SidebarMenuButton isActive={isActive("/admin/inquiry")}> 
+                <SidebarMenuButton isActive={isActive("/admin/inquiry")}>
                   <MessageSquare className="size-4" />
                   Inquiries
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
 
-            {/* Quotations with submenu */}
+            {/* Simplified Quotations */}
             <SidebarMenuItem>
-              <button
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded hover:bg-muted transition"
-                onClick={() => setIsQuotationsOpen(!isQuotationsOpen)}
-              >
-                <FileText className="size-4" />
-                <span className="flex-1 text-left">Quotations</span>
-                {isQuotationsOpen ? (
-                  <ChevronDown className="size-4" />
-                ) : (
-                  <ChevronRight className="size-4" />
-                )}
-              </button>
-              {isQuotationsOpen && (
-                <div className="ml-6 mt-1 space-y-1">
-                  <Link href="/admin/quotations/laboratory">
-                    <SidebarMenuButton
-                      isActive={isActive("/admin/quotations/laboratory")}
-                    >
-                      <FileBox className="size-4" /> Laboratory
-                    </SidebarMenuButton>
-                  </Link>
-                  <Link href="/admin/quotations/equipment">
-                    <SidebarMenuButton
-                      isActive={isActive("/admin/quotations/equipment")}
-                    >
-                      <FileBox className="size-4" /> Equipment
-                    </SidebarMenuButton>
-                  </Link>
-                </div>
-              )}
+              <Link href="/admin/quotations">
+                <SidebarMenuButton isActive={isActive("/admin/quotations")}>
+                  <FileText className="size-4" />
+                  Quotations
+                </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
 
             <SidebarMenuItem>
               <Link href="/admin/charge-slips">
-                <SidebarMenuButton isActive={isActive("/admin/charge-slips")}> 
+                <SidebarMenuButton isActive={isActive("/admin/charge-slips")}>
                   <FileText className="size-4" />
                   Charge Slips
                 </SidebarMenuButton>
@@ -123,7 +94,7 @@ export function AdminSidebar() {
 
             <SidebarMenuItem>
               <Link href="/admin/settings">
-                <SidebarMenuButton isActive={isActive("/admin/settings")}> 
+                <SidebarMenuButton isActive={isActive("/admin/settings")}>
                   <Settings className="size-4" />
                   Settings
                 </SidebarMenuButton>
