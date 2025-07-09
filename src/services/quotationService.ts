@@ -99,29 +99,33 @@ export async function getAllQuotations(): Promise<QuotationRecord[]> {
   return records;
 }
 
+
+
 /**
- * Dynamically generate the next reference number based on existing Firestore data.
+ * Generates the next reference number from Firestore quotations.
  * Format: VMENF-Q-YYYY-XXX
  */
-export async function generateNextReferenceNumber(year: number): Promise<string> {
+export async function generateNextReferenceNumber(currentYear: number): Promise<string> {
+  const prefix = `VMENF-Q-${currentYear}`;
   const quotationsRef = collection(db, "quotations");
+
   const q = query(
     quotationsRef,
-    where("referenceNumber", ">=", `VMENF-Q-${year}-000`),
-    where("referenceNumber", "<=", `VMENF-Q-${year}-999`),
-    // orderBy("referenceNumber", "desc")
+    where("referenceNumber", ">=", `${prefix}-000`),
+    where("referenceNumber", "<=", `${prefix}-999`),
+    orderBy("referenceNumber", "desc")
   );
 
   const snapshot = await getDocs(q);
-  const latestRef = snapshot.docs[0]?.data()?.referenceNumber;
 
   let nextNumber = 1;
-  if (latestRef) {
-    const parts = latestRef.split("-");
-    const lastNum = parseInt(parts[3], 10);
+
+  if (!snapshot.empty) {
+    const lastRef = snapshot.docs[0].data().referenceNumber;
+    const lastNum = parseInt(lastRef.split("-").pop() || "0", 10);
     nextNumber = lastNum + 1;
   }
 
   const padded = String(nextNumber).padStart(3, "0");
-  return `VMENF-Q-${year}-${padded}`;
+  return `${prefix}-${padded}`;
 }

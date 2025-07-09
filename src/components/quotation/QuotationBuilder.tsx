@@ -79,14 +79,14 @@ export default function QuotationBuilder({
     enabled: !!effectiveInquiryId && !initialClientInfo,
   });
 
-  useEffect(() => {
+    useEffect(() => {
     const fetchRef = async () => {
-      const year = new Date().getFullYear();
-      const next = await generateNextReferenceNumber(year);
-      setReferenceNumber(next);
+        const year = new Date().getFullYear();
+        const next = await generateNextReferenceNumber(year);
+        setReferenceNumber(next);
     };
     fetchRef();
-  }, []);
+    }, []);
 
   const clientInfo = initialClientInfo
     ? initialClientInfo
