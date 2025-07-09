@@ -1,10 +1,5 @@
-// src/app/admin/quotations/page.tsx
-import QuotationBuilder from "@/components/quotation/QuotationBuilder";
+import QuotationListPageClient from "@/components/QuotationListPageClient";
 
-export default function QuotationBuilderPage() {
-  return (
-    <div className="p-6">
-      <QuotationBuilder />
-    </div>
-  );
+export default function QuotationListPage() {
+  return <QuotationListPageClient />;
 }

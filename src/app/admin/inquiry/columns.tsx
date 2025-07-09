@@ -1,3 +1,4 @@
+// src/app/admin/inquiry/columns.tsx
 "use client";
 
 import { useRouter } from "next/navigation";

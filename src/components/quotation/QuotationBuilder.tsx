@@ -1,15 +1,18 @@
 // src/components/quotation/QuotationBuilder.tsx
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 
-import mockCatalog from "@/mock/mock_catalog.json";
-import { mockInquiries } from "@/mock/mockInquiries";
+import { getServiceCatalog } from "@/services/serviceCatalogService";
+import { getInquiryById } from "@/services/inquiryService";
 
-import { SelectedService } from "@/types/SelectedService";
+import { SelectedService as StrictSelectedService } from "@/types/SelectedService";
 import { ServiceItem } from "@/types/ServiceItem";
+import { Inquiry } from "@/types/Inquiry";
 
+import { saveQuotationToFirestore, generateNextReferenceNumber } from "@/services/quotationService";
 import {
   Accordion,
   AccordionContent,
@@ -39,16 +42,15 @@ import {
 
 import { PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
 import { QuotationPDF } from "./QuotationPDF";
-
-import {
-  mockQuotationHistory,
-  addMockQuotation,
-} from "@/mock/mockQuotationHistory";
-
 import { QuotationHistoryPanel } from "./QuotationHistoryPanel";
-import { generateNextReferenceNumber } from "@/lib/generateReferenceNumber";
 
-type QuotationBuilderProps = {
+// Allow editable quantity ("" or number)
+type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & { quantity: number | "" };
+
+export default function QuotationBuilder({
+  inquiryId,
+  initialClientInfo,
+}: {
   inquiryId?: string;
   initialClientInfo?: {
     name: string;
@@ -56,42 +58,53 @@ type QuotationBuilderProps = {
     designation: string;
     email: string;
   };
-};
-
-export default function QuotationBuilder({
-  inquiryId,
-  initialClientInfo,
-}: QuotationBuilderProps) {
-  const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
+}) {
+  const [selectedServices, setSelectedServices] = useState<EditableSelectedService[]>([]);
   const [isInternal, setIsInternal] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
   const [search, setSearch] = useState("");
+  const [referenceNumber, setReferenceNumber] = useState<string>("");
 
   const searchParams = useSearchParams();
   const effectiveInquiryId = inquiryId || searchParams.get("inquiryId") || "";
 
-  const matchedInquiry = !initialClientInfo
-    ? mockInquiries.find((inq) => inq.id === effectiveInquiryId)
-    : null;
+  const { data: catalog = [] } = useQuery({
+    queryKey: ["serviceCatalog"],
+    queryFn: getServiceCatalog,
+  });
+
+  const { data: inquiryData } = useQuery<Inquiry | undefined>({
+    queryKey: ["inquiry", effectiveInquiryId],
+    queryFn: () => getInquiryById(effectiveInquiryId),
+    enabled: !!effectiveInquiryId && !initialClientInfo,
+  });
+
+    useEffect(() => {
+    const fetchRef = async () => {
+        const year = new Date().getFullYear();
+        const next = await generateNextReferenceNumber(year);
+        setReferenceNumber(next);
+    };
+    fetchRef();
+    }, []);
 
   const clientInfo = initialClientInfo
     ? initialClientInfo
-    : matchedInquiry
+    : inquiryData
     ? {
-        name: matchedInquiry.name,
-        institution: matchedInquiry.affiliation,
-        designation: matchedInquiry.designation,
-        email: matchedInquiry.email,
+        name: inquiryData.name,
+        institution: inquiryData.affiliation,
+        designation: inquiryData.designation,
+        email: inquiryData.email ?? "",
       }
     : {
         name: "Unknown",
         institution: "N/A",
         designation: "N/A",
-        email: "N/A",
+        email: "",
       };
 
   const currentYear = new Date().getFullYear();
-  const nextReferenceNumber = generateNextReferenceNumber(currentYear);
 
   const toggleService = (id: string, service: ServiceItem) => {
     setSelectedServices((prev) => {
@@ -101,13 +114,17 @@ export default function QuotationBuilder({
     });
   };
 
-  const updateQuantity = (id: string, qty: number) => {
+  const updateQuantity = (id: string, qty: number | "") => {
     setSelectedServices((prev) =>
       prev.map((svc) => (svc.id === id ? { ...svc, quantity: qty } : svc))
     );
   };
 
-  const subtotal = selectedServices.reduce(
+  const cleanedServices: StrictSelectedService[] = selectedServices
+    .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
+    .map((s) => ({ ...s, quantity: s.quantity as number }));
+
+  const subtotal = cleanedServices.reduce(
     (sum, item) => sum + item.quantity * item.price,
     0
   );
@@ -116,14 +133,14 @@ export default function QuotationBuilder({
 
   const groupedByType = useMemo(() => {
     const result: Record<string, ServiceItem[]> = {};
-    for (const item of mockCatalog as ServiceItem[]) {
+    for (const item of catalog) {
       if (!search || item.name.toLowerCase().includes(search.toLowerCase())) {
         if (!result[item.type]) result[item.type] = [];
         result[item.type].push(item);
       }
     }
     return result;
-  }, [search]);
+  }, [search, catalog]);
 
   const renderTable = (services: ServiceItem[]) => (
     <Table>
@@ -140,8 +157,11 @@ export default function QuotationBuilder({
       <TableBody>
         {services.map((item) => {
           const isSelected = selectedServices.find((s) => s.id === item.id);
-          const quantity = isSelected?.quantity || 1;
-          const amount = isSelected ? item.price * quantity : 0;
+          const quantity = isSelected?.quantity ?? "";
+          const amount =
+            isSelected && typeof quantity === "number"
+              ? item.price * quantity
+              : 0;
 
           return (
             <TableRow key={item.id}>
@@ -153,17 +173,22 @@ export default function QuotationBuilder({
               </TableCell>
               <TableCell>{item.name}</TableCell>
               <TableCell>{item.unit}</TableCell>
-              <TableCell>₱{item.price.toFixed(2)}</TableCell>
+              <TableCell>{item.price.toFixed(2)}</TableCell>
               <TableCell>
                 <Input
                   type="number"
-                  min={1}
+                  min={0}
                   value={quantity}
-                  onChange={(e) => updateQuantity(item.id, +e.target.value)}
+                  onChange={(e) =>
+                    updateQuantity(
+                      item.id,
+                      e.target.value === "" ? "" : +e.target.value
+                    )
+                  }
                   disabled={!isSelected}
                 />
               </TableCell>
-              <TableCell>₱{amount.toFixed(2)}</TableCell>
+              <TableCell>{amount.toFixed(2)}</TableCell>
             </TableRow>
           );
         })}
@@ -173,7 +198,6 @@ export default function QuotationBuilder({
 
   return (
     <div className="p-6 flex gap-6">
-      {/* LEFT PANEL */}
       <div className="flex-1">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Quotation Builder</h2>
@@ -207,11 +231,10 @@ export default function QuotationBuilder({
         </ScrollArea>
       </div>
 
-      {/* RIGHT SUMMARY PANEL */}
       <div className="w-96 shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
         <h3 className="text-lg font-bold mb-2">Summary</h3>
         <Separator className="mb-2" />
-        {selectedServices.map((item) => (
+        {cleanedServices.map((item) => (
           <div key={item.id} className="flex justify-between text-sm mb-1">
             <span>
               {item.name} x {item.quantity}
@@ -239,39 +262,52 @@ export default function QuotationBuilder({
             <div className="mt-4">
               <PDFViewer width="100%" height="600">
                 <QuotationPDF
-                  services={selectedServices}
+                  services={cleanedServices}
                   clientInfo={clientInfo}
-                  referenceNumber={nextReferenceNumber}
+                  referenceNumber={referenceNumber}
                   useInternalPrice={isInternal}
-                  remarks="For confirmation. Valid for 30 days."
                 />
               </PDFViewer>
               <div className="text-right mt-4">
                 <PDFDownloadLink
                   document={
                     <QuotationPDF
-                      services={selectedServices}
+                      services={cleanedServices}
                       clientInfo={clientInfo}
-                      referenceNumber={nextReferenceNumber}
+                      referenceNumber={referenceNumber}
                       useInternalPrice={isInternal}
-                      remarks="For confirmation. Valid for 30 days."
                     />
                   }
-                  fileName={`${nextReferenceNumber}.pdf`}
+                  fileName={`${referenceNumber}.pdf`}
                 >
                   {({ loading }) => (
                     <Button
                       disabled={loading}
-                      onClick={() => {
-                        addMockQuotation(effectiveInquiryId, {
-                          referenceNumber: nextReferenceNumber,
-                          clientInfo,
-                          services: selectedServices,
-                          isInternal,
-                          remarks: "For confirmation. Valid for 30 days.",
-                          dateIssued: new Date().toISOString(),
-                          year: currentYear,
-                        });
+                      onClick={async () => {
+                        try {
+                          const quotationToSave = {
+                            referenceNumber,
+                            name: clientInfo.name,
+                            institution: clientInfo.institution,
+                            designation: clientInfo.designation,
+                            email: clientInfo.email,
+                            services: cleanedServices,
+                            isInternal,
+                            dateIssued: new Date().toISOString(),
+                            year: currentYear,
+                            subtotal,
+                            discount,
+                            total,
+                            preparedBy: "MA. CARMEL F. JAVIER, M.Sc.",
+                            categories: Array.from(
+                              new Set(cleanedServices.map((s) => s.type))
+                            ),
+                            inquiryId: effectiveInquiryId.trim(),
+                          };
+                          await saveQuotationToFirestore(quotationToSave);
+                        } catch (err) {
+                          console.error("Failed to save quotation", err);
+                        }
                       }}
                     >
                       {loading ? "Preparing..." : "Generate Final Quotation"}

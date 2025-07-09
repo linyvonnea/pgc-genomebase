@@ -1,3 +1,4 @@
+// src/app/admin/inquiry/data-table.tsx
 "use client"
 
 import {

@@ -1,4 +1,4 @@
-// src/app/admin/quotations/builder.tsx
+// src/app/admin/quotations/builder/page.tsx
 "use client";
 
 import QuotationBuilder from "@/components/quotation/QuotationBuilder";

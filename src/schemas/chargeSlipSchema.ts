@@ -5,7 +5,6 @@ export const chargeSlipSchema = z.object({
   projectId: z.string(),
   preparedBy: z.string(),
   dateIssued: z.date(),
-  remarks: z.string().optional(),
   amount: z.number().min(0),
 });
 
