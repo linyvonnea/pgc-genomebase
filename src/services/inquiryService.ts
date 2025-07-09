@@ -2,6 +2,7 @@ import { collection, getDocs, addDoc, serverTimestamp, query, orderBy } from "fi
 import { db } from "@/lib/firebase";
 import { Inquiry } from "@/types/Inquiry";
 import { InquiryFormData } from "@/schemas/inquirySchema";
+import { doc, getDoc } from "firebase/firestore";
 
 export async function getInquiries(): Promise<Inquiry[]> {
   try {
@@ -87,5 +88,32 @@ export async function createInquiry(formData: InquiryFormData): Promise<string> 
   } catch (error) {
     console.error("Error creating inquiry:", error);
     throw new Error("Failed to create inquiry");
+  }
+}
+
+
+export async function getInquiryById(id: string): Promise<Inquiry> {
+  try {
+    const docRef = doc(db, "inquiries", id);
+    const snap = await getDoc(docRef);
+
+    if (!snap.exists()) throw new Error("Inquiry not found");
+
+    const data = snap.data();
+
+    return {
+      id: snap.id,
+      year: data.year || new Date().getFullYear(),
+      createdAt: data.createdAt?.toDate?.() ?? new Date(),
+      name: data.name || "Unknown",
+      status: data.status || "Pending",
+      isApproved: data.isApproved || false,
+      affiliation: data.affiliation || "",
+      designation: data.designation || "",
+      email: data.email ?? "", // fallback to empty string
+    };
+  } catch (error) {
+    console.error(` Failed to fetch inquiry ${id}:`, error);
+    throw error;
   }
 }

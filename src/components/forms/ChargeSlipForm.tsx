@@ -23,7 +23,6 @@ export default function ChargeSlipForm() {
       <input placeholder="Project ID" {...register("projectId")} />
       <input placeholder="Prepared By" {...register("preparedBy")} />
       <input type="date" {...register("dateIssued", { valueAsDate: true })} />
-      <input placeholder="Remarks" {...register("remarks")} />
       <input type="number" placeholder="Amount" {...register("amount", { valueAsNumber: true })} />
       <button type="submit">Submit</button>
     </form>

@@ -1,3 +1,5 @@
+// src/mock/mockInquiries.ts
+
 import { Inquiry } from '../types/Inquiry';
 
 export const mockInquiries: Inquiry[] = [
@@ -112,3 +114,6 @@ export const mockInquiries: Inquiry[] = [
     email: 'carlos.mendoza@uplb.edu.ph'
   }
 ];
+export function getMockInquiryDetailsById(id: string) {
+  return mockInquiries.find((inq) => inq.id === id);
+}
