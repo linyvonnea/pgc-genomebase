@@ -30,6 +30,19 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
 }
 
+function customGlobalFilterFn<TData extends object>(
+  row: any,
+  columnId: string,
+  filterValue: string
+) {
+  const values = Object.values(row.original).map((v) =>
+    Array.isArray(v) ? v.join(", ") : String(v ?? "")
+  )
+  return values.some((value) =>
+    value.toLowerCase().includes(filterValue.toLowerCase())
+  )
+}
+
 export function DataTable<TData, TValue>({
   columns,
   data,
@@ -37,6 +50,8 @@ export function DataTable<TData, TValue>({
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
+
+  
 
   const table = useReactTable({
     data,
@@ -46,6 +61,7 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
+    globalFilterFn: customGlobalFilterFn,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
     state: {

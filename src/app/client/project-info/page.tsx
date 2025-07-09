@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { z } from "zod";
-import { projectSchema, ProjectFormData } from "@/schemas/projectSchema"; 
+import { projectFormSchema, ProjectFormData } from "@/schemas/projectSchema"; 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,6 @@ export default function ProjectForm() {
     title: "",
     projectLead: "",
     startDate: new Date(),
-    endDate: null,
     sendingInstitution: "",
     fundingInstitution: "",
   });
@@ -43,7 +42,7 @@ export default function ProjectForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const result = projectSchema.safeParse(formData);
+    const result = projectFormSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors: Partial<Record<keyof ProjectFormData, string>> = {};
       result.error.errors.forEach((err) => {
@@ -56,7 +55,6 @@ export default function ProjectForm() {
       const formattedData = {
         ...result.data,
         startDate: result.data.startDate ? format(result.data.startDate, "MMMM dd, yyyy") : "",
-        endDate: result.data.endDate ? format(result.data.endDate, "MMMM dd, yyyy") : "",
       };
       console.log("Valid data:", formattedData);
     }
@@ -117,102 +115,49 @@ export default function ProjectForm() {
             Start Date <span className="text-red-500 text-sm">*</span>
           </Label>
           <div className="relative flex gap-2">
-            <Input
-              id="startDate"
-              value={formatDate(formData.startDate)}
-              placeholder="June 01, 2025"
-              className="bg-background pr-10"
-              onChange={(e) => {
-                const date = new Date(e.target.value);
-                handleChange("startDate", isValidDate(date) ? date : formData.startDate);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  setStartOpen(true);
-                }
-              }}
-              onFocus={() => setStartOpen(true)}
-              onClick={() => setStartOpen(true)}
-            />
-            <Popover open={startOpen} onOpenChange={setStartOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  id="start-date-picker"
-                  variant="ghost"
-                  className="absolute top-1/2 right-2 size-6 -translate-y-1/2"
-                >
-                  <CalendarIcon className="size-3.5" />
-                  <span className="sr-only">Select date</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto overflow-hidden p-0" align="end" alignOffset={-8} sideOffset={10}>
-                <Calendar
-                  mode="single"
-                  selected={formData.startDate}
-                  captionLayout="dropdown"
-                  month={formData.startDate}
-                  onMonthChange={(date) => handleChange("startDate", date)}
-                  onSelect={(date) => {
-                    handleChange("startDate", date);
-                    setStartOpen(false);
-                  }}
-                />
-              </PopoverContent>
-            </Popover>
+
+           <Popover open={startOpen} onOpenChange={setStartOpen}>
+  <PopoverTrigger asChild>
+    <div className="relative w-full">
+      <Input
+        id="startDate"
+        value={formatDate(formData.startDate)}
+        placeholder="June 01, 2025"
+        className="bg-background pr-10 w-full"
+        readOnly
+      />
+      <Button
+        variant="ghost"
+        className="absolute top-1/2 right-2 size-6 -translate-y-1/2"
+        type="button"
+      >
+        <CalendarIcon className="size-4" />
+        <span className="sr-only">Select date</span>
+      </Button>
+    </div>
+  </PopoverTrigger>
+  <PopoverContent
+    className="w-auto overflow-hidden p-0"
+    align="end"
+    alignOffset={-8}
+    sideOffset={10}
+  >
+    <Calendar
+      mode="single"
+      selected={formData.startDate}
+      captionLayout="dropdown"
+      month={formData.startDate}
+      onMonthChange={(date) => handleChange("startDate", date)}
+      onSelect={(date) => {
+        handleChange("startDate", date);
+        setStartOpen(false);
+      }}
+    />
+  </PopoverContent>
+</Popover>
+
           </div>
           {errors.startDate && <p className="text-red-500 text-sm">{errors.startDate}</p>}
-        </div>
-        <div className="flex-1">
-          <Label htmlFor="endDate">
-            End Date (optional)
-          </Label>
-          <div className="relative flex gap-2">
-            <Input
-              id="endDate"
-              value={formatDate(formData.endDate)}
-              placeholder="June 01, 2025"
-              className="bg-background pr-10"
-              onChange={(e) => {
-                const date = new Date(e.target.value);
-                handleChange("endDate", isValidDate(date) ? date : formData.endDate);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "ArrowDown") {
-                  e.preventDefault();
-                  setEndOpen(true);
-                }
-              }}
-              onFocus={() => setEndOpen(true)}
-              onClick={() => setEndOpen(true)}
-            />
-            <Popover open={endOpen} onOpenChange={setEndOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  id="end-date-picker"
-                  variant="ghost"
-                  className="absolute top-1/2 right-2 size-6 -translate-y-1/2"
-                >
-                  <CalendarIcon className="size-3.5" />
-                  <span className="sr-only">Select date</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto overflow-hidden p-0" align="end" alignOffset={-8} sideOffset={10}>
-                <Calendar
-                  mode="single"
-                  selected={formData.endDate || undefined}
-                  captionLayout="dropdown"
-                  month={formData.endDate || formData.startDate}
-                  onMonthChange={(date) => handleChange("endDate", date)}
-                  onSelect={(date) => {
-                    handleChange("endDate", date);
-                    setEndOpen(false);
-                  }}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          {errors.endDate && <p className="text-red-500 text-sm">{errors.endDate}</p>}
         </div>
       </div>
       <div>

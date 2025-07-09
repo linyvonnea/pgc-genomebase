@@ -6,33 +6,17 @@ import { projectSchema } from "@/schemas/projectSchema"
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ProjectFormModal } from "@/app/admin/projects/modalform"
+import { getProjects } from "@/services/projectsService"
 
 async function getData(): Promise<Project[]> {
-  // In a real app, you would fetch data from your API here.
-  // For now, we'll use mock data with a simulated delay
-  await new Promise(resolve => setTimeout(resolve, 100))
-  
-  // Validate the mock data using Zod schema before returning
-  const validatedData = mockProjects.map(project => {
-    // Convert string dates to Date objects for Zod validation
-    const toValidate = {
-      ...project,
-      iid: project.iid || "", 
-      title: project.title || "Untitled Project",
-      startDate: project.startDate ? new Date(project.startDate) : undefined,
-      endDate: project.endDate ? new Date(project.endDate) : null,
-      projectLead: project.lead,
-      fundingInstitution: project.fundingInstitution,
-    };
-    const result = projectSchema.safeParse(toValidate);
-    if (!result.success) {
-      console.error(`Invalid project data for ${project.pid}:`, result.error);
-      return undefined;
-    }
-    return project;
-  }).filter((p): p is Project => !!p)
-  
-  return validatedData
+  try {
+    const projects = await getProjects();
+    return projects;
+  } catch (error) {
+    console.error("Failed to fetch inquiries:", error);
+    // Return empty array if there's an error
+    return [];
+  }
 }
 
 export default async function ProjectPage() {
