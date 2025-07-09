@@ -4,14 +4,6 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Project } from "@/types/Project"
 import { projectSchema } from "@/schemas/projectSchema"
 
-const validateProject = (data: any) => {
-  const result = projectSchema.safeParse(data)
-  return {
-    isValid: result.success,
-    data: result.success ? result.data : null,
-    error: result.success ? null : result.error
-  }
-}
 
 export const columns: ColumnDef<Project>[] = [
   {
@@ -29,6 +21,15 @@ export const columns: ColumnDef<Project>[] = [
   {
     accessorKey: "clientNames",
     header: "Client Names",
+    cell: ({ row }) => {
+      const names = row.original.clientNames;
+      return names && names.length > 0 ? names.join(", ") : "";
+    },
+    //  enables global filtering by converting the array to a string
+    filterFn: (row, columnId, filterValue) => {
+      const value: string[] = row.getValue(columnId) || [];
+      return value.join(", ").toLowerCase().includes(filterValue.toLowerCase());
+    },
   },
   {
     accessorKey: "lead",
@@ -70,7 +71,7 @@ export const columns: ColumnDef<Project>[] = [
   },
   {
     accessorKey: "sendingInstitution",
-    header: "Sending lInstitution",
+    header: "Sending Institution",
   },
   {
     accessorKey: "fundingCategory",
@@ -83,6 +84,10 @@ export const columns: ColumnDef<Project>[] = [
   {
     accessorKey: "serviceRequested",
     header: "Service Requested",
+    cell: ({ row }) => {
+      const services = row.original.serviceRequested
+      return services && services.length > 0 ? services.join(", ") : ""
+    },
   },
   {
     accessorKey: "personnelAssigned",
