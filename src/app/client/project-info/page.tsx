@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from 'next/navigation';
 import { z } from "zod";
 import { projectFormSchema, ProjectFormData } from "@/schemas/projectSchema"; 
 import { Input } from "@/components/ui/input";
@@ -14,14 +15,18 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { db } from "@/lib/firebase";
-import { collection, doc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { getNextPid } from "@/services/projectsService";
 
 
 
 export default function ProjectForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pid = searchParams.get("pid");
+  const cid = searchParams.get("cid");
+
   const [formData, setFormData] = useState<ProjectFormData>({
     title: "",
     projectLead: "",
@@ -29,9 +34,36 @@ export default function ProjectForm() {
     sendingInstitution: "",
     fundingInstitution: "",
   });
-
+  const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectFormData, string>>>({});
   const [startOpen, setStartOpen] = useState(false);
+
+  // Fetch existing project data on mount
+  useEffect(() => {
+    async function fetchProject() {
+      if (!pid) return;
+      setLoading(true);
+      try {
+        const docRef = doc(db, "projects", pid);
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          setFormData({
+            title: data.title || "",
+            projectLead: data.lead || "",
+            startDate: data.startDate ? (data.startDate.toDate ? data.startDate.toDate() : new Date(data.startDate)) : new Date(),
+            sendingInstitution: data.sendingInstitution || "",
+            fundingInstitution: data.fundingInstitution || "",
+          });
+        }
+      } catch (err) {
+        toast.error("Failed to load project data.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProject();
+  }, [pid]);
 
   const handleChange = (field: keyof ProjectFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -39,7 +71,6 @@ export default function ProjectForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const result = projectFormSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors: Partial<Record<keyof ProjectFormData, string>> = {};
@@ -50,47 +81,35 @@ export default function ProjectForm() {
       setErrors(fieldErrors);
       return;
     }
-
     setErrors({});
-
+    if (!pid) {
+      toast.error("Missing project ID in URL.");
+      return;
+    }
     try {
       const year = result.data.startDate.getFullYear();
-      const newPid = await getNextPid(year); 
-
+      const docRef = doc(db, "projects", pid);
+      // Fetch the existing project to check for createdAt
+      const snap = await getDoc(docRef);
+      let createdAt = serverTimestamp();
+      if (snap.exists() && snap.data().createdAt) {
+        createdAt = snap.data().createdAt;
+      }
       const payload = {
-        pid: newPid,
         title: result.data.title,
         lead: result.data.projectLead,
         startDate: Timestamp.fromDate(result.data.startDate),
         sendingInstitution: result.data.sendingInstitution,
         fundingInstitution: result.data.fundingInstitution,
-        createdAt: serverTimestamp(),
         year,
-        status: "Ongoing", // default
-        clientNames: [],
-        serviceRequested: [],
-        fundingCategory: "",
-        projectTag: "",
-        iid: "",
-        personnelAssigned: "",
-        notes: "",
+        createdAt, // always set createdAt
+        updatedAt: serverTimestamp(),
       };
-
-      const docRef = doc(db, "projects", newPid);
-      await setDoc(docRef, payload);
-
-      toast.success("Project submitted successfully!");
-      setFormData({
-        title: "",
-        projectLead: "",
-        startDate: new Date(),
-        sendingInstitution: "",
-        fundingInstitution: "",
-      });
-
+      await setDoc(docRef, payload, { merge: true });
+      toast.success("Project updated successfully!");
+      // Optionally redirect or do something else
     } catch (err) {
-      console.error(err);
-      toast.error("Error submitting project. Please try again.");
+      toast.error("Error updating project. Please try again.");
     }
   };
 
@@ -101,6 +120,10 @@ export default function ProjectForm() {
       month: "long",
       year: "numeric",
     });
+  }
+
+  if (loading) {
+    return <div className="max-w-4xl mx-auto p-8">Loading project data...</div>;
   }
 
   return (
