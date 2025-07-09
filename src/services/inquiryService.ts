@@ -1,8 +1,7 @@
-import { collection, getDocs, addDoc, serverTimestamp, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, addDoc, serverTimestamp, query, orderBy, doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Inquiry } from "@/types/Inquiry";
 import { InquiryFormData } from "@/schemas/inquirySchema";
-import { doc, getDoc } from "firebase/firestore";
 
 export async function getInquiries(): Promise<Inquiry[]> {
   try {
@@ -92,5 +91,33 @@ export async function getInquiryById(id: string): Promise<Inquiry> {
   } catch (error) {
     console.error(` Failed to fetch inquiry ${id}:`, error);
     throw error;
+  }
+}
+
+export async function updateInquiry(id: string, data: {
+  name: string;
+  email: string;
+  affiliation: string;
+  designation: string;
+  status: string;
+}) {
+  try {
+    const docRef = doc(db, "inquiries", id);
+    
+    // Update the document with the new data
+    await updateDoc(docRef, {
+      name: data.name,
+      email: data.email,
+      affiliation: data.affiliation,
+      designation: data.designation,
+      status: data.status,
+      isApproved: data.status === 'Approved Client', // Update isApproved based on status
+    });
+    
+    console.log(`Successfully updated inquiry ${id}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating inquiry:", error);
+    throw new Error('Failed to update inquiry');
   }
 }
