@@ -14,6 +14,8 @@ import { projectSchema as baseProjectSchema } from "@/schemas/projectSchema";
 import { collection, addDoc, serverTimestamp, Timestamp, FieldValue, doc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase"; 
 import { toast } from "sonner";
+import { getNextPid } from "@/services/projectsService";
+
 
 
 // Extend the Zod schema to match the Project type
@@ -57,7 +59,7 @@ const mutation = useMutation({
   mutationFn: async (data: Project) => {
     if (!data.pid) throw new Error("Project ID is required");
 
-    const docRef = doc(db, "projects", data.pid); // ✅ pid is now guaranteed
+    const docRef = doc(db, "projects", data.pid);
 
     await setDoc(docRef, {
     ...data,
@@ -77,10 +79,10 @@ const mutation = useMutation({
   },
 });
 
-const handleSubmit = (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
-  const result = projectSchema.safeParse(formData);
+  const result = projectSchema.omit({ pid: true }).safeParse(formData); // omit pid for initial validation
   if (!result.success) {
     const fieldErrors: Partial<Record<keyof ProjectFormData, string>> = {};
     result.error.errors.forEach((err) => {
@@ -90,17 +92,25 @@ const handleSubmit = (e: React.FormEvent) => {
     setErrors(fieldErrors);
   } else {
     setErrors({});
-    const cleanData: Project = {
-      ...result.data,
-      year: Number(result.data.year),
-      clientNames: result.data.clientNames,
-      serviceRequested: result.data.serviceRequested,
-      lead: result.data.lead,
-      notes: result.data.notes || "",
-    };
-    mutation.mutate(cleanData);
+    try {
+      const nextPid = await getNextPid(result.data.year);
+      const cleanData: Project = {
+        ...result.data,
+        pid: nextPid,
+        year: Number(result.data.year),
+        clientNames: result.data.clientNames,
+        serviceRequested: result.data.serviceRequested,
+        lead: result.data.lead,
+        notes: result.data.notes || "",
+      };
+      mutation.mutate(cleanData);
+    } catch (err) {
+      toast.error("Failed to generate project ID.");
+      console.error("PID generation failed:", err);
+    }
   }
 };
+
 
     const handleChange = (
       e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
