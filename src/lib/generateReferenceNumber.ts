@@ -1,31 +1,39 @@
 // src/lib/generateReferenceNumber.ts
 
-import { mockQuotationHistory } from "@/mock/mockQuotationHistory";
+import { db } from "@/lib/firebase";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy,
+} from "firebase/firestore";
 
 /**
- * Generates the next available reference number based on existing mock quotation history.
- * Ensures suffix increments correctly per year.
+ * Generates the next reference number from Firestore quotations.
+ * Format: VMENF-Q-YYYY-XXX
  */
-export function generateNextReferenceNumber(currentYear: number): string {
-  const prefix = "VMENF-Q";
+export async function generateNextReferenceNumber(currentYear: number): Promise<string> {
+  const prefix = `VMENF-Q-${currentYear}`;
+  const quotationsRef = collection(db, "quotations");
 
-  // Flatten all quotations across inquiries
-  const allQuotations = Object.values(mockQuotationHistory).flat();
-
-  // Filter by matching year in reference number (e.g., VMENF-Q-2025-001)
-  const thisYearQuotations = allQuotations.filter((q) =>
-    q.referenceNumber.includes(`-${currentYear}-`)
+  const q = query(
+    quotationsRef,
+    where("referenceNumber", ">=", `${prefix}-000`),
+    where("referenceNumber", "<=", `${prefix}-999`),
+    orderBy("referenceNumber", "desc")
   );
 
-  // Extract numeric suffix from reference numbers
-  const lastSuffix = thisYearQuotations
-    .map((q) => {
-      const parts = q.referenceNumber.split("-");
-      return parseInt(parts[3], 10); // e.g., '001'
-    })
-    .sort((a, b) => b - a)[0] || 0;
+  const snapshot = await getDocs(q);
 
-  const nextSuffix = String(lastSuffix + 1).padStart(3, "0");
+  let nextNumber = 1;
 
-  return `${prefix}-${currentYear}-${nextSuffix}`;
+  if (!snapshot.empty) {
+    const lastRef = snapshot.docs[0].data().referenceNumber;
+    const lastNum = parseInt(lastRef.split("-").pop() || "0", 10);
+    nextNumber = lastNum + 1;
+  }
+
+  const padded = String(nextNumber).padStart(3, "0");
+  return `${prefix}-${padded}`;
 }

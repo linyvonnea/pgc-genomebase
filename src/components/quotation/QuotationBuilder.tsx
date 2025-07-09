@@ -1,15 +1,18 @@
 // src/components/quotation/QuotationBuilder.tsx
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 
-import mockCatalog from "@/mock/mock_catalog.json";
-import { mockInquiries } from "@/mock/mockInquiries";
+import { getServiceCatalog } from "@/services/serviceCatalogService";
+import { getInquiryById } from "@/services/inquiryService";
 
 import { SelectedService } from "@/types/SelectedService";
 import { ServiceItem } from "@/types/ServiceItem";
+import { Inquiry } from "@/types/Inquiry";
 
+import { saveQuotationToFirestore, generateNextReferenceNumber } from "@/services/quotationService";
 import {
   Accordion,
   AccordionContent,
@@ -40,15 +43,12 @@ import {
 import { PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
 import { QuotationPDF } from "./QuotationPDF";
 
-import {
-  mockQuotationHistory,
-  addMockQuotation,
-} from "@/mock/mockQuotationHistory";
-
 import { QuotationHistoryPanel } from "./QuotationHistoryPanel";
-import { generateNextReferenceNumber } from "@/lib/generateReferenceNumber";
 
-type QuotationBuilderProps = {
+export default function QuotationBuilder({
+  inquiryId,
+  initialClientInfo,
+}: {
   inquiryId?: string;
   initialClientInfo?: {
     name: string;
@@ -56,48 +56,61 @@ type QuotationBuilderProps = {
     designation: string;
     email: string;
   };
-};
-
-export default function QuotationBuilder({
-  inquiryId,
-  initialClientInfo,
-}: QuotationBuilderProps) {
+}) {
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
   const [isInternal, setIsInternal] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
   const [search, setSearch] = useState("");
+  const [referenceNumber, setReferenceNumber] = useState<string>("");
 
   const searchParams = useSearchParams();
   const effectiveInquiryId = inquiryId || searchParams.get("inquiryId") || "";
+    console.log("📌 Effective Inquiry ID used:", effectiveInquiryId);
 
-  const matchedInquiry = !initialClientInfo
-    ? mockInquiries.find((inq) => inq.id === effectiveInquiryId)
-    : null;
+
+  const { data: catalog = [], isLoading: loadingCatalog } = useQuery({
+    queryKey: ["serviceCatalog"],
+    queryFn: getServiceCatalog,
+  });
+
+  const { data: inquiryData } = useQuery<Inquiry | undefined>({
+    queryKey: ["inquiry", effectiveInquiryId],
+    queryFn: () => getInquiryById(effectiveInquiryId),
+    enabled: !!effectiveInquiryId && !initialClientInfo,
+  });
+
+  useEffect(() => {
+    const fetchRef = async () => {
+      const year = new Date().getFullYear();
+      const next = await generateNextReferenceNumber(year);
+      setReferenceNumber(next);
+    };
+    fetchRef();
+  }, []);
 
   const clientInfo = initialClientInfo
     ? initialClientInfo
-    : matchedInquiry
+    : inquiryData
     ? {
-        name: matchedInquiry.name,
-        institution: matchedInquiry.affiliation,
-        designation: matchedInquiry.designation,
-        email: matchedInquiry.email,
+        name: inquiryData.name,
+        institution: inquiryData.affiliation,
+        designation: inquiryData.designation,
+        email: inquiryData.email ?? "",
       }
     : {
         name: "Unknown",
         institution: "N/A",
         designation: "N/A",
-        email: "N/A",
+        email: "",
       };
 
   const currentYear = new Date().getFullYear();
-  const nextReferenceNumber = generateNextReferenceNumber(currentYear);
 
   const toggleService = (id: string, service: ServiceItem) => {
     setSelectedServices((prev) => {
       const exists = prev.find((s) => s.id === id);
       if (exists) return prev.filter((s) => s.id !== id);
-      return [...prev, { ...service, quantity: 1 }];
+      return [...prev, { ...service, quantity: 1, price: service.price }];
     });
   };
 
@@ -116,14 +129,14 @@ export default function QuotationBuilder({
 
   const groupedByType = useMemo(() => {
     const result: Record<string, ServiceItem[]> = {};
-    for (const item of mockCatalog as ServiceItem[]) {
+    for (const item of catalog) {
       if (!search || item.name.toLowerCase().includes(search.toLowerCase())) {
         if (!result[item.type]) result[item.type] = [];
         result[item.type].push(item);
       }
     }
     return result;
-  }, [search]);
+  }, [search, catalog]);
 
   const renderTable = (services: ServiceItem[]) => (
     <Table>
@@ -153,7 +166,7 @@ export default function QuotationBuilder({
               </TableCell>
               <TableCell>{item.name}</TableCell>
               <TableCell>{item.unit}</TableCell>
-              <TableCell>₱{item.price.toFixed(2)}</TableCell>
+              <TableCell>{item.price.toFixed(2)}</TableCell>
               <TableCell>
                 <Input
                   type="number"
@@ -163,7 +176,7 @@ export default function QuotationBuilder({
                   disabled={!isSelected}
                 />
               </TableCell>
-              <TableCell>₱{amount.toFixed(2)}</TableCell>
+              <TableCell>{amount.toFixed(2)}</TableCell>
             </TableRow>
           );
         })}
@@ -173,7 +186,6 @@ export default function QuotationBuilder({
 
   return (
     <div className="p-6 flex gap-6">
-      {/* LEFT PANEL */}
       <div className="flex-1">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Quotation Builder</h2>
@@ -207,7 +219,6 @@ export default function QuotationBuilder({
         </ScrollArea>
       </div>
 
-      {/* RIGHT SUMMARY PANEL */}
       <div className="w-96 shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
         <h3 className="text-lg font-bold mb-2">Summary</h3>
         <Separator className="mb-2" />
@@ -232,7 +243,13 @@ export default function QuotationBuilder({
           <DialogTrigger asChild>
             <Button className="mt-4 w-full">Preview Quotation</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl h-[90vh] overflow-auto">
+         <DialogContent
+            className="max-w-4xl h-[90vh] overflow-auto"
+            aria-describedby="pdf-preview-desc"
+            >
+            <div id="pdf-preview-desc" className="sr-only">
+                This is a preview of the generated quotation PDF.
+            </div>
             <DialogHeader>
               <DialogTitle>Preview Quotation PDF</DialogTitle>
             </DialogHeader>
@@ -241,7 +258,7 @@ export default function QuotationBuilder({
                 <QuotationPDF
                   services={selectedServices}
                   clientInfo={clientInfo}
-                  referenceNumber={nextReferenceNumber}
+                  referenceNumber={referenceNumber}
                   useInternalPrice={isInternal}
                 />
               </PDFViewer>
@@ -251,19 +268,23 @@ export default function QuotationBuilder({
                     <QuotationPDF
                       services={selectedServices}
                       clientInfo={clientInfo}
-                      referenceNumber={nextReferenceNumber}
+                      referenceNumber={referenceNumber}
                       useInternalPrice={isInternal}
                     />
                   }
-                  fileName={`${nextReferenceNumber}.pdf`}
+                  fileName={`${referenceNumber}.pdf`}
                 >
                   {({ loading }) => (
                     <Button
-                      disabled={loading}
-                      onClick={() => {
-                        addMockQuotation(effectiveInquiryId, {
-                            referenceNumber: nextReferenceNumber,
-                            clientInfo,
+                    disabled={loading}
+                    onClick={async () => {
+                        try {
+                        const quotationToSave = {
+                            referenceNumber,
+                            name: clientInfo.name,
+                            institution: clientInfo.institution,
+                            designation: clientInfo.designation,
+                            email: clientInfo.email,
                             services: selectedServices,
                             isInternal,
                             dateIssued: new Date().toISOString(),
@@ -271,13 +292,20 @@ export default function QuotationBuilder({
                             subtotal,
                             discount,
                             total,
-                            preparedBy: "",
+                            preparedBy: "MA. CARMEL F. JAVIER, M.Sc.", // or grab dynamically from context in real use
                             categories: Array.from(new Set(selectedServices.map((s) => s.type))),
-                            inquiryId: effectiveInquiryId
-                        });
-                      }}
+                            inquiryId: effectiveInquiryId.trim(),
+                        };
+
+                        console.log("[SAVE DEBUG] Quotation to save:", quotationToSave);
+
+                        await saveQuotationToFirestore(quotationToSave);
+                        } catch (err) {
+                        console.error("Failed to save quotation", err);
+                        }
+                    }}
                     >
-                      {loading ? "Preparing..." : "Generate Final Quotation"}
+                    {loading ? "Preparing..." : "Generate Final Quotation"}
                     </Button>
                   )}
                 </PDFDownloadLink>
@@ -287,8 +315,9 @@ export default function QuotationBuilder({
         </Dialog>
 
         <Separator className="my-6" />
+    
         <QuotationHistoryPanel inquiryId={effectiveInquiryId} />
-      </div>
+      </div> 
     </div>
   );
 }

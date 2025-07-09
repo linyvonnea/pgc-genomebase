@@ -27,7 +27,13 @@ export default function DownloadButtonSection(props: {
       <DialogTrigger asChild>
         <Button variant="default">📄 Preview Quotation</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-5xl w-full h-[90vh] flex flex-col">
+      <DialogContent
+        className="max-w-5xl w-full h-[90vh] flex flex-col"
+        aria-describedby="pdf-preview-desc"
+      >
+        <div id="pdf-preview-desc" className="sr-only">
+          This is a preview of the generated quotation PDF.
+        </div>
         <DialogHeader>
           <DialogTitle>Quotation Preview</DialogTitle>
         </DialogHeader>

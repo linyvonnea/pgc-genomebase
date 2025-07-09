@@ -1,5 +1,5 @@
-// src/components/quotation/QuotationPDF.tsx
-
+// File: src/components/quotation/QuotationPDF.tsx
+"use client";
 
 import {
   Page,
@@ -166,17 +166,14 @@ export function QuotationPDF({
             <View key={category}>
               <Text style={styles.categoryHeader}>{category}</Text>
               {items.map((svc) => {
-                const unitPrice = useInternalPrice
-                  ? svc.price * 0.88
-                  : svc.price;
-                const amount = unitPrice * svc.quantity;
+                const amount = svc.price * svc.quantity;
                 return (
                   <View style={styles.tableRow} key={svc.id}>
                     <Text style={styles.cell}>{svc.name}</Text>
                     <Text style={styles.cell}>{svc.unit}</Text>
-                    <Text style={styles.cell}> {unitPrice.toFixed(2)}</Text>
+                    <Text style={styles.cell}>{svc.price.toFixed(2)}</Text>
                     <Text style={styles.cell}>{svc.quantity}</Text>
-                    <Text style={styles.cell}> {amount.toFixed(2)}</Text>
+                    <Text style={styles.cell}>{amount.toFixed(2)}</Text>
                   </View>
                 );
               })}
@@ -188,7 +185,7 @@ export function QuotationPDF({
         <View style={styles.summary}>
           <Text>Subtotal: PHP {totalWithoutDiscount.toFixed(2)}</Text>
           {useInternalPrice && (
-            <Text>Less 12% Discount: PHP{discount.toFixed(2)}</Text>
+            <Text>Less 12% Discount: PHP {discount.toFixed(2)}</Text>
           )}
           <Text style={{ fontWeight: "bold" }}>
             TOTAL: PHP {finalTotal.toFixed(2)}

@@ -1,3 +1,4 @@
+// src/components/quotation/QuotationPDFClient.tsx
 "use client";
 
 import { PDFViewer } from "@react-pdf/renderer";
@@ -14,7 +15,12 @@ export default function QuotationPDFClient({
       <QuotationPDF
         referenceNumber={quotation.referenceNumber}
         services={quotation.services}
-        clientInfo={quotation.clientInfo}
+        clientInfo={{
+            name: quotation.name,
+            email: quotation.email,
+            institution: quotation.institution,
+            designation: quotation.designation,
+            }}
         useInternalPrice={quotation.isInternal}
       />
     </PDFViewer>

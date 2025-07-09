@@ -1,7 +1,6 @@
 // src/components/quotation/QuotationList.tsx
 "use client";
 
-import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -12,16 +11,14 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { mockQuotationRecords } from "@/mock/mockQuotationRecords";
-import { QuotationRecord } from "@/types/Quotation";
+import { useQuery } from "@tanstack/react-query";
+import { getAllQuotations } from "@/services/quotationService";
 
 export default function QuotationList() {
-  const [records, setRecords] = useState<QuotationRecord[]>(mockQuotationRecords);
-
-  const handleRemarkChange = (index: number, value: string) => {
-    const updated = [...records];
-    setRecords(updated);
-  };
+  const { data: records = [], isLoading } = useQuery({
+    queryKey: ["quotations"],
+    queryFn: getAllQuotations,
+  });
 
   return (
     <div>
@@ -42,13 +39,13 @@ export default function QuotationList() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {records.map((q, i) => (
+          {records.map((q) => (
             <TableRow key={q.referenceNumber}>
               <TableCell>{new Date(q.dateIssued).toLocaleDateString()}</TableCell>
               <TableCell className="font-medium">{q.referenceNumber}</TableCell>
-              <TableCell>{q.clientInfo.name}</TableCell>
-              <TableCell>{q.clientInfo.designation}</TableCell>
-              <TableCell>{q.clientInfo.institution}</TableCell>
+              <TableCell>{q.name}</TableCell>
+              <TableCell>{q.designation}</TableCell>
+              <TableCell>{q.institution}</TableCell>
               <TableCell>₱{q.subtotal?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
               <TableCell>₱{q.discount?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</TableCell>
               <TableCell className="font-semibold text-primary">

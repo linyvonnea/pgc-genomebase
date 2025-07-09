@@ -1,32 +1,44 @@
-// src/components/QuotationDetailPageClient.tsx
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { notFound } from "next/navigation";
-import { mockQuotationRecords } from "@/mock/mockQuotationRecords";
-import {
-  mockQuotationHistory,
-} from "@/mock/mockQuotationHistory";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { getQuotationByReferenceNumber } from "@/services/quotationService";
+import { QuotationRecord } from "@/types/Quotation";
+import { notFound, useRouter } from "next/navigation";
 import DownloadButtonSection from "@/components/pdf/DownloadButtonSection";
 import { Button } from "@/components/ui/button";
 
-export default function QuotationDetailPageClient({
-  referenceNumber,
-}: {
-  referenceNumber: string;
-}) {
+export default function QuotationDetailPageClient() {
+  const { referenceNumber } = useParams(); // 👈 Get params here
   const router = useRouter();
+  const [quotation, setQuotation] = useState<QuotationRecord | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const quotation =
-    mockQuotationRecords.find((q) => q.referenceNumber === referenceNumber) ||
-    mockQuotationHistory.find((q) => q.referenceNumber === referenceNumber);
+  useEffect(() => {
+    if (!referenceNumber || typeof referenceNumber !== "string") return;
 
+    const fetchQuotation = async () => {
+      try {
+        const data = await getQuotationByReferenceNumber(referenceNumber);
+        setQuotation(data);
+      } catch (err) {
+        console.error("Error loading quotation:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuotation();
+  }, [referenceNumber]);
+
+  if (loading) return <div className="p-6">Loading quotation...</div>;
   if (!quotation) return notFound();
 
-
   const {
-    clientInfo,
+    name,
+    email,
+    institution,
+    designation,
     services,
     isInternal,
     dateIssued,
@@ -47,32 +59,15 @@ export default function QuotationDetailPageClient({
       </div>
 
       <div className="border rounded-md p-4 space-y-3 text-sm bg-white shadow-sm">
-        <div>
-          <strong>Prepared By:</strong> {preparedBy || "—"}
-        </div>
-        <div>
-          <strong>Date Issued:</strong>{" "}
-          {new Date(dateIssued).toLocaleDateString()}
-        </div>
-        <div>
-          <strong>Client:</strong> {clientInfo.name} ({clientInfo.email})
-        </div>
-        <div>
-          <strong>Institution:</strong> {clientInfo.institution}
-        </div>
-        <div>
-          <strong>Designation:</strong> {clientInfo.designation}
-        </div>
-        <div>
-          <strong>Categories:</strong> {categories.join(", ")}
-        </div>
-        <div>
-          <strong>Subtotal:</strong> ₱{subtotal.toLocaleString()}
-        </div>
+        <div><strong>Prepared By:</strong> {preparedBy || "—"}</div>
+        <div><strong>Date Issued:</strong> {new Date(dateIssued).toLocaleDateString()}</div>
+        <div><strong>Client:</strong> {name} ({email})</div>
+        <div><strong>Institution:</strong> {institution}</div>
+        <div><strong>Designation:</strong> {designation}</div>
+        <div><strong>Categories:</strong> {categories.join(", ")}</div>
+        <div><strong>Subtotal:</strong> ₱{subtotal.toLocaleString()}</div>
         {isInternal && (
-          <div>
-            <strong>Discount (12%):</strong> ₱{discount.toLocaleString()}
-          </div>
+          <div><strong>Discount (12%):</strong> ₱{discount.toLocaleString()}</div>
         )}
         <div>
           <strong>Total:</strong>{" "}
@@ -82,10 +77,15 @@ export default function QuotationDetailPageClient({
         </div>
       </div>
 
-      <DownloadButtonSection
-        referenceNumber={referenceNumber}
+     <DownloadButtonSection
+        referenceNumber={referenceNumber as string}
         services={services}
-        clientInfo={clientInfo}
+        clientInfo={{
+          name,
+          email,
+          institution,
+          designation,
+        }}
         useInternalPrice={isInternal}
       />
     </div>

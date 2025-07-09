@@ -1,3 +1,4 @@
+// src/app/admin/inquiry/page.tsx
 import { columns } from "./columns"
 import { DataTable } from "./data-table"
 import { Inquiry } from "@/types/Inquiry"

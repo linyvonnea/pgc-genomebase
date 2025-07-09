@@ -5,16 +5,14 @@ export type SelectedService = ServiceItem & {
   quantity: number;
 };
 
-export type QuotationRecord = {
-  inquiryId: string;
+export interface QuotationRecord {
+  id?: string;
   referenceNumber: string;
-  clientInfo: {
-    name: string;
-    institution: string;
-    designation: string;
-    email: string;
-  };
-  services: SelectedService[];
+  name: string;
+  institution: string;
+  designation: string;
+  email: string;
+  services: any[]; // or SelectedService[]
   isInternal: boolean;
   dateIssued: string;
   year: number;
@@ -23,4 +21,5 @@ export type QuotationRecord = {
   total: number;
   preparedBy: string;
   categories: string[];
-};
+  inquiryId: string;
+}

@@ -1,27 +1,33 @@
 // src/components/quotation/QuotationHistoryPanel.tsx
 "use client";
 
-import { useState } from "react";
-import { mockQuotationHistory } from "@/mock/mockQuotationHistory";
+import { useQuery } from "@tanstack/react-query";
+import { getQuotationsByInquiryId } from "@/services/quotationService";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { FileTextIcon } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { QuotationPDFViewer } from "./QuotationPDFViewer";
-import { getMockInquiryDetailsById } from "@/mock/mockInquiries"; // helper if needed
 
 export function QuotationHistoryPanel({ inquiryId }: { inquiryId: string }) {
-  const history = mockQuotationHistory.filter((q) => q.inquiryId === inquiryId);
-  const [selectedRef, setSelectedRef] = useState<string | null>(null);
+ console.log("HistoryPanel inquiryId:", inquiryId);
+  const { data: history = [], isLoading } = useQuery({
+    queryKey: ["quotationHistory", inquiryId],
+    queryFn: () => getQuotationsByInquiryId(inquiryId),
+    enabled: !!inquiryId,
+  });
 
+  if (isLoading) return <div className="text-sm text-muted-foreground">Loading history...</div>;
   if (history.length === 0) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        No past quotations yet.
-      </div>
-    );
+    return <div className="text-sm text-muted-foreground">No past quotations yet.</div>;
   }
 
   return (
@@ -37,23 +43,22 @@ export function QuotationHistoryPanel({ inquiryId }: { inquiryId: string }) {
                   Issued: {new Date(quote.dateIssued).toLocaleString()}
                 </div>
               </div>
-            <Dialog>
-            <DialogTrigger asChild>
-                <Button
-                variant="ghost"
-                className="text-sm px-2 h-auto"
-                onClick={() => setSelectedRef(quote.referenceNumber)}
-                >
-                <FileTextIcon className="w-4 h-4 mr-1" /> PDF
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl h-[90vh] overflow-hidden">
-                <DialogHeader>
-                <DialogTitle>{quote.referenceNumber}</DialogTitle>
-                </DialogHeader>
-                <QuotationPDFViewer quotation={quote} />
-            </DialogContent>
-            </Dialog>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="text-sm px-2 h-auto"
+                  >
+                    <FileTextIcon className="w-4 h-4 mr-1" /> PDF
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-4xl h-[90vh] overflow-hidden">
+                  <DialogHeader>
+                    <DialogTitle>{quote.referenceNumber}</DialogTitle>
+                  </DialogHeader>
+                  <QuotationPDFViewer quotation={quote} />
+                </DialogContent>
+              </Dialog>
             </Card>
           ))}
         </div>
