@@ -8,7 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getServiceCatalog } from "@/services/serviceCatalogService";
 import { getInquiryById } from "@/services/inquiryService";
 
-import { SelectedService } from "@/types/SelectedService";
+import { SelectedService as StrictSelectedService } from "@/types/SelectedService";
 import { ServiceItem } from "@/types/ServiceItem";
 import { Inquiry } from "@/types/Inquiry";
 
@@ -42,8 +42,10 @@ import {
 
 import { PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
 import { QuotationPDF } from "./QuotationPDF";
-
 import { QuotationHistoryPanel } from "./QuotationHistoryPanel";
+
+// Allow editable quantity ("" or number)
+type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & { quantity: number | "" };
 
 export default function QuotationBuilder({
   inquiryId,
@@ -57,7 +59,7 @@ export default function QuotationBuilder({
     email: string;
   };
 }) {
-  const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
+  const [selectedServices, setSelectedServices] = useState<EditableSelectedService[]>([]);
   const [isInternal, setIsInternal] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
   const [search, setSearch] = useState("");
@@ -65,10 +67,8 @@ export default function QuotationBuilder({
 
   const searchParams = useSearchParams();
   const effectiveInquiryId = inquiryId || searchParams.get("inquiryId") || "";
-    console.log("📌 Effective Inquiry ID used:", effectiveInquiryId);
 
-
-  const { data: catalog = [], isLoading: loadingCatalog } = useQuery({
+  const { data: catalog = [] } = useQuery({
     queryKey: ["serviceCatalog"],
     queryFn: getServiceCatalog,
   });
@@ -110,17 +110,21 @@ export default function QuotationBuilder({
     setSelectedServices((prev) => {
       const exists = prev.find((s) => s.id === id);
       if (exists) return prev.filter((s) => s.id !== id);
-      return [...prev, { ...service, quantity: 1, price: service.price }];
+      return [...prev, { ...service, quantity: 1 }];
     });
   };
 
-  const updateQuantity = (id: string, qty: number) => {
+  const updateQuantity = (id: string, qty: number | "") => {
     setSelectedServices((prev) =>
       prev.map((svc) => (svc.id === id ? { ...svc, quantity: qty } : svc))
     );
   };
 
-  const subtotal = selectedServices.reduce(
+  const cleanedServices: StrictSelectedService[] = selectedServices
+    .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
+    .map((s) => ({ ...s, quantity: s.quantity as number }));
+
+  const subtotal = cleanedServices.reduce(
     (sum, item) => sum + item.quantity * item.price,
     0
   );
@@ -153,8 +157,11 @@ export default function QuotationBuilder({
       <TableBody>
         {services.map((item) => {
           const isSelected = selectedServices.find((s) => s.id === item.id);
-          const quantity = isSelected?.quantity || 1;
-          const amount = isSelected ? item.price * quantity : 0;
+          const quantity = isSelected?.quantity ?? "";
+          const amount =
+            isSelected && typeof quantity === "number"
+              ? item.price * quantity
+              : 0;
 
           return (
             <TableRow key={item.id}>
@@ -170,9 +177,14 @@ export default function QuotationBuilder({
               <TableCell>
                 <Input
                   type="number"
-                  min={1}
+                  min={0}
                   value={quantity}
-                  onChange={(e) => updateQuantity(item.id, +e.target.value)}
+                  onChange={(e) =>
+                    updateQuantity(
+                      item.id,
+                      e.target.value === "" ? "" : +e.target.value
+                    )
+                  }
                   disabled={!isSelected}
                 />
               </TableCell>
@@ -222,7 +234,7 @@ export default function QuotationBuilder({
       <div className="w-96 shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
         <h3 className="text-lg font-bold mb-2">Summary</h3>
         <Separator className="mb-2" />
-        {selectedServices.map((item) => (
+        {cleanedServices.map((item) => (
           <div key={item.id} className="flex justify-between text-sm mb-1">
             <span>
               {item.name} x {item.quantity}
@@ -243,20 +255,14 @@ export default function QuotationBuilder({
           <DialogTrigger asChild>
             <Button className="mt-4 w-full">Preview Quotation</Button>
           </DialogTrigger>
-         <DialogContent
-            className="max-w-4xl h-[90vh] overflow-auto"
-            aria-describedby="pdf-preview-desc"
-            >
-            <div id="pdf-preview-desc" className="sr-only">
-                This is a preview of the generated quotation PDF.
-            </div>
+          <DialogContent className="max-w-4xl h-[90vh] overflow-auto">
             <DialogHeader>
               <DialogTitle>Preview Quotation PDF</DialogTitle>
             </DialogHeader>
             <div className="mt-4">
               <PDFViewer width="100%" height="600">
                 <QuotationPDF
-                  services={selectedServices}
+                  services={cleanedServices}
                   clientInfo={clientInfo}
                   referenceNumber={referenceNumber}
                   useInternalPrice={isInternal}
@@ -266,7 +272,7 @@ export default function QuotationBuilder({
                 <PDFDownloadLink
                   document={
                     <QuotationPDF
-                      services={selectedServices}
+                      services={cleanedServices}
                       clientInfo={clientInfo}
                       referenceNumber={referenceNumber}
                       useInternalPrice={isInternal}
@@ -276,36 +282,35 @@ export default function QuotationBuilder({
                 >
                   {({ loading }) => (
                     <Button
-                    disabled={loading}
-                    onClick={async () => {
+                      disabled={loading}
+                      onClick={async () => {
                         try {
-                        const quotationToSave = {
+                          const quotationToSave = {
                             referenceNumber,
                             name: clientInfo.name,
                             institution: clientInfo.institution,
                             designation: clientInfo.designation,
                             email: clientInfo.email,
-                            services: selectedServices,
+                            services: cleanedServices,
                             isInternal,
                             dateIssued: new Date().toISOString(),
                             year: currentYear,
                             subtotal,
                             discount,
                             total,
-                            preparedBy: "MA. CARMEL F. JAVIER, M.Sc.", // or grab dynamically from context in real use
-                            categories: Array.from(new Set(selectedServices.map((s) => s.type))),
+                            preparedBy: "MA. CARMEL F. JAVIER, M.Sc.",
+                            categories: Array.from(
+                              new Set(cleanedServices.map((s) => s.type))
+                            ),
                             inquiryId: effectiveInquiryId.trim(),
-                        };
-
-                        console.log("[SAVE DEBUG] Quotation to save:", quotationToSave);
-
-                        await saveQuotationToFirestore(quotationToSave);
+                          };
+                          await saveQuotationToFirestore(quotationToSave);
                         } catch (err) {
-                        console.error("Failed to save quotation", err);
+                          console.error("Failed to save quotation", err);
                         }
-                    }}
+                      }}
                     >
-                    {loading ? "Preparing..." : "Generate Final Quotation"}
+                      {loading ? "Preparing..." : "Generate Final Quotation"}
                     </Button>
                   )}
                 </PDFDownloadLink>
@@ -315,9 +320,8 @@ export default function QuotationBuilder({
         </Dialog>
 
         <Separator className="my-6" />
-    
         <QuotationHistoryPanel inquiryId={effectiveInquiryId} />
-      </div> 
+      </div>
     </div>
   );
 }

@@ -12,7 +12,7 @@ export interface QuotationRecord {
   institution: string;
   designation: string;
   email: string;
-  services: any[]; // or SelectedService[]
+  services: SelectedService[]; // Use proper type
   isInternal: boolean;
   dateIssued: string;
   year: number;
