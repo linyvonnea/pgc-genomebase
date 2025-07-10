@@ -4,18 +4,20 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { inquiryFormSchema, type InquiryFormData, type WorkflowOption } from "@/schemas/inquirySchema"
-import { createInquiryAction } from "@/app/actions/inquiryActions" // Import the server action
+import { createInquiryAction } from "@/app/actions/inquiryActions"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import useAuth from "@/hooks/useAuth" // Import the auth hook
 
 export default function QuotationRequestForm() {
   const [selectedService, setSelectedService] = useState<string>("laboratory")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
+  const { user } = useAuth() // Get the current authenticated user
   
   const form = useForm<InquiryFormData>({
     resolver: zodResolver(inquiryFormSchema),
@@ -62,8 +64,14 @@ export default function QuotationRequestForm() {
     setIsSubmitting(true)
     
     try {
-      console.log("Submitting form data:", data)
-      const result = await createInquiryAction(data) // Use server action
+      // Add the current user's email to the submission data
+      const submissionData = {
+        ...data,
+        email: user?.email || "" // Add the user's email from auth
+      }
+      
+      console.log("Submitting form data:", submissionData)
+      const result = await createInquiryAction(submissionData) // Use server action with email included
       
       if (result.success) {
         toast({
