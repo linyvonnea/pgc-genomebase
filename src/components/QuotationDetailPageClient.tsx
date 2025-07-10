@@ -56,82 +56,149 @@ export default function QuotationDetailPageClient() {
       : `${preparedBy?.name ?? "—"}, ${preparedBy?.position ?? ""}`;
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10 space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Quotation Details</h1>
-          <p className="text-muted-foreground">
-            Reference No: <span className="font-medium">{referenceNumber}</span>
-          </p>
-        </div>
-        <Button variant="outline" onClick={() => router.push("/admin/quotations")}>
-          ← Back to List
-        </Button>
-      </div>
-
-      {/* Detail Section */}
-      <div className="rounded-md border bg-white shadow-sm p-6 space-y-4 text-sm">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <span className="text-muted-foreground">Prepared By:</span>{" "}
-            <strong>{preparedByText}</strong>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Date Issued:</span>{" "}
-            {new Date(dateIssued).toLocaleDateString()}
-          </div>
-          <div>
-            <span className="text-muted-foreground">Client:</span> {name} ({email})
-          </div>
-          <div>
-            <span className="text-muted-foreground">Designation:</span> {designation}
-          </div>
-          <div>
-            <span className="text-muted-foreground">Institution:</span> {institution}
-          </div>
-          <div className="flex items-center gap-1 flex-wrap">
-            <span className="text-muted-foreground">Categories:</span>
-            {categories.map((cat) => (
-              <Badge key={cat} className="capitalize">
-                {cat}
-              </Badge>
-            ))}
-          </div>
-        </div>
-
-        {/* Financials */}
-        <div className="pt-4 border-t mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <span className="text-muted-foreground">Subtotal:</span> ₱
-            {subtotal.toLocaleString()}
-          </div>
-          {isInternal && (
-            <div>
-              <span className="text-muted-foreground">Discount (12%):</span> ₱
-              {discount.toLocaleString()}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50/50 to-blue-50/30 p-6">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Modern Header */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent">
+                Quotation Details
+              </h1>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-slate-600">Reference No:</span>
+                <Badge variant="outline" className="font-mono text-[#F69122] border-[#F69122]/30 bg-[#F69122]/5">
+                  {referenceNumber}
+                </Badge>
+              </div>
             </div>
-          )}
-          <div className="col-span-full text-lg font-semibold">
-            Total: <span className="text-primary">₱{total.toLocaleString()}</span>
+            <Button 
+              variant="outline" 
+              onClick={() => router.push("/admin/quotations")}
+              className="hover:bg-slate-50 border-slate-200"
+            >
+              ← Back to List
+            </Button>
           </div>
         </div>
-      </div>
 
-      {/* PDF Controls */}
-      <div className="rounded-md border bg-white shadow-sm p-6 space-y-2">
-        <h2 className="text-lg font-medium">Quotation PDF</h2>
-        <DownloadButtonSection
-          referenceNumber={referenceNumber as string}
-          services={services}
-          clientInfo={{ name, email, institution, designation }}
-          useInternalPrice={isInternal}
-          preparedBy={
-            typeof preparedBy === "string"
-              ? { name: preparedBy, position: "—" }
-              : preparedBy
-          }
-        />
+        {/* Client Information Card */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+          <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <div className="w-2 h-2 bg-gradient-to-r from-[#F69122] to-[#B9273A] rounded-full"></div>
+            Client Information
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <div className="flex flex-col">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Client</span>
+                <span className="text-sm font-medium text-slate-800">{name}</span>
+                <span className="text-xs text-slate-600">{email}</span>
+              </div>
+              
+              <div className="flex flex-col">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Institution</span>
+                <span className="text-sm font-medium text-slate-800">{institution}</span>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex flex-col">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Designation</span>
+                <span className="text-sm font-medium text-slate-800">{designation}</span>
+              </div>
+              
+              <div className="flex flex-col">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Date Issued</span>
+                <span className="text-sm font-medium text-slate-800">
+                  {new Date(dateIssued).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <div className="flex flex-col">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Categories</span>
+              <div className="flex items-center gap-2 flex-wrap">
+                {categories.map((cat) => (
+                  <Badge 
+                    key={cat} 
+                    className="capitalize bg-gradient-to-r from-[#166FB5]/10 to-[#4038AF]/10 text-[#166FB5] border-[#166FB5]/20 hover:bg-[#166FB5]/20"
+                  >
+                    {cat}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Financial Summary Card */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+          <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#6E308E] rounded-full"></div>
+            Financial Summary
+          </h2>
+          
+          <div className="space-y-3">
+            <div className="flex justify-between items-center py-2">
+              <span className="text-sm text-slate-600">Subtotal</span>
+              <span className="font-medium text-slate-800">₱{subtotal.toLocaleString()}</span>
+            </div>
+            
+            {isInternal && (
+              <div className="flex justify-between items-center py-2 bg-green-50/50 -mx-2 px-2 rounded-lg">
+                <span className="text-sm text-green-700">Discount (12%)</span>
+                <span className="font-medium text-green-700">-₱{discount.toLocaleString()}</span>
+              </div>
+            )}
+            
+            <div className="border-t border-slate-100 pt-3">
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-semibold text-slate-800">Total</span>
+                <span className="text-xl font-bold bg-gradient-to-r from-[#F69122] to-[#B9273A] bg-clip-text text-transparent">
+                  ₱{total.toLocaleString()}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Preparation Details Card */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+          <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <div className="w-2 h-2 bg-gradient-to-r from-[#4038AF] to-[#166FB5] rounded-full"></div>
+            Preparation Details
+          </h2>
+          
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Prepared By</span>
+            <span className="text-sm font-medium text-slate-800">{preparedByText}</span>
+          </div>
+        </div>
+
+        {/* PDF Generation Card */}
+        <div className="bg-gradient-to-r from-[#F69122]/5 via-[#B9273A]/5 to-[#912ABD]/5 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+          <h2 className="text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
+            <div className="w-2 h-2 bg-gradient-to-r from-[#F69122] to-[#912ABD] rounded-full"></div>
+            Generate PDF Document
+          </h2>
+          <p className="text-sm text-slate-600 mb-4">Download the official quotation document</p>
+          
+          <DownloadButtonSection
+            referenceNumber={referenceNumber as string}
+            services={services}
+            clientInfo={{ name, email, institution, designation }}
+            useInternalPrice={isInternal}
+            preparedBy={
+              typeof preparedBy === "string"
+                ? { name: preparedBy, position: "—" }
+                : preparedBy
+            }
+          />
+        </div>
       </div>
     </div>
   );
