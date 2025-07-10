@@ -86,7 +86,11 @@ export default function Home() {
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
-            <p className="text-sm text-slate-500">Get started in minutes</p>
+            <Link href="/login">
+              <p className="text-sm text-slate-500 hover:text-[#166FB5] transition-colors cursor-pointer mt-3">
+                Sign in as Admin
+              </p>
+            </Link>
           </div>
         </div>
 

@@ -92,7 +92,7 @@ export default function useAuth() {
     setUser(null);
     setIsAdmin(false);
     setAdminInfo(null);
-    window.location.href = "/login";
+    window.location.href = "/";
   };
 
   return {
