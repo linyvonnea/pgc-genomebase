@@ -24,7 +24,6 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       targetTrainingDate: inquiryData.targetTrainingDate || null,
       numberOfParticipants: inquiryData.numberOfParticipants || null,
       createdAt: serverTimestamp(),
-      year: currentDate.getFullYear(),
       status: 'Pending',
       isApproved: false,
       // Store the service type for reference if needed
