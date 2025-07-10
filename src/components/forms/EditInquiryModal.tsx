@@ -90,7 +90,9 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel> 
+                    Name <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Enter name" {...field} />
                   </FormControl>
@@ -104,7 +106,9 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>
+                    Email <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="Enter email" {...field} />
                   </FormControl>
@@ -118,7 +122,9 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
               name="affiliation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Affiliation</FormLabel>
+                  <FormLabel>
+                    Affiliation <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Enter affiliation" {...field} />
                   </FormControl>
@@ -132,7 +138,9 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
               name="designation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Designation</FormLabel>
+                  <FormLabel>
+                    Designation <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Enter designation" {...field} />
                   </FormControl>
