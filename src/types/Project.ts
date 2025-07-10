@@ -8,9 +8,9 @@ export interface Project {
   clientNames?: string[];
   title?: string;
   projectTag?: string;
-  status?: string;
-  sendingInstitution?: string;
-  fundingCategory?: string;
+  status?: "Ongoing" | "Cancelled" | "Completed";
+  sendingInstitution?: "UP System" |"SUC/HEI" | "Government" | "Private/Local" | "International" | "N/A";
+  fundingCategory?: "External" | "In-House";
   fundingInstitution?: string;
   serviceRequested?: string[];
   personnelAssigned?: string;

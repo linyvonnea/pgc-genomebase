@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 export const adminClientSchema = z.object({
-  cid: z.string().min(1, "Client ID is required"),
   pid: z.string().min(1, "Project ID is required"),
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email"),

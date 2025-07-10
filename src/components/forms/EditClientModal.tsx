@@ -33,6 +33,8 @@ import { Pencil } from "lucide-react";
 import { Client } from "@/types/Client";
 import { updateClientAndProjectName } from "@/services/updateClientAndProjectName";
 import { toast } from "sonner";
+import { deleteDoc, doc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 interface EditClientModalProps {
   client: Client;
@@ -42,11 +44,11 @@ interface EditClientModalProps {
 export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const form = useForm<AdminClientData>({
+  const form = useForm<AdminClientData & { pid?: string }>({
     resolver: zodResolver(adminClientSchema),
     defaultValues: {
-      cid: client.cid || "",
       name: client.name || "",
       email: client.email || "",
       affiliation: client.affiliation || "",
@@ -54,15 +56,18 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
       sex: client.sex || "M",
       phoneNumber: client.phoneNumber || "",
       affiliationAddress: client.affiliationAddress || "",
+      pid: client.pid || "",
     },
   });
 
   const onSubmit = async (data: AdminClientData) => {
     setIsLoading(true);
     try {
+      // Omit pid and cid from data before updating
+      const { pid, cid, ...safeData } = data as any;
       // If pid changed, update client doc with new pid and update both old and new projects
       const pidChanged = client.pid !== data.pid;
-      await updateClientAndProjectName(client.cid!, data, client.name, pidChanged ? client.pid : undefined);
+      await updateClientAndProjectName(client.cid!, safeData, client.name, pidChanged ? client.pid : undefined);
       toast.success("Client updated successfully!");
       setIsOpen(false);
       onSuccess?.();
@@ -71,6 +76,20 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
       toast.error("Failed to update client. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!client.cid) return;
+    try {
+      await deleteDoc(doc(db, "clients", client.cid));
+      toast.success("Client deleted successfully!");
+      setShowDeleteConfirm(false);
+      setIsOpen(false);
+      onSuccess?.();
+    } catch (error) {
+      console.error("Error deleting client:", error);
+      toast.error("Failed to delete client. Please try again.");
     }
   };
 
@@ -190,32 +209,51 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="cid"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Client ID</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter client ID" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setIsOpen(false)}
+           
+            <div className="flex justify-between items-center pt-4">
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => setShowDeleteConfirm(true)}
                 disabled={isLoading}
               >
-                Cancel
+                Delete
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Saving..." : "Save changes"}
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsOpen(false)}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Saving..." : "Save changes"}
+                </Button>
+              </div>
             </div>
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+              <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                <DialogContent className="max-w-xs w-full">
+                  <DialogHeader>
+                    <DialogTitle>Delete Client</DialogTitle>
+                    <DialogDescription>
+                      Are you sure you want to delete this client? This action cannot be undone.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+                      Cancel
+                    </Button>
+                    <Button variant="destructive" onClick={handleDelete}>
+                      Delete
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
           </form>
         </Form>
       </DialogContent>

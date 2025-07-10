@@ -71,7 +71,6 @@ export default function ClientForm() {
           year,
           clientNames: [result.data.name],
           startDate: serverTimestamp(),
-          sendingInstitution: result.data.affiliation,
           // ...other fields
         }, { merge: true });
         router.push(`/client/project-info?pid=${pid}&cid=${cid}`);

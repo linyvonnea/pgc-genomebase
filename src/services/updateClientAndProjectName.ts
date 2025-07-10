@@ -1,5 +1,5 @@
 import { db } from "@/lib/firebase";
-import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, updateDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { Client } from "@/types/Client";
 
 export async function updateClientAndProjectName(cid: string, data: Partial<Client>, oldName?: string, oldPid?: string) {
@@ -7,7 +7,19 @@ export async function updateClientAndProjectName(cid: string, data: Partial<Clie
   const clientRef = doc(db, "clients", cid);
   await setDoc(clientRef, data, { merge: true });
 
-  // Remove client name from old project if pid changed
+  // Update all projects where clientNames contains oldName
+  if (oldName && oldName.trim() && data.name && data.name.trim()) {
+    const projectsRef = collection(db, "projects");
+    const q = query(projectsRef, where("clientNames", "array-contains", oldName));
+    const snapshot = await getDocs(q);
+    for (const projectDoc of snapshot.docs) {
+      let clientNames: string[] = Array.isArray(projectDoc.data().clientNames) ? projectDoc.data().clientNames : [];
+      clientNames = clientNames.map(n => n === oldName ? data.name! : n);
+      await updateDoc(projectDoc.ref, { clientNames });
+    }
+  }
+
+  // Remove client name from old project if pid changed (legacy logic)
   if (oldPid && oldPid !== data.pid && oldName && oldName.trim()) {
     const oldProjectRef = doc(db, "projects", oldPid);
     const oldProjectSnap = await getDoc(oldProjectRef);
@@ -18,7 +30,7 @@ export async function updateClientAndProjectName(cid: string, data: Partial<Clie
     }
   }
 
-  // Add or update client name in new project
+  // Add or update client name in new project (legacy logic)
   if (data.name && data.pid) {
     const projectRef = doc(db, "projects", data.pid);
     const projectSnap = await getDoc(projectRef);
