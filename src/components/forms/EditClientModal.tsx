@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { adminClientSchema, AdminClientData } from "@/schemas/adminClientSchema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Trash2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -211,14 +212,15 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
             />
            
             <div className="flex justify-between items-center pt-4">
-              <Button
+              <button
                 type="button"
-                variant="destructive"
+                className="flex items-center gap-1 text-red-600 hover:text-red-700 text-sm font-medium bg-transparent border-none p-0 m-0 focus:outline-none"
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={isLoading}
+                style={{ boxShadow: "none", background: "none" }}
               >
-                Delete
-              </Button>
+                <Trash2 className="h-4 w-4" /> Delete
+              </button>
               <div className="flex gap-2">
                 <Button 
                   type="button" 
