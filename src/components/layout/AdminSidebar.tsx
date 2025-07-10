@@ -11,6 +11,8 @@ import {
   MessageSquare,
   FileText,
   Settings,
+  Calculator,
+  Receipt,
 } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,6 +32,11 @@ export function AdminSidebar() {
       label: "Dashboard", 
       icon: LayoutDashboard,
     },
+        { 
+      href: "/admin/inquiry", 
+      label: "Inquiries", 
+      icon: MessageSquare,
+    },
     { 
       href: "/admin/clients", 
       label: "Clients", 
@@ -41,11 +48,6 @@ export function AdminSidebar() {
       icon: LibraryBig,
     },
     { 
-      href: "/admin/inquiry", 
-      label: "Inquiries", 
-      icon: MessageSquare,
-    },
-    { 
       href: "/admin/quotations", 
       label: "Quotations", 
       icon: FileText,
@@ -53,7 +55,12 @@ export function AdminSidebar() {
     { 
       href: "/admin/charge-slips", 
       label: "Charge Slips", 
-      icon: FileText,
+      icon: Receipt,
+    },
+    { 
+      href: "/admin/manual-quotation", 
+      label: "Manual Quotation", 
+      icon: Calculator,
     },
     { 
       href: "/admin/settings", 
