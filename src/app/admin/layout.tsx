@@ -1,11 +1,6 @@
 // src/app/admin/layout.tsx
 "use client";
 
-import {
-  SidebarProvider,
-  Sidebar,
-  SidebarInset,
-} from "@/components/ui/sidebar";
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { Toaster } from "@/components/ui/sonner";
 import useAuth from "@/hooks/useAuth";
@@ -26,21 +21,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (loading || !user || !isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
-        <p className="text-sm text-muted-foreground">Checking access...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-6 relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-[#F69122]/10 to-[#912ABD]/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-[#166FB5]/10 to-[#4038AF]/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+        
+        <div className="relative z-10 text-center space-y-4">
+          <div className="w-16 h-16 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] rounded-full flex items-center justify-center mx-auto animate-spin">
+            <div className="w-8 h-8 bg-white rounded-full"></div>
+          </div>
+          <div>
+            <p className="text-lg font-semibold text-slate-700">Checking access...</p>
+            <p className="text-sm text-muted-foreground">Please wait while we verify your permissions</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <AdminSidebar />
-      </Sidebar>
-      <SidebarInset>
-        <main className="p-6">{children}</main>
-      </SidebarInset>
+    <div className="flex h-screen">
+      <AdminSidebar />
+      <main className="flex-1 overflow-auto bg-gradient-to-br from-slate-50/30 via-blue-50/20 to-indigo-50/30">
+        <div className="p-6 lg:p-8">
+          {children}
+        </div>
+      </main>
       <Toaster />
-    </SidebarProvider>
+    </div>
   );
 }

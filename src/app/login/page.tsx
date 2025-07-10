@@ -2,11 +2,24 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import useAuth from "@/hooks/useAuth";
+import { 
+  UserCheck, 
+  Shield,
+  ArrowRight,
+  Info,
+  Mail,
+  ArrowLeft
+} from "lucide-react";
 
 export default function LoginPage() {
   const [agreed, setAgreed] = useState(false);
@@ -15,7 +28,7 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     if (!agreed) {
-      toast.warning("Please agree to the privacy notice.");
+      toast.warning("Please agree to the privacy notice and terms of service.");
       return;
     }
 
@@ -38,63 +51,134 @@ export default function LoginPage() {
   }, [user, isAdmin, loading, router]);
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-background px-6">
-      <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-        {/* Left Section */}
-        <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold tracking-tight">WELCOME TO PGC GENOMEBASE!</h1>
-          <div className="flex justify-center">
-            <Image
-              src="/assets/pgc-logo.png"
-              alt="PGC Logo"
-              width={280}
-              height={140}
-              className="mb-2"
-            />
-          </div>
-          <h2 className="text-lg font-semibold">Quote Request</h2>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
-            ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-            laboris nisi ut aliquip ex ea commodo consequat.
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-[#F69122]/10 to-[#912ABD]/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-[#166FB5]/10 to-[#4038AF]/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
+        {/* Back to Home Link */}
+        <div className="mb-6">
+          <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
+          </Link>
         </div>
 
-        {/* Right Section */}
-        <div
-          className="rounded-3xl p-6 md:p-8 shadow-lg backdrop-blur-lg"
-          style={{
-            background:
-              "linear-gradient(135deg, #F69122 0%, #B9273A 15%, #912ABD 33%, #6E30BE 46%, #633190 58%, #40388F 88%, #166FB5 100%)",
-          }}
-        >
-          <div className="space-y-4 text-white">
-            <h2 className="text-lg font-bold">Privacy Notice</h2>
-            <div className="border border-white/50 rounded-md p-4 text-sm bg-white/10">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
-              ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-              laboris nisi ut aliquip ex ea commodo consequat.
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="agree"
-                checked={agreed}
-                onCheckedChange={(checked) => setAgreed(checked === true)}
-                className="border-white data-[state=checked]:bg-white"
+        {/* Login Card */}
+        <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
+          <CardHeader className="text-center space-y-6 pb-6">
+            {/* Logo */}
+            <div className="flex justify-center">
+              <Image
+                src="/assets/pgc-logo.png"
+                alt="PGC Logo"
+                width={180}
+                height={65}
+                className="object-contain"
               />
-              <label htmlFor="agree" className="text-sm">
-                I Agree
-              </label>
             </div>
-            <Button
-              onClick={handleLogin}
-              className="w-full bg-white text-black hover:bg-gray-100 transition"
-            >
-              Sign in with Google
-            </Button>
-          </div>
-        </div>
+            
+            {/* User Icon */}
+            <div className="relative mx-auto">
+              <div className="w-20 h-20 bg-gradient-to-br from-[#F69122] via-[#B9273A] to-[#912ABD] rounded-full flex items-center justify-center shadow-lg">
+                <UserCheck className="h-10 w-10 text-white" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-gradient-to-r from-[#166FB5] to-[#4038AF] rounded-full flex items-center justify-center border-2 border-white">
+                <Shield className="w-4 h-4 text-white" />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <CardTitle className="text-3xl font-bold">Sign In</CardTitle>
+              <CardDescription className="text-base text-muted-foreground">
+                Access your genomic services dashboard
+              </CardDescription>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="space-y-6">
+            {/* Enhanced Privacy Notice */}
+            <div className="space-y-4">
+              <div className="bg-gradient-to-r from-[#166FB5]/10 via-[#4038AF]/10 to-[#912ABD]/10 p-5 rounded-xl border border-[#166FB5]/30 relative overflow-hidden">
+                <div className="absolute top-2 right-2">
+                  <Info className="h-4 w-4 text-[#166FB5]" />
+                </div>
+                <h3 className="font-semibold text-sm mb-3 text-[#166FB5] flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  Privacy Notice
+                </h3>
+                <p className="text-xs text-[#4038AF] leading-relaxed">
+                  We respect your privacy and are committed to protecting your personal data. 
+                  Your information will be used solely for genomic service purposes and 
+                  communication with PGC Visayas.
+                </p>
+              </div>
+              
+              <div className="flex items-start gap-3 p-2">                  <Checkbox
+                    id="agree"
+                    checked={agreed}
+                    onCheckedChange={(checked) => setAgreed(checked === true)}
+                    className="mt-1 data-[state=checked]:bg-[#166FB5] data-[state=checked]:border-[#166FB5]"
+                  />
+                <label htmlFor="agree" className="text-sm leading-relaxed cursor-pointer select-none">
+                  I agree to the privacy notice and terms of service.
+                </label>
+              </div>
+            </div>
+
+            <Separator className="my-6" />
+
+            {/* Enhanced Login Button */}
+            <div className="space-y-4">
+              <Button
+                onClick={handleLogin}
+                disabled={!agreed || loading}
+                className="w-full h-14 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-base"
+              >
+                {loading ? (
+                  <div className="flex items-center gap-3">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Signing in...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <Mail className="h-5 w-5" />
+                    Sign in with Google
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </div>
+                )}
+              </Button>
+
+              <div className="text-center space-y-2">
+                <Badge variant="secondary" className="text-xs flex items-center gap-1 mx-auto w-fit bg-gradient-to-r from-[#166FB5] to-[#4038AF] text-white border-0">
+                  <Shield className="w-3 h-3" />
+                  Secure authentication powered by Google
+                </Badge>
+                
+                {loading && (
+                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                    <Skeleton className="h-3 w-3 rounded-full" />
+                    <span>Connecting to authentication service...</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Need help section */}
+            <div className="text-center pt-4 border-t border-border">
+              <p className="text-xs text-muted-foreground">
+                Need help? Contact us at{" "}
+                <a href="mailto:support@pgc-genomebase.com" className="text-[#166FB5] hover:underline">
+                  support@pgc-genomebase.com
+                </a>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </main>
+    </div>
   );
 }
