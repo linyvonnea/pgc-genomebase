@@ -12,7 +12,12 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (!loading && !user) {
-      router.replace("/login");
+      // If not logged in, but on /client/client-info, redirect to /verify instead of /login
+      if (typeof window !== 'undefined' && window.location.pathname === '/client/client-info') {
+        router.replace('/verify');
+      } else {
+        router.replace('/login');
+      }
     } else if (!loading && user && isAdmin) {
       router.replace("/admin/dashboard");
     }

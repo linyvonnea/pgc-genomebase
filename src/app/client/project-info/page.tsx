@@ -27,6 +27,7 @@ export default function ProjectForm() {
   const searchParams = useSearchParams();
   const pid = searchParams.get("pid");
   const cid = searchParams.get("cid");
+  const inquiryId = searchParams.get("inquiryId");
 
   const [formData, setFormData] = useState<ProjectFormData>({
     title: "",
@@ -122,7 +123,7 @@ export default function ProjectForm() {
 
       const payload = {
         pid: pid || "",
-        iid: "", // Set iid as empty string
+        iid: inquiryId || "", // Store inquiryId in the project table
         year,
         startDate: Timestamp.fromDate(result.data.startDate),
         createdAt,
