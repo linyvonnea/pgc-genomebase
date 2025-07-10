@@ -86,10 +86,6 @@ export const columns: ColumnDef<Inquiry>[] = [
     },
   },
   {
-    accessorKey: "year",
-    header: "Year",
-  },
-  {
     id: "actions",
     header: "Actions",
     cell: ({ row }) => {

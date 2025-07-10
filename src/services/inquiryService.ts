@@ -33,7 +33,6 @@ export async function getInquiries(): Promise<Inquiry[]> {
       // Create inquiry object with proper defaults
       const inquiry: Inquiry = {
         id: doc.id,
-        year: data.year || new Date().getFullYear(),
         createdAt: createdAt,
         name: data.name || 'Unknown',
         status: data.status || 'Pending',
@@ -42,7 +41,6 @@ export async function getInquiries(): Promise<Inquiry[]> {
         designation: data.designation || '',
         email: data.email || undefined
       };
-      
       inquiries.push(inquiry);
     });
     
@@ -76,15 +74,13 @@ export const createInquiry = async (inquiryData: any) => {
       targetTrainingDate: inquiryData.targetTrainingDate || null,
       numberOfParticipants: inquiryData.numberOfParticipants || null,
       createdAt: serverTimestamp(),
-      year: currentDate.getFullYear(),
       status: 'Pending',
       isApproved: false,
-      // Set default serviceType if not provided
       serviceType: inquiryData.service || 'added manual record'
+      // Removed year here
     };
 
     const docRef = await addDoc(collection(db, "inquiries"), transformedData);
-    
     return docRef.id;
   } catch (error) {
     console.error("Error creating inquiry:", error);
@@ -103,14 +99,14 @@ export async function getInquiryById(id: string): Promise<Inquiry> {
 
     return {
       id: snap.id,
-      year: data.year || new Date().getFullYear(),
       createdAt: data.createdAt?.toDate?.() ?? new Date(),
       name: data.name || "Unknown",
       status: data.status || "Pending",
       isApproved: data.isApproved || false,
       affiliation: data.affiliation || "",
       designation: data.designation || "",
-      email: data.email ?? "", // fallback to empty string
+      email: data.email ?? "",
+      // Removed year here
     };
   } catch (error) {
     console.error(` Failed to fetch inquiry ${id}:`, error);

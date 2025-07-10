@@ -4,7 +4,6 @@ import { z } from "zod";
 // Base schema without service (for stored data)
 export const inquirySchema = z.object({
   id: z.string(),
-  year: z.number(),
   createdAt: z.date(),
   name: z.string().min(1, "Name is required").max(100, "Name must be at most 100 characters"),
   affiliation: z.string().min(1, "Affiliation is required").max(200, "Affiliation must be at most 200 characters"),
@@ -36,7 +35,6 @@ export const inquiryFormSchema = inquirySchema
   .omit({ 
     id: true, 
     createdAt: true, 
-    year: true,
     isApproved: true,
     status: true,
   })

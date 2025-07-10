@@ -62,7 +62,6 @@ export function AddInquiryModal({ onSuccess }: AddInquiryModalProps) {
       const inquiryData = {
         ...data,
         createdAt: currentDate,
-        year: currentDate.getFullYear(),
         isApproved: data.status === 'Approved Client',
       };
 
