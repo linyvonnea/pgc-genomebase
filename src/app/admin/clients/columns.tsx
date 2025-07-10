@@ -50,5 +50,14 @@ export const columns: ColumnDef<Client>[] = [
     accessorKey: "phoneNumber",
     header: "Phone Number",
   },
- 
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => {
+      const client = row.original;
+      // Lazy import to avoid circular dependency if needed
+      const EditClientModal = require("@/components/forms/EditClientModal").EditClientModal;
+      return <EditClientModal client={client} onSuccess={() => {}} />;
+    },
+  },
 ]

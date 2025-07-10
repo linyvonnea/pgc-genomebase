@@ -6,7 +6,7 @@ export const projectFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
   projectLead: z.string().min(1, "Project Lead is required"),
   startDate: z.date(),
-  sendingInstitution: z.string().min(1, "Sending institution is required"),
+  sendingInstitution:  z.enum(["UP System", "SUC/HEI", "Government", "Private/Local", "International", "N/A"]),
   fundingInstitution: z.string().min(1, "Funding institution is required"),
 });
 
@@ -24,8 +24,8 @@ export const projectSchema = z.object({
   title: z.string().optional(),
   projectTag: z.string().optional(),
   status: z.string().optional(),
-  sendingInstitution: z.string().optional(),
-  fundingCategory: z.string().optional(),
+  sendingInstitution:  z.enum(["UP System", "SUC/HEI", "Government", "Private/Local", "International", "N/A"]).optional(),
+  fundingCategory: z.enum(["External", "In-House"]).optional(),
   fundingInstitution: z.string().optional(),
   serviceRequested: z.array(z.string()).optional(),
   personnelAssigned: z.string().optional(),

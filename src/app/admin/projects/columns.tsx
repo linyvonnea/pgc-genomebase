@@ -97,8 +97,14 @@ export const columns: ColumnDef<Project>[] = [
     accessorKey: "notes",
     header: "Notes",
   },
-
-
-
- 
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => {
+      const project = row.original;
+      // Lazy import to avoid circular dependency if needed
+      const EditProjectModal = require("@/components/forms/EditProjectModal").EditProjectModal;
+      return <EditProjectModal project={project} onSuccess={() => {}} />;
+    },
+  },
 ]
