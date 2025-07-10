@@ -32,6 +32,8 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { createInquiry } from "@/services/inquiryService";
+import { revalidatePath } from "next/cache";
+import { useRouter } from "next/navigation";
 
 interface AddInquiryModalProps {
   onSuccess?: () => void;
@@ -40,6 +42,7 @@ interface AddInquiryModalProps {
 export function AddInquiryModal({ onSuccess }: AddInquiryModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const form = useForm<AdminInquiryData>({
     resolver: zodResolver(adminInquirySchema),
@@ -69,6 +72,10 @@ export function AddInquiryModal({ onSuccess }: AddInquiryModalProps) {
       form.reset();
       setIsOpen(false);
       onSuccess?.();
+      
+      // Refresh the page to show the new data
+      router.refresh();
+      
     } catch (error) {
       console.error("Error creating inquiry:", error);
       toast.error("Failed to add inquiry. Please try again.");
@@ -98,7 +105,9 @@ export function AddInquiryModal({ onSuccess }: AddInquiryModalProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>
+                    Name <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Enter name" {...field} />
                   </FormControl>
@@ -112,7 +121,9 @@ export function AddInquiryModal({ onSuccess }: AddInquiryModalProps) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>
+                    Email <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="Enter email" {...field} />
                   </FormControl>
@@ -126,7 +137,9 @@ export function AddInquiryModal({ onSuccess }: AddInquiryModalProps) {
               name="affiliation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Affiliation</FormLabel>
+                  <FormLabel>
+                    Affiliation <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Enter affiliation" {...field} />
                   </FormControl>
@@ -140,7 +153,9 @@ export function AddInquiryModal({ onSuccess }: AddInquiryModalProps) {
               name="designation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Designation</FormLabel>
+                  <FormLabel>
+                    Designation <span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input placeholder="Enter designation" {...field} />
                   </FormControl>

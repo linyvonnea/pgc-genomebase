@@ -99,8 +99,9 @@ export const columns: ColumnDef<Inquiry>[] = [
       return (
         <div className="flex items-center gap-2">
           <EditInquiryModal
+            key={inquiry.id} 
             inquiry={inquiry}
-            onSuccess={() => window.location.reload()}
+            onSuccess={() => router.refresh()}
           />
           <Button
             onClick={() =>

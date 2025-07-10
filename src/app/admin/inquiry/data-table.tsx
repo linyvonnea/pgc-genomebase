@@ -1,4 +1,3 @@
-// src/app/admin/inquiry/data-table.tsx
 "use client"
 
 import {
@@ -38,6 +37,7 @@ export function DataTable<TData, TValue>({
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
+  const [activeStatusFilter, setActiveStatusFilter] = useState<string | undefined>(undefined)
 
   const table = useReactTable({
     data,
@@ -56,6 +56,11 @@ export function DataTable<TData, TValue>({
     },
   })
 
+  const handleStatusFilter = (status: string | undefined) => {
+    setActiveStatusFilter(status)
+    table.getColumn("status")?.setFilterValue(status)
+  }
+
   return (
     <div className="space-y-4">
       {/* Search and Filter Controls */}
@@ -68,35 +73,27 @@ export function DataTable<TData, TValue>({
             className="max-w-sm"
           />
           <Button
-            variant="outline"
-            onClick={() => {
-              table.getColumn("status")?.setFilterValue("Approved Client")
-            }}
+            variant={activeStatusFilter === "Approved Client" ? "default" : "outline"}
+            onClick={() => handleStatusFilter("Approved Client")}
             className="ml-2"
           >
             Approved Client
           </Button>
           <Button
-            variant="outline"
-            onClick={() => {
-              table.getColumn("status")?.setFilterValue("Quotation Only")
-            }}
+            variant={activeStatusFilter === "Quotation Only" ? "default" : "outline"}
+            onClick={() => handleStatusFilter("Quotation Only")}
           >
             Quotation Only
           </Button>
           <Button
-            variant="outline"
-            onClick={() => {
-              table.getColumn("status")?.setFilterValue("Pending")
-            }}
+            variant={activeStatusFilter === "Pending" ? "default" : "outline"}
+            onClick={() => handleStatusFilter("Pending")}
           >
             Pending
           </Button>
           <Button
-            variant="outline"
-            onClick={() => {
-              table.getColumn("status")?.setFilterValue(undefined)
-            }}
+            variant={activeStatusFilter === undefined ? "default" : "outline"}
+            onClick={() => handleStatusFilter(undefined)}
           >
             All
           </Button>
