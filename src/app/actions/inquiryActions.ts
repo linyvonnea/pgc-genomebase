@@ -19,6 +19,10 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       additionalInfo: inquiryData.additionalInfo || null,
       projectBackground: inquiryData.projectBackground || null,
       projectBudget: inquiryData.projectBudget || null,
+      // Add the new training service fields
+      specificTrainingNeed: inquiryData.specificTrainingNeed || null,
+      targetTrainingDate: inquiryData.targetTrainingDate || null,
+      numberOfParticipants: inquiryData.numberOfParticipants || null,
       createdAt: serverTimestamp(),
       year: currentDate.getFullYear(),
       status: 'Pending',

@@ -27,7 +27,10 @@ export default function QuotationRequestForm() {
       workflows: [],
       additionalInfo: "",
       projectBackground: "",
-      projectBudget: ""
+      projectBudget: "",
+      specificTrainingNeed: "",
+      targetTrainingDate: "",
+      numberOfParticipants: undefined
     }
   })
 
@@ -36,12 +39,15 @@ export default function QuotationRequestForm() {
 
   const handleServiceChange = (value: string) => {
     setSelectedService(value)
-    setValue("service", value as "laboratory" | "research")
+    setValue("service", value as "laboratory" | "research" | "training")
     // Reset service-specific fields when switching
     setValue("workflows", [])
     setValue("additionalInfo", "")
     setValue("projectBackground", "")
     setValue("projectBudget", "")
+    setValue("specificTrainingNeed", "")
+    setValue("targetTrainingDate", "")
+    setValue("numberOfParticipants", undefined)
   }
 
   const handleWorkflowChange = (workflow: string, checked: boolean) => {
@@ -91,7 +97,7 @@ export default function QuotationRequestForm() {
           <p className="text-gray-600 leading-relaxed text-justify mb-6">
             Thank you for reaching out to PGC researchers for your research needs. We offer a range of 
             services from Equipment Use, DNA Extraction, Polymerase Chain Reaction (PCR), Sample 
-            Purification, Next Generation Sequencing (NGS), and Bioinformatics Analysis. To assist 
+            Purification, Next Generation Sequencing (NGS), Bioinformatics Analysis, and Training Services. To assist 
             you better kindly provide us with the following information:
           </p>
 
@@ -161,6 +167,7 @@ export default function QuotationRequestForm() {
                   <SelectContent>
                     <SelectItem value="laboratory">Laboratory Service</SelectItem>
                     <SelectItem value="research">Research and Collaboration</SelectItem>
+                    <SelectItem value="training">Training Service</SelectItem>
                   </SelectContent>
                 </Select>
                 {errors.service && (
@@ -260,6 +267,61 @@ export default function QuotationRequestForm() {
                     />
                     {errors.projectBudget && (
                       <p className="text-red-500 text-sm mt-1">{errors.projectBudget.message}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {selectedService === "training" && (
+                <div className="space-y-4">
+                  {/* Specific Training Need */}
+                  <div>
+                    <Label htmlFor="specificTrainingNeed" className="text-sm font-medium text-gray-700">
+                      Specific Training Need <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="specificTrainingNeed"
+                      type="text"
+                      placeholder="Describe the specific training you need..."
+                      {...register("specificTrainingNeed")}
+                      className="mt-1"
+                    />
+                    {errors.specificTrainingNeed && (
+                      <p className="text-red-500 text-sm mt-1">{errors.specificTrainingNeed.message}</p>
+                    )}
+                  </div>
+
+                  {/* Target Date for Training */}
+                  <div>
+                    <Label htmlFor="targetTrainingDate" className="text-sm font-medium text-gray-700">
+                      Target Date for the Training <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="targetTrainingDate"
+                      type="date"
+                      {...register("targetTrainingDate")}
+                      className="mt-1"
+                    />
+                    {errors.targetTrainingDate && (
+                      <p className="text-red-500 text-sm mt-1">{errors.targetTrainingDate.message}</p>
+                    )}
+                  </div>
+
+                  {/* Number of Participants */}
+                  <div>
+                    <Label htmlFor="numberOfParticipants" className="text-sm font-medium text-gray-700">
+                      Number of Participants <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="numberOfParticipants"
+                      type="number"
+                      min="1"
+                      placeholder="Enter number of participants"
+                      {...register("numberOfParticipants", { valueAsNumber: true })}
+                      className="mt-1"
+                    />
+                    {errors.numberOfParticipants && (
+                      <p className="text-red-500 text-sm mt-1">{errors.numberOfParticipants.message}</p>
                     )}
                   </div>
                 </div>
