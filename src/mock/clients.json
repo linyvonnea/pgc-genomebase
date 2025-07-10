@@ -1,6 +1,6 @@
 [
     {
-        "id": "CL-2024-001",
+        "cid": "CL-2024-001",
         "pid": "P-2024-001",
         "projectName": "Metabarcoding of Gut Microbiota in Farmed vs Wild Tilapia",
         "year": 2024,
@@ -11,7 +11,7 @@
         "status": "Completed",
         "name": "Dr. Dominador Castigador Jr.",
         "affiliation": "Institute of Aquaculture, College of Fisheries and Ocean Sciences, UP Visayas",
-        "address": "Miagao, Iloilo",
+        "affiliationAddress": "Miagao, Iloilo",
         "sex": "M",
         "designation": "University Researcher (Scientist I)",
         "email": "dominador.castigador@up.edu.ph",
@@ -20,7 +20,7 @@
         "haveSubmitted": true
     },
     {
-        "id": "CL-2024-002",
+        "cid": "CL-2024-002",
         "pid": "P-2024-001",
         "projectName": "Metabarcoding of Gut Microbiota in Farmed vs Wild Tilapia",
         "year": 2024,
@@ -31,7 +31,7 @@
         "status": "Completed",
         "name": "Solomon Salazar",
         "affiliation": "Institute of Aquaculture, College of Fisheries and Ocean Sciences, UP Visayas",
-        "address": "Miagao, Iloilo",
+        "affiliationAddress": "Miagao, Iloilo",
         "sex": "M",
         "designation": "Research Assistant",
         "email": "solomon.salazar@up.edu.ph",
@@ -40,7 +40,7 @@
         "haveSubmitted": true
     },
     {
-        "id": "CL-2024-003",
+        "cid": "CL-2024-003",
         "pid": "P-2024-001",
         "projectName": "Metabarcoding of Gut Microbiota in Farmed vs Wild Tilapia",
         "year": 2024,
@@ -51,7 +51,7 @@
         "status": "Completed",
         "name": "Dinah Malaki",
         "affiliation": "Institute of Aquaculture, College of Fisheries and Ocean Sciences, UP Visayas",
-        "address": "Miagao, Iloilo",
+        "affiliationAddress": "Miagao, Iloilo",
         "sex": "F",
         "designation": "Research Assistant",
         "email": "dinah.malaki@up.edu.ph",
@@ -60,7 +60,7 @@
         "haveSubmitted": true
     },
     {
-        "id": "CL-2024-004",
+        "cid": "CL-2024-004",
         "pid": "P-2024-002",
         "projectName": "Resolving Species Boundaries in Mangrove Plants Using Multi-Gene Phylogenetic Analysis",
         "year": 2024,
@@ -71,7 +71,7 @@
         "status": "Ongoing",
         "name": "Dr. Rex Sabado",
         "affiliation": "Plant Science Department, Aklan State University",
-        "address": "Banga, Aklan",
+        "affiliationAddress": "Banga, Aklan",
         "sex": "M",
         "designation": "Assistant Professor",
         "email": "rex.sabado@asu.edu.ph",
@@ -80,7 +80,7 @@
         "haveSubmitted": true
     },
     {
-        "id": "CL-2024-005",
+        "cid": "CL-2024-005",
         "pid": "P-2024-002",
         "projectName": "Resolving Species Boundaries in Mangrove Plants Using Multi-Gene Phylogenetic Analysis",
         "year": 2024,
@@ -91,7 +91,7 @@
         "status": "Ongoing",
         "name": "Nestor dela Paz",
         "affiliation": "Plant Science Department, Aklan State University",
-        "address": "Banga, Aklan",
+        "affiliationAddress": "Banga, Aklan",
         "sex": "M",
         "designation": "Faculty",
         "email": "nestor.delapaz@asu.edu.ph",
@@ -100,7 +100,7 @@
         "haveSubmitted": true
     },
     {
-        "id": "CL-2024-006",
+        "cid": "CL-2024-006",
         "pid": "P-2024-003",
         "projectName": "Isolation and Characterization of Endophytic Bacteria from Leaves of Banana (Musa spp.)",
         "year": 2024,
@@ -111,7 +111,7 @@
         "status": "Completed",
         "name": "Esther Mae Abellana",
         "affiliation": "Central Philippine University",
-        "address": "Jaro, Iloilo",
+        "affiliationAddress": "Jaro, Iloilo",
         "sex": "F",
         "designation": "Student",
         "email": "esther.abellana@cpu.edu.ph",
@@ -120,7 +120,7 @@
         "haveSubmitted": true
     },
     {
-        "id": "CL-2024-007",
+        "cid": "CL-2024-007",
         "pid": "P-2024-004",
         "projectName": "Metagenomic Profiling of Oil-Contaminated Mangrove Sediments",
         "year": 2024,
@@ -131,7 +131,7 @@
         "status": "Completed",
         "name": "Thaddeus Alvarado",
         "affiliation": "DENR Regional Office 6",
-        "address": "Pepita Aquino St., Port Area, Iloilo City",
+        "affiliationAddress": "Pepita Aquino St., Port Area, Iloilo City",
         "sex": "M",
         "designation": "Researcher",
         "email": "thaddeus.alvarado@denr.gov.ph",
@@ -140,7 +140,7 @@
         "haveSubmitted": true
     },
     {
-        "id": "CL-2024-008",
+        "cid": "CL-2024-008",
         "pid": "P-2024-005",
         "projectName": "Molecular Identification of Irrawaddy Dolphin Stranded in Antique",
         "year": 2024,
@@ -151,7 +151,7 @@
         "status": "Completed",
         "name": "Rufina Rafa Cabungcal",
         "affiliation": "DOST VI",
-        "address": "La Paz, Iloilo City",
+        "affiliationAddress": "La Paz, Iloilo City",
         "sex": "F",
         "designation": "Researcher",
         "email": "rufina.cabungcal@dost.gov.ph",
@@ -160,7 +160,7 @@
         "haveSubmitted": true
     },
     {
-        "id": "CL-2024-009",
+        "cid": "CL-2024-009",
         "pid": "P-2024-007",
         "projectName": "Amplicon Sequencing of Chanos chanos",
         "year": 2024,
@@ -171,7 +171,7 @@
         "status": "Completed",
         "name": "Nerian Naragdao",
         "affiliation": "Samar State University",
-        "address": "Brgy. Guindaponan, Catbalogan City, Samar",
+        "affiliationAddress": "Brgy. Guindaponan, Catbalogan City, Samar",
         "sex": "F",
         "designation": "URA II",
         "email": "nerian.naragdao@ssu.edu.ph",
@@ -180,7 +180,7 @@
         "haveSubmitted": true
     },
     {
-        "id": "CL-2024-010",
+        "cid": "CL-2024-010",
         "pid": "P-2024-008",
         "projectName": "Storage of Samples",
         "year": 2024,
@@ -189,9 +189,9 @@
             "value": "2024-12-16T00:00:00Z"
         },
         "status": "Ongoing",
-        "name": "Leocadio Mabinni",
+        "name": "Leocadio Mabini",
         "affiliation": "SOTECH UPV",
-        "address": "Miagao, Iloilo",
+        "affiliationAddress": "Miagao, Iloilo",
         "sex": "M",
         "designation": "Project Assistant",
         "email": "leocadio.mabinni@up.edu.ph",
@@ -200,7 +200,7 @@
         "haveSubmitted": true
     },
     {
-        "id": "CL-2025-011",
+        "cid": "CL-2025-011",
         "pid": "P-2025-009",
         "projectName": "Whole Genome Sequencing of Osmoxylon lineare",
         "year": 2025,
@@ -211,7 +211,7 @@
         "status": "Ongoing",
         "name": "Ezekiel Rafael Santos",
         "affiliation": "Division of Biological Sciences, College of Arts and Sciences, UP Visayas",
-        "address": "Miagao, Iloilo",
+        "affiliationAddress": "Miagao, Iloilo",
         "sex": "M",
         "designation": "Project Leader",
         "email": "ezekiel.santos@up.edu.ph",
@@ -220,7 +220,7 @@
         "haveSubmitted": false
     },
     {
-        "id": "CL-2025-012",
+        "cid": "CL-2025-012",
         "pid": "P-2025-009",
         "projectName": "Whole Genome Sequencing of Osmoxylon lineare",
         "year": 2025,
@@ -231,7 +231,7 @@
         "status": "Ongoing",
         "name": "Maria Allia Buan",
         "affiliation": "Division of Biological Sciences, College of Arts and Sciences, UP Visayas",
-        "address": "Miagao, Iloilo",
+        "affiliationAddress": "Miagao, Iloilo",
         "sex": "F",
         "designation": "Project Assistant",
         "email": "maria.buan@up.edu.ph",
@@ -240,7 +240,7 @@
         "haveSubmitted": false
     },
     {
-        "id": "CL-2025-013",
+        "cid": "CL-2025-013",
         "pid": "P-2025-009",
         "projectName": "Whole Genome Sequencing of Osmoxylon lineare",
         "year": 2025,
@@ -251,7 +251,7 @@
         "status": "Ongoing",
         "name": "Isabella Noa Perez",
         "affiliation": "Division of Biological Sciences, College of Arts and Sciences, UP Visayas",
-        "address": "Miagao, Iloilo",
+        "affiliationAddress": "Miagao, Iloilo",
         "sex": "F",
         "designation": "Project Member",
         "email": "isabella.perez@up.edu.ph",
@@ -260,7 +260,7 @@
         "haveSubmitted": false
     },
     {
-        "id": "CL-2025-014",
+        "cid": "CL-2025-014",
         "pid": "P-2025-010",
         "projectName": "Metagenomic Analysis of Soil Microbiota in Agricultural vs Undisturbed Lands in Oton, Iloilo",
         "year": 2025,
@@ -271,7 +271,7 @@
         "status": "Ongoing",
         "name": "Maria Jossana Therese Magbanua",
         "affiliation": "Division of Biological Sciences, College of Arts and Sciences, UP Visayas",
-        "address": "Miagao, Iloilo",
+        "affiliationAddress": "Miagao, Iloilo",
         "sex": "F",
         "designation": "Lead",
         "email": "mj.magbanua@up.edu.ph",
@@ -280,7 +280,7 @@
         "haveSubmitted": true
     },
     {
-        "id": "CL-2025-015",
+        "cid": "CL-2025-015",
         "pid": "P-2025-010",
         "projectName": "Metagenomic Analysis of Soil Microbiota in Agricultural vs Undisturbed Lands in Oton, Iloilo",
         "year": 2025,
@@ -291,7 +291,7 @@
         "status": "Ongoing",
         "name": "Rhonin Kenshin Murata",
         "affiliation": "Division of Biological Sciences, College of Arts and Sciences, UP Visayas",
-        "address": "Miagao, Iloilo",
+        "affiliationAddress": "Miagao, Iloilo",
         "sex": "M",
         "designation": "",
         "email": "rhonin.murata@up.edu.ph",
@@ -300,7 +300,7 @@
         "haveSubmitted": false
     },
     {
-        "id": "CL-2025-016",
+        "cid": "CL-2025-016",
         "pid": "P-2025-010",
         "projectName": "Metagenomic Analysis of Soil Microbiota in Agricultural vs Undisturbed Lands in Oton, Iloilo",
         "year": 2025,
@@ -311,7 +311,7 @@
         "status": "Ongoing",
         "name": "Almiro Alejandro",
         "affiliation": "Division of Biological Sciences, College of Arts and Sciences, UP Visayas",
-        "address": "Miagao, Iloilo",
+        "affiliationAddress": "Miagao, Iloilo",
         "sex": "M",
         "designation": "",
         "email": "almiro.alejandro@up.edu.ph",
@@ -320,7 +320,7 @@
         "haveSubmitted": false
     },
     {
-        "id": "CL-2025-017",
+        "cid": "CL-2025-017",
         "pid": "P-2025-011",
         "projectName": "Whole Genome Sequencing of Negros Bleeding Heart Pigeon",
         "year": 2025,
@@ -331,7 +331,7 @@
         "status": "Ongoing",
         "name": "Tothelyn Anne dela Cruz",
         "affiliation": "Natural Sciences Department, University of St. La Salle",
-        "address": "Bacolod City, Negros Occidental",
+        "affiliationAddress": "Bacolod City, Negros Occidental",
         "sex": "F",
         "designation": "Faculty Researcher",
         "email": "tothelyn.delacruz@usls.edu.ph",
@@ -340,7 +340,7 @@
         "haveSubmitted": true
     },
     {
-        "id": "CL-2025-018",
+        "cid": "CL-2025-018",
         "pid": "P-2025-012",
         "projectName": "Molecular Identication of Fishes in Iloilo River",
         "year": 2025,
@@ -351,7 +351,7 @@
         "status": "Ongoing",
         "name": "Corazon Marquee Lopez",
         "affiliation": "DOST Regional Office 6",
-        "address": "Magsaysay Village, La Paz, Iloilo City",
+        "affiliationAddress": "Magsaysay Village, La Paz, Iloilo City",
         "sex": "F",
         "designation": "Researcher",
         "email": "corazon.lopez@dost.gov.ph",
@@ -360,7 +360,7 @@
         "haveSubmitted": true
     },
     {
-        "id": "CL-2025-019",
+        "cid": "CL-2025-019",
         "pid": "P-2025-014",
         "projectName": "Species Identification of Seagrass Using DNA",
         "year": 2025,
@@ -371,7 +371,7 @@
         "status": "Completed",
         "name": "PJ Sy",
         "affiliation": "UP Los Banos",
-        "address": "Los Banos, Laguna",
+        "affiliationAddress": "Los Banos, Laguna",
         "sex": "M",
         "designation": "Faculty Researcher",
         "email": "pj.sy@uplb.edu.ph",
@@ -380,7 +380,7 @@
         "haveSubmitted": true
     },
     {
-        "id": "CL-2025-020",
+        "cid": "CL-2025-020",
         "pid": "P-2025-015",
         "projectName": "Equipment Use",
         "year": 2025,
@@ -391,7 +391,7 @@
         "status": "Ongoing",
         "name": "Veronica Dolores Navarro",
         "affiliation": "Division of Biological Sciences, College of Arts and Sciences, UP Visayas",
-        "address": "Magsaysay Village, La Paz, Iloilo City",
+        "affiliationAddress": "Magsaysay Village, La Paz, Iloilo City",
         "sex": "F",
         "designation": "Faculty Researcher",
         "email": "veronica.navarro@up.edu.ph",
