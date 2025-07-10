@@ -1,7 +1,10 @@
+// src/app/admin/inquiry/page.tsx
 import { columns } from "./columns"
 import { DataTable } from "./data-table"
 import { Inquiry } from "@/types/Inquiry"
 import { getInquiries } from "@/services/inquiryService"
+import { AddInquiryModal } from "@/components/forms/InquiryModalForm"
+import { revalidatePath } from "next/cache"
 
 async function getData(): Promise<Inquiry[]> {
   try {
@@ -17,6 +20,11 @@ async function getData(): Promise<Inquiry[]> {
 export default async function InquiryPage() {
   const data = await getData()
 
+  const handleRefresh = async () => {
+    'use server'
+    revalidatePath('/admin/inquiry')
+  }
+
   // Calculate some stats for the header
   const approvedClientCount = data.filter(inquiry => inquiry.status === 'Approved Client').length
   const quotationOnlyCount = data.filter(inquiry => inquiry.status === 'Quotation Only').length
@@ -26,11 +34,14 @@ export default async function InquiryPage() {
   return (
     <div className="container mx-auto py-10">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Inquiry Management</h1>
-          <p className="text-muted-foreground">
-            Manage and review research inquiries submitted to the genome database.
-          </p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Inquiry Management</h1>
+            <p className="text-muted-foreground">
+              Manage and review research inquiries submitted to the genome database.
+            </p>
+          </div>
+          <AddInquiryModal />
         </div>
         
         {/* Stats Cards */}

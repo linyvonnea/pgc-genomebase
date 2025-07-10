@@ -15,6 +15,7 @@ import { useState } from "react"
 import { Project } from "@/types/Project"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 
 import {
   Table,
@@ -28,6 +29,19 @@ import {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+}
+
+function customGlobalFilterFn<TData extends object>(
+  row: any,
+  columnId: string,
+  filterValue: string
+) {
+  const values = Object.values(row.original).map((v) =>
+    Array.isArray(v) ? v.join(", ") : String(v ?? "")
+  )
+  return values.some((value) =>
+    value.toLowerCase().includes(filterValue.toLowerCase())
+  )
 }
 
 export function DataTable<TData, TValue>({
@@ -46,6 +60,7 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
+    globalFilterFn: customGlobalFilterFn,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
     state: {
@@ -54,6 +69,8 @@ export function DataTable<TData, TValue>({
       globalFilter,
     },
   })
+
+  const selectedStatus = table.getColumn("status")?.getFilterValue()
 
   return (
     <div className="space-y-4">
@@ -68,30 +85,41 @@ export function DataTable<TData, TValue>({
           />
           <Button
             variant="outline"
-            onClick={() => {
-              table.getColumn("status")?.setFilterValue("Completed")
-            }}
-            className="ml-2"
+            onClick={() => table.getColumn("status")?.setFilterValue("Completed")}
+            className={cn(
+              "ml-2",
+              selectedStatus === "Completed" ? "bg-primary text-primary-foreground border-primary" : ""
+            )}
           >
             Completed
           </Button>
           <Button
             variant="outline"
-            onClick={() => {
-              table.getColumn("status")?.setFilterValue("Ongoing")
-            }}
+            onClick={() => table.getColumn("status")?.setFilterValue("Ongoing")}
+            className={cn(
+              selectedStatus === "Ongoing" ? "bg-primary text-primary-foreground border-primary" : ""
+            )}
           >
             Ongoing
           </Button>
           <Button
             variant="outline"
-            onClick={() => {
-              table.getColumn("status")?.setFilterValue(undefined)
-            }}
+            onClick={() => table.getColumn("status")?.setFilterValue("Cancelled")}
+            className={cn(
+              selectedStatus === "Cancelled" ? "bg-primary text-primary-foreground border-primary" : ""
+            )}
+          >
+            Cancelled
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => table.getColumn("status")?.setFilterValue(undefined)}
+            className={cn(
+              selectedStatus === undefined ? "bg-primary text-primary-foreground border-primary" : ""
+            )}
           >
             All
           </Button>
-
         </div>
         <div className="text-sm text-muted-foreground">
           {table.getFilteredRowModel().rows.length} of {table.getCoreRowModel().rows.length} projects

@@ -1,19 +1,23 @@
-// File: src/app/admin/quotations/new/page.tsx
+// src/app/admin/quotations/new/page.tsx
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { getInquiryById } from "@/services/inquiryService";
 import QuotationBuilder from "@/components/quotation/QuotationBuilder";
-import { mockInquiries } from "@/mock/mockInquiries";
 
 export default function NewQuotationPage() {
   const searchParams = useSearchParams();
   const inquiryId = searchParams.get("inquiryId");
 
-  const inquiry = mockInquiries.find((inq) => inq.id === inquiryId);
+  const { data: inquiry, isLoading, error } = useQuery({
+    queryKey: ["inquiry", inquiryId],
+    queryFn: () => inquiryId ? getInquiryById(inquiryId) : Promise.resolve(undefined),
+    enabled: !!inquiryId,
+  });
 
-  if (!inquiry) {
-    return <div className="p-6">Inquiry not found.</div>;
-  }
+  if (isLoading) return <div className="p-6">Loading inquiry...</div>;
+  if (error || !inquiry) return <div className="p-6">Inquiry not found.</div>;
 
   return (
     <div className="p-6">
@@ -23,7 +27,7 @@ export default function NewQuotationPage() {
           name: inquiry.name,
           institution: inquiry.affiliation,
           designation: inquiry.designation,
-          email: inquiry.email,
+          email: inquiry.email ?? "",
         }}
       />
     </div>

@@ -4,18 +4,20 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { inquiryFormSchema, type InquiryFormData, type WorkflowOption } from "@/schemas/inquirySchema"
-import { createInquiry } from "@/services/inquiryService"
+import { createInquiryAction } from "@/app/actions/inquiryActions"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import useAuth from "@/hooks/useAuth" // Import the auth hook
 
 export default function QuotationRequestForm() {
   const [selectedService, setSelectedService] = useState<string>("laboratory")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
+  const { user } = useAuth() // Get the current authenticated user
   
   const form = useForm<InquiryFormData>({
     resolver: zodResolver(inquiryFormSchema),
@@ -27,7 +29,10 @@ export default function QuotationRequestForm() {
       workflows: [],
       additionalInfo: "",
       projectBackground: "",
-      projectBudget: ""
+      projectBudget: "",
+      specificTrainingNeed: "",
+      targetTrainingDate: "",
+      numberOfParticipants: undefined
     }
   })
 
@@ -36,12 +41,15 @@ export default function QuotationRequestForm() {
 
   const handleServiceChange = (value: string) => {
     setSelectedService(value)
-    setValue("service", value as "laboratory" | "research")
+    setValue("service", value as "laboratory" | "research" | "training")
     // Reset service-specific fields when switching
     setValue("workflows", [])
     setValue("additionalInfo", "")
     setValue("projectBackground", "")
     setValue("projectBudget", "")
+    setValue("specificTrainingNeed", "")
+    setValue("targetTrainingDate", "")
+    setValue("numberOfParticipants", undefined)
   }
 
   const handleWorkflowChange = (workflow: string, checked: boolean) => {
@@ -56,17 +64,25 @@ export default function QuotationRequestForm() {
     setIsSubmitting(true)
     
     try {
-      console.log("Submitting form data:", data)
-      const inquiryId = await createInquiry(data)
+      // Add the current user's email to the submission data
+      const submissionData = {
+        ...data,
+        email: user?.email || "" // Add the user's email from auth
+      }
       
-      toast({
-        title: "Success!",
-        description: `Your inquiry has been submitted successfully.`,
-      })
+      console.log("Submitting form data:", submissionData)
+      const result = await createInquiryAction(submissionData) // Use server action with email included
       
-      // Reset form after successful submission
-      reset()
-      setSelectedService("laboratory")
+      if (result.success) {
+        toast({
+          title: "Success!",
+          description: `Your inquiry has been submitted successfully.`,
+        })
+        
+        // Reset form after successful submission
+        reset()
+        setSelectedService("laboratory")
+      }
       
     } catch (error) {
       console.error("Error submitting form:", error)
@@ -89,7 +105,7 @@ export default function QuotationRequestForm() {
           <p className="text-gray-600 leading-relaxed text-justify mb-6">
             Thank you for reaching out to PGC researchers for your research needs. We offer a range of 
             services from Equipment Use, DNA Extraction, Polymerase Chain Reaction (PCR), Sample 
-            Purification, Next Generation Sequencing (NGS), and Bioinformatics Analysis. To assist 
+            Purification, Next Generation Sequencing (NGS), Bioinformatics Analysis, and Training Services. To assist 
             you better kindly provide us with the following information:
           </p>
 
@@ -159,6 +175,7 @@ export default function QuotationRequestForm() {
                   <SelectContent>
                     <SelectItem value="laboratory">Laboratory Service</SelectItem>
                     <SelectItem value="research">Research and Collaboration</SelectItem>
+                    <SelectItem value="training">Training Service</SelectItem>
                   </SelectContent>
                 </Select>
                 {errors.service && (
@@ -258,6 +275,61 @@ export default function QuotationRequestForm() {
                     />
                     {errors.projectBudget && (
                       <p className="text-red-500 text-sm mt-1">{errors.projectBudget.message}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {selectedService === "training" && (
+                <div className="space-y-4">
+                  {/* Specific Training Need */}
+                  <div>
+                    <Label htmlFor="specificTrainingNeed" className="text-sm font-medium text-gray-700">
+                      Specific Training Need <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="specificTrainingNeed"
+                      type="text"
+                      placeholder="Describe the specific training you need..."
+                      {...register("specificTrainingNeed")}
+                      className="mt-1"
+                    />
+                    {errors.specificTrainingNeed && (
+                      <p className="text-red-500 text-sm mt-1">{errors.specificTrainingNeed.message}</p>
+                    )}
+                  </div>
+
+                  {/* Target Date for Training */}
+                  <div>
+                    <Label htmlFor="targetTrainingDate" className="text-sm font-medium text-gray-700">
+                      Target Date for the Training <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="targetTrainingDate"
+                      type="date"
+                      {...register("targetTrainingDate")}
+                      className="mt-1"
+                    />
+                    {errors.targetTrainingDate && (
+                      <p className="text-red-500 text-sm mt-1">{errors.targetTrainingDate.message}</p>
+                    )}
+                  </div>
+
+                  {/* Number of Participants */}
+                  <div>
+                    <Label htmlFor="numberOfParticipants" className="text-sm font-medium text-gray-700">
+                      Number of Participants <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="numberOfParticipants"
+                      type="number"
+                      min="1"
+                      placeholder="Enter number of participants"
+                      {...register("numberOfParticipants", { valueAsNumber: true })}
+                      className="mt-1"
+                    />
+                    {errors.numberOfParticipants && (
+                      <p className="text-red-500 text-sm mt-1">{errors.numberOfParticipants.message}</p>
                     )}
                   </div>
                 </div>

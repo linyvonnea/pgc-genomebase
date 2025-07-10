@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, serverTimestamp, query, orderBy } from "firebase/firestore";
+import { collection, getDocs, addDoc, serverTimestamp, query, orderBy, doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Inquiry } from "@/types/Inquiry";
 import { InquiryFormData } from "@/schemas/inquirySchema";
@@ -33,7 +33,6 @@ export async function getInquiries(): Promise<Inquiry[]> {
       // Create inquiry object with proper defaults
       const inquiry: Inquiry = {
         id: doc.id,
-        year: data.year || new Date().getFullYear(),
         createdAt: createdAt,
         name: data.name || 'Unknown',
         status: data.status || 'Pending',
@@ -42,7 +41,6 @@ export async function getInquiries(): Promise<Inquiry[]> {
         designation: data.designation || '',
         email: data.email || undefined
       };
-      
       inquiries.push(inquiry);
     });
     
@@ -58,34 +56,88 @@ export async function getInquiries(): Promise<Inquiry[]> {
   }
 }
 
-export async function createInquiry(formData: InquiryFormData): Promise<string> {
+export const createInquiry = async (inquiryData: any) => {
   try {
-    const inquiriesRef = collection(db, "inquiries");
+    // Transform the form data to match the expected database structure
+    const currentDate = new Date();
     
-    // Prepare the data for Firebase
-    const inquiryData = {
-      name: formData.name,
-      affiliation: formData.affiliation,
-      designation: formData.designation,
-      workflows: formData.workflows || [],
-      additionalInfo: formData.additionalInfo || '',
-      projectBackground: formData.projectBackground || '',
-      projectBudget: formData.projectBudget || '',
-      status: 'Pending' as const,
+    const transformedData = {
+      name: inquiryData.name,
+      affiliation: inquiryData.affiliation,
+      designation: inquiryData.designation,
+      email: inquiryData.email || null,
+      workflows: inquiryData.workflows || [],
+      additionalInfo: inquiryData.additionalInfo || null,
+      projectBackground: inquiryData.projectBackground || null,
+      projectBudget: inquiryData.projectBudget || null,
+      specificTrainingNeed: inquiryData.specificTrainingNeed || null,
+      targetTrainingDate: inquiryData.targetTrainingDate || null,
+      numberOfParticipants: inquiryData.numberOfParticipants || null,
+      createdAt: serverTimestamp(),
+      status: 'Pending',
       isApproved: false,
-      year: new Date().getFullYear(),
-      createdAt: serverTimestamp(), // This will be set by Firebase server
-      email: null, // Will be set when authentication is implemented
+      serviceType: inquiryData.service || 'added manual record'
+      // Removed year here
     };
-    
-    console.log("Creating inquiry with data:", inquiryData);
-    
-    const docRef = await addDoc(inquiriesRef, inquiryData);
-    console.log("Inquiry created with ID:", docRef.id);
-    
+
+    const docRef = await addDoc(collection(db, "inquiries"), transformedData);
     return docRef.id;
   } catch (error) {
     console.error("Error creating inquiry:", error);
-    throw new Error("Failed to create inquiry");
+    throw error;
+  }
+};
+
+export async function getInquiryById(id: string): Promise<Inquiry> {
+  try {
+    const docRef = doc(db, "inquiries", id);
+    const snap = await getDoc(docRef);
+
+    if (!snap.exists()) throw new Error("Inquiry not found");
+
+    const data = snap.data();
+
+    return {
+      id: snap.id,
+      createdAt: data.createdAt?.toDate?.() ?? new Date(),
+      name: data.name || "Unknown",
+      status: data.status || "Pending",
+      isApproved: data.isApproved || false,
+      affiliation: data.affiliation || "",
+      designation: data.designation || "",
+      email: data.email ?? "",
+      // Removed year here
+    };
+  } catch (error) {
+    console.error(` Failed to fetch inquiry ${id}:`, error);
+    throw error;
+  }
+}
+
+export async function updateInquiry(id: string, data: {
+  name: string;
+  email: string;
+  affiliation: string;
+  designation: string;
+  status: string;
+}) {
+  try {
+    const docRef = doc(db, "inquiries", id);
+    
+    // Update the document with the new data
+    await updateDoc(docRef, {
+      name: data.name,
+      email: data.email,
+      affiliation: data.affiliation,
+      designation: data.designation,
+      status: data.status,
+      isApproved: data.status === 'Approved Client', // Update isApproved based on status
+    });
+    
+    console.log(`Successfully updated inquiry ${id}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating inquiry:", error);
+    throw new Error('Failed to update inquiry');
   }
 }

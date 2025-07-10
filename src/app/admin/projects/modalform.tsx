@@ -11,6 +11,12 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { DialogFooter } from "@/components/ui/dialog";
 import { Project } from "@/types/Project";
 import { projectSchema as baseProjectSchema } from "@/schemas/projectSchema";
+import { collection, addDoc, serverTimestamp, Timestamp, FieldValue, doc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase"; 
+import { toast } from "sonner";
+import { getNextPid } from "@/services/projectsService";
+
+
 
 // Extend the Zod schema to match the Project type
 const projectSchema = baseProjectSchema.extend({
@@ -20,11 +26,10 @@ const projectSchema = baseProjectSchema.extend({
   clientNames: z.string().min(1).transform((val) => val.split(",").map((v) => v.trim())),
   projectTag: z.string().min(1, "Project Tag is required"),
   status: z.enum(["Ongoing", "Completed", "Cancelled"]),
-  fundingCategory: z.string().min(1, "Funding Category is required"),
+  fundingCategory: z.enum(["External", "In-House"]),
   serviceRequested: z.string().min(1).transform((val) => val.split(",").map((v) => v.trim())),
   personnelAssigned: z.string().min(1, "Personnel Assigned is required"),
   notes: z.string().optional(),
-  endDate: z.string().nullable(),
   startDate: z.string(),
 });
 
@@ -35,15 +40,14 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     pid: "",
     iid: "",
     year: new Date().getFullYear(),
-    startDate: "",
-    endDate: "",
-    projectLead: "",
+    startDate: new Date().toISOString().substring(0, 10),
+    lead: "",
     clientNames: [],
     title: "",
     projectTag: "",
     status: "Ongoing",
-    sendingInstitution: "",
-    fundingCategory: "",
+    sendingInstitution: "Government",
+    fundingCategory: "In-House",
     fundingInstitution: "",
     serviceRequested: [],
     personnelAssigned: "",
@@ -51,49 +55,81 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
   });
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectFormData, string>>>({});
 
-  const mutation = useMutation({
-    mutationFn: async (data: Project) => {
-      // Replace with your API call or state update
-      return data;
-    },
-    onSuccess: (data) => {
-      if (onSubmit) onSubmit(data);
-    },
+const mutation = useMutation({
+  mutationFn: async (data: Project) => {
+    if (!data.pid) throw new Error("Project ID is required");
+
+    const docRef = doc(db, "projects", data.pid);
+
+    await setDoc(docRef, {
+    ...data,
+    startDate: Timestamp.fromDate(new Date(data.startDate ?? "")),
+    createdAt: serverTimestamp(),
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+    return data;
+  },
+  onSuccess: (data) => {
+    toast.success("Project added successfully!");
+    if (onSubmit) onSubmit(data);
+  },
+  onError: (error) => {
+    toast.error("Failed to add project.");
+    console.error("Firestore insert failed:", error);
+  },
+});
 
-  const handleSelect = (name: keyof ProjectFormData, value: string) => {
-    setFormData({ ...formData, [name]: value });
-  };
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const result = projectSchema.safeParse(formData);
-    if (!result.success) {
-      const fieldErrors: Partial<Record<keyof ProjectFormData, string>> = {};
-      result.error.errors.forEach((err) => {
-        const field = err.path[0] as keyof ProjectFormData;
-        fieldErrors[field] = err.message;
-      });
-      setErrors(fieldErrors);
-    } else {
-      setErrors({});
-      // Convert to Project type
-      const data: Project = {
+  const result = projectSchema.omit({ pid: true }).safeParse(formData); // omit pid for initial validation
+  if (!result.success) {
+    const fieldErrors: Partial<Record<keyof ProjectFormData, string>> = {};
+    result.error.errors.forEach((err) => {
+      const field = err.path[0] as keyof ProjectFormData;
+      fieldErrors[field] = err.message;
+    });
+    setErrors(fieldErrors);
+  } else {
+    setErrors({});
+    try {
+      const nextPid = await getNextPid(result.data.year);
+      const cleanData: Project = {
         ...result.data,
+        pid: nextPid,
         year: Number(result.data.year),
-        clientNames: result.data.clientNames as string[],
-        serviceRequested: result.data.serviceRequested as string[],
-        endDate: result.data.endDate || null,
-        lead: result.data.projectLead,
+        clientNames: result.data.clientNames,
+        serviceRequested: result.data.serviceRequested,
+        lead: result.data.lead,
         notes: result.data.notes || "",
       };
-      mutation.mutate(data);
+      mutation.mutate(cleanData);
+    } catch (err) {
+      toast.error("Failed to generate project ID.");
+      console.error("PID generation failed:", err);
     }
-  };
+  }
+};
+
+
+    const handleChange = (
+      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    ) => {
+      const { name, value } = e.target;
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    };
+
+    const handleSelect = (field: keyof ProjectFormData, value: string) => {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    };
+
+
 
   return (
     <form className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-4" onSubmit={handleSubmit}>
@@ -114,8 +150,8 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       </div>
       <div>
         <Label>Project Lead</Label>
-        <Input name="projectLead" value={formData.projectLead} onChange={handleChange} />
-        {errors.projectLead && <p className="text-red-500 text-xs mt-1">{errors.projectLead}</p>}
+        <Input name="lead" value={formData.lead} onChange={handleChange} />
+        {errors.lead && <p className="text-red-500 text-xs mt-1">{errors.lead}</p>}
       </div>
       <div>
         <Label>Project ID</Label>
@@ -156,7 +192,13 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       </div>
       <div>
         <Label>Funding Category</Label>
-        <Input name="fundingCategory" value={formData.fundingCategory} onChange={handleChange} />
+        <Select value={formData.fundingCategory} onValueChange={val => handleSelect("fundingCategory", val)}>
+          <SelectTrigger><SelectValue placeholder="Select funding category" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="External">External</SelectItem>
+            <SelectItem value="In-House">In-House</SelectItem>
+          </SelectContent>
+        </Select>
         {errors.fundingCategory && <p className="text-red-500 text-xs mt-1">{errors.fundingCategory}</p>}
       </div>
       <div>
@@ -180,7 +222,9 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         {errors.notes && <p className="text-red-500 text-xs mt-1">{errors.notes}</p>}
       </div>
       <DialogFooter className="col-span-2">
-        <Button type="submit">Save</Button>
+        <Button type="submit" disabled={mutation.isPending}>
+          {mutation.isPending ? "Saving..." : "Save"}
+        </Button>
       </DialogFooter>
     </form>
   );

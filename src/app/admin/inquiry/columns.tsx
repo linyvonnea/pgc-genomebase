@@ -1,3 +1,4 @@
+// src/app/admin/inquiry/columns.tsx
 "use client";
 
 import { useRouter } from "next/navigation";
@@ -5,6 +6,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Inquiry } from "@/types/Inquiry";
 import { inquirySchema } from "@/schemas/inquirySchema";
 import { Button } from "@/components/ui/button";
+import { EditInquiryModal } from "@/components/forms/EditInquiryModal";
 
 // Utility function to validate inquiry data using Zod
 const validateInquiry = (data: any) => {
@@ -53,7 +55,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 120, 
+    size: 120,
     cell: ({ row }) => {
       const { isValid, data } = validateInquiry(row.original);
       if (!isValid || !data) {
@@ -84,10 +86,6 @@ export const columns: ColumnDef<Inquiry>[] = [
     },
   },
   {
-    accessorKey: "year",
-    header: "Year",
-  },
-  {
     id: "actions",
     header: "Actions",
     cell: ({ row }) => {
@@ -95,15 +93,22 @@ export const columns: ColumnDef<Inquiry>[] = [
       const router = useRouter();
 
       return (
-        <Button
-          onClick={() =>
-            router.push(`/admin/quotations/new?inquiryId=${inquiry.id}`)
-          }
-          variant="outline"
-          className="text-sm"
-        >
-          Quote
-        </Button>
+        <div className="flex items-center gap-2">
+          <EditInquiryModal
+            key={inquiry.id} 
+            inquiry={inquiry}
+            onSuccess={() => router.refresh()}
+          />
+          <Button
+            onClick={() =>
+              router.push(`/admin/quotations/new?inquiryId=${inquiry.id}`)
+            }
+            variant="outline"
+            className="text-sm"
+          >
+            Quote
+          </Button>
+        </div>
       );
     },
   },
