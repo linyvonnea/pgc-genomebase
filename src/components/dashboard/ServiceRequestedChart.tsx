@@ -1,4 +1,3 @@
-// src/components/dashboard/charts/ServiceRequestedChart.tsx
 "use client";
 
 import * as React from "react";
@@ -16,12 +15,15 @@ import {
   Tooltip, 
   Legend
 } from "recharts";
-import { EmptyData } from "./EmptyData";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
 interface ServiceRequestedChartProps {
-  projects: any[];
+  projects: Array<{
+    id: string;
+    serviceRequested: string[];
+    [key: string]: any;
+  }>;
 }
 
 export function ServiceRequestedChart({ projects }: ServiceRequestedChartProps) {
@@ -35,34 +37,22 @@ export function ServiceRequestedChart({ projects }: ServiceRequestedChartProps) 
   };
 
   projects.forEach(project => {
-    project.serviceRequested.forEach((service: string) => {
-      if (service in serviceCounts) {
+    // Handle both array and single service cases
+    const services = Array.isArray(project.serviceRequested) 
+      ? project.serviceRequested 
+      : [project.serviceRequested];
+    
+    services.forEach((service: string) => {
+      if (service && service in serviceCounts) {
         serviceCounts[service as ServiceCategory] += 1;
       }
     });
   });
 
-  const data = Object.entries(serviceCounts)
-    .filter(([_, value]) => value > 0)
-    .map(([name, value]) => ({
-      name,
-      value
-    }));
-
-  if (data.length === 0) {
-    return (
-      <Card className="flex-1 min-w-0">
-        <CardHeader className="flex flex-col items-center justify-center p-4">
-          <CardTitle className="text-sm font-medium text-muted-foreground">Service Requested</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-          <div className="h-[300px]">
-            <EmptyData />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const data = Object.entries(serviceCounts).map(([name, value]) => ({
+    name,
+    value
+  }));
 
   return (
     <Card className="flex-1 min-w-0">
@@ -85,7 +75,11 @@ export function ServiceRequestedChart({ projects }: ServiceRequestedChartProps) 
                 dataKey="value"
               >
                 {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={COLORS[index % COLORS.length]} 
+                    opacity={entry.value > 0 ? 1 : 0}
+                  />
                 ))}
               </Pie>
               <Tooltip
@@ -98,10 +92,6 @@ export function ServiceRequestedChart({ projects }: ServiceRequestedChartProps) 
                   fontWeight: 500,
                   padding: '8px 12px',
                 }}
-                itemStyle={{
-                  color: '#1f2937',
-                  padding: '2px 0',
-                }}
                 formatter={(value: number, name: string) => [
                   <span key="combined" className="flex items-center gap-2">
                     <span className="text-gray-600">{name}</span>
@@ -112,9 +102,34 @@ export function ServiceRequestedChart({ projects }: ServiceRequestedChartProps) 
               />
               <Legend 
                 iconSize={12}
-                wrapperStyle={{
-                  fontSize: '12px'
-                }}
+                wrapperStyle={{ fontSize: '12px' }}
+                content={() => (
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    gap: '8px',
+                    flexWrap: 'wrap'
+                  }}>
+                    {Object.keys(serviceCounts).map((service, index) => (
+                      <div 
+                        key={service} 
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '4px',
+                        }}
+                      >
+                        <div style={{
+                          width: '12px',
+                          height: '12px',
+                          backgroundColor: COLORS[index % COLORS.length],
+                          borderRadius: '2px'
+                        }} />
+                        <span style={{ fontSize: '12px' }}>{service}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               />
             </PieChart>
           </ResponsiveContainer>

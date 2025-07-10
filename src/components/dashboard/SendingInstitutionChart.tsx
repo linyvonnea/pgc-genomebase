@@ -1,4 +1,3 @@
-// src/components/dashboard/charts/SendingInstitutionChart.tsx
 "use client";
 
 import * as React from "react";
@@ -16,26 +15,21 @@ import {
   Tooltip, 
   Legend
 } from "recharts";
-import { EmptyData } from "./EmptyData";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
 interface SendingInstitutionChartProps {
-  projects: any[];
+  projects: Array<{
+    id: string;
+    sendingInstitution: string;
+    [key: string]: any;
+  }>;
 }
 
 export function SendingInstitutionChart({ projects }: SendingInstitutionChartProps) {
-  const institutionMap: Record<string, string> = {
-    "UP System": "UP System",
-    "SUC/HEI": "SUC/HEI",
-    "Government": "Government",
-    "Private/Local": "Private/Local",
-    "International": "International"
-  };
+  type InstitutionCategory = "UP System" | "SUC/HEI" | "Government" | "Private/Local" | "International";
   
-  type InstitutionCategory = keyof typeof institutionMap;
-  
-  const sendingCounts: Record<InstitutionCategory, number> = {
+  const institutionCounts: Record<InstitutionCategory, number> = {
     "UP System": 0,
     "SUC/HEI": 0,
     "Government": 0,
@@ -44,37 +38,16 @@ export function SendingInstitutionChart({ projects }: SendingInstitutionChartPro
   };
 
   projects.forEach(project => {
-    const sendingInstitution = project.sendingInstitution;
-    const mappedCategory = Object.entries(institutionMap).find(
-      ([key]) => key === sendingInstitution
-    )?.[1] as InstitutionCategory | undefined;
-
-    if (mappedCategory && mappedCategory in sendingCounts) {
-      sendingCounts[mappedCategory] += 1;
+    const institution = project.sendingInstitution;
+    if (institution && institution in institutionCounts) {
+      institutionCounts[institution as InstitutionCategory] += 1;
     }
   });
 
-  const data = Object.entries(sendingCounts)
-    .filter(([_, value]) => value > 0)
-    .map(([name, value]) => ({
-      name,
-      value
-    }));
-  
-  if (data.length === 0) {
-    return (
-      <Card className="flex-1 min-w-0">
-        <CardHeader className="flex flex-col items-center justify-center p-4">
-          <CardTitle className="text-sm font-medium text-muted-foreground">Sending Institution</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 pt-0">
-          <div className="h-[300px]">
-            <EmptyData />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const data = Object.entries(institutionCounts).map(([name, value]) => ({
+    name,
+    value: value || 0
+  }));
 
   return (
     <Card className="flex-1 min-w-0">
@@ -97,7 +70,11 @@ export function SendingInstitutionChart({ projects }: SendingInstitutionChartPro
                 dataKey="value"
               >
                 {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={COLORS[index % COLORS.length]}
+                    opacity={entry.value > 0 ? 1 : 0}
+                  />
                 ))}
               </Pie>
               <Tooltip
@@ -110,10 +87,6 @@ export function SendingInstitutionChart({ projects }: SendingInstitutionChartPro
                   fontWeight: 500,
                   padding: '8px 12px',
                 }}
-                itemStyle={{
-                  color: '#1f2937',
-                  padding: '2px 0',
-                }}
                 formatter={(value: number, name: string) => [
                   <span key="combined" className="flex items-center gap-2">
                     <span className="text-gray-600">{name}</span>
@@ -125,8 +98,36 @@ export function SendingInstitutionChart({ projects }: SendingInstitutionChartPro
               <Legend 
                 iconSize={12}
                 wrapperStyle={{
-                  fontSize: '12px'
+                  fontSize: '12px',
+                  justifyContent: 'center',
                 }}
+                content={() => (
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    gap: '8px',
+                    flexWrap: 'wrap'
+                  }}>
+                    {Object.keys(institutionCounts).map((institution, index) => (
+                      <div 
+                        key={institution}
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '4px'
+                        }}
+                      >
+                        <div style={{
+                          width: '12px',
+                          height: '12px',
+                          backgroundColor: COLORS[index % COLORS.length],
+                          borderRadius: '2px'
+                        }} />
+                        <span style={{ fontSize: '12px' }}>{institution}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               />
             </PieChart>
           </ResponsiveContainer>
