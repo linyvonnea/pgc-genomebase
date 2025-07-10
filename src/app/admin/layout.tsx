@@ -12,25 +12,25 @@ import useAuth from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const { user, isAdmin, loading } = useAuth();
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { user, isAdmin, signOut, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && user && !isAdmin) {
-      router.push("/"); // redirect non-admins
+    if (!loading && !user) {
+      router.replace("/login");
+    } else if (!loading && user && !isAdmin) {
+      router.replace("/client/inquiry-request");
     }
   }, [user, isAdmin, loading, router]);
 
-  if (loading || !user) {
-    return <div className="p-6 text-sm text-muted-foreground">Checking access...</div>;
+  if (loading || !user || !isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
+        <p className="text-sm text-muted-foreground">Checking access...</p>
+      </div>
+    );
   }
-
-  if (!isAdmin) return null;
 
   return (
     <SidebarProvider>

@@ -1,12 +1,13 @@
+// src/components/ui/header.tsx
 import Image from "next/image";
 
-interface HeaderProps {
+export interface HeaderProps {
+  showNavigation?: boolean;
   user?: {
     displayName?: string | null;
     email?: string | null;
-  };
+  } | null;
   onLogout?: () => void;
-  showNavigation?: boolean;
 }
 
 export default function Header({ user, onLogout, showNavigation = true }: HeaderProps) {
