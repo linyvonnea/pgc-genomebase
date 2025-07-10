@@ -93,9 +93,6 @@ export default function LoginPage() {
             
             <div className="space-y-2">
               <CardTitle className="text-3xl font-bold">Sign In</CardTitle>
-              <CardDescription className="text-base text-muted-foreground">
-                Access your genomic services dashboard
-              </CardDescription>
             </div>
           </CardHeader>
           
@@ -153,10 +150,6 @@ export default function LoginPage() {
               </Button>
 
               <div className="text-center space-y-2">
-                <Badge variant="secondary" className="text-xs flex items-center gap-1 mx-auto w-fit bg-gradient-to-r from-[#166FB5] to-[#4038AF] text-white border-0">
-                  <Shield className="w-3 h-3" />
-                  Secure authentication powered by Google
-                </Badge>
                 
                 {loading && (
                   <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
