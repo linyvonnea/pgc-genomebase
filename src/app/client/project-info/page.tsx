@@ -41,7 +41,10 @@ export default function ProjectForm() {
   // Fetch existing project data on mount
   useEffect(() => {
     async function fetchProject() {
-      if (!pid) return;
+      if (!pid) {
+        setLoading(false); // If no pid, stop loading and show form
+        return;
+      }
       setLoading(true);
       try {
         const docRef = doc(db, "projects", pid);
@@ -123,7 +126,11 @@ export default function ProjectForm() {
   }
 
   if (loading) {
-    return <div className="max-w-4xl mx-auto p-8">Loading project data...</div>;
+    // Only show loading if loading is true AND there is a pid (editing existing project)
+    if (pid) {
+      return <div className="max-w-4xl mx-auto p-8">Loading project data...</div>;
+    }
+    // If no pid, not editing, so show the form
   }
 
   return (
