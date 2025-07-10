@@ -2,13 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Base styling */
-body {
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
-  @apply bg-background text-foreground min-h-screen;
-}
-
-/* Light Theme */
 @layer base {
   :root {
     --radius: 0.5rem;
@@ -102,7 +95,14 @@ body {
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
+  body {
+    font-family: var(--font-geist-sans);
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    min-height: 100vh;
+  }
+
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
 }
