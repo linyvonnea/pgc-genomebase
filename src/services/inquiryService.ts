@@ -60,7 +60,28 @@ export async function getInquiries(): Promise<Inquiry[]> {
 
 export const createInquiry = async (inquiryData: any) => {
   try {
-    const docRef = await addDoc(collection(db, "inquiries"), inquiryData);
+    // Transform the form data to match the expected database structure
+    const currentDate = new Date();
+    
+    const transformedData = {
+      name: inquiryData.name,
+      affiliation: inquiryData.affiliation,
+      designation: inquiryData.designation,
+      email: inquiryData.email || null,
+      workflows: inquiryData.workflows || [],
+      additionalInfo: inquiryData.additionalInfo || null,
+      projectBackground: inquiryData.projectBackground || null,
+      projectBudget: inquiryData.projectBudget || null,
+      createdAt: serverTimestamp(),
+      year: currentDate.getFullYear(),
+      status: 'Pending',
+      isApproved: false,
+      // Set default serviceType if not provided
+      serviceType: inquiryData.service || 'added manual record'
+    };
+
+    const docRef = await addDoc(collection(db, "inquiries"), transformedData);
+    
     return docRef.id;
   } catch (error) {
     console.error("Error creating inquiry:", error);

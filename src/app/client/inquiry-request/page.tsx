@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { inquiryFormSchema, type InquiryFormData, type WorkflowOption } from "@/schemas/inquirySchema"
-import { createInquiry } from "@/services/inquiryService"
+import { createInquiryAction } from "@/app/actions/inquiryActions" // Import the server action
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -57,16 +57,18 @@ export default function QuotationRequestForm() {
     
     try {
       console.log("Submitting form data:", data)
-      const inquiryId = await createInquiry(data)
+      const result = await createInquiryAction(data) // Use server action
       
-      toast({
-        title: "Success!",
-        description: `Your inquiry has been submitted successfully.`,
-      })
-      
-      // Reset form after successful submission
-      reset()
-      setSelectedService("laboratory")
+      if (result.success) {
+        toast({
+          title: "Success!",
+          description: `Your inquiry has been submitted successfully.`,
+        })
+        
+        // Reset form after successful submission
+        reset()
+        setSelectedService("laboratory")
+      }
       
     } catch (error) {
       console.error("Error submitting form:", error)
