@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from 'next/navigation';
+import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { z } from "zod";
 import { clientFormSchema, ClientFormData } from "@/schemas/clientSchema";
 import { Input } from "@/components/ui/input";
@@ -18,9 +19,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { getNextCid } from "@/services/clientService";
 import { getNextPid } from "@/services/projectsService";
 import { db } from "@/lib/firebase";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
-export default function ClientForm() {
+export default function ClientFormEntry() {
+  const [step, setStep] = useState<"verify" | "form">("verify");
+  const [inquiryId, setInquiryId] = useState("");
+  const [verifyEmail, setVerifyEmail] = useState("");
+  const [verifyError, setVerifyError] = useState("");
+  const [verifying, setVerifying] = useState(false);
   const [formData, setFormData] = useState<ClientFormData>({
     name: "",
     email: "",
@@ -33,7 +38,31 @@ export default function ClientForm() {
 
   const [errors, setErrors] = useState<Partial<Record<keyof ClientFormData, string>>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [googleUser, setGoogleUser] = useState<{ email: string } | null>(null);
+  const searchParams = useSearchParams();
   const router = useRouter();
+
+  // Only allow access if email and inquiryId are present in query params
+  const emailParam = searchParams.get('email');
+  const inquiryIdParam = searchParams.get('inquiryId');
+
+  useEffect(() => {
+    // Only redirect to /verify if query params are missing
+    if (!emailParam || !inquiryIdParam) {
+      router.replace('/verify');
+    }
+  }, [emailParam, inquiryIdParam, router]);
+
+  if (!emailParam || !inquiryIdParam) {
+    return null;
+  }
+
+  // Pre-fill email and lock the field
+  useEffect(() => {
+    if (emailParam) {
+      setFormData((prev) => ({ ...prev, email: emailParam }));
+    }
+  }, [emailParam]);
 
   const handleChange = (field: keyof ClientFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -71,9 +100,10 @@ export default function ClientForm() {
           year,
           clientNames: [result.data.name],
           startDate: serverTimestamp(),
+          inquiryId: inquiryIdParam, // Store inquiryId in project
           // ...other fields
         }, { merge: true });
-        router.push(`/client/project-info?pid=${pid}&cid=${cid}`);
+        router.push(`/client/project-info?pid=${pid}&cid=${cid}&inquiryId=${inquiryIdParam}`);
       } catch (err) {
         setErrors({ name: "Failed to save client/project. Please try again." });
         setSubmitting(false);
@@ -84,108 +114,108 @@ export default function ClientForm() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="bg-white rounded-lg shadow-sm p-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Client Information Form</h1>
-          <div className="mb-4">
-            <p className="text-gray-600 leading-relaxed text-justify mb-6">
-              To help us serve you better, please complete this form
-              with accurate and updated details. Your information will be handled with 
-              strict confidentiality and will only be used for official purposes related 
-              to your request, project, or collaboration with PGC.
-            </p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Client Information Form</h1>
+        <div className="mb-4">
+          <p className="text-gray-600 leading-relaxed text-justify mb-6">
+            To help us serve you better, please complete this form
+            with accurate and updated details. Your information will be handled with 
+            strict confidentiality and will only be used for official purposes related 
+            to your request, project, or collaboration with PGC.
+          </p>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4 w-full p-1">
+          <div>
+            <Label>
+              Name <span className="text-red-500 text-sm">*</span>
+            </Label>
+            <Input
+              value={formData.name}
+              onChange={(e) => handleChange("name", e.target.value)}
+              placeholder="Enter name here"
+            />
+            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
           </div>
-    <form onSubmit={handleSubmit} className="space-y-4 w-full p-1">
-      <div>
-        <Label>
-          Name <span className="text-red-500 text-sm">*</span>
-        </Label>
-        <Input
-          value={formData.name}
-          onChange={(e) => handleChange("name", e.target.value)}
-          placeholder="Enter name here"
-        />
-        {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+          <div>
+            <Label>
+              Email <span className="text-red-500 text-sm">*</span>
+            </Label>
+            <Input
+              value={formData.email}
+              disabled
+              placeholder="Verified email"
+            />
+            {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+          </div>
+          <div>
+            <Label>
+              Affiliation (Department & Institution) <span className="text-red-500 text-sm">*</span>
+            </Label>
+            <Input
+              value={formData.affiliation}
+              onChange={(e) => handleChange("affiliation", e.target.value)}
+              placeholder="e.g. Division of Biological Sciences - UPV CAS"
+            />
+            {errors.affiliation && <p className="text-red-500 text-sm">{errors.affiliation}</p>}
+          </div>
+          <div>
+            <Label>
+              Designation <span className="text-red-500 text-sm">*</span>
+            </Label>
+            <Input
+              value={formData.designation}
+              onChange={(e) => handleChange("designation", e.target.value)}
+              placeholder="Enter designation here"
+            />
+            {errors.designation && <p className="text-red-500 text-sm">{errors.designation}</p>}
+          </div>
+          <div>
+            <Label>
+              Sex <span className="text-red-500 text-sm">*</span>
+            </Label>
+            <Select value={formData.sex} onValueChange={(val) => handleChange("sex", val)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="M">Male</SelectItem>
+                <SelectItem value="F">Female</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>
+              Mobile Number <span className="text-red-500 text-sm">*</span>
+            </Label>
+            <Input
+              value={formData.phoneNumber}
+              onChange={(e) => handleChange("phoneNumber", e.target.value)}
+              placeholder="e.g. 09091234567"
+            />
+            {errors.phoneNumber && <p className="text-red-500 text-sm">{errors.phoneNumber}</p>}
+          </div>
+          <div>
+            <Label>
+              Affiliation Address <span className="text-red-500 text-sm">*</span>
+            </Label>
+            <Textarea
+              value={formData.affiliationAddress}
+              onChange={(e) => handleChange("affiliationAddress", e.target.value)}
+              placeholder="Enter affiliation address here"
+            />
+            {errors.affiliationAddress && <p className="text-red-500 text-sm">{errors.affiliationAddress}</p>}
+          </div>
+          <div className="flex justify-end pt-6">
+            <Button 
+              type="submit" 
+              className="bg-gray-600 hover:bg-gray-700 text-white px-8 py-2"
+              disabled={submitting}
+            >
+              {submitting ? "Submitting..." : "Submit"}
+            </Button>
+          </div>
+        </form>
       </div>
-      <div>
-        <Label>
-          Email <span className="text-red-500 text-sm">*</span>
-        </Label>
-        <Input
-          value={formData.email}
-          onChange={(e) => handleChange("email", e.target.value)}
-          placeholder="Enter email here"
-        />
-        {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
-      </div>
-      <div>
-        <Label>
-          Affiliation (Department & Institution) <span className="text-red-500 text-sm">*</span>
-        </Label>
-        <Input
-          value={formData.affiliation}
-          onChange={(e) => handleChange("affiliation", e.target.value)}
-          placeholder="e.g. Division of Biological Sciences - UPV CAS"
-        />
-        {errors.affiliation && <p className="text-red-500 text-sm">{errors.affiliation}</p>}
-      </div>
-      <div>
-        <Label>
-          Designation <span className="text-red-500 text-sm">*</span>
-        </Label>
-        <Input
-          value={formData.designation}
-          onChange={(e) => handleChange("designation", e.target.value)}
-          placeholder="Enter designation here"
-        />
-        {errors.designation && <p className="text-red-500 text-sm">{errors.designation}</p>}
-      </div>
-      <div>
-        <Label>
-          Sex <span className="text-red-500 text-sm">*</span>
-        </Label>
-        <Select value={formData.sex} onValueChange={(val) => handleChange("sex", val)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="M">Male</SelectItem>
-            <SelectItem value="F">Female</SelectItem>
-            <SelectItem value="Other">Other</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <Label>
-          Mobile Number <span className="text-red-500 text-sm">*</span>
-        </Label>
-        <Input
-          value={formData.phoneNumber}
-          onChange={(e) => handleChange("phoneNumber", e.target.value)}
-          placeholder="e.g. 09091234567"
-        />
-        {errors.phoneNumber && <p className="text-red-500 text-sm">{errors.phoneNumber}</p>}
-      </div>
-      <div>
-        <Label>
-          Affiliation Address <span className="text-red-500 text-sm">*</span>
-        </Label>
-        <Textarea
-          value={formData.affiliationAddress}
-          onChange={(e) => handleChange("affiliationAddress", e.target.value)}
-          placeholder="Enter affiliation address here"
-        />
-        {errors.affiliationAddress && <p className="text-red-500 text-sm">{errors.affiliationAddress}</p>}
-      </div>
-      <div className="flex justify-end pt-6">
-        <Button 
-          type="submit" 
-          className="bg-gray-600 hover:bg-gray-700 text-white px-8 py-2"
-          disabled={submitting}
-        >
-          {submitting ? "Submitting..." : "Submit"}
-        </Button>
-      </div>
-    </form>
-    </div>
     </div>
   );
 }
