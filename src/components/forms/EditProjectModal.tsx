@@ -22,7 +22,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Pencil } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Project } from "@/types/Project";
 import { db } from "@/lib/firebase";
 import { doc, setDoc, deleteDoc } from "firebase/firestore";
@@ -360,14 +360,15 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
               )}
             />
             <div className="flex justify-between items-center pt-4">
-              <Button
+              <button
                 type="button"
-                variant="destructive"
+                className="flex items-center gap-1 text-red-600 hover:text-red-700 text-sm font-medium bg-transparent border-none p-0 m-0 focus:outline-none"
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={isLoading}
+                style={{ boxShadow: "none", background: "none" }}
               >
-                Delete
-              </Button>
+                <Trash2 className="h-4 w-4" /> Delete
+              </button>
               <div className="flex gap-2">
                 <Button 
                   type="button" 
