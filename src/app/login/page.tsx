@@ -1,37 +1,43 @@
+// src/app/login/page.tsx
 "use client";
 
-import { Button } from "@/components/ui/button";
-import useAuth from "@/hooks/useAuth";
 import { useEffect } from "react";
+import useAuth from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import { getUserRole } from "@/services/userService";
 
 export default function LoginPage() {
-  const { user, isAdmin, signIn } = useAuth();
+  const { user, signIn, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (user) {
-      if (isAdmin) {
-        router.push("/admin/dashboard");
-      } else {
-        router.push("/client");
+    const checkAndRedirect = async () => {
+      if (user) {
+        const role = await getUserRole(user.email!);
+        if (role === "admin") {
+          router.replace("/admin/dashboard");
+        } else {
+          router.replace("/client/inquiry-request");
+        }
       }
-    }
-  }, [user, isAdmin, router]);
+    };
+    checkAndRedirect();
+  }, [user, router]);
+
+  if (loading) {
+    return <div className="p-6">Checking authentication...</div>;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm space-y-6 text-center">
-        <h1 className="text-2xl font-bold">Sign in to PGC GenomeBase</h1>
-        <p className="text-muted-foreground text-sm">
-          Use your Google account to continue.
-        </p>
-        <Button onClick={signIn} className="w-full">
+      <div className="bg-white p-10 rounded shadow-md text-center space-y-6">
+        <h1 className="text-xl font-bold">Welcome to GenomeBase</h1>
+        <button
+          onClick={signIn}
+          className="px-6 py-2 bg-primary text-white rounded hover:bg-primary/90"
+        >
           Sign in with Google
-        </Button>
-        <p className="text-xs text-muted-foreground">
-          Admins must use their @up.edu.ph email.
-        </p>
+        </button>
       </div>
     </div>
   );
