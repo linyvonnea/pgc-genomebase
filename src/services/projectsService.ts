@@ -45,18 +45,21 @@ export async function getProjects(): Promise<Project[]> {
 
       if (result.success) {
         const raw = result.data;
-
         const project: Project = {
           ...raw,
+          fundingCategory: raw.fundingCategory === "" ? undefined : raw.fundingCategory,
           startDate: raw.startDate
             ? formatDateToMMDDYYYY(new Date(raw.startDate))
             : undefined,
           clientNames: raw.clientNames
             ? raw.clientNames.map((s) => s.trim())
             : undefined,
+          status: raw.status === "" ? undefined : raw.status,
         };
-
         projects.push(project);
+      } else {
+        // Debug: log validation errors and the candidate data
+        console.error('Project validation failed:', candidate, result.error);
       }
     });
 

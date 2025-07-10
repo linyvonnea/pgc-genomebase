@@ -18,6 +18,7 @@ import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 
@@ -31,7 +32,7 @@ export default function ProjectForm() {
     title: "",
     projectLead: "",
     startDate: new Date(),
-    sendingInstitution: "",
+    sendingInstitution: "Government",
     fundingInstitution: "",
   });
   const [loading, setLoading] = useState(true);
@@ -92,22 +93,52 @@ export default function ProjectForm() {
     try {
       const year = result.data.startDate.getFullYear();
       const docRef = doc(db, "projects", pid);
-      // Fetch the existing project to check for createdAt
+      
+      // Fetch client name if cid exists
+      let clientName = "";
+      if (cid) {
+        const clientDoc = await getDoc(doc(db, "clients", cid));
+        if (clientDoc.exists()) {
+          clientName = clientDoc.data().name || "";
+        }
+      }
+
+      // Fetch the existing project to check for createdAt and existing clientNames
       const snap = await getDoc(docRef);
       let createdAt = serverTimestamp();
-      if (snap.exists() && snap.data().createdAt) {
-        createdAt = snap.data().createdAt;
+      let existingClientNames: string[] = [];
+      
+      if (snap.exists()) {
+        if (snap.data().createdAt) {
+          createdAt = snap.data().createdAt;
+        }
+        existingClientNames = snap.data().clientNames || [];
       }
+
+      // Add new client name if it exists and isn't already in the array
+      const updatedClientNames = clientName && !existingClientNames.includes(clientName) 
+        ? [...existingClientNames, clientName]
+        : existingClientNames;
+
       const payload = {
-        title: result.data.title,
-        lead: result.data.projectLead,
-        startDate: Timestamp.fromDate(result.data.startDate),
-        sendingInstitution: result.data.sendingInstitution,
-        fundingInstitution: result.data.fundingInstitution,
+        pid: pid || "",
+        iid: "", // Set iid as empty string
         year,
-        createdAt, // always set createdAt
-        updatedAt: serverTimestamp(),
+        startDate: Timestamp.fromDate(result.data.startDate),
+        createdAt,
+        lead: result.data.projectLead || "",
+        clientNames: updatedClientNames, // Use updated client names array
+        title: result.data.title || "",
+        projectTag: "",
+        status: "",
+        sendingInstitution: result.data.sendingInstitution || "",
+        fundingCategory: "",
+        fundingInstitution: result.data.fundingInstitution || "",
+        serviceRequested: [],
+        personnelAssigned: "",
+        notes: "",
       };
+      
       await setDoc(docRef, payload, { merge: true });
       toast.success("Project updated successfully!");
       // Optionally redirect or do something else
@@ -126,11 +157,7 @@ export default function ProjectForm() {
   }
 
   if (loading) {
-    // Only show loading if loading is true AND there is a pid (editing existing project)
-    if (pid) {
-      return <div className="max-w-4xl mx-auto p-8">Loading project data...</div>;
-    }
-    // If no pid, not editing, so show the form
+    return <div className="max-w-4xl mx-auto p-8">Loading project data...</div>;
   }
 
   return (
@@ -221,11 +248,22 @@ export default function ProjectForm() {
 
           <div>
             <Label>Sending Institution <span className="text-red-500 text-sm">*</span></Label>
-            <Input
+            <Select
               value={formData.sendingInstitution}
-              onChange={(e) => handleChange("sendingInstitution", e.target.value)}
-              placeholder="Enter sending institution here"
-            />
+              onValueChange={(value) => handleChange("sendingInstitution", value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select sending institution" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="UP System">UP System</SelectItem>
+                <SelectItem value="SUC/HEI">SUC/HEI</SelectItem>
+                <SelectItem value="Government">Government</SelectItem>
+                <SelectItem value="Private/Local">Private/Local</SelectItem>
+                <SelectItem value="International">International</SelectItem>
+                <SelectItem value="N/A">N/A</SelectItem>
+              </SelectContent>
+            </Select>
             {errors.sendingInstitution && <p className="text-red-500 text-sm">{errors.sendingInstitution}</p>}
           </div>
 

@@ -26,7 +26,7 @@ const projectSchema = baseProjectSchema.extend({
   clientNames: z.string().min(1).transform((val) => val.split(",").map((v) => v.trim())),
   projectTag: z.string().min(1, "Project Tag is required"),
   status: z.enum(["Ongoing", "Completed", "Cancelled"]),
-  fundingCategory: z.string().min(1, "Funding Category is required"),
+  fundingCategory: z.enum(["External", "In-House"]),
   serviceRequested: z.string().min(1).transform((val) => val.split(",").map((v) => v.trim())),
   personnelAssigned: z.string().min(1, "Personnel Assigned is required"),
   notes: z.string().optional(),
@@ -46,8 +46,8 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     title: "",
     projectTag: "",
     status: "Ongoing",
-    sendingInstitution: "",
-    fundingCategory: "",
+    sendingInstitution: "Government",
+    fundingCategory: "In-House",
     fundingInstitution: "",
     serviceRequested: [],
     personnelAssigned: "",
@@ -192,7 +192,13 @@ const handleSubmit = async (e: React.FormEvent) => {
       </div>
       <div>
         <Label>Funding Category</Label>
-        <Input name="fundingCategory" value={formData.fundingCategory} onChange={handleChange} />
+        <Select value={formData.fundingCategory} onValueChange={val => handleSelect("fundingCategory", val)}>
+          <SelectTrigger><SelectValue placeholder="Select funding category" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="External">External</SelectItem>
+            <SelectItem value="In-House">In-House</SelectItem>
+          </SelectContent>
+        </Select>
         {errors.fundingCategory && <p className="text-red-500 text-xs mt-1">{errors.fundingCategory}</p>}
       </div>
       <div>
