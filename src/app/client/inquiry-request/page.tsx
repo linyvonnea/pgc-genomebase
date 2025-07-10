@@ -97,79 +97,111 @@ export default function QuotationRequestForm() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-white rounded-lg shadow-sm p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Quotation Request Form</h1>
-        
-        <div className="mb-4">
-          <p className="text-gray-600 leading-relaxed text-justify mb-6">
-            Thank you for reaching out to PGC researchers for your research needs. We offer a range of 
-            services from Equipment Use, DNA Extraction, Polymerase Chain Reaction (PCR), Sample 
-            Purification, Next Generation Sequencing (NGS), Bioinformatics Analysis, and Training Services. To assist 
-            you better kindly provide us with the following information:
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50/50 to-blue-50/30 p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8">
+          {/* Modern Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 bg-gradient-to-r from-[#F69122] to-[#912ABD] rounded-full"></div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent">
+                Quotation Request Form
+              </h1>
+            </div>
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+              <p className="text-slate-700 leading-relaxed">
+                Thank you for reaching out to PGC researchers for your research needs. We offer a range of 
+                services from Equipment Use, DNA Extraction, Polymerase Chain Reaction (PCR), Sample 
+                Purification, Next Generation Sequencing (NGS), Bioinformatics Analysis, and Training Services. 
+                To assist you better, kindly provide us with the following information:
+              </p>
+            </div>
+          </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Required Fields Section */}
-            <div className="space-y-4">
-              {/* Name Field */}
-              <div>
-                <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-                  Name <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Enter name here"
-                  {...register("name")}
-                  className="mt-1"
-                />
-                {errors.name && (
-                  <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-                )}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            {/* Personal Information Section */}
+            <div className="bg-gradient-to-r from-slate-50 to-blue-50/50 rounded-xl p-6 border border-slate-100">
+              <h2 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-2">
+                <div className="w-2 h-2 bg-gradient-to-r from-[#166FB5] to-[#4038AF] rounded-full"></div>
+                Personal Information
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Name Field */}
+                <div className="md:col-span-2">
+                  <Label htmlFor="name" className="text-sm font-semibold text-slate-700 mb-2 block">
+                    Full Name <span className="text-[#B9273A]">*</span>
+                  </Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Enter your full name"
+                    {...register("name")}
+                    className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
+                  />
+                  {errors.name && (
+                    <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                      <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                      {errors.name.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Affiliation Field */}
+                <div className="md:col-span-2">
+                  <Label htmlFor="affiliation" className="text-sm font-semibold text-slate-700 mb-2 block">
+                    Affiliation (Department & Institution Name) <span className="text-[#B9273A]">*</span>
+                  </Label>
+                  <Input
+                    id="affiliation"
+                    type="text"
+                    placeholder="e.g. Division of Biological Sciences - UPV CAS"
+                    {...register("affiliation")}
+                    className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
+                  />
+                  {errors.affiliation && (
+                    <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                      <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                      {errors.affiliation.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Designation Field */}
+                <div className="md:col-span-2">
+                  <Label htmlFor="designation" className="text-sm font-semibold text-slate-700 mb-2 block">
+                    Designation <span className="text-[#B9273A]">*</span>
+                  </Label>
+                  <Input
+                    id="designation"
+                    type="text"
+                    placeholder="e.g. Research Assistant, Professor"
+                    {...register("designation")}
+                    className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
+                  />
+                  {errors.designation && (
+                    <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                      <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                      {errors.designation.message}
+                    </p>
+                  )}
+                </div>
               </div>
+            </div>
 
-              {/* Affiliation Field */}
+            {/* Service Selection Section */}
+            <div className="bg-gradient-to-r from-slate-50 to-blue-50/50 rounded-xl p-6 border border-slate-100">
+              <h2 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-2">
+                <div className="w-2 h-2 bg-gradient-to-r from-[#F69122] to-[#B9273A] rounded-full"></div>
+                Service Selection
+              </h2>
+              
               <div>
-                <Label htmlFor="affiliation" className="text-sm font-medium text-gray-700">
-                  Affiliation (Department & Institution Name) <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="affiliation"
-                  type="text"
-                  placeholder="e.g. Division of Biological Sciences - UPV CAS"
-                  {...register("affiliation")}
-                  className="mt-1"
-                />
-                {errors.affiliation && (
-                  <p className="text-red-500 text-sm mt-1">{errors.affiliation.message}</p>
-                )}
-              </div>
-
-              {/* Designation Field */}
-              <div>
-                <Label htmlFor="designation" className="text-sm font-medium text-gray-700">
-                  Designation <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="designation"
-                  type="text"
-                  placeholder="Enter designation here"
-                  {...register("designation")}
-                  className="mt-1"
-                />
-                {errors.designation && (
-                  <p className="text-red-500 text-sm mt-1">{errors.designation.message}</p>
-                )}
-              </div>
-
-              {/* Select Service */}
-              <div>
-                <Label htmlFor="service" className="text-sm font-medium text-gray-700">
-                  Select Service:
+                <Label htmlFor="service" className="text-sm font-semibold text-slate-700 mb-2 block">
+                  Select Service Type:
                 </Label>
                 <Select onValueChange={handleServiceChange} defaultValue="laboratory">
-                  <SelectTrigger className="mt-1">
+                  <SelectTrigger className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12">
                     <SelectValue placeholder="Select a service" />
                   </SelectTrigger>
                   <SelectContent>
@@ -179,23 +211,29 @@ export default function QuotationRequestForm() {
                   </SelectContent>
                 </Select>
                 {errors.service && (
-                  <p className="text-red-500 text-sm mt-1">{errors.service.message}</p>
+                  <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                    <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                    {errors.service.message}
+                  </p>
                 )}
               </div>
             </div>
 
             {/* Dynamic Fields Section */}
-            <div className="border-t pt-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Please answer the following:</h2>
+            <div className="bg-gradient-to-r from-slate-50 to-blue-50/50 rounded-xl p-6 border border-slate-100">
+              <h2 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-2">
+                <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#4038AF] rounded-full"></div>
+                Service Details
+              </h2>
               
               {selectedService === "laboratory" && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {/* Workflow Selection */}
                   <div>
-                    <Label className="text-sm font-medium text-gray-700 mb-3 block">
-                      Kindly choose which workflow you will be availing?
+                    <Label className="text-sm font-semibold text-slate-700 mb-3 block">
+                      Kindly choose which workflow you will be availing? <span className="text-[#B9273A]">*</span>
                     </Label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {([
                         { id: "dna-extraction", label: "DNA extraction" },
                         { id: "sequencing", label: "Sequencing" },
@@ -204,121 +242,139 @@ export default function QuotationRequestForm() {
                         { id: "quantification", label: "Quantification" },
                         { id: "complete-workflow", label: "Complete Workflow" }
                       ] as Array<{ id: WorkflowOption; label: string }>).map((workflow) => (
-                        <div key={workflow.id} className="flex items-center space-x-2">
+                        <div key={workflow.id} className="flex items-center space-x-3 p-3 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
                           <input
                             type="checkbox"
                             id={workflow.id}
                             checked={formData.workflows?.includes(workflow.id) || false}
                             onChange={(e) => handleWorkflowChange(workflow.id, e.target.checked)}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="rounded border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
                           />
-                          <Label htmlFor={workflow.id} className="text-sm text-gray-700">
+                          <Label htmlFor={workflow.id} className="text-sm text-slate-700 font-medium cursor-pointer">
                             {workflow.label}
                           </Label>
                         </div>
                       ))}
                     </div>
                     {errors.workflows && (
-                      <p className="text-red-500 text-sm mt-1">{errors.workflows.message}</p>
+                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                        {errors.workflows.message}
+                      </p>
                     )}
                   </div>
 
                   {/* Additional Information */}
                   <div>
-                    <Label htmlFor="additionalInfo" className="text-sm font-medium text-gray-700">
+                    <Label htmlFor="additionalInfo" className="text-sm font-semibold text-slate-700 mb-2 block">
                       Do you have questions or any other additional information?
                     </Label>
                     <Textarea
                       id="additionalInfo"
                       placeholder="Enter a description..."
                       {...register("additionalInfo")}
-                      className="mt-1"
+                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[100px] resize-none"
                       rows={4}
                     />
                     {errors.additionalInfo && (
-                      <p className="text-red-500 text-sm mt-1">{errors.additionalInfo.message}</p>
+                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                        {errors.additionalInfo.message}
+                      </p>
                     )}
                   </div>
                 </div>
               )}
 
               {selectedService === "research" && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {/* Project Background */}
                   <div>
-                    <Label htmlFor="projectBackground" className="text-sm font-medium text-gray-700">
-                      Indicate a brief background of the project and required molecular workflow
+                    <Label htmlFor="projectBackground" className="text-sm font-semibold text-slate-700 mb-2 block">
+                      Indicate a brief background of the project and required molecular workflow <span className="text-[#B9273A]">*</span>
                     </Label>
                     <Textarea
                       id="projectBackground"
                       placeholder="Enter a description..."
                       {...register("projectBackground")}
-                      className="mt-1"
+                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[100px] resize-none"
                       rows={4}
                     />
                     {errors.projectBackground && (
-                      <p className="text-red-500 text-sm mt-1">{errors.projectBackground.message}</p>
+                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                        {errors.projectBackground.message}
+                      </p>
                     )}
                   </div>
 
                   {/* Project Budget */}
                   <div>
-                    <Label htmlFor="projectBudget" className="text-sm font-medium text-gray-700">
-                      Indicate project budget for molecular workflow
+                    <Label htmlFor="projectBudget" className="text-sm font-semibold text-slate-700 mb-2 block">
+                      Indicate project budget for molecular workflow <span className="text-[#B9273A]">*</span>
                     </Label>
                     <Input
                       id="projectBudget"
                       type="text"
                       placeholder="₱"
                       {...register("projectBudget")}
-                      className="mt-1"
+                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
                     />
                     {errors.projectBudget && (
-                      <p className="text-red-500 text-sm mt-1">{errors.projectBudget.message}</p>
+                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                        {errors.projectBudget.message}
+                      </p>
                     )}
                   </div>
                 </div>
               )}
 
               {selectedService === "training" && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {/* Specific Training Need */}
                   <div>
-                    <Label htmlFor="specificTrainingNeed" className="text-sm font-medium text-gray-700">
-                      Specific Training Need <span className="text-red-500">*</span>
+                    <Label htmlFor="specificTrainingNeed" className="text-sm font-semibold text-slate-700 mb-2 block">
+                      Specific Training Need <span className="text-[#B9273A]">*</span>
                     </Label>
                     <Input
                       id="specificTrainingNeed"
                       type="text"
                       placeholder="Describe the specific training you need..."
                       {...register("specificTrainingNeed")}
-                      className="mt-1"
+                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
                     />
                     {errors.specificTrainingNeed && (
-                      <p className="text-red-500 text-sm mt-1">{errors.specificTrainingNeed.message}</p>
+                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                        {errors.specificTrainingNeed.message}
+                      </p>
                     )}
                   </div>
 
                   {/* Target Date for Training */}
                   <div>
-                    <Label htmlFor="targetTrainingDate" className="text-sm font-medium text-gray-700">
-                      Target Date for the Training <span className="text-red-500">*</span>
+                    <Label htmlFor="targetTrainingDate" className="text-sm font-semibold text-slate-700 mb-2 block">
+                      Target Date for the Training <span className="text-[#B9273A]">*</span>
                     </Label>
                     <Input
                       id="targetTrainingDate"
                       type="date"
                       {...register("targetTrainingDate")}
-                      className="mt-1"
+                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
                     />
                     {errors.targetTrainingDate && (
-                      <p className="text-red-500 text-sm mt-1">{errors.targetTrainingDate.message}</p>
+                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                        {errors.targetTrainingDate.message}
+                      </p>
                     )}
                   </div>
 
                   {/* Number of Participants */}
                   <div>
-                    <Label htmlFor="numberOfParticipants" className="text-sm font-medium text-gray-700">
-                      Number of Participants <span className="text-red-500">*</span>
+                    <Label htmlFor="numberOfParticipants" className="text-sm font-semibold text-slate-700 mb-2 block">
+                      Number of Participants <span className="text-[#B9273A]">*</span>
                     </Label>
                     <Input
                       id="numberOfParticipants"
@@ -326,10 +382,13 @@ export default function QuotationRequestForm() {
                       min="1"
                       placeholder="Enter number of participants"
                       {...register("numberOfParticipants", { valueAsNumber: true })}
-                      className="mt-1"
+                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
                     />
                     {errors.numberOfParticipants && (
-                      <p className="text-red-500 text-sm mt-1">{errors.numberOfParticipants.message}</p>
+                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                        {errors.numberOfParticipants.message}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -337,13 +396,13 @@ export default function QuotationRequestForm() {
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end pt-6">
+            <div className="flex justify-end pt-8 border-t border-slate-100">
               <Button 
                 type="submit" 
-                className="bg-gray-600 hover:bg-gray-700 text-white px-8 py-2"
+                className="h-12 px-8 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Submitting..." : "Submit"}
+                {isSubmitting ? "Submitting..." : "Submit Request"}
               </Button>
             </div>
           </form>

@@ -17,10 +17,7 @@ import { CalendarIcon } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { toast } from "sonner";
-import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-
 
 export default function ProjectForm() {
   const router = useRouter();
@@ -40,11 +37,10 @@ export default function ProjectForm() {
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectFormData, string>>>({});
   const [startOpen, setStartOpen] = useState(false);
 
-  // Fetch existing project data on mount
   useEffect(() => {
     async function fetchProject() {
       if (!pid) {
-        setLoading(false); // If no pid, stop loading and show form
+        setLoading(false);
         return;
       }
       setLoading(true);
@@ -56,12 +52,12 @@ export default function ProjectForm() {
           setFormData({
             title: data.title || "",
             projectLead: data.lead || "",
-            startDate: data.startDate ? (data.startDate.toDate ? data.startDate.toDate() : new Date(data.startDate)) : new Date(),
+            startDate: data.startDate?.toDate?.() || new Date(data.startDate),
             sendingInstitution: data.sendingInstitution || "",
             fundingInstitution: data.fundingInstitution || "",
           });
         }
-      } catch (err) {
+      } catch {
         toast.error("Failed to load project data.");
       } finally {
         setLoading(false);
@@ -91,11 +87,11 @@ export default function ProjectForm() {
       toast.error("Missing project ID in URL.");
       return;
     }
+
     try {
       const year = result.data.startDate.getFullYear();
       const docRef = doc(db, "projects", pid);
-      
-      // Fetch client name if cid exists
+
       let clientName = "";
       if (cid) {
         const clientDoc = await getDoc(doc(db, "clients", cid));
@@ -104,137 +100,130 @@ export default function ProjectForm() {
         }
       }
 
-      // Fetch the existing project to check for createdAt and existing clientNames
       const snap = await getDoc(docRef);
       let createdAt = serverTimestamp();
       let existingClientNames: string[] = [];
-      
+
       if (snap.exists()) {
-        if (snap.data().createdAt) {
-          createdAt = snap.data().createdAt;
-        }
+        createdAt = snap.data().createdAt || createdAt;
         existingClientNames = snap.data().clientNames || [];
       }
 
-      // Add new client name if it exists and isn't already in the array
       const updatedClientNames = clientName && !existingClientNames.includes(clientName) 
         ? [...existingClientNames, clientName]
         : existingClientNames;
 
       const payload = {
-        pid: pid || "",
-        iid: inquiryId || "", // Store inquiryId in the project table
+        pid,
+        iid: inquiryId || "",
         year,
         startDate: Timestamp.fromDate(result.data.startDate),
         createdAt,
-        lead: result.data.projectLead || "",
-        clientNames: updatedClientNames, // Use updated client names array
-        title: result.data.title || "",
+        lead: result.data.projectLead,
+        clientNames: updatedClientNames,
+        title: result.data.title,
         projectTag: "",
         status: "",
-        sendingInstitution: result.data.sendingInstitution || "",
+        sendingInstitution: result.data.sendingInstitution,
         fundingCategory: "",
-        fundingInstitution: result.data.fundingInstitution || "",
+        fundingInstitution: result.data.fundingInstitution,
         serviceRequested: [],
         personnelAssigned: "",
         notes: "",
       };
-      
+
       await setDoc(docRef, payload, { merge: true });
       toast.success("Project updated successfully!");
-      // Optionally redirect or do something else
-    } catch (err) {
+    } catch {
       toast.error("Error updating project. Please try again.");
     }
   };
 
-  function formatDate(date: Date | null) {
-    if (!date) return "";
-    return date.toLocaleDateString("en-US", {
+  const formatDate = (date: Date | null) =>
+    date?.toLocaleDateString("en-US", {
       day: "2-digit",
       month: "long",
       year: "numeric",
-    });
-  }
+    }) || "";
 
   if (loading) {
-    return <div className="max-w-4xl mx-auto p-8">Loading project data...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-slate-50/50 to-blue-50/30">
+        <div className="bg-white/80 p-8 rounded-2xl shadow-xl border border-white/50 backdrop-blur-sm">
+          <div className="animate-pulse space-y-4">
+            <div className="h-6 bg-slate-200 rounded w-48" />
+            <div className="h-4 bg-slate-100 rounded w-64" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-white rounded-lg shadow-sm p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Project Information Form</h1>
-
-        <div className="mb-4">
-          <p className="text-gray-600 leading-relaxed text-justify mb-6">
-            Thank you for partnering with Philippine Genome Center Visayas.
-            To better understand and support your project, we request that you 
-            provide information through this form.
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4 w-full p-1">
-          <div>
-            <Label>Project Title <span className="text-red-500 text-sm">*</span></Label>
-            <Input
-              value={formData.title}
-              onChange={(e) => handleChange("title", e.target.value)}
-              placeholder="Enter project title here"
-            />
-            {errors.title && <p className="text-red-500 text-sm">{errors.title}</p>}
+    <div className="min-h-screen p-6 bg-gradient-to-br from-slate-50/50 to-blue-50/30">
+      <div className="max-w-4xl mx-auto">
+        <div className="p-8 bg-white/80 rounded-2xl shadow-xl border border-white/50 backdrop-blur-sm">
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 rounded-full bg-gradient-to-r from-[#F69122] to-[#912ABD]" />
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent">
+                Project Information Form
+              </h1>
+            </div>
+            <div className="p-6 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <p className="text-slate-700 leading-relaxed">
+                Thank you for partnering with Philippine Genome Center Visayas. To better understand and support your project, please fill out this form.
+              </p>
+            </div>
           </div>
 
-          <div>
-            <Label>Project Lead <span className="text-red-500 text-sm">*</span></Label>
-            <Input
-              value={formData.projectLead}
-              onChange={(e) => handleChange("projectLead", e.target.value)}
-              placeholder="Enter project lead here"
-            />
-            {errors.projectLead && <p className="text-red-500 text-sm">{errors.projectLead}</p>}
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <Label>Project Title <span className="text-[#B9273A]">*</span></Label>
+                <Input
+                  value={formData.title}
+                  onChange={(e) => handleChange("title", e.target.value)}
+                  placeholder="Enter your project title"
+                />
+                {errors.title && <p className="text-[#B9273A] text-sm mt-1">{errors.title}</p>}
+              </div>
 
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <Label htmlFor="startDate">
-                Start Date <span className="text-red-500 text-sm">*</span>
-              </Label>
-              <div className="relative flex gap-2">
+              <div>
+                <Label>Project Lead <span className="text-[#B9273A]">*</span></Label>
+                <Input
+                  value={formData.projectLead}
+                  onChange={(e) => handleChange("projectLead", e.target.value)}
+                  placeholder="Enter project lead name"
+                />
+                {errors.projectLead && <p className="text-[#B9273A] text-sm mt-1">{errors.projectLead}</p>}
+              </div>
+
+              <div>
+                <Label>Start Date <span className="text-[#B9273A]">*</span></Label>
                 <Popover open={startOpen} onOpenChange={setStartOpen}>
                   <PopoverTrigger asChild>
                     <div className="relative w-full">
                       <Input
-                        id="startDate"
                         value={formatDate(formData.startDate)}
-                        placeholder="June 01, 2025"
-                        className="bg-background pr-10 w-full"
                         readOnly
+                        className="pr-10"
                       />
                       <Button
+                        type="button"
                         variant="ghost"
                         className="absolute top-1/2 right-2 size-6 -translate-y-1/2"
-                        type="button"
                       >
-                        <CalendarIcon className="size-4" />
-                        <span className="sr-only">Select date</span>
+                        <CalendarIcon className="size-4 text-[#166FB5]" />
                       </Button>
                     </div>
                   </PopoverTrigger>
-                  <PopoverContent
-                    className="w-auto overflow-hidden p-0"
-                    align="end"
-                    alignOffset={-8}
-                    sideOffset={10}
-                  >
+                  <PopoverContent className="p-0 border border-slate-200 bg-white/90 backdrop-blur-sm">
                     <Calendar
                       mode="single"
                       selected={formData.startDate}
-                      captionLayout="dropdown"
                       fromYear={2000}
-                      toYear={new Date().getFullYear() + 10} 
-                      month={formData.startDate}
-                      onMonthChange={(date) => handleChange("startDate", date)}
+                      toYear={new Date().getFullYear() + 10}
                       onSelect={(date) => {
                         handleChange("startDate", date);
                         setStartOpen(false);
@@ -242,54 +231,52 @@ export default function ProjectForm() {
                     />
                   </PopoverContent>
                 </Popover>
+                {errors.startDate && <p className="text-[#B9273A] text-sm mt-1">{errors.startDate}</p>}
               </div>
-              {errors.startDate && <p className="text-red-500 text-sm">{errors.startDate}</p>}
             </div>
-          </div>
 
-          <div>
-            <Label>Sending Institution <span className="text-red-500 text-sm">*</span></Label>
-            <Select
-              value={formData.sendingInstitution}
-              onValueChange={(value) => handleChange("sendingInstitution", value)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select sending institution" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="UP System">UP System</SelectItem>
-                <SelectItem value="SUC/HEI">SUC/HEI</SelectItem>
-                <SelectItem value="Government">Government</SelectItem>
-                <SelectItem value="Private/Local">Private/Local</SelectItem>
-                <SelectItem value="International">International</SelectItem>
-                <SelectItem value="N/A">N/A</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.sendingInstitution && <p className="text-red-500 text-sm">{errors.sendingInstitution}</p>}
-          </div>
+            <div>
+              <Label>Sending Institution <span className="text-[#B9273A]">*</span></Label>
+              <Select
+                value={formData.sendingInstitution}
+                onValueChange={(val) => handleChange("sendingInstitution", val)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select sending institution" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="UP System">UP System</SelectItem>
+                  <SelectItem value="SUC/HEI">SUC/HEI</SelectItem>
+                  <SelectItem value="Government">Government</SelectItem>
+                  <SelectItem value="Private/Local">Private/Local</SelectItem>
+                  <SelectItem value="International">International</SelectItem>
+                  <SelectItem value="N/A">N/A</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.sendingInstitution && <p className="text-[#B9273A] text-sm mt-1">{errors.sendingInstitution}</p>}
+            </div>
 
-          <div>
-            <Label>Funding Institution <span className="text-red-500 text-sm">*</span></Label>
-            <Input
-              value={formData.fundingInstitution}
-              onChange={(e) => handleChange("fundingInstitution", e.target.value)}
-              placeholder="Enter funding institution here"
-            />
-            {errors.fundingInstitution && <p className="text-red-500 text-sm">{errors.fundingInstitution}</p>}
-          </div>
+            <div>
+              <Label>Funding Institution <span className="text-[#B9273A]">*</span></Label>
+              <Input
+                value={formData.fundingInstitution}
+                onChange={(e) => handleChange("fundingInstitution", e.target.value)}
+                placeholder="Enter funding institution"
+              />
+              {errors.fundingInstitution && <p className="text-[#B9273A] text-sm mt-1">{errors.fundingInstitution}</p>}
+            </div>
 
-          <div className="flex justify-end pt-6">
-            <Button 
-              type="submit" 
-              className="bg-gray-600 hover:bg-gray-700 text-white px-8 py-2"
-            >
-              Submit
-            </Button>
-          </div>
-        </form>
+            <div className="flex justify-end pt-6 border-t border-slate-100">
+              <Button
+                type="submit"
+                className="h-12 px-8 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] text-white hover:brightness-110 transition-all duration-300"
+              >
+                Submit
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
 }
-
-//test

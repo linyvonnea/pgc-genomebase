@@ -112,109 +112,160 @@ export default function ClientFormEntry() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-white rounded-lg shadow-sm p-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Client Information Form</h1>
-        <div className="mb-4">
-          <p className="text-gray-600 leading-relaxed text-justify mb-6">
-            To help us serve you better, please complete this form
-            with accurate and updated details. Your information will be handled with 
-            strict confidentiality and will only be used for official purposes related 
-            to your request, project, or collaboration with PGC.
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50/50 to-blue-50/30 p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8">
+          {/* Modern Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 bg-gradient-to-r from-[#F69122] to-[#912ABD] rounded-full"></div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent">
+                Client Information Form
+              </h1>
+            </div>
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+              <p className="text-slate-700 leading-relaxed">
+                To help us serve you better, please complete this form with accurate and updated details. 
+                Your information will be handled with strict confidentiality and will only be used for 
+                official purposes related to your request, project, or collaboration with PGC.
+              </p>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Name Field */}
+              <div className="md:col-span-2">
+                <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+                  Full Name <span className="text-[#B9273A]">*</span>
+                </Label>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => handleChange("name", e.target.value)}
+                  placeholder="Enter your full name"
+                  className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
+                />
+                {errors.name && <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                  <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                  {errors.name}
+                </p>}
+              </div>
+
+              {/* Email Field */}
+              <div className="md:col-span-2">
+                <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+                  Email Address <span className="text-[#B9273A]">*</span>
+                </Label>
+                <Input
+                  value={formData.email}
+                  disabled
+                  placeholder="Verified email address"
+                  className="bg-slate-50 border-slate-200 text-slate-600 h-12 cursor-not-allowed"
+                />
+                {errors.email && <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                  <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                  {errors.email}
+                </p>}
+              </div>
+
+              {/* Affiliation Field */}
+              <div className="md:col-span-2">
+                <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+                  Affiliation (Department & Institution) <span className="text-[#B9273A]">*</span>
+                </Label>
+                <Input
+                  value={formData.affiliation}
+                  onChange={(e) => handleChange("affiliation", e.target.value)}
+                  placeholder="e.g. Division of Biological Sciences - UPV CAS"
+                  className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
+                />
+                {errors.affiliation && <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                  <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                  {errors.affiliation}
+                </p>}
+              </div>
+
+              {/* Designation Field */}
+              <div>
+                <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+                  Designation <span className="text-[#B9273A]">*</span>
+                </Label>
+                <Input
+                  value={formData.designation}
+                  onChange={(e) => handleChange("designation", e.target.value)}
+                  placeholder="e.g. Research Assistant, Professor"
+                  className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
+                />
+                {errors.designation && <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                  <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                  {errors.designation}
+                </p>}
+              </div>
+
+              {/* Sex Field */}
+              <div>
+                <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+                  Gender <span className="text-[#B9273A]">*</span>
+                </Label>
+                <Select value={formData.sex} onValueChange={(val) => handleChange("sex", val)}>
+                  <SelectTrigger className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12">
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="M">Male</SelectItem>
+                    <SelectItem value="F">Female</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Phone Number Field */}
+              <div className="md:col-span-2">
+                <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+                  Mobile Number <span className="text-[#B9273A]">*</span>
+                </Label>
+                <Input
+                  value={formData.phoneNumber}
+                  onChange={(e) => handleChange("phoneNumber", e.target.value)}
+                  placeholder="e.g. 09091234567"
+                  className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
+                />
+                {errors.phoneNumber && <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                  <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                  {errors.phoneNumber}
+                </p>}
+              </div>
+
+              {/* Affiliation Address Field */}
+              <div className="md:col-span-2">
+                <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+                  Affiliation Address <span className="text-[#B9273A]">*</span>
+                </Label>
+                <Textarea
+                  value={formData.affiliationAddress}
+                  onChange={(e) => handleChange("affiliationAddress", e.target.value)}
+                  placeholder="Enter complete address of your institution/organization"
+                  className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[100px] resize-none"
+                />
+                {errors.affiliationAddress && <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                  <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                  {errors.affiliationAddress}
+                </p>}
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex justify-end pt-8 border-t border-slate-100">
+              <Button 
+                type="submit" 
+                className="h-12 px-8 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                disabled={submitting}
+              >
+                {submitting ? "Submitting..." : "Continue to Project Information"}
+              </Button>
+            </div>
+          </form>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4 w-full p-1">
-          <div>
-            <Label>
-              Name <span className="text-red-500 text-sm">*</span>
-            </Label>
-            <Input
-              value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              placeholder="Enter name here"
-            />
-            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
-          </div>
-          <div>
-            <Label>
-              Email <span className="text-red-500 text-sm">*</span>
-            </Label>
-            <Input
-              value={formData.email}
-              disabled
-              placeholder="Verified email"
-            />
-            {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
-          </div>
-          <div>
-            <Label>
-              Affiliation (Department & Institution) <span className="text-red-500 text-sm">*</span>
-            </Label>
-            <Input
-              value={formData.affiliation}
-              onChange={(e) => handleChange("affiliation", e.target.value)}
-              placeholder="e.g. Division of Biological Sciences - UPV CAS"
-            />
-            {errors.affiliation && <p className="text-red-500 text-sm">{errors.affiliation}</p>}
-          </div>
-          <div>
-            <Label>
-              Designation <span className="text-red-500 text-sm">*</span>
-            </Label>
-            <Input
-              value={formData.designation}
-              onChange={(e) => handleChange("designation", e.target.value)}
-              placeholder="Enter designation here"
-            />
-            {errors.designation && <p className="text-red-500 text-sm">{errors.designation}</p>}
-          </div>
-          <div>
-            <Label>
-              Sex <span className="text-red-500 text-sm">*</span>
-            </Label>
-            <Select value={formData.sex} onValueChange={(val) => handleChange("sex", val)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="M">Male</SelectItem>
-                <SelectItem value="F">Female</SelectItem>
-                <SelectItem value="Other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>
-              Mobile Number <span className="text-red-500 text-sm">*</span>
-            </Label>
-            <Input
-              value={formData.phoneNumber}
-              onChange={(e) => handleChange("phoneNumber", e.target.value)}
-              placeholder="e.g. 09091234567"
-            />
-            {errors.phoneNumber && <p className="text-red-500 text-sm">{errors.phoneNumber}</p>}
-          </div>
-          <div>
-            <Label>
-              Affiliation Address <span className="text-red-500 text-sm">*</span>
-            </Label>
-            <Textarea
-              value={formData.affiliationAddress}
-              onChange={(e) => handleChange("affiliationAddress", e.target.value)}
-              placeholder="Enter affiliation address here"
-            />
-            {errors.affiliationAddress && <p className="text-red-500 text-sm">{errors.affiliationAddress}</p>}
-          </div>
-          <div className="flex justify-end pt-6">
-            <Button 
-              type="submit" 
-              className="bg-gray-600 hover:bg-gray-700 text-white px-8 py-2"
-              disabled={submitting}
-            >
-              {submitting ? "Submitting..." : "Submit"}
-            </Button>
-          </div>
-        </form>
       </div>
     </div>
   );
