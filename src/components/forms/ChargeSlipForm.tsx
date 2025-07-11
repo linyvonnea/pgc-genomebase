@@ -5,26 +5,25 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { chargeSlipSchema, ChargeSlipFormData } from "@/schemas/chargeSlipSchema";
 
-export default function ChargeSlipForm() {
+export default function ChargeSlipForm({ onSubmit }: { onSubmit: (data: ChargeSlipFormData) => void }) {
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<ChargeSlipFormData>({
     resolver: zodResolver(chargeSlipSchema),
+    defaultValues: {
+      amount: 0,
+    },
   });
 
-  const onSubmit = (data: ChargeSlipFormData) => {
-    console.log(data);
+  const handleFormSubmit = (data: ChargeSlipFormData) => {
+    onSubmit(data);
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <input placeholder="Project ID" {...register("projectId")} />
-      <input placeholder="Prepared By" {...register("preparedBy")} />
-      <input type="date" {...register("dateIssued", { valueAsDate: true })} />
-      <input type="number" placeholder="Amount" {...register("amount", { valueAsNumber: true })} />
-      <button type="submit">Submit</button>
+    <form onSubmit={handleSubmit(handleFormSubmit)}>
+      {/* Removed the `amount` input field from ChargeSlipForm */}
     </form>
   );
 }
