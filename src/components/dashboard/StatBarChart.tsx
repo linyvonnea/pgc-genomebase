@@ -32,6 +32,7 @@ const COLORS = [
 interface StatisticsBarChartProps {
   projectsData: any[];
   clientsData: any[];
+  trainingsData: any[];
   timeRange: string;
   customRange?: { year: number; startMonth: number; endMonth: number };
 }
@@ -39,6 +40,7 @@ interface StatisticsBarChartProps {
 export function StatBarChart({ 
   projectsData, 
   clientsData,
+  trainingsData,
   timeRange,
   customRange
 }: StatisticsBarChartProps) {
@@ -139,30 +141,35 @@ export function StatBarChart({
     const now = new Date();
     let filteredProjects = [...projectsData];
     let filteredClients = [...clientsData];
+    let filteredTrainings = [...trainingsData];
     
     if (timeRange === "today") {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
       filteredProjects = filteredProjects.filter(p => toDate(p.startDate) >= todayStart);
       filteredClients = filteredClients.filter(c => toDate(c.createdAt) >= todayStart);
+      filteredTrainings = filteredTrainings.filter(t => toDate(t.dateConducted) >= todayStart);
     } 
     else if (timeRange === "weekly") {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
       filteredProjects = filteredProjects.filter(p => toDate(p.startDate) >= weekAgo);
       filteredClients = filteredClients.filter(c => toDate(c.createdAt) >= weekAgo);
+      filteredTrainings = filteredTrainings.filter(t => toDate(t.dateConducted) >= weekAgo);
     }
     else if (timeRange === "monthly") {
       const monthAgo = new Date();
       monthAgo.setMonth(monthAgo.getMonth() - 1);
       filteredProjects = filteredProjects.filter(p => toDate(p.startDate) >= monthAgo);
       filteredClients = filteredClients.filter(c => toDate(c.createdAt) >= monthAgo);
+      filteredTrainings = filteredTrainings.filter(t => toDate(t.dateConducted) >= monthAgo);
     }
     else if (timeRange === "yearly") {
       const yearAgo = new Date();
       yearAgo.setFullYear(yearAgo.getFullYear() - 1);
       filteredProjects = filteredProjects.filter(p => toDate(p.startDate) >= yearAgo);
       filteredClients = filteredClients.filter(c => toDate(c.createdAt) >= yearAgo);
+      filteredTrainings = filteredTrainings.filter(t => toDate(t.dateConducted) >= yearAgo);
     }
     else if (timeRange === "custom" && customRange) {
       filteredProjects = filteredProjects.filter(p => {
@@ -181,6 +188,14 @@ export function StatBarChart({
           date.getMonth() <= customRange.endMonth
         );
       });
+      filteredTrainings = filteredTrainings.filter(t => {
+        const date = toDate(t.dateConducted);
+        return (
+          date.getFullYear() === customRange.year &&
+          date.getMonth() >= customRange.startMonth &&
+          date.getMonth() <= customRange.endMonth
+        );
+      });
     }
 
     switch(timeRange) {
@@ -190,19 +205,20 @@ export function StatBarChart({
 
         return [{
           name: "Today",
-          projects: projectsData.filter(p => toDate(p.startDate) >= todayStart).length,
-          clients: clientsData.filter(c => toDate(c.createdAt) >= todayStart).length,
-          trainings: 0
+          projects: filteredProjects.length,
+          clients: filteredClients.length,
+          trainings: filteredTrainings.length
         }];
         
       case "weekly":
         const dailyProjects = countByTimePeriod(filteredProjects, 'startDate', 'day');
         const dailyClients = countByTimePeriod(filteredClients, 'createdAt', 'day');
+        const dailyTrainings = countByTimePeriod(filteredTrainings, 'dateConducted', 'day');
         return dailyProjects.map((day, i) => ({
           name: day.name,
           projects: day.count,
           clients: dailyClients[i]?.count || 0,
-          trainings: 0
+          trainings: dailyTrainings[i]?.count || 0
         }));
         
       case "monthly": 
@@ -220,15 +236,18 @@ export function StatBarChart({
 
           dailyCounts.push({
             name: dayLabel, 
-            projects: projectsData.filter(p => {
+            projects: filteredProjects.filter(p => {
               const pDate = toDate(p.startDate);
               return pDate.toDateString() === date.toDateString();
             }).length,
-            clients: clientsData.filter(c => {
+            clients: filteredClients.filter(c => {
               const cDate = toDate(c.createdAt);
               return cDate.toDateString() === date.toDateString();
             }).length,
-            trainings: 0
+            trainings: filteredTrainings.filter(t => {
+              const tDate = toDate(t.dateConducted);
+              return tDate.toDateString() === date.toDateString();
+            }).length
           });
         }
         return dailyCounts;
@@ -236,21 +255,23 @@ export function StatBarChart({
       case "yearly":
         const monthlyProjects = countByTimePeriod(filteredProjects, 'startDate', 'month');
         const monthlyClients = countByTimePeriod(filteredClients, 'createdAt', 'month');
+        const monthlyTrainings = countByTimePeriod(filteredTrainings, 'dateConducted', 'month');
         return monthlyProjects.map((month, i) => ({
           name: month.name,
           projects: month.count,
           clients: monthlyClients[i]?.count || 0,
-          trainings: 0
+          trainings: monthlyTrainings[i]?.count || 0
         }));
         
       case "all":
         const yearlyProjects = countByTimePeriod(filteredProjects, 'startDate', 'year');
         const yearlyClients = countByTimePeriod(filteredClients, 'createdAt', 'year');
+        const yearlyTrainings = countByTimePeriod(filteredTrainings, 'dateConducted', 'year');
         return yearlyProjects.map((year, i) => ({
           name: year.name,
           projects: year.count,
           clients: yearlyClients[i]?.count || 0,
-          trainings: 0
+          trainings: yearlyTrainings[i]?.count || 0
         }));
         
       case "custom":
@@ -262,21 +283,27 @@ export function StatBarChart({
 
         return customMonths.map(month => ({
           name: month,
-          projects: projectsData.filter(p => {
+          projects: filteredProjects.filter(p => {
             const date = toDate(p.startDate);
             return (
               date.getFullYear() === customRange.year &&
               months[date.getMonth()] === month
             );
           }).length,
-          clients: clientsData.filter(c => {
+          clients: filteredClients.filter(c => {
             const date = toDate(c.createdAt);
             return (
               date.getFullYear() === customRange.year &&
               months[date.getMonth()] === month
             );
           }).length,
-          trainings: 0
+          trainings: filteredTrainings.filter(t => {
+            const date = toDate(t.dateConducted);
+            return (
+              date.getFullYear() === customRange.year &&
+              months[date.getMonth()] === month
+            );
+          }).length
         }));
         
       default:
@@ -284,7 +311,7 @@ export function StatBarChart({
           name: "Overview",
           projects: filteredProjects.length,
           clients: filteredClients.length,
-          trainings: 0
+          trainings: filteredTrainings.length
         }];
     }
   };
@@ -305,7 +332,7 @@ export function StatBarChart({
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={data}
-              margin={{ left: -20 }} 
+              margin={{ left: -35 }} 
             >
               <CartesianGrid vertical={false}/>
               <XAxis 
@@ -383,13 +410,13 @@ export function StatBarChart({
                   </div>
                 )}
               />
-            <Bar 
-              dataKey="clients" 
-              fill={COLORS[0]} 
-              name="Clients" 
-              radius={[4, 4, 0, 0]}
-            />
-            <Bar 
+              <Bar 
+                dataKey="clients" 
+                fill={COLORS[0]} 
+                name="Clients" 
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar 
                 dataKey="projects" 
                 fill={COLORS[1]} 
                 name="Projects" 

@@ -17,7 +17,8 @@ export default function Dashboard() {
   const [filteredProjects, setFilteredProjects] = React.useState<any[]>([]);
   const [filteredClients, setFilteredClients] = React.useState<any[]>([]);
   const [filteredQuotations, setFilteredQuotations] = React.useState<any[]>([]);
-  const [totalIncome, setTotalIncome] = React.useState<number>(0)
+  const [filteredTrainings, setFilteredTrainings] = React.useState<any[]>([]);
+  const [totalIncome, setTotalIncome] = React.useState<number>(0);
   const [timeRange, setTimeRange] = React.useState("all");
   const [customRange, setCustomRange] = React.useState<{
     year: number;
@@ -58,10 +59,11 @@ export default function Dashboard() {
     const fetchInitialData = async () => {
       try {
         setLoading(true);
-        const [projectsSnapshot, clientsSnapshot, quotationsSnapshot] = await Promise.all([
+        const [projectsSnapshot, clientsSnapshot, quotationsSnapshot, trainingsSnapshot] = await Promise.all([
           getDocs(collection(db, "projects")),
           getDocs(collection(db, "clients")),
           getDocs(collection(db, "quotations")), 
+          getDocs(collection(db, "trainings")), // Add trainings collection
           getDocs(collection(db, "users"))
         ]);
 
@@ -77,7 +79,7 @@ export default function Dashboard() {
           id: doc.id,
           ...doc.data()
         }));
-        const usersData = quotationsSnapshot.docs.map(doc => ({
+        const trainingsData = trainingsSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
@@ -85,6 +87,7 @@ export default function Dashboard() {
         setFilteredProjects(projectsData);
         setFilteredClients(clientsData);
         setFilteredQuotations(quotationsData);
+        setFilteredTrainings(trainingsData);
         setTotalIncome(calculateTotalIncome(quotationsData));
       } catch (error) {
         console.error("Error fetching initial data:", error);
@@ -104,7 +107,7 @@ export default function Dashboard() {
       let projectsQuery = query(collection(db, "projects"));
       let clientsQuery = query(collection(db, "clients"));
       let quotationsQuery = query(collection(db, "quotations"));
-
+      let trainingsQuery = query(collection(db, "trainings")); 
       if (typeof range === "string") {
         setTimeRange(range);
         setCustomRange(undefined);
@@ -126,6 +129,10 @@ export default function Dashboard() {
               collection(db, "quotations"),
               where("dateIssued", ">=", today.toISOString())
             );
+            trainingsQuery = query(
+              collection(db, "trainings"),
+              where("dateConducted", ">=", todayTimestamp)
+            );
             break;
           case "weekly":
             const weekAgo = new Date(today);
@@ -141,6 +148,10 @@ export default function Dashboard() {
             quotationsQuery = query(
               collection(db, "quotations"),
               where("dateIssued", ">=", weekAgo.toISOString())
+            );
+            trainingsQuery = query(
+              collection(db, "trainings"),
+              where("dateConducted", ">=", Timestamp.fromDate(weekAgo))
             );
             break;
           case "monthly":
@@ -158,6 +169,10 @@ export default function Dashboard() {
               collection(db, "quotations"),
               where("dateIssued", ">=", monthAgo.toISOString())
             );
+            trainingsQuery = query(
+              collection(db, "trainings"),
+              where("dateConducted", ">=", Timestamp.fromDate(monthAgo))
+            );
             break;
           case "yearly":
             const yearAgo = new Date(today);
@@ -173,6 +188,10 @@ export default function Dashboard() {
             quotationsQuery = query(
               collection(db, "quotations"),
               where("dateIssued", ">=", yearAgo.toISOString())
+            );
+            trainingsQuery = query(
+              collection(db, "trainings"),
+              where("dateConducted", ">=", Timestamp.fromDate(yearAgo))
             );
             break;
           default: 
@@ -203,12 +222,18 @@ export default function Dashboard() {
           where("dateIssued", ">=", startDate.toISOString()),
           where("dateIssued", "<=", endDate.toISOString())
         );
+        trainingsQuery = query(
+          collection(db, "trainings"),
+          where("date", ">=", startTimestamp),
+          where("date", "<=", endTimestamp)
+        );
       }
 
-      const [projectsSnapshot, clientsSnapshot, quotationsSnapshot] = await Promise.all([
+      const [projectsSnapshot, clientsSnapshot, quotationsSnapshot, trainingsSnapshot] = await Promise.all([
         getDocs(projectsQuery),
         getDocs(clientsQuery),
-        getDocs(quotationsQuery)
+        getDocs(quotationsQuery),
+        getDocs(trainingsQuery) // Add trainings snapshot
       ]);
 
       const projectsData = projectsSnapshot.docs.map(doc => ({
@@ -223,10 +248,15 @@ export default function Dashboard() {
         id: doc.id,
         ...doc.data()
       }));
+      const trainingsData = trainingsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
       setFilteredProjects(projectsData);
       setFilteredClients(clientsData);
       setFilteredQuotations(quotationsData);
+      setFilteredTrainings(trainingsData);
       setTotalIncome(calculateTotalIncome(quotationsData));
     } catch (error) {
       console.error("Error filtering data:", error);
@@ -266,9 +296,9 @@ export default function Dashboard() {
                   colorIndex={1} 
                 />
                 <StatCard 
-                  title="Total Quotations" 
-                  value={filteredQuotations.length}
-                  colorIndex={2} 
+                  title="Total Trainings" 
+                  value={filteredTrainings.length}
+                  colorIndex={2}
                 />
                 <StatCard 
                   title="Total Income" 
@@ -281,6 +311,7 @@ export default function Dashboard() {
               <StatBarChart
                 projectsData={filteredProjects}
                 clientsData={filteredClients}
+                trainingsData={filteredTrainings}
                 timeRange={timeRange}
                 customRange={customRange}
               />
