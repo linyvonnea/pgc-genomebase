@@ -19,7 +19,15 @@ import {
   ResponsiveContainer
 } from "recharts";
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
+const COLORS = [
+  "#F69122",
+  "#B9273A",
+  "#912ABD",
+  "#6E30BE",
+  "#633190",
+  "#40388F",
+  "#166FB5"
+];
 
 interface StatisticsBarChartProps {
   projectsData: any[];
@@ -48,12 +56,10 @@ export function StatBarChart({
     custom: "Custom Range"
   };
 
-  // Helper function to convert Firebase Timestamp to Date
   const toDate = (timestamp: any) => {
     if (timestamp?.toDate) {
       return timestamp.toDate();
     }
-    // If it's already a Date object or string
     return new Date(timestamp);
   };
 
@@ -94,12 +100,10 @@ export function StatBarChart({
     const counts: Record<string, number> = {};
     const allPeriods = generateAllTimePeriods(period, period === 'day' ? 7 : 12);
     
-    // Initialize all periods with 0
     allPeriods.forEach(p => {
       counts[p] = 0;
     });
 
-    // Count actual items
     items.forEach(item => {
       const date = toDate(item[dateKey]);
       let periodKey = '';
@@ -201,11 +205,11 @@ export function StatBarChart({
           trainings: 0
         }));
         
-      case "monthly": // Last 30 days (daily)
+      case "monthly": 
         const dailyCounts = [];
         const today = new Date();
         
-        for (let i = 29; i >= 0; i--) { // Last 30 days
+        for (let i = 29; i >= 0; i--) {
           const date = new Date(today);
           date.setDate(date.getDate() - i);
           
@@ -215,7 +219,7 @@ export function StatBarChart({
           });
 
           dailyCounts.push({
-            name: dayLabel, // e.g., "Apr 5"
+            name: dayLabel, 
             projects: projectsData.filter(p => {
               const pDate = toDate(p.startDate);
               return pDate.toDateString() === date.toDateString();
@@ -251,32 +255,29 @@ export function StatBarChart({
         
       case "custom":
       if (!customRange) return [];
-      
-      // 1. Generate all months in the custom range
-      const customMonths = [];
-      for (let i = customRange.startMonth; i <= customRange.endMonth; i++) {
-        customMonths.push(months[i]);
-      }
+        const customMonths = [];
+        for (let i = customRange.startMonth; i <= customRange.endMonth; i++) {
+          customMonths.push(months[i]);
+        }
 
-      // 2. Initialize data structure with all months (even if empty)
-      return customMonths.map(month => ({
-        name: month,
-        projects: projectsData.filter(p => {
-          const date = toDate(p.startDate);
-          return (
-            date.getFullYear() === customRange.year &&
-            months[date.getMonth()] === month
-          );
-        }).length,
-        clients: clientsData.filter(c => {
-          const date = toDate(c.createdAt);
-          return (
-            date.getFullYear() === customRange.year &&
-            months[date.getMonth()] === month
-          );
-        }).length,
-        trainings: 0
-      }));
+        return customMonths.map(month => ({
+          name: month,
+          projects: projectsData.filter(p => {
+            const date = toDate(p.startDate);
+            return (
+              date.getFullYear() === customRange.year &&
+              months[date.getMonth()] === month
+            );
+          }).length,
+          clients: clientsData.filter(c => {
+            const date = toDate(c.createdAt);
+            return (
+              date.getFullYear() === customRange.year &&
+              months[date.getMonth()] === month
+            );
+          }).length,
+          trainings: 0
+        }));
         
       default:
         return [{
@@ -292,19 +293,19 @@ export function StatBarChart({
 
   return (
     <Card className="h-full">
-      <CardHeader className="flex flex-col items-center justify-center p-4">
+      <CardHeader className="flex flex-col items-center justify-center p-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {timeRange === "custom" && customRange 
             ? `${months[customRange.startMonth]} - ${months[customRange.endMonth]} ${customRange.year}`
             : timeRangeLabels[timeRange as keyof typeof timeRangeLabels]}
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 pt-0">
+      <CardContent className="">
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={data}
-              margin={{ top: 5, right: 20, left: 5, bottom: 20 }}
+              margin={{ left: -20 }} 
             >
               <CartesianGrid vertical={false}/>
               <XAxis 
@@ -343,48 +344,63 @@ export function StatBarChart({
                 iconSize={12}
                 wrapperStyle={{
                   fontSize: '12px',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginTop: '8px',
+                  paddingTop: '10px',
+                  paddingBottom: '10px',
                 }}
                 content={({ payload }) => (
                   <div style={{
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    gap: '16px',
-                    flexWrap: 'wrap'
+                    gap: '16px', 
+                    width: '100%', 
+                    margin: '0 auto', 
                   }}>
-                    {payload?.map((entry, index) => (
-                      <div 
-                        key={`legend-item-${index}`}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}
-                      >
-                        <div style={{
-                          width: '12px',
-                          height: '12px',
-                          backgroundColor: entry.color,
-                          borderRadius: '2px'
-                        }} />
-                        <span style={{ 
-                          fontSize: '12px',
-                        }}>
-                          {entry.value}
-                        </span>
-                      </div>
-                    ))}
+                    {payload?.map((entry, index) => {
+                      return (
+                        <div 
+                          key={`legend-item-${index}`}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          <div style={{
+                            width: '12px',
+                            height: '12px',
+                            backgroundColor: entry.color,
+                            borderRadius: '2px'
+                          }} />
+                          <span style={{ 
+                            fontSize: '12px',
+                          }}>
+                            {entry.value}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               />
-              <Bar dataKey="projects" fill="#0088FE" name="Projects" />
-              <Bar dataKey="clients" fill="#00C49F" name="Clients" />
-              <Bar dataKey="trainings" fill="#FFBB28" name="Trainings" />
+            <Bar 
+              dataKey="clients" 
+              fill={COLORS[0]} 
+              name="Clients" 
+              radius={[4, 4, 0, 0]}
+            />
+            <Bar 
+                dataKey="projects" 
+                fill={COLORS[1]} 
+                name="Projects" 
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar 
+                dataKey="trainings" 
+                fill={COLORS[2]} 
+                name="Trainings" 
+                radius={[4, 4, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer> 
         </div> 

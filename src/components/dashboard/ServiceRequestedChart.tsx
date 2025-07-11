@@ -16,7 +16,15 @@ import {
   Legend
 } from "recharts";
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
+const COLORS = [
+  "#F69122",
+  "#B9273A",
+  "#912ABD",
+  "#6E30BE",
+  "#633190",
+  "#40388F",
+  "#166FB5"
+];
 
 interface ServiceRequestedChartProps {
   projects: Array<{
