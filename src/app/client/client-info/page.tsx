@@ -102,25 +102,40 @@ export default function ClientFormEntry() {
         const year = new Date().getFullYear();
         const cid = await getNextCid(year);
         // Get the correct project id for this inquiry
-        let pid;
-        // Try to get the contact person's client record by inquiry email
         const inquiryDoc = await getDoc(doc(db, "inquiries", inquiryIdParam));
-        let contactClientDoc = null;
+        let pid;
         let inquiryContactEmail = "";
         if (inquiryDoc.exists()) {
           const inquiry = inquiryDoc.data();
           inquiryContactEmail = inquiry.email;
-          contactClientDoc = await getDoc(doc(db, "clients", inquiryContactEmail));
-          if (contactClientDoc.exists()) {
-            pid = contactClientDoc.data().pid;
+          // Query for contact person client record by isContactPerson, inquiry email, and inquiryId
+          const contactPersonQuery = await import("firebase/firestore").then(({ query, where, getDocs, collection }) =>
+            getDocs(query(
+              collection(db, "clients"),
+              where("isContactPerson", "==", true),
+              where("email", "==", inquiryContactEmail),
+              where("inquiryId", "==", inquiryIdParam)
+            ))
+          );
+          if (!contactPersonQuery.empty) {
+            const contactPersonDoc = contactPersonQuery.docs[0];
+            pid = contactPersonDoc.data().pid;
           }
         }
-        // Fallback: if not found, use generated pid
+        // Find existing project for this inquiry
+        let projectQuery = await import("firebase/firestore").then(({ query, where, getDocs, collection }) =>
+          getDocs(query(collection(db, "projects"), where("inquiryId", "==", inquiryIdParam)))
+        );
+        if (!projectQuery.empty) {
+          const projectDoc = projectQuery.docs[0];
+          pid = projectDoc.data().pid;
+        }
+        // Only create a new project if none exists for this inquiry
         if (!pid) {
           pid = await getNextPid(year);
         }
         // Save client with pid
-        const clientDocId = result.data.email === emailParam ? result.data.email : cid;
+        const clientDocId = cid; // Always use incrementing CL id
         // Set isContactPerson strictly by comparing to inquiry's contact email
         const isContactPersonValue = result.data.email === inquiryContactEmail;
         await setDoc(doc(db, "clients", clientDocId), {
@@ -128,10 +143,14 @@ export default function ClientFormEntry() {
           cid,
           pid, // always use the correct project id
           year,
+          inquiryId: inquiryIdParam,
           createdAt: serverTimestamp(),
           isContactPerson: isContactPersonValue,
-          haveSubmitted: true,
         });
+        // If contact person, set haveSubmitted in inquiry
+        if (isContactPersonValue) {
+          await setDoc(doc(db, "inquiries", inquiryIdParam), { haveSubmitted: true }, { merge: true });
+        }
         // Fetch updated client record
         const updatedClientSnap = await getDoc(doc(db, "clients", clientDocId));
         const updatedClient = updatedClientSnap.exists() ? updatedClientSnap.data() : {};
@@ -154,7 +173,7 @@ export default function ClientFormEntry() {
           // ...other fields
         }, { merge: true });
         // Use updated client record for permission check
-        if (updatedClient.isContactPerson && updatedClient.haveSubmitted) {
+        if (updatedClient.isContactPerson && inquiryContactEmail && updatedClient.email === inquiryContactEmail) {
           router.push(`/client/project-info?pid=${pid}&cid=${clientDocId}&inquiryId=${inquiryIdParam}`);
         } else {
           setSubmitting(false);

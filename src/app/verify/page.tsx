@@ -76,13 +76,11 @@ export default function ClientVerifyPage() {
         setVerifying(false);
         return;
       }
-      // Check if contact person has submitted
-      const contactClientSnap = await getDoc(doc(db, "clients", inquiry.email));
-      const contactClient = contactClientSnap.exists() ? contactClientSnap.data() : null;
+      // Check if contact person has submitted (now in inquiry.haveSubmitted)
       if (googleUser.email === inquiry.email) {
         // Contact person can always proceed
         router.push(`/client/client-info?email=${encodeURIComponent(googleUser.email)}&inquiryId=${encodeURIComponent(inquiryId)}`);
-      } else if (contactClient && contactClient.haveSubmitted === true) {
+      } else if (inquiry.haveSubmitted === true) {
         // Any other email can proceed if contact person has submitted
         router.push(`/client/client-info?email=${encodeURIComponent(googleUser.email)}&inquiryId=${encodeURIComponent(inquiryId)}`);
       } else {
