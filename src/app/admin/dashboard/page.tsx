@@ -10,8 +10,10 @@ import { ServiceRequestedChart } from "@/components/dashboard/ServiceRequestedCh
 import { SendingInstitutionChart } from "@/components/dashboard/SendingInstitutionChart";
 import { FundingCategoryChart } from "@/components/dashboard/FundingCategoryChart";
 import { Timestamp } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 export default function Dashboard() {
+  const [userName, setUserName] = React.useState("User");
   const [filteredProjects, setFilteredProjects] = React.useState<any[]>([]);
   const [filteredClients, setFilteredClients] = React.useState<any[]>([]);
   const [filteredQuotations, setFilteredQuotations] = React.useState<any[]>([]);
@@ -42,13 +44,25 @@ export default function Dashboard() {
   };
 
   React.useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user && user.displayName) {
+        setUserName(user.displayName);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  React.useEffect(() => {
     const fetchInitialData = async () => {
       try {
         setLoading(true);
         const [projectsSnapshot, clientsSnapshot, quotationsSnapshot] = await Promise.all([
           getDocs(collection(db, "projects")),
           getDocs(collection(db, "clients")),
-          getDocs(collection(db, "quotations")) 
+          getDocs(collection(db, "quotations")), 
+          getDocs(collection(db, "users"))
         ]);
 
         const projectsData = projectsSnapshot.docs.map(doc => ({
@@ -60,6 +74,10 @@ export default function Dashboard() {
           ...doc.data()
         }));
         const quotationsData = quotationsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        const usersData = quotationsSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
@@ -221,7 +239,7 @@ export default function Dashboard() {
     <div className="w-full max-w-7xl mx-auto px-4 py-8 rounded-lg">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold flex-grow min-w-0">
-          Welcome, Admin!
+          Welcome, {userName}!
         </h1>
         <div>
           <TimeFilter onFilterChange={handleTimeFilterChange} />
@@ -234,28 +252,41 @@ export default function Dashboard() {
         </div>
       ) : (
         <>
-          <div className="w-full flex flex-col gap-4 mb-4">
-            <StatCard title="Total Income" value={totalIncome.toLocaleString()} />
-          </div>
-          <div className="flex flex-col lg:flex-row gap-4 mb-4">
-            <div className="w-full lg:w-1/4 flex flex-col gap-4">
-              <StatCard title="Total Clients" value={filteredClients.length} />
-              <StatCard title="Total Projects" value={filteredProjects.length} />
-              <StatCard title="Total Quotations" value={filteredQuotations.length} />
+          <div className="gap-4 mb-4">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
+                <StatCard 
+                  title="Total Clients" 
+                  value={filteredClients.length}
+                  colorIndex={0} 
+                />
+                <StatCard 
+                  title="Total Projects" 
+                  value={filteredProjects.length}
+                  colorIndex={1} 
+                />
+                <StatCard 
+                  title="Total Quotations" 
+                  value={filteredQuotations.length}
+                  colorIndex={2} 
+                />
+                <StatCard 
+                  title="Total Income" 
+                  value={totalIncome.toLocaleString()}
+                  colorIndex={3}
+                />
+              </div>
             </div>
-            
-            <div className="flex-1 min-w-0 h-[350px] min-h-[350px]">
-              <StatBarChart 
+            <div className="h-[400px]"> 
+              <StatBarChart
                 projectsData={filteredProjects}
                 clientsData={filteredClients}
                 timeRange={timeRange}
                 customRange={customRange}
               />
             </div>
-          </div>
-
-          {/* Pie Charts */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          </div>          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <ServiceRequestedChart projects={filteredProjects} />
             <SendingInstitutionChart projects={filteredProjects} />
             <FundingCategoryChart projects={filteredProjects} />

@@ -105,4 +105,16 @@
   * {
     border-color: hsl(var(--border));
   }
+
+  .recharts-wrapper:focus,
+  .recharts-surface:focus,
+  .recharts-layer:focus,
+  .recharts-default-legend:focus {
+    outline: none !important;
+  }
+
+  .card:focus:not(:focus-visible) {
+    outline: none;
+    box-shadow: none;
+  }
 }
