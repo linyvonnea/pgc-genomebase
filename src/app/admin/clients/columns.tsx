@@ -3,6 +3,8 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Client } from "@/types/Client"
 import { clientSchema } from "@/schemas/clientSchema"
+import { Button } from "@/components/ui/button"
+import router from "next/router"
 
 const validateClient = (data: any) => {
   const result = clientSchema.safeParse(data)
@@ -57,7 +59,20 @@ export const columns: ColumnDef<Client>[] = [
       const client = row.original;
       // Lazy import to avoid circular dependency if needed
       const EditClientModal = require("@/components/forms/EditClientModal").EditClientModal;
-      return <EditClientModal client={client} onSuccess={() => {}} />;
+      return (
+      <div className="flex items-center gap-2">
+      <EditClientModal client={client} onSuccess={() => {}} />
+         <Button
+            onClick={() => router.push(`/admin/charge-slip`)}
+            variant="outline"
+            className="text-sm"
+          >
+            Charge Slip
+          </Button>
+      </div>
+
+    );
+
     },
   },
 ]

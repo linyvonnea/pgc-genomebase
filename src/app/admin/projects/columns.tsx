@@ -154,13 +154,7 @@ export const columns: ColumnDef<Project>[] = [
       return (
         <div className="flex items-center gap-2">
           <EditProjectModal project={project} onSuccess={() => {}} />
-          <Button
-            onClick={() => router.push(`/admin/charge-slip`)}
-            variant="outline"
-            className="text-sm"
-          >
-            Charge Slip
-          </Button>
+         
         </div>
       );
     },
