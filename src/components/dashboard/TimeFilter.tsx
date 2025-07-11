@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
+  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Check } from "lucide-react";
 
 interface TimeFilterProps {
   onFilterChange: (value: string | { year: number; startMonth: number; endMonth: number }) => void;
@@ -36,8 +36,40 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
     custom: "Custom"
   };
 
+  React.useEffect(() => {
+    if (timeRange === "custom") {
+      onFilterChange({ year, startMonth, endMonth });
+    }
+  }, [year, startMonth, endMonth, timeRange]);
+
   const handleRangeChange = () => {
     onFilterChange({ year, startMonth, endMonth });
+  };
+
+  const handleTimeRangeSelect = (range: TimeRange) => {
+    setTimeRange(range);
+    if (range !== "custom") {
+      onFilterChange(range);
+    } else {
+      onFilterChange({ year, startMonth, endMonth });
+    }
+  };
+
+  const handleYearSelect = (selectedYear: number) => {
+    setYear(selectedYear);
+    handleRangeChange();
+  };
+
+  const handleStartMonthSelect = (month: number) => {
+    setStartMonth(month);
+    if (month > endMonth) setEndMonth(month);
+    handleRangeChange();
+  };
+
+  const handleEndMonthSelect = (month: number) => {
+    setEndMonth(month);
+    if (month < startMonth) setStartMonth(month);
+    handleRangeChange();
   };
 
   return (
@@ -47,36 +79,21 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
           <div className="w-[160px]">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="w-full text-left truncate"
-                >
+                <Button variant="outline" className="w-full text-left truncate">
                   Timeline: {timeRangeLabels[timeRange]}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                className="w-[var(--radix-dropdown-menu-trigger-width)]" 
-                align="end"
-              >
-                <DropdownMenuRadioGroup 
-                  value={timeRange} 
-                  onValueChange={(value: string) => {
-                    const range = value as TimeRange;
-                    setTimeRange(range);
-                    if (range !== "custom") {
-                      onFilterChange(value);
-                    }
-                  }}
-                >
-                  {Object.entries(timeRangeLabels).map(([value, label]) => (
-                    <DropdownMenuRadioItem 
-                      key={value}
-                      value={value}
-                    >
-                      {label}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
+              <DropdownMenuContent className="w-[160px]" align="end">
+                {Object.entries(timeRangeLabels).map(([value, label]) => (
+                  <DropdownMenuItem
+                    key={value}
+                    className="flex justify-between"
+                    onClick={() => handleTimeRangeSelect(value as TimeRange)}
+                  >
+                    <span>{label}</span>
+                    {timeRange === value && <Check className="h-4 w-4 text-primary" />}
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -86,36 +103,21 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
             <div className="w-[160px]">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full text-left truncate"
-                  >
+                  <Button variant="outline" className="w-full text-left truncate">
                     Timeline: Custom
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  className="w-[var(--radix-dropdown-menu-trigger-width)]" 
-                  align="end"
-                >
-                  <DropdownMenuRadioGroup 
-                    value={timeRange} 
-                    onValueChange={(value: string) => {
-                      const range = value as TimeRange;
-                      setTimeRange(range);
-                      if (range !== "custom") {
-                        onFilterChange(value);
-                      }
-                    }}
-                  >
-                    {Object.entries(timeRangeLabels).map(([value, label]) => (
-                      <DropdownMenuRadioItem
-                        key={value}
-                        value={value}
-                      >
-                        {label}
-                      </DropdownMenuRadioItem>
-                    ))}
-                  </DropdownMenuRadioGroup>
+                <DropdownMenuContent className="w-[160px]" align="end">
+                  {Object.entries(timeRangeLabels).map(([value, label]) => (
+                    <DropdownMenuItem
+                      key={value}
+                      className="flex justify-between"
+                      onClick={() => handleTimeRangeSelect(value as TimeRange)}
+                    >
+                      <span>{label}</span>
+                      {timeRange === value && <Check className="h-4 w-4 text-primary" />}
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -124,33 +126,21 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
             <div className="w-[160px]">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full text-left truncate"
-                  >
+                  <Button variant="outline" className="w-full text-left truncate">
                     Year: {year}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  className="w-[var(--radix-dropdown-menu-trigger-width)]" 
-                  align="end"
-                >
-                  <DropdownMenuRadioGroup
-                    value={year.toString()}
-                    onValueChange={(value: string) => {
-                      setYear(Number(value));
-                      handleRangeChange();
-                    }}
-                  >
-                    {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map((y) => (
-                      <DropdownMenuRadioItem 
-                        key={y}
-                        value={y.toString()}
-                      >
-                        {y}
-                      </DropdownMenuRadioItem>
-                    ))}
-                  </DropdownMenuRadioGroup>
+                <DropdownMenuContent className="w-[160px]" align="end">
+                  {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+                    <DropdownMenuItem
+                      key={y}
+                      className="flex justify-between"
+                      onClick={() => handleYearSelect(y)}
+                    >
+                      <span>{y}</span>
+                      {year === y && <Check className="h-4 w-4 text-primary" />}
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -159,35 +149,21 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
             <div className="w-[160px]">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full text-left truncate"
-                  >
+                  <Button variant="outline" className="w-full text-left truncate">
                     From: {months[startMonth]}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  className="w-[var(--radix-dropdown-menu-trigger-width)]" 
-                  align="end"
-                >
-                  <DropdownMenuRadioGroup
-                    value={startMonth.toString()}
-                    onValueChange={(value: string) => {
-                      const month = Number(value);
-                      setStartMonth(month);
-                      if (month > endMonth) setEndMonth(month);
-                      handleRangeChange();
-                    }}
-                  >
-                    {months.map((month, index) => (
-                      <DropdownMenuRadioItem
-                        key={month}
-                        value={index.toString()}
-                      >
-                        {month}
-                      </DropdownMenuRadioItem>
-                    ))}
-                  </DropdownMenuRadioGroup>
+                <DropdownMenuContent className="w-[160px]" align="end">
+                  {months.map((month, index) => (
+                    <DropdownMenuItem
+                      key={month}
+                      className="flex justify-between"
+                      onClick={() => handleStartMonthSelect(index)}
+                    >
+                      <span>{month}</span>
+                      {startMonth === index && <Check className="h-4 w-4 text-primary" />}
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -196,36 +172,21 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
             <div className="w-[160px]">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="w-full text-left truncate"
-                  >
+                  <Button variant="outline" className="w-full text-left truncate">
                     To: {months[endMonth]}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  className="w-[var(--radix-dropdown-menu-trigger-width)]" 
-                  align="end"
-                >
-                  <DropdownMenuRadioGroup
-                    value={endMonth.toString()}
-                    onValueChange={(value: string) => {
-                      const month = Number(value);
-                      setEndMonth(month);
-                      if (month < startMonth) setStartMonth(month);
-                      handleRangeChange();
-                    }}
-                  >
-                    {months.map((month, index) => (
-                      <DropdownMenuRadioItem
-                        key={month}
-                        value={index.toString()}
-                        disabled={index < startMonth}
-                      >
-                        {month}
-                      </DropdownMenuRadioItem>
-                    ))}
-                  </DropdownMenuRadioGroup>
+                <DropdownMenuContent className="w-[160px]" align="end">
+                  {months.map((month, index) => (
+                    <DropdownMenuItem
+                      key={month}
+                      className={`flex justify-between ${index < startMonth ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      onClick={() => index >= startMonth && handleEndMonthSelect(index)}
+                    >
+                      <span>{month}</span>
+                      {endMonth === index && <Check className="h-4 w-4 text-primary" />}
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

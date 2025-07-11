@@ -111,7 +111,8 @@ export function FundingCategoryChart({ projects }: FundingCategoryChartProps) {
                     display: 'flex', 
                     justifyContent: 'center', 
                     gap: '16px',
-                    flexWrap: 'wrap'
+                    flexWrap: 'wrap',
+                    paddingBottom: '28px'
                   }}>
                     {Object.keys(fundingCounts).map((category, index) => (
                       <div 

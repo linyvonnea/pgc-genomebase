@@ -63,7 +63,7 @@ export default function Dashboard() {
           getDocs(collection(db, "projects")),
           getDocs(collection(db, "clients")),
           getDocs(collection(db, "quotations")), 
-          getDocs(collection(db, "trainings")), // Add trainings collection
+          getDocs(collection(db, "trainings")), 
           getDocs(collection(db, "users"))
         ]);
 
