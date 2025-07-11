@@ -1,4 +1,4 @@
-import { collection, getDocs, addDoc, serverTimestamp, query, orderBy, doc, getDoc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, addDoc, serverTimestamp, query, orderBy, doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Inquiry } from "@/types/Inquiry";
 import { InquiryFormData } from "@/schemas/inquirySchema";
@@ -139,5 +139,17 @@ export async function updateInquiry(id: string, data: {
   } catch (error) {
     console.error("Error updating inquiry:", error);
     throw new Error('Failed to update inquiry');
+  }
+}
+
+export async function deleteInquiry(id: string) {
+  try {
+    const docRef = doc(db, "inquiries", id);
+    await deleteDoc(docRef);
+    console.log(`Successfully deleted inquiry ${id}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting inquiry:", error);
+    throw new Error('Failed to delete inquiry');
   }
 }
