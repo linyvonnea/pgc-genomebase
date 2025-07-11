@@ -76,12 +76,20 @@ export default function ClientVerifyPage() {
         setVerifying(false);
         return;
       }
-      if (inquiry.email !== googleUser.email) {
-        toast.error("Google account email does not match the approved inquiry.");
+      // Check if contact person has submitted
+      const contactClientSnap = await getDoc(doc(db, "clients", inquiry.email));
+      const contactClient = contactClientSnap.exists() ? contactClientSnap.data() : null;
+      if (googleUser.email === inquiry.email) {
+        // Contact person can always proceed
+        router.push(`/client/client-info?email=${encodeURIComponent(googleUser.email)}&inquiryId=${encodeURIComponent(inquiryId)}`);
+      } else if (contactClient && contactClient.haveSubmitted === true) {
+        // Any other email can proceed if contact person has submitted
+        router.push(`/client/client-info?email=${encodeURIComponent(googleUser.email)}&inquiryId=${encodeURIComponent(inquiryId)}`);
+      } else {
+        toast.error("Only the contact person can proceed until they have submitted their client info.");
         setVerifying(false);
         return;
       }
-      router.push(`/client/client-info?email=${encodeURIComponent(googleUser.email)}&inquiryId=${encodeURIComponent(inquiryId)}`);
     } catch (err) {
       toast.error("Verification failed. Please check your Inquiry ID and Google account.");
     } finally {
