@@ -10,7 +10,7 @@ import {
 
 interface StatCardProps {
   title: string;
-  value: number;
+  value: number | string;
 }
 
 export function StatCard({ title, value }: StatCardProps) {
