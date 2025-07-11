@@ -9,10 +9,6 @@ import { useRouter } from "next/navigation"
 
 export const columns: ColumnDef<Project>[] = [
   {
-    accessorKey: "year",
-    header: "Year",
-  },
-  {
     accessorKey: "startDate",
     header: "Start Date",
   },
@@ -126,7 +122,7 @@ export const columns: ColumnDef<Project>[] = [
   },
   {
     accessorKey: "fundingInstitution",
-    header: "Funding Institution",
+    header: "Source of Funding",
   },
   {
     accessorKey: "serviceRequested",

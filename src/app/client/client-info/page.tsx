@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { getNextCid } from "@/services/clientService";
 import { getNextPid } from "@/services/projectsService";
 import { db } from "@/lib/firebase";
+import { toast } from "sonner";
 
 export default function ClientFormEntry() {
   const [step, setStep] = useState<"verify" | "form">("verify");
@@ -39,6 +40,8 @@ export default function ClientFormEntry() {
   const [errors, setErrors] = useState<Partial<Record<keyof ClientFormData, string>>>({});
   const [submitting, setSubmitting] = useState(false);
   const [googleUser, setGoogleUser] = useState<{ email: string } | null>(null);
+  const [isContactPerson, setIsContactPerson] = useState(false);
+  const [haveSubmitted, setHaveSubmitted] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -52,6 +55,20 @@ export default function ClientFormEntry() {
       router.replace('/verify');
     }
   }, [emailParam, inquiryIdParam, router]);
+
+  useEffect(() => {
+    // Fetch client record for permission logic
+    async function fetchClientPermission() {
+      if (!emailParam || !inquiryIdParam) return;
+      // Find client by email and inquiryId (pid)
+      const clientQuery = await getDoc(doc(db, "clients", emailParam));
+      if (clientQuery.exists()) {
+        setIsContactPerson(!!clientQuery.data().isContactPerson);
+        setHaveSubmitted(!!clientQuery.data().haveSubmitted);
+      }
+    }
+    fetchClientPermission();
+  }, [emailParam, inquiryIdParam]);
 
   if (!emailParam || !inquiryIdParam) {
     return null;
@@ -84,26 +101,65 @@ export default function ClientFormEntry() {
       try {
         const year = new Date().getFullYear();
         const cid = await getNextCid(year);
-        const pid = await getNextPid(year);
+        // Get the correct project id for this inquiry
+        let pid;
+        // Try to get the contact person's client record by inquiry email
+        const inquiryDoc = await getDoc(doc(db, "inquiries", inquiryIdParam));
+        let contactClientDoc = null;
+        let inquiryContactEmail = "";
+        if (inquiryDoc.exists()) {
+          const inquiry = inquiryDoc.data();
+          inquiryContactEmail = inquiry.email;
+          contactClientDoc = await getDoc(doc(db, "clients", inquiryContactEmail));
+          if (contactClientDoc.exists()) {
+            pid = contactClientDoc.data().pid;
+          }
+        }
+        // Fallback: if not found, use generated pid
+        if (!pid) {
+          pid = await getNextPid(year);
+        }
         // Save client with pid
-        await setDoc(doc(db, "clients", cid), {
+        const clientDocId = result.data.email === emailParam ? result.data.email : cid;
+        // Set isContactPerson strictly by comparing to inquiry's contact email
+        const isContactPersonValue = result.data.email === inquiryContactEmail;
+        await setDoc(doc(db, "clients", clientDocId), {
           ...result.data,
           cid,
-          pid, // link to project
+          pid, // always use the correct project id
           year,
           createdAt: serverTimestamp(),
+          isContactPerson: isContactPersonValue,
+          haveSubmitted: true,
         });
-        // Save project with client name (append if already exists)
+        // Fetch updated client record
+        const updatedClientSnap = await getDoc(doc(db, "clients", clientDocId));
+        const updatedClient = updatedClientSnap.exists() ? updatedClientSnap.data() : {};
+        // Append client name to project clientNames array
         const projectDocRef = doc(db, "projects", pid);
+        const projectSnap = await getDoc(projectDocRef);
+        let clientNames: string[] = [];
+        if (projectSnap.exists()) {
+          clientNames = projectSnap.data().clientNames || [];
+        }
+        if (!clientNames.includes(result.data.name)) {
+          clientNames.push(result.data.name);
+        }
         await setDoc(projectDocRef, {
           pid,
           year,
-          clientNames: [result.data.name],
+          clientNames,
           startDate: serverTimestamp(),
-          inquiryId: inquiryIdParam, // Store inquiryId in project
+          inquiryId: inquiryIdParam,
           // ...other fields
         }, { merge: true });
-        router.push(`/client/project-info?pid=${pid}&cid=${cid}&inquiryId=${inquiryIdParam}`);
+        // Use updated client record for permission check
+        if (updatedClient.isContactPerson && updatedClient.haveSubmitted) {
+          router.push(`/client/project-info?pid=${pid}&cid=${clientDocId}&inquiryId=${inquiryIdParam}`);
+        } else {
+          setSubmitting(false);
+          toast.success("Client information submitted successfully! Only the contact person can fill out the project information form.");
+        }
       } catch (err) {
         setErrors({ name: "Failed to save client/project. Please try again." });
         setSubmitting(false);

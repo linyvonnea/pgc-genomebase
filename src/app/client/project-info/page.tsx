@@ -66,6 +66,37 @@ export default function ProjectForm() {
     fetchProject();
   }, [pid]);
 
+  useEffect(() => {
+    async function checkPermission() {
+      if (!cid) {
+        toast.error("Missing client ID. Please verify first.");
+        router.replace("/verify");
+        return;
+      }
+      // Defensive: check both by cid and by contact person's email from inquiry
+      let clientDoc = await getDoc(doc(db, "clients", cid));
+      let clientData = clientDoc.exists() ? clientDoc.data() : null;
+      if (!clientData && inquiryId) {
+        // Try to get by contact person's email from inquiry
+        const inquiryDoc = await getDoc(doc(db, "inquiries", inquiryId));
+        if (inquiryDoc.exists()) {
+          const inquiry = inquiryDoc.data();
+          const contactDoc = await getDoc(doc(db, "clients", inquiry.email));
+          if (contactDoc.exists()) {
+            clientData = contactDoc.data();
+          }
+        }
+      }
+      // Only allow access if isContactPerson is true
+      if (!clientData || !clientData.isContactPerson) {
+        toast.error("Only the contact person can access the project information form.");
+        router.replace("/client/client-info?email=" + encodeURIComponent(clientData?.email || "") + "&inquiryId=" + encodeURIComponent(inquiryId || ""));
+        return;
+      }
+    }
+    checkPermission();
+  }, [cid, inquiryId, router]);
+
   const handleChange = (field: keyof ProjectFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
