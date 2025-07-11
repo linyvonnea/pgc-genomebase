@@ -1,3 +1,4 @@
+// src/app/admin/charge-slips/column.tsx
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";

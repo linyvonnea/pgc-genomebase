@@ -1,3 +1,4 @@
+// src/app/admin/charge-slips/ChargeSlipClientTable.tsx
 "use client";
 
 import {

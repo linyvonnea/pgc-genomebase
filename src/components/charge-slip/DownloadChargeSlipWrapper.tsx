@@ -1,3 +1,4 @@
+// src/components/charge-slip/DownloadChargeSlipWrapper.tsx
 "use client";
 
 import { useState } from "react";
@@ -10,6 +11,7 @@ import { EditableSelectedService } from "@/types/SelectedService";
 import { Client } from "@/types/Client";
 import { Project } from "@/types/Project";
 import { AdminInfo } from "@/types/Admin";
+import { saveChargeSlipToFirestore } from "@/services/chargeSlipService";
 
 interface Props {
   services: EditableSelectedService[];
@@ -55,6 +57,28 @@ export default function DownloadChargeSlipWrapper({
         console.error("Missing required data for generating charge slip.");
         return;
       }
+
+      // Save the charge slip to Firestore
+      const chargeSlipData = {
+        id: "TEMP-ID", // Temporary ID, replace with actual logic if needed
+        projectId: project.pid || "UNKNOWN_PROJECT_ID", // Provide fallback value for projectId
+        services: cleanedServices,
+        client,
+        project,
+        chargeSlipNumber,
+        orNumber,
+        useInternalPrice,
+        preparedBy,
+        referenceNumber,
+        clientInfo,
+        approvedBy,
+        dateIssued,
+        subtotal,
+        discount,
+        total,
+      };
+
+      await saveChargeSlipToFirestore(chargeSlipData);
 
       // Generate and download the PDF
       const pdfBlob = await pdf(

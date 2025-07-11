@@ -1,3 +1,4 @@
+// src/app/admin/charge-slips/builder/page.tsx
 "use client";
 
 import ChargeSlipBuilder from "@/components/charge-slip/ChargeSlipBuilder";

@@ -1,3 +1,4 @@
+// src/components/charge-slip/ChargeSlipHistoryPanel.tsx
 "use client";
 
 import { useQuery } from "@tanstack/react-query";

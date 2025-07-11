@@ -1,3 +1,4 @@
+// src/components/charge-slip/ChargeSlipPDFClient.tsx
 import {
   Document,
   Page,

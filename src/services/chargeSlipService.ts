@@ -1,3 +1,4 @@
+// src/services/chargeSlipService.ts
 import {
   collection,
   query,
@@ -16,8 +17,14 @@ import { getClientById, getProjectById } from "./clientProjectService";
  * Save or overwrite a charge slip using chargeSlipNumber as the document ID.
  */
 export async function saveChargeSlipToFirestore(chargeSlip: ChargeSlipRecord) {
-  const docRef = doc(db, "chargeSlips", chargeSlip.chargeSlipNumber);
-  await setDoc(docRef, chargeSlip);
+  try {
+    console.log("Saving charge slip to Firestore:", chargeSlip); // Debugging log
+    const docRef = doc(db, "chargeSlips", chargeSlip.chargeSlipNumber);
+    await setDoc(docRef, chargeSlip);
+    console.log("Charge slip saved successfully."); // Debugging log
+  } catch (error) {
+    console.error("Error saving charge slip to Firestore:", error); // Debugging log
+  }
 }
 
 /**

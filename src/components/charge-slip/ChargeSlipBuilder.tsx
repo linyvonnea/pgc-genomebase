@@ -45,7 +45,7 @@ import {
 
 import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import useAuth from "@/hooks/useAuth";
-import ChargeSlipForm from "@/components/forms/ChargeSlipForm";
+// import ChargeSlipForm from "@/components/forms/ChargeSlipForm";
 import { ChargeSlipFormData } from "@/schemas/chargeSlipSchema";
 
 import type { AdminInfo } from "@/types/Admin";
@@ -63,6 +63,7 @@ interface ExtendedChargeSlip extends ChargeSlip {
   discount: number;
   total: number;
   approvedBy?: string; // Optional for now
+  projectId: string; // Added projectId to match usage
 }
 
 export type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
@@ -318,6 +319,16 @@ export default function ChargeSlipBuilder({
         <p className="text-base font-semibold text-primary">
           Total: PHP {total.toFixed(2)}
         </p>
+
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex gap-4 items-center">
+            <Checkbox
+              checked={isInternal}
+              onCheckedChange={(val: boolean) => setIsInternal(!!val)}
+            />
+            <span>Internal Client (Apply 12% discount)</span>
+          </div>
+        </div>
 
         <Dialog open={openPreview} onOpenChange={setOpenPreview}>
           <DialogTrigger asChild>
