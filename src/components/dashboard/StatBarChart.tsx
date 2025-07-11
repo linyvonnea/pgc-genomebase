@@ -1,0 +1,394 @@
+// src/components/dashboard/charts/StatBarChart.tsx
+"use client";
+
+import * as React from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from "recharts";
+
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
+
+interface StatisticsBarChartProps {
+  projectsData: any[];
+  clientsData: any[];
+  timeRange: string;
+  customRange?: { year: number; startMonth: number; endMonth: number };
+}
+
+export function StatBarChart({ 
+  projectsData, 
+  clientsData,
+  timeRange,
+  customRange
+}: StatisticsBarChartProps) {
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const timeRangeLabels = {
+    all: "All Time",
+    today: "Today",
+    weekly: "Last 7 Days",
+    monthly: "Last 30 Days",
+    yearly: "Last 12 Months",
+    custom: "Custom Range"
+  };
+
+  // Helper function to convert Firebase Timestamp to Date
+  const toDate = (timestamp: any) => {
+    if (timestamp?.toDate) {
+      return timestamp.toDate();
+    }
+    // If it's already a Date object or string
+    return new Date(timestamp);
+  };
+
+  const generateAllTimePeriods = (period: string, count: number = 12) => {
+    const now = new Date();
+    const periods: string[] = [];
+
+    if (period === 'hour') {
+      for (let i = 0; i < 24; i++) {
+        periods.push(`${i}:00`);
+      }
+    } else if (period === 'day') {
+      for (let i = 0; i < count; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        periods.unshift(date.toLocaleDateString('en-US', { weekday: 'short' }));
+      }
+    } else if (period === 'week') {
+      for (let i = 0; i < count; i++) {
+        periods.unshift(`Week ${i + 1}`);
+      }
+    } else if (period === 'month') {
+      for (let i = 0; i < count; i++) {
+        const date = new Date();
+        date.setMonth(date.getMonth() - i);
+        periods.unshift(date.toLocaleDateString('en-US', { month: 'short' }));
+      }
+    } else if (period === 'year') {
+      for (let i = 0; i < count; i++) {
+        periods.unshift((now.getFullYear() - i).toString());
+      }
+    }
+
+    return periods;
+  };
+
+  const countByTimePeriod = (items: any[], dateKey: string, period: string) => {
+    const counts: Record<string, number> = {};
+    const allPeriods = generateAllTimePeriods(period, period === 'day' ? 7 : 12);
+    
+    // Initialize all periods with 0
+    allPeriods.forEach(p => {
+      counts[p] = 0;
+    });
+
+    // Count actual items
+    items.forEach(item => {
+      const date = toDate(item[dateKey]);
+      let periodKey = '';
+      
+      switch(period) {
+        case 'hour':
+          periodKey = `${date.getHours()}:00`;
+          break;
+        case 'day':
+          periodKey = date.toLocaleDateString('en-US', { weekday: 'short' });
+          break;
+        case 'week':
+          const weekNum = Math.floor(date.getDate() / 7) + 1;
+          periodKey = `Week ${weekNum}`;
+          break;
+        case 'month':
+          periodKey = date.toLocaleDateString('en-US', { month: 'short' });
+          break;
+        case 'year':
+          periodKey = date.getFullYear().toString();
+          break;
+      }
+      
+      if (periodKey in counts) {
+        counts[periodKey] += 1;
+      }
+    });
+    
+    return Object.entries(counts).map(([name, count]) => ({ name, count }));
+  };
+
+  const generateChartData = () => {
+    const now = new Date();
+    let filteredProjects = [...projectsData];
+    let filteredClients = [...clientsData];
+    
+    if (timeRange === "today") {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      filteredProjects = filteredProjects.filter(p => toDate(p.startDate) >= todayStart);
+      filteredClients = filteredClients.filter(c => toDate(c.createdAt) >= todayStart);
+    } 
+    else if (timeRange === "weekly") {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      filteredProjects = filteredProjects.filter(p => toDate(p.startDate) >= weekAgo);
+      filteredClients = filteredClients.filter(c => toDate(c.createdAt) >= weekAgo);
+    }
+    else if (timeRange === "monthly") {
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      filteredProjects = filteredProjects.filter(p => toDate(p.startDate) >= monthAgo);
+      filteredClients = filteredClients.filter(c => toDate(c.createdAt) >= monthAgo);
+    }
+    else if (timeRange === "yearly") {
+      const yearAgo = new Date();
+      yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+      filteredProjects = filteredProjects.filter(p => toDate(p.startDate) >= yearAgo);
+      filteredClients = filteredClients.filter(c => toDate(c.createdAt) >= yearAgo);
+    }
+    else if (timeRange === "custom" && customRange) {
+      filteredProjects = filteredProjects.filter(p => {
+        const date = toDate(p.startDate);
+        return (
+          date.getFullYear() === customRange.year &&
+          date.getMonth() >= customRange.startMonth &&
+          date.getMonth() <= customRange.endMonth
+        );
+      });
+      filteredClients = filteredClients.filter(c => {
+        const date = toDate(c.createdAt);
+        return (
+          date.getFullYear() === customRange.year &&
+          date.getMonth() >= customRange.startMonth &&
+          date.getMonth() <= customRange.endMonth
+        );
+      });
+    }
+
+    switch(timeRange) {
+      case "today":
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+
+        return [{
+          name: "Today",
+          projects: projectsData.filter(p => toDate(p.startDate) >= todayStart).length,
+          clients: clientsData.filter(c => toDate(c.createdAt) >= todayStart).length,
+          trainings: 0
+        }];
+        
+      case "weekly":
+        const dailyProjects = countByTimePeriod(filteredProjects, 'startDate', 'day');
+        const dailyClients = countByTimePeriod(filteredClients, 'createdAt', 'day');
+        return dailyProjects.map((day, i) => ({
+          name: day.name,
+          projects: day.count,
+          clients: dailyClients[i]?.count || 0,
+          trainings: 0
+        }));
+        
+      case "monthly": // Last 30 days (daily)
+        const dailyCounts = [];
+        const today = new Date();
+        
+        for (let i = 29; i >= 0; i--) { // Last 30 days
+          const date = new Date(today);
+          date.setDate(date.getDate() - i);
+          
+          const dayLabel = date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric' 
+          });
+
+          dailyCounts.push({
+            name: dayLabel, // e.g., "Apr 5"
+            projects: projectsData.filter(p => {
+              const pDate = toDate(p.startDate);
+              return pDate.toDateString() === date.toDateString();
+            }).length,
+            clients: clientsData.filter(c => {
+              const cDate = toDate(c.createdAt);
+              return cDate.toDateString() === date.toDateString();
+            }).length,
+            trainings: 0
+          });
+        }
+        return dailyCounts;
+        
+      case "yearly":
+        const monthlyProjects = countByTimePeriod(filteredProjects, 'startDate', 'month');
+        const monthlyClients = countByTimePeriod(filteredClients, 'createdAt', 'month');
+        return monthlyProjects.map((month, i) => ({
+          name: month.name,
+          projects: month.count,
+          clients: monthlyClients[i]?.count || 0,
+          trainings: 0
+        }));
+        
+      case "all":
+        const yearlyProjects = countByTimePeriod(filteredProjects, 'startDate', 'year');
+        const yearlyClients = countByTimePeriod(filteredClients, 'createdAt', 'year');
+        return yearlyProjects.map((year, i) => ({
+          name: year.name,
+          projects: year.count,
+          clients: yearlyClients[i]?.count || 0,
+          trainings: 0
+        }));
+        
+      case "custom":
+      if (!customRange) return [];
+      
+      // 1. Generate all months in the custom range
+      const customMonths = [];
+      for (let i = customRange.startMonth; i <= customRange.endMonth; i++) {
+        customMonths.push(months[i]);
+      }
+
+      // 2. Initialize data structure with all months (even if empty)
+      return customMonths.map(month => ({
+        name: month,
+        projects: projectsData.filter(p => {
+          const date = toDate(p.startDate);
+          return (
+            date.getFullYear() === customRange.year &&
+            months[date.getMonth()] === month
+          );
+        }).length,
+        clients: clientsData.filter(c => {
+          const date = toDate(c.createdAt);
+          return (
+            date.getFullYear() === customRange.year &&
+            months[date.getMonth()] === month
+          );
+        }).length,
+        trainings: 0
+      }));
+        
+      default:
+        return [{
+          name: "Overview",
+          projects: filteredProjects.length,
+          clients: filteredClients.length,
+          trainings: 0
+        }];
+    }
+  };
+
+  const data = generateChartData();
+
+  return (
+    <Card className="h-full">
+      <CardHeader className="flex flex-col items-center justify-center p-4">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
+          {timeRange === "custom" && customRange 
+            ? `${months[customRange.startMonth]} - ${months[customRange.endMonth]} ${customRange.year}`
+            : timeRangeLabels[timeRange as keyof typeof timeRangeLabels]}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-4 pt-0">
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              margin={{ top: 5, right: 20, left: 5, bottom: 20 }}
+            >
+              <CartesianGrid vertical={false}/>
+              <XAxis 
+                dataKey="name"
+                tick={{ fontSize: 12, fill: '#6b7280' }}
+                tickMargin={12}
+              />
+              <YAxis 
+                allowDecimals={false}
+                tick={{ fontSize: 12, fill: '#6b7280' }}
+                tickMargin={12}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '6px',
+                  boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  padding: '8px 12px',
+                }}
+                itemStyle={{
+                  color: '#1f2937',
+                  padding: '2px 0',
+                }}
+                formatter={(value: number, name: string) => [
+                  <span key="combined" className="flex items-center gap-2">
+                    <span className="text-gray-600">{name}</span>
+                    <span className="font-semibold">{value}</span>
+                  </span>,
+                  null
+                ]}
+              />
+              <Legend 
+                iconSize={12}
+                wrapperStyle={{
+                  fontSize: '12px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '8px',
+                  marginTop: '8px',
+                }}
+                content={({ payload }) => (
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '16px',
+                    flexWrap: 'wrap'
+                  }}>
+                    {payload?.map((entry, index) => (
+                      <div 
+                        key={`legend-item-${index}`}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <div style={{
+                          width: '12px',
+                          height: '12px',
+                          backgroundColor: entry.color,
+                          borderRadius: '2px'
+                        }} />
+                        <span style={{ 
+                          fontSize: '12px',
+                        }}>
+                          {entry.value}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              />
+              <Bar dataKey="projects" fill="#0088FE" name="Projects" />
+              <Bar dataKey="clients" fill="#00C49F" name="Clients" />
+              <Bar dataKey="trainings" fill="#FFBB28" name="Trainings" />
+            </BarChart>
+          </ResponsiveContainer> 
+        </div> 
+      </CardContent>
+    </Card>
+  );
+}

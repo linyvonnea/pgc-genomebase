@@ -1,6 +1,7 @@
 [
     {
-        "id": "P-2024-001",
+        "pid": "P-2024-001",
+        "iid": "Kgd2CtZwNrT1fBGkDhu2",
         "year": 2024,
         "startDate": {
             "__datatype__": "timestamp",
@@ -11,14 +12,22 @@
         "projectTag": "",
         "status": "",
         "sendingInstitution": "UP System",
-        "fundingCategory": "",
+        "fundingCategory": "In-House",
         "fundingInstitution": "PGC Visayas",
-        "serviceRequested": "Laboratory Services",
+        "serviceRequested": [
+            "Laboratory Services",
+            "Bioinformatics Analysis"
+        ],
         "personnelAssigned": "",
-        "notes": ""
+        "notes": "",
+        "clientNames": [
+            "Solomon Salazar",
+            "Dinah Malaki"
+        ]
     },
     {
-        "id": "P-2024-002",
+        "pid": "P-2024-002",
+        "iid": "CixisI0mrAN3tFqR5j8G",
         "year": 2024,
         "startDate": {
             "__datatype__": "timestamp",
@@ -29,14 +38,20 @@
         "projectTag": "",
         "status": "",
         "sendingInstitution": "SUC/HEI",
-        "fundingCategory": "",
+        "fundingCategory": "External",
         "fundingInstitution": "DOST",
-        "serviceRequested": "Laboratory Services",
+        "serviceRequested": [
+            "Laboratory Services"
+        ],
         "personnelAssigned": "",
-        "notes": ""
+        "notes": "",
+        "clientNames": [
+            "Nestor dela Paz"
+        ]
     },
     {
-        "id": "P-2024-003",
+        "pid": "P-2024-003",
+        "iid": "T31BqP2znaZMEmIcJNWi",
         "year": 2024,
         "startDate": {
             "__datatype__": "timestamp",
@@ -47,14 +62,18 @@
         "projectTag": "",
         "status": "",
         "sendingInstitution": "SUC/HEI",
-        "fundingCategory": "",
+        "fundingCategory": "External",
         "fundingInstitution": "N/A",
-        "serviceRequested": "Equipment Use",
+        "serviceRequested": [
+            "Equipment Use"
+        ],
         "personnelAssigned": "",
-        "notes": ""
+        "notes": "",
+        "clientNames": []
     },
     {
-        "id": "P-2024-004",
+        "pid": "P-2024-004",
+        "iid": "EN88lGJESwWfQwBoMwg2",
         "year": 2024,
         "startDate": {
             "__datatype__": "timestamp",
@@ -65,14 +84,19 @@
         "projectTag": "",
         "status": "",
         "sendingInstitution": "Government",
-        "fundingCategory": "",
+        "fundingCategory": "External",
         "fundingInstitution": "DOST",
-        "serviceRequested": "Equipment Use",
+        "serviceRequested": [
+            "Laboratory Services",
+            "Bioinformatics Analysis"
+        ],
         "personnelAssigned": "",
-        "notes": ""
+        "notes": "",
+        "clientNames": []
     },
     {
-        "id": "P-2024-005",
+        "pid": "P-2024-005",
+        "iid": "s9posE0AqN9MKvK1X2SG",
         "year": 2024,
         "startDate": {
             "__datatype__": "timestamp",
@@ -83,32 +107,41 @@
         "projectTag": "",
         "status": "",
         "sendingInstitution": "International",
-        "fundingCategory": "",
+        "fundingCategory": "External",
         "fundingInstitution": "PGC Visayas",
-        "serviceRequested": "Laboratory Services",
+        "serviceRequested": [
+            "Laboratory Services"
+        ],
         "personnelAssigned": "",
-        "notes": ""
+        "notes": "",
+        "clientNames": []
     },
     {
-        "id": "P-2024-006",
+        "pid": "P-2024-006",
+        "iid": "KT0gdUfAqMYvqAgUEG2z",
         "year": 2024,
         "startDate": {
             "__datatype__": "timestamp",
             "value": "2024-11-14T00:00:00Z"
         },
         "lead": "Nerian Naragdao",
-        "title": "Amplicon Sequencing of Chanos chanos ",
+        "title": "Amplicon Sequencing of Chanos chanos",
         "projectTag": "",
         "status": "",
         "sendingInstitution": "SUC/HEI",
-        "fundingCategory": "",
+        "fundingCategory": "External",
         "fundingInstitution": "DOST",
-        "serviceRequested": "Laboratory Services",
+        "serviceRequested": [
+            "Laboratory Services",
+            "Bioinformatics Analysis"
+        ],
         "personnelAssigned": "",
-        "notes": ""
+        "notes": "",
+        "clientNames": []
     },
     {
-        "id": "P-2024-007",
+        "pid": "P-2024-007",
+        "iid": "jkvozyHuua3zIyDya5jq",
         "year": 2024,
         "startDate": {
             "__datatype__": "timestamp",
@@ -119,14 +152,18 @@
         "projectTag": "",
         "status": "",
         "sendingInstitution": "UP System",
-        "fundingCategory": "",
+        "fundingCategory": "External",
         "fundingInstitution": "N/A",
-        "serviceRequested": "Equipment Use",
+        "serviceRequested": [
+            "Equipment Use"
+        ],
         "personnelAssigned": "",
-        "notes": ""
+        "notes": "",
+        "clientNames": []
     },
     {
-        "id": "P-2025-008",
+        "pid": "P-2025-008",
+        "iid": "5cK0Ixr3TeCn7wbrOtdR",
         "year": 2025,
         "startDate": {
             "__datatype__": "timestamp",
@@ -137,14 +174,21 @@
         "projectTag": "",
         "status": "",
         "sendingInstitution": "UP System",
-        "fundingCategory": "",
+        "fundingCategory": "In-House",
         "fundingInstitution": "PGC Visayas",
-        "serviceRequested": "Laboratory Services",
+        "serviceRequested": [
+            "Laboratory Services"
+        ],
         "personnelAssigned": "",
-        "notes": ""
+        "notes": "",
+        "clientNames": [
+            "Maria Allia Buan",
+            "Isabella Noa Perez"
+        ]
     },
     {
-        "id": "P-2025-009",
+        "pid": "P-2025-009",
+        "iid": "2OfwncHl4OvqxgsZMxK0",
         "year": 2025,
         "startDate": {
             "__datatype__": "timestamp",
@@ -155,14 +199,22 @@
         "projectTag": "",
         "status": "",
         "sendingInstitution": "UP System",
-        "fundingCategory": "",
+        "fundingCategory": "External",
         "fundingInstitution": "N/A",
-        "serviceRequested": "Equipment Use",
+        "serviceRequested": [
+            "Equipment Use",
+            "Bioinformatics Analysis"
+        ],
         "personnelAssigned": "",
-        "notes": ""
+        "notes": "",
+        "clientNames": [
+            "Rhonin Kenshin Murata",
+            "Almiro Alejandro"
+        ]
     },
     {
-        "id": "P-2025-010",
+        "pid": "P-2025-010",
+        "iid": "cBe2DT1scGMK19SuiIbq",
         "year": 2025,
         "startDate": {
             "__datatype__": "timestamp",
@@ -173,14 +225,18 @@
         "projectTag": "",
         "status": "",
         "sendingInstitution": "SUC/HEI",
-        "fundingCategory": "",
+        "fundingCategory": "External",
         "fundingInstitution": "DOST",
-        "serviceRequested": "Laboratory Services",
+        "serviceRequested": [
+            "Laboratory Services"
+        ],
         "personnelAssigned": "",
-        "notes": ""
+        "notes": "",
+        "clientNames": []
     },
     {
-        "id": "P-2025-011",
+        "pid": "P-2025-011",
+        "iid": "yMyVDQamOJVh5drMXhBL",
         "year": 2025,
         "startDate": {
             "__datatype__": "timestamp",
@@ -191,14 +247,18 @@
         "projectTag": "",
         "status": "",
         "sendingInstitution": "Government",
-        "fundingCategory": "",
+        "fundingCategory": "External",
         "fundingInstitution": "DOST",
-        "serviceRequested": "Laboratory Services",
+        "serviceRequested": [
+            "Laboratory Services"
+        ],
         "personnelAssigned": "",
-        "notes": ""
+        "notes": "",
+        "clientNames": []
     },
     {
-        "id": "P-2025-012",
+        "pid": "P-2025-012",
+        "iid": "mgM5KMzdFxn1GY19MRSJ",
         "year": 2025,
         "startDate": {
             "__datatype__": "timestamp",
@@ -209,14 +269,19 @@
         "projectTag": "",
         "status": "",
         "sendingInstitution": "International",
-        "fundingCategory": "",
+        "fundingCategory": "External",
         "fundingInstitution": "N/A",
-        "serviceRequested": "Laboratory Services",
+        "serviceRequested": [
+            "Laboratory Services",
+            "Bioinformatics Analysis"
+        ],
         "personnelAssigned": "",
-        "notes": ""
+        "notes": "",
+        "clientNames": []
     },
     {
-        "id": "P-2025-013",
+        "pid": "P-2025-013",
+        "iid": "EXHtJymbsl36WgbP6GPD",
         "year": 2025,
         "startDate": {
             "__datatype__": "timestamp",
@@ -227,10 +292,13 @@
         "projectTag": "",
         "status": "",
         "sendingInstitution": "UP System",
-        "fundingCategory": "",
+        "fundingCategory": "External",
         "fundingInstitution": "N/A",
-        "serviceRequested": "Equipment Use",
+        "serviceRequested": [
+            "Equipment Use"
+        ],
         "personnelAssigned": "",
-        "notes": ""
+        "notes": "",
+        "clientNames": []
     }
 ]
