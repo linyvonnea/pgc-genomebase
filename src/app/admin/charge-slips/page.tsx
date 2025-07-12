@@ -9,7 +9,6 @@ import { DataTable } from "./data-table";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import ChargeSlipForm from "@/components/forms/ChargeSlipForm";
 
 export default function ChargeSlipsPage() {
   const [data, setData] = useState<ChargeSlipRecord[]>([]);
@@ -53,7 +52,6 @@ export default function ChargeSlipsPage() {
       <h1 className="text-3xl font-bold tracking-tight mb-6">
         Charge Slip Builder
       </h1>
-      <ChargeSlipForm onSubmit={(data) => console.log(data)} />
     </div>
   );
 }

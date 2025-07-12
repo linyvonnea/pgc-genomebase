@@ -1,59 +1,55 @@
-// src/components/charge-slip/ChargeSlipPDFViewer.tsx
 "use client";
 
+import { useState, useEffect } from "react";
 import { PDFViewer, pdf } from "@react-pdf/renderer";
 import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
-import { format } from "date-fns";
-import { useEffect, useState } from "react";
 import { getClientById, getProjectById } from "@/services/clientProjectService";
 import { saveChargeSlipToFirestore } from "@/services/chargeSlipService";
+import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
-export function ChargeSlipPDFViewer({ chargeSlip }: { chargeSlip: ChargeSlipRecord }) {
+interface Props {
+  chargeSlip: ChargeSlipRecord;
+}
+
+export function ChargeSlipPDFViewer({ chargeSlip }: Props) {
   const [clientDetails, setClientDetails] = useState<string>("");
   const [projectDetails, setProjectDetails] = useState<string>("");
 
   useEffect(() => {
     const fetchDetails = async () => {
       try {
-        console.log("chargeSlip object:", chargeSlip); // Debugging log
-
         if (chargeSlip.client?.cid && chargeSlip.project?.pid) {
-          const client = await getClientById(chargeSlip.client.cid);
-          const project = await getProjectById(chargeSlip.project.pid);
+          const [client, project] = await Promise.all([
+            getClientById(chargeSlip.client.cid),
+            getProjectById(chargeSlip.project.pid),
+          ]);
 
           if (client) {
-            console.log("Fetched client details:", client); // Debugging log
             setClientDetails(`${client.name} (${client.affiliation || "N/A"})`);
-          } else {
-            console.warn("Client not found for CID:", chargeSlip.client.cid); // Warning log
           }
 
           if (project) {
-            console.log("Fetched project details:", project); // Debugging log
             setProjectDetails(project.title || "N/A");
-          } else {
-            console.warn("Project not found for PID:", chargeSlip.project.pid); // Warning log
           }
-        } else {
-          console.warn("Missing client.cid or project.pid in chargeSlip:", chargeSlip); // Warning log
         }
       } catch (error) {
         console.error("Failed to fetch client or project details", error);
+        toast.error("Failed to fetch client or project details.");
       }
     };
 
     fetchDetails();
   }, [chargeSlip.client?.cid, chargeSlip.project?.pid]);
 
-  const formattedDateIssued = format(new Date(chargeSlip.dateIssued), "MMMM dd, yyyy");
+  const formattedDate = format(new Date(chargeSlip.dateIssued), "MMMM dd, yyyy");
 
   const handleGenerateFinalChargeSlip = async () => {
     try {
-      // Save charge slip to Firestore
       await saveChargeSlipToFirestore(chargeSlip);
 
-      // Generate and download the PDF
       const blob = await pdf(
         <ChargeSlipPDF
           services={chargeSlip.services}
@@ -66,7 +62,7 @@ export function ChargeSlipPDFViewer({ chargeSlip }: { chargeSlip: ChargeSlipReco
           referenceNumber={chargeSlip.referenceNumber}
           clientInfo={chargeSlip.clientInfo}
           approvedBy={chargeSlip.approvedBy}
-          dateIssued={format(new Date(chargeSlip.dateIssued), "MMMM dd, yyyy")}
+          dateIssued={chargeSlip.dateIssued}
           subtotal={chargeSlip.subtotal}
           discount={chargeSlip.discount}
           total={chargeSlip.total}
@@ -79,16 +75,20 @@ export function ChargeSlipPDFViewer({ chargeSlip }: { chargeSlip: ChargeSlipReco
       link.download = `${chargeSlip.chargeSlipNumber}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
+
+      toast.success("Charge slip generated successfully.");
     } catch (error) {
-      console.error("Failed to generate final charge slip", error);
+      console.error("Failed to generate charge slip", error);
+      toast.error("Failed to generate charge slip.");
     }
   };
 
   return (
     <div>
       <h1 className="text-xl font-semibold mb-4">
-        Build Charge Slip for: {clientDetails} – {projectDetails}
+        Build Charge Slip for: {clientDetails || "Loading..."} – {projectDetails || "Loading..."}
       </h1>
+
       <PDFViewer width="100%" height="600">
         <ChargeSlipPDF
           services={chargeSlip.services}
@@ -101,18 +101,16 @@ export function ChargeSlipPDFViewer({ chargeSlip }: { chargeSlip: ChargeSlipReco
           referenceNumber={chargeSlip.referenceNumber}
           clientInfo={chargeSlip.clientInfo}
           approvedBy={chargeSlip.approvedBy}
-          dateIssued={formattedDateIssued}
+          dateIssued={chargeSlip.dateIssued}
           subtotal={chargeSlip.subtotal}
           discount={chargeSlip.discount}
           total={chargeSlip.total}
         />
       </PDFViewer>
-      <button
-        onClick={handleGenerateFinalChargeSlip}
-        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-      >
+
+      <Button onClick={handleGenerateFinalChargeSlip} className="mt-4">
         Generate Final Charge Slip
-      </button>
+      </Button>
     </div>
   );
 }

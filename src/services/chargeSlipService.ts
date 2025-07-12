@@ -18,12 +18,28 @@ import { getClientById, getProjectById } from "./clientProjectService";
  */
 export async function saveChargeSlipToFirestore(chargeSlip: ChargeSlipRecord) {
   try {
-    console.log("Saving charge slip to Firestore:", chargeSlip); // Debugging log
+    console.log("Saving charge slip to Firestore:", chargeSlip);
+
     const docRef = doc(db, "chargeSlips", chargeSlip.chargeSlipNumber);
-    await setDoc(docRef, chargeSlip);
-    console.log("Charge slip saved successfully."); // Debugging log
+
+    const sanitizedChargeSlip = {
+      ...chargeSlip,
+      projectId: chargeSlip.projectId, // ✅ ensure this stays at root level
+      project: {
+        ...chargeSlip.project,
+        status:
+          chargeSlip.project?.status &&
+          ["Ongoing", "Cancelled", "Completed"].includes(chargeSlip.project.status)
+            ? chargeSlip.project.status
+            : "Ongoing",
+      },
+    };
+
+    console.log("Sanitized charge slip data:", sanitizedChargeSlip);
+    await setDoc(docRef, sanitizedChargeSlip);
+    console.log("Charge slip saved successfully.");
   } catch (error) {
-    console.error("Error saving charge slip to Firestore:", error); // Debugging log
+    console.error("Error saving charge slip to Firestore:", error);
   }
 }
 

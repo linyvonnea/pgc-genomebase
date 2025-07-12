@@ -3,10 +3,13 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { pdf, PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
+import { pdf, PDFViewer } from "@react-pdf/renderer";
 
 import { getServiceCatalog } from "@/services/serviceCatalogService";
-import { getClientById, getProjectById } from "@/services/clientProjectService";
+import {
+  getClientById,
+  getProjectById,
+} from "@/services/clientProjectService";
 import {
   generateNextChargeSlipNumber,
   saveChargeSlipToFirestore,
@@ -14,7 +17,6 @@ import {
 
 import { SelectedService as StrictSelectedService } from "@/types/SelectedService";
 import { ServiceItem } from "@/types/ServiceItem";
-import { ChargeSlip } from "@/types/ChargeSlip";
 
 import {
   Accordion,
@@ -45,26 +47,6 @@ import {
 
 import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import useAuth from "@/hooks/useAuth";
-// import ChargeSlipForm from "@/components/forms/ChargeSlipForm";
-import { ChargeSlipFormData } from "@/schemas/chargeSlipSchema";
-
-import type { AdminInfo } from "@/types/Admin";
-
-interface ExtendedChargeSlip extends ChargeSlip {
-  client: any;
-  project: any;
-  services: any[];
-  chargeSlipNumber: string;
-  orNumber: string;
-  useInternalPrice: boolean;
-  referenceNumber: string;
-  isInternal: boolean;
-  subtotal: number;
-  discount: number;
-  total: number;
-  approvedBy?: string; // Optional for now
-  projectId: string; // Added projectId to match usage
-}
 
 export type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
   quantity: number | "";
@@ -83,30 +65,14 @@ export default function ChargeSlipBuilder({
   projectData?: any;
   onSubmit: (data: any) => void;
 }) {
-  const { user, adminInfo } = useAuth(); // Added adminInfo from useAuth
   const [selectedServices, setSelectedServices] = useState<EditableSelectedService[]>([]);
-  const [client, setClient] = useState<any | null>(null);
-  const [project, setProject] = useState<any | null>(null);
-  const [chargeSlipNumber, setChargeSlipNumber] = useState<string>("");
-  const [orNumber, setOrNumber] = useState<string>("");
   const [isInternal, setIsInternal] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
   const [search, setSearch] = useState("");
-  const [formData, setFormData] = useState<any>(null); // Added formData state
+  const [chargeSlipNumber, setChargeSlipNumber] = useState<string>("");
 
-  const preparedBy: AdminInfo = adminInfo || { name: "Unknown", position: "Unknown", email: "unknown@example.com" }; // Use adminInfo or fallback
-
-  const approvedBy = "John Doe"; // Example approvedBy value
-
-  const clientInfo = {
-    name: client?.name || "",
-    institution: client?.affiliation || "",
-    designation: client?.designation || "",
-    email: client?.email || "",
-  };
-
+  const { adminInfo } = useAuth();
   const searchParams = useSearchParams();
-
   const effectiveClientId = clientId || searchParams.get("clientId") || "";
   const effectiveProjectId = projectId || searchParams.get("projectId") || "";
 
@@ -115,17 +81,20 @@ export default function ChargeSlipBuilder({
     queryFn: getServiceCatalog,
   });
 
-  const { data: clientDataFetched } = useQuery({
+  const { data: fetchedClient } = useQuery({
     queryKey: ["client", effectiveClientId],
     queryFn: () => getClientById(effectiveClientId),
     enabled: !!effectiveClientId,
   });
 
-  const { data: projectDataFetched } = useQuery({
+  const { data: fetchedProject } = useQuery({
     queryKey: ["project", effectiveProjectId],
     queryFn: () => getProjectById(effectiveProjectId),
     enabled: !!effectiveProjectId,
   });
+
+  const client = clientData || fetchedClient || {};
+  const project = projectData || fetchedProject || {};
 
   useEffect(() => {
     const fetchRef = async () => {
@@ -135,19 +104,6 @@ export default function ChargeSlipBuilder({
     };
     fetchRef();
   }, []);
-
-  useEffect(() => {
-    console.log("Received clientData:", clientData); // Debugging log
-    console.log("Received projectData:", projectData); // Debugging log
-
-    if (clientData) {
-      setClient(clientData);
-    }
-
-    if (projectData) {
-      setProject(projectData);
-    }
-  }, [clientData, projectData]);
 
   const toggleService = (id: string, service: ServiceItem) => {
     setSelectedServices((prev) => {
@@ -173,6 +129,13 @@ export default function ChargeSlipBuilder({
   );
   const discount = isInternal ? subtotal * 0.12 : 0;
   const total = subtotal - discount;
+
+  const clientInfo = {
+    name: client?.name || "Unknown",
+    institution: client?.affiliation || "N/A",
+    designation: client?.designation || "N/A",
+    email: client?.email || "",
+  };
 
   const groupedByType = useMemo(() => {
     const result: Record<string, ServiceItem[]> = {};
@@ -201,7 +164,10 @@ export default function ChargeSlipBuilder({
         {services.map((item) => {
           const isSelected = selectedServices.find((s) => s.id === item.id);
           const quantity = isSelected?.quantity ?? "";
-          const amount = isSelected && typeof quantity === "number" ? item.price * quantity : 0;
+          const amount =
+            isSelected && typeof quantity === "number"
+              ? item.price * quantity
+              : 0;
 
           return (
             <TableRow key={item.id}>
@@ -236,47 +202,66 @@ export default function ChargeSlipBuilder({
     </Table>
   );
 
-  const renderGroupedTable = () => (
-    <ScrollArea className="h-[65vh] pr-2">
-      <Accordion type="multiple" className="space-y-4">
-        {Object.entries(groupedByType).map(([type, items]) => (
-          <AccordionItem key={type} value={type}>
-            <AccordionTrigger className="text-lg font-bold capitalize">
-              {type}
-            </AccordionTrigger>
-            <AccordionContent>{renderTable(items)}</AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
-    </ScrollArea>
-  );
+  const handleSaveAndDownload = async () => {
+// Remove undefined values from project
+const sanitizedProject = Object.fromEntries(
+  Object.entries(project || {}).filter(([_, v]) => v !== undefined)
+);
 
-  const handleFormSubmit = async (data: ChargeSlipFormData) => {
-    const client = await getClientById(effectiveClientId);
-    const project = await getProjectById(effectiveProjectId);
-    const chargeSlipNumber = await generateNextChargeSlipNumber(Number(effectiveProjectId));
+  const record = {
+    id: chargeSlipNumber,
+    chargeSlipNumber,
+    projectId: project?.pid ?? "",
+    client,
+    project: sanitizedProject,
+    services: cleanedServices,
+    orNumber: "",
+    useInternalPrice: isInternal,
+    preparedBy: {
+      name: adminInfo?.name || "—",
+      position: adminInfo?.position || "—",
+    },
+    approvedBy: {
+      name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
+      position: "AED, PGC Visayas",
+    },
+    referenceNumber: chargeSlipNumber,
+    clientInfo,
+    dateIssued: new Date().toISOString(),
+    subtotal,
+    discount,
+    total,
+  };
 
-    const updatedFormData: ExtendedChargeSlip = {
-      id: "TEMP-ID", // Default ID, replace with actual logic if needed
-      ...data,
-      client,
-      project,
-      projectId: effectiveProjectId, // Add projectId
-      chargeSlipNumber, // Use chargeSlipNumber instead of referenceNumber
-      orNumber: "", // Default orNumber
-      useInternalPrice: isInternal,
-      services: selectedServices,
-      preparedBy: adminInfo || { name: "Unknown", position: "Unknown" },
-      referenceNumber: chargeSlipNumber, // Added referenceNumber
-      isInternal,
-      subtotal,
-      discount,
-      total,
-      dateIssued: new Date().toISOString(), // Convert dateIssued to string
-      approvedBy: "Victor Marco Emmanuel N. Ferriols, Ph.D", // Default approvedBy
-    };
+    console.log("Saving charge slip...");
+    await saveChargeSlipToFirestore(record);
+    console.log("Saved!");
 
-    setFormData(updatedFormData);
+    const blob = await pdf(
+      <ChargeSlipPDF
+        services={cleanedServices}
+        client={client}
+        project={project}
+        chargeSlipNumber={chargeSlipNumber}
+        orNumber={""}
+        useInternalPrice={isInternal}
+        preparedBy={record.preparedBy}
+        approvedBy={record.approvedBy}
+        referenceNumber={chargeSlipNumber}
+        clientInfo={clientInfo}
+        dateIssued={record.dateIssued}
+        subtotal={subtotal}
+        discount={discount}
+        total={total}
+      />
+    ).toBlob();
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${chargeSlipNumber}.pdf`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -285,40 +270,9 @@ export default function ChargeSlipBuilder({
         <div className="mb-6">
           <h1 className="text-xl font-semibold mb-1">Build Charge Slip for:</h1>
           <p className="text-muted-foreground">
-            {clientInfo.name} 
-            {clientInfo.institution && ` – ${clientInfo.institution}`}
+            {clientInfo.name} – {clientInfo.institution}, {clientInfo.designation}
           </p>
         </div>
-
-        <Input
-          placeholder="Search services..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="mb-4"
-        />
-
-        {renderGroupedTable()}
-      </div>
-
-      <div className="w-96 shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
-        <h3 className="text-lg font-bold mb-2">Summary</h3>
-        <Separator className="mb-2" />
-        {cleanedServices.map((item) => (
-          <div key={item.id} className="flex justify-between text-sm mb-1">
-            <span>
-              {item.name} x {item.quantity}
-            </span>
-            <span>PHP {(item.price * item.quantity).toFixed(2)}</span>
-          </div>
-        ))}
-        <Separator className="my-2" />
-        <p className="text-sm">Subtotal: PHP {subtotal.toFixed(2)}</p>
-        {isInternal && (
-          <p className="text-sm">Discount (12%): PHP {discount.toFixed(2)}</p>
-        )}
-        <p className="text-base font-semibold text-primary">
-          Total: PHP {total.toFixed(2)}
-        </p>
 
         <div className="flex items-center justify-between mb-4">
           <div className="flex gap-4 items-center">
@@ -329,6 +283,47 @@ export default function ChargeSlipBuilder({
             <span>Internal Client (Apply 12% discount)</span>
           </div>
         </div>
+
+        <Input
+          placeholder="Search services..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="mb-4"
+        />
+
+        <ScrollArea className="h-[65vh] pr-2">
+          <Accordion type="multiple" className="space-y-4">
+            {Object.entries(groupedByType).map(([type, items]) => (
+              <AccordionItem key={type} value={type}>
+                <AccordionTrigger className="text-lg font-bold capitalize">
+                  {type}
+                </AccordionTrigger>
+                <AccordionContent>{renderTable(items)}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </ScrollArea>
+      </div>
+
+      <div className="w-96 shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
+        <h3 className="text-lg font-bold mb-2">Summary</h3>
+        <Separator className="mb-2" />
+        {cleanedServices.map((item) => (
+          <div key={item.id} className="flex justify-between text-sm mb-1">
+            <span>
+              {item.name} x {item.quantity}
+            </span>
+            <span>₱{(item.price * item.quantity).toFixed(2)}</span>
+          </div>
+        ))}
+        <Separator className="my-2" />
+        <p className="text-sm">Subtotal: ₱{subtotal.toFixed(2)}</p>
+        {isInternal && (
+          <p className="text-sm">Discount (12%): ₱{discount.toFixed(2)}</p>
+        )}
+        <p className="text-base font-semibold text-primary">
+          Total: ₱{total.toFixed(2)}
+        </p>
 
         <Dialog open={openPreview} onOpenChange={setOpenPreview}>
           <DialogTrigger asChild>
@@ -345,12 +340,18 @@ export default function ChargeSlipBuilder({
                   client={client}
                   project={project}
                   chargeSlipNumber={chargeSlipNumber}
-                  orNumber={orNumber}
+                  orNumber={""}
                   useInternalPrice={isInternal}
-                  preparedBy={preparedBy}
+                  preparedBy={{
+                    name: adminInfo?.name || "—",
+                    position: adminInfo?.position || "—",
+                  }}
                   referenceNumber={chargeSlipNumber}
                   clientInfo={clientInfo}
-                  approvedBy={approvedBy}
+                  approvedBy={{
+                    name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
+                    position: "AED, PGC Visayas",
+                  }}
                   dateIssued={new Date().toISOString()}
                   subtotal={subtotal}
                   discount={discount}
@@ -358,33 +359,9 @@ export default function ChargeSlipBuilder({
                 />
               </PDFViewer>
               <div className="text-right mt-4">
-                <PDFDownloadLink
-                  document={
-                    <ChargeSlipPDF
-                      services={cleanedServices}
-                      client={client}
-                      project={project}
-                      chargeSlipNumber={chargeSlipNumber}
-                      orNumber={orNumber}
-                      useInternalPrice={isInternal}
-                      preparedBy={preparedBy}
-                      referenceNumber={chargeSlipNumber}
-                      clientInfo={clientInfo}
-                      approvedBy={approvedBy}
-                      dateIssued={new Date().toISOString()}
-                      subtotal={subtotal}
-                      discount={discount}
-                      total={total}
-                    />
-                  }
-                  fileName={`${chargeSlipNumber}.pdf`}
-                >
-                  {({ loading }) => (
-                    <Button disabled={loading} className="mt-4">
-                      {loading ? "Preparing..." : "Download Final PDF"}
-                    </Button>
-                  )}
-                </PDFDownloadLink>
+                <Button onClick={handleSaveAndDownload}>
+                  Generate Final Charge Slip
+                </Button>
               </div>
             </div>
           </DialogContent>
