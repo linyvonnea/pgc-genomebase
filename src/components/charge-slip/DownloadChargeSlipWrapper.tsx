@@ -1,8 +1,10 @@
 // src/components/charge-slip/DownloadChargeSlipWrapper.tsx
 "use client";
 
+import { normalizeDate } from "@/lib/formatters";
+
 import { pdf } from "@react-pdf/renderer";
-import { saveChargeSlipToFirestore } from "@/services/chargeSlipService";
+import { saveChargeSlip } from "@/services/chargeSlipService";
 import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 
@@ -14,7 +16,7 @@ export default function DownloadChargeSlipWrapper({ record }: Props) {
   const handleDownload = async () => {
     try {
       // Optional: Save to Firestore before downloading
-      await saveChargeSlipToFirestore(record);
+      await saveChargeSlip(record);
 
       // Generate PDF as blob using @react-pdf/renderer
       const blob = await pdf(
@@ -23,13 +25,13 @@ export default function DownloadChargeSlipWrapper({ record }: Props) {
           client={record.client}
           project={record.project}
           chargeSlipNumber={record.chargeSlipNumber}
-          orNumber={record.orNumber}
+          orNumber={record.orNumber ?? ""}
           useInternalPrice={record.useInternalPrice}
           preparedBy={record.preparedBy}
           approvedBy={record.approvedBy}
           referenceNumber={record.referenceNumber}
           clientInfo={record.clientInfo}
-          dateIssued={record.dateIssued}
+          dateIssued={normalizeDate(record.dateIssued ?? "")}
           subtotal={record.subtotal}
           discount={record.discount}
           total={record.total}

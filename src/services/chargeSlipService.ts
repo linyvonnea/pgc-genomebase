@@ -1,205 +1,172 @@
+import { db } from "@/lib/firebase";
 import {
   collection,
-  query,
-  where,
+  addDoc,
   getDocs,
-  orderBy,
   doc,
-  setDoc,
   getDoc,
+  updateDoc,
+  where,
+  orderBy,
+  query,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
+import { convertToDate, convertToTimestamp } from "@/lib/convert";
+import { Client } from "@/types/Client";
+import { Project } from "@/types/Project";
 
-/**
- * Save or overwrite a charge slip using chargeSlipNumber as the document ID.
- */
-export async function saveChargeSlipToFirestore(chargeSlip: ChargeSlipRecord) {
-  try {
-    console.log("💾 Saving charge slip to Firestore:", chargeSlip);
+const CHARGE_SLIPS_COLLECTION = "chargeSlips";
 
-    const docRef = doc(db, "chargeSlips", chargeSlip.chargeSlipNumber);
+export async function getAllChargeSlips(): Promise<ChargeSlipRecord[]> {
+  const snapshot = await getDocs(
+    query(collection(db, CHARGE_SLIPS_COLLECTION), orderBy("dateIssued", "desc"))
+  );
 
-    const sanitizedChargeSlip = {
-      ...chargeSlip,
-      cid: chargeSlip.client?.cid || "", // ✅ flatten cid for easier querying
-      projectId: chargeSlip.projectId,
-      project: {
-        ...chargeSlip.project,
-        status:
-          chargeSlip.project?.status &&
-          ["Ongoing", "Cancelled", "Completed"].includes(chargeSlip.project.status)
-            ? chargeSlip.project.status
-            : "Ongoing",
-        fundingCategory: chargeSlip.project?.fundingCategory || "General",
-      },
+  return snapshot.docs.map((docSnap) => {
+    const data = docSnap.data() as any;
+
+    const clientData: Client = {
+      ...data.client,
+      createdAt: convertToDate(data.client?.createdAt),
     };
 
-    await setDoc(docRef, sanitizedChargeSlip);
-    console.log("✅ Charge slip saved successfully.");
-  } catch (error) {
-    console.error("❌ Error saving charge slip to Firestore:", error);
-  }
-}
+    const projectData: Project = {
+      ...data.project,
+      createdAt: convertToDate(data.project?.createdAt),
+    };
 
-/**
- * Get a single charge slip by its chargeSlipNumber (document ID).
- */
-export async function getChargeSlipByNumber(
-  chargeSlipNumber: string
-): Promise<ChargeSlipRecord | null> {
-  try {
-    const docRef = doc(db, "chargeSlips", chargeSlipNumber);
-    const snapshot = await getDoc(docRef);
-
-    if (!snapshot.exists()) return null;
-
-    const data = snapshot.data();
     return {
       ...data,
-      id: snapshot.id,
-      dateIssued:
-        typeof data.dateIssued === "string"
-          ? data.dateIssued
-          : data.dateIssued?.toDate().toISOString(),
-    } as ChargeSlipRecord;
-  } catch (error) {
-    console.error("❌ Error fetching charge slip:", error);
-    return null;
-  }
+      id: docSnap.id,
+      client: clientData,
+      project: projectData,
+      dateIssued: convertToDate(data.dateIssued),
+      dateOfOR: convertToDate(data.dateOfOR),
+      createdAt: convertToDate(data.createdAt),
+    };
+  });
 }
 
-/**
- * Get all charge slips in the database.
- */
-export async function getAllChargeSlips(): Promise<ChargeSlipRecord[]> {
-  try {
-    const q = query(collection(db, "chargeSlips"), orderBy("dateIssued", "desc"));
-    const snapshot = await getDocs(q);
+export async function getChargeSlipById(id: string): Promise<ChargeSlipRecord | null> {
+  const docRef = doc(db, CHARGE_SLIPS_COLLECTION, id);
+  const snap = await getDoc(docRef);
 
-    const records: ChargeSlipRecord[] = [];
-    snapshot.forEach((doc) => {
-      const data = doc.data();
-      records.push({
-        ...data,
-        id: doc.id,
-        dateIssued:
-          typeof data.dateIssued === "string"
-            ? data.dateIssued
-            : data.dateIssued?.toDate().toISOString(),
-      } as ChargeSlipRecord);
-    });
+  if (!snap.exists()) return null;
 
-    return records;
-  } catch (error) {
-    console.error("❌ Error fetching all charge slips:", error);
-    return [];
-  }
+  const data = snap.data() as any;
+
+  return {
+    ...data,
+    id: snap.id,
+    client: {
+      ...data.client,
+      createdAt: convertToDate(data.client?.createdAt),
+    },
+    project: {
+      ...data.project,
+      createdAt: convertToDate(data.project?.createdAt),
+    },
+    dateIssued: convertToDate(data.dateIssued),
+    dateOfOR: convertToDate(data.dateOfOR),
+    createdAt: convertToDate(data.createdAt),
+  };
 }
 
-/**
- * Generates the next charge slip number.
- * Format: CS-YYYY-XXX
- */
-export async function generateNextChargeSlipNumber(currentYear: number): Promise<string> {
-  const prefix = `CS-${currentYear}`;
-  const slipsRef = collection(db, "chargeSlips");
+export async function saveChargeSlip(slip: ChargeSlipRecord): Promise<string> {
+  const ref = await addDoc(collection(db, CHARGE_SLIPS_COLLECTION), {
+    ...slip,
+    dateIssued: convertToTimestamp(slip.dateIssued),
+    dateOfOR: convertToTimestamp(slip.dateOfOR),
+    createdAt: convertToTimestamp(slip.createdAt),
+    client: {
+      ...slip.client,
+      createdAt: convertToTimestamp(slip.client.createdAt),
+    },
+    project: {
+      ...slip.project,
+      createdAt: convertToTimestamp(slip.project.createdAt),
+    },
+  });
 
+  return ref.id;
+}
+
+export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRecord>) {
+  const docRef = doc(db, CHARGE_SLIPS_COLLECTION, id);
+
+  const updatedData: any = { ...updates };
+
+  // Safely convert timestamp fields if provided
+  if (updates.dateIssued) {
+    updatedData.dateIssued = convertToTimestamp(updates.dateIssued);
+  }
+  if (updates.dateOfOR) {
+    updatedData.dateOfOR = convertToTimestamp(updates.dateOfOR);
+  }
+  if (updates.createdAt) {
+    updatedData.createdAt = convertToTimestamp(updates.createdAt);
+  }
+
+  // Safely convert nested client/project timestamps if provided
+  if (updates.client?.createdAt) {
+    updatedData.client = {
+      ...updates.client,
+      createdAt: convertToTimestamp(updates.client.createdAt),
+    };
+  }
+
+  if (updates.project?.createdAt) {
+    updatedData.project = {
+      ...updates.project,
+      createdAt: convertToTimestamp(updates.project.createdAt),
+    };
+  }
+
+  await updateDoc(docRef, updatedData);
+}
+
+export async function getChargeSlipsByProjectId(projectId: string): Promise<ChargeSlipRecord[]> {
+  const snapshot = await getDocs(
+    query(
+      collection(db, CHARGE_SLIPS_COLLECTION),
+      where("projectId", "==", projectId),
+      orderBy("dateIssued", "desc")
+    )
+  );
+
+  return snapshot.docs.map((docSnap) => {
+    const data = docSnap.data() as any;
+
+    return {
+      ...data,
+      id: docSnap.id,
+      client: {
+        ...data.client,
+        createdAt: convertToDate(data.client?.createdAt),
+      },
+      project: {
+        ...data.project,
+        createdAt: convertToDate(data.project?.createdAt),
+      },
+      dateIssued: convertToDate(data.dateIssued),
+      dateOfOR: convertToDate(data.dateOfOR),
+      createdAt: convertToDate(data.createdAt),
+    };
+  });
+}
+
+export async function generateNextChargeSlipNumber(year: number): Promise<string> {
+  const prefix = `CS-${year}`;
   const q = query(
-    slipsRef,
+    collection(db, CHARGE_SLIPS_COLLECTION),
     where("chargeSlipNumber", ">=", `${prefix}-000`),
     where("chargeSlipNumber", "<=", `${prefix}-999`),
     orderBy("chargeSlipNumber", "desc")
   );
 
   const snapshot = await getDocs(q);
+  const latest = snapshot.docs[0]?.data()?.chargeSlipNumber;
 
-  let nextNumber = 1;
-  if (!snapshot.empty) {
-    const lastRef = snapshot.docs[0].data().chargeSlipNumber;
-    const lastNum = parseInt(lastRef.split("-").pop() || "0", 10);
-    nextNumber = lastNum + 1;
-  }
-
-  const padded = String(nextNumber).padStart(3, "0");
-  return `${prefix}-${padded}`;
-}
-
-/**
- * Get charge slips by project ID.
- */
-export async function getChargeSlipsByProjectId(projectId: string): Promise<ChargeSlipRecord[]> {
-  try {
-    console.log("📥 Fetching charge slips for projectId:", projectId);
-
-    const slipsRef = collection(db, "chargeSlips");
-    const q = query(
-      slipsRef,
-      where("projectId", "==", projectId),
-      orderBy("dateIssued", "desc")
-    );
-
-    const snapshot = await getDocs(q);
-    console.log("📸 Snapshot size:", snapshot.size);
-
-    const records: ChargeSlipRecord[] = [];
-    snapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      records.push({
-        ...data,
-        id: docSnap.id,
-        dateIssued:
-          typeof data.dateIssued === "string"
-            ? data.dateIssued
-            : data.dateIssued?.toDate().toISOString(),
-      } as ChargeSlipRecord);
-    });
-
-    console.log("📦 Fetched charge slips:", records);
-    return records;
-  } catch (error) {
-    console.error("❌ Error fetching charge slips by projectId:", error);
-    return [];
-  }
-}
-
-/**
- * (OPTIONAL) Get charge slips by both project ID and client ID.
- */
-export async function getChargeSlipsByProjectAndClient(
-  projectId: string,
-  cid: string
-): Promise<ChargeSlipRecord[]> {
-  try {
-    console.log(`📥 Fetching charge slips for projectId: ${projectId} and cid: ${cid}`);
-
-    const slipsRef = collection(db, "chargeSlips");
-    const q = query(
-      slipsRef,
-      where("projectId", "==", projectId),
-      where("cid", "==", cid),
-      orderBy("dateIssued", "desc")
-    );
-
-    const snapshot = await getDocs(q);
-    console.log("📸 Snapshot size (project+client):", snapshot.size);
-
-    const records: ChargeSlipRecord[] = [];
-    snapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      records.push({
-        ...data,
-        id: docSnap.id,
-        dateIssued:
-          typeof data.dateIssued === "string"
-            ? data.dateIssued
-            : data.dateIssued?.toDate().toISOString(),
-      } as ChargeSlipRecord);
-    });
-
-    return records;
-  } catch (error) {
-    console.error("❌ Error fetching charge slips by project + client:", error);
-    return [];
-  }
+  const nextNum = latest ? parseInt(latest.split("-")[2], 10) + 1 : 1;
+  return `${prefix}-${String(nextNum).padStart(3, "0")}`;
 }

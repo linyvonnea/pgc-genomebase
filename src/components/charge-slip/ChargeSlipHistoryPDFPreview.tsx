@@ -1,5 +1,7 @@
 "use client";
 
+
+import { normalizeDate } from "@/lib/formatters";
 import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -13,13 +15,13 @@ export function ChargeSlipHistoryPDFPreview({ record }: { record: ChargeSlipReco
       client={record.client}
       project={record.project}
       chargeSlipNumber={record.chargeSlipNumber}
-      orNumber={record.orNumber}
+      orNumber={record.orNumber ?? ""}
       useInternalPrice={record.useInternalPrice}
       preparedBy={record.preparedBy}
       referenceNumber={record.referenceNumber}
       clientInfo={record.clientInfo}
       approvedBy={record.approvedBy}
-      dateIssued={record.dateIssued}
+      dateIssued={normalizeDate(record.dateIssued ?? "")}
       subtotal={record.subtotal}
       discount={record.discount}
       total={record.total}

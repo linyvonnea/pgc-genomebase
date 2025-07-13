@@ -1,5 +1,5 @@
 // src/components/charge-slip/ChargeSlipPDFClient.tsx
-
+import { normalizeDate } from "@/lib/formatters";
 import {
   Document,
   Page,
@@ -10,13 +10,16 @@ import {
 } from "@react-pdf/renderer";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { pgcLogo, schoolLogo } from "@/assets/logosBase64";
+import { Timestamp } from "firebase/firestore";
 
 // Utility to format ISO string to YYYY-MM-DD
-const formatDate = (iso: string) => {
-  const date = new Date(iso);
-  return `${date.getFullYear()}-${(date.getMonth() + 1)
+const formatDate = (date: string | Timestamp | undefined) => {
+  const iso = normalizeDate(date);
+  const parsed = new Date(iso);
+  return `${parsed.getFullYear()}-${(parsed.getMonth() + 1).toString().padStart(2, "0")}-${parsed
+    .getDate()
     .toString()
-    .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
+    .padStart(2, "0")}`;
 };
 
 // PDF styles

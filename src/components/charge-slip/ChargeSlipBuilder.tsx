@@ -1,10 +1,12 @@
 "use client";
+
 import { Label } from "@/components/ui/label";
 import { ChargeSlipHistoryPanel } from "./ChargeSlipHistoryPanel";
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { pdf, PDFViewer } from "@react-pdf/renderer";
+import { Timestamp } from "firebase/firestore";
 
 import { getServiceCatalog } from "@/services/serviceCatalogService";
 import {
@@ -13,7 +15,7 @@ import {
 } from "@/services/clientProjectService";
 import {
   generateNextChargeSlipNumber,
-  saveChargeSlipToFirestore,
+  saveChargeSlip,
 } from "@/services/chargeSlipService";
 
 import { SelectedService as StrictSelectedService } from "@/types/SelectedService";
@@ -229,14 +231,15 @@ export default function ChargeSlipBuilder({
       },
       referenceNumber: chargeSlipNumber,
       clientInfo,
-      dateIssued: new Date().toISOString(),
+      dateIssued: Timestamp.fromDate(new Date()),
       subtotal,
       discount,
       total,
+      categories: Array.from(new Set(cleanedServices.map((s) => s.category))),
     };
 
     console.log("Saving charge slip...");
-    await saveChargeSlipToFirestore(record);
+    await saveChargeSlip(record);
     console.log("Saved!");
 
     const blob = await pdf(
@@ -251,7 +254,7 @@ export default function ChargeSlipBuilder({
         approvedBy={record.approvedBy}
         referenceNumber={chargeSlipNumber}
         clientInfo={clientInfo}
-        dateIssued={record.dateIssued}
+        dateIssued={new Date().toISOString()}
         subtotal={subtotal}
         discount={discount}
         total={total}

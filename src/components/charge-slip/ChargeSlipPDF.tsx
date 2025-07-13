@@ -32,6 +32,7 @@ type Props = {
     name: string;
     position: string;
   };
+  
   dateIssued: string;
   subtotal: number;
   discount: number;

@@ -1,7 +1,7 @@
 "use client";
 
 import { pdf } from "@react-pdf/renderer";
-import { saveChargeSlipToFirestore } from "@/services/chargeSlipService";
+import { saveChargeSlip } from "@/services/chargeSlipService";
 import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import { SelectedService } from "@/types/SelectedService";
 import { Client } from "@/types/Client";
@@ -75,7 +75,7 @@ export default function ChargeSlipPDFActions({
       };
 
       console.log("Saving charge slip to Firestore...");
-      await saveChargeSlipToFirestore(record);
+      await saveChargeSlip(record);
       console.log("Saved to Firestore ✅");
 
       const blob = await pdf(

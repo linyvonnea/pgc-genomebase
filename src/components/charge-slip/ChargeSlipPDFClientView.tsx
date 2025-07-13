@@ -1,6 +1,9 @@
 // components/charge-slip/ChargeSlipPDFClientView.tsx
 "use client";
 
+
+import { normalizeDate } from "@/lib/formatters";
+
 import { PDFViewer } from "@react-pdf/renderer";
 import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
@@ -17,13 +20,13 @@ export function ChargeSlipPDFClientView({ record }: Props) {
         client={record.client}
         project={record.project}
         chargeSlipNumber={record.chargeSlipNumber}
-        orNumber={record.orNumber}
+        orNumber={record.orNumber ?? ""}
         useInternalPrice={record.useInternalPrice}
         preparedBy={record.preparedBy}
         referenceNumber={record.referenceNumber}
         clientInfo={record.clientInfo}
         approvedBy={record.approvedBy}
-        dateIssued={record.dateIssued}
+        dateIssued={normalizeDate(record.dateIssued ?? "")}
         subtotal={record.subtotal}
         discount={record.discount}
         total={record.total}

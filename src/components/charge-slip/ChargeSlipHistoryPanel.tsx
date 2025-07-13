@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { FileTextIcon } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { normalizeDate } from "@/lib/formatters";
 
 import {
   Dialog,
@@ -62,7 +63,7 @@ export function ChargeSlipHistoryPanel({ projectId }: ChargeSlipHistoryPanelProp
               <div>
                 <div className="font-medium text-sm">{record.chargeSlipNumber}</div>
                 <div className="text-xs text-muted-foreground">
-                  Issued: {record.dateIssued ? new Date(record.dateIssued).toLocaleString() : "Unknown"}
+                  Issued: {record.dateIssued ? new Date(normalizeDate(record.dateIssued ?? "")).toLocaleString() : "Unknown"}
                 </div>
               </div>
 

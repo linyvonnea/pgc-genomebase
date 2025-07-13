@@ -1,173 +1,106 @@
-// src/app/admin/charge-slips/data-table.tsx
 "use client";
 
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  SortingState,
-  useReactTable,
-} from "@tanstack/react-table";
-import { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
+import { ColumnDef } from "@tanstack/react-table";
+import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
 
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
-  onRowClick?: (rowData: TData) => void;
-}
-
-export function DataTable<TData, TValue>({
-  columns,
-  data,
-  onRowClick,
-}: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("__all");
-
-  const table = useReactTable({
-    data,
-    columns,
-    state: {
-      sorting,
+export const columns: ColumnDef<ChargeSlipRecord>[] = [
+  {
+    accessorKey: "dateIssued",
+    header: "Date",
+    cell: ({ row }) => {
+      const raw = row.getValue("dateIssued");
+      const date = raw ? new Date(raw as string) : null;
+      return date && !isNaN(date.getTime())
+        ? date.toLocaleDateString("en-CA")
+        : "—";
     },
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-  });
+  },
+  {
+    accessorKey: "chargeSlipNumber",
+    header: "Charge Slip No.",
+  },
+  {
+    accessorKey: "clientInfo.name",
+    header: "Client Name",
+    cell: ({ row }) => row.original.clientInfo?.name || "—",
+  },
+  {
+    accessorKey: "total",
+    header: "Amount",
+    cell: ({ row }) =>
+      `₱${(row.getValue("total") as number)?.toLocaleString()}`,
+  },
+  {
+    accessorKey: "orNumber",
+    header: "OR No.",
+    cell: ({ row }) => (
+      <Input
+        defaultValue={row.getValue("orNumber") as string}
+        onBlur={(e) => {
+          // TODO: update OR No. in Firestore
+        }}
+        className="w-32 text-xs"
+      />
+    ),
+  },
+  {
+    accessorKey: "dateOfOR",
+    header: "Date of OR",
+    cell: ({ row }) => {
+      const raw = row.getValue("dateOfOR");
+      let iso = "";
 
-  const allCategories = [
-    "Laboratory",
-    "Equipment",
-    "Bioinformatics",
-    "Retail Sales",
-  ];
+      try {
+        const date = new Date(raw as string);
+        if (!isNaN(date.getTime())) {
+          iso = date.toISOString().split("T")[0];
+        }
+      } catch {
+        iso = "";
+      }
 
-  const filteredRows = table.getRowModel().rows.filter((row) => {
-    const matchesSearch = row
-      .getAllCells()
-      .some((cell) =>
-        String(cell.getValue())
-          .toLowerCase()
-          .includes(globalFilter.toLowerCase())
-      );
-
-    const matchesCategory =
-      categoryFilter === "__all" ||
-      (row.original as any).categories?.some(
-        (cat: string) => cat.toLowerCase() === categoryFilter.toLowerCase()
-      );
-
-    return matchesSearch && matchesCategory;
-  });
-
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      return (
         <Input
-          placeholder="Search client, institution, charge slip no..."
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          className="w-72"
+          type="date"
+          defaultValue={iso}
+          onBlur={(e) => {
+            // TODO: update dateOfOR in Firestore
+          }}
+          className="w-40 text-xs"
         />
-
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-56">
-            <SelectValue placeholder="Filter by Category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__all">All Categories</SelectItem>
-            {allCategories.map((cat) => (
-              <SelectItem key={cat} value={cat}>
-                {cat}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {filteredRows.length ? (
-              filteredRows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  onClick={() => onRowClick?.(row.original)}
-                  className="cursor-pointer hover:bg-muted transition"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="text-center">
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <div className="flex items-center justify-end space-x-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Previous
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next
-        </Button>
-      </div>
-    </div>
-  );
-}
+      );
+    },
+  },
+  {
+    accessorKey: "dvNumber",
+    header: "DV No.",
+    cell: ({ row }) => (
+      <Input
+        defaultValue={row.getValue("dvNumber") as string}
+        onBlur={(e) => {
+          // TODO: update DV No. in Firestore
+        }}
+        className="w-40 text-xs"
+      />
+    ),
+  },
+  {
+    accessorKey: "notes",
+    header: "Notes",
+    cell: ({ row }) => (
+      <Input
+        defaultValue={row.getValue("notes") as string}
+        onBlur={(e) => {
+          // TODO: update Notes in Firestore
+        }}
+        className="w-64 text-xs"
+      />
+    ),
+  },
+  {
+    accessorKey: "preparedBy.name",
+    header: "Prepared By",
+    cell: ({ row }) => row.original.preparedBy?.name || "—",
+  },
+];

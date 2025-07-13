@@ -5,10 +5,11 @@ import { PDFViewer, pdf } from "@react-pdf/renderer";
 import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { getClientById, getProjectById } from "@/services/clientProjectService";
-import { saveChargeSlipToFirestore } from "@/services/chargeSlipService";
+import { saveChargeSlip } from "@/services/chargeSlipService";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { normalizeDate } from "@/lib/formatters";
 
 interface Props {
   chargeSlip: ChargeSlipRecord;
@@ -44,11 +45,10 @@ export function ChargeSlipPDFViewer({ chargeSlip }: Props) {
     fetchDetails();
   }, [chargeSlip.client?.cid, chargeSlip.project?.pid]);
 
-  const formattedDate = format(new Date(chargeSlip.dateIssued), "MMMM dd, yyyy");
 
   const handleGenerateFinalChargeSlip = async () => {
     try {
-      await saveChargeSlipToFirestore(chargeSlip);
+      await saveChargeSlip(chargeSlip);
 
       const blob = await pdf(
         <ChargeSlipPDF
@@ -56,13 +56,13 @@ export function ChargeSlipPDFViewer({ chargeSlip }: Props) {
           client={chargeSlip.client}
           project={chargeSlip.project}
           chargeSlipNumber={chargeSlip.chargeSlipNumber}
-          orNumber={chargeSlip.orNumber}
+          orNumber={chargeSlip.orNumber ?? ""}
           useInternalPrice={chargeSlip.useInternalPrice}
           preparedBy={chargeSlip.preparedBy}
           referenceNumber={chargeSlip.referenceNumber}
           clientInfo={chargeSlip.clientInfo}
           approvedBy={chargeSlip.approvedBy}
-          dateIssued={chargeSlip.dateIssued}
+          dateIssued={normalizeDate(chargeSlip.dateIssued)}
           subtotal={chargeSlip.subtotal}
           discount={chargeSlip.discount}
           total={chargeSlip.total}
@@ -95,13 +95,13 @@ export function ChargeSlipPDFViewer({ chargeSlip }: Props) {
           client={chargeSlip.client}
           project={chargeSlip.project}
           chargeSlipNumber={chargeSlip.chargeSlipNumber}
-          orNumber={chargeSlip.orNumber}
+          orNumber={chargeSlip.orNumber ?? ""}
           useInternalPrice={chargeSlip.useInternalPrice}
           preparedBy={chargeSlip.preparedBy}
           referenceNumber={chargeSlip.referenceNumber}
           clientInfo={chargeSlip.clientInfo}
           approvedBy={chargeSlip.approvedBy}
-          dateIssued={chargeSlip.dateIssued}
+          dateIssued={normalizeDate(chargeSlip.dateIssued)}
           subtotal={chargeSlip.subtotal}
           discount={chargeSlip.discount}
           total={chargeSlip.total}
