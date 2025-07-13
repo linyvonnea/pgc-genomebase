@@ -1,5 +1,5 @@
 "use client";
-
+import { Label } from "@/components/ui/label";
 import { ChargeSlipHistoryPanel } from "./ChargeSlipHistoryPanel";
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
@@ -71,6 +71,7 @@ export default function ChargeSlipBuilder({
   const [openPreview, setOpenPreview] = useState(false);
   const [search, setSearch] = useState("");
   const [chargeSlipNumber, setChargeSlipNumber] = useState<string>("");
+  const [orNumber, setOrNumber] = useState<string>("");
 
   const { adminInfo } = useAuth();
   const searchParams = useSearchParams();
@@ -216,7 +217,7 @@ export default function ChargeSlipBuilder({
       client,
       project: sanitizedProject,
       services: cleanedServices,
-      orNumber: "",
+      orNumber,
       useInternalPrice: isInternal,
       preparedBy: {
         name: adminInfo?.name || "—",
@@ -244,7 +245,7 @@ export default function ChargeSlipBuilder({
         client={client}
         project={project}
         chargeSlipNumber={chargeSlipNumber}
-        orNumber={""}
+        orNumber={orNumber}
         useInternalPrice={isInternal}
         preparedBy={record.preparedBy}
         approvedBy={record.approvedBy}
@@ -283,6 +284,16 @@ export default function ChargeSlipBuilder({
             />
             <span>Internal Client (Apply 12% discount)</span>
           </div>
+        </div>
+
+        <div className="mb-4">
+          <Label htmlFor="orNumber">OR Number</Label>
+          <Input
+            id="orNumber"
+            placeholder="Enter OR Number"
+            value={orNumber}
+            onChange={(e) => setOrNumber(e.target.value)}
+          />
         </div>
 
         <Input
@@ -341,7 +352,7 @@ export default function ChargeSlipBuilder({
                   client={client}
                   project={project}
                   chargeSlipNumber={chargeSlipNumber}
-                  orNumber={""}
+                  orNumber={orNumber}
                   useInternalPrice={isInternal}
                   preparedBy={{
                     name: adminInfo?.name || "—",

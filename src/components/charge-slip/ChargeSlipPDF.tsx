@@ -172,7 +172,7 @@ function convertToWords(amount: number): string {
   const integerPart = Math.floor(amount);
   const decimalPart = Math.round((amount - integerPart) * 100);
 
-  return `${numberToWords(integerPart)} pesos and ${decimalPart} centavos`;
+  return `${numberToWords(integerPart)} pesos and ${numberToWords(decimalPart)} centavos`;
 }
 
 export function ChargeSlipPDF({
@@ -215,7 +215,13 @@ export function ChargeSlipPDF({
         {/* Metadata */}
         <View style={styles.section}>
           <Text>No. {chargeSlipNumber}</Text>
-          <Text>Date Issued: {dateIssued}</Text>
+          <Text>
+            Date Issued: {new Date(dateIssued).toLocaleDateString("en-PH", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </Text>
         </View>
 
         {/* Client Info */}
@@ -263,6 +269,7 @@ export function ChargeSlipPDF({
             <Text>Less 12% Discount: PHP {discount.toFixed(2)}</Text>
           )}
           <Text style={styles.totalText}>TOTAL: PHP {total.toFixed(2)}</Text>
+          <Text style={styles.bold}>OR Number: {orNumber || "—"}</Text>
         </View>
 
         {/* Amount in Words */}
