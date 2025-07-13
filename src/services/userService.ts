@@ -1,4 +1,4 @@
-import { db } from "@/lib/firebase"; // or wherever your firebase is initialized
+import { db } from "@/lib/firebase"; 
 import { doc, getDoc } from "firebase/firestore";
 
 // Utility function to get user role from Firestore
