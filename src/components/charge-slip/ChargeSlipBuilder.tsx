@@ -1,5 +1,6 @@
 "use client";
 
+import { ChargeSlipHistoryPanel } from "./ChargeSlipHistoryPanel";
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -203,35 +204,35 @@ export default function ChargeSlipBuilder({
   );
 
   const handleSaveAndDownload = async () => {
-// Remove undefined values from project
-const sanitizedProject = Object.fromEntries(
-  Object.entries(project || {}).filter(([_, v]) => v !== undefined)
-);
+    const sanitizedProject = Object.fromEntries(
+      Object.entries(project || {}).filter(([_, v]) => v !== undefined)
+    );
 
-  const record = {
-    id: chargeSlipNumber,
-    chargeSlipNumber,
-    projectId: project?.pid ?? "",
-    client,
-    project: sanitizedProject,
-    services: cleanedServices,
-    orNumber: "",
-    useInternalPrice: isInternal,
-    preparedBy: {
-      name: adminInfo?.name || "—",
-      position: adminInfo?.position || "—",
-    },
-    approvedBy: {
-      name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
-      position: "AED, PGC Visayas",
-    },
-    referenceNumber: chargeSlipNumber,
-    clientInfo,
-    dateIssued: new Date().toISOString(),
-    subtotal,
-    discount,
-    total,
-  };
+    const record = {
+      id: chargeSlipNumber,
+      chargeSlipNumber,
+      cid: client?.cid || effectiveClientId,
+      projectId: effectiveProjectId,
+      client,
+      project: sanitizedProject,
+      services: cleanedServices,
+      orNumber: "",
+      useInternalPrice: isInternal,
+      preparedBy: {
+        name: adminInfo?.name || "—",
+        position: adminInfo?.position || "—",
+      },
+      approvedBy: {
+        name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
+        position: "AED, PGC Visayas",
+      },
+      referenceNumber: chargeSlipNumber,
+      clientInfo,
+      dateIssued: new Date().toISOString(),
+      subtotal,
+      discount,
+      total,
+    };
 
     console.log("Saving charge slip...");
     await saveChargeSlipToFirestore(record);
@@ -366,6 +367,8 @@ const sanitizedProject = Object.fromEntries(
             </div>
           </DialogContent>
         </Dialog>
+        <Separator className="my-6" />
+        <ChargeSlipHistoryPanel projectId={effectiveProjectId} />
       </div>
     </div>
   );

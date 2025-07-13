@@ -58,6 +58,7 @@ export default function ChargeSlipPDFActions({
         id: chargeSlipNumber,
         chargeSlipNumber,
         projectId: project.pid!,
+        cid: client.cid!,
         client,
         project,
         services,

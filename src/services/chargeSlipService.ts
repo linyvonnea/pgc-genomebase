@@ -1,4 +1,3 @@
-// src/services/chargeSlipService.ts
 import {
   collection,
   query,
@@ -11,20 +10,20 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
-import { getClientById, getProjectById } from "./clientProjectService";
 
 /**
  * Save or overwrite a charge slip using chargeSlipNumber as the document ID.
  */
 export async function saveChargeSlipToFirestore(chargeSlip: ChargeSlipRecord) {
   try {
-    console.log("Saving charge slip to Firestore:", chargeSlip);
+    console.log("💾 Saving charge slip to Firestore:", chargeSlip);
 
     const docRef = doc(db, "chargeSlips", chargeSlip.chargeSlipNumber);
 
     const sanitizedChargeSlip = {
       ...chargeSlip,
-      projectId: chargeSlip.projectId, // ✅ ensure this stays at root level
+      cid: chargeSlip.client?.cid || "", // ✅ flatten cid for easier querying
+      projectId: chargeSlip.projectId,
       project: {
         ...chargeSlip.project,
         status:
@@ -32,14 +31,14 @@ export async function saveChargeSlipToFirestore(chargeSlip: ChargeSlipRecord) {
           ["Ongoing", "Cancelled", "Completed"].includes(chargeSlip.project.status)
             ? chargeSlip.project.status
             : "Ongoing",
+        fundingCategory: chargeSlip.project?.fundingCategory || "General",
       },
     };
 
-    console.log("Sanitized charge slip data:", sanitizedChargeSlip);
     await setDoc(docRef, sanitizedChargeSlip);
-    console.log("Charge slip saved successfully.");
+    console.log("✅ Charge slip saved successfully.");
   } catch (error) {
-    console.error("Error saving charge slip to Firestore:", error);
+    console.error("❌ Error saving charge slip to Firestore:", error);
   }
 }
 
@@ -49,43 +48,53 @@ export async function saveChargeSlipToFirestore(chargeSlip: ChargeSlipRecord) {
 export async function getChargeSlipByNumber(
   chargeSlipNumber: string
 ): Promise<ChargeSlipRecord | null> {
-  const docRef = doc(db, "chargeSlips", chargeSlipNumber);
-  const snapshot = await getDoc(docRef);
+  try {
+    const docRef = doc(db, "chargeSlips", chargeSlipNumber);
+    const snapshot = await getDoc(docRef);
 
-  if (!snapshot.exists()) return null;
+    if (!snapshot.exists()) return null;
 
-  const data = snapshot.data();
-  return {
-    ...data,
-    id: snapshot.id,
-    dateIssued:
-      typeof data.dateIssued === "string"
-        ? data.dateIssued
-        : data.dateIssued.toDate().toISOString(),
-  } as ChargeSlipRecord;
+    const data = snapshot.data();
+    return {
+      ...data,
+      id: snapshot.id,
+      dateIssued:
+        typeof data.dateIssued === "string"
+          ? data.dateIssued
+          : data.dateIssued?.toDate().toISOString(),
+    } as ChargeSlipRecord;
+  } catch (error) {
+    console.error("❌ Error fetching charge slip:", error);
+    return null;
+  }
 }
 
 /**
  * Get all charge slips in the database.
  */
 export async function getAllChargeSlips(): Promise<ChargeSlipRecord[]> {
-  const q = query(collection(db, "chargeSlips"), orderBy("dateIssued", "desc"));
-  const snapshot = await getDocs(q);
+  try {
+    const q = query(collection(db, "chargeSlips"), orderBy("dateIssued", "desc"));
+    const snapshot = await getDocs(q);
 
-  const records: ChargeSlipRecord[] = [];
-  snapshot.forEach((doc) => {
-    const data = doc.data();
-    records.push({
-      ...data,
-      id: doc.id,
-      dateIssued:
-        typeof data.dateIssued === "string"
-          ? data.dateIssued
-          : data.dateIssued.toDate().toISOString(),
-    } as ChargeSlipRecord);
-  });
+    const records: ChargeSlipRecord[] = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      records.push({
+        ...data,
+        id: doc.id,
+        dateIssued:
+          typeof data.dateIssued === "string"
+            ? data.dateIssued
+            : data.dateIssued?.toDate().toISOString(),
+      } as ChargeSlipRecord);
+    });
 
-  return records;
+    return records;
+  } catch (error) {
+    console.error("❌ Error fetching all charge slips:", error);
+    return [];
+  }
 }
 
 /**
@@ -117,33 +126,80 @@ export async function generateNextChargeSlipNumber(currentYear: number): Promise
 }
 
 /**
- * Get charge slips by project ID, ordered by date issued.
+ * Get charge slips by project ID.
  */
 export async function getChargeSlipsByProjectId(projectId: string): Promise<ChargeSlipRecord[]> {
-  const slipsRef = collection(db, "chargeSlips");
-  const q = query(slipsRef, where("projectId", "==", projectId), orderBy("dateIssued", "desc"));
+  try {
+    console.log("📥 Fetching charge slips for projectId:", projectId);
 
-  const snapshot = await getDocs(q);
-  const records: ChargeSlipRecord[] = [];
+    const slipsRef = collection(db, "chargeSlips");
+    const q = query(
+      slipsRef,
+      where("projectId", "==", projectId),
+      orderBy("dateIssued", "desc")
+    );
 
-  for (const doc of snapshot.docs) {
-    const data = doc.data();
+    const snapshot = await getDocs(q);
+    console.log("📸 Snapshot size:", snapshot.size);
 
-    // Fetch client and project details
-    const client = data.client?.cid ? await getClientById(data.client.cid) : null;
-    const project = data.project?.pid ? await getProjectById(data.project.pid) : null;
+    const records: ChargeSlipRecord[] = [];
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      records.push({
+        ...data,
+        id: docSnap.id,
+        dateIssued:
+          typeof data.dateIssued === "string"
+            ? data.dateIssued
+            : data.dateIssued?.toDate().toISOString(),
+      } as ChargeSlipRecord);
+    });
 
-    records.push({
-      ...data,
-      id: doc.id,
-      client: client || data.client, // Fallback to existing client data if fetch fails
-      project: project || data.project, // Fallback to existing project data if fetch fails
-      dateIssued:
-        typeof data.dateIssued === "string"
-          ? data.dateIssued
-          : data.dateIssued.toDate().toISOString(),
-    } as ChargeSlipRecord);
+    console.log("📦 Fetched charge slips:", records);
+    return records;
+  } catch (error) {
+    console.error("❌ Error fetching charge slips by projectId:", error);
+    return [];
   }
+}
 
-  return records;
+/**
+ * (OPTIONAL) Get charge slips by both project ID and client ID.
+ */
+export async function getChargeSlipsByProjectAndClient(
+  projectId: string,
+  cid: string
+): Promise<ChargeSlipRecord[]> {
+  try {
+    console.log(`📥 Fetching charge slips for projectId: ${projectId} and cid: ${cid}`);
+
+    const slipsRef = collection(db, "chargeSlips");
+    const q = query(
+      slipsRef,
+      where("projectId", "==", projectId),
+      where("cid", "==", cid),
+      orderBy("dateIssued", "desc")
+    );
+
+    const snapshot = await getDocs(q);
+    console.log("📸 Snapshot size (project+client):", snapshot.size);
+
+    const records: ChargeSlipRecord[] = [];
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      records.push({
+        ...data,
+        id: docSnap.id,
+        dateIssued:
+          typeof data.dateIssued === "string"
+            ? data.dateIssued
+            : data.dateIssued?.toDate().toISOString(),
+      } as ChargeSlipRecord);
+    });
+
+    return records;
+  } catch (error) {
+    console.error("❌ Error fetching charge slips by project + client:", error);
+    return [];
+  }
 }

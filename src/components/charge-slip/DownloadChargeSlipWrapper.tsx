@@ -1,3 +1,4 @@
+// src/components/charge-slip/DownloadChargeSlipWrapper.tsx
 "use client";
 
 import { pdf } from "@react-pdf/renderer";
@@ -12,10 +13,10 @@ interface Props {
 export default function DownloadChargeSlipWrapper({ record }: Props) {
   const handleDownload = async () => {
     try {
-      // Save to Firestore
+      // Optional: Save to Firestore before downloading
       await saveChargeSlipToFirestore(record);
 
-      // Generate PDF blob
+      // Generate PDF as blob using @react-pdf/renderer
       const blob = await pdf(
         <ChargeSlipPDF
           services={record.services}
@@ -25,7 +26,7 @@ export default function DownloadChargeSlipWrapper({ record }: Props) {
           orNumber={record.orNumber}
           useInternalPrice={record.useInternalPrice}
           preparedBy={record.preparedBy}
-          approvedBy={record.approvedBy} // ✅ now passed as object, not string
+          approvedBy={record.approvedBy}
           referenceNumber={record.referenceNumber}
           clientInfo={record.clientInfo}
           dateIssued={record.dateIssued}
@@ -35,15 +36,15 @@ export default function DownloadChargeSlipWrapper({ record }: Props) {
         />
       ).toBlob();
 
-      // Trigger download
+      // Create a temporary download link
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = `${record.chargeSlipNumber}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("Failed to download charge slip", err);
+    } catch (error) {
+      console.error("❌ Failed to generate or download charge slip:", error);
     }
   };
 

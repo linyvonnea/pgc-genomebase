@@ -135,6 +135,16 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     marginTop: 4,
   },
+  bold: {
+    fontWeight: "bold",
+  },
+  totalText: {
+    fontWeight: "bold",
+    fontSize: 12,
+  },
+  marginTop16: {
+    marginTop: 16,
+  },
 });
 
 function convertToWords(amount: number): string {
@@ -210,10 +220,10 @@ export function ChargeSlipPDF({
 
         {/* Client Info */}
         <View style={styles.section}>
-          <Text style={{ fontWeight: "bold" }}>CLIENT NAME: {clientInfo.name}</Text>
+          <Text style={styles.bold}>CLIENT NAME: {clientInfo.name}</Text>
           <Text>INCLUSIVE BILLING DATES: N/A</Text>
-          <Text style={{ fontWeight: "bold" }}>ADDRESS: {client?.affiliationAddress || "—"}</Text>
-          <Text style={{ fontWeight: "bold" }}>PAYMENT FOR: {project?.title || "—"}</Text>
+          <Text style={styles.bold}>ADDRESS: {client?.affiliationAddress || "—"}</Text>
+          <Text style={styles.bold}>PAYMENT FOR: {project?.title || "—"}</Text>
         </View>
 
         {/* Table */}
@@ -248,16 +258,16 @@ export function ChargeSlipPDF({
 
         {/* Summary */}
         <View style={styles.section}>
-          <Text style={{ fontWeight: "bold" }}>Subtotal: PHP {subtotal.toFixed(2)}</Text>
+          <Text style={styles.bold}>Subtotal: PHP {subtotal.toFixed(2)}</Text>
           {useInternalPrice && (
             <Text>Less 12% Discount: PHP {discount.toFixed(2)}</Text>
           )}
-          <Text style={{ fontWeight: "bold", fontSize: 12 }}>TOTAL: PHP {total.toFixed(2)}</Text>
+          <Text style={styles.totalText}>TOTAL: PHP {total.toFixed(2)}</Text>
         </View>
 
         {/* Amount in Words */}
         <View style={styles.section}>
-          <Text style={{ fontWeight: "bold" }}>AMOUNT IN WORDS</Text>
+          <Text style={styles.bold}>AMOUNT IN WORDS</Text>
           <Text>{convertToWords(total)}</Text>
         </View>
 
@@ -273,7 +283,7 @@ export function ChargeSlipPDF({
           <Text style={styles.signatureName}>{preparedBy.name}</Text>
           <Text style={styles.signaturePosition}>{preparedBy.position}</Text>
 
-          <Text style={[styles.signatureLabel, { marginTop: 16 }]}>Approved:</Text>
+          <Text style={[styles.signatureLabel, styles.marginTop16]}>Approved:</Text>
           <Text style={styles.signatureName}>{approvedBy.name}</Text>
           <Text style={styles.signaturePosition}>{approvedBy.position}</Text>
         </View>
