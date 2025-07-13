@@ -94,9 +94,13 @@ export async function saveChargeSlip(slip: ChargeSlipRecord): Promise<string> {
 export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRecord>) {
   const docRef = doc(db, CHARGE_SLIPS_COLLECTION, id);
 
-  const updatedData: any = { ...updates };
+  const updatedData: any = {};
 
-  // Safely convert timestamp fields if provided
+  if ("dvNumber" in updates) updatedData.dvNumber = updates.dvNumber;
+  if ("orNumber" in updates) updatedData.orNumber = updates.orNumber;
+  if ("status" in updates) updatedData.status = updates.status;
+  if ("notes" in updates) updatedData.notes = updates.notes;
+
   if (updates.dateIssued) {
     updatedData.dateIssued = convertToTimestamp(updates.dateIssued);
   }
@@ -107,18 +111,21 @@ export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRe
     updatedData.createdAt = convertToTimestamp(updates.createdAt);
   }
 
-  // Safely convert nested client/project timestamps if provided
-  if (updates.client?.createdAt) {
+  if (updates.client) {
     updatedData.client = {
       ...updates.client,
-      createdAt: convertToTimestamp(updates.client.createdAt),
+      ...(updates.client.createdAt && {
+        createdAt: convertToTimestamp(updates.client.createdAt),
+      }),
     };
   }
 
-  if (updates.project?.createdAt) {
+  if (updates.project) {
     updatedData.project = {
       ...updates.project,
-      createdAt: convertToTimestamp(updates.project.createdAt),
+      ...(updates.project.createdAt && {
+        createdAt: convertToTimestamp(updates.project.createdAt),
+      }),
     };
   }
 
