@@ -113,7 +113,10 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       await editProject(updatedData);
       toast.success("Project updated successfully!");
       setIsOpen(false);
-      onSuccess?.();
+      // Call onSuccess after modal is closed
+      setTimeout(() => {
+        onSuccess?.();
+      }, 200);
     } catch (error) {
       console.error("Error updating project:", error);
       toast.error("Failed to update project. Please try again.");
@@ -129,7 +132,10 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       toast.success("Project deleted successfully!");
       setShowDeleteConfirm(false);
       setIsOpen(false);
-      onSuccess?.();
+      // Call onSuccess after modal is closed
+      setTimeout(() => {
+        onSuccess?.();
+      }, 200);
     } catch (error) {
       console.error("Error deleting project:", error);
       toast.error("Failed to delete project. Please try again.");

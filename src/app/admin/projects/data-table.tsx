@@ -29,6 +29,7 @@ import {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  meta?: { onSuccess?: () => void }
 }
 
 function customGlobalFilterFn<TData extends object>(
@@ -47,6 +48,7 @@ function customGlobalFilterFn<TData extends object>(
 export function DataTable<TData, TValue>({
   columns,
   data,
+  meta,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -139,7 +141,7 @@ export function DataTable<TData, TValue>({
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            { ...header.getContext(), meta }
                           )}
                     </TableHead>
                   )
@@ -156,7 +158,7 @@ export function DataTable<TData, TValue>({
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(cell.column.columnDef.cell, { ...cell.getContext(), meta })}
                     </TableCell>
                   ))}
                 </TableRow>

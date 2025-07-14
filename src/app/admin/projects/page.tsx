@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { columns } from "./columns"
 import { DataTable } from "./data-table"
 import { Project } from "@/types/Project"
@@ -19,12 +22,19 @@ async function getData(): Promise<Project[]> {
   }
 }
 
-export default async function ProjectPage() {
-  const data = await getData()
+export default function ProjectPage() {
+  const [data, setData] = useState<Project[]>([]);
+  const fetchData = async () => {
+    const projects = await getData();
+    setData(projects);
+  };
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const completedCount = data.filter(project => project.status === "Completed").length;
   const ongoingCount = data.filter(project => project.status === "Ongoing").length;
-  const totalCount = data.length
+  const totalCount = data.length;
 
   return (
     <div className="container mx-auto py-10">
@@ -66,10 +76,9 @@ export default async function ProjectPage() {
             <div className="text-sm text-muted-foreground">Total Projects</div>
           </div>
         </div>
-        
         {/* Data Table */}
-        <DataTable columns={columns} data={data} />
+        <DataTable columns={columns} data={data} meta={{ onSuccess: fetchData }} />
       </div>
     </div>
-  )
+  );
 }

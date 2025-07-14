@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { columns } from "./columns";
 import { DataTable } from "./data-table";
 import { Client } from "@/types/Client";
@@ -30,8 +33,15 @@ async function getData(): Promise<Client[]> {
   }
 }
 
-export default async function ClientPage() {
-  const data = await getData();
+export default function ClientPage() {
+  const [data, setData] = useState<Client[]>([]);
+  const fetchData = async () => {
+    const clients = await getData();
+    setData(clients);
+  };
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   return (
     <div className="container mx-auto py-10">
@@ -58,7 +68,7 @@ export default async function ClientPage() {
         </div>
 
         {/* Data Table */}
-        <DataTable columns={columns} data={data} />
+        <DataTable columns={columns} data={data} meta={{ onSuccess: fetchData }} />
       </div>
       </div>
   

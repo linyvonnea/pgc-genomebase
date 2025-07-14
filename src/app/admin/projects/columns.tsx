@@ -143,14 +143,14 @@ export const columns: ColumnDef<Project>[] = [
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => {
+    cell: (ctx: any) => {
+      const { row, meta } = ctx;
       const project = row.original;
       const EditProjectModal = require("@/components/forms/EditProjectModal").EditProjectModal;
       const router = useRouter();
       return (
         <div className="flex items-center gap-2">
-          <EditProjectModal project={project} onSuccess={() => {}} />
-         
+          <EditProjectModal project={project} onSuccess={meta?.onSuccess} />
         </div>
       );
     },
