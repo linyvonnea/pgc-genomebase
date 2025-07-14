@@ -208,6 +208,14 @@ export default function ChargeSlipBuilder({
     </Table>
   );
 
+  const normalizeCategory = (raw: string): string => {
+    const lower = raw.toLowerCase();
+    if (lower.includes("equipment")) return "equipment";
+    if (lower.includes("lab")) return "laboratory";
+    if (lower.includes("bioinfo")) return "bioinformatics";
+    if (lower.includes("retail")) return "retail";
+    return lower; // fallback
+  };
   const handleSaveAndDownload = async () => {
     const rawRecord = {
       id: chargeSlipNumber,
@@ -233,7 +241,8 @@ export default function ChargeSlipBuilder({
       subtotal,
       discount,
       total,
-      categories: Array.from(new Set(cleanedServices.map((s) => s.category))),
+      
+      categories: Array.from(new Set(cleanedServices.map((s) => normalizeCategory(s.category)))),
     };
 
     const record = sanitizeObject(rawRecord) as ChargeSlipRecord;
