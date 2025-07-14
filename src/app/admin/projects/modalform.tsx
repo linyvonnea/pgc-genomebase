@@ -27,7 +27,7 @@ const projectSchema = baseProjectSchema.extend({
   projectTag: z.string().min(1, "Project Tag is required"),
   status: z.enum(["Ongoing", "Completed", "Cancelled"]),
   fundingCategory: z.enum(["External", "In-House"]),
-  serviceRequested: z.string().min(1).transform((val) => val.split(",").map((v) => v.trim())),
+  serviceRequested: z.array(z.string()).min(1, "Select at least one service").optional(),
   personnelAssigned: z.string().min(1, "Personnel Assigned is required"),
   notes: z.string().optional(),
   startDate: z.string(),
@@ -129,6 +129,24 @@ const handleSubmit = async (e: React.FormEvent) => {
       }));
     };
 
+  // Checkbox options for serviceRequested
+  const serviceOptions = [
+    "Laboratory Services",
+    "Retail Services",
+    "Equipment Use",
+    "Bioinformatics Analysis"
+  ];
+
+  const handleServiceCheckbox = (service: string) => {
+    setFormData((prev) => {
+      const selected = prev.serviceRequested || [];
+      if (selected.includes(service)) {
+        return { ...prev, serviceRequested: selected.filter((s) => s !== service) };
+      } else {
+        return { ...prev, serviceRequested: [...selected, service] };
+      }
+    });
+  };
 
 
   return (
@@ -208,7 +226,18 @@ const handleSubmit = async (e: React.FormEvent) => {
       </div>
       <div>
         <Label>Service Requested</Label>
-        <Input name="serviceRequested" placeholder="Separate with comma" value={formData.serviceRequested} onChange={handleChange} />
+        <div className="flex flex-col gap-2">
+          {serviceOptions.map((option) => (
+            <label key={option} className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={formData.serviceRequested?.includes(option) || false}
+                onChange={() => handleServiceCheckbox(option)}
+              />
+              {option}
+            </label>
+          ))}
+        </div>
         {errors.serviceRequested && <p className="text-red-500 text-xs mt-1">{errors.serviceRequested}</p>}
       </div>
       <div>
