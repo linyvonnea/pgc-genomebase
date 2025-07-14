@@ -7,6 +7,8 @@ import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { pdf, PDFViewer } from "@react-pdf/renderer";
 import { Timestamp } from "firebase/firestore";
+import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
+import { sanitizeObject } from "@/lib/sanitizeObject";
 
 import { getServiceCatalog } from "@/services/serviceCatalogService";
 import {
@@ -97,8 +99,8 @@ export default function ChargeSlipBuilder({
     enabled: !!effectiveProjectId,
   });
 
-  const client = clientData || fetchedClient || {};
-  const project = projectData || fetchedProject || {};
+  const client = sanitizeObject(clientData || fetchedClient || {});
+  const project = sanitizeObject(projectData || fetchedProject || {});
 
   useEffect(() => {
     const fetchRef = async () => {
@@ -206,18 +208,22 @@ export default function ChargeSlipBuilder({
     </Table>
   );
 
+  const normalizeCategory = (raw: string): string => {
+    const lower = raw.toLowerCase();
+    if (lower.includes("equipment")) return "equipment";
+    if (lower.includes("lab")) return "laboratory";
+    if (lower.includes("bioinfo")) return "bioinformatics";
+    if (lower.includes("retail")) return "retail";
+    return lower; // fallback
+  };
   const handleSaveAndDownload = async () => {
-    const sanitizedProject = Object.fromEntries(
-      Object.entries(project || {}).filter(([_, v]) => v !== undefined)
-    );
-
-    const record = {
+    const rawRecord = {
       id: chargeSlipNumber,
       chargeSlipNumber,
       cid: client?.cid || effectiveClientId,
       projectId: effectiveProjectId,
       client,
-      project: sanitizedProject,
+      project,
       services: cleanedServices,
       orNumber,
       useInternalPrice: isInternal,
@@ -235,12 +241,13 @@ export default function ChargeSlipBuilder({
       subtotal,
       discount,
       total,
-      categories: Array.from(new Set(cleanedServices.map((s) => s.category))),
+      
+      categories: Array.from(new Set(cleanedServices.map((s) => normalizeCategory(s.category)))),
     };
 
-    console.log("Saving charge slip...");
+    const record = sanitizeObject(rawRecord) as ChargeSlipRecord;
+
     await saveChargeSlip(record);
-    console.log("Saved!");
 
     const blob = await pdf(
       <ChargeSlipPDF
@@ -271,6 +278,7 @@ export default function ChargeSlipBuilder({
 
   return (
     <div className="p-6 flex gap-6">
+      {/* Left Column */}
       <div className="flex-1">
         <div className="mb-6">
           <h1 className="text-xl font-semibold mb-1">Build Charge Slip for:</h1>
@@ -320,6 +328,7 @@ export default function ChargeSlipBuilder({
         </ScrollArea>
       </div>
 
+      {/* Right Summary Column */}
       <div className="w-96 shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
         <h3 className="text-lg font-bold mb-2">Summary</h3>
         <Separator className="mb-2" />
@@ -361,12 +370,12 @@ export default function ChargeSlipBuilder({
                     name: adminInfo?.name || "—",
                     position: adminInfo?.position || "—",
                   }}
-                  referenceNumber={chargeSlipNumber}
-                  clientInfo={clientInfo}
                   approvedBy={{
                     name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
                     position: "AED, PGC Visayas",
                   }}
+                  referenceNumber={chargeSlipNumber}
+                  clientInfo={clientInfo}
                   dateIssued={new Date().toISOString()}
                   subtotal={subtotal}
                   discount={discount}

@@ -1,4 +1,3 @@
-// src/components/charge-slip/ChargeSlipClientTable.tsx
 "use client";
 
 import {
@@ -9,7 +8,6 @@ import {
   getSortedRowModel,
   SortingState,
   useReactTable,
-  Row,
 } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -31,6 +29,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { columns as defaultColumns } from "./columns";
+
+import type { ValidCategory } from "@/types/ChargeSlipRecord";
 
 type UIChargeSlipRecord = {
   chargeSlipNumber: string;
@@ -54,7 +54,7 @@ type UIChargeSlipRecord = {
     title?: string;
     [key: string]: any;
   };
-  categories: string[];
+  categories: ValidCategory[];
   services: { name: string; type: string }[];
   dvNumber?: string;
   orNumber?: string;
