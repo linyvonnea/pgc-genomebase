@@ -178,6 +178,7 @@ export default function ClientFormEntry() {
         } else {
           setSubmitting(false);
           toast.success("Client information submitted successfully! Only the contact person can fill out the project information form.");
+          router.push("/client/confirmed");
         }
       } catch (err) {
         setErrors({ name: "Failed to save client/project. Please try again." });
@@ -336,7 +337,7 @@ export default function ClientFormEntry() {
                 className="h-12 px-8 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                 disabled={submitting}
               >
-                {submitting ? "Submitting..." : "Continue to Project Information"}
+                {submitting ? "Submitting..." : "Submit"}
               </Button>
             </div>
           </form>
