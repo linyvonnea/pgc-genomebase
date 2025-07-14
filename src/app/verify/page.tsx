@@ -2,15 +2,25 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { signInWithPopup, GoogleAuthProvider, getAuth } from "firebase/auth";
 import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
+import { 
+  UserCheck, 
+  Shield,
+  ArrowLeft,
+  CheckCircle,
+  Mail
+} from "lucide-react";
 
 export default function ClientVerifyPage() {
   const [agreed, setAgreed] = useState(false);
@@ -96,78 +106,114 @@ export default function ClientVerifyPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-background px-6">
-      <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-        {/* Left Section */}
-        <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold tracking-tight">WELCOME TO PGC GENOMEBASE!</h1>
-          <div className="flex justify-center">
-            <Image
-              src="/assets/pgc-logo.png"
-              alt="PGC Logo"
-              width={280}
-              height={140}
-              className="mb-2"
-            />
-          </div>
-          <h2 className="text-lg font-semibold">Client Verification</h2>
-          <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Please sign in with Google and enter your Inquiry ID to proceed to the client information form.
-          </p>
-        </div>
-
-        {/* Right Section */}
-        <div
-          className="rounded-3xl p-6 md:p-8 shadow-lg backdrop-blur-lg"
-          style={{
-            background:
-              "linear-gradient(135deg, #F69122 0%, #B9273A 15%, #912ABD 33%, #6E30BE 46%, #633190 58%, #40388F 88%, #166FB5 100%)",
-          }}
-        >
-          <div className="space-y-4 text-white">
-            <h2 className="text-lg font-bold">Privacy Notice</h2>
-            <div className="border border-white/50 rounded-md p-4 text-sm bg-white/10">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt
-              ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
-              laboris nisi ut aliquip ex ea commodo consequat.
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="agree"
-                checked={agreed}
-                onCheckedChange={(checked) => setAgreed(checked === true)}
-                className="border-white data-[state=checked]:bg-white"
+    <main 
+      className="min-h-screen flex items-center justify-center px-4"
+      style={{
+        background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"
+      }}
+    >
+      <div className="w-full max-w-md">
+        <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
+          <CardHeader className="text-center pb-6">
+            <div className="flex justify-center mb-6">
+              <Image
+                src="/assets/pgc-logo.png"
+                alt="PGC Logo"
+                width={150}
+                height={75}
+                className="h-auto"
               />
-              <label htmlFor="agree" className="text-sm">
-                I Agree
-              </label>
             </div>
-            <Button
-              onClick={handleGoogleSignIn}
-              className="w-full bg-white text-black hover:bg-gray-100 transition"
-              disabled={verifying || !!googleUser}
-            >
-              {googleUser ? `Signed in as ${googleUser.email}` : "Sign in with Google"}
-            </Button>
-            {googleUser && (
-              <form onSubmit={handleVerify} className="space-y-4 pt-2">
-                <div>
-                  <Label>Inquiry ID <span className="text-red-500">*</span></Label>
-                  <Input
-                    value={inquiryId}
-                    onChange={e => setInquiryId(e.target.value)}
-                    placeholder=""
-                    required
-                    className="bg-white/10"
-                  />
+            <CardTitle className="text-xl lg:text-2xl font-bold text-gray-800">Client Verification</CardTitle>
+            <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+              Sign in with <strong>Google</strong> and enter your <strong>Inquiry ID</strong> to access your project information.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Privacy Notice */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                <Shield className="w-4 h-4" />
+                Privacy Notice
+              </div>
+              <div className="text-xs text-gray-600 bg-gray-50 p-4 rounded-lg border leading-relaxed">
+                Your personal information will be processed in accordance with our privacy policy. 
+                We collect and use your data solely for project management and communication purposes.
+                Your information is securely stored and will not be shared with third parties without consent.
+              </div>
+              <div className="flex items-start space-x-3">
+                <Checkbox
+                  id="privacy-agreement"
+                  checked={agreed}
+                  onCheckedChange={(checked) => setAgreed(checked === true)}
+                  className="mt-0.5"
+                />
+                <label 
+                  htmlFor="privacy-agreement" 
+                  className="text-xs text-gray-600 leading-relaxed cursor-pointer"
+                >
+                  I agree to the privacy notice and terms of service
+                </label>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Google Sign In */}
+            <div className="space-y-4">
+              <Button
+                onClick={handleGoogleSignIn}
+                disabled={verifying || !!googleUser}
+                className="w-full bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 shadow-sm transition-all duration-200 h-11"
+                variant="outline"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                {googleUser ? `Signed in as ${googleUser.email}` : "Sign in with Google"}
+              </Button>
+              
+              {googleUser && (
+                <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-3 rounded-md border border-green-200">
+                  <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>Successfully authenticated</span>
                 </div>
-                <Button type="submit" className="w-full bg-white text-black hover:bg-gray-100 transition" disabled={verifying}>
-                  {verifying ? "Verifying..." : "Verify"}
-                </Button>
-              </form>
+              )}
+            </div>
+
+            {/* Verification Form */}
+            {googleUser && (
+              <>
+                <Separator />
+                <form onSubmit={handleVerify} className="space-y-5">
+                  <div className="space-y-3">
+                    <Label htmlFor="inquiry-id" className="text-sm font-medium text-gray-700">
+                      Inquiry ID <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="inquiry-id"
+                      value={inquiryId}
+                      onChange={(e) => setInquiryId(e.target.value)}
+                      placeholder="Enter your inquiry ID"
+                      required
+                      className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 h-11"
+                    />
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      This ID was provided on the email sent by PGC Visayas.
+                    </p>
+                  </div>
+                  
+                  <Button 
+                    type="submit" 
+                    disabled={verifying || !inquiryId.trim()}
+                    className="w-full h-12 px-8 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    {verifying ? "Verifying..." : "Verify"}
+                  </Button>
+                </form>
+              </>
             )}
-          </div>
-        </div>
+        
+          </CardContent>
+        </Card>
       </div>
     </main>
   );

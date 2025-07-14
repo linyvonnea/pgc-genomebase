@@ -169,6 +169,11 @@ export default function ProjectForm() {
 
       await setDoc(docRef, payload, { merge: true });
       toast.success("Project updated successfully!");
+      
+      // Redirect to thank you page after successful submission
+      setTimeout(() => {
+        router.push("/client/confirmed");
+      }, 1500);
     } catch {
       toast.error("Error updating project. Please try again.");
     }
