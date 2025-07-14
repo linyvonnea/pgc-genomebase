@@ -105,4 +105,25 @@
   * {
     border-color: hsl(var(--border));
   }
+
+  .recharts-wrapper:focus,
+  .recharts-surface:focus,
+  .recharts-layer:focus,
+  .recharts-default-legend:focus,
+  .recharts-sector:focus,
+  .recharts-pie-sector:focus,
+  .recharts-active-shape:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  .recharts-pie .recharts-sector {
+    outline: none !important;
+  }
+
+  .recharts-pie .recharts-sector:active,
+  .recharts-pie .recharts-sector:focus {
+    outline: none !important;
+    stroke: none !important;
+  }
 }

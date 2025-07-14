@@ -3,6 +3,7 @@
 import * as React from "react";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { Button } from "@/components/ui/button";
 import { TimeFilter } from "@/components/dashboard/TimeFilter";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { StatBarChart } from "@/components/dashboard/StatBarChart";
@@ -10,12 +11,17 @@ import { ServiceRequestedChart } from "@/components/dashboard/ServiceRequestedCh
 import { SendingInstitutionChart } from "@/components/dashboard/SendingInstitutionChart";
 import { FundingCategoryChart } from "@/components/dashboard/FundingCategoryChart";
 import { Timestamp } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 export default function Dashboard() {
+  const [userName, setUserName] = React.useState("User");
   const [filteredProjects, setFilteredProjects] = React.useState<any[]>([]);
   const [filteredClients, setFilteredClients] = React.useState<any[]>([]);
   const [filteredQuotations, setFilteredQuotations] = React.useState<any[]>([]);
-  const [totalIncome, setTotalIncome] = React.useState<number>(0)
+  const [filteredTrainings, setFilteredTrainings] = React.useState<any[]>([]);
+  const [totalIncome, setTotalIncome] = React.useState<number>(0);
   const [timeRange, setTimeRange] = React.useState("all");
   const [customRange, setCustomRange] = React.useState<{
     year: number;
@@ -23,6 +29,78 @@ export default function Dashboard() {
     endMonth: number;
   }>();
   const [loading, setLoading] = React.useState(true);
+
+  const exportToPDF = async () => {
+    const dashboardElement = document.getElementById("dashboard-content");
+    if (!dashboardElement) {
+      console.error("Dashboard content element not found");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const exportButton = document.querySelector('[onClick*="exportToPDF"], button[onclick*="exportToPDF"]') as HTMLElement | null;
+      let originalButtonDisplay = "";
+      
+      if (exportButton) {
+        originalButtonDisplay = exportButton.style.display;
+        exportButton.style.display = 'none'; 
+      }
+
+      const canvas = await html2canvas(dashboardElement, {
+        scale: 2,
+        useCORS: true,
+        logging: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
+
+      if (exportButton) {
+        exportButton.style.display = originalButtonDisplay;
+      }
+
+      const pdf = new jsPDF('landscape');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const margins = {
+        left: 10,
+        right: 10,
+        top: 15,
+        bottom: 15
+      };
+
+      // Calculate available space
+      const contentWidth = pageWidth - margins.left - margins.right;
+      const contentHeight = pageHeight - margins.top - margins.bottom;
+
+      // Calculate image dimensions to fit while maintaining aspect ratio
+      const imgRatio = canvas.width / canvas.height;
+      let imgWidth = contentWidth;
+      let imgHeight = imgWidth / imgRatio;
+
+      // Adjust if too tall
+      if (imgHeight > contentHeight) {
+        imgHeight = contentHeight;
+        imgWidth = imgHeight * imgRatio;
+      }
+
+      // Center the content
+      const x = margins.left + (contentWidth - imgWidth) / 2;
+      const y = margins.top + (contentHeight - imgHeight) / 2;
+
+      // Add to PDF
+      pdf.addImage(canvas, 'PNG', x, y, imgWidth, imgHeight);
+      pdf.save('dashboard-report.pdf');
+
+    } catch (error) {
+      console.error('Error during PDF export:', error);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const calculateTotalIncome = (quotations: any[]) => {
     return quotations.reduce((sum, quotation) => {
@@ -42,13 +120,26 @@ export default function Dashboard() {
   };
 
   React.useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user && user.displayName) {
+        setUserName(user.displayName);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  React.useEffect(() => {
     const fetchInitialData = async () => {
       try {
         setLoading(true);
-        const [projectsSnapshot, clientsSnapshot, quotationsSnapshot] = await Promise.all([
+        const [projectsSnapshot, clientsSnapshot, quotationsSnapshot, trainingsSnapshot] = await Promise.all([
           getDocs(collection(db, "projects")),
           getDocs(collection(db, "clients")),
-          getDocs(collection(db, "quotations")) 
+          getDocs(collection(db, "quotations")), 
+          getDocs(collection(db, "trainings")), 
+          getDocs(collection(db, "users"))
         ]);
 
         const projectsData = projectsSnapshot.docs.map(doc => ({
@@ -63,10 +154,15 @@ export default function Dashboard() {
           id: doc.id,
           ...doc.data()
         }));
+        const trainingsData = trainingsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
 
         setFilteredProjects(projectsData);
         setFilteredClients(clientsData);
         setFilteredQuotations(quotationsData);
+        setFilteredTrainings(trainingsData);
         setTotalIncome(calculateTotalIncome(quotationsData));
       } catch (error) {
         console.error("Error fetching initial data:", error);
@@ -86,7 +182,7 @@ export default function Dashboard() {
       let projectsQuery = query(collection(db, "projects"));
       let clientsQuery = query(collection(db, "clients"));
       let quotationsQuery = query(collection(db, "quotations"));
-
+      let trainingsQuery = query(collection(db, "trainings")); 
       if (typeof range === "string") {
         setTimeRange(range);
         setCustomRange(undefined);
@@ -108,6 +204,10 @@ export default function Dashboard() {
               collection(db, "quotations"),
               where("dateIssued", ">=", today.toISOString())
             );
+            trainingsQuery = query(
+              collection(db, "trainings"),
+              where("dateConducted", ">=", todayTimestamp)
+            );
             break;
           case "weekly":
             const weekAgo = new Date(today);
@@ -123,6 +223,10 @@ export default function Dashboard() {
             quotationsQuery = query(
               collection(db, "quotations"),
               where("dateIssued", ">=", weekAgo.toISOString())
+            );
+            trainingsQuery = query(
+              collection(db, "trainings"),
+              where("dateConducted", ">=", Timestamp.fromDate(weekAgo))
             );
             break;
           case "monthly":
@@ -140,6 +244,10 @@ export default function Dashboard() {
               collection(db, "quotations"),
               where("dateIssued", ">=", monthAgo.toISOString())
             );
+            trainingsQuery = query(
+              collection(db, "trainings"),
+              where("dateConducted", ">=", Timestamp.fromDate(monthAgo))
+            );
             break;
           case "yearly":
             const yearAgo = new Date(today);
@@ -155,6 +263,10 @@ export default function Dashboard() {
             quotationsQuery = query(
               collection(db, "quotations"),
               where("dateIssued", ">=", yearAgo.toISOString())
+            );
+            trainingsQuery = query(
+              collection(db, "trainings"),
+              where("dateConducted", ">=", Timestamp.fromDate(yearAgo))
             );
             break;
           default: 
@@ -185,12 +297,18 @@ export default function Dashboard() {
           where("dateIssued", ">=", startDate.toISOString()),
           where("dateIssued", "<=", endDate.toISOString())
         );
+        trainingsQuery = query(
+          collection(db, "trainings"),
+          where("date", ">=", startTimestamp),
+          where("date", "<=", endTimestamp)
+        );
       }
 
-      const [projectsSnapshot, clientsSnapshot, quotationsSnapshot] = await Promise.all([
+      const [projectsSnapshot, clientsSnapshot, quotationsSnapshot, trainingsSnapshot] = await Promise.all([
         getDocs(projectsQuery),
         getDocs(clientsQuery),
-        getDocs(quotationsQuery)
+        getDocs(quotationsQuery),
+        getDocs(trainingsQuery)
       ]);
 
       const projectsData = projectsSnapshot.docs.map(doc => ({
@@ -205,10 +323,15 @@ export default function Dashboard() {
         id: doc.id,
         ...doc.data()
       }));
+      const trainingsData = trainingsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
       setFilteredProjects(projectsData);
       setFilteredClients(clientsData);
       setFilteredQuotations(quotationsData);
+      setFilteredTrainings(trainingsData);
       setTotalIncome(calculateTotalIncome(quotationsData));
     } catch (error) {
       console.error("Error filtering data:", error);
@@ -221,47 +344,74 @@ export default function Dashboard() {
     <div className="w-full max-w-7xl mx-auto px-4 py-8 rounded-lg">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold flex-grow min-w-0">
-          Welcome, Admin!
+          Welcome, {userName}!
         </h1>
-        <div>
+        <div className="flex gap-2">
           <TimeFilter onFilterChange={handleTimeFilterChange} />
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        </div>
-      ) : (
-        <>
-          <div className="w-full flex flex-col gap-4 mb-4">
-            <StatCard title="Total Income" value={totalIncome.toLocaleString()} />
+      <div id="dashboard-content">
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
-          <div className="flex flex-col lg:flex-row gap-4 mb-4">
-            <div className="w-full lg:w-1/4 flex flex-col gap-4">
-              <StatCard title="Total Clients" value={filteredClients.length} />
-              <StatCard title="Total Projects" value={filteredProjects.length} />
-              <StatCard title="Total Quotations" value={filteredQuotations.length} />
+        ) : (
+          <>
+            <div className="gap-4 mb-4">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
+                  <StatCard 
+                    title="Total Clients" 
+                    value={filteredClients.length}
+                    colorIndex={0} 
+                  />
+                  <StatCard 
+                    title="Total Projects" 
+                    value={filteredProjects.length}
+                    colorIndex={1} 
+                  />
+                  <StatCard 
+                    title="Total Trainings" 
+                    value={filteredTrainings.length}
+                    colorIndex={2}
+                  />
+                  <StatCard 
+                    title="Total Income" 
+                    value={totalIncome.toLocaleString()}
+                    colorIndex={3}
+                  />
+                </div>
+              </div>
+              <div className="h-[400px]"> 
+                <StatBarChart
+                  projectsData={filteredProjects}
+                  clientsData={filteredClients}
+                  trainingsData={filteredTrainings}
+                  timeRange={timeRange}
+                  customRange={customRange}
+                />
+              </div>
+            </div>          
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <ServiceRequestedChart projects={filteredProjects} />
+              <SendingInstitutionChart projects={filteredProjects} />
+              <FundingCategoryChart projects={filteredProjects} />
             </div>
-            
-            <div className="flex-1 min-w-0 h-[350px] min-h-[350px]">
-              <StatBarChart 
-                projectsData={filteredProjects}
-                clientsData={filteredClients}
-                timeRange={timeRange}
-                customRange={customRange}
-              />
-            </div>
-          </div>
 
-          {/* Pie Charts */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <ServiceRequestedChart projects={filteredProjects} />
-            <SendingInstitutionChart projects={filteredProjects} />
-            <FundingCategoryChart projects={filteredProjects} />
-          </div>
-        </>
-      )}
+          </>
+        )}
+      </div>
+      <div className="flex justify-end mt-6">
+              <Button 
+                variant="outline" 
+                onClick={exportToPDF}
+                disabled={loading}
+                className="w-[160px] text-left truncate"
+              >
+                {loading ? "Generating..." : "Export as PDF"}
+              </Button>
+      </div>
     </div>
   );
 }
