@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { DialogFooter } from "@/components/ui/dialog";
 import { Project } from "@/types/Project";
 import { projectSchema as baseProjectSchema } from "@/schemas/projectSchema";
 import { collection, addDoc, serverTimestamp, Timestamp, FieldValue, doc, setDoc } from "firebase/firestore";
@@ -18,19 +17,23 @@ import { getNextPid } from "@/services/projectsService";
 
 
 
-// Extend the Zod schema to match the Project type
+// Update schema: make all fields optional except year
 const projectSchema = baseProjectSchema.extend({
-  pid: z.string().min(1, "Project ID is required"),
-  iid: z.string().min(1, "Inquiry ID is required"),
+  pid: z.string().optional(),
+  iid: z.string().optional(),
   year: z.coerce.number().int().min(2000),
-  clientNames: z.string().min(1).transform((val) => val.split(",").map((v) => v.trim())),
-  projectTag: z.string().min(1, "Project Tag is required"),
-  status: z.enum(["Ongoing", "Completed", "Cancelled"]),
-  fundingCategory: z.enum(["External", "In-House"]),
-  serviceRequested: z.array(z.string()).min(1, "Select at least one service").optional(),
-  personnelAssigned: z.string().min(1, "Personnel Assigned is required"),
+  clientNames: z.string().optional().transform((val) => val ? val.split(",").map((v) => v.trim()) : []),
+  projectTag: z.string().optional(),
+  status: z.enum(["Ongoing", "Completed", "Cancelled"]).optional(),
+  fundingCategory: z.enum(["External", "In-House"]).optional(),
+  serviceRequested: z.array(z.string()).optional(),
+  personnelAssigned: z.string().optional(),
   notes: z.string().optional(),
-  startDate: z.string(),
+  startDate: z.string().optional(),
+  lead: z.string().optional(),
+  title: z.string().optional(),
+  sendingInstitution: z.string().optional(),
+  fundingInstitution: z.string().optional(),
 });
 
 type ProjectFormData = z.infer<typeof projectSchema>;
@@ -102,6 +105,18 @@ const handleSubmit = async (e: React.FormEvent) => {
         serviceRequested: result.data.serviceRequested,
         lead: result.data.lead,
         notes: result.data.notes || "",
+        sendingInstitution: (
+          [
+            "UP System",
+            "SUC/HEI",
+            "Government",
+            "Private/Local",
+            "International",
+            "N/A"
+          ].includes(result.data.sendingInstitution as string)
+            ? result.data.sendingInstitution
+            : "Government"
+        ) as Project["sendingInstitution"],
       };
       mutation.mutate(cleanData);
     } catch (err) {
@@ -171,11 +186,12 @@ const handleSubmit = async (e: React.FormEvent) => {
         <Input name="lead" value={formData.lead} onChange={handleChange} />
         {errors.lead && <p className="text-red-500 text-xs mt-1">{errors.lead}</p>}
       </div>
-      <div>
+      {/* Remove Project ID textbox */}
+      {/* <div>
         <Label>Project ID</Label>
         <Input name="pid" value={formData.pid} onChange={handleChange} />
         {errors.pid && <p className="text-red-500 text-xs mt-1">{errors.pid}</p>}
-      </div>
+      </div> */}
       <div>
         <Label>Inquiry ID</Label>
         <Input name="iid" value={formData.iid} onChange={handleChange} />
@@ -193,7 +209,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       </div>
       <div>
         <Label>Status</Label>
-        <Select value={formData.status} onValueChange={val => handleSelect("status", val)}>
+        <Select value={formData.status || ""} onValueChange={val => handleSelect("status", val)}>
           <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="Ongoing">Ongoing</SelectItem>
@@ -205,12 +221,12 @@ const handleSubmit = async (e: React.FormEvent) => {
       </div>
       <div>
         <Label>Sending Institution</Label>
-        <Input name="sendingInstitution" value={formData.sendingInstitution} onChange={handleChange} />
+        <Input name="sendingInstitution" value={formData.sendingInstitution || ""} onChange={handleChange} />
         {errors.sendingInstitution && <p className="text-red-500 text-xs mt-1">{errors.sendingInstitution}</p>}
       </div>
       <div>
         <Label>Funding Category</Label>
-        <Select value={formData.fundingCategory} onValueChange={val => handleSelect("fundingCategory", val)}>
+        <Select value={formData.fundingCategory || ""} onValueChange={val => handleSelect("fundingCategory", val)}>
           <SelectTrigger><SelectValue placeholder="Select funding category" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="External">External</SelectItem>
@@ -221,7 +237,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       </div>
       <div>
         <Label>Funding Institution</Label>
-        <Input name="fundingInstitution" value={formData.fundingInstitution} onChange={handleChange} />
+        <Input name="fundingInstitution" value={formData.fundingInstitution || ""} onChange={handleChange} />
         {errors.fundingInstitution && <p className="text-red-500 text-xs mt-1">{errors.fundingInstitution}</p>}
       </div>
       <div>
@@ -242,19 +258,19 @@ const handleSubmit = async (e: React.FormEvent) => {
       </div>
       <div>
         <Label>Personnel Assigned</Label>
-        <Input name="personnelAssigned" value={formData.personnelAssigned} onChange={handleChange} />
+        <Input name="personnelAssigned" value={formData.personnelAssigned || ""} onChange={handleChange} />
         {errors.personnelAssigned && <p className="text-red-500 text-xs mt-1">{errors.personnelAssigned}</p>}
       </div>
       <div>
         <Label>Notes</Label>
-        <Textarea name="notes" value={formData.notes} onChange={handleChange} />
+        <Textarea name="notes" value={formData.notes || ""} onChange={handleChange} />
         {errors.notes && <p className="text-red-500 text-xs mt-1">{errors.notes}</p>}
       </div>
-      <DialogFooter className="col-span-2">
+      <div className="col-span-2 flex justify-end mt-4">
         <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending ? "Saving..." : "Save"}
         </Button>
-      </DialogFooter>
+      </div>
     </form>
   );
 }
