@@ -21,6 +21,7 @@ import { Timestamp } from "firebase/firestore";
 export default function ChargeSlipDetailPage() {
   const { chargeSlipNumber } = useParams() as { chargeSlipNumber: string };
   const router = useRouter();
+
   const [record, setRecord] = useState<ChargeSlipRecord | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -78,6 +79,14 @@ export default function ChargeSlipDetailPage() {
 
   if (loading || !record) return <p className="p-10">Loading...</p>;
 
+  // ✅ Derive categories only if not set
+  const derivedCategories =
+    record.categories?.length && record.categories.some(Boolean)
+      ? record.categories
+      : Array.from(
+          new Set((record.services ?? []).map((s) => s.type ?? ""))
+        ).filter(Boolean);
+
   return (
     <div className="container mx-auto py-10 space-y-6">
       <Button variant="outline" onClick={() => router.push("/admin/charge-slips")}>
@@ -97,8 +106,8 @@ export default function ChargeSlipDetailPage() {
         <p><strong>Client Address:</strong> {record.clientInfo?.address || record.client?.affiliationAddress || "—"}</p>
         <p><strong>Project Title:</strong> {record.project?.title}</p>
         <p><strong>Project ID:</strong> {record.projectId}</p>
-        <p><strong>Categories:</strong> {record.categories?.join(", ") || "—"}</p>
-        <p><strong>Services:</strong> {record.services?.map(s => s.name).join(", ") || "—"}</p>
+        <p><strong>Categories:</strong> {derivedCategories.join(", ") || "—"}</p>
+        <p><strong>Services:</strong> {record.services?.map((s) => s.name).join(", ") || "—"}</p>
         <p><strong>Total:</strong> ₱{record.total.toLocaleString()}</p>
 
         <div>
