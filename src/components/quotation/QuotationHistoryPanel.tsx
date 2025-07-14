@@ -27,12 +27,12 @@ export function QuotationHistoryPanel({ inquiryId }: { inquiryId: string }) {
   });
 
   if (error) {
-    console.error("❌ [HistoryPanel] Error fetching quotation history:", error);
+    console.error(" [HistoryPanel] Error fetching quotation history:", error);
     return <div className="text-red-500 text-sm">Failed to load quotation history.</div>;
   }
 
   if (!isLoading && isFetched) {
-    console.log(`✅ [HistoryPanel] Found ${history.length} quotation(s) for inquiryId: ${inquiryId}`);
+    console.log(` [HistoryPanel] Found ${history.length} quotation(s) for inquiryId: ${inquiryId}`);
   }
 
   if (isLoading) return <div className="text-sm text-muted-foreground">Loading history...</div>;

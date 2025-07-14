@@ -55,10 +55,10 @@ export default function Home() {
           {/* Welcome */}
           <div className="space-y-6">
             <h1 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#166FB5] bg-clip-text text-transparent leading-tight">
-              Welcome to PGC GenomeBase
+              PGC Visayas Genomic Service Request Portal
             </h1>
             <p className="text-lg text-slate-600 max-w-md mx-auto lg:mx-0">
-              Your gateway to professional genomic services
+              Start your journey with our laboratory, equipment, or bioinformatics services.
             </p>
             
             {/* Simple badges */}
@@ -82,7 +82,7 @@ export default function Home() {
           <div className="space-y-4">
             <Link href="/login">
               <Button size="lg" className="h-14 px-8 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 text-base">
-                Request a Quote
+                Submit an Inquiry
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>

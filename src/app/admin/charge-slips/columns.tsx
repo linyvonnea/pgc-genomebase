@@ -5,14 +5,14 @@ import { UIChargeSlipRecord } from "@/types/UIChargeSlipRecord";
 import { Badge } from "@/components/ui/badge";
 import { ValidCategory } from "@/types/ValidCategory";
 
-// 🎨 Badge colors for statuses
+// Badge colors for statuses
 const statusColors: Record<string, string> = {
   processing: "bg-blue-100 text-blue-800",
   paid: "bg-green-100 text-green-800",
   cancelled: "bg-red-100 text-red-800",
 };
 
-// 🎨 Badge colors for categories
+// Badge colors for categories
 const categoryColors: Record<ValidCategory, string> = {
   laboratory: "bg-green-100 text-green-800",
   equipment: "bg-blue-100 text-blue-800",

@@ -23,10 +23,6 @@ export default function ChargeSlipBuilderPage() {
     enabled: !!projectId,
   });
 
-  console.log("Client ID:", clientId); // Debugging log
-  console.log("Project ID:", projectId); // Debugging log
-  console.log("Fetched client data:", clientData); // Debugging log
-  console.log("Fetched project data:", projectData); // Debugging log
 
   return (
     <main className="p-4">

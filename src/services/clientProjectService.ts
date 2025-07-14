@@ -34,13 +34,13 @@ export async function getClientById(cid: string): Promise<Client | null> {
     const parsed = clientSchema.safeParse({ id: snapshot.id, ...data });
 
     if (!parsed.success) {
-      console.warn("❌ Failed to validate client:", parsed.error);
+      console.warn(" Failed to validate client:", parsed.error);
       return null;
     }
 
     return parsed.data;
   } catch (error) {
-    console.error("❌ Error fetching client:", error);
+    console.error("Error fetching client:", error);
     return null;
   }
 }
@@ -64,7 +64,7 @@ export async function getProjectById(pid: string): Promise<Project | null> {
     const parsed = projectSchema.safeParse({ id: snapshot.id, ...data });
 
     if (!parsed.success) {
-      console.warn("❌ Failed to validate project:", parsed.error);
+      console.warn(" Failed to validate project:", parsed.error);
       return null;
     }
 
@@ -80,7 +80,7 @@ export async function getProjectById(pid: string): Promise<Project | null> {
 
     return project;
   } catch (error) {
-    console.error("❌ Error fetching project:", error);
+    console.error(" Error fetching project:", error);
     return null;
   }
 }

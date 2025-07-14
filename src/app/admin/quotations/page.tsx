@@ -1,7 +1,7 @@
 // src/app/admin/quotations/page.tsx
 import { QuotationRecord } from "@/types/Quotation"
 import { getAllQuotations } from "@/services/quotationService"
-import { QuotationClientTable } from "./QuotationClientTable" // ✅ your new wrapper
+import { QuotationClientTable } from "./QuotationClientTable"
 
 async function getData(): Promise<QuotationRecord[]> {
   try {

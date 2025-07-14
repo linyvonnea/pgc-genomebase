@@ -12,7 +12,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 interface AdminInfo {
   name: string;
   position: string;
-  email: string; // Added email property
+  email: string; 
 }
 
 export default function useAuth() {

@@ -6,7 +6,7 @@ import { Timestamp } from "firebase/firestore";
 import { UIChargeSlipRecord } from "@/types/UIChargeSlipRecord";
 import { ValidCategory } from "@/types/ValidCategory";
 
-// 🔁 Converts Firestore Timestamp, string, or Date → Date
+// Converts Firestore Timestamp, string, or Date → Date
 function toDateSafe(value: string | Timestamp | Date | null | undefined): Date | undefined {
   if (!value) return undefined;
   if (value instanceof Date) return value;
@@ -18,10 +18,10 @@ function toDateSafe(value: string | Timestamp | Date | null | undefined): Date |
   return undefined;
 }
 
-// 🎯 Allowed top-level categories
+// Allowed top-level categories
 const VALID_CATEGORIES: ValidCategory[] = ["laboratory", "equipment", "bioinformatics", "retail"];
 
-// 🧠 Extracts only valid service `type` values
+// Extracts only valid service `type` values
 function extractValidCategories(services: any[]): ValidCategory[] {
   if (!Array.isArray(services)) return [];
   return Array.from(
@@ -33,14 +33,14 @@ function extractValidCategories(services: any[]): ValidCategory[] {
   );
 }
 
-// 🛡️ Normalize status
+// Normalize status
 function normalizeStatus(status?: string): "paid" | "cancelled" | "processing" {
   const safe = (status || "processing").toLowerCase();
   if (safe === "paid" || safe === "cancelled" || safe === "processing") return safe;
   return "processing";
 }
 
-// ✅ Server Component: Charge Slip Management Page
+// Server Component: Charge Slip Management Page
 export default async function ChargeSlipPage() {
   const rawData: ChargeSlipRecord[] = await getAllChargeSlips();
 

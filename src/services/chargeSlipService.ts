@@ -17,7 +17,7 @@ import { Project } from "@/types/Project";
 
 const CHARGE_SLIPS_COLLECTION = "chargeSlips";
 
-// ✅ Helper to safely convert timestamps only if defined
+// Helper to safely convert timestamps only if defined
 const safeTimestamp = (value: any) =>
   value ? convertToTimestamp(value) : convertToTimestamp(new Date());
 
