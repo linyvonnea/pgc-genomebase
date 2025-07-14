@@ -3,21 +3,24 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { UIChargeSlipRecord } from "@/types/UIChargeSlipRecord";
 import { Badge } from "@/components/ui/badge";
+import { ValidCategory } from "@/types/ValidCategory";
 
+// 🎨 Badge colors for statuses
 const statusColors: Record<string, string> = {
   processing: "bg-blue-100 text-blue-800",
   paid: "bg-green-100 text-green-800",
   cancelled: "bg-red-100 text-red-800",
 };
 
-const categoryColors: Record<string, string> = {
+// 🎨 Badge colors for categories
+const categoryColors: Record<ValidCategory, string> = {
   laboratory: "bg-green-100 text-green-800",
   equipment: "bg-blue-100 text-blue-800",
   bioinformatics: "bg-purple-100 text-purple-800",
   retail: "bg-orange-100 text-orange-800",
 };
 
-export const columns: ColumnDef<UIChargeSlipRecord>[] = [
+export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
   {
     accessorKey: "dateIssued",
     header: "Date",
@@ -32,16 +35,20 @@ export const columns: ColumnDef<UIChargeSlipRecord>[] = [
     header: "Charge Slip No.",
   },
   {
-    accessorKey: "clientInfo.name",
+    accessorFn: (row) => row.clientInfo?.name,
+    id: "clientInfo.name",
     header: "Client Name",
-    cell: ({ row }) => row.original.clientInfo?.name || "—",
+    cell: ({ getValue }) => getValue() || "—",
   },
   {
     accessorKey: "total",
     header: "Amount",
     cell: ({ row }) => {
       const value = row.getValue("total") as number;
-      return `₱${value.toLocaleString()}`;
+      return `₱${value.toLocaleString(undefined, {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      })}`;
     },
   },
   {
@@ -58,40 +65,37 @@ export const columns: ColumnDef<UIChargeSlipRecord>[] = [
     },
   },
   {
-    accessorKey: "clientInfo.address",
+    accessorFn: (row) => row.clientInfo?.address,
+    id: "clientInfo.address",
     header: "Address",
-    cell: ({ row }) => row.original.clientInfo?.address || "—",
+    cell: ({ getValue }) => getValue() || "—",
   },
   {
-    accessorKey: "project.title",
+    accessorFn: (row) => row.project?.title,
+    id: "project.title",
     header: "Payment For",
-    cell: ({ row }) => row.original.project?.title || "—",
+    cell: ({ getValue }) => getValue() || "—",
   },
   {
     accessorKey: "categories",
     header: "Service Requested",
     cell: ({ row }) => {
-      const categories = row.getValue("categories") as string[] | undefined;
+      const categories = row.getValue("categories") as ValidCategory[] | undefined;
       if (!categories?.length) return "—";
       return (
         <div className="flex flex-wrap gap-1">
-          {categories.map((cat) => {
-            const color = categoryColors[cat.toLowerCase()] || "bg-gray-100 text-gray-800";
-            return (
-              <span
-                key={cat}
-                className={`px-2 py-0.5 rounded-full text-xs font-medium ${color}`}
-              >
-                {cat}
-              </span>
-            );
-          })}
+          {categories.map((cat) => (
+            <span
+              key={cat}
+              className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${categoryColors[cat]}`}
+            >
+              {cat}
+            </span>
+          ))}
         </div>
       );
     },
   },
-  // ❌ Removed the services column
-
   {
     accessorKey: "dvNumber",
     header: "DV No.",
@@ -117,8 +121,9 @@ export const columns: ColumnDef<UIChargeSlipRecord>[] = [
     cell: ({ row }) => row.getValue("notes") || "—",
   },
   {
-    accessorKey: "preparedBy.name",
+    accessorFn: (row) => row.preparedBy?.name,
+    id: "preparedBy.name",
     header: "Prepared By",
-    cell: ({ row }) => row.original.preparedBy?.name || "—",
+    cell: ({ getValue }) => getValue() || "—",
   },
 ];
