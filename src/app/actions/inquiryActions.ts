@@ -32,7 +32,47 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       haveSubmitted: false
     };
 
+    // Add the inquiry document to the database
     const docRef = await addDoc(collection(db, "inquiries"), transformedData);
+    
+    // Prepare email data for Firebase Trigger Email extension
+    const templateId = `inquiry-${inquiryData.service}`;
+    
+    // Create template data based on service type
+    let templateData: Record<string, any> = {
+      name: inquiryData.name,
+      affiliation: inquiryData.affiliation,
+      designation: inquiryData.designation,
+      email: inquiryData.email || '',
+      service: inquiryData.service
+    };
+
+    // Add service-specific data
+    if (inquiryData.service === 'laboratory') {
+      templateData.workflows = Array.isArray(inquiryData.workflows) 
+        ? inquiryData.workflows.join(', ') 
+        : inquiryData.workflows || '';
+      templateData.additionalInfo = inquiryData.additionalInfo || '';
+    } else if (inquiryData.service === 'research') {
+      templateData.projectBackground = inquiryData.projectBackground || '';
+      templateData.projectBudget = inquiryData.projectBudget || '';
+    } else if (inquiryData.service === 'training') {
+      templateData.specificTrainingNeed = inquiryData.specificTrainingNeed || '';
+      templateData.targetTrainingDate = inquiryData.targetTrainingDate || '';
+      templateData.numberOfParticipants = inquiryData.numberOfParticipants?.toString() || '';
+    }
+
+    // Create email document for Firebase Trigger Email extension
+    const emailData = {
+      to: ["daniellalpailden@gmail.com"],
+      template: {
+        name: templateId,
+        data: templateData
+      }
+    };
+
+    // Add email to the mail collection to trigger the extension
+    await addDoc(collection(db, "mail"), emailData);
     
     // Revalidate the admin inquiry page to show new data
     revalidatePath('/admin/inquiry');
