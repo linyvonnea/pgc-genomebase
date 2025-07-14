@@ -1,3 +1,4 @@
+// src/components/charge-slip/ChargeSlipPDFViewer.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,10 +7,10 @@ import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { getClientById, getProjectById } from "@/services/clientProjectService";
 import { saveChargeSlip } from "@/services/chargeSlipService";
-import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { normalizeDate } from "@/lib/formatters";
+import { sanitizeObject } from "@/lib/sanitizeObject";
 
 interface Props {
   chargeSlip: ChargeSlipRecord;
@@ -45,34 +46,39 @@ export function ChargeSlipPDFViewer({ chargeSlip }: Props) {
     fetchDetails();
   }, [chargeSlip.client?.cid, chargeSlip.project?.pid]);
 
-
   const handleGenerateFinalChargeSlip = async () => {
     try {
-      await saveChargeSlip(chargeSlip);
+      const sanitized = sanitizeObject(chargeSlip) as ChargeSlipRecord;
+      await saveChargeSlip(sanitized);
 
       const blob = await pdf(
         <ChargeSlipPDF
-          services={chargeSlip.services}
-          client={chargeSlip.client}
-          project={chargeSlip.project}
-          chargeSlipNumber={chargeSlip.chargeSlipNumber}
-          orNumber={chargeSlip.orNumber ?? ""}
-          useInternalPrice={chargeSlip.useInternalPrice}
-          preparedBy={chargeSlip.preparedBy}
-          referenceNumber={chargeSlip.referenceNumber}
-          clientInfo={chargeSlip.clientInfo}
-          approvedBy={chargeSlip.approvedBy}
-          dateIssued={normalizeDate(chargeSlip.dateIssued)}
-          subtotal={chargeSlip.subtotal}
-          discount={chargeSlip.discount}
-          total={chargeSlip.total}
+          services={sanitized.services}
+          client={sanitized.client}
+          project={sanitized.project}
+          chargeSlipNumber={sanitized.chargeSlipNumber}
+          orNumber={sanitized.orNumber ?? ""}
+          useInternalPrice={sanitized.useInternalPrice}
+          preparedBy={sanitized.preparedBy}
+          referenceNumber={sanitized.referenceNumber}
+          clientInfo={sanitized.clientInfo}
+          approvedBy={
+            sanitized.approvedBy || {
+              name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.",
+              position: "AED, PGC Visayas",
+            }
+          }
+          dateIssued={normalizeDate(sanitized.dateIssued ?? "")}
+          subtotal={sanitized.subtotal}
+          discount={sanitized.discount}
+          total={sanitized.total}
         />
       ).toBlob();
 
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${chargeSlip.chargeSlipNumber}.pdf`;
+      link.download = `${sanitized.chargeSlipNumber}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
 
@@ -100,8 +106,13 @@ export function ChargeSlipPDFViewer({ chargeSlip }: Props) {
           preparedBy={chargeSlip.preparedBy}
           referenceNumber={chargeSlip.referenceNumber}
           clientInfo={chargeSlip.clientInfo}
-          approvedBy={chargeSlip.approvedBy}
-          dateIssued={normalizeDate(chargeSlip.dateIssued)}
+          approvedBy={
+            chargeSlip.approvedBy || {
+              name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.",
+              position: "AED, PGC Visayas",
+            }
+          }
+          dateIssued={normalizeDate(chargeSlip.dateIssued ?? "")}
           subtotal={chargeSlip.subtotal}
           discount={chargeSlip.discount}
           total={chargeSlip.total}

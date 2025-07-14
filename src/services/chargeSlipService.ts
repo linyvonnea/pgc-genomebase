@@ -4,6 +4,7 @@ import {
   addDoc,
   getDocs,
   doc,
+  setDoc,
   getDoc,
   updateDoc,
   where,
@@ -16,6 +17,10 @@ import { Client } from "@/types/Client";
 import { Project } from "@/types/Project";
 
 const CHARGE_SLIPS_COLLECTION = "chargeSlips";
+
+// ✅ Helper to safely convert timestamps only if defined
+const safeTimestamp = (value: any) =>
+  value !== undefined ? convertToTimestamp(value) : null;
 
 export async function getAllChargeSlips(): Promise<ChargeSlipRecord[]> {
   const snapshot = await getDocs(
@@ -72,24 +77,28 @@ export async function getChargeSlipById(id: string): Promise<ChargeSlipRecord | 
   };
 }
 
-export async function saveChargeSlip(slip: ChargeSlipRecord): Promise<string> {
-  const ref = await addDoc(collection(db, CHARGE_SLIPS_COLLECTION), {
-    ...slip,
-    dateIssued: convertToTimestamp(slip.dateIssued),
-    dateOfOR: convertToTimestamp(slip.dateOfOR),
-    createdAt: convertToTimestamp(slip.createdAt),
-    client: {
-      ...slip.client,
-      createdAt: convertToTimestamp(slip.client.createdAt),
-    },
-    project: {
-      ...slip.project,
-      createdAt: convertToTimestamp(slip.project.createdAt),
-    },
-  });
 
-  return ref.id;
-}
+  export async function saveChargeSlip(slip: ChargeSlipRecord): Promise<string> {
+    const docRef = doc(db, CHARGE_SLIPS_COLLECTION, slip.chargeSlipNumber); // Use "CS-2025-009" as ID
+
+    const payload: any = {
+      ...slip,
+      dateIssued: convertToTimestamp(slip.dateIssued),
+      dateOfOR: slip.dateOfOR !== undefined ? convertToTimestamp(slip.dateOfOR) : null,
+      createdAt: slip.createdAt !== undefined ? convertToTimestamp(slip.createdAt) : null,
+      client: {
+        ...slip.client,
+        createdAt: slip.client?.createdAt ? convertToTimestamp(slip.client.createdAt) : null,
+      },
+      project: {
+        ...slip.project,
+        createdAt: slip.project?.createdAt ? convertToTimestamp(slip.project.createdAt) : null,
+      },
+    };
+
+    await setDoc(docRef, payload); // Replaces addDoc
+    return slip.chargeSlipNumber;
+  }
 
 export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRecord>) {
   const docRef = doc(db, CHARGE_SLIPS_COLLECTION, id);
@@ -101,21 +110,23 @@ export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRe
   if ("status" in updates) updatedData.status = updates.status;
   if ("notes" in updates) updatedData.notes = updates.notes;
 
-  if (updates.dateIssued) {
-    updatedData.dateIssued = convertToTimestamp(updates.dateIssued);
+  if ("dateIssued" in updates) {
+    updatedData.dateIssued = safeTimestamp(updates.dateIssued);
   }
-  if (updates.dateOfOR) {
-    updatedData.dateOfOR = convertToTimestamp(updates.dateOfOR);
+
+  if ("dateOfOR" in updates) {
+    updatedData.dateOfOR = safeTimestamp(updates.dateOfOR);
   }
-  if (updates.createdAt) {
-    updatedData.createdAt = convertToTimestamp(updates.createdAt);
+
+  if ("createdAt" in updates) {
+    updatedData.createdAt = safeTimestamp(updates.createdAt);
   }
 
   if (updates.client) {
     updatedData.client = {
       ...updates.client,
       ...(updates.client.createdAt && {
-        createdAt: convertToTimestamp(updates.client.createdAt),
+        createdAt: safeTimestamp(updates.client.createdAt),
       }),
     };
   }
@@ -124,7 +135,7 @@ export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRe
     updatedData.project = {
       ...updates.project,
       ...(updates.project.createdAt && {
-        createdAt: convertToTimestamp(updates.project.createdAt),
+        createdAt: safeTimestamp(updates.project.createdAt),
       }),
     };
   }

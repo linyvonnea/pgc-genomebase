@@ -1,3 +1,4 @@
+// src/types/ChargeSlipRecord.ts
 import { Client } from "./Client";
 import { Project } from "./Project";
 import { AdminInfo } from "./Admin";
@@ -5,7 +6,7 @@ import { SelectedService } from "./SelectedService";
 import { Timestamp } from "firebase/firestore";
 
 export interface ChargeSlipRecord {
-  id?: string; // Firestore doc ID
+  id?: string; // Firestore document ID
 
   chargeSlipNumber: string;
   referenceNumber: string;
@@ -30,12 +31,12 @@ export interface ChargeSlipRecord {
     institution: string;
     designation: string;
     email: string;
-    address?: string; // ✅ added
+    address?: string; // Optional address field
   };
 
-  // Firestore-compatible types (string | Timestamp)
+  // Firestore-compatible timestamp fields
   dateIssued: string | Timestamp;
-  dateOfOR?: string | Timestamp;
+  dateOfOR?: string | Timestamp | null; // ✅ Accepts null
   createdAt?: string | Timestamp;
 
   dvNumber?: string;
@@ -46,6 +47,6 @@ export interface ChargeSlipRecord {
   discount: number;
   total: number;
 
-  categories?: string[]; // ✅ added
-  status?: "paid" | "cancelled" | "processing"; // ✅ added
+  categories?: string[]; // Optional category tags
+  status?: "paid" | "cancelled" | "processing"; // Optional status field
 }
