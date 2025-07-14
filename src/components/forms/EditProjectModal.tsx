@@ -61,7 +61,10 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       sendingInstitution: project.sendingInstitution || "Government",
       fundingCategory: project.fundingCategory || "In-House",
       fundingInstitution: project.fundingInstitution || "",
-      serviceRequested: project.serviceRequested ?? [],
+      serviceRequested: Array.isArray(project.serviceRequested)
+        ? project.serviceRequested.filter((s): s is "Laboratory Services" | "Retail Services" | "Equipment Use" | "Bioinformatics Analysis" =>
+            ["Laboratory Services", "Retail Services", "Equipment Use", "Bioinformatics Analysis"].includes(s))
+        : [],
       notes: project.notes || "",
       personnelAssigned: project.personnelAssigned || "",
     },
@@ -91,7 +94,16 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
     // Ensure serviceRequested is always an array
     let serviceRequested = data.serviceRequested;
     if (typeof serviceRequested === "string") {
-      serviceRequested = (serviceRequested as string).split(",").map((s: string) => s.trim()).filter((s: string) => Boolean(s));
+      const validOptions = [
+        "Laboratory Services",
+        "Retail Services",
+        "Equipment Use",
+        "Bioinformatics Analysis",
+      ] as const;
+      serviceRequested = (serviceRequested as string)
+        .split(",")
+        .map((s: string) => s.trim())
+        .filter((s): s is typeof validOptions[number] => validOptions.includes(s as typeof validOptions[number]));
     } else if (!Array.isArray(serviceRequested)) {
       serviceRequested = [];
     }
@@ -322,12 +334,25 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                 <FormItem>
                   <FormLabel>Service Requested</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Comma separated (e.g. Laboratory Services, Bioinformatics Analysis)"
-                      value={serviceRequestedInput}
-                      onChange={e => setServiceRequestedInput(e.target.value)}
-                      onBlur={() => field.onChange(serviceRequestedInput.split(",").map(s => s.trim()).filter(Boolean))}
-                    />
+                    <div className="flex flex-col gap-2">
+                      {(["Laboratory Services", "Retail Services", "Equipment Use", "Bioinformatics Analysis"] as const).map(option => (
+                        <label key={option} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={field.value?.includes(option) || false}
+                            onChange={() => {
+                              const current = field.value as typeof option[] || [];
+                              if (current.includes(option)) {
+                                field.onChange(current.filter((s) => s !== option));
+                              } else {
+                                field.onChange([...current, option]);
+                              }
+                            }}
+                          />
+                          {option}
+                        </label>
+                      ))}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

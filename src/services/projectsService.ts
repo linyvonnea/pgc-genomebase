@@ -36,6 +36,29 @@ export async function getProjects(): Promise<Project[]> {
         data.startDate = data.startDate.toDate();
       }
 
+      // Map legacy/invalid serviceRequested codes to valid enum values
+      if (Array.isArray(data.serviceRequested)) {
+        const serviceMap: Record<string, string> = {
+          bio: "Bioinformatics Analysis",
+          info: "Bioinformatics Analysis",
+          lab: "Laboratory Services",
+          retail: "Retail Services",
+          equip: "Equipment Use",
+          equipment: "Equipment Use",
+          "Bioinformatics Analysis": "Bioinformatics Analysis",
+          "Laboratory Services": "Laboratory Services",
+          "Retail Services": "Retail Services",
+          "Equipment Use": "Equipment Use",
+        };
+        data.serviceRequested = data.serviceRequested
+          .map((code: string) => serviceMap[code] || code)
+          .filter(
+            (val: string, idx: number, arr: string[]) =>
+              ["Laboratory Services", "Retail Services", "Equipment Use", "Bioinformatics Analysis"].includes(val) &&
+              arr.indexOf(val) === idx
+          );
+      }
+
       const candidate = {
         id: doc.id,
         ...data,
