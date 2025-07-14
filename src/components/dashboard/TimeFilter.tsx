@@ -10,8 +10,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Check } from "lucide-react";
 
+type CustomRange = { year: number; startMonth: number; endMonth: number; };
+
 interface TimeFilterProps {
-  onFilterChange: (value: string | { year: number; startMonth: number; endMonth: number }) => void;
+  onFilterChange: (range: TimeRange | CustomRange) => void | Promise<void>;
 }
 
 type TimeRange = "all" | "today" | "weekly" | "monthly" | "yearly" | "custom";
