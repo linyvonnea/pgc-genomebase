@@ -98,7 +98,7 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
             </DropdownMenu>
           </div>
         ) : (
-          <div className="flex flex-wrap justify-end gap-2 w-full">
+          <div className="flex flex-wrap md:flex-nowrap justify-end gap-2 w-full">
             {/* Timeline Dropdown */}
             <div className="w-[160px]">
               <DropdownMenu>

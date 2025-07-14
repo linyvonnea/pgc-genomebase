@@ -19,7 +19,7 @@ export default function Dashboard() {
   const [userName, setUserName] = React.useState("User");
   const [filteredProjects, setFilteredProjects] = React.useState<any[]>([]);
   const [filteredClients, setFilteredClients] = React.useState<any[]>([]);
-  const [filteredQuotations, setFilteredQuotations] = React.useState<any[]>([]);
+  const [filteredChargeSlips, setFilteredChargeSlips] = React.useState<any[]>([]);
   const [filteredTrainings, setFilteredTrainings] = React.useState<any[]>([]);
   const [totalIncome, setTotalIncome] = React.useState<number>(0);
   const [timeRange, setTimeRange] = React.useState("all");
@@ -102,10 +102,13 @@ export default function Dashboard() {
     }
   };
 
-  const calculateTotalIncome = (quotations: any[]) => {
-    return quotations.reduce((sum, quotation) => {
-      const total = parseFloat(quotation.total) || 0;
-      return sum + total;
+  const calculateTotalIncome = (chargeSlips: any[]) => {
+    return chargeSlips.reduce((sum, chargeSlip) => {
+      if (chargeSlip.status === "paid") {
+        const amount = parseFloat(chargeSlip.total) || 0; 
+        return sum + amount;
+      }
+      return sum;
     }, 0);
   };
 
@@ -134,10 +137,10 @@ export default function Dashboard() {
     const fetchInitialData = async () => {
       try {
         setLoading(true);
-        const [projectsSnapshot, clientsSnapshot, quotationsSnapshot, trainingsSnapshot] = await Promise.all([
+        const [projectsSnapshot, clientsSnapshot, chargeSlipsSnapshot, trainingsSnapshot] = await Promise.all([
           getDocs(collection(db, "projects")),
           getDocs(collection(db, "clients")),
-          getDocs(collection(db, "quotations")), 
+          getDocs(collection(db, "chargeSlips")), 
           getDocs(collection(db, "trainings")), 
           getDocs(collection(db, "users"))
         ]);
@@ -150,7 +153,7 @@ export default function Dashboard() {
           id: doc.id,
           ...doc.data()
         }));
-        const quotationsData = quotationsSnapshot.docs.map(doc => ({
+        const chargeSlipsData = chargeSlipsSnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
@@ -161,9 +164,9 @@ export default function Dashboard() {
 
         setFilteredProjects(projectsData);
         setFilteredClients(clientsData);
-        setFilteredQuotations(quotationsData);
+        setFilteredChargeSlips(chargeSlipsData);
         setFilteredTrainings(trainingsData);
-        setTotalIncome(calculateTotalIncome(quotationsData));
+        setTotalIncome(calculateTotalIncome(chargeSlipsData));
       } catch (error) {
         console.error("Error fetching initial data:", error);
       } finally {
@@ -175,20 +178,22 @@ export default function Dashboard() {
   }, []);
 
   const handleTimeFilterChange = async (
-    range: string | { year: number; startMonth: number; endMonth: number }
+  range: string | { year: number; startMonth: number; endMonth: number }
   ) => {
     try {
       setLoading(true);
       let projectsQuery = query(collection(db, "projects"));
       let clientsQuery = query(collection(db, "clients"));
-      let quotationsQuery = query(collection(db, "quotations"));
+      let chargeSlipsQuery = query(collection(db, "chargeSlips"));
       let trainingsQuery = query(collection(db, "trainings")); 
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayTimestamp = Timestamp.fromDate(today);
+
       if (typeof range === "string") {
         setTimeRange(range);
         setCustomRange(undefined);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayTimestamp = Timestamp.fromDate(today);
 
         switch(range) {
           case "today":
@@ -200,9 +205,10 @@ export default function Dashboard() {
               collection(db, "clients"),
               where("createdAt", ">=", todayTimestamp)
             );
-            quotationsQuery = query(
-              collection(db, "quotations"),
-              where("dateIssued", ">=", today.toISOString())
+            chargeSlipsQuery = query(
+              collection(db, "chargeSlips"),
+              where("dateOfOR", ">=", todayTimestamp),
+              where("status", "==", "paid")
             );
             trainingsQuery = query(
               collection(db, "trainings"),
@@ -212,61 +218,70 @@ export default function Dashboard() {
           case "weekly":
             const weekAgo = new Date(today);
             weekAgo.setDate(today.getDate() - 7);
+            const weekAgoTimestamp = Timestamp.fromDate(weekAgo);
+            
             projectsQuery = query(
               collection(db, "projects"),
-              where("startDate", ">=", Timestamp.fromDate(weekAgo))
+              where("startDate", ">=", weekAgoTimestamp)
             );
             clientsQuery = query(
               collection(db, "clients"),
-              where("createdAt", ">=", Timestamp.fromDate(weekAgo))
+              where("createdAt", ">=", weekAgoTimestamp)
             );
-            quotationsQuery = query(
-              collection(db, "quotations"),
-              where("dateIssued", ">=", weekAgo.toISOString())
+            chargeSlipsQuery = query(
+              collection(db, "chargeSlips"),
+              where("dateOfOR", ">=", weekAgoTimestamp),
+              where("status", "==", "paid")
             );
             trainingsQuery = query(
               collection(db, "trainings"),
-              where("dateConducted", ">=", Timestamp.fromDate(weekAgo))
+              where("dateConducted", ">=", weekAgoTimestamp)
             );
             break;
           case "monthly":
             const monthAgo = new Date(today);
             monthAgo.setMonth(today.getMonth() - 1);
+            const monthAgoTimestamp = Timestamp.fromDate(monthAgo);
+            
             projectsQuery = query(
               collection(db, "projects"),
-              where("startDate", ">=", Timestamp.fromDate(monthAgo))
+              where("startDate", ">=", monthAgoTimestamp)
             );
             clientsQuery = query(
               collection(db, "clients"),
-              where("createdAt", ">=", Timestamp.fromDate(monthAgo))
+              where("createdAt", ">=", monthAgoTimestamp)
             );
-            quotationsQuery = query(
-              collection(db, "quotations"),
-              where("dateIssued", ">=", monthAgo.toISOString())
+            chargeSlipsQuery = query(
+              collection(db, "chargeSlips"),
+              where("dateOfOR", ">=", monthAgoTimestamp),
+              where("status", "==", "paid")
             );
             trainingsQuery = query(
               collection(db, "trainings"),
-              where("dateConducted", ">=", Timestamp.fromDate(monthAgo))
+              where("dateConducted", ">=", monthAgoTimestamp)
             );
             break;
           case "yearly":
             const yearAgo = new Date(today);
             yearAgo.setFullYear(today.getFullYear() - 1);
+            const yearAgoTimestamp = Timestamp.fromDate(yearAgo);
+            
             projectsQuery = query(
               collection(db, "projects"),
-              where("startDate", ">=", Timestamp.fromDate(yearAgo))
+              where("startDate", ">=", yearAgoTimestamp)
             );
             clientsQuery = query(
               collection(db, "clients"),
-              where("createdAt", ">=", Timestamp.fromDate(yearAgo))
+              where("createdAt", ">=", yearAgoTimestamp)
             );
-            quotationsQuery = query(
-              collection(db, "quotations"),
-              where("dateIssued", ">=", yearAgo.toISOString())
+            chargeSlipsQuery = query(
+              collection(db, "chargeSlips"),
+              where("dateOfOR", ">=", yearAgoTimestamp),
+              where("status", "==", "paid")
             );
             trainingsQuery = query(
               collection(db, "trainings"),
-              where("dateConducted", ">=", Timestamp.fromDate(yearAgo))
+              where("dateConducted", ">=", yearAgoTimestamp)
             );
             break;
           default: 
@@ -292,22 +307,23 @@ export default function Dashboard() {
           where("createdAt", ">=", startTimestamp),
           where("createdAt", "<=", endTimestamp)
         );
-        quotationsQuery = query(
-          collection(db, "quotations"),
-          where("dateIssued", ">=", startDate.toISOString()),
-          where("dateIssued", "<=", endDate.toISOString())
+        chargeSlipsQuery = query(
+          collection(db, "chargeSlips"),
+          where("dateOfOR", ">=", startTimestamp),
+          where("dateOfOR", "<=", endTimestamp),
+          where("status", "==", "paid")
         );
         trainingsQuery = query(
           collection(db, "trainings"),
-          where("date", ">=", startTimestamp),
-          where("date", "<=", endTimestamp)
+          where("dateConducted", ">=", startTimestamp),
+          where("dateConducted", "<=", endTimestamp)
         );
       }
 
-      const [projectsSnapshot, clientsSnapshot, quotationsSnapshot, trainingsSnapshot] = await Promise.all([
+      const [projectsSnapshot, clientsSnapshot, chargeSlipsSnapshot, trainingsSnapshot] = await Promise.all([
         getDocs(projectsQuery),
         getDocs(clientsQuery),
-        getDocs(quotationsQuery),
+        getDocs(chargeSlipsQuery),
         getDocs(trainingsQuery)
       ]);
 
@@ -319,7 +335,7 @@ export default function Dashboard() {
         id: doc.id,
         ...doc.data()
       }));
-      const quotationsData = quotationsSnapshot.docs.map(doc => ({
+      const chargeSlipsData = chargeSlipsSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
@@ -330,9 +346,9 @@ export default function Dashboard() {
 
       setFilteredProjects(projectsData);
       setFilteredClients(clientsData);
-      setFilteredQuotations(quotationsData);
+      setFilteredChargeSlips(chargeSlipsData);
       setFilteredTrainings(trainingsData);
-      setTotalIncome(calculateTotalIncome(quotationsData));
+      setTotalIncome(calculateTotalIncome(chargeSlipsData));
     } catch (error) {
       console.error("Error filtering data:", error);
     } finally {
