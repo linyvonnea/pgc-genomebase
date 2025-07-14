@@ -18,6 +18,7 @@ import { db } from "@/lib/firebase";
 import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
 
 export default function ProjectForm() {
   const router = useRouter();
@@ -36,6 +37,8 @@ export default function ProjectForm() {
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectFormData, string>>>({});
   const [startOpen, setStartOpen] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingData, setPendingData] = useState<ProjectFormData | null>(null);
 
   useEffect(() => {
     async function fetchProject() {
@@ -118,15 +121,20 @@ export default function ProjectForm() {
       return;
     }
     setErrors({});
-    if (!pid) {
-      toast.error("Missing project ID in URL.");
-      return;
-    }
+    setPendingData(formData);
+    setShowConfirmModal(true);
+  };
 
+  const handleConfirmSave = async () => {
+    setShowConfirmModal(false);
     try {
+      const result = projectFormSchema.safeParse(pendingData);
+      if (!result.success) {
+        toast.error("Invalid data. Please review your entries.");
+        return;
+      }
       const year = result.data.startDate.getFullYear();
-      const docRef = doc(db, "projects", pid);
-
+      const docRef = doc(db, "projects", pid!);
       let clientName = "";
       if (cid) {
         const clientDoc = await getDoc(doc(db, "clients", cid));
@@ -134,20 +142,16 @@ export default function ProjectForm() {
           clientName = clientDoc.data().name || "";
         }
       }
-
       const snap = await getDoc(docRef);
       let createdAt = serverTimestamp();
       let existingClientNames: string[] = [];
-
       if (snap.exists()) {
         createdAt = snap.data().createdAt || createdAt;
         existingClientNames = snap.data().clientNames || [];
       }
-
       const updatedClientNames = clientName && !existingClientNames.includes(clientName) 
         ? [...existingClientNames, clientName]
         : existingClientNames;
-
       const payload = {
         pid,
         iid: inquiryId || "",
@@ -166,17 +170,19 @@ export default function ProjectForm() {
         personnelAssigned: "",
         notes: "",
       };
-
       await setDoc(docRef, payload, { merge: true });
-      toast.success("Project updated successfully!");
-      
-      // Redirect to thank you page after successful submission
+      toast.success("Project added successfully! Redirecting...");
       setTimeout(() => {
-        router.push("/client/confirmed");
+        router.push("/client/project-info/submitted");
       }, 1500);
     } catch {
       toast.error("Error updating project. Please try again.");
     }
+  };
+
+  const handleCancelModal = () => {
+    setShowConfirmModal(false);
+    setPendingData(null);
   };
 
   const formatDate = (date: Date | null) =>
@@ -317,6 +323,27 @@ export default function ProjectForm() {
           </form>
         </div>
       </div>
+      {/* Confirmation Modal */}
+      <ConfirmationModalLayout
+        open={showConfirmModal}
+        onConfirm={handleConfirmSave}
+        onCancel={handleCancelModal}
+        loading={false}
+        title="Please double check before saving"
+        description="Review your project information below before confirming. This action cannot be undone."
+        confirmLabel="Confirm & Submit"
+        cancelLabel="Go Back"
+      >
+        {pendingData && (
+          <div className="space-y-2 text-slate-800 text-sm">
+            <div><span className="font-semibold">Project Title:</span> {pendingData.title}</div>
+            <div><span className="font-semibold">Project Lead:</span> {pendingData.projectLead}</div>
+            <div><span className="font-semibold">Start Date:</span> {formatDate(pendingData.startDate)}</div>
+            <div><span className="font-semibold">Sending Institution:</span> {pendingData.sendingInstitution}</div>
+            <div><span className="font-semibold">Funding Institution:</span> {pendingData.fundingInstitution}</div>
+          </div>
+        )}
+      </ConfirmationModalLayout>
     </div>
   );
 }

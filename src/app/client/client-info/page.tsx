@@ -20,6 +20,7 @@ import { getNextCid } from "@/services/clientService";
 import { getNextPid } from "@/services/projectsService";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
+import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
 
 export default function ClientFormEntry() {
   const [step, setStep] = useState<"verify" | "form">("verify");
@@ -42,6 +43,8 @@ export default function ClientFormEntry() {
   const [googleUser, setGoogleUser] = useState<{ email: string } | null>(null);
   const [isContactPerson, setIsContactPerson] = useState(false);
   const [haveSubmitted, setHaveSubmitted] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingData, setPendingData] = useState<ClientFormData | null>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -97,94 +100,112 @@ export default function ClientFormEntry() {
       setErrors(fieldErrors);
     } else {
       setErrors({});
-      setSubmitting(true);
-      try {
-        const year = new Date().getFullYear();
-        const cid = await getNextCid(year);
-        // Get the correct project id for this inquiry
-        const inquiryDoc = await getDoc(doc(db, "inquiries", inquiryIdParam));
-        let pid;
-        let inquiryContactEmail = "";
-        if (inquiryDoc.exists()) {
-          const inquiry = inquiryDoc.data();
-          inquiryContactEmail = inquiry.email;
-          // Query for contact person client record by isContactPerson, inquiry email, and inquiryId
-          const contactPersonQuery = await import("firebase/firestore").then(({ query, where, getDocs, collection }) =>
-            getDocs(query(
-              collection(db, "clients"),
-              where("isContactPerson", "==", true),
-              where("email", "==", inquiryContactEmail),
-              where("inquiryId", "==", inquiryIdParam)
-            ))
-          );
-          if (!contactPersonQuery.empty) {
-            const contactPersonDoc = contactPersonQuery.docs[0];
-            pid = contactPersonDoc.data().pid;
-          }
-        }
-        // Find existing project for this inquiry
-        let projectQuery = await import("firebase/firestore").then(({ query, where, getDocs, collection }) =>
-          getDocs(query(collection(db, "projects"), where("inquiryId", "==", inquiryIdParam)))
-        );
-        if (!projectQuery.empty) {
-          const projectDoc = projectQuery.docs[0];
-          pid = projectDoc.data().pid;
-        }
-        // Only create a new project if none exists for this inquiry
-        if (!pid) {
-          pid = await getNextPid(year);
-        }
-        // Save client with pid
-        const clientDocId = cid; // Always use incrementing CL id
-        // Set isContactPerson strictly by comparing to inquiry's contact email
-        const isContactPersonValue = result.data.email === inquiryContactEmail;
-        await setDoc(doc(db, "clients", clientDocId), {
-          ...result.data,
-          cid,
-          pid, // always use the correct project id
-          year,
-          inquiryId: inquiryIdParam,
-          createdAt: serverTimestamp(),
-          isContactPerson: isContactPersonValue,
-        });
-        // If contact person, set haveSubmitted in inquiry
-        if (isContactPersonValue) {
-          await setDoc(doc(db, "inquiries", inquiryIdParam), { haveSubmitted: true }, { merge: true });
-        }
-        // Fetch updated client record
-        const updatedClientSnap = await getDoc(doc(db, "clients", clientDocId));
-        const updatedClient = updatedClientSnap.exists() ? updatedClientSnap.data() : {};
-        // Append client name to project clientNames array
-        const projectDocRef = doc(db, "projects", pid);
-        const projectSnap = await getDoc(projectDocRef);
-        let clientNames: string[] = [];
-        if (projectSnap.exists()) {
-          clientNames = projectSnap.data().clientNames || [];
-        }
-        if (!clientNames.includes(result.data.name)) {
-          clientNames.push(result.data.name);
-        }
-        await setDoc(projectDocRef, {
-          pid,
-          year,
-          clientNames,
-          startDate: serverTimestamp(),
-          inquiryId: inquiryIdParam,
-          // ...other fields
-        }, { merge: true });
-        // Use updated client record for permission check
-        if (updatedClient.isContactPerson && inquiryContactEmail && updatedClient.email === inquiryContactEmail) {
-          router.push(`/client/project-info?pid=${pid}&cid=${clientDocId}&inquiryId=${inquiryIdParam}`);
-        } else {
-          setSubmitting(false);
-          toast.success("Client information submitted successfully! Only the contact person can fill out the project information form.");
-          router.push("/client/confirmed");
-        }
-      } catch (err) {
-        setErrors({ name: "Failed to save client/project. Please try again." });
-        setSubmitting(false);
-      }
+      setPendingData(formData);
+      setShowConfirmModal(true);
     }
+  };
+
+  const handleConfirmSave = async () => {
+    setShowConfirmModal(false);
+    setSubmitting(true);
+    try {
+      // Parse pendingData for validation and field access
+      const result = clientFormSchema.safeParse(pendingData);
+      if (!result.success) {
+        setErrors({ name: "Invalid data. Please review your entries." });
+        setSubmitting(false);
+        return;
+      }
+      const year = new Date().getFullYear();
+      const cid = await getNextCid(year);
+      // Get the correct project id for this inquiry
+      const inquiryDoc = await getDoc(doc(db, "inquiries", inquiryIdParam));
+      let pid;
+      let inquiryContactEmail = "";
+      if (inquiryDoc.exists()) {
+        const inquiry = inquiryDoc.data();
+        inquiryContactEmail = inquiry.email;
+        // Query for contact person client record by isContactPerson, inquiry email, and inquiryId
+        const contactPersonQuery = await import("firebase/firestore").then(({ query, where, getDocs, collection }) =>
+          getDocs(query(
+            collection(db, "clients"),
+            where("isContactPerson", "==", true),
+            where("email", "==", inquiryContactEmail),
+            where("inquiryId", "==", inquiryIdParam)
+          ))
+        );
+        if (!contactPersonQuery.empty) {
+          const contactPersonDoc = contactPersonQuery.docs[0];
+          pid = contactPersonDoc.data().pid;
+        }
+      }
+      // Find existing project for this inquiry
+      let projectQuery = await import("firebase/firestore").then(({ query, where, getDocs, collection }) =>
+        getDocs(query(collection(db, "projects"), where("inquiryId", "==", inquiryIdParam)))
+      );
+      if (!projectQuery.empty) {
+        const projectDoc = projectQuery.docs[0];
+        pid = projectDoc.data().pid;
+      }
+      // Only create a new project if none exists for this inquiry
+      if (!pid) {
+        pid = await getNextPid(year);
+      }
+      // Save client with pid
+      const clientDocId = cid; // Always use incrementing CL id
+      // Set isContactPerson strictly by comparing to inquiry's contact email
+      const isContactPersonValue = result.data.email === inquiryContactEmail;
+      await setDoc(doc(db, "clients", clientDocId), {
+        ...result.data,
+        cid,
+        pid, // always use the correct project id
+        year,
+        inquiryId: inquiryIdParam,
+        createdAt: serverTimestamp(),
+        isContactPerson: isContactPersonValue,
+      });
+      // If contact person, set haveSubmitted in inquiry
+      if (isContactPersonValue) {
+        await setDoc(doc(db, "inquiries", inquiryIdParam), { haveSubmitted: true }, { merge: true });
+      }
+      // Fetch updated client record
+      const updatedClientSnap = await getDoc(doc(db, "clients", clientDocId));
+      const updatedClient = updatedClientSnap.exists() ? updatedClientSnap.data() : {};
+      // Append client name to project clientNames array
+      const projectDocRef = doc(db, "projects", pid);
+      const projectSnap = await getDoc(projectDocRef);
+      let clientNames: string[] = [];
+      if (projectSnap.exists()) {
+        clientNames = projectSnap.data().clientNames || [];
+      }
+      if (!clientNames.includes(result.data.name)) {
+        clientNames.push(result.data.name);
+      }
+      await setDoc(projectDocRef, {
+        pid,
+        year,
+        clientNames,
+        startDate: serverTimestamp(),
+        inquiryId: inquiryIdParam,
+        // ...other fields
+      }, { merge: true });
+      // Use updated client record for permission check
+      if (updatedClient.isContactPerson && inquiryContactEmail && updatedClient.email === inquiryContactEmail) {
+        router.push(`/client/project-info?pid=${pid}&cid=${clientDocId}&inquiryId=${inquiryIdParam}`);
+      } else {
+        setSubmitting(false);
+        toast.success("Client information submitted successfully! Only the contact person can fill out the project information form. Redirecting...");
+        router.push("/client/client-info/submitted");
+      }
+    } catch (err) {
+      setErrors({ name: "Failed to save client/project. Please try again." });
+      setSubmitting(false);
+    }
+  };
+
+  const handleCancelModal = () => {
+    setShowConfirmModal(false);
+    setPendingData(null);
   };
 
   return (
@@ -343,6 +364,29 @@ export default function ClientFormEntry() {
           </form>
         </div>
       </div>
+      {/* Confirmation Modal */}
+      <ConfirmationModalLayout
+        open={showConfirmModal}
+        onConfirm={handleConfirmSave}
+        onCancel={handleCancelModal}
+        loading={submitting}
+        title="Please double check before saving"
+        description="Review your entries below before confirming. This action cannot be undone."
+        confirmLabel="Confirm & Submit"
+        cancelLabel="Go Back"
+      >
+        {pendingData && (
+          <div className="space-y-2 text-slate-800 text-sm">
+            <div><span className="font-semibold">Full Name:</span> {pendingData.name}</div>
+            <div><span className="font-semibold">Email:</span> {pendingData.email}</div>
+            <div><span className="font-semibold">Affiliation:</span> {pendingData.affiliation}</div>
+            <div><span className="font-semibold">Designation:</span> {pendingData.designation}</div>
+            <div><span className="font-semibold">Gender:</span> {pendingData.sex}</div>
+            <div><span className="font-semibold">Mobile Number:</span> {pendingData.phoneNumber}</div>
+            <div><span className="font-semibold">Affiliation Address:</span> {pendingData.affiliationAddress}</div>
+          </div>
+        )}
+      </ConfirmationModalLayout>
     </div>
   );
 }
