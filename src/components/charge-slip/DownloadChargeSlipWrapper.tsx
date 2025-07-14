@@ -48,7 +48,7 @@ export default function DownloadChargeSlipWrapper({ record }: Props) {
       link.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("❌ Failed to generate or download charge slip:", error);
+      console.error("Failed to generate or download charge slip:", error);
     }
   };
 

@@ -97,7 +97,7 @@ export default function LoginPage() {
           </CardHeader>
           
           <CardContent className="space-y-6">
-            {/* Enhanced Privacy Notice */}
+            {/* Privacy Notice */}
             <div className="space-y-4">
               <div className="bg-gradient-to-r from-[#166FB5]/10 via-[#4038AF]/10 to-[#912ABD]/10 p-5 rounded-xl border border-[#166FB5]/30 relative overflow-hidden">
                 <div className="absolute top-2 right-2">
@@ -165,7 +165,7 @@ export default function LoginPage() {
               <p className="text-xs text-muted-foreground">
                 Need help? Contact us at{" "}
                 <a href="mailto:support@pgc-genomebase.com" className="text-[#166FB5] hover:underline">
-                  support@pgc-genomebase.com
+                  pgc.upvisayas@up.edu.ph
                 </a>
               </p>
             </div>

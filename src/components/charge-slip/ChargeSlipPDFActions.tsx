@@ -120,7 +120,7 @@ export default function ChargeSlipPDFActions({
         router.push("/admin/charge-slips");
       }, 1000);
     } catch (err) {
-      console.error("❌ Error saving or generating PDF:", err);
+      console.error("Error saving or generating PDF:", err);
       toast.error("Failed to save charge slip. Please try again.");
     }
   };

@@ -3,7 +3,6 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { QuotationRecord } from "@/types/Quotation";
-import { Badge } from "@/components/ui/badge";
 
 const categoryColors: Record<string, string> = {
   laboratory: "bg-green-100 text-green-800",
