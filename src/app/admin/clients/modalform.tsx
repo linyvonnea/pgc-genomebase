@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
@@ -8,13 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { DialogFooter } from "@/components/ui/dialog";
 import { Client } from "@/types/Client";
 import { clientSchema as baseClientSchema } from "@/schemas/clientSchema";
 import { db } from "@/lib/firebase"; 
 import { toast } from "sonner";
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, updateDoc, arrayUnion } from "firebase/firestore";
 import { getNextCid } from "@/services/clientService";
+import { getProjects } from "@/services/projectsService";
+import { DialogFooter } from "@/components/ui/dialog";
 
 const clientSchema = baseClientSchema.extend({
   affiliation: z.string().min(1, "Affiliation is required"),
@@ -46,28 +47,36 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof ClientFormData, string>>>({});
-
+  const [projectOptions, setProjectOptions] = useState<{ pid: string; title?: string }[]>([]);
+  const [selectedPid, setSelectedPid] = useState<string>("");
+  const [projectSearch, setProjectSearch] = useState("");
   const mutation = useMutation({
     mutationFn: async (data: Client) => {
       if (!data.cid) throw new Error("Client ID is required");
-
       const docRef = doc(db, "clients", data.cid);
       await setDoc(docRef, {
         ...data,
         createdAt: serverTimestamp(),
       });
-
       return data;
     },
     onSuccess: (data) => {
       toast.success("Client added successfully!");
-      onSubmit?.(data);
+      setTimeout(() => {
+        onSubmit?.(data);
+      }, 200);
     },
     onError: (error) => {
       toast.error("Failed to add client.");
       console.error("Firestore insert failed:", error);
     },
   });
+
+  useEffect(() => {
+    getProjects().then((projects) => {
+      setProjectOptions(projects.map((p) => ({ pid: p.pid!, title: p.title })));
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,11 +97,19 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
           ...result.data,
           cid: nextCid,
           year: result.data.year,
+          pid: selectedPid,
         };
-        mutation.mutate(clientData);
+        await mutation.mutateAsync(clientData);
+        // Update project clientNames
+        if (selectedPid && clientData.name) {
+          const projectRef = doc(db, "projects", selectedPid);
+          await updateDoc(projectRef, {
+            clientNames: arrayUnion(clientData.name)
+          });
+        }
       } catch (err) {
-        toast.error("Failed to generate client ID.");
-        console.error("CID generation failed:", err);
+        toast.error("Failed to generate client ID or update project.");
+        console.error("CID generation or project update failed:", err);
       }
     }
   };
@@ -107,8 +124,39 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
     }));
   };
 
+  const filteredProjectOptions = projectOptions.filter(
+    (proj) =>
+      proj.pid.toLowerCase().includes(projectSearch.toLowerCase()) ||
+      (proj.title?.toLowerCase().includes(projectSearch.toLowerCase()) ?? false)
+  );
+
   return (
     <form onSubmit={handleSubmit}>
+      {/* Project ID Dropdown */}
+      <div>
+        <Label>Project ID</Label>
+        <Select value={selectedPid} onValueChange={setSelectedPid}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select Project ID" />
+          </SelectTrigger>
+          <SelectContent>
+            <div className="p-2">
+              <Input
+                placeholder="Search Project ID or Title..."
+                value={projectSearch}
+                onChange={e => setProjectSearch(e.target.value)}
+                className="mb-2"
+              />
+            </div>
+            {filteredProjectOptions.map((proj) => (
+              <SelectItem key={proj.pid} value={proj.pid}>
+                {proj.pid} {proj.title ? `- ${proj.title}` : ""}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div>
         <Label>Name</Label>
         <Input
