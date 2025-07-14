@@ -10,8 +10,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Check } from "lucide-react";
 
+type CustomRange = { year: number; startMonth: number; endMonth: number; };
+
 interface TimeFilterProps {
-  onFilterChange: (value: string | { year: number; startMonth: number; endMonth: number }) => void;
+  onFilterChange: (range: TimeRange | CustomRange) => void | Promise<void>;
 }
 
 type TimeRange = "all" | "today" | "weekly" | "monthly" | "yearly" | "custom";
@@ -98,7 +100,7 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
             </DropdownMenu>
           </div>
         ) : (
-          <div className="flex flex-wrap justify-end gap-2 w-full">
+          <div className="flex flex-wrap md:flex-nowrap justify-end gap-2 w-full">
             {/* Timeline Dropdown */}
             <div className="w-[160px]">
               <DropdownMenu>
