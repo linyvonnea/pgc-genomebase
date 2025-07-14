@@ -45,7 +45,12 @@ export async function fetchFilteredData(
   const [pr, cl, cs, tr] = await Promise.all([
     getDocs(query(collection(db, "projects"), where("startDate", ">=", startTS), where("startDate", "<=", endTS))),
     getDocs(query(collection(db, "clients"), where("createdAt", ">=", startTS), where("createdAt", "<=", endTS))),
-    getDocs(query(collection(db, "chargeSlips"), where("dateOfOR", ">=", startTS), where("dateOfOR", "<=", endTS), where("status", "==", "paid"))),
+    getDocs(query(
+      collection(db, "chargeSlips"),
+      where("dateIssued", ">=", startTS),
+      where("dateIssued", "<=", endTS),
+      where("status", "==", "paid")
+    )),
     getDocs(query(collection(db, "trainings"), where("dateConducted", ">=", startTS), where("dateConducted", "<=", endTS)))
   ]);
   const mapDocs = (snap: any) => snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
