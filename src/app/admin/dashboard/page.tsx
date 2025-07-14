@@ -3,6 +3,7 @@
 import * as React from "react";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { Button } from "@/components/ui/button";
 import { TimeFilter } from "@/components/dashboard/TimeFilter";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { StatBarChart } from "@/components/dashboard/StatBarChart";
@@ -11,6 +12,8 @@ import { SendingInstitutionChart } from "@/components/dashboard/SendingInstituti
 import { FundingCategoryChart } from "@/components/dashboard/FundingCategoryChart";
 import { Timestamp } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 export default function Dashboard() {
   const [userName, setUserName] = React.useState("User");
@@ -26,6 +29,78 @@ export default function Dashboard() {
     endMonth: number;
   }>();
   const [loading, setLoading] = React.useState(true);
+
+  const exportToPDF = async () => {
+    const dashboardElement = document.getElementById("dashboard-content");
+    if (!dashboardElement) {
+      console.error("Dashboard content element not found");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const exportButton = document.querySelector('[onClick*="exportToPDF"], button[onclick*="exportToPDF"]') as HTMLElement | null;
+      let originalButtonDisplay = "";
+      
+      if (exportButton) {
+        originalButtonDisplay = exportButton.style.display;
+        exportButton.style.display = 'none'; 
+      }
+
+      const canvas = await html2canvas(dashboardElement, {
+        scale: 2,
+        useCORS: true,
+        logging: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
+
+      if (exportButton) {
+        exportButton.style.display = originalButtonDisplay;
+      }
+
+      const pdf = new jsPDF('landscape');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const margins = {
+        left: 10,
+        right: 10,
+        top: 15,
+        bottom: 15
+      };
+
+      // Calculate available space
+      const contentWidth = pageWidth - margins.left - margins.right;
+      const contentHeight = pageHeight - margins.top - margins.bottom;
+
+      // Calculate image dimensions to fit while maintaining aspect ratio
+      const imgRatio = canvas.width / canvas.height;
+      let imgWidth = contentWidth;
+      let imgHeight = imgWidth / imgRatio;
+
+      // Adjust if too tall
+      if (imgHeight > contentHeight) {
+        imgHeight = contentHeight;
+        imgWidth = imgHeight * imgRatio;
+      }
+
+      // Center the content
+      const x = margins.left + (contentWidth - imgWidth) / 2;
+      const y = margins.top + (contentHeight - imgHeight) / 2;
+
+      // Add to PDF
+      pdf.addImage(canvas, 'PNG', x, y, imgWidth, imgHeight);
+      pdf.save('dashboard-report.pdf');
+
+    } catch (error) {
+      console.error('Error during PDF export:', error);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const calculateTotalIncome = (quotations: any[]) => {
     return quotations.reduce((sum, quotation) => {
@@ -233,7 +308,7 @@ export default function Dashboard() {
         getDocs(projectsQuery),
         getDocs(clientsQuery),
         getDocs(quotationsQuery),
-        getDocs(trainingsQuery) // Add trainings snapshot
+        getDocs(trainingsQuery)
       ]);
 
       const projectsData = projectsSnapshot.docs.map(doc => ({
@@ -271,59 +346,72 @@ export default function Dashboard() {
         <h1 className="text-2xl sm:text-3xl font-bold flex-grow min-w-0">
           Welcome, {userName}!
         </h1>
-        <div>
+        <div className="flex gap-2">
           <TimeFilter onFilterChange={handleTimeFilterChange} />
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        </div>
-      ) : (
-        <>
-          <div className="gap-4 mb-4">
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
-                <StatCard 
-                  title="Total Clients" 
-                  value={filteredClients.length}
-                  colorIndex={0} 
-                />
-                <StatCard 
-                  title="Total Projects" 
-                  value={filteredProjects.length}
-                  colorIndex={1} 
-                />
-                <StatCard 
-                  title="Total Trainings" 
-                  value={filteredTrainings.length}
-                  colorIndex={2}
-                />
-                <StatCard 
-                  title="Total Income" 
-                  value={totalIncome.toLocaleString()}
-                  colorIndex={3}
+      <div id="dashboard-content">
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <>
+            <div className="gap-4 mb-4">
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
+                  <StatCard 
+                    title="Total Clients" 
+                    value={filteredClients.length}
+                    colorIndex={0} 
+                  />
+                  <StatCard 
+                    title="Total Projects" 
+                    value={filteredProjects.length}
+                    colorIndex={1} 
+                  />
+                  <StatCard 
+                    title="Total Trainings" 
+                    value={filteredTrainings.length}
+                    colorIndex={2}
+                  />
+                  <StatCard 
+                    title="Total Income" 
+                    value={totalIncome.toLocaleString()}
+                    colorIndex={3}
+                  />
+                </div>
+              </div>
+              <div className="h-[400px]"> 
+                <StatBarChart
+                  projectsData={filteredProjects}
+                  clientsData={filteredClients}
+                  trainingsData={filteredTrainings}
+                  timeRange={timeRange}
+                  customRange={customRange}
                 />
               </div>
+            </div>          
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <ServiceRequestedChart projects={filteredProjects} />
+              <SendingInstitutionChart projects={filteredProjects} />
+              <FundingCategoryChart projects={filteredProjects} />
             </div>
-            <div className="h-[400px]"> 
-              <StatBarChart
-                projectsData={filteredProjects}
-                clientsData={filteredClients}
-                trainingsData={filteredTrainings}
-                timeRange={timeRange}
-                customRange={customRange}
-              />
-            </div>
-          </div>          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <ServiceRequestedChart projects={filteredProjects} />
-            <SendingInstitutionChart projects={filteredProjects} />
-            <FundingCategoryChart projects={filteredProjects} />
-          </div>
-        </>
-      )}
+
+          </>
+        )}
+      </div>
+      <div className="flex justify-end mt-6">
+              <Button 
+                variant="outline" 
+                onClick={exportToPDF}
+                disabled={loading}
+                className="w-[160px] text-left truncate"
+              >
+                {loading ? "Generating..." : "Export as PDF"}
+              </Button>
+      </div>
     </div>
   );
 }

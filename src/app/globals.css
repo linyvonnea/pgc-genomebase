@@ -109,12 +109,21 @@
   .recharts-wrapper:focus,
   .recharts-surface:focus,
   .recharts-layer:focus,
-  .recharts-default-legend:focus {
+  .recharts-default-legend:focus,
+  .recharts-sector:focus,
+  .recharts-pie-sector:focus,
+  .recharts-active-shape:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  .recharts-pie .recharts-sector {
     outline: none !important;
   }
 
-  .card:focus:not(:focus-visible) {
-    outline: none;
-    box-shadow: none;
+  .recharts-pie .recharts-sector:active,
+  .recharts-pie .recharts-sector:focus {
+    outline: none !important;
+    stroke: none !important;
   }
 }
