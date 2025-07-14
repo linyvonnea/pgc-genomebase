@@ -12,6 +12,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 interface AdminInfo {
   name: string;
   position: string;
+  email: string; // Added email property
 }
 
 export default function useAuth() {
@@ -42,7 +43,7 @@ export default function useAuth() {
       if (adminSnap.exists()) {
         const { name, position } = adminSnap.data();
         setIsAdmin(true);
-        setAdminInfo({ name, position });
+        setAdminInfo({ name, position, email });
 
         // Save admin in /users if not already
         const userRef = doc(db, "users", uid);
@@ -92,7 +93,7 @@ export default function useAuth() {
     setUser(null);
     setIsAdmin(false);
     setAdminInfo(null);
-    window.location.href = "/login";
+    window.location.href = "/";
   };
 
   return {

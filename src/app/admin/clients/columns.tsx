@@ -3,6 +3,8 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Client } from "@/types/Client"
 import { clientSchema } from "@/schemas/clientSchema"
+import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation";
 
 const validateClient = (data: any) => {
   const result = clientSchema.safeParse(data)
@@ -18,7 +20,7 @@ export const columns: ColumnDef<Client>[] = [
     accessorKey: "pid",
     header: "Project ID",
   },
-  {
+  { 
     accessorKey: "cid",
     header: "Client ID",
   },
@@ -55,9 +57,28 @@ export const columns: ColumnDef<Client>[] = [
     header: "Actions",
     cell: ({ row }) => {
       const client = row.original;
+      const router = useRouter();
       // Lazy import to avoid circular dependency if needed
       const EditClientModal = require("@/components/forms/EditClientModal").EditClientModal;
-      return <EditClientModal client={client} onSuccess={() => {}} />;
+      return (
+      <div className="flex items-center gap-2">
+      <EditClientModal client={client} onSuccess={() => {}} />
+        <Button
+          onClick={() => {
+            console.log("Client Data:", client);
+            router.push(
+              `/admin/charge-slips/new?clientId=${client.cid}&projectId=${client.pid}`
+            );
+          }}
+          variant="outline"
+          className="text-sm"
+        >
+          Charge Slip
+        </Button>
+      </div>
+
+    );
+
     },
   },
 ]

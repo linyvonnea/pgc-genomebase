@@ -27,7 +27,9 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       status: 'Pending',
       isApproved: false,
       // Store the service type for reference if needed
-      serviceType: inquiryData.service
+      serviceType: inquiryData.service,
+      // Add the haveSubmitted field (default false)
+      haveSubmitted: false
     };
 
     const docRef = await addDoc(collection(db, "inquiries"), transformedData);
