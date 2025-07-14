@@ -55,30 +55,28 @@ export const columns: ColumnDef<Client>[] = [
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => {
+    cell: (ctx: any) => {
+      const { row, meta } = ctx;
       const client = row.original;
-      const router = useRouter();
-      // Lazy import to avoid circular dependency if needed
       const EditClientModal = require("@/components/forms/EditClientModal").EditClientModal;
+      const router = useRouter();
       return (
-      <div className="flex items-center gap-2">
-      <EditClientModal client={client} onSuccess={() => {}} />
-        <Button
-          onClick={() => {
-            console.log("Client Data:", client);
-            router.push(
-              `/admin/charge-slips/new?clientId=${client.cid}&projectId=${client.pid}`
-            );
-          }}
-          variant="outline"
-          className="text-sm"
-        >
-          Charge Slip
-        </Button>
-      </div>
-
-    );
-
+        <div className="flex items-center gap-2">
+          <EditClientModal client={client} onSuccess={meta?.onSuccess} />
+          <Button
+            onClick={() => {
+              console.log("Client Data:", client);
+              router.push(
+                `/admin/charge-slips/new?clientId=${client.cid}&projectId=${client.pid}`
+              );
+            }}
+            variant="outline"
+            className="text-sm"
+          >
+            Charge Slip
+          </Button>
+        </div>
+      );
     },
   },
 ]
