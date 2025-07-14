@@ -1,33 +1,9 @@
-// src/app/admin/charge-slips/page.tsx
-
 import { getAllChargeSlips } from "@/services/chargeSlipService";
 import { ChargeSlipClientTable } from "./ChargeSlipClientTable";
+import { columns } from "./columns";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { Timestamp } from "firebase/firestore";
-
-// ✅ Local UI-safe type (avoids Firestore constraint issues)
-type UIChargeSlipRecord = Omit<
-  ChargeSlipRecord,
-  "dateIssued" | "dateOfOR" | "createdAt" | "client" | "project"
-> & {
-  dateIssued?: Date;
-  dateOfOR?: Date;
-  createdAt?: Date;
-  client: {
-    createdAt?: Date;
-    address: string;
-    [key: string]: any;
-  };
-  project: {
-    createdAt?: Date;
-    [key: string]: any;
-  };
-  clientInfo: {
-    address: string;
-    [key: string]: any;
-  };
-  categories: string[];
-};
+import { UIChargeSlipRecord } from "@/types/UIChargeSlipRecord";
 
 // 🔁 Converts Firestore Timestamp, string, or Date → Date
 function toDateSafe(value: string | Timestamp | Date | null | undefined): Date | undefined {
@@ -47,22 +23,24 @@ function extractCategories(services: any[]): string[] {
   return Array.from(new Set(services.map((s) => s.type || ""))).filter(Boolean);
 }
 
-// 🚀 Fetch charge slip data from Firestore
-async function getData(): Promise<ChargeSlipRecord[]> {
-  try {
-    return await getAllChargeSlips();
-  } catch (error) {
-    console.error("Failed to fetch charge slips:", error);
-    return [];
+// 🛡️ Safe status normalization
+function normalizeStatus(status?: string): "paid" | "cancelled" | "processing" {
+  const safe = (status || "processing").toLowerCase();
+  if (safe === "paid" || safe === "cancelled" || safe === "processing") {
+    return safe;
   }
+  return "processing";
 }
 
-// 🧾 Page component
+// ✅ Final Server Component
 export default async function ChargeSlipPage() {
-  const rawData = await getData();
+  const rawData: ChargeSlipRecord[] = await getAllChargeSlips();
 
-  const data: UIChargeSlipRecord[] = rawData.map((record) => ({
+  const data: UIChargeSlipRecord[] = rawData.map((record: ChargeSlipRecord) => ({
     ...record,
+
+    status: normalizeStatus(record.status),
+
     dateIssued: toDateSafe(record.dateIssued),
     dateOfOR: toDateSafe(record.dateOfOR),
     createdAt: toDateSafe(record.createdAt),
@@ -80,10 +58,7 @@ export default async function ChargeSlipPage() {
 
     clientInfo: {
       ...record.clientInfo,
-      address:
-        record.clientInfo?.address ||
-        record.client?.affiliationAddress ||
-        "—",
+      address: record.clientInfo?.address || record.client?.affiliationAddress || "—",
     },
 
     categories: record.categories ?? extractCategories(record.services),
@@ -92,15 +67,13 @@ export default async function ChargeSlipPage() {
   return (
     <div className="container mx-auto py-10 space-y-6">
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Charge Slip Management
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight">Charge Slip Management</h1>
         <p className="text-muted-foreground">
           Review and manage all charge slips issued through GenomeBase.
         </p>
       </div>
 
-      <ChargeSlipClientTable data={data} />
+      <ChargeSlipClientTable data={data} columns={columns} />
     </div>
   );
 }

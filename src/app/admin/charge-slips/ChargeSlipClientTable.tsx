@@ -1,12 +1,37 @@
 // src/components/charge-slip/ChargeSlipClientTable.tsx
 "use client";
 
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+  Row,
+} from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
-import { DataTable } from "@/components/ui/data-table";
-import { columns } from "./columns";
-import { Row } from "@tanstack/react-table";
+import { useMemo, useState } from "react";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { columns as defaultColumns } from "./columns";
 
-// Use a local UI-safe type to match the cleaned `page.tsx` structure
 type UIChargeSlipRecord = {
   chargeSlipNumber: string;
   dateIssued?: Date;
@@ -42,21 +67,166 @@ type UIChargeSlipRecord = {
 
 interface Props {
   data: UIChargeSlipRecord[];
+  columns?: ColumnDef<UIChargeSlipRecord, any>[];
 }
 
-export function ChargeSlipClientTable({ data }: Props) {
+export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props) {
   const router = useRouter();
 
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("__all");
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
+  const filteredRows = useMemo(() => {
+    return table.getRowModel().rows.filter((row) => {
+      const matchesSearch = row
+        .getAllCells()
+        .some((cell) =>
+          String(cell.getValue())
+            .toLowerCase()
+            .includes(globalFilter.toLowerCase())
+        );
+
+      const matchesStatus =
+        statusFilter === "__all" || row.original.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [table, globalFilter, statusFilter]);
+
+  const countByStatus = (status: string) =>
+    filteredRows.filter((row) => row.original.status === status).length;
+
+  const totalAmount = useMemo(() => {
+    return filteredRows.reduce((sum, row) => sum + (row.original.total || 0), 0);
+  }, [filteredRows]);
+
   return (
-    <DataTable
-      columns={columns}
-      data={data}
-      onRowClick={(row: Row<UIChargeSlipRecord>) => {
-        const chargeSlipNumber = row.original.chargeSlipNumber;
-        if (chargeSlipNumber) {
-          router.push(`/admin/charge-slips/${chargeSlipNumber}`);
-        }
-      }}
-    />
+    <div className="space-y-4">
+      {/* Filter Controls */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <Input
+          placeholder="Search client, CS number, etc."
+          value={globalFilter}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          className="w-72"
+        />
+
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-56">
+            <SelectValue placeholder="Filter by Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all">All Statuses</SelectItem>
+            <SelectItem value="processing">Processing</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="rounded-lg border p-4 text-center">
+          <div className="text-2xl font-bold text-blue-600">
+            {countByStatus("processing")}
+          </div>
+          <div className="text-sm text-muted-foreground">Processing</div>
+        </div>
+        <div className="rounded-lg border p-4 text-center">
+          <div className="text-2xl font-bold text-green-600">
+            {countByStatus("paid")}
+          </div>
+          <div className="text-sm text-muted-foreground">Paid</div>
+        </div>
+        <div className="rounded-lg border p-4 text-center">
+          <div className="text-2xl font-bold text-red-600">
+            {countByStatus("cancelled")}
+          </div>
+          <div className="text-sm text-muted-foreground">Cancelled</div>
+        </div>
+        <div className="rounded-lg border p-4 text-center">
+          <div className="text-2xl font-bold text-gray-700">
+            ₱{totalAmount.toLocaleString()}
+          </div>
+          <div className="text-sm text-muted-foreground">Total Amount</div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+
+          <TableBody>
+            {filteredRows.length ? (
+              filteredRows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  onClick={() =>
+                    router.push(`/admin/charge-slips/${row.original.chargeSlipNumber}`)
+                  }
+                  className="hover:bg-muted/40 cursor-pointer"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="text-center">
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-end space-x-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          Previous
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          Next
+        </Button>
+      </div>
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
+import { UIChargeSlipRecord } from "@/types/UIChargeSlipRecord";
 import { Badge } from "@/components/ui/badge";
 
 const statusColors: Record<string, string> = {
@@ -17,7 +17,7 @@ const categoryColors: Record<string, string> = {
   retail: "bg-orange-100 text-orange-800",
 };
 
-export const columns: ColumnDef<ChargeSlipRecord>[] = [
+export const columns: ColumnDef<UIChargeSlipRecord>[] = [
   {
     accessorKey: "dateIssued",
     header: "Date",
@@ -48,11 +48,11 @@ export const columns: ColumnDef<ChargeSlipRecord>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const status = (row.getValue("status") as string)?.toLowerCase();
-      const color = statusColors[status] || "bg-gray-100 text-gray-800";
+      const raw = (row.getValue("status") as string | undefined)?.toLowerCase() || "processing";
+      const color = statusColors[raw] || "bg-gray-100 text-gray-800";
       return (
         <Badge className={`capitalize ${color}`}>
-          {status || "Processing"}
+          {raw}
         </Badge>
       );
     },
@@ -90,14 +90,8 @@ export const columns: ColumnDef<ChargeSlipRecord>[] = [
       );
     },
   },
-  {
-    accessorKey: "services",
-    header: "Service Details",
-    cell: ({ row }) => {
-      const services = row.original.services;
-      return services?.length ? services.map((s) => s.name).join(", ") : "—";
-    },
-  },
+  // ❌ Removed the services column
+
   {
     accessorKey: "dvNumber",
     header: "DV No.",
