@@ -12,13 +12,20 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import useAuth from "@/hooks/useAuth" // Import the auth hook
+import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout"
+import { useRouter } from "next/navigation";
+import ConfirmationPage from "@/components/ConfirmationPage";
 
 export default function QuotationRequestForm() {
   const [selectedService, setSelectedService] = useState<string>("laboratory")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingData, setPendingData] = useState<InquiryFormData | null>(null);
   const { toast } = useToast()
   const { user } = useAuth() // Get the current authenticated user
-  
+  const router = useRouter();
+  const [showThankYou, setShowThankYou] = useState(false);
+
   const form = useForm<InquiryFormData>({
     resolver: zodResolver(inquiryFormSchema),
     defaultValues: {
@@ -60,41 +67,45 @@ export default function QuotationRequestForm() {
     setValue("workflows", newWorkflows)
   }
 
-  const onSubmit = async (data: InquiryFormData) => {
-    setIsSubmitting(true)
-    
+  const handleFormSubmit = (data: InquiryFormData) => {
+    setPendingData(data);
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmSave = async () => {
+    if (!pendingData) return;
+    setIsSubmitting(true);
+    setShowConfirmModal(false);
     try {
-      // Add the current user's email to the submission data
       const submissionData = {
-        ...data,
-        email: user?.email || "" // Add the user's email from auth
-      }
-      
-      console.log("Submitting form data:", submissionData)
-      const result = await createInquiryAction(submissionData) // Use server action with email included
-      
+        ...pendingData,
+        email: user?.email || ""
+      };
+      const result = await createInquiryAction(submissionData);
       if (result.success) {
-        toast({
-          title: "Success!",
-          description: `Your inquiry has been submitted successfully.`,
-        })
-        
-        // Reset form after successful submission
-        reset()
-        setSelectedService("laboratory")
+        reset();
+        setSelectedService("laboratory");
+        // Redirect to thank you page tailored to inquiry
+        router.push("/client/inquiry-request/submitted");
+        return;
       }
-      
     } catch (error) {
-      console.error("Error submitting form:", error)
+      console.error("Error submitting form:", error);
       toast({
         title: "Error",
         description: "Failed to submit your inquiry. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
+      setPendingData(null);
     }
-  }
+  };
+
+  const handleCancelModal = () => {
+    setShowConfirmModal(false);
+    setPendingData(null);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50/50 to-blue-50/30 p-6">
@@ -118,7 +129,7 @@ export default function QuotationRequestForm() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
             {/* Personal Information Section */}
             <div className="bg-gradient-to-r from-slate-50 to-blue-50/50 rounded-xl p-6 border border-slate-100">
               <h2 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-2">
@@ -408,6 +419,49 @@ export default function QuotationRequestForm() {
           </form>
         </div>
       </div>
+      {/* Confirmation Modal */}
+      <ConfirmationModalLayout
+        open={showConfirmModal}
+        onConfirm={handleConfirmSave}
+        onCancel={handleCancelModal}
+        loading={isSubmitting}
+        title="Please double check before saving"
+        description="Review your entries below before confirming. This action cannot be undone."
+        confirmLabel="Confirm & Submit"
+        cancelLabel="Go Back"
+      >
+        {pendingData && (
+          <div className="space-y-2 text-slate-800 text-sm">
+            <div><span className="font-semibold">Full Name:</span> {pendingData.name}</div>
+            <div><span className="font-semibold">Affiliation:</span> {pendingData.affiliation}</div>
+            <div><span className="font-semibold">Designation:</span> {pendingData.designation}</div>
+            <div><span className="font-semibold">Service Type:</span> {pendingData.service}</div>
+            {pendingData.service === "laboratory" && (
+              <div>
+                <span className="font-semibold">Workflows:</span> {pendingData.workflows?.join(", ") || "-"}
+              </div>
+            )}
+            {pendingData.service === "laboratory" && (
+              <div>
+                <span className="font-semibold">Additional Info:</span> {pendingData.additionalInfo || "-"}
+              </div>
+            )}
+            {pendingData.service === "research" && (
+              <>
+                <div><span className="font-semibold">Project Background:</span> {pendingData.projectBackground}</div>
+                <div><span className="font-semibold">Project Budget:</span> {pendingData.projectBudget}</div>
+              </>
+            )}
+            {pendingData.service === "training" && (
+              <>
+                <div><span className="font-semibold">Specific Training Need:</span> {pendingData.specificTrainingNeed}</div>
+                <div><span className="font-semibold">Target Training Date:</span> {pendingData.targetTrainingDate}</div>
+                <div><span className="font-semibold">Number of Participants:</span> {pendingData.numberOfParticipants}</div>
+              </>
+            )}
+          </div>
+        )}
+      </ConfirmationModalLayout>
     </div>
   )
 }
