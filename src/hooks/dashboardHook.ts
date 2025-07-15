@@ -121,7 +121,11 @@ export function useDashboardData() {
     try {
       const canvas = await html2canvas(element);
       const jsPDF = (await import("jspdf")).default;
-      const pdf = new jsPDF("landscape");
+      const pdf = new jsPDF({
+        orientation: "landscape",
+        unit: "mm",
+        format: [297, 240 + 20] 
+      });
       const imgData = canvas.toDataURL("image/png");
 
       const margin = 5;
@@ -144,15 +148,17 @@ export function useDashboardData() {
         ? `Custom: ${customRange?.year ?? ""} (${(customRange?.startMonth ?? 0) + 1}-${(customRange?.endMonth ?? 0) + 1})`
         : `Filter: ${timeRange.charAt(0).toUpperCase() + timeRange.slice(1)}`;
       pdf.setFontSize(10);
-      // Date on the left, filter on the right (same row)
-      pdf.text(`Date Generated: ${dateStr}`, margin, margin - 6);
+      // Draw date and filter at the top, inside the margin
+      const textY = margin + 10;
+      pdf.text(`Date Generated: ${dateStr}`, margin, textY);
       pdf.text(
         filterStr,
         pageWidth - margin - pdf.getTextWidth(filterStr),
-        margin - 6
+        textY
       );
 
-      pdf.addImage(imgData, "PNG", x, y + 20, finalWidth, finalHeight);
+      // Draw the image starting just below the header text
+      pdf.addImage(imgData, "PNG", x, textY + 6, finalWidth, finalHeight);
       pdf.save("dashboard-report.pdf");
     } catch (e) {
       console.error("PDF export failed", e);
