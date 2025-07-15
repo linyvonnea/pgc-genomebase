@@ -16,12 +16,12 @@ const INSTITUTION_CATEGORIES: readonly ("UP System" | "SUC/HEI" | "Government" |
 type InstitutionCategory = typeof INSTITUTION_CATEGORIES[number];
 
 const CATEGORY_COLORS: Record<InstitutionCategory, string> = {
-  "UP System": "#F69122",
-  "SUC/HEI": "#B9273A",
-  "Government": "#912ABD",
-  "Private/Local": "#6E30BE",
-  "International": "#633190",
-  "N/A": "#166FB5"
+  "UP System":"#166FB5",
+  "SUC/HEI":  "#40388F",
+  "Government": " #633190",
+  "Private/Local": "#6E30BE ",
+  "International": "#912ABD",
+  "N/A":  "#F69122" 
 };
 
 export function SendingInstitutionChart({ projects }: { projects: Project[] }) {

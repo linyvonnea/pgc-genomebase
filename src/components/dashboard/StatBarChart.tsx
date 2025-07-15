@@ -21,8 +21,8 @@ import {
 import { generateChartData } from "@/services/filterGraph";
 
 const CATEGORY_COLORS = {
-  CLIENTS: "#F69122",  
-  PROJECTS: "#B9273A",
+  CLIENTS: "#166FB5",  
+  PROJECTS: "#633190",
   TRAININGS: "#912ABD" 
 } as const;
 
