@@ -10,7 +10,6 @@ import {
   LibraryBig,
   MessageSquare,
   FileText,
-  Settings,
   Calculator,
   Receipt,
 } from "lucide-react";
@@ -61,11 +60,6 @@ export function AdminSidebar() {
       href: "/admin/manual-quotation", 
       label: "Manual Quotation", 
       icon: Calculator,
-    },
-    { 
-      href: "/admin/settings", 
-      label: "Settings", 
-      icon: Settings,
     },
   ];
 
