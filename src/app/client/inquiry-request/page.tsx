@@ -15,7 +15,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
-import { useToast } from "@/hooks/use-toast"
+import { toast } from "sonner" // Changed from useToast to sonner
 import useAuth from "@/hooks/useAuth"
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout"
 import { useRouter } from "next/navigation"
@@ -26,7 +26,7 @@ export default function QuotationRequestForm() {
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [pendingData, setPendingData] = useState<InquiryFormData | null>(null)
   const [trainingDate, setTrainingDate] = useState<Date>()
-  const { toast } = useToast()
+  // Removed const { toast } = useToast()
   const { user } = useAuth()
   const router = useRouter()
 
@@ -90,6 +90,13 @@ export default function QuotationRequestForm() {
     if (!pendingData) return
     setIsSubmitting(true)
     setShowConfirmModal(false)
+    
+    // Show toast notification that form is being submitted using Sonner
+    toast.loading("Submitting your inquiry request...", {
+      description: "Please wait while we process your request. You will be redirected to the confirmation page shortly.",
+      duration: Infinity, // Keep it visible until we dismiss it
+    })
+    
     try {
       const submissionData = {
         ...pendingData,
@@ -97,18 +104,27 @@ export default function QuotationRequestForm() {
       }
       const result = await createInquiryAction(submissionData)
       if (result.success) {
-        reset()
-        setSelectedService("laboratory")
-        setTrainingDate(undefined)
-        router.push("/client/inquiry-request/submitted")
+        // Dismiss the loading toast and show success
+        toast.dismiss()
+        toast.success("Inquiry submitted successfully!", {
+          description: "Thank you for your submission. Redirecting to confirmation page...",
+          duration: 4000,
+        })
+        
+        // Small delay before redirect to allow user to see the success toast
+        setTimeout(() => {
+          reset()
+          setSelectedService("laboratory")
+          setTrainingDate(undefined)
+          router.push("/client/inquiry-request/submitted")
+        }, 2000)
         return
       }
     } catch (error) {
       console.error("Error submitting form:", error)
-      toast({
-        title: "Error",
-        description: "Failed to submit your inquiry. Please try again.",
-        variant: "destructive",
+      toast.dismiss()
+      toast.error("Failed to submit inquiry", {
+        description: "There was an error submitting your request. Please try again.",
       })
     } finally {
       setIsSubmitting(false)

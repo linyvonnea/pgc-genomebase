@@ -48,8 +48,7 @@ export default function InquiryThankYouPage() {
 
           {/* Message */}
           <p className="text-slate-700 mb-8 leading-relaxed">
-            Thank you for submitting your inquiry. PGC Visayas will reach out to
-            you via email.
+            Thank you for submitting your inquiry. Please wait for PGC Visayas to reach out to you regarding your quotation request.
           </p>
 
           {/* Action Button */}
