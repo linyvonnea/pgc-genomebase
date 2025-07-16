@@ -352,7 +352,7 @@ export default function ClientFormEntry() {
             <div className="flex justify-end pt-8 border-t border-slate-100">
               <Button 
                 type="submit" 
-                className="h-12 px-8 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                 disabled={submitting}
               >
                 {submitting ? "Submitting..." : "Submit"}

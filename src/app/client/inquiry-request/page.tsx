@@ -10,21 +10,25 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { CalendarIcon } from "lucide-react"
+import { format } from "date-fns"
+import { cn } from "@/lib/utils"
 import { useToast } from "@/hooks/use-toast"
-import useAuth from "@/hooks/useAuth" // Import the auth hook
+import useAuth from "@/hooks/useAuth"
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout"
-import { useRouter } from "next/navigation";
-import ConfirmationPage from "@/components/ConfirmationPage";
+import { useRouter } from "next/navigation"
 
 export default function QuotationRequestForm() {
   const [selectedService, setSelectedService] = useState<string>("laboratory")
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [pendingData, setPendingData] = useState<InquiryFormData | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [pendingData, setPendingData] = useState<InquiryFormData | null>(null)
+  const [trainingDate, setTrainingDate] = useState<Date>()
   const { toast } = useToast()
-  const { user } = useAuth() // Get the current authenticated user
-  const router = useRouter();
-  const [showThankYou, setShowThankYou] = useState(false);
+  const { user } = useAuth()
+  const router = useRouter()
 
   const form = useForm<InquiryFormData>({
     resolver: zodResolver(inquiryFormSchema),
@@ -57,6 +61,7 @@ export default function QuotationRequestForm() {
     setValue("specificTrainingNeed", "")
     setValue("targetTrainingDate", "")
     setValue("numberOfParticipants", undefined)
+    setTrainingDate(undefined)
   }
 
   const handleWorkflowChange = (workflow: string, checked: boolean) => {
@@ -67,45 +72,54 @@ export default function QuotationRequestForm() {
     setValue("workflows", newWorkflows)
   }
 
+  const handleDateSelect = (date: Date | undefined) => {
+    setTrainingDate(date)
+    if (date) {
+      setValue("targetTrainingDate", format(date, "yyyy-MM-dd"))
+    } else {
+      setValue("targetTrainingDate", "")
+    }
+  }
+
   const handleFormSubmit = (data: InquiryFormData) => {
-    setPendingData(data);
-    setShowConfirmModal(true);
-  };
+    setPendingData(data)
+    setShowConfirmModal(true)
+  }
 
   const handleConfirmSave = async () => {
-    if (!pendingData) return;
-    setIsSubmitting(true);
-    setShowConfirmModal(false);
+    if (!pendingData) return
+    setIsSubmitting(true)
+    setShowConfirmModal(false)
     try {
       const submissionData = {
         ...pendingData,
         email: user?.email || ""
-      };
-      const result = await createInquiryAction(submissionData);
+      }
+      const result = await createInquiryAction(submissionData)
       if (result.success) {
-        reset();
-        setSelectedService("laboratory");
-        // Redirect to thank you page tailored to inquiry
-        router.push("/client/inquiry-request/submitted");
-        return;
+        reset()
+        setSelectedService("laboratory")
+        setTrainingDate(undefined)
+        router.push("/client/inquiry-request/submitted")
+        return
       }
     } catch (error) {
-      console.error("Error submitting form:", error);
+      console.error("Error submitting form:", error)
       toast({
         title: "Error",
         description: "Failed to submit your inquiry. Please try again.",
         variant: "destructive",
-      });
+      })
     } finally {
-      setIsSubmitting(false);
-      setPendingData(null);
+      setIsSubmitting(false)
+      setPendingData(null)
     }
-  };
+  }
 
   const handleCancelModal = () => {
-    setShowConfirmModal(false);
-    setPendingData(null);
-  };
+    setShowConfirmModal(false)
+    setPendingData(null)
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50/50 to-blue-50/30 p-6">
@@ -343,10 +357,43 @@ export default function QuotationRequestForm() {
 
               {selectedService === "training" && (
                 <div className="space-y-6">
+                  {/* Training Information Section */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-800 mb-3">PGC Visayas Training Services</h3>
+                        <p className="text-slate-700 mb-3">PGC Visayas offers a range of training services, including:</p>
+                        <ul className="list-disc list-inside space-y-1 text-slate-700 ml-4">
+                          <li>Basic Molecular Techniques (DNA Extraction, PCR, and Quantification)</li>
+                          <li>Library Preparation for Next Generation Sequencing (Amplicon Sequencing, 16s Metabarcoding, Whole Genome Sequencing)</li>
+                          <li>Sequencing (Illumina iSeq 100 and NextSeq 1000)</li>
+                          <li>Bioinformatics Analysis (Customized depending on the needed application)</li>
+                        </ul>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-semibold text-slate-800 mb-2">Training Structure:</h4>
+                        <div className="space-y-2 text-slate-700">
+                          <div>
+                            <span className="font-medium">Lecture and Hands-On Training (4-5 day Training)</span>
+                            <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
+                              <li>Lecture and Hands-On Laboratory Training (2-3 days)</li>
+                              <li>Lecture and Hand-On Bioinformatics Training (1-2 days)</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <p className="text-slate-700 font-medium">
+                        If you are interested, kindly provide us with the following details:
+                      </p>
+                    </div>
+                  </div>
+
                   {/* Specific Training Need */}
                   <div>
                     <Label htmlFor="specificTrainingNeed" className="text-sm font-semibold text-slate-700 mb-2 block">
-                      Specific Training Need <span className="text-[#B9273A]">*</span>
+                      Specific Training Needs <span className="text-[#B9273A]">*</span>
                     </Label>
                     <Input
                       id="specificTrainingNeed"
@@ -363,17 +410,36 @@ export default function QuotationRequestForm() {
                     )}
                   </div>
 
-                  {/* Target Date for Training */}
+                  {/* Target Date for Training with Calendar */}
                   <div>
-                    <Label htmlFor="targetTrainingDate" className="text-sm font-semibold text-slate-700 mb-2 block">
+                    <Label className="text-sm font-semibold text-slate-700 mb-2 block">
                       Target Date for the Training <span className="text-[#B9273A]">*</span>
                     </Label>
-                    <Input
-                      id="targetTrainingDate"
-                      type="date"
-                      {...register("targetTrainingDate")}
-                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
-                    />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full h-12 justify-start text-left font-normal bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20",
+                            !trainingDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {trainingDate ? format(trainingDate, "PPP") : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={trainingDate}
+                          onSelect={handleDateSelect}
+                          disabled={(date) =>
+                            date < new Date() || date < new Date("1900-01-01")
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
                     {errors.targetTrainingDate && (
                       <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
                         <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
@@ -410,7 +476,7 @@ export default function QuotationRequestForm() {
             <div className="flex justify-end pt-8 border-t border-slate-100">
               <Button 
                 type="submit" 
-                className="h-12 px-8 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Submitting..." : "Submit Request"}
