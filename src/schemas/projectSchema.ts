@@ -1,4 +1,4 @@
-// src/schemas/projectSchema.ts
+
 import { z } from "zod";
 
 // Schema for the project form (minimal fields)
@@ -26,7 +26,12 @@ export const projectSchema = z.object({
   status: z.enum(["Ongoing" , "Cancelled" , "Completed"]).optional().or(z.literal("")).or(z.undefined()),
   sendingInstitution: z.enum(["UP System", "SUC/HEI", "Government", "Private/Local", "International", "N/A"]).optional(),
   fundingCategory: z.enum(["External", "In-House"]).optional().or(z.literal("")).or(z.undefined()),  fundingInstitution: z.string().optional(),
-  serviceRequested: z.array(z.string()).optional(),
+  serviceRequested: z.array(z.enum([
+    "Laboratory Services",
+    "Retail Services",
+    "Equipment Use",
+    "Bioinformatics Analysis"
+  ])).optional().or(z.undefined()),
   personnelAssigned: z.string().optional(),
   notes: z.string().optional(),
 });

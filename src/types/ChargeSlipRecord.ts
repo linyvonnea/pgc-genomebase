@@ -1,11 +1,27 @@
+// src/types/ChargeSlipRecord.ts
 import { Client } from "./Client";
 import { Project } from "./Project";
 import { AdminInfo } from "./Admin";
 import { SelectedService } from "./SelectedService";
 import { Timestamp } from "firebase/firestore";
 
+/**
+ * Allowed service categories in charge slips.
+ */
+export type ValidCategory = "equipment" | "retail" | "bioinformatics" | "laboratory";
+
+/**
+ * Constant array of valid service categories (for UI/filtering/validation).
+ */
+export const VALID_CATEGORIES: ValidCategory[] = [
+  "equipment",
+  "retail",
+  "bioinformatics",
+  "laboratory",
+];
+
 export interface ChargeSlipRecord {
-  id?: string; // Firestore doc ID
+  id?: string; // Firestore document ID
 
   chargeSlipNumber: string;
   referenceNumber: string;
@@ -30,12 +46,12 @@ export interface ChargeSlipRecord {
     institution: string;
     designation: string;
     email: string;
-    address?: string; // ✅ added
+    address?: string; // Optional address field
   };
 
-  // Firestore-compatible types (string | Timestamp)
+  // Firestore-compatible timestamp fields
   dateIssued: string | Timestamp;
-  dateOfOR?: string | Timestamp;
+  dateOfOR?: string | Timestamp | null;
   createdAt?: string | Timestamp;
 
   dvNumber?: string;
@@ -46,6 +62,6 @@ export interface ChargeSlipRecord {
   discount: number;
   total: number;
 
-  categories?: string[]; // ✅ added
-  status?: "paid" | "cancelled" | "processing"; // ✅ added
+  categories?: ValidCategory[]; // Now restricted to valid enums only
+  status?: "paid" | "cancelled" | "processing";
 }

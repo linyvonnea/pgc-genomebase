@@ -1,3 +1,4 @@
+// src/components/charge-slip/ChargeSlipPDFActions.tsx
 "use client";
 
 import { pdf } from "@react-pdf/renderer";
@@ -7,13 +8,18 @@ import { SelectedService } from "@/types/SelectedService";
 import { Client } from "@/types/Client";
 import { Project } from "@/types/Project";
 import { AdminInfo } from "@/types/Admin";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
+import { sanitizeObject } from "@/lib/sanitizeObject";
+import { normalizeDate } from "@/lib/formatters";
 
 interface ChargeSlipPDFActionsProps {
   services: SelectedService[];
   client: Client;
   project: Project;
   chargeSlipNumber: string;
-  orNumber: string;
+  orNumber?: string;
   useInternalPrice: boolean;
   preparedBy: AdminInfo;
   referenceNumber: string;
@@ -30,7 +36,7 @@ interface ChargeSlipPDFActionsProps {
   total: number;
 }
 
-// Default approver
+// Fallback approver
 const DEFAULT_APPROVER: AdminInfo = {
   name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.",
   position: "AED, PGC Visayas",
@@ -41,7 +47,7 @@ export default function ChargeSlipPDFActions({
   client,
   project,
   chargeSlipNumber,
-  orNumber,
+  orNumber = "",
   useInternalPrice,
   preparedBy,
   referenceNumber,
@@ -52,31 +58,35 @@ export default function ChargeSlipPDFActions({
   discount,
   total,
 }: ChargeSlipPDFActionsProps) {
+  const router = useRouter();
+
   const handleGenerateAndSave = async () => {
     try {
-      const record = {
+        const rawRecord: ChargeSlipRecord = {
         id: chargeSlipNumber,
         chargeSlipNumber,
-        projectId: project.pid!,
-        cid: client.cid!,
+        referenceNumber,
+        projectId: project?.pid ?? "",
+        cid: client?.cid ?? "",
         client,
         project,
         services,
-        orNumber,
         useInternalPrice,
         preparedBy,
         approvedBy,
-        referenceNumber,
         clientInfo,
+        orNumber,
         dateIssued,
         subtotal,
         discount,
         total,
-      };
 
-      console.log("Saving charge slip to Firestore...");
-      await saveChargeSlip(record);
-      console.log("Saved to Firestore ✅");
+        // Add this line to prevent `undefined` error
+        dateOfOR: null,
+        };
+
+      const sanitized = sanitizeObject(rawRecord) as ChargeSlipRecord;
+      await saveChargeSlip(sanitized);
 
       const blob = await pdf(
         <ChargeSlipPDF
@@ -90,7 +100,7 @@ export default function ChargeSlipPDFActions({
           approvedBy={approvedBy}
           referenceNumber={referenceNumber}
           clientInfo={clientInfo}
-          dateIssued={dateIssued}
+          dateIssued={normalizeDate(dateIssued)}
           subtotal={subtotal}
           discount={discount}
           total={total}
@@ -103,8 +113,15 @@ export default function ChargeSlipPDFActions({
       link.download = `${chargeSlipNumber}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
+
+      toast.success("Charge slip saved and downloaded successfully!");
+
+      setTimeout(() => {
+        router.push("/admin/charge-slips");
+      }, 1000);
     } catch (err) {
-      console.error("❌ Error saving or generating PDF:", err);
+      console.error("Error saving or generating PDF:", err);
+      toast.error("Failed to save charge slip. Please try again.");
     }
   };
 

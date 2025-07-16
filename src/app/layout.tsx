@@ -10,8 +10,14 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PGC GenomeBase",
-  description: "Client Data Tracker for PGC",
+  title: "PGC Visayas Service Request Portal",
+  description: "Streamlined Service Request Portal for PGC Visayas",
+icons: {
+  icon: [
+    { url: "/favicon.ico", sizes: "any" },
+    { url: "/favicon.png", type: "image/png" },
+  ],
+},
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

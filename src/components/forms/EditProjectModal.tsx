@@ -61,7 +61,10 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       sendingInstitution: project.sendingInstitution || "Government",
       fundingCategory: project.fundingCategory || "In-House",
       fundingInstitution: project.fundingInstitution || "",
-      serviceRequested: project.serviceRequested ?? [],
+      serviceRequested: Array.isArray(project.serviceRequested)
+        ? project.serviceRequested.filter((s): s is "Laboratory Services" | "Retail Services" | "Equipment Use" | "Bioinformatics Analysis" =>
+            ["Laboratory Services", "Retail Services", "Equipment Use", "Bioinformatics Analysis"].includes(s))
+        : [],
       notes: project.notes || "",
       personnelAssigned: project.personnelAssigned || "",
     },
@@ -79,7 +82,6 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
   }, [isOpen]);
 
   const onSubmit = async (data: AdminProjectData) => {
-    console.log("Submitting...");
     setIsLoading(true);
     // Ensure pid is present
     const pid = data.pid || project.pid;
@@ -91,17 +93,29 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
     // Ensure serviceRequested is always an array
     let serviceRequested = data.serviceRequested;
     if (typeof serviceRequested === "string") {
-      serviceRequested = (serviceRequested as string).split(",").map((s: string) => s.trim()).filter((s: string) => Boolean(s));
+      const validOptions = [
+        "Laboratory Services",
+        "Retail Services",
+        "Equipment Use",
+        "Bioinformatics Analysis",
+      ] as const;
+      serviceRequested = (serviceRequested as string)
+        .split(",")
+        .map((s: string) => s.trim())
+        .filter((s): s is typeof validOptions[number] => validOptions.includes(s as typeof validOptions[number]));
     } else if (!Array.isArray(serviceRequested)) {
       serviceRequested = [];
     }
     const updatedData = { ...data, pid, serviceRequested };
-    console.log("Submitting to Firestore:", updatedData);
+  
     try {
       await editProject(updatedData);
       toast.success("Project updated successfully!");
       setIsOpen(false);
-      onSuccess?.();
+      // Call onSuccess after modal is closed
+      setTimeout(() => {
+        onSuccess?.();
+      }, 200);
     } catch (error) {
       console.error("Error updating project:", error);
       toast.error("Failed to update project. Please try again.");
@@ -117,7 +131,10 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       toast.success("Project deleted successfully!");
       setShowDeleteConfirm(false);
       setIsOpen(false);
-      onSuccess?.();
+      // Call onSuccess after modal is closed
+      setTimeout(() => {
+        onSuccess?.();
+      }, 200);
     } catch (error) {
       console.error("Error deleting project:", error);
       toast.error("Failed to delete project. Please try again.");
@@ -322,12 +339,25 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                 <FormItem>
                   <FormLabel>Service Requested</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="Comma separated (e.g. Laboratory Services, Bioinformatics Analysis)"
-                      value={serviceRequestedInput}
-                      onChange={e => setServiceRequestedInput(e.target.value)}
-                      onBlur={() => field.onChange(serviceRequestedInput.split(",").map(s => s.trim()).filter(Boolean))}
-                    />
+                    <div className="flex flex-col gap-2">
+                      {(["Laboratory Services", "Retail Services", "Equipment Use", "Bioinformatics Analysis"] as const).map(option => (
+                        <label key={option} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={field.value?.includes(option) || false}
+                            onChange={() => {
+                              const current = field.value as typeof option[] || [];
+                              if (current.includes(option)) {
+                                field.onChange(current.filter((s) => s !== option));
+                              } else {
+                                field.onChange([...current, option]);
+                              }
+                            }}
+                          />
+                          {option}
+                        </label>
+                      ))}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

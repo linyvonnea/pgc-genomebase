@@ -1,35 +1,12 @@
-// src/app/admin/charge-slips/page.tsx
-
 import { getAllChargeSlips } from "@/services/chargeSlipService";
 import { ChargeSlipClientTable } from "./ChargeSlipClientTable";
+import { columns } from "./columns";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { Timestamp } from "firebase/firestore";
+import { UIChargeSlipRecord } from "@/types/UIChargeSlipRecord";
+import { ValidCategory } from "@/types/ValidCategory";
 
-// ✅ Local UI-safe type (avoids Firestore constraint issues)
-type UIChargeSlipRecord = Omit<
-  ChargeSlipRecord,
-  "dateIssued" | "dateOfOR" | "createdAt" | "client" | "project"
-> & {
-  dateIssued?: Date;
-  dateOfOR?: Date;
-  createdAt?: Date;
-  client: {
-    createdAt?: Date;
-    address: string;
-    [key: string]: any;
-  };
-  project: {
-    createdAt?: Date;
-    [key: string]: any;
-  };
-  clientInfo: {
-    address: string;
-    [key: string]: any;
-  };
-  categories: string[];
-};
-
-// 🔁 Converts Firestore Timestamp, string, or Date → Date
+// Converts Firestore Timestamp, string, or Date → Date
 function toDateSafe(value: string | Timestamp | Date | null | undefined): Date | undefined {
   if (!value) return undefined;
   if (value instanceof Date) return value;
@@ -41,66 +18,74 @@ function toDateSafe(value: string | Timestamp | Date | null | undefined): Date |
   return undefined;
 }
 
-// 🧠 Derives categories from selected services
-function extractCategories(services: any[]): string[] {
+// Allowed top-level categories
+const VALID_CATEGORIES: ValidCategory[] = ["laboratory", "equipment", "bioinformatics", "retail"];
+
+// Extracts only valid service `type` values
+function extractValidCategories(services: any[]): ValidCategory[] {
   if (!Array.isArray(services)) return [];
-  return Array.from(new Set(services.map((s) => s.type || ""))).filter(Boolean);
+  return Array.from(
+    new Set(
+      services
+        .map((s) => (s.type || "").toLowerCase())
+        .filter((type): type is ValidCategory => VALID_CATEGORIES.includes(type as ValidCategory))
+    )
+  );
 }
 
-// 🚀 Fetch charge slip data from Firestore
-async function getData(): Promise<ChargeSlipRecord[]> {
-  try {
-    return await getAllChargeSlips();
-  } catch (error) {
-    console.error("Failed to fetch charge slips:", error);
-    return [];
-  }
+// Normalize status
+function normalizeStatus(status?: string): "paid" | "cancelled" | "processing" {
+  const safe = (status || "processing").toLowerCase();
+  if (safe === "paid" || safe === "cancelled" || safe === "processing") return safe;
+  return "processing";
 }
 
-// 🧾 Page component
+// Server Component: Charge Slip Management Page
 export default async function ChargeSlipPage() {
-  const rawData = await getData();
+  const rawData: ChargeSlipRecord[] = await getAllChargeSlips();
 
-  const data: UIChargeSlipRecord[] = rawData.map((record) => ({
-    ...record,
-    dateIssued: toDateSafe(record.dateIssued),
-    dateOfOR: toDateSafe(record.dateOfOR),
-    createdAt: toDateSafe(record.createdAt),
+  const data: UIChargeSlipRecord[] = rawData.map((record) => {
+    // ✅ Always compute categories from services
+    const categories: ValidCategory[] = extractValidCategories(record.services);
 
-    client: {
-      ...record.client,
-      createdAt: toDateSafe(record.client?.createdAt),
-      address: record.client?.affiliationAddress || "—",
-    },
+    return {
+      ...record,
+      status: normalizeStatus(record.status),
 
-    project: {
-      ...record.project,
-      createdAt: toDateSafe(record.project?.createdAt),
-    },
+      dateIssued: toDateSafe(record.dateIssued),
+      dateOfOR: toDateSafe(record.dateOfOR),
+      createdAt: toDateSafe(record.createdAt),
 
-    clientInfo: {
-      ...record.clientInfo,
-      address:
-        record.clientInfo?.address ||
-        record.client?.affiliationAddress ||
-        "—",
-    },
+      client: {
+        ...record.client,
+        createdAt: toDateSafe(record.client?.createdAt),
+        address: record.client?.affiliationAddress || "—",
+      },
 
-    categories: record.categories ?? extractCategories(record.services),
-  }));
+      project: {
+        ...record.project,
+        createdAt: toDateSafe(record.project?.createdAt),
+      },
+
+      clientInfo: {
+        ...record.clientInfo,
+        address: record.clientInfo?.address || record.client?.affiliationAddress || "—",
+      },
+
+      categories,
+    };
+  });
 
   return (
     <div className="container mx-auto py-10 space-y-6">
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Charge Slip Management
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight">Charge Slip Management</h1>
         <p className="text-muted-foreground">
           Review and manage all charge slips issued through GenomeBase.
         </p>
       </div>
 
-      <ChargeSlipClientTable data={data} />
+      <ChargeSlipClientTable data={data} columns={columns} />
     </div>
   );
 }

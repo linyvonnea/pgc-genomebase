@@ -1,21 +1,25 @@
 import { z } from "zod";
 
 export const adminProjectSchema = z.object({
-    year: z.number(),
-  pid: z.string().min(1, "Project ID is required"),
-  startDate: z.date(),
-  title: z.string().min(1, "Project Title is required"),
-  projectTag: z.string().min(1, "Project Title is required"),
-  sendingInstitution: z.enum(["UP System", "SUC/HEI", "Government", "Private/Local", "International", "N/A"]),
-  fundingInstitution: z.string().min(1, "Funding institution is required"),
+  year: z.number().optional(),
+  pid: z.string().optional(),
+  startDate: z.date().optional(),
+  title: z.string().optional(),
+  projectTag: z.string().optional(),
+  sendingInstitution: z.enum(["UP System", "SUC/HEI", "Government", "Private/Local", "International", "N/A"]).optional(),
+  fundingInstitution: z.string().optional(),
   fundingCategory: z.enum(["External", "In-House"]).optional().or(z.literal("")).or(z.undefined()),
-  status: z.string().min(1, "Status is required").optional().or(z.literal("")).or(z.undefined()),
+  status: z.string().optional().or(z.literal("")).or(z.undefined()),
   lead: z.string().optional(),
-serviceRequested: z.array(z.string()).optional(),
+  serviceRequested: z.array(z.enum([
+    "Laboratory Services",
+    "Retail Services",
+    "Equipment Use",
+    "Bioinformatics Analysis"
+  ])).optional().or(z.undefined()),
   personnelAssigned: z.string().optional(),
   notes: z.string().optional(),
 
-  // Add more fields as needed for your admin modal
 });
 
 export type AdminProjectData = z.infer<typeof adminProjectSchema>;

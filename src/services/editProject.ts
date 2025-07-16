@@ -1,3 +1,6 @@
+// Service for updating a project document in Firestore (admin use).
+// Accepts validated admin project data and merges it into the existing project document.
+
 import { db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { AdminProjectData } from "@/schemas/adminProjectSchema";
@@ -11,6 +14,8 @@ export async function editProject(data: AdminProjectData): Promise<void> {
   if (!data.pid) {
     throw new Error("Project ID (pid) is required to update a project.");
   }
+  // Reference the project document by pid
   const docRef = doc(db, "projects", data.pid);
+  // Merge the new data into the existing document
   await setDoc(docRef, data, { merge: true });
 }

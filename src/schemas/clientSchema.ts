@@ -1,4 +1,4 @@
-// src/schemas/clientSchema.ts
+
 import { z } from "zod";
 
 export const clientFormSchema = z.object({

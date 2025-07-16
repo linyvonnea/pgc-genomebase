@@ -1,3 +1,7 @@
+// Admin Clients Data Table
+// Generic data table component for displaying and managing client records in the admin panel.
+// Supports sorting, filtering, pagination, and custom actions via meta prop.
+
 "use client"
 
 import {
@@ -15,7 +19,6 @@ import { useState } from "react"
 import { Client } from "@/types/Client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-
 import {
   Table,
   TableBody,
@@ -25,19 +28,25 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+// Props for the generic DataTable component
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  meta?: { onSuccess?: () => void } // Optional meta for passing callbacks to cell actions
 }
 
+// Generic DataTable component for admin/clients
 export function DataTable<TData, TValue>({
   columns,
   data,
+  meta,
 }: DataTableProps<TData, TValue>) {
+  // Table state for sorting, filtering, and global search
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
 
+  // Initialize TanStack Table instance
   const table = useReactTable({
     data,
     columns,
@@ -66,9 +75,9 @@ export function DataTable<TData, TValue>({
             onChange={(event) => setGlobalFilter(event.target.value)}
             className="max-w-sm"
           />
-
         </div>
         <div className="text-sm text-muted-foreground">
+          {/* Show filtered row count */}
           {table.getFilteredRowModel().rows.length} of {table.getCoreRowModel().rows.length} clients
         </div>
       </div>
@@ -86,7 +95,7 @@ export function DataTable<TData, TValue>({
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            { ...header.getContext(), meta }
                           )}
                     </TableHead>
                   )
@@ -95,6 +104,7 @@ export function DataTable<TData, TValue>({
             ))}
           </TableHeader>
           <TableBody>
+            {/* Render rows or show 'No results' if empty */}
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
@@ -103,7 +113,7 @@ export function DataTable<TData, TValue>({
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(cell.column.columnDef.cell, { ...cell.getContext(), meta })}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -119,7 +129,7 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      {/* Pagination */}
+      {/* Pagination Controls */}
       <div className="flex items-center justify-between space-x-2">
         <div className="text-sm text-muted-foreground">
           Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}

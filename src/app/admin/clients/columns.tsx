@@ -1,3 +1,6 @@
+// Admin Clients Table Columns
+// Defines the columns and actions for the admin/clients data table.
+
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
@@ -6,6 +9,7 @@ import { clientSchema } from "@/schemas/clientSchema"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation";
 
+// Helper to validate client data using Zod schema
 const validateClient = (data: any) => {
   const result = clientSchema.safeParse(data)
   return {
@@ -15,6 +19,7 @@ const validateClient = (data: any) => {
   }
 }
 
+// Table columns definition for admin/clients
 export const columns: ColumnDef<Client>[] = [
   {
     accessorKey: "pid",
@@ -55,30 +60,31 @@ export const columns: ColumnDef<Client>[] = [
   {
     id: "actions",
     header: "Actions",
-    cell: ({ row }) => {
+    // Render edit modal and charge slip button for each row
+    cell: (ctx: any) => {
+      const { row, meta } = ctx;
       const client = row.original;
-      const router = useRouter();
-      // Lazy import to avoid circular dependency if needed
+      // Lazy load EditClientModal to avoid SSR issues
       const EditClientModal = require("@/components/forms/EditClientModal").EditClientModal;
+      const router = useRouter();
       return (
-      <div className="flex items-center gap-2">
-      <EditClientModal client={client} onSuccess={() => {}} />
-        <Button
-          onClick={() => {
-            console.log("Client Data:", client);
-            router.push(
-              `/admin/charge-slips/new?clientId=${client.cid}&projectId=${client.pid}`
-            );
-          }}
-          variant="outline"
-          className="text-sm"
-        >
-          Charge Slip
-        </Button>
-      </div>
-
-    );
-
+        <div className="flex items-center gap-2">
+          {/* Edit client modal button */}
+          <EditClientModal client={client} onSuccess={meta?.onSuccess} />
+          {/* Charge slip button */}
+          <Button
+            onClick={() => {
+              router.push(
+                `/admin/charge-slips/new?clientId=${client.cid}&projectId=${client.pid}`
+              );
+            }}
+            variant="outline"
+            className="text-sm"
+          >
+            Charge Slip
+          </Button>
+        </div>
+      );
     },
   },
 ]
