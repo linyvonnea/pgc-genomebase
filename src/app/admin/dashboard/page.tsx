@@ -78,6 +78,31 @@ export default function Dashboard() {
           <ExportButton onClick={exportToPDF} disabled={isExporting} />
         </div>
       )}
+
+      {/* Hidden dashboard for export */}
+      <div
+        id="dashboard-export"
+        style={{
+          width: "1200px",
+          minHeight: "1600px",
+          position: "absolute",
+          left: "-9999px",
+          top: 0,
+          background: "white",
+          zIndex: -1,
+          overflow: "hidden",
+          pointerEvents: "none",
+        }}
+      >
+        <DashboardContent
+          filteredProjects={filteredProjects}
+          filteredClients={filteredClients}
+          filteredTrainings={filteredTrainings}
+          totalIncome={totalIncome}
+          timeRange={timeRange}
+          customRange={customRange}
+        />
+      </div>
     </div>
   );
 }

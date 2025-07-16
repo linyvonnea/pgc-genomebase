@@ -27,15 +27,15 @@ export function StatCard({ title, value, colorIndex = 0 }: StatCardProps) {
   const color = COLORS[colorIndex % COLORS.length];
   
   return (
-    <Card className="rounded-lg border">
-      <CardContent className="p-4">
+    <Card className="rounded-lg border h-full">
+      <CardContent className="p-4 flex flex-col justify-center items-center h-full">
         <div 
-          className="text-2xl font-bold" 
+          className="text-2xl font-bold"
           style={{ color }}
         >
           {value}
         </div>
-        <CardTitle className="text-sm text-muted-foreground font-normal pt-1">
+        <CardTitle className="text-sm text-muted-foreground font-normal pt-1 text-center">
           {title}
         </CardTitle>
       </CardContent>
