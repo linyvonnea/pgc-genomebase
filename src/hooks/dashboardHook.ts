@@ -10,8 +10,7 @@ import {
   Timestamp
 } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { db } from "@/lib/firebase";
-import { calculateTotalIncome, fetchAllData, fetchFilteredData } from "../services/dashboardUtils";
+import { fetchAllData, fetchFilteredData } from "../services/dashboardUtils";
 import html2canvas from "html2canvas";
 
 type TimeRange = "all" | "today" | "weekly" | "monthly" | "yearly" | "custom";
@@ -121,11 +120,7 @@ export function useDashboardData() {
     try {
       const canvas = await html2canvas(element);
       const jsPDF = (await import("jspdf")).default;
-      const pdf = new jsPDF({
-        orientation: "landscape",
-        unit: "mm",
-        format: [297, 240 + 20] 
-      });
+      const pdf = new jsPDF("landscape");
       const imgData = canvas.toDataURL("image/png");
 
       const margin = 5;
@@ -148,17 +143,15 @@ export function useDashboardData() {
         ? `Custom: ${customRange?.year ?? ""} (${(customRange?.startMonth ?? 0) + 1}-${(customRange?.endMonth ?? 0) + 1})`
         : `Filter: ${timeRange.charAt(0).toUpperCase() + timeRange.slice(1)}`;
       pdf.setFontSize(10);
-      // Draw date and filter at the top, inside the margin
-      const textY = margin + 10;
-      pdf.text(`Date Generated: ${dateStr}`, margin, textY);
+      // Date on the left, filter on the right (same row)
+      pdf.text(`Date Generated: ${dateStr}`, margin, margin - 6);
       pdf.text(
         filterStr,
         pageWidth - margin - pdf.getTextWidth(filterStr),
-        textY
+        margin - 6
       );
 
-      // Draw the image starting just below the header text
-      pdf.addImage(imgData, "PNG", x, textY + 6, finalWidth, finalHeight);
+      pdf.addImage(imgData, "PNG", x, y + 20, finalWidth, finalHeight);
       pdf.save("dashboard-report.pdf");
     } catch (e) {
       console.error("PDF export failed", e);

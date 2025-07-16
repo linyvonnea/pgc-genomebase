@@ -50,9 +50,10 @@ export interface ChargeSlipRecord {
   };
 
   // Firestore-compatible timestamp fields
-  dateIssued: string | Timestamp;
-  dateOfOR?: string | Timestamp | null;
-  createdAt?: string | Timestamp;
+  dateIssued?: string | Timestamp | Date | null;
+  dateOfOR?: string | Timestamp | Date | null;
+  createdAt?: string | Timestamp | Date | null;
+  datePaid?: string | Timestamp | Date | null;
 
   dvNumber?: string;
   orNumber?: string;
@@ -63,5 +64,5 @@ export interface ChargeSlipRecord {
   total: number;
 
   categories?: ValidCategory[]; // Now restricted to valid enums only
-  status?: "paid" | "cancelled" | "processing";
+  status?: string;
 }

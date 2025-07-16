@@ -51,10 +51,10 @@ export default async function ChargeSlipPage() {
     return {
       ...record,
       status: normalizeStatus(record.status),
-
       dateIssued: toDateSafe(record.dateIssued),
       dateOfOR: toDateSafe(record.dateOfOR),
       createdAt: toDateSafe(record.createdAt),
+      datePaid: toDateSafe(record.datePaid), 
 
       client: {
         ...record.client,

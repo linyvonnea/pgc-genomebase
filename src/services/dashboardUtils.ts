@@ -1,7 +1,7 @@
 import { collection, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-export function calculateTotalIncome(slips: any[]) {
+function calculateTotalIncome(slips: any[]) {
   return slips.reduce((sum, slip) => {
     if (slip.status === "paid") {
       return sum + (parseFloat(slip.total) || 0);
