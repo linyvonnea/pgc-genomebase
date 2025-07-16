@@ -1,9 +1,10 @@
 'use server'
 
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { revalidatePath } from "next/cache";
 import { InquiryFormData } from "@/schemas/inquirySchema";
+import { AdminInquiryData } from "@/schemas/adminInquirySchema";
 
 export async function createInquiryAction(inquiryData: InquiryFormData) {
   try {
@@ -82,5 +83,76 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
   } catch (error) {
     console.error("Error creating inquiry:", error);
     throw new Error("Failed to create inquiry");
+  }
+}
+
+export async function createAdminInquiryAction(data: AdminInquiryData) {
+  try {
+    const transformedData = {
+      name: data.name,
+      email: data.email,
+      affiliation: data.affiliation,
+      designation: data.designation,
+      status: data.status,
+      isApproved: data.status === 'Approved Client',
+      createdAt: serverTimestamp(),
+      haveSubmitted: false,
+      workflows: [],
+      additionalInfo: null,
+      projectBackground: null,
+      projectBudget: null,
+      specificTrainingNeed: null,
+      targetTrainingDate: null,
+      numberOfParticipants: null,
+      serviceType: null
+    };
+
+    const docRef = await addDoc(collection(db, "inquiries"), transformedData);
+    
+    // Revalidate the admin inquiry page
+    revalidatePath('/admin/inquiry');
+    
+    return { success: true, inquiryId: docRef.id };
+  } catch (error) {
+    console.error("Error creating inquiry:", error);
+    throw new Error("Failed to create inquiry");
+  }
+}
+
+export async function updateInquiryAction(id: string, data: AdminInquiryData) {
+  try {
+    const docRef = doc(db, "inquiries", id);
+    
+    await updateDoc(docRef, {
+      name: data.name,
+      email: data.email,
+      affiliation: data.affiliation,
+      designation: data.designation,
+      status: data.status,
+      isApproved: data.status === 'Approved Client',
+    });
+    
+    // Revalidate the admin inquiry page
+    revalidatePath('/admin/inquiry');
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating inquiry:", error);
+    throw new Error('Failed to update inquiry');
+  }
+}
+
+export async function deleteInquiryAction(id: string) {
+  try {
+    const docRef = doc(db, "inquiries", id);
+    await deleteDoc(docRef);
+    
+    // Revalidate the admin inquiry page
+    revalidatePath('/admin/inquiry');
+    
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting inquiry:", error);
+    throw new Error('Failed to delete inquiry');
   }
 }
