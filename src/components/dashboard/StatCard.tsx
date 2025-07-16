@@ -13,6 +13,7 @@ interface StatCardProps {
   colorIndex?: number; // Optional color index
 }
 
+// Colors for each category
 const COLORS = [
   "#912ABD",
   "#6E30BE",

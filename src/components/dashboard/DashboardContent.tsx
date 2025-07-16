@@ -1,10 +1,16 @@
 //src/components/dashboard/DashboardContent.tsx
+
 import { StatCard } from "@/components/dashboard/StatCard";
 import { StatBarChart } from "@/components/dashboard/StatBarChart";
 import { ServiceRequestedChart } from "@/components/dashboard/ServiceRequestedChart";
 import { SendingInstitutionChart } from "@/components/dashboard/SendingInstitutionChart";
 import { FundingCategoryChart } from "@/components/dashboard/FundingCategoryChart";
+import { DashboardContentProps } from "@/types/DashboardContent";
 
+/**
+ * Main dashboard layout for admin.
+ * Displays stat cards, bar chart, and pie charts using filtered data.
+ */
 export function DashboardContent({
   filteredProjects,
   filteredClients,
@@ -12,9 +18,10 @@ export function DashboardContent({
   totalIncome,
   timeRange,
   customRange
-}: any) {
+}: DashboardContentProps) {
   return (
     <>
+      {/* Stat Cards Section */}
       <div className="gap-4 mb-4">
         <div className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
@@ -31,6 +38,7 @@ export function DashboardContent({
             />
           </div>
         </div>
+        {/* Bar Chart Section */}
         <div className="h-[400px]">
           <StatBarChart
             projectsData={filteredProjects}
@@ -42,6 +50,7 @@ export function DashboardContent({
         </div>
       </div>
 
+      {/* Pie Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <ServiceRequestedChart projects={filteredProjects} />
         <SendingInstitutionChart projects={filteredProjects} />
