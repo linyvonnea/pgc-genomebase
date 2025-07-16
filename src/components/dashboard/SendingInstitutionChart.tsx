@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * Pie chart showing the distribution of projects by sending institution type.
+ */
+
 import { BasePieChart } from "./BasePieChart";
 import { Project } from "@/types/Project";
 
@@ -15,6 +19,7 @@ const INSTITUTION_CATEGORIES: readonly ("UP System" | "SUC/HEI" | "Government" |
 
 type InstitutionCategory = typeof INSTITUTION_CATEGORIES[number];
 
+// Colors for each category in the pie chart
 const CATEGORY_COLORS: Record<InstitutionCategory, string> = {
   "UP System":"#166FB5",
   "SUC/HEI":  "#40388F",
@@ -38,6 +43,7 @@ export function SendingInstitutionChart({ projects }: { projects: Project[] }) {
     }
   });
 
+  // Prepare data for the pie chart
   const data = INSTITUTION_CATEGORIES.map((category) => ({
     name: category,
     value: institutionCounts[category],

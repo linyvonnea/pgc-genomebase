@@ -5,10 +5,8 @@ import { useEffect, useState } from "react";
 import { Timestamp } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { fetchAllData, fetchFilteredData } from "../services/dashboardUtils";
-import html2canvas from "html2canvas";
-
-type TimeRange = "all" | "today" | "weekly" | "monthly" | "yearly" | "custom";
-type CustomRange = { year: number; startMonth: number; endMonth: number };
+import { exportDashboardPDF } from "@/services/exportDashboardPDF";
+import { TimeRange, CustomRange } from "@/types/TimeFilter";
 
 const monthNames = [
   "January", "February", "March", "April", "May", "June",
@@ -107,52 +105,13 @@ export function useDashboardData() {
 
   const exportToPDF = async () => {
     setIsExporting(true);
-    const element = document.getElementById("dashboard-content");
-    if (!element) {
-      console.error("Missing dashboard-content");
-      setIsExporting(false);
-      return;
-    }
-
     try {
-      const canvas = await html2canvas(element);
-      const jsPDF = (await import("jspdf")).default;
-      const pdf = new jsPDF({
-        orientation: "landscape",
-        unit: "mm",
-        format: [300, 350] 
+      await exportDashboardPDF({
+        elementId: "dashboard-content",
+        timeRange,
+        customRange,
+        monthNames
       });
-      const imgData = canvas.toDataURL("image/png");
-
-      const margin = 5;
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(
-        (pageWidth - margin * 2) / imgWidth,
-        (pageHeight - margin * 2) / imgHeight
-      );
-      const finalWidth = imgWidth * ratio;
-      const finalHeight = imgHeight * ratio;
-      const x = (pageWidth - finalWidth) / 2;
-
-      const dateStr = new Date().toLocaleString();
-      const filterStr = timeRange === "custom"
-        ? `${monthNames[customRange?.startMonth ?? 0]}-${monthNames[customRange?.endMonth ?? 0]} ${customRange?.year ?? ""}`
-        : `Filter: ${timeRange.charAt(0).toUpperCase() + timeRange.slice(1)}`;
-      pdf.setFontSize(10);
-      const textY = margin + 10;
-      pdf.text(`Date Generated: ${dateStr}`, margin, textY);
-      pdf.text(
-        filterStr,
-        pageWidth - margin - pdf.getTextWidth(filterStr),
-        textY
-      );
-
-      pdf.addImage(imgData, "PNG", x, textY + 6, finalWidth, finalHeight);
-      pdf.save("dashboard-report.pdf");
     } catch (e) {
       console.error("PDF export failed", e);
     } finally {

@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * Pie chart showing the distribution of projects by funding category.
+ */
+
 import { BasePieChart } from "./BasePieChart";
 import { Project } from "@/types/Project";
 
@@ -11,12 +15,14 @@ const FUNDING_CATEGORIES: readonly ("External" | "In-House")[] = [
 
 type FundingCategory = typeof FUNDING_CATEGORIES[number];
 
+// Colors for each category in the pie chart
 const CATEGORY_COLORS: Record<FundingCategory, string> = {
   "In-House": "#166FB5",
   "External": "#633190 ",
 };
 
 export function FundingCategoryChart({ projects }: { projects: Project[] }) {
+  // Count projects for each funding category
   const fundingCounts = FUNDING_CATEGORIES.reduce((acc, category) => {
     acc[category] = 0;
     return acc;
@@ -29,6 +35,7 @@ export function FundingCategoryChart({ projects }: { projects: Project[] }) {
     }
   });
 
+  // Prepare data for the pie chart
   const data = FUNDING_CATEGORIES.map((category) => ({
     name: category,
     value: fundingCounts[category],

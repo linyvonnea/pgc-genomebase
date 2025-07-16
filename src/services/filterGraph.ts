@@ -1,5 +1,5 @@
 //src/services/filterBarGraph.ts
-import { StatisticsBarChartProps } from "@/components/dashboard/StatBarChart";
+import { StatisticsBarChartProps } from "@/types/StatBarChart";
 
 const months = [
   "January", "February", "March", "April", "May", "June",

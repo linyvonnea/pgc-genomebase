@@ -1,5 +1,10 @@
 "use client";
 
+/**
+ * Pie chart showing the distribution of requested services for projects.
+ * Uses BasePieChart for visualization.
+ */
+
 import { BasePieChart } from "./BasePieChart";
 import { Project } from "@/types/Project";
 
@@ -12,6 +17,7 @@ const SERVICE_CATEGORIES = [
 
 type ServiceCategory = typeof SERVICE_CATEGORIES[number];
 
+// Colors for each category in the pie chart
 const CATEGORY_COLORS: Record<ServiceCategory, string> = {
   "Laboratory Services": "#166FB5",
   "Equipment Use": "#40388F",
@@ -25,6 +31,7 @@ function isServiceCategory(service: string): service is ServiceCategory {
 }
 
 export function ServiceRequestedChart({ projects }: { projects: Project[] }) {
+  // Count projects for each service category
   const serviceCounts = SERVICE_CATEGORIES.reduce((acc, category) => {
     acc[category] = 0;
     return acc;
@@ -44,6 +51,7 @@ export function ServiceRequestedChart({ projects }: { projects: Project[] }) {
     });
   });
 
+  // Prepare data for the pie chart
   const data = SERVICE_CATEGORIES.map((category) => ({
     name: category,
     value: serviceCounts[category],

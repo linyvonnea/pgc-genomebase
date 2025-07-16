@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * Dashboard filter component for selecting time range and custom date ranges.
+ */
+
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,26 +13,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Check } from "lucide-react";
+import { TimeFilterProps, TimeRange, CustomRange } from "@/types/TimeFilter";
 
-type CustomRange = { year: number; startMonth: number; endMonth: number; };
-
-interface TimeFilterProps {
-  onFilterChange: (range: TimeRange | CustomRange) => void | Promise<void>;
-}
-
-type TimeRange = "all" | "today" | "weekly" | "monthly" | "yearly" | "custom";
 
 export function TimeFilter({ onFilterChange }: TimeFilterProps) {
+  // State for selected time range and custom range values
   const [timeRange, setTimeRange] = React.useState<TimeRange>("all");
   const [year, setYear] = React.useState(new Date().getFullYear());
   const [startMonth, setStartMonth] = React.useState(0);
   const [endMonth, setEndMonth] = React.useState(11);
 
+  // Month names for dropdowns
   const months = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ];
 
+  // Labels for each time range option
   const timeRangeLabels: Record<TimeRange, string> = {
     all: "All Time",
     today: "Today",
@@ -38,16 +39,19 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
     custom: "Custom"
   };
 
+  // Effect: When custom range changes, notify parent
   React.useEffect(() => {
     if (timeRange === "custom") {
       onFilterChange({ year, startMonth, endMonth });
     }
   }, [year, startMonth, endMonth, timeRange]);
 
+  // Helper to trigger filter change for custom range
   const handleRangeChange = () => {
     onFilterChange({ year, startMonth, endMonth });
   };
 
+  // Handle selection of a time range
   const handleTimeRangeSelect = (range: TimeRange) => {
     setTimeRange(range);
     if (range !== "custom") {
@@ -57,17 +61,20 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
     }
   };
 
+  // Handle selection of year in custom range
   const handleYearSelect = (selectedYear: number) => {
     setYear(selectedYear);
     handleRangeChange();
   };
 
+  // Handle selection of start month in custom range
   const handleStartMonthSelect = (month: number) => {
     setStartMonth(month);
     if (month > endMonth) setEndMonth(month);
     handleRangeChange();
   };
 
+  // Handle selection of end month in custom range
   const handleEndMonthSelect = (month: number) => {
     setEndMonth(month);
     if (month < startMonth) setStartMonth(month);
@@ -77,6 +84,7 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
   return (
     <div className="w-full flex justify-end">
       <div className="flex flex-col sm:flex-row items-end gap-2 w-full">
+        {/* Time range dropdown (non-custom) */}
         {timeRange !== "custom" ? (
           <div className="w-[160px]">
             <DropdownMenu>
@@ -100,6 +108,7 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
             </DropdownMenu>
           </div>
         ) : (
+          // Custom range dropdowns
           <div className="flex flex-wrap md:flex-nowrap justify-end gap-2 w-full">
             {/* Timeline Dropdown */}
             <div className="w-[160px]">

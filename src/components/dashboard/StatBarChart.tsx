@@ -1,6 +1,10 @@
 // src/components/dashboard/charts/StatBarChart.tsx
 "use client";
 
+/**
+ * Bar chart that displays statistics for projects, clients, and trainings.
+ */
+
 import * as React from "react";
 import {
   Card,
@@ -19,20 +23,14 @@ import {
   ResponsiveContainer
 } from "recharts";
 import { generateChartData } from "@/services/filterGraph";
+import { StatisticsBarChartProps } from "@/types/StatBarChart";
 
+// Colors for each category in the bar chart
 const CATEGORY_COLORS = {
   CLIENTS: "#166FB5",  
   PROJECTS: "#633190",
   TRAININGS: "#912ABD" 
 } as const;
-
-export interface StatisticsBarChartProps {
-  projectsData: any[];
-  clientsData: any[];
-  trainingsData: any[];
-  timeRange: string;
-  customRange?: { year: number; startMonth: number; endMonth: number };
-}
 
 export function StatBarChart({ 
   projectsData, 
@@ -41,11 +39,13 @@ export function StatBarChart({
   timeRange,
   customRange
 }: StatisticsBarChartProps) {
+  // Month names for custom range display
   const months = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ];
 
+  // Labels for each time range option
   const timeRangeLabels = {
     all: "All Time",
     today: "Today",
@@ -55,6 +55,7 @@ export function StatBarChart({
     custom: "Custom Range"
   };
 
+  // Generate chart data based on selected time range
   const data = generateChartData({
     projectsData,
     clientsData,
@@ -65,6 +66,7 @@ export function StatBarChart({
 
   return (
     <Card className="h-full">
+      {/* Chart header with time range label */}
       <CardHeader className="flex flex-col items-center justify-center p-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {timeRange === "custom" && customRange 
@@ -79,17 +81,21 @@ export function StatBarChart({
               data={data}
               margin={{ left: -25 }} 
             >
+              {/* Grid lines */}
               <CartesianGrid vertical={false}/>
+              {/* X axis for time periods */}
               <XAxis 
                 dataKey="name"
                 tick={{ fontSize: 12 }}
                 tickMargin={12}
               />
+              {/* Y axis for counts */}
               <YAxis 
                 allowDecimals={false}
                 tick={{ fontSize: 12 }}
                 tickMargin={12}
               />
+              {/* Tooltip for bar details */}
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#fff',
@@ -121,6 +127,7 @@ export function StatBarChart({
                   null
                 ]}
               />
+              {/* Legend for bar colors */}
               <Legend 
                 iconSize={12}
                 wrapperStyle={{
@@ -164,6 +171,7 @@ export function StatBarChart({
                   </div>
                 )}
               />
+              {/* Bars for each category */}
               <Bar 
                 dataKey="clients" 
                 fill={CATEGORY_COLORS.CLIENTS} 

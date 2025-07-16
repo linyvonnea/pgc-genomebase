@@ -1,11 +1,16 @@
 //src/components/dashboard/ExportButton.tsx
+
+
+/**
+ * Button component for exporting dashboard as PDF.
+ */
+
 import { Button } from "@/components/ui/button";
 
 interface ExportButtonProps {
   onClick: () => void;
   disabled: boolean;
 }
-
 export function ExportButton({ onClick, disabled }: ExportButtonProps) {
   return (
     <Button

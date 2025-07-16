@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * Template for components that uses pie charts.
+ */
+
 import * as React from "react";
 import {
   PieChart as RechartsPieChart,
@@ -28,10 +32,12 @@ export function BasePieChart<T extends string>({
   emptyMessage,
   legendWrapperStyle = { justifyContent: 'center' },
 }: BasePieChartProps<T>) {
+  // Calculate total value for all categories
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <Card className="flex-1 min-w-0">
+      {/* Chart header */}
       <CardHeader className="flex flex-col items-center justify-center p-4">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
@@ -39,6 +45,7 @@ export function BasePieChart<T extends string>({
       </CardHeader>
       <CardContent className="p-4 pt-0">
         <div className="h-[300px]">
+          {/* Show empty message if no data */}
           {total === 0 ? (
             <div className="flex items-center justify-center h-full text-muted-foreground">
               {emptyMessage}
@@ -56,6 +63,7 @@ export function BasePieChart<T extends string>({
                   outerRadius={80}
                   dataKey="value"
                 >
+                  {/* Render each pie slice */}
                   {data.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
@@ -64,6 +72,7 @@ export function BasePieChart<T extends string>({
                     />
                   ))}
                 </Pie>
+                {/* Tooltip for slice details */}
                 <Tooltip
                   contentStyle={{
                     borderRadius: "6px",
@@ -85,6 +94,7 @@ export function BasePieChart<T extends string>({
                     null,
                   ]}
                 />
+                {/* Custom legend for categories */}
                 <Legend
                   iconSize={12}
                   wrapperStyle={legendWrapperStyle}
