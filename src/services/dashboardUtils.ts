@@ -47,8 +47,8 @@ export async function fetchFilteredData(
     getDocs(query(collection(db, "clients"), where("createdAt", ">=", startTS), where("createdAt", "<=", endTS))),
     getDocs(query(
       collection(db, "chargeSlips"),
-      where("dateIssued", ">=", startTS),
-      where("dateIssued", "<=", endTS),
+      where("datePaid", ">=", startTS),
+      where("datePaid", "<=", endTS),
       where("status", "==", "paid")
     )),
     getDocs(query(collection(db, "trainings"), where("dateConducted", ">=", startTS), where("dateConducted", "<=", endTS)))
