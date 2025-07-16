@@ -1,17 +1,21 @@
+// Flexible Confirmation Modal Layout
+// A reusable dialog for confirming user actions, with support for custom content, loading state, and customizable button labels.
+
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
+// Props for the flexible confirmation modal layout
 interface ConfirmationModalLayoutProps {
   open: boolean;
   title?: string;
   description?: string;
-  children?: React.ReactNode;
+  children?: React.ReactNode; // Custom content to display in the modal
   confirmLabel?: string;
   cancelLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
-  loading?: boolean;
+  loading?: boolean; // Show loading state on confirm button
 }
 
 export default function ConfirmationModalLayout({
@@ -36,7 +40,9 @@ export default function ConfirmationModalLayout({
             {description}
           </DialogDescription>
         </DialogHeader>
+        {/* Custom content (e.g., summary, form, etc.) */}
         <div className="my-4">{children}</div>
+        {/* Action buttons with loading state */}
         <DialogFooter className="flex gap-3 justify-end pt-4">
           <Button variant="outline" onClick={onCancel} disabled={loading}>
             {cancelLabel}

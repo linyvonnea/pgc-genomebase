@@ -1,4 +1,7 @@
 "use client";
+
+//Thank you page for client info submission
+
 import { useEffect, useState } from "react";
 import ConfirmationPage from "@/components/ConfirmationPage";
 

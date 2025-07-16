@@ -1,4 +1,4 @@
-// src/schemas/projectSchema.ts
+
 import { z } from "zod";
 
 // Schema for the project form (minimal fields)

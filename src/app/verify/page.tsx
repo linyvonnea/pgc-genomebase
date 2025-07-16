@@ -1,3 +1,6 @@
+// Client Verification Page
+// Allows users to sign in with Google, agree to privacy, and verify their Inquiry ID to access project/client forms.
+
 "use client";
 
 import { useState } from "react";
@@ -23,6 +26,7 @@ import {
 } from "lucide-react";
 
 export default function ClientVerifyPage() {
+  // State for privacy agreement, inquiry ID, errors, loading, and Google user
   const [agreed, setAgreed] = useState(false);
   const [inquiryId, setInquiryId] = useState("");
   const [verifyError, setVerifyError] = useState("");
@@ -30,6 +34,7 @@ export default function ClientVerifyPage() {
   const [googleUser, setGoogleUser] = useState<{ email: string } | null>(null);
   const router = useRouter();
 
+  // Handle Google sign-in and set user
   const handleGoogleSignIn = async () => {
     if (!agreed) {
       toast.warning("Please agree to the privacy notice before signing in with Google.");
@@ -55,6 +60,7 @@ export default function ClientVerifyPage() {
     }
   };
 
+  // Handle verification of Inquiry ID and permissions
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreed) {
@@ -74,6 +80,7 @@ export default function ClientVerifyPage() {
         setVerifying(false);
         return;
       }
+      // Fetch inquiry document from Firestore
       const inquiryDoc = await getDoc(doc(db, "inquiries", inquiryId));
       if (!inquiryDoc.exists()) {
         toast.error("Inquiry ID not found.");
@@ -86,7 +93,7 @@ export default function ClientVerifyPage() {
         setVerifying(false);
         return;
       }
-      // Check if contact person has submitted (now in inquiry.haveSubmitted)
+      // Permission logic: contact person or after contact person submits
       if (googleUser.email === inquiry.email) {
         // Contact person can always proceed
         router.push(`/client/client-info?email=${encodeURIComponent(googleUser.email)}&inquiryId=${encodeURIComponent(inquiryId)}`);
@@ -115,6 +122,7 @@ export default function ClientVerifyPage() {
       <div className="w-full max-w-md">
         <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center pb-6">
+            {/* PGC Logo */}
             <div className="flex justify-center mb-6">
               <Image
                 src="/assets/pgc-logo.png"
@@ -130,7 +138,7 @@ export default function ClientVerifyPage() {
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Privacy Notice */}
+            {/* Privacy Notice Section */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <Shield className="w-4 h-4" />
@@ -159,7 +167,7 @@ export default function ClientVerifyPage() {
 
             <Separator />
 
-            {/* Google Sign In */}
+            {/* Google Sign In Section */}
             <div className="space-y-4">
               <Button
                 onClick={handleGoogleSignIn}
@@ -170,7 +178,7 @@ export default function ClientVerifyPage() {
                 <Mail className="w-4 h-4 mr-2" />
                 {googleUser ? `Signed in as ${googleUser.email}` : "Sign in with Google"}
               </Button>
-              
+              {/* Show success if signed in */}
               {googleUser && (
                 <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-3 rounded-md border border-green-200">
                   <CheckCircle className="w-4 h-4 flex-shrink-0" />
@@ -179,7 +187,7 @@ export default function ClientVerifyPage() {
               )}
             </div>
 
-            {/* Verification Form */}
+            {/* Verification Form Section */}
             {googleUser && (
               <>
                 <Separator />
@@ -191,7 +199,7 @@ export default function ClientVerifyPage() {
                     <Input
                       id="inquiry-id"
                       value={inquiryId}
-                      onChange={(e) => setInquiryId(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInquiryId(e.target.value)}
                       placeholder="Enter your inquiry ID"
                       required
                       className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 h-11"
@@ -200,7 +208,6 @@ export default function ClientVerifyPage() {
                       This ID was provided on the email sent by PGC Visayas.
                     </p>
                   </div>
-                  
                   <Button 
                     type="submit" 
                     disabled={verifying || !inquiryId.trim()}
@@ -211,7 +218,6 @@ export default function ClientVerifyPage() {
                 </form>
               </>
             )}
-        
           </CardContent>
         </Card>
       </div>

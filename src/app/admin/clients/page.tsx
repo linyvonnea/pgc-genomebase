@@ -1,3 +1,6 @@
+// Admin Clients Page
+// Displays a table of all PGC clients and allows adding new client records via a modal form.
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,11 +13,11 @@ import { Button } from "@/components/ui/button"
 import { ProjectFormModal } from "@/app/admin/projects/modalform"
 import { ClientFormModal } from "./modalform";
 
-
+// Fetch and validate client data from Firestore
 async function getData(): Promise<Client[]> {
   try {
     const clients = await getClients();
-
+    // Filter out invalid/legacy records
     const validatedData = clients.map((client) => {
       if (
         !client.cid ||
@@ -25,7 +28,6 @@ async function getData(): Promise<Client[]> {
       }
       return client;
     }).filter((c): c is Client => c !== null);
-
     return validatedData;
   } catch (error) {
     console.error("Failed to fetch clients:", error);
@@ -34,7 +36,9 @@ async function getData(): Promise<Client[]> {
 }
 
 export default function ClientPage() {
+  // State for client data
   const [data, setData] = useState<Client[]>([]);
+  // Fetch data and update state
   const fetchData = async () => {
     const clients = await getData();
     setData(clients);
@@ -46,15 +50,16 @@ export default function ClientPage() {
   return (
     <div className="container mx-auto py-10">
       <div className="space-y-6">
+        {/* Header and Add New Client Button */}
         <div className="flex items-center justify-between">
           <div>
-          <h1 className="text-3xl font-bold tracking-tight">PGC Clients</h1>
-          <p className="text-muted-foreground">
-            Manage and review PGC clients submitted to the genome database.
-          </p>
-        </div>
-
-        <Dialog>
+            <h1 className="text-3xl font-bold tracking-tight">PGC Clients</h1>
+            <p className="text-muted-foreground">
+              Manage and review PGC clients submitted to the database.
+            </p>
+          </div>
+          {/* Add New Client Modal */}
+          <Dialog>
             <DialogTrigger asChild>
               <Button variant="default">Add New Record</Button>
             </DialogTrigger>
@@ -66,11 +71,9 @@ export default function ClientPage() {
             </DialogContent>
           </Dialog>
         </div>
-
-        {/* Data Table */}
+        {/* Data Table with instant update on add/edit/delete */}
         <DataTable columns={columns} data={data} meta={{ onSuccess: fetchData }} />
       </div>
-      </div>
-  
+    </div>
   );
 }

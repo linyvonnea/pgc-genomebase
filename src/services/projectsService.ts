@@ -1,3 +1,5 @@
+// Service for fetching and generating project records from Firestore, with schema validation, legacy mapping, and ID generation.
+
 import {
   collection,
   getDocs,
@@ -9,7 +11,7 @@ import { db } from "@/lib/firebase";
 import { Project } from "@/types/Project";
 import { projectSchema } from "@/schemas/projectSchema";
 
-// Helper to format date to MM-DD-YYYY
+// Helper to format a JS Date to MM-DD-YYYY string
 function formatDateToMMDDYYYY(date: Date): string {
   const mm = String(date.getMonth() + 1).padStart(2, "0");
   const dd = String(date.getDate()).padStart(2, "0");
@@ -17,6 +19,11 @@ function formatDateToMMDDYYYY(date: Date): string {
   return `${mm}-${dd}-${yyyy}`;
 }
 
+/**
+ * Fetch all projects from Firestore, ordered by creation date (newest first).
+ * Converts Firestore Timestamps to JS Dates, maps legacy service codes, and validates with Zod schema.
+ * Returns only valid project records.
+ */
 export async function getProjects(): Promise<Project[]> {
   try {
     const projectsRef = collection(db, "projects");
@@ -52,10 +59,15 @@ export async function getProjects(): Promise<Project[]> {
         };
         data.serviceRequested = data.serviceRequested
           .map((code: string) => serviceMap[code] || code)
+          // Only keep valid, unique service names
           .filter(
             (val: string, idx: number, arr: string[]) =>
-              ["Laboratory Services", "Retail Services", "Equipment Use", "Bioinformatics Analysis"].includes(val) &&
-              arr.indexOf(val) === idx
+              [
+                "Laboratory Services",
+                "Retail Services",
+                "Equipment Use",
+                "Bioinformatics Analysis",
+              ].includes(val) && arr.indexOf(val) === idx
           );
       }
 
@@ -64,10 +76,12 @@ export async function getProjects(): Promise<Project[]> {
         ...data,
       };
 
+      // Validate with Zod schema
       const result = projectSchema.safeParse(candidate);
 
       if (result.success) {
         const raw = result.data;
+        // Normalize and format project fields
         const project: Project = {
           ...raw,
           fundingCategory: raw.fundingCategory === "" ? undefined : raw.fundingCategory,
@@ -92,6 +106,11 @@ export async function getProjects(): Promise<Project[]> {
   }
 }
 
+/**
+ * Generate the next available project ID (pid) for a given year.
+ * Looks for the highest existing pid for the year and increments it.
+ * Returns a string like 'P-2025-017'.
+ */
 export async function getNextPid(year: number): Promise<string> {
   const projectsRef = collection(db, "projects");
   const yearPrefix = `P-${year}-`;

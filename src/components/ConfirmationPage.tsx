@@ -1,17 +1,21 @@
+// Reusable Confirmation Page
+// Displays a thank you/confirmation message after successful form submission, with optional email and logout sections.
+
 import React from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { CheckCircle, Mail, LogOut } from "lucide-react";
 
+// Props for the confirmation page
 interface ConfirmationPageProps {
-  title?: string;
-  message?: string;
-  emailInfo?: string;
-  showEmail?: boolean;
-  showLogout?: boolean;
-  onLogout?: () => void;
-  buttonLabel?: string;
+  title?: string; // Main heading
+  message?: string; // Main confirmation message
+  emailInfo?: string; // Sub-message or info
+  showEmail?: boolean; // Show email contact section
+  showLogout?: boolean; // Show logout button
+  onLogout?: () => void; // Logout handler
+  buttonLabel?: string; // Logout button label
 }
 
 export default function ConfirmationPage({
@@ -28,6 +32,7 @@ export default function ConfirmationPage({
       <div className="w-full max-w-lg">
         <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center pb-6">
+            {/* PGC Logo */}
             <div className="flex justify-center mb-6">
               <Image
                 src="/assets/pgc-logo.png"
@@ -37,11 +42,13 @@ export default function ConfirmationPage({
                 className="h-auto"
               />
             </div>
+            {/* Success Icon */}
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
                 <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
             </div>
+            {/* Title and Info */}
             <h1 className="text-2xl font-bold text-gray-800 mb-2">
               {title}
             </h1>
@@ -50,6 +57,7 @@ export default function ConfirmationPage({
             </p>
           </CardHeader>
           <CardContent className="space-y-6 text-center">
+            {/* Email Contact Section */}
             {showEmail && (
               <div className="p-4 rounded-lg border border-blue-200">
                 <div className="flex items-center justify-center gap-2 mb-2">
@@ -68,9 +76,11 @@ export default function ConfirmationPage({
               </div>
             )}
             <div className="space-y-3">
+              {/* Main confirmation message */}
               <p className="text-sm text-gray-600">
                 {message}
               </p>
+              {/* Optional logout button */}
               {showLogout && onLogout && (
                 <div className="pt-4">
                   <Button 

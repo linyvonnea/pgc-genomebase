@@ -1,3 +1,6 @@
+// This is the Project Information Form page for clients to submit or update project details.
+// It includes permission checks, data fetching, and a confirmation modal before final submission.
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -23,10 +26,12 @@ import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout"
 export default function ProjectForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // Get project, client, and inquiry IDs from URL
   const pid = searchParams.get("pid");
   const cid = searchParams.get("cid");
   const inquiryId = searchParams.get("inquiryId");
 
+  // Form state
   const [formData, setFormData] = useState<ProjectFormData>({
     title: "",
     projectLead: "",
@@ -37,9 +42,11 @@ export default function ProjectForm() {
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectFormData, string>>>({});
   const [startOpen, setStartOpen] = useState(false);
+  // Confirmation modal state
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingData, setPendingData] = useState<ProjectFormData | null>(null);
 
+  // Fetch project data if editing an existing project
   useEffect(() => {
     async function fetchProject() {
       if (!pid) {
@@ -69,6 +76,7 @@ export default function ProjectForm() {
     fetchProject();
   }, [pid]);
 
+  // Permission check: Only allow access if user is contact person and client info is submitted
   useEffect(() => {
     async function checkPermission() {
       if (!cid) {
@@ -104,10 +112,12 @@ export default function ProjectForm() {
     checkPermission();
   }, [cid, inquiryId, router]);
 
+  // Handle form field changes
   const handleChange = (field: keyof ProjectFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // On form submit, validate and show confirmation modal
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = projectFormSchema.safeParse(formData);
@@ -121,10 +131,11 @@ export default function ProjectForm() {
       return;
     }
     setErrors({});
-    setPendingData(formData);
-    setShowConfirmModal(true);
+    setPendingData(formData); // Store data for modal
+    setShowConfirmModal(true); // Show confirmation modal
   };
 
+  // On confirm in modal, save project to Firestore
   const handleConfirmSave = async () => {
     setShowConfirmModal(false);
     try {
@@ -142,6 +153,7 @@ export default function ProjectForm() {
           clientName = clientDoc.data().name || "";
         }
       }
+      // Prepare project payload
       const snap = await getDoc(docRef);
       let createdAt = serverTimestamp();
       let existingClientNames: string[] = [];
@@ -180,11 +192,13 @@ export default function ProjectForm() {
     }
   };
 
+  // Cancel confirmation modal
   const handleCancelModal = () => {
     setShowConfirmModal(false);
     setPendingData(null);
   };
 
+  // Format date for display
   const formatDate = (date: Date | null) =>
     date?.toLocaleDateString("en-US", {
       day: "2-digit",
@@ -192,6 +206,7 @@ export default function ProjectForm() {
       year: "numeric",
     }) || "";
 
+  // Show loading skeleton while fetching project data
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-slate-50/50 to-blue-50/30">
@@ -205,10 +220,12 @@ export default function ProjectForm() {
     );
   }
 
+  // Main form UI
   return (
     <div className="min-h-screen p-6 bg-gradient-to-br from-slate-50/50 to-blue-50/30">
       <div className="max-w-4xl mx-auto">
         <div className="p-8 bg-white/80 rounded-2xl shadow-xl border border-white/50 backdrop-blur-sm">
+          {/* Header and instructions */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-3 h-3 rounded-full bg-gradient-to-r from-[#F69122] to-[#912ABD]" />
@@ -223,28 +240,32 @@ export default function ProjectForm() {
             </div>
           </div>
 
+          {/* Project form fields */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Project Title */}
               <div className="md:col-span-2">
                 <Label>Project Title <span className="text-[#B9273A]">*</span></Label>
                 <Input
                   value={formData.title}
-                  onChange={(e) => handleChange("title", e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange("title", e.target.value)}
                   placeholder="Enter your project title"
                 />
                 {errors.title && <p className="text-[#B9273A] text-sm mt-1">{errors.title}</p>}
               </div>
 
+              {/* Project Lead */}
               <div>
                 <Label>Project Lead <span className="text-[#B9273A]">*</span></Label>
                 <Input
                   value={formData.projectLead}
-                  onChange={(e) => handleChange("projectLead", e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange("projectLead", e.target.value)}
                   placeholder="Enter project lead name"
                 />
                 {errors.projectLead && <p className="text-[#B9273A] text-sm mt-1">{errors.projectLead}</p>}
               </div>
 
+              {/* Start Date */}
               <div>
                 <Label>Start Date <span className="text-[#B9273A]">*</span></Label>
                 <Popover open={startOpen} onOpenChange={setStartOpen}>
@@ -270,7 +291,7 @@ export default function ProjectForm() {
                       selected={formData.startDate}
                       fromYear={2000}
                       toYear={new Date().getFullYear() + 10}
-                      onSelect={(date) => {
+                      onSelect={(date: Date | undefined) => {
                         handleChange("startDate", date);
                         setStartOpen(false);
                       }}
@@ -281,11 +302,12 @@ export default function ProjectForm() {
               </div>
             </div>
 
+            {/* Sending Institution */}
             <div>
               <Label>Sending Institution <span className="text-[#B9273A]">*</span></Label>
               <Select
                 value={formData.sendingInstitution}
-                onValueChange={(val) => handleChange("sendingInstitution", val)}
+                onValueChange={(val: string) => handleChange("sendingInstitution", val)}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select sending institution" />
@@ -302,16 +324,18 @@ export default function ProjectForm() {
               {errors.sendingInstitution && <p className="text-[#B9273A] text-sm mt-1">{errors.sendingInstitution}</p>}
             </div>
 
+            {/* Funding Institution */}
             <div>
               <Label>Funding Institution <span className="text-[#B9273A]">*</span></Label>
               <Input
                 value={formData.fundingInstitution}
-                onChange={(e) => handleChange("fundingInstitution", e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange("fundingInstitution", e.target.value)}
                 placeholder="Enter funding institution"
               />
               {errors.fundingInstitution && <p className="text-[#B9273A] text-sm mt-1">{errors.fundingInstitution}</p>}
             </div>
 
+            {/* Submit Button */}
             <div className="flex justify-end pt-6 border-t border-slate-100">
               <Button
                 type="submit"
@@ -323,7 +347,7 @@ export default function ProjectForm() {
           </form>
         </div>
       </div>
-      {/* Confirmation Modal */}
+      {/* Confirmation Modal: Review project info before final submit */}
       <ConfirmationModalLayout
         open={showConfirmModal}
         onConfirm={handleConfirmSave}

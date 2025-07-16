@@ -1,3 +1,5 @@
+// Service for fetching a single client or project by ID from Firestore, with schema validation and timestamp conversion.
+
 import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { clientSchema } from "@/schemas/clientSchema";
@@ -17,7 +19,9 @@ function safeDate(input: any): string | undefined {
 }
 
 /**
- * Fetch a single client by ID (cid)
+ * Fetch a single client by ID (cid) from Firestore.
+ * Converts Firestore timestamps and validates with Zod schema.
+ * Returns null if not found or validation fails.
  */
 export async function getClientById(cid: string): Promise<Client | null> {
   try {
@@ -28,9 +32,10 @@ export async function getClientById(cid: string): Promise<Client | null> {
 
     const data = snapshot.data();
 
-    // Convert timestamps
+    // Convert Firestore Timestamp to JS Date
     if (data.createdAt?.toDate) data.createdAt = data.createdAt.toDate();
 
+    // Validate with Zod schema
     const parsed = clientSchema.safeParse({ id: snapshot.id, ...data });
 
     if (!parsed.success) {
@@ -46,7 +51,9 @@ export async function getClientById(cid: string): Promise<Client | null> {
 }
 
 /**
- * Fetch a single project by ID (pid)
+ * Fetch a single project by ID (pid) from Firestore.
+ * Converts Firestore timestamps and validates with Zod schema.
+ * Returns null if not found or validation fails.
  */
 export async function getProjectById(pid: string): Promise<Project | null> {
   try {
@@ -57,10 +64,11 @@ export async function getProjectById(pid: string): Promise<Project | null> {
 
     const data = snapshot.data();
 
-    // Convert timestamps
+    // Convert Firestore Timestamps to JS Dates
     if (data.createdAt?.toDate) data.createdAt = data.createdAt.toDate();
     if (data.startDate?.toDate) data.startDate = data.startDate.toDate();
 
+    // Validate with Zod schema
     const parsed = projectSchema.safeParse({ id: snapshot.id, ...data });
 
     if (!parsed.success) {
@@ -68,6 +76,7 @@ export async function getProjectById(pid: string): Promise<Project | null> {
       return null;
     }
 
+    // Normalize and format project fields
     const project: Project = {
       ...parsed.data,
       fundingCategory: parsed.data.fundingCategory || undefined,

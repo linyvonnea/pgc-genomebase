@@ -1,3 +1,5 @@
+// Service for fetching and generating client records from Firestore, with schema validation and ID generation.
+
 import {
   collection,
   getDocs,
@@ -9,7 +11,7 @@ import { db } from "@/lib/firebase";
 import { Client } from "@/types/Client";
 import { clientSchema } from "@/schemas/clientSchema";
 
-// Helper to format date to MM-DD-YYYY
+// Helper to format a JS Date to MM-DD-YYYY string
 function formatDateToMMDDYYYY(date: Date): string {
   const mm = String(date.getMonth() + 1).padStart(2, "0");
   const dd = String(date.getDate()).padStart(2, "0");
@@ -17,6 +19,11 @@ function formatDateToMMDDYYYY(date: Date): string {
   return `${mm}-${dd}-${yyyy}`;
 }
 
+/**
+ * Fetch all clients from Firestore, ordered by creation date (newest first).
+ * Converts Firestore Timestamps to JS Dates and validates with Zod schema.
+ * Returns only valid client records.
+ */
 export async function getClients(): Promise<Client[]> {
   try {
     const clientsRef = collection(db, "clients");
@@ -41,15 +48,14 @@ export async function getClients(): Promise<Client[]> {
         ...data,
       };
 
+      // Validate with Zod schema
       const result = clientSchema.safeParse(candidate);
 
       if (result.success) {
         const raw = result.data;
-
         const client: Client = {
           ...raw,
         };
-
         clients.push(client);
       }
     });
@@ -60,6 +66,11 @@ export async function getClients(): Promise<Client[]> {
   }
 }
 
+/**
+ * Generate the next available client ID (cid) for a given year.
+ * Looks for the highest existing cid for the year and increments it.
+ * Returns a string like 'CL-2025-017'.
+ */
 export async function getNextCid(year: number): Promise<string> {
   const clientsRef = collection(db, "clients");
   const yearPrefix = `CL-${year}-`;
@@ -72,7 +83,7 @@ export async function getNextCid(year: number): Promise<string> {
 
   const snapshot = await getDocs(clientsQuery);
 
-  // Extract numerical part of cid (e.g., 016 from P-2025-016)
+  // Extract numerical part of cid (e.g., 016 from CL-2025-016)
   const numbers = snapshot.docs
     .map((doc) => {
       const cid = doc.data().cid as string;

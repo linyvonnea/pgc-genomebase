@@ -1,3 +1,6 @@
+// Admin Client Modal Form
+// Modal form for adding a new client in the admin panel, with project linking and validation.
+
 'use client';
 
 import { useState, useEffect } from "react";
@@ -17,6 +20,7 @@ import { getNextCid } from "@/services/clientService";
 import { getProjects } from "@/services/projectsService";
 import { DialogFooter } from "@/components/ui/dialog";
 
+// Extended client schema for admin modal validation
 const clientSchema = baseClientSchema.extend({
   affiliation: z.string().min(1, "Affiliation is required"),
   affiliationAddress: z.string().min(1, "Affiliation address is required"),
@@ -33,7 +37,9 @@ const clientSchema = baseClientSchema.extend({
 
 type ClientFormData = z.infer<typeof clientSchema>;
 
+// Modal form component for adding a client
 export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => void }) {
+  // Form state
   const [formData, setFormData] = useState<ClientFormData>({
     year: new Date().getFullYear(),
     name: "",
@@ -50,6 +56,8 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
   const [projectOptions, setProjectOptions] = useState<{ pid: string; title?: string }[]>([]);
   const [selectedPid, setSelectedPid] = useState<string>("");
   const [projectSearch, setProjectSearch] = useState("");
+
+  // Mutation for saving client to Firestore
   const mutation = useMutation({
     mutationFn: async (data: Client) => {
       if (!data.cid) throw new Error("Client ID is required");
@@ -72,15 +80,16 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
     },
   });
 
+  // Fetch project options for dropdown
   useEffect(() => {
     getProjects().then((projects) => {
       setProjectOptions(projects.map((p) => ({ pid: p.pid!, title: p.title })));
     });
   }, []);
 
+  // Handle form submit: validate, save client, update project
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const result = clientSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors: Partial<Record<keyof ClientFormData, string>> = {};
@@ -92,6 +101,7 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
     } else {
       setErrors({});
       try {
+        // Generate next client ID
         const nextCid = await getNextCid(result.data.year);
         const clientData: Client = {
           ...result.data,
@@ -100,7 +110,7 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
           pid: selectedPid,
         };
         await mutation.mutateAsync(clientData);
-        // Update project clientNames
+        // Update project clientNames array
         if (selectedPid && clientData.name) {
           const projectRef = doc(db, "projects", selectedPid);
           await updateDoc(projectRef, {
@@ -114,6 +124,7 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
     }
   };
 
+  // Handle form field changes
   const handleChange = (
     name: keyof ClientFormData,
     value: string
@@ -124,6 +135,7 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
     }));
   };
 
+  // Filter project options by search
   const filteredProjectOptions = projectOptions.filter(
     (proj) =>
       proj.pid.toLowerCase().includes(projectSearch.toLowerCase()) ||
@@ -132,7 +144,7 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
 
   return (
     <form onSubmit={handleSubmit}>
-      {/* Project ID Dropdown */}
+      {/* Project ID Dropdown with search */}
       <div>
         <Label>Project ID</Label>
         <Select value={selectedPid} onValueChange={setSelectedPid}>
@@ -157,6 +169,7 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
         </Select>
       </div>
 
+      {/* Name Field */}
       <div>
         <Label>Name</Label>
         <Input
@@ -167,6 +180,7 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
         {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
       </div>
 
+      {/* Email Field */}
       <div>
         <Label>Email</Label>
         <Input
@@ -177,6 +191,7 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
         {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
       </div>
 
+      {/* Affiliation Field */}
       <div>
         <Label>Affiliation (Department & Institution)</Label>
         <Input
@@ -187,6 +202,7 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
         {errors.affiliation && <p className="text-red-500 text-sm">{errors.affiliation}</p>}
       </div>
 
+      {/* Designation Field */}
       <div>
         <Label>Designation</Label>
         <Input
@@ -197,6 +213,7 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
         {errors.designation && <p className="text-red-500 text-sm">{errors.designation}</p>}
       </div>
 
+      {/* Sex Field */}
       <div>
         <Label>Sex</Label>
         <Select value={formData.sex} onValueChange={(val) => handleChange("sex", val as ClientFormData["sex"])}>
@@ -212,6 +229,7 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
         {errors.sex && <p className="text-red-500 text-sm">{errors.sex}</p>}
       </div>
 
+      {/* Mobile Number Field */}
       <div>
         <Label>Mobile Number</Label>
         <Input
@@ -222,6 +240,7 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
         {errors.phoneNumber && <p className="text-red-500 text-sm">{errors.phoneNumber}</p>}
       </div>
 
+      {/* Affiliation Address Field */}
       <div className="mb-4">
         <Label>Affiliation Address</Label>
         <Textarea
@@ -232,6 +251,7 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
         {errors.affiliationAddress && <p className="text-red-500 text-sm">{errors.affiliationAddress}</p>}
       </div>
 
+      {/* Save Button */}
       <DialogFooter>
         <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending ? "Saving..." : "Save"}

@@ -1,5 +1,7 @@
 "use client";
 
+// Client information form entry page
+
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { doc, setDoc, serverTimestamp, getDoc } from "firebase/firestore";
@@ -23,11 +25,6 @@ import { toast } from "sonner";
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
 
 export default function ClientFormEntry() {
-  const [step, setStep] = useState<"verify" | "form">("verify");
-  const [inquiryId, setInquiryId] = useState("");
-  const [verifyEmail, setVerifyEmail] = useState("");
-  const [verifyError, setVerifyError] = useState("");
-  const [verifying, setVerifying] = useState(false);
   const [formData, setFormData] = useState<ClientFormData>({
     name: "",
     email: "",
@@ -60,7 +57,7 @@ export default function ClientFormEntry() {
   }, [emailParam, inquiryIdParam, router]);
 
   useEffect(() => {
-    // Fetch client record for permission logic
+    // Fetch client record for permissions
     async function fetchClientPermission() {
       if (!emailParam || !inquiryIdParam) return;
       // Find client by email and inquiryId (pid)
@@ -152,13 +149,13 @@ export default function ClientFormEntry() {
         pid = await getNextPid(year);
       }
       // Save client with pid
-      const clientDocId = cid; // Always use incrementing CL id
+      const clientDocId = cid; 
       // Set isContactPerson strictly by comparing to inquiry's contact email
       const isContactPersonValue = result.data.email === inquiryContactEmail;
       await setDoc(doc(db, "clients", clientDocId), {
         ...result.data,
         cid,
-        pid, // always use the correct project id
+        pid, 
         year,
         inquiryId: inquiryIdParam,
         createdAt: serverTimestamp(),
@@ -187,7 +184,7 @@ export default function ClientFormEntry() {
         clientNames,
         startDate: serverTimestamp(),
         inquiryId: inquiryIdParam,
-        // ...other fields
+     
       }, { merge: true });
       // Use updated client record for permission check
       if (updatedClient.isContactPerson && inquiryContactEmail && updatedClient.email === inquiryContactEmail) {
@@ -212,7 +209,7 @@ export default function ClientFormEntry() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50/50 to-blue-50/30 p-6">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8">
-          {/* Modern Header */}
+          {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-3 h-3 bg-gradient-to-r from-[#F69122] to-[#912ABD] rounded-full"></div>
@@ -364,6 +361,7 @@ export default function ClientFormEntry() {
           </form>
         </div>
       </div>
+      
       {/* Confirmation Modal */}
       <ConfirmationModalLayout
         open={showConfirmModal}
