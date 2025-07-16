@@ -82,7 +82,6 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
   }, [isOpen]);
 
   const onSubmit = async (data: AdminProjectData) => {
-    console.log("Submitting...");
     setIsLoading(true);
     // Ensure pid is present
     const pid = data.pid || project.pid;
@@ -108,7 +107,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       serviceRequested = [];
     }
     const updatedData = { ...data, pid, serviceRequested };
-    console.log("Submitting to Firestore:", updatedData);
+  
     try {
       await editProject(updatedData);
       toast.success("Project updated successfully!");

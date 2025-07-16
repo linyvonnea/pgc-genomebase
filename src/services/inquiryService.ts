@@ -12,13 +12,11 @@ export async function getInquiries(): Promise<Inquiry[]> {
     const q = query(inquiriesRef, orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(q);
     
-    console.log(`Found ${querySnapshot.size} documents in inquiries collection`);
     
     const inquiries: Inquiry[] = [];
     
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-      console.log(`Processing document ${doc.id}:`, data);
       
       // Convert Firestore Timestamp to Date if needed
       let createdAt = data.createdAt;
