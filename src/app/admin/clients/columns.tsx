@@ -74,7 +74,6 @@ export const columns: ColumnDef<Client>[] = [
           {/* Charge slip button */}
           <Button
             onClick={() => {
-              console.log("Client Data:", client);
               router.push(
                 `/admin/charge-slips/new?clientId=${client.cid}&projectId=${client.pid}`
               );

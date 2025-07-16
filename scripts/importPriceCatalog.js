@@ -32,7 +32,7 @@ async function uploadCatalog() {
     await setDoc(doc(colRef, item.id), item);
   }
 
-  console.log("🎉 All services uploaded to Firestore.");
+
 }
 
 uploadCatalog().catch((error) => {
