@@ -339,7 +339,8 @@ export default function ProjectForm() {
             <div className="flex justify-end pt-6 border-t border-slate-100">
               <Button
                 type="submit"
-                className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] text-white hover:brightness-110 transition-all duration-300"
+                className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+
               >
                 Submit
               </Button>
