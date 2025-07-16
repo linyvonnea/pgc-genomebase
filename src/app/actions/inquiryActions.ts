@@ -40,6 +40,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     
     // Create template data based on service type
     let templateData: Record<string, any> = {
+      inquiryId: docRef.id,
       name: inquiryData.name,
       affiliation: inquiryData.affiliation,
       designation: inquiryData.designation,
