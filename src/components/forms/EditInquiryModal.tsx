@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/form";
 import { Pencil, Trash2 } from "lucide-react";
 import { Inquiry } from "@/types/Inquiry";
-import { updateInquiry, deleteInquiry } from "@/services/inquiryService";
+import { updateInquiryAction, deleteInquiryAction } from "@/app/actions/inquiryActions";
 import { toast } from "sonner";
 
 interface EditInquiryModalProps {
@@ -69,7 +69,7 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
   const onSubmit = async (data: AdminInquiryData) => {
     setIsLoading(true);
     try {
-      await updateInquiry(inquiry.id, data);
+      await updateInquiryAction(inquiry.id, data);
       toast.success("Inquiry updated successfully!");
       setIsOpen(false);
       onSuccess?.();
@@ -84,7 +84,7 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      await deleteInquiry(inquiry.id);
+      await deleteInquiryAction(inquiry.id);
       toast.success("Inquiry deleted successfully!");
       setShowDeleteAlert(false);
       setIsOpen(false);

@@ -1,7 +1,6 @@
-import { collection, getDocs, addDoc, serverTimestamp, query, orderBy, doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Inquiry } from "@/types/Inquiry";
-import { InquiryFormData } from "@/schemas/inquirySchema";
 
 export async function getInquiries(): Promise<Inquiry[]> {
   try {
@@ -11,7 +10,6 @@ export async function getInquiries(): Promise<Inquiry[]> {
     const inquiriesRef = collection(db, "inquiries");
     const q = query(inquiriesRef, orderBy("createdAt", "desc"));
     const querySnapshot = await getDocs(q);
-    
     
     const inquiries: Inquiry[] = [];
     
@@ -54,38 +52,6 @@ export async function getInquiries(): Promise<Inquiry[]> {
   }
 }
 
-export const createInquiry = async (inquiryData: any) => {
-  try {
-    // Transform the form data to match the expected database structure
-    const currentDate = new Date();
-    
-    const transformedData = {
-      name: inquiryData.name,
-      affiliation: inquiryData.affiliation,
-      designation: inquiryData.designation,
-      email: inquiryData.email || null,
-      workflows: inquiryData.workflows || [],
-      additionalInfo: inquiryData.additionalInfo || null,
-      projectBackground: inquiryData.projectBackground || null,
-      projectBudget: inquiryData.projectBudget || null,
-      specificTrainingNeed: inquiryData.specificTrainingNeed || null,
-      targetTrainingDate: inquiryData.targetTrainingDate || null,
-      numberOfParticipants: inquiryData.numberOfParticipants || null,
-      createdAt: serverTimestamp(),
-      status: 'Pending',
-      isApproved: false,
-      serviceType: inquiryData.service || 'added manual record'
-      // Removed year here
-    };
-
-    const docRef = await addDoc(collection(db, "inquiries"), transformedData);
-    return docRef.id;
-  } catch (error) {
-    console.error("Error creating inquiry:", error);
-    throw error;
-  }
-};
-
 export async function getInquiryById(id: string): Promise<Inquiry> {
   try {
     const docRef = doc(db, "inquiries", id);
@@ -104,50 +70,9 @@ export async function getInquiryById(id: string): Promise<Inquiry> {
       affiliation: data.affiliation || "",
       designation: data.designation || "",
       email: data.email ?? "",
-      // Removed year here
     };
   } catch (error) {
-    console.error(` Failed to fetch inquiry ${id}:`, error);
+    console.error(`Failed to fetch inquiry ${id}:`, error);
     throw error;
-  }
-}
-
-export async function updateInquiry(id: string, data: {
-  name: string;
-  email: string;
-  affiliation: string;
-  designation: string;
-  status: string;
-}) {
-  try {
-    const docRef = doc(db, "inquiries", id);
-    
-    // Update the document with the new data
-    await updateDoc(docRef, {
-      name: data.name,
-      email: data.email,
-      affiliation: data.affiliation,
-      designation: data.designation,
-      status: data.status,
-      isApproved: data.status === 'Approved Client', // Update isApproved based on status
-    });
-    
-    console.log(`Successfully updated inquiry ${id}`);
-    return { success: true };
-  } catch (error) {
-    console.error("Error updating inquiry:", error);
-    throw new Error('Failed to update inquiry');
-  }
-}
-
-export async function deleteInquiry(id: string) {
-  try {
-    const docRef = doc(db, "inquiries", id);
-    await deleteDoc(docRef);
-    console.log(`Successfully deleted inquiry ${id}`);
-    return { success: true };
-  } catch (error) {
-    console.error("Error deleting inquiry:", error);
-    throw new Error('Failed to delete inquiry');
   }
 }

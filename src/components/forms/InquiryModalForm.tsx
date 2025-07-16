@@ -31,9 +31,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
-import { createInquiry } from "@/services/inquiryService";
-import { revalidatePath } from "next/cache";
-import { useRouter } from "next/navigation";
+import { createAdminInquiryAction } from "@/app/actions/inquiryActions";
 
 interface AddInquiryModalProps {
   onSuccess?: () => void;
@@ -42,7 +40,6 @@ interface AddInquiryModalProps {
 export function AddInquiryModal({ onSuccess }: AddInquiryModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   const form = useForm<AdminInquiryData>({
     resolver: zodResolver(adminInquirySchema),
@@ -58,22 +55,12 @@ export function AddInquiryModal({ onSuccess }: AddInquiryModalProps) {
   const onSubmit = async (data: AdminInquiryData) => {
     setIsLoading(true);
     try {
-      const currentDate = new Date();
-      const inquiryData = {
-        ...data,
-        createdAt: currentDate,
-        isApproved: data.status === 'Approved Client',
-      };
-
-      await createInquiry(inquiryData);
+      await createAdminInquiryAction(data);
       
       toast.success("Inquiry added successfully!");
       form.reset();
       setIsOpen(false);
       onSuccess?.();
-      
-      // Refresh the page to show the new data
-      router.refresh();
       
     } catch (error) {
       console.error("Error creating inquiry:", error);

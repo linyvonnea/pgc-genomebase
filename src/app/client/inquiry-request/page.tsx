@@ -107,7 +107,7 @@ export default function QuotationRequestForm() {
         // Dismiss the loading toast and show success
         toast.dismiss()
         toast.success("Inquiry submitted successfully!", {
-          description: "Thank you for your submission. Redirecting to confirmation page...",
+          description: "Thank you for your submission. Redirecting to another page...",
           duration: 4000,
         })
         
