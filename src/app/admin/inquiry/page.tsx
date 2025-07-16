@@ -38,7 +38,7 @@ export default async function InquiryPage() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Inquiry Management</h1>
             <p className="text-muted-foreground">
-              Manage and review research inquiries submitted to the genome database.
+              Manage and review research inquiries submitted to the database.
             </p>
           </div>
           <AddInquiryModal />
