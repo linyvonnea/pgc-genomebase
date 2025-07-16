@@ -15,11 +15,10 @@ interface StatCardProps {
 
 // Colors for each category
 const COLORS = [
-  "#912ABD",
-  "#6E30BE",
-  "#633190", 
-  "#40388F", 
-  "#166FB5"  
+  "#F06292", 
+  "#81C784", 
+  "#64B5F6", 
+  "#BA68C8", 
 ];
 
 export function StatCard({ title, value, colorIndex = 0 }: StatCardProps) {

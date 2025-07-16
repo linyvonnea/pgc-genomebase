@@ -30,11 +30,11 @@ export default function Dashboard() {
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-8 rounded-lg">
       {/* Header section with welcome message and time filter */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold flex-grow min-w-0">
+      <div className="mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold mb-4">
           Welcome, {userName}!
         </h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full">
           {/* Time filter for dashboard data */}
           <TimeFilter onFilterChange={handleTimeFilterChange} />
         </div>
@@ -78,31 +78,6 @@ export default function Dashboard() {
           <ExportButton onClick={exportToPDF} disabled={isExporting} />
         </div>
       )}
-
-      {/* Hidden dashboard for export */}
-      <div
-        id="dashboard-export"
-        style={{
-          width: "1200px",
-          minHeight: "1600px",
-          position: "absolute",
-          left: "-9999px",
-          top: 0,
-          background: "white",
-          zIndex: -1,
-          overflow: "hidden",
-          pointerEvents: "none",
-        }}
-      >
-        <DashboardContent
-          filteredProjects={filteredProjects}
-          filteredClients={filteredClients}
-          filteredTrainings={filteredTrainings}
-          totalIncome={totalIncome}
-          timeRange={timeRange}
-          customRange={customRange}
-        />
-      </div>
     </div>
   );
 }

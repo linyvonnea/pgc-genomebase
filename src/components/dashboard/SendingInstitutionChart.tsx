@@ -21,12 +21,12 @@ type InstitutionCategory = typeof INSTITUTION_CATEGORIES[number];
 
 // Colors for each category in the pie chart
 const CATEGORY_COLORS: Record<InstitutionCategory, string> = {
-  "UP System":"#166FB5",
-  "SUC/HEI":  "#40388F",
-  "Government": " #633190",
-  "Private/Local": "#6E30BE ",
-  "International": "#912ABD",
-  "N/A":  "#F69122" 
+  "UP System": "#F06292",         
+  "SUC/HEI": "#FFB74D",           
+  "Government": "#FFF176",       
+  "Private/Local": "#81C784",  
+  "International": "#64B5F6",    
+  "N/A": "#BA68C8",             
 };
 
 export function SendingInstitutionChart({ projects }: { projects: Project[] }) {

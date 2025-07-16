@@ -27,9 +27,9 @@ import { StatisticsBarChartProps } from "@/types/StatBarChart";
 
 // Colors for each category in the bar chart
 const CATEGORY_COLORS = {
-  CLIENTS: "#166FB5",  
-  PROJECTS: "#633190",
-  TRAININGS: "#912ABD" 
+  CLIENTS: "#F06292",    // Muted Pink
+  PROJECTS: "#81C784",   // Muted Green
+  TRAININGS: "#64B5F6"   // Muted Blue
 } as const;
 
 export function StatBarChart({ 
@@ -134,40 +134,38 @@ export function StatBarChart({
                   fontSize: '12px',
                   paddingTop: '10px',
                   paddingBottom: '10px',
+                  width: '100%',
+                  textAlign: 'center',
                 }}
                 content={({ payload }) => (
                   <div style={{
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    gap: '16px', 
-                    width: '100%', 
-                    margin: '0 auto', 
+                    gap: '16px',
+                    width: '100%',
+                    margin: '0 auto',
                   }}>
-                    {payload?.map((entry, index) => {
-                      return (
-                        <div 
-                          key={`legend-item-${index}`}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                          }}
-                        >
-                          <div style={{
-                            width: '12px',
-                            height: '12px',
-                            backgroundColor: entry.color,
-                            borderRadius: '2px'
-                          }} />
-                          <span style={{ 
-                            fontSize: '12px',
-                          }}>
-                            {entry.value}
-                          </span>
-                        </div>
-                      );
-                    })}
+                    {payload?.map((entry, index) => (
+                      <div 
+                        key={`legend-item-${index}`}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <div style={{
+                          width: '12px',
+                          height: '12px',
+                          backgroundColor: entry.color,
+                          borderRadius: '2px'
+                        }} />
+                        <span style={{ fontSize: '12px' }}>
+                          {entry.value}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 )}
               />

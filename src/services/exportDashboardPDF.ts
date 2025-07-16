@@ -11,10 +11,19 @@ export async function exportDashboardPDF({
   customRange?: { startMonth?: number; endMonth?: number; year?: number };
   monthNames: string[];
 }) {
-  const element = document.getElementById("dashboard-export");
+  const element = document.getElementById("dashboard-content");
   if (!element) {
-    throw new Error("Missing dashboard-export");
+    throw new Error("Missing dashboard-content");
   }
+
+  // Save original style
+  const originalWidth = element.style.width;
+
+  // Force fixed width for export (e.g., 1200px)
+  element.style.width = "1200px";
+
+  // Wait for browser to reflow
+  await new Promise((resolve) => setTimeout(resolve, 100));
 
   // Get dashboard size in pixels
   const rect = element.getBoundingClientRect();
@@ -29,6 +38,9 @@ export async function exportDashboardPDF({
   // Render dashboard to canvas
   const canvas = await html2canvas(element, { scale: 2 });
   const jsPDF = (await import("jspdf")).default;
+
+  // Restore original style
+  element.style.width = originalWidth;
 
   // Create PDF with dashboard size
   const pdf = new jsPDF({

@@ -86,10 +86,10 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
       <div className="flex flex-col sm:flex-row items-end gap-2 w-full">
         {/* Time range dropdown (non-custom) */}
         {timeRange !== "custom" ? (
-          <div className="w-[160px]">
+          <div className="w-full sm:w-[160px]">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full text-left truncate">
+                <Button variant="outline" className="w-full px-4 py-2 rounded border bg-white text-center">
                   Timeline: {timeRangeLabels[timeRange]}
                 </Button>
               </DropdownMenuTrigger>
@@ -109,9 +109,9 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
           </div>
         ) : (
           // Custom range dropdowns
-          <div className="flex flex-wrap md:flex-nowrap justify-end gap-2 w-full">
+          <div className="flex flex-wrap md:flex-nowrap gap-2 w-full">
             {/* Timeline Dropdown */}
-            <div className="w-[160px]">
+            <div className="w-full sm:w-[160px]">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-full text-left truncate">
@@ -134,7 +134,7 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
             </div>
 
             {/* Year Picker */}
-            <div className="w-[160px]">
+            <div className="w-full sm:w-[160px]">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-full text-left truncate">
@@ -157,7 +157,7 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
             </div>
 
             {/* Start Month Picker */}
-            <div className="w-[160px]">
+            <div className="w-full sm:w-[160px]">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-full text-left truncate">
@@ -180,7 +180,7 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
             </div>
 
             {/* End Month Picker */}
-            <div className="w-[160px]">
+            <div className="w-full sm:w-[160px]">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-full text-left truncate">
