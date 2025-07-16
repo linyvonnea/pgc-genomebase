@@ -50,10 +50,10 @@ export interface ChargeSlipRecord {
   };
 
   // Firestore-compatible timestamp fields
-  dateIssued?: string | Timestamp | Date | null;
-  dateOfOR?: string | Timestamp | Date | null;
-  createdAt?: string | Timestamp | Date | null;
-  datePaid?: string | Timestamp | Date | null;
+  dateIssued?: string | Timestamp | null;
+  dateOfOR?: string | Timestamp | null;
+  createdAt?: string | Timestamp | null;
+  datePaid?: string | Timestamp | null;
 
   dvNumber?: string;
   orNumber?: string;
