@@ -272,7 +272,7 @@ export default function QuotationRequestForm() {
                   {/* Workflow Selection */}
                   <div>
                     <Label className="text-sm font-semibold text-slate-700 mb-3 block">
-                      Kindly choose which workflow you will be availing? <span className="text-[#B9273A]">*</span>
+                      Kindly choose which workflow you will be availing <span className="text-[#B9273A]">*</span>
                     </Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {([
@@ -467,7 +467,7 @@ export default function QuotationRequestForm() {
                   {/* Number of Participants */}
                   <div>
                     <Label htmlFor="numberOfParticipants" className="text-sm font-semibold text-slate-700 mb-2 block">
-                      Number of Participants <span className="text-[#B9273A]">*</span>
+                      Number of Participants (Minimum of 6 pax for in-person) <span className="text-[#B9273A]">*</span>
                     </Label>
                     <Input
                       id="numberOfParticipants"
