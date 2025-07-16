@@ -299,11 +299,11 @@ export default function ClientFormEntry() {
               {/* Sex Field */}
               <div>
                 <Label className="text-sm font-semibold text-slate-700 mb-2 block">
-                  Gender <span className="text-[#B9273A]">*</span>
+                  Assigned sex at birth <span className="text-[#B9273A]">*</span>
                 </Label>
                 <Select value={formData.sex} onValueChange={(val) => handleChange("sex", val)}>
                   <SelectTrigger className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12">
-                    <SelectValue placeholder="Select gender" />
+                    <SelectValue placeholder="Select sex" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="M">Male</SelectItem>
@@ -353,6 +353,7 @@ export default function ClientFormEntry() {
               <Button 
                 type="submit" 
                 className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+
                 disabled={submitting}
               >
                 {submitting ? "Submitting..." : "Submit"}
@@ -379,7 +380,7 @@ export default function ClientFormEntry() {
             <div><span className="font-semibold">Email:</span> {pendingData.email}</div>
             <div><span className="font-semibold">Affiliation:</span> {pendingData.affiliation}</div>
             <div><span className="font-semibold">Designation:</span> {pendingData.designation}</div>
-            <div><span className="font-semibold">Gender:</span> {pendingData.sex}</div>
+            <div><span className="font-semibold">Sex:</span> {pendingData.sex}</div>
             <div><span className="font-semibold">Mobile Number:</span> {pendingData.phoneNumber}</div>
             <div><span className="font-semibold">Affiliation Address:</span> {pendingData.affiliationAddress}</div>
           </div>
