@@ -13,9 +13,9 @@ const SERVICE_CATEGORIES = [
 type ServiceCategory = typeof SERVICE_CATEGORIES[number];
 
 const CATEGORY_COLORS: Record<ServiceCategory, string> = {
-  "Laboratory Services": "#F69122",
-  "Equipment Use": "#B9273A",
-  "Bioinformatics Analysis": "#912ABD",
+  "Laboratory Services": "#166FB5",
+  "Equipment Use": "#40388F",
+  "Bioinformatics Analysis": "#633190",
   "Retail Sales": "#6E30BE",
 };
 

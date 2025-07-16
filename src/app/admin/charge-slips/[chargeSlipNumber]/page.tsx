@@ -56,7 +56,7 @@ export default function ChargeSlipDetailPage() {
       setDvNumber(data.dvNumber ?? "");
       setOrNumber(data.orNumber ?? "");
       setNotes(data.notes ?? "");
-      setStatus(data.status ?? "processing");
+      setStatus((data.status as "processing" | "paid" | "cancelled") ?? "processing");
 
       const rawDate = data.dateOfOR;
       if (isTimestamp(rawDate)) setDateOfOR(rawDate);

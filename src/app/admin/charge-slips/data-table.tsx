@@ -67,7 +67,9 @@ export function ChargeSlipTable({ data, columns }: Props) {
   }, [table, globalFilter, statusFilter]);
 
   const totalAmount = useMemo(() => {
-    return filteredRows.reduce((sum, row) => sum + (row.original.total || 0), 0);
+    return filteredRows.reduce((sum, row) =>
+      row.original.status === "paid" ? sum + (row.original.total || 0) : sum,
+    0);
   }, [filteredRows]);
 
   return (

@@ -1,7 +1,7 @@
 import { collection, getDocs, query, where, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-export function calculateTotalIncome(slips: any[]) {
+function calculateTotalIncome(slips: any[]) {
   return slips.reduce((sum, slip) => {
     if (slip.status === "paid") {
       return sum + (parseFloat(slip.total) || 0);
@@ -47,8 +47,8 @@ export async function fetchFilteredData(
     getDocs(query(collection(db, "clients"), where("createdAt", ">=", startTS), where("createdAt", "<=", endTS))),
     getDocs(query(
       collection(db, "chargeSlips"),
-      where("dateIssued", ">=", startTS),
-      where("dateIssued", "<=", endTS),
+      where("datePaid", ">=", startTS),
+      where("datePaid", "<=", endTS),
       where("status", "==", "paid")
     )),
     getDocs(query(collection(db, "trainings"), where("dateConducted", ">=", startTS), where("dateConducted", "<=", endTS)))

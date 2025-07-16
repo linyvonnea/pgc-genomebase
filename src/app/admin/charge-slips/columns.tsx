@@ -65,6 +65,15 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     },
   },
   {
+    accessorKey: "datePaid",
+    header: "Date Paid",
+    cell: ({ row }) => {
+      const raw = row.getValue("datePaid") as Date | string | undefined | null;
+      const date = raw instanceof Date ? raw : new Date(raw || "");
+      return isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-CA");
+    },
+  },
+  {
     accessorFn: (row) => row.clientInfo?.address,
     id: "clientInfo.address",
     header: "Address",

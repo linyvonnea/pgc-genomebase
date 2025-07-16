@@ -14,13 +14,11 @@ interface StatCardProps {
 }
 
 const COLORS = [
-  "#F69122", // Orange
-  "#B9273A", // Red
-  "#912ABD", // Purple
-  "#6E30BE", // Violet
-  "#633190", // Deep Purple
-  "#40388F", // Indigo
-  "#166FB5"  // Blue
+  "#912ABD",
+  "#6E30BE",
+  "#633190", 
+  "#40388F", 
+  "#166FB5"  
 ];
 
 export function StatCard({ title, value, colorIndex = 0 }: StatCardProps) {

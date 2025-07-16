@@ -12,8 +12,8 @@ const FUNDING_CATEGORIES: readonly ("External" | "In-House")[] = [
 type FundingCategory = typeof FUNDING_CATEGORIES[number];
 
 const CATEGORY_COLORS: Record<FundingCategory, string> = {
-  "In-House": "#F69122",
-  "External": "#B9273A",
+  "In-House": "#166FB5",
+  "External": "#633190 ",
 };
 
 export function FundingCategoryChart({ projects }: { projects: Project[] }) {

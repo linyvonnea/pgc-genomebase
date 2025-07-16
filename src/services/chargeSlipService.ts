@@ -9,6 +9,7 @@ import {
   where,
   orderBy,
   query,
+  Timestamp,
 } from "firebase/firestore";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { convertToDate, convertToTimestamp } from "@/lib/convert";
@@ -105,7 +106,14 @@ export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRe
 
   if ("dvNumber" in updates) updatedData.dvNumber = updates.dvNumber;
   if ("orNumber" in updates) updatedData.orNumber = updates.orNumber;
-  if ("status" in updates) updatedData.status = updates.status;
+  if ("status" in updates) {
+    updatedData.status = updates.status;
+    if (updates.status === "paid") {
+      updatedData.datePaid = Timestamp.fromDate(new Date()); 
+    } else {
+      updatedData.datePaid = null;
+    }
+  }
   if ("notes" in updates) updatedData.notes = updates.notes;
 
   if ("dateIssued" in updates) {

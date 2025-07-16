@@ -108,7 +108,9 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     filteredRows.filter((row) => row.original.status === status).length;
 
   const totalAmount = useMemo(() => {
-    return filteredRows.reduce((sum, row) => sum + (row.original.total || 0), 0);
+    return filteredRows.reduce((sum, row) =>
+      row.original.status === "paid" ? sum + (row.original.total || 0) : sum,
+    0);
   }, [filteredRows]);
 
   return (
