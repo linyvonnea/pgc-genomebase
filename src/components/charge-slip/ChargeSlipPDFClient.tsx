@@ -13,7 +13,8 @@ import { pgcLogo, schoolLogo } from "@/assets/logosBase64";
 import { Timestamp } from "firebase/firestore";
 
 // Utility to format ISO string to YYYY-MM-DD
-const formatDate = (date: string | Timestamp | undefined) => {
+const formatDate = (date: string | Timestamp | null | undefined) => {
+  if (!date) return "—";
   const iso = normalizeDate(date);
   const parsed = new Date(iso);
   return `${parsed.getFullYear()}-${(parsed.getMonth() + 1).toString().padStart(2, "0")}-${parsed
