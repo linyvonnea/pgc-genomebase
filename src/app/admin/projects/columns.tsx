@@ -1,3 +1,6 @@
+// Admin Projects Table Columns
+// Defines the columns and cell renderers for the admin projects data table.
+
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
@@ -6,7 +9,7 @@ import { projectSchema } from "@/schemas/projectSchema"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 
-
+// Column definitions for the projects table
 export const columns: ColumnDef<Project>[] = [
   {
     accessorKey: "startDate",
@@ -20,10 +23,11 @@ export const columns: ColumnDef<Project>[] = [
     accessorKey: "clientNames",
     header: "Client Names",
     cell: ({ row }) => {
+      // Render client names as comma-separated string
       const names = row.original.clientNames;
       return names && names.length > 0 ? names.join(", ") : "";
     },
-    //  enables global filtering by converting the array to a string
+    // Enables global filtering by converting the array to a string
     filterFn: (row, columnId, filterValue) => {
       const value: string[] = row.getValue(columnId) || [];
       return value.join(", ").toLowerCase().includes(filterValue.toLowerCase());
@@ -37,11 +41,12 @@ export const columns: ColumnDef<Project>[] = [
     accessorKey: "pid",
     header: "Project ID",
   },
-    {
+  {
     accessorKey: "iid",
     header: "Inquiry ID",
     size: 80,
     cell: ({ row }) => (
+      // Show inquiry ID 
       <span className="block max-w-[80px] break-words whitespace-normal">{row.original.iid}</span>
     ),
   },
@@ -57,6 +62,7 @@ export const columns: ColumnDef<Project>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
+      // Render status with color-coded badge
       const status = row.original.status;
       let color = "bg-gray-100 text-gray-800";
       let label: string = status || "";
@@ -88,6 +94,7 @@ export const columns: ColumnDef<Project>[] = [
     accessorKey: "sendingInstitution",
     header: "Sending Institution",
     cell: ({ row }) => {
+      // Render sending institution with color-coded badge
       const value = row.original.sendingInstitution;
       let color = "bg-gray-100 text-gray-800";
       switch (value) {
@@ -109,6 +116,7 @@ export const columns: ColumnDef<Project>[] = [
     accessorKey: "fundingCategory",
     header: "Funding Category",
     cell: ({ row }) => {
+      // Render funding category with color-coded badge
       const value = row.original.fundingCategory;
       let color = "bg-gray-100 text-gray-800";
       if (value === "External") color = "bg-orange-100 text-orange-800";
@@ -128,6 +136,7 @@ export const columns: ColumnDef<Project>[] = [
     accessorKey: "serviceRequested",
     header: "Service Requested",
     cell: ({ row }) => {
+      // Render requested services as comma-separated string
       const services = row.original.serviceRequested
       return services && services.length > 0 ? services.join(", ") : ""
     },
@@ -144,6 +153,7 @@ export const columns: ColumnDef<Project>[] = [
     id: "actions",
     header: "Actions",
     cell: (ctx: any) => {
+      // Render edit modal for each project row
       const { row, meta } = ctx;
       const project = row.original;
       const EditProjectModal = require("@/components/forms/EditProjectModal").EditProjectModal;

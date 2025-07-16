@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import ConfirmationPage from "@/components/ConfirmationPage";
 
+//Thank you page for project info submission
+
 export default function ProjectInfoSubmittedPage() {
   const [loading, setLoading] = useState(true);
 

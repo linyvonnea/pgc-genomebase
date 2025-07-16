@@ -20,7 +20,6 @@ export const adminProjectSchema = z.object({
   personnelAssigned: z.string().optional(),
   notes: z.string().optional(),
 
-  // Add more fields as needed for your admin modal
 });
 
 export type AdminProjectData = z.infer<typeof adminProjectSchema>;

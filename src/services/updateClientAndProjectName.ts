@@ -1,19 +1,23 @@
+// Update client document and synchronize client name in all related projects.
+// Handles legacy logic for updating/removing client names in project documents when client info changes.
+
 import { db } from "@/lib/firebase";
 import { doc, setDoc, getDoc, updateDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { Client } from "@/types/Client";
 
 export async function updateClientAndProjectName(cid: string, data: Partial<Client>, oldName?: string, oldPid?: string) {
-  // Update client document
+  // Update client document in Firestore
   const clientRef = doc(db, "clients", cid);
   await setDoc(clientRef, data, { merge: true });
 
-  // Update all projects where clientNames contains oldName
+  // Update all projects where clientNames contains oldName (rename in all projects)
   if (oldName && oldName.trim() && data.name && data.name.trim()) {
     const projectsRef = collection(db, "projects");
     const q = query(projectsRef, where("clientNames", "array-contains", oldName));
     const snapshot = await getDocs(q);
     for (const projectDoc of snapshot.docs) {
       let clientNames: string[] = Array.isArray(projectDoc.data().clientNames) ? projectDoc.data().clientNames : [];
+      // Replace oldName with new name
       clientNames = clientNames.map(n => n === oldName ? data.name! : n);
       await updateDoc(projectDoc.ref, { clientNames });
     }
@@ -25,6 +29,7 @@ export async function updateClientAndProjectName(cid: string, data: Partial<Clie
     const oldProjectSnap = await getDoc(oldProjectRef);
     if (oldProjectSnap.exists()) {
       let clientNames: string[] = Array.isArray(oldProjectSnap.data().clientNames) ? oldProjectSnap.data().clientNames : [];
+      // Remove oldName from clientNames array
       clientNames = clientNames.filter(n => n !== oldName);
       await updateDoc(oldProjectRef, { clientNames });
     }
@@ -44,7 +49,7 @@ export async function updateClientAndProjectName(cid: string, data: Partial<Clie
       if (data.name.trim() && !clientNames.includes(data.name)) {
         clientNames.push(data.name);
       }
-      // Remove any empty strings
+      // Remove any empty strings from the array
       clientNames = clientNames.filter(n => n && n.trim());
       await updateDoc(projectRef, { clientNames });
     }

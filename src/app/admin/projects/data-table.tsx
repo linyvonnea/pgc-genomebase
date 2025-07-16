@@ -1,3 +1,6 @@
+// Admin Projects Data Table
+// Generic, reusable data table for displaying and filtering projects in the admin dashboard.
+
 "use client"
 
 import {
@@ -16,7 +19,6 @@ import { Project } from "@/types/Project"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-
 import {
   Table,
   TableBody,
@@ -26,12 +28,14 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+// Props for the generic DataTable component
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   meta?: { onSuccess?: () => void }
 }
 
+// Custom global filter: checks if any cell value contains the filter string
 function customGlobalFilterFn<TData extends object>(
   row: any,
   columnId: string,
@@ -45,15 +49,18 @@ function customGlobalFilterFn<TData extends object>(
   )
 }
 
+// Generic DataTable component for displaying tabular data with search, filter, and pagination
 export function DataTable<TData, TValue>({
   columns,
   data,
   meta,
 }: DataTableProps<TData, TValue>) {
+  // State for sorting, column filters, and global search
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
 
+  // Set up TanStack Table instance
   const table = useReactTable({
     data,
     columns,
@@ -72,6 +79,7 @@ export function DataTable<TData, TValue>({
     },
   })
 
+  // Track which status filter is selected for button highlighting
   const selectedStatus = table.getColumn("status")?.getFilterValue()
 
   return (
@@ -79,12 +87,14 @@ export function DataTable<TData, TValue>({
       {/* Search and Filter Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
+          {/* Global search input */}
           <Input
             placeholder="Search projects..."
             value={globalFilter ?? ""}
             onChange={(event) => setGlobalFilter(event.target.value)}
             className="max-w-sm"
           />
+          {/* Status filter buttons */}
           <Button
             variant="outline"
             onClick={() => table.getColumn("status")?.setFilterValue("Completed")}
@@ -123,6 +133,7 @@ export function DataTable<TData, TValue>({
             All
           </Button>
         </div>
+        {/* Row count display */}
         <div className="text-sm text-muted-foreground">
           {table.getFilteredRowModel().rows.length} of {table.getCoreRowModel().rows.length} projects
         </div>
@@ -174,7 +185,7 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      {/* Pagination */}
+      {/* Pagination Controls */}
       <div className="flex items-center justify-between space-x-2">
         <div className="text-sm text-muted-foreground">
           Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
