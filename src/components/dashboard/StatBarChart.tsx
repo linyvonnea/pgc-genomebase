@@ -27,9 +27,9 @@ import { StatisticsBarChartProps } from "@/types/StatBarChart";
 
 // Colors for each category in the bar chart
 const CATEGORY_COLORS = {
-  CLIENTS: "#F06292",    // Muted Pink
-  PROJECTS: "#81C784",   // Muted Green
-  TRAININGS: "#64B5F6"   // Muted Blue
+  CLIENTS: "#F06292",  
+  PROJECTS: "#81C784",   
+  TRAININGS: "#64B5F6"   
 } as const;
 
 export function StatBarChart({ 
