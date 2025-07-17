@@ -50,7 +50,7 @@ export const columns: ColumnDef<QuotationRecord>[] = [
             const color = categoryColors[cat.toLowerCase()] || "bg-gray-100 text-gray-800";
             return (
               <span key={cat} className={`px-2 py-0.5 rounded-full text-xs font-medium ${color}`}>
-                {cat}
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
               </span>
             );
           })}

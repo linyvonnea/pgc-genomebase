@@ -66,17 +66,13 @@ export async function exportDashboardPDF({
     contentHeight
   );
 
-  const dateStr = new Date().toLocaleString();
+  const now = new Date();
+  const dateStr = now.toISOString().replace(/[:.]/g, "-").slice(0, 19); // "2025-07-17T14-25-27"
   const filterStr = timeRange === "custom"
-    ? `${monthNames[customRange?.startMonth ?? 0]}-${monthNames[customRange?.endMonth ?? 0]} ${customRange?.year ?? ""}`
-    : `Filter: ${timeRange.charAt(0).toUpperCase() + timeRange.slice(1)}`;
-  pdf.setFontSize(10);
-  pdf.text(`Date Generated: ${dateStr}`, margin, margin - 2);
-  pdf.text(
-    filterStr,
-    pdfWidth - margin - pdf.getTextWidth(filterStr),
-    margin - 2
-  );
+    ? `${monthNames[customRange?.startMonth ?? 0]}-${monthNames[customRange?.endMonth ?? 0]}_${customRange?.year ?? ""}`
+    : timeRange;
+  const safeFilter = filterStr.replace(/[^a-zA-Z0-9_-]/g, "");
+  const fileName = `dashboard-report_${safeFilter}.pdf`;
 
-  pdf.save("dashboard-report.pdf");
+  pdf.save(fileName);
 }
