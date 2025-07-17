@@ -11,47 +11,72 @@ export async function exportDashboardPDF({
   customRange?: { startMonth?: number; endMonth?: number; year?: number };
   monthNames: string[];
 }) {
-  const element = document.getElementById(elementId);
+  const element = document.getElementById("dashboard-content");
   if (!element) {
     throw new Error("Missing dashboard-content");
   }
 
-  const canvas = await html2canvas(element);
+  // Save original style
+  const originalWidth = element.style.width;
+
+  // Force fixed width for export (e.g., 1200px)
+  element.style.width = "1200px";
+
+  // Wait for browser to reflow
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
+  // Get dashboard size in pixels
+  const rect = element.getBoundingClientRect();
+  const dashboardWidthPx = rect.width;
+  const dashboardHeightPx = rect.height;
+
+  // Convert pixels to mm (1px ≈ 0.264583 mm)
+  const pxToMm = (px: number) => px * 0.264583;
+  const pdfWidth = pxToMm(dashboardWidthPx);
+  const pdfHeight = pxToMm(dashboardHeightPx);
+
+  // Render dashboard to canvas
+  const canvas = await html2canvas(element, { scale: 2 });
   const jsPDF = (await import("jspdf")).default;
+
+  // Restore original style
+  element.style.width = originalWidth;
+
+  // Create PDF with dashboard size
   const pdf = new jsPDF({
-    orientation: "landscape",
+    orientation: pdfWidth > pdfHeight ? "landscape" : "portrait",
     unit: "mm",
-    format: [300, 350]
+    format: [pdfWidth, pdfHeight]
   });
+
   const imgData = canvas.toDataURL("image/png");
 
-  const margin = 5;
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
+  // Set margin in mm
+  const margin = 10;
+  const contentWidth = pdfWidth - margin * 2;
+  const contentHeight = pdfHeight - margin * 2;
 
-  const imgWidth = canvas.width;
-  const imgHeight = canvas.height;
-  const ratio = Math.min(
-    (pageWidth - margin * 2) / imgWidth,
-    (pageHeight - margin * 2) / imgHeight
+  // Fill the page with the image, leaving margin
+  pdf.addImage(
+    imgData,
+    "PNG",
+    margin,
+    margin,
+    contentWidth,
+    contentHeight
   );
-  const finalWidth = imgWidth * ratio;
-  const finalHeight = imgHeight * ratio;
-  const x = (pageWidth - finalWidth) / 2;
 
   const dateStr = new Date().toLocaleString();
   const filterStr = timeRange === "custom"
     ? `${monthNames[customRange?.startMonth ?? 0]}-${monthNames[customRange?.endMonth ?? 0]} ${customRange?.year ?? ""}`
     : `Filter: ${timeRange.charAt(0).toUpperCase() + timeRange.slice(1)}`;
   pdf.setFontSize(10);
-  const textY = margin + 10;
-  pdf.text(`Date Generated: ${dateStr}`, margin, textY);
+  pdf.text(`Date Generated: ${dateStr}`, margin, margin - 2);
   pdf.text(
     filterStr,
-    pageWidth - margin - pdf.getTextWidth(filterStr),
-    textY
+    pdfWidth - margin - pdf.getTextWidth(filterStr),
+    margin - 2
   );
 
-  pdf.addImage(imgData, "PNG", x, textY + 6, finalWidth, finalHeight);
   pdf.save("dashboard-report.pdf");
 }

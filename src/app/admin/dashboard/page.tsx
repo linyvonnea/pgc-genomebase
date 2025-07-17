@@ -30,11 +30,11 @@ export default function Dashboard() {
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-8 rounded-lg">
       {/* Header section with welcome message and time filter */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold flex-grow min-w-0">
+      <div className="mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold mb-4">
           Welcome, {userName}!
         </h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full">
           {/* Time filter for dashboard data */}
           <TimeFilter onFilterChange={handleTimeFilterChange} />
         </div>

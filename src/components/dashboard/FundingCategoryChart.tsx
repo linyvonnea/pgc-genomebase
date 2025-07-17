@@ -17,8 +17,8 @@ type FundingCategory = typeof FUNDING_CATEGORIES[number];
 
 // Colors for each category in the pie chart
 const CATEGORY_COLORS: Record<FundingCategory, string> = {
-  "In-House": "#166FB5",
-  "External": "#633190 ",
+  "In-House": "#F06292",   
+  "External": "#64b5f6",   
 };
 
 export function FundingCategoryChart({ projects }: { projects: Project[] }) {
