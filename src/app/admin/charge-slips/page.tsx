@@ -6,6 +6,10 @@ import { Timestamp } from "firebase/firestore";
 import { UIChargeSlipRecord } from "@/types/UIChargeSlipRecord";
 import { ValidCategory } from "@/types/ValidCategory";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Converts Firestore Timestamp, string, or Date → Date
 function toDateSafe(value: string | Timestamp | Date | null | undefined): Date | undefined {
   if (!value) return undefined;
