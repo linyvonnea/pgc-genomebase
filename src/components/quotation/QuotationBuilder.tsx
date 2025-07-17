@@ -4,9 +4,11 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 import { getServiceCatalog } from "@/services/serviceCatalogService";
 import { getInquiryById } from "@/services/inquiryService";
+import { saveQuotationAction } from "@/app/actions/quotationActions";
 
 import { SelectedService as StrictSelectedService } from "@/types/SelectedService";
 import { ServiceItem } from "@/types/ServiceItem";
@@ -197,6 +199,45 @@ export default function QuotationBuilder({
       </TableBody>
     </Table>
   );
+
+  const handleSaveQuotation = async () => {
+    try {
+      const quotationRecord = {
+        referenceNumber,
+        name: clientInfo.name,
+        institution: clientInfo.institution,
+        designation: clientInfo.designation,
+        email: clientInfo.email,
+        services: cleanedServices,
+        isInternal,
+        dateIssued: new Date().toISOString(),
+        year: currentYear,
+        subtotal,
+        discount,
+        total,
+        preparedBy: {
+          name: adminInfo?.name || "—",
+          position: adminInfo?.position || "—",
+        },
+        categories: Array.from(
+          new Set(cleanedServices.map((s) => s.type))
+        ),
+        inquiryId: effectiveInquiryId.trim(),
+      };
+
+      const result = await saveQuotationAction(quotationRecord);
+
+      if (result.success) {
+        toast.success("Quotation saved successfully!");
+        // router.push("/admin/quotations"); // Uncomment if you want to redirect
+      } else {
+        toast.error(result.error || "Failed to save quotation");
+      }
+    } catch (error) {
+      console.error("Error saving quotation:", error);
+      toast.error("Failed to save quotation.");
+    }
+  };
 
   return (
     <div className="p-6 flex gap-6">

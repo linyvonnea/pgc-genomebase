@@ -2,7 +2,7 @@
 "use client";
 
 import { pdf } from "@react-pdf/renderer";
-import { saveChargeSlip } from "@/services/chargeSlipService";
+import { saveChargeSlipAction } from "@/app/actions/chargeSlipActions";
 import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import { SelectedService } from "@/types/SelectedService";
 import { Client } from "@/types/Client";
@@ -62,7 +62,7 @@ export default function ChargeSlipPDFActions({
 
   const handleGenerateAndSave = async () => {
     try {
-        const rawRecord: ChargeSlipRecord = {
+      const rawRecord: ChargeSlipRecord = {
         id: chargeSlipNumber,
         chargeSlipNumber,
         referenceNumber,
@@ -83,42 +83,43 @@ export default function ChargeSlipPDFActions({
 
         // Add this line to prevent `undefined` error
         dateOfOR: null,
-        };
+      };
 
       const sanitized = sanitizeObject(rawRecord) as ChargeSlipRecord;
-      await saveChargeSlip(sanitized);
+      const result = await saveChargeSlipAction(sanitized);
 
-      const blob = await pdf(
-        <ChargeSlipPDF
-          services={services}
-          client={client}
-          project={project}
-          chargeSlipNumber={chargeSlipNumber}
-          orNumber={orNumber}
-          useInternalPrice={useInternalPrice}
-          preparedBy={preparedBy}
-          approvedBy={approvedBy}
-          referenceNumber={referenceNumber}
-          clientInfo={clientInfo}
-          dateIssued={normalizeDate(dateIssued)}
-          subtotal={subtotal}
-          discount={discount}
-          total={total}
-        />
-      ).toBlob();
+      if (result.success) {
+        const blob = await pdf(
+          <ChargeSlipPDF
+            services={services}
+            client={client}
+            project={project}
+            chargeSlipNumber={chargeSlipNumber}
+            orNumber={orNumber}
+            useInternalPrice={useInternalPrice}
+            preparedBy={preparedBy}
+            approvedBy={approvedBy}
+            referenceNumber={referenceNumber}
+            clientInfo={clientInfo}
+            dateIssued={normalizeDate(dateIssued)}
+            subtotal={subtotal}
+            discount={discount}
+            total={total}
+          />
+        ).toBlob();
 
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${chargeSlipNumber}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${chargeSlipNumber}.pdf`;
+        link.click();
+        URL.revokeObjectURL(url);
 
-      toast.success("Charge slip saved and downloaded successfully!");
-
-      setTimeout(() => {
+        toast.success("Charge slip saved and downloaded successfully!");
         router.push("/admin/charge-slips");
-      }, 1000);
+      } else {
+        toast.error(result.error || "Failed to save charge slip");
+      }
     } catch (err) {
       console.error("Error saving or generating PDF:", err);
       toast.error("Failed to save charge slip. Please try again.");
