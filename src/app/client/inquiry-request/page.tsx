@@ -1,3 +1,20 @@
+/**
+ * Client Inquiry Request Form Page
+ * 
+ * This is the main form page where clients can submit requests for different services offered by the PGC. The form dynamically changes based on the selected service type and includes comprehensive validation.
+ * 
+ * Used in:
+ * - Client-facing inquiry submission (/client/inquiry-request)
+ * 
+ * Key Features:
+ * - Dynamic form fields based on service type selection
+ * - Real-time form validation using Zod schemas
+ * - Confirmation modal before submission
+ * - Toast notifications for user feedback
+ * - Authentication integration for user email
+ * - Responsive design with modern UI
+ */
+
 "use client"
 
 import { useState } from "react"
@@ -15,28 +32,45 @@ import { Calendar } from "@/components/ui/calendar"
 import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
-import { toast } from "sonner" // Changed from useToast to sonner
+import { toast } from "sonner" 
 import useAuth from "@/hooks/useAuth"
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout"
 import { useRouter } from "next/navigation"
 
+/**
+ * Main Quotation Request Form Component
+ * 
+ * This component handles the complete inquiry submission flow including
+ * form validation, confirmation, and submission to the backend.
+ */
 export default function QuotationRequestForm() {
+  // State for managing the currently selected service type
   const [selectedService, setSelectedService] = useState<string>("laboratory")
+  
+  // Loading state for form submission
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // Modal state for confirmation dialog
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+  
+  // Temporary storage for form data before confirmation
   const [pendingData, setPendingData] = useState<InquiryFormData | null>(null)
+  
+  // State for training date picker (separate from form state for UI purposes)
   const [trainingDate, setTrainingDate] = useState<Date>()
-  // Removed const { toast } = useToast()
+  
+  // Get authenticated user information
   const { user } = useAuth()
   const router = useRouter()
 
+  // Initialize form with validation schema and default values
   const form = useForm<InquiryFormData>({
-    resolver: zodResolver(inquiryFormSchema),
+    resolver: zodResolver(inquiryFormSchema), 
     defaultValues: {
       name: "",
       affiliation: "",
       designation: "",
-      service: "laboratory",
+      service: "laboratory", 
       workflows: [],
       additionalInfo: "",
       projectBackground: "",
@@ -47,13 +81,20 @@ export default function QuotationRequestForm() {
     }
   })
 
+  // Destructure form methods for easier access
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = form
-  const formData = watch()
+  const formData = watch() // Watch all form values for reactive updates
 
+  /**
+   * Handles service type selection and resets service-specific fields
+   * When a user changes the service type, clear all the fields
+   * that are specific to other service types to prevent data contamination.
+   */
   const handleServiceChange = (value: string) => {
     setSelectedService(value)
     setValue("service", value as "laboratory" | "research" | "training")
-    // Reset service-specific fields when switching
+    
+    // Reset service-specific fields when switching to prevent cross-contamination
     setValue("workflows", [])
     setValue("additionalInfo", "")
     setValue("projectBackground", "")
@@ -64,58 +105,87 @@ export default function QuotationRequestForm() {
     setTrainingDate(undefined)
   }
 
+  /**
+   * Handles workflow checkbox changes for laboratory service
+   * 
+   * Updates the workflows array by adding or removing the selected workflow
+   * based on whether the checkbox is checked or unchecked.
+   */
   const handleWorkflowChange = (workflow: string, checked: boolean) => {
     const currentWorkflows = formData.workflows || []
     const newWorkflows = checked 
-      ? [...currentWorkflows, workflow as WorkflowOption]
+      ? [...currentWorkflows, workflow as WorkflowOption] 
       : currentWorkflows.filter(w => w !== workflow)
     setValue("workflows", newWorkflows)
   }
 
+  /**
+   * Handles date selection for training service
+   * 
+   * Updates both the local state (for UI display) and the form value
+   * (for validation and submission). Formats the date as ISO string.
+   */
   const handleDateSelect = (date: Date | undefined) => {
     setTrainingDate(date)
     if (date) {
+      // Format date as YYYY-MM-DD for form submission
       setValue("targetTrainingDate", format(date, "yyyy-MM-dd"))
     } else {
       setValue("targetTrainingDate", "")
     }
   }
 
+  /**
+   * Handles form submission - shows confirmation modal instead of direct submission
+   * 
+   * This provides a two-step submission process where users can review their
+   * data before final submission.
+   */
   const handleFormSubmit = (data: InquiryFormData) => {
-    setPendingData(data)
-    setShowConfirmModal(true)
+    setPendingData(data)        // Store data temporarily
+    setShowConfirmModal(true)   // Show confirmation modal
   }
 
+  /**
+   * Handles the actual form submission after user confirmation
+   * 
+   * This function is called when the user confirms their submission in the modal.
+   */
   const handleConfirmSave = async () => {
     if (!pendingData) return
+    
     setIsSubmitting(true)
     setShowConfirmModal(false)
     
-    // Show toast notification that form is being submitted using Sonner
+    // Show loading toast notification
     toast.loading("Submitting your inquiry request...", {
       description: "Please wait while we process your request. You will be redirected to the confirmation page shortly.",
-      duration: Infinity, // Keep it visible until we dismiss it
+      duration: Infinity, 
     })
     
     try {
+      // Merge form data with user email from authentication
       const submissionData = {
         ...pendingData,
-        email: user?.email || ""
+        email: user?.email || "" // Get email from authenticated user
       }
+      
+      // Submit to server action
       const result = await createInquiryAction(submissionData)
+      
       if (result.success) {
-        // Dismiss the loading toast and show success
+        // Dismiss loading toast and show success
         toast.dismiss()
         toast.success("Inquiry submitted successfully!", {
           description: "Thank you for your submission. Redirecting to another page...",
           duration: 4000,
         })
         
-        // Small delay before redirect to allow user to see the success toast
+        // Reset form and redirect after brief delay to show success message
         setTimeout(() => {
           reset()
-          setSelectedService("laboratory")
-          setTrainingDate(undefined)
+          setSelectedService("laboratory") 
+          setTrainingDate(undefined) 
           router.push("/client/inquiry-request/submitted")
         }, 2000)
         return
@@ -132,6 +202,10 @@ export default function QuotationRequestForm() {
     }
   }
 
+  /**
+   * Handles cancellation of the confirmation modal
+   * Closes the modal and clears pending data without submitting.
+   */
   const handleCancelModal = () => {
     setShowConfirmModal(false)
     setPendingData(null)
@@ -141,7 +215,7 @@ export default function QuotationRequestForm() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50/50 to-blue-50/30 p-6">
       <div className="max-w-4xl mx-auto">
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8">
-          {/* Modern Header */}
+          {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-3 h-3 bg-gradient-to-r from-[#F69122] to-[#912ABD] rounded-full"></div>
@@ -149,6 +223,7 @@ export default function QuotationRequestForm() {
                 Quotation Request Form
               </h1>
             </div>
+            {/* Information banner explaining available services */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
               <p className="text-slate-700 leading-relaxed">
                 Thank you for reaching out to PGC researchers for your research needs. We offer a range of 
@@ -241,6 +316,7 @@ export default function QuotationRequestForm() {
                 <Label htmlFor="service" className="text-sm font-semibold text-slate-700 mb-2 block">
                   Select Service Type:
                 </Label>
+                {/* Service type dropdown that triggers form field changes */}
                 <Select onValueChange={handleServiceChange} defaultValue="laboratory">
                   <SelectTrigger className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12">
                     <SelectValue placeholder="Select a service" />
@@ -260,16 +336,17 @@ export default function QuotationRequestForm() {
               </div>
             </div>
 
-            {/* Dynamic Fields Section */}
+            {/* Dynamic Fields Section - Changes based on selected service */}
             <div className="bg-gradient-to-r from-slate-50 to-blue-50/50 rounded-xl p-6 border border-slate-100">
               <h2 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-2">
                 <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#4038AF] rounded-full"></div>
                 Service Details
               </h2>
               
+              {/* Laboratory Service Fields */}
               {selectedService === "laboratory" && (
                 <div className="space-y-6">
-                  {/* Workflow Selection */}
+                  {/* Workflow Selection - Multiple checkboxes */}
                   <div>
                     <Label className="text-sm font-semibold text-slate-700 mb-3 block">
                       Kindly choose which workflow you will be availing <span className="text-[#B9273A]">*</span>
@@ -305,7 +382,7 @@ export default function QuotationRequestForm() {
                     )}
                   </div>
 
-                  {/* Additional Information */}
+                  {/* Additional Information - Optional text area */}
                   <div>
                     <Label htmlFor="additionalInfo" className="text-sm font-semibold text-slate-700 mb-2 block">
                       Do you have questions or any other additional information?
@@ -327,9 +404,10 @@ export default function QuotationRequestForm() {
                 </div>
               )}
 
+              {/* Research Service Fields */}
               {selectedService === "research" && (
                 <div className="space-y-6">
-                  {/* Project Background */}
+                  {/* Project Background - Required for research */}
                   <div>
                     <Label htmlFor="projectBackground" className="text-sm font-semibold text-slate-700 mb-2 block">
                       Indicate a brief background of the project and required molecular workflow <span className="text-[#B9273A]">*</span>
@@ -349,7 +427,7 @@ export default function QuotationRequestForm() {
                     )}
                   </div>
 
-                  {/* Project Budget */}
+                  {/* Project Budget - Required for research */}
                   <div>
                     <Label htmlFor="projectBudget" className="text-sm font-semibold text-slate-700 mb-2 block">
                       Indicate project budget for molecular workflow <span className="text-[#B9273A]">*</span>
@@ -371,9 +449,10 @@ export default function QuotationRequestForm() {
                 </div>
               )}
 
+              {/* Training Service Fields */}
               {selectedService === "training" && (
                 <div className="space-y-6">
-                  {/* Training Information Section */}
+                  {/* Training Information Section - Informational content */}
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
                     <div className="space-y-4">
                       <div>
@@ -406,7 +485,7 @@ export default function QuotationRequestForm() {
                     </div>
                   </div>
 
-                  {/* Specific Training Need */}
+                  {/* Specific Training Need - Required field */}
                   <div>
                     <Label htmlFor="specificTrainingNeed" className="text-sm font-semibold text-slate-700 mb-2 block">
                       Specific Training Needs <span className="text-[#B9273A]">*</span>
@@ -426,7 +505,7 @@ export default function QuotationRequestForm() {
                     )}
                   </div>
 
-                  {/* Target Date for Training with Calendar */}
+                  {/* Target Date for Training with Calendar Picker */}
                   <div>
                     <Label className="text-sm font-semibold text-slate-700 mb-2 block">
                       Target Date for the Training <span className="text-[#B9273A]">*</span>
@@ -450,7 +529,7 @@ export default function QuotationRequestForm() {
                           selected={trainingDate}
                           onSelect={handleDateSelect}
                           disabled={(date) =>
-                            date < new Date() || date < new Date("1900-01-01")
+                            date < new Date() || date < new Date("1900-01-01") // Disable past dates
                           }
                           initialFocus
                         />
@@ -464,7 +543,7 @@ export default function QuotationRequestForm() {
                     )}
                   </div>
 
-                  {/* Number of Participants */}
+                  {/* Number of Participants - Required field with minimum constraint */}
                   <div>
                     <Label htmlFor="numberOfParticipants" className="text-sm font-semibold text-slate-700 mb-2 block">
                       Number of Participants (Minimum of 6 pax for in-person) <span className="text-[#B9273A]">*</span>
@@ -474,7 +553,7 @@ export default function QuotationRequestForm() {
                       type="number"
                       min="1"
                       placeholder="Enter number of participants"
-                      {...register("numberOfParticipants", { valueAsNumber: true })}
+                      {...register("numberOfParticipants", { valueAsNumber: true })} 
                       className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
                     />
                     {errors.numberOfParticipants && (
@@ -501,7 +580,8 @@ export default function QuotationRequestForm() {
           </form>
         </div>
       </div>
-      {/* Confirmation Modal */}
+      
+      {/* Confirmation Modal - Shows form data review before final submission */}
       <ConfirmationModalLayout
         open={showConfirmModal}
         onConfirm={handleConfirmSave}
@@ -512,12 +592,15 @@ export default function QuotationRequestForm() {
         confirmLabel="Confirm & Submit"
         cancelLabel="Go Back"
       >
+        {/* Display all form data for user review */}
         {pendingData && (
           <div className="space-y-2 text-slate-800 text-sm">
             <div><span className="font-semibold">Full Name:</span> {pendingData.name}</div>
             <div><span className="font-semibold">Affiliation:</span> {pendingData.affiliation}</div>
             <div><span className="font-semibold">Designation:</span> {pendingData.designation}</div>
             <div><span className="font-semibold">Service Type:</span> {pendingData.service}</div>
+            
+            {/* Show service-specific fields based on service type */}
             {pendingData.service === "laboratory" && (
               <div>
                 <span className="font-semibold">Workflows:</span> {pendingData.workflows?.join(", ") || "-"}
