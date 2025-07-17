@@ -3,6 +3,10 @@ import { QuotationRecord } from "@/types/Quotation"
 import { getAllQuotations } from "@/services/quotationService"
 import { QuotationClientTable } from "./QuotationClientTable"
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 async function getData(): Promise<QuotationRecord[]> {
   try {
     return await getAllQuotations()
