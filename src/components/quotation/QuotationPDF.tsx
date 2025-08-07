@@ -98,6 +98,22 @@ const styles = StyleSheet.create({
   },
 });
 
+function formatMoney(num: number) {
+  const fixed = Math.round(num * 100) / 100;
+  const parts = fixed.toString().split(".");
+  let integer = parts[0];
+  let decimal = parts[1] || "00";
+  if (decimal.length === 1) decimal += "0";
+
+  let result = "";
+  while (integer.length > 3) {
+    result = "," + integer.slice(-3) + result;
+    integer = integer.slice(0, -3);
+  }
+  result = integer + result;
+  return result + "." + decimal;
+}
+
 export function QuotationPDF({
   services,
   clientInfo,
@@ -157,6 +173,11 @@ export function QuotationPDF({
           <Text><Text style={styles.label}>Internal Client:</Text> {useInternalPrice ? "Yes" : "No"}</Text>
         </View>
 
+        <Text style={{ marginBottom: 10 }}>
+          Dear Client,{"\n"}
+          Thank you for choosing Philippine Genome Center for your sequencing needs. We are pleased to quote you the following:
+        </Text>
+
         {/* Service Table */}
         <View style={styles.table}>
           <View style={[styles.tableRow, styles.tableHeader]}>
@@ -176,9 +197,13 @@ export function QuotationPDF({
                   <View style={styles.tableRow} key={svc.id}>
                     <Text style={styles.cell}>{svc.name}</Text>
                     <Text style={styles.cell}>{svc.unit}</Text>
-                    <Text style={styles.cell}>{svc.price.toFixed(2)}</Text>
+                    <Text style={styles.cell}>
+                      {formatMoney(svc.price)}
+                    </Text>
                     <Text style={styles.cell}>{svc.quantity}</Text>
-                    <Text style={styles.cell}>{amount.toFixed(2)}</Text>
+                    <Text style={styles.cell}>
+                      {formatMoney(amount)}
+                    </Text>
                   </View>
                 );
               })}
@@ -188,12 +213,11 @@ export function QuotationPDF({
 
         {/* Summary */}
         <View style={styles.summary}>
-          <Text>Subtotal: PHP {totalWithoutDiscount.toFixed(2)}</Text>
-          {useInternalPrice && (
-            <Text>Less 12% Discount: PHP {discount.toFixed(2)}</Text>
-          )}
+          <Text>
+            Subtotal: PHP {formatMoney(totalWithoutDiscount)}
+          </Text>
           <Text style={{ fontWeight: "bold" }}>
-            TOTAL: PHP {finalTotal.toFixed(2)}
+            TOTAL: PHP {formatMoney(finalTotal)}
           </Text>
         </View>
 
