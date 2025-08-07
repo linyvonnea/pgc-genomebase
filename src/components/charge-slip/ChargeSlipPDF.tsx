@@ -32,7 +32,6 @@ type Props = {
     name: string;
     position: string;
   };
-  
   dateIssued: string;
   subtotal: number;
   discount: number;
@@ -149,8 +148,8 @@ const styles = StyleSheet.create({
 });
 
 function convertToWords(amount: number): string {
-  const words = [
-    "zero", "one", "two", "three", "four", "five", "six",
+  const ones = [
+    "", "one", "two", "three", "four", "five", "six",
     "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen",
     "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen",
   ];
@@ -158,22 +157,82 @@ function convertToWords(amount: number): string {
     "", "", "twenty", "thirty", "forty", "fifty",
     "sixty", "seventy", "eighty", "ninety",
   ];
+  const scales = ["", "thousand", "million", "billion", "trillion"];
+
+  function chunkNumber(n: number): number[] {
+    const chunks = [];
+    while (n > 0) {
+      chunks.push(n % 1000);
+      n = Math.floor(n / 1000);
+    }
+    return chunks;
+  }
+
+  function chunkToWords(chunk: number): string {
+    let str = "";
+    const hundred = Math.floor(chunk / 100);
+    const remainder = chunk % 100;
+
+    if (hundred > 0) {
+      str += ones[hundred] + " hundred";
+      if (remainder > 0) str += " ";
+    }
+
+    if (remainder > 0) {
+      if (remainder < 20) {
+        str += ones[remainder];
+      } else {
+        const ten = Math.floor(remainder / 10);
+        const unit = remainder % 10;
+        str += tens[ten];
+        if (unit > 0) str += " " + ones[unit];
+      }
+    }
+
+    return str;
+  }
 
   function numberToWords(n: number): string {
-    if (n < 20) return words[n];
-    if (n < 100)
-      return tens[Math.floor(n / 10)] + (n % 10 ? " " + words[n % 10] : "");
-    if (n < 1000)
-      return words[Math.floor(n / 100)] + " hundred" + (n % 100 ? " and " + numberToWords(n % 100) : "");
-    if (n < 1000000)
-      return numberToWords(Math.floor(n / 1000)) + " thousand" + (n % 1000 ? " " + numberToWords(n % 1000) : "");
-    return "";
+    if (n === 0) return "zero";
+    const chunks = chunkNumber(n);
+    const words: string[] = [];
+
+    for (let i = chunks.length - 1; i >= 0; i--) {
+      const chunk = chunks[i];
+      if (chunk === 0) continue;
+      const chunkWord = chunkToWords(chunk);
+      const scale = scales[i];
+      words.push(chunkWord + (scale ? " " + scale : ""));
+    }
+
+    return words.join(" ");
   }
 
   const integerPart = Math.floor(amount);
   const decimalPart = Math.round((amount - integerPart) * 100);
 
-  return `${numberToWords(integerPart)} pesos and ${numberToWords(decimalPart)} centavos`;
+  const pesoWords = numberToWords(integerPart) + " peso" + (integerPart === 1 ? "" : "s");
+  const centavoWords = decimalPart === 0
+    ? "zero centavos"
+    : numberToWords(decimalPart) + " centavo" + (decimalPart === 1 ? "" : "s");
+
+  return `${pesoWords} and ${centavoWords} only`.toUpperCase();
+}
+
+function formatMoney(num: number) {
+  const fixed = Math.round(num * 100) / 100;
+  const parts = fixed.toString().split(".");
+  let integer = parts[0];
+  let decimal = parts[1] || "00";
+  if (decimal.length === 1) decimal += "0";
+
+  let result = "";
+  while (integer.length > 3) {
+    result = "," + integer.slice(-3) + result;
+    integer = integer.slice(0, -3);
+  }
+  result = integer + result;
+  return result + "." + decimal;
 }
 
 export function ChargeSlipPDF({
@@ -252,10 +311,10 @@ export function ChargeSlipPDF({
                 <View key={idx} style={styles.tableRow}>
                   <Text style={[styles.cell, styles.col1]}>{item.name}</Text>
                   <Text style={[styles.cell, styles.col2]}>{item.unit}</Text>
-                  <Text style={[styles.cell, styles.col3]}>PHP {item.price.toFixed(2)}</Text>
+                  <Text style={[styles.cell, styles.col3]}>PHP {formatMoney(item.price)}</Text>
                   <Text style={[styles.cell, styles.col4]}>{item.quantity}</Text>
                   <Text style={[styles.cell, styles.col5, styles.noBorder]}>
-                    PHP {(item.price * item.quantity).toFixed(2)}
+                    PHP {formatMoney(item.price * item.quantity)}
                   </Text>
                 </View>
               ))}
@@ -265,11 +324,11 @@ export function ChargeSlipPDF({
 
         {/* Summary */}
         <View style={styles.section}>
-          <Text style={styles.bold}>Subtotal: PHP {subtotal.toFixed(2)}</Text>
+          <Text style={styles.bold}>Subtotal: PHP {formatMoney(subtotal)}</Text>
           {useInternalPrice && (
-            <Text>Less 12% Discount: PHP {discount.toFixed(2)}</Text>
+            <Text>Less 12% Discount: PHP {formatMoney(discount)}</Text>
           )}
-          <Text style={styles.totalText}>TOTAL: PHP {total.toFixed(2)}</Text>
+          <Text style={styles.totalText}>TOTAL: PHP {formatMoney(total)}</Text>
           <Text style={styles.bold}>OR Number: {orNumber || "—"}</Text>
         </View>
 
