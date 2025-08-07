@@ -186,7 +186,6 @@ export async function generateNextChargeSlipNumber(year: number): Promise<string
   const q = query(
     collection(db, CHARGE_SLIPS_COLLECTION),
     where("chargeSlipNumber", ">=", `${prefix}-000`),
-    where("chargeSlipNumber", "<=", `${prefix}-999`),
     orderBy("chargeSlipNumber", "desc")
   );
 
@@ -194,5 +193,5 @@ export async function generateNextChargeSlipNumber(year: number): Promise<string
   const latest = snapshot.docs[0]?.data()?.chargeSlipNumber;
 
   const nextNum = latest ? parseInt(latest.split("-")[2], 10) + 1 : 1;
-  return `${prefix}-${String(nextNum).padStart(3, "0")}`;
+  return `${prefix}-${nextNum}`;
 }

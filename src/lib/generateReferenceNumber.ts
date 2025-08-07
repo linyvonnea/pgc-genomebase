@@ -20,7 +20,6 @@ export async function generateNextReferenceNumber(currentYear: number): Promise<
   const q = query(
     quotationsRef,
     where("referenceNumber", ">=", `${prefix}-000`),
-    where("referenceNumber", "<=", `${prefix}-999`),
     orderBy("referenceNumber", "desc")
   );
 
@@ -34,6 +33,5 @@ export async function generateNextReferenceNumber(currentYear: number): Promise<
     nextNumber = lastNum + 1;
   }
 
-  const padded = String(nextNumber).padStart(3, "0");
-  return `${prefix}-${padded}`;
+  return `${prefix}-${nextNumber}`;
 }
