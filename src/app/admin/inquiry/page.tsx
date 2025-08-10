@@ -19,6 +19,11 @@ import { getInquiries } from "@/services/inquiryService"
 import { AddInquiryModal } from "@/components/forms/InquiryModalForm"
 import { revalidatePath } from "next/cache"
 
+// Force dynamic rendering - this prevents static generation
+export const dynamic = 'force-dynamic';
+// Alternatively, you can use:
+// export const revalidate = 0;
+
 /**
  * Server-side data fetching function
  * 
