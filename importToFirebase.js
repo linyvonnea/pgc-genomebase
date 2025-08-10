@@ -10,15 +10,51 @@ initializeApp({
 
 const db = getFirestore();
 
+async function purgeCollection() {
+  console.log('Purging existing data from inquiries collection...');
+  
+  const collectionRef = db.collection('inquiries');
+  const snapshot = await collectionRef.get();
+  
+  if (snapshot.empty) {
+    console.log('No existing data to purge.');
+    return;
+  }
+  
+  console.log(`Found ${snapshot.size} existing documents to delete...`);
+  
+  let batch = db.batch();
+  let count = 0;
+  
+  snapshot.forEach(doc => {
+    batch.delete(doc.ref);
+    count++;
+    
+    if (count % 500 === 0) {
+      batch.commit();
+      batch = db.batch();
+    }
+  });
+  
+  if (count % 500 !== 0) {
+    await batch.commit();
+  }
+  
+  console.log(`Purged ${count} existing documents.`);
+}
+
 async function importData() {
   try {
+    // First purge existing data
+    await purgeCollection();
+    
     // Read the converted JSON file
     const allData = JSON.parse(fs.readFileSync('inquiriesDB.json', 'utf8'));
     
-    // Take only the first 5 records
-    const data = allData.slice(0, 5);
+    // Import all data instead of just first 5
+    const data = allData;
     
-    console.log(`Importing first ${data.length} records out of ${allData.length} total records...`);
+    console.log(`Importing all ${data.length} records...`);
     
     let batch = db.batch();
     let count = 0;
@@ -31,7 +67,18 @@ async function importData() {
         continue;
       }
       
-      // Fix timestamp conversion to preserve original dates
+      // Handle email field - be more permissive with email values
+      if (item.email === null || item.email === undefined || item.email === "null") {
+        item.email = "N/A";
+      } else if (typeof item.email === 'string') {
+        // Keep the email as-is if it's a string, even if it's empty or "N/A"
+        item.email = item.email.trim();
+      } else {
+        // For any other data type, convert to string
+        item.email = String(item.email);
+      }
+      
+      // Fix timestamp conversion first, before processing other fields
       if (item.createdAt) {
         if (typeof item.createdAt === 'string') {
           // If createdAt is a string (ISO format), convert it to Firestore Timestamp
@@ -40,6 +87,7 @@ async function importData() {
             item.createdAt = Timestamp.fromDate(date);
           } else {
             // If date is invalid, use current time as fallback
+            console.log(`Invalid date for record ${item.name || 'Unknown'}: ${item.createdAt}, using current time`);
             item.createdAt = Timestamp.now();
           }
         } else if (item.createdAt._seconds) {
@@ -47,6 +95,7 @@ async function importData() {
           item.createdAt = Timestamp.fromMillis(item.createdAt._seconds * 1000);
         } else {
           // Set default timestamp if format is unrecognized
+          console.log(`Unrecognized date format for record ${item.name || 'Unknown'}: ${item.createdAt}, using current time`);
           item.createdAt = Timestamp.now();
         }
       } else {
@@ -55,19 +104,18 @@ async function importData() {
       }
       
       // Fix status values - ensure proper status values
-      if (!item.status || item.status === "null" || item.status === null) {
+      if (!item.status || item.status === "null" || item.status === null || item.status === undefined || item.status === "") {
         item.status = "Pending";
       }
       
-      // Convert other null/undefined fields to proper defaults
+      // Convert other null/undefined fields to proper defaults (skip email, createdAt, and status as they're handled above)
       Object.keys(item).forEach(key => {
+        // Skip fields already processed
+        if (key === 'email' || key === 'createdAt' || key === 'status') return;
+        
         if (item[key] === "null" || item[key] === null || item[key] === undefined || item[key] === "") {
           if (key === 'isApproved') {
             item[key] = false;
-          } else if (key === 'status') {
-            item[key] = "Pending";
-          } else if (key === 'email') {
-            item[key] = undefined; // Keep email as undefined if not provided
           } else {
             item[key] = "";
           }
@@ -77,6 +125,7 @@ async function importData() {
         if (key === 'isApproved') {
           if (item[key] === "true") item[key] = true;
           if (item[key] === "false") item[key] = false;
+          if (typeof item[key] !== 'boolean') item[key] = false;
         }
       });
       
@@ -87,7 +136,7 @@ async function importData() {
       count++;
       batchCount++;
       
-      console.log(`Prepared record ${count}: ${item.name} - Status: ${item.status}`);
+      console.log(`Prepared record ${count}: ${item.name || 'No name'} - Status: ${item.status} - Email: ${item.email} - Created: ${item.createdAt ? 'Valid' : 'Invalid'}`);
       
       if (batchCount >= 500) {
         await batch.commit();
