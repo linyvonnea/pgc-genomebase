@@ -35,7 +35,10 @@ interface Props {
 }
 
 export function ChargeSlipTable({ data, columns }: Props) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  // Default sort: newest first by dateIssued
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "dateIssued", desc: true },
+  ]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("__all");
 
@@ -50,31 +53,30 @@ export function ChargeSlipTable({ data, columns }: Props) {
   });
 
   const filteredRows = useMemo(() => {
+    const q = globalFilter.toLowerCase();
     return table.getRowModel().rows.filter((row) => {
       const matchesSearch = row
         .getAllCells()
-        .some((cell) =>
-          String(cell.getValue())
-            .toLowerCase()
-            .includes(globalFilter.toLowerCase())
-        );
+        .some((cell) => String(cell.getValue() ?? "").toLowerCase().includes(q));
 
+      const status = String((row.original as any).status ?? "").toLowerCase();
       const matchesStatus =
-        statusFilter === "__all" || row.original.status === statusFilter;
+        statusFilter === "__all" || status === statusFilter.toLowerCase();
 
       return matchesSearch && matchesStatus;
     });
   }, [table, globalFilter, statusFilter]);
 
   const totalAmount = useMemo(() => {
-    return filteredRows.reduce((sum, row) =>
-      row.original.status === "paid" ? sum + (row.original.total || 0) : sum,
-    0);
+    return filteredRows.reduce((sum, row) => {
+      const status = String((row.original as any).status ?? "").toLowerCase();
+      return status === "paid" ? sum + (Number((row.original as any).total) || 0) : sum;
+    }, 0);
   }, [filteredRows]);
 
   return (
     <div className="space-y-4">
-      {/* Search and Filter Bar */}
+      {/* Search + Filter */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Input
           placeholder="Search client, CS number, etc."
@@ -99,8 +101,10 @@ export function ChargeSlipTable({ data, columns }: Props) {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-muted p-4 rounded-lg text-center">
-          <p className="text-xs">Total Filtered</p>
-          <p className="text-lg font-bold">₱{totalAmount.toLocaleString()}</p>
+          <p className="text-xs">Total Filtered (Paid)</p>
+          <p className="text-lg font-bold">
+            ₱{totalAmount.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </p>
         </div>
         <div className="bg-muted p-4 rounded-lg text-center">
           <p className="text-xs">Total Charge Slips</p>
@@ -112,28 +116,36 @@ export function ChargeSlipTable({ data, columns }: Props) {
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
+            {table.getHeaderGroups().map((group) => (
+              <TableRow key={group.id}>
+                {group.headers.map((header) => {
+                  const canSort = header.column.getCanSort?.();
+                  const sort = header.column.getIsSorted?.(); // "asc" | "desc" | false
+                  return (
+                    <TableHead
+                      key={header.id}
+                      onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                      className={canSort ? "cursor-pointer select-none" : undefined}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                      {canSort && (
+                        <span className="ml-1 text-xs opacity-60">
+                          {sort === "asc" ? "▲" : sort === "desc" ? "▼" : ""}
+                        </span>
+                      )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
+
           <TableBody>
             {filteredRows.length ? (
               filteredRows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className="hover:bg-muted/40 cursor-pointer"
-                >
+                <TableRow key={row.id} className="hover:bg-muted/40">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
