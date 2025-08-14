@@ -1,9 +1,0 @@
-[
-  { "category": "Equipment Use (Without Consumables)", "id": null, "name": "Electrophoresis System (Advance Mupid One)", "type": "equipment", "unit": "per hour", "price": 154, "quantity": 63 },
-  { "category": "Equipment Use (Without Consumables)", "id": null, "name": "Fluorometer (Qubit 4.0)", "type": "equipment", "unit": "per hour", "price": 287, "quantity": 9 },
-  { "category": "Equipment Use (Without Consumables)", "id": null, "name": "Gradient Thermal Cycler (Bio-Rad T100)", "type": "equipment", "unit": "per hour", "price": 261, "quantity": 108 },
-  { "category": "Equipment Use (Without Consumables)", "id": null, "name": "Microvolume Spectrophotometer (Multiskan Sky)", "type": "equipment", "unit": "per hour", "price": 305, "quantity": 9 },
-  { "category": "Equipment Use (Without Consumables)", "id": null, "name": "Standard Microcentrifuge (Heraeus Pico 17)", "type": "equipment", "unit": "per hour", "price": 136, "quantity": 72 },
-
-  { "category": "Retail Sales", "id": null, "name": "Nuclease Free Water @₱703/100 mL (14 × 100 mL per period × 3)", "type": "retail", "unit": "lot", "price": 29526, "quantity": 1 }
-]

@@ -18,13 +18,15 @@ const serviceAccount = require("./serviceAccount.json");
  */
 const [oldPath, newPath, itemsPath, dateIssuedArg, ...flags] = process.argv.slice(2);
 if (!oldPath || !newPath || !itemsPath || !dateIssuedArg) {
-  console.error("Usage: node rename_and_patch_quote.cjs <oldDocPath> <newDocPath> <items.json> <YYYY-MM-DD> [--internal] [--discount-scope=equipment|all] [--delete-old]");
+  console.error(
+    "Usage: node rename_and_patch_quote.cjs <oldDocPath> <newDocPath> <items.json> <YYYY-MM-DD> [--internal] [--discount-scope=equipment|all] [--delete-old]"
+  );
   process.exit(1);
 }
 
 const IS_INTERNAL = flags.includes("--internal");
 const DELETE_OLD = flags.includes("--delete-old");
-const scopeFlag = flags.find(f => f.startsWith("--discount-scope="));
+const scopeFlag = flags.find((f) => f.startsWith("--discount-scope="));
 const DISCOUNT_SCOPE = scopeFlag ? scopeFlag.split("=")[1] : "equipment"; // "equipment" | "all"
 
 initializeApp({ credential: cert(serviceAccount) });
@@ -32,7 +34,8 @@ const db = getFirestore();
 
 const r2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
 const isEquipment = (l) =>
-  (l.type && l.type.toLowerCase() === "equipment") || /equipment/i.test(l.category || "");
+  (l.type && l.type.toLowerCase() === "equipment") ||
+  /equipment/i.test(l.category || "");
 
 async function copySubcollections(oldRef, newRef) {
   const subs = await oldRef.listCollections();
@@ -58,44 +61,60 @@ async function run() {
   const services = JSON.parse(fs.readFileSync(path.resolve(itemsPath), "utf8"));
 
   const equipmentSubtotal = r2(
-    services.filter(isEquipment).reduce((s, l) => s + (l.price ?? 0) * (l.quantity ?? 0), 0)
+    services
+      .filter(isEquipment)
+      .reduce((s, l) => s + (l.price ?? 0) * (l.quantity ?? 0), 0)
   );
   const nonEquipmentSubtotal = r2(
-    services.filter((l) => !isEquipment(l)).reduce((s, l) => s + (l.price ?? 0) * (l.quantity ?? 0), 0)
+    services
+      .filter((l) => !isEquipment(l))
+      .reduce((s, l) => s + (l.price ?? 0) * (l.quantity ?? 0), 0)
   );
   const combinedSubtotal = r2(equipmentSubtotal + nonEquipmentSubtotal);
 
   const discountRate = IS_INTERNAL ? 0.12 : 0;
+
+  // Discount base depends on requested scope
   const discountBase =
     DISCOUNT_SCOPE === "all" ? combinedSubtotal : equipmentSubtotal;
 
-  const equipmentDiscount = r2((DISCOUNT_SCOPE === "equipment" ? discountBase : equipmentSubtotal) * discountRate);
-  const combinedDiscount = r2(discountBase * discountRate);
+  // This is the discount that should be displayed in the UI/PDF
+  const discount = r2(discountBase * discountRate);
 
   // Grand total according to selected scope
   const grandTotal =
     DISCOUNT_SCOPE === "all"
-      ? r2(combinedSubtotal - combinedDiscount)
-      : r2(equipmentSubtotal - equipmentDiscount + nonEquipmentSubtotal);
+      ? r2(combinedSubtotal - discount)
+      : r2(equipmentSubtotal - discount + nonEquipmentSubtotal);
 
   const newId = newPath.split("/").pop();
   const payload = {
     ...base,
     referenceNumber: newId,
     services,
+
+    // flags
     isInternal: IS_INTERNAL,
     discountRate,
-    // Store both for transparency
+    discountAppliedOn: DISCOUNT_SCOPE, // "equipment" | "all"
+
+    // subtotals
     equipmentSubtotal,
     reagentsSubtotal: nonEquipmentSubtotal,
     subtotal: combinedSubtotal,
-    equipmentDiscount: DISCOUNT_SCOPE === "equipment" ? combinedDiscount : equipmentDiscount, // keep field name for UI
-    discountAppliedOn: DISCOUNT_SCOPE, // "equipment" | "all"
+
+    // canonical discount & totals for the UI/PDF
+    discount, // <-- ALWAYS the actual applied discount
+    totalAfterDiscount: r2(combinedSubtotal - discount), // handy for scope=all
+    grandTotal, // list/summary total
+
+    // legacy/compat fields (kept consistent so nothing breaks)
+    equipmentDiscount: discount, // make the "discount" visible regardless of scope
     equipmentTotalAfterDiscount:
-      DISCOUNT_SCOPE === "equipment"
-        ? r2(equipmentSubtotal - combinedDiscount)
-        : r2(equipmentSubtotal - equipmentDiscount),
-    grandTotal,
+      DISCOUNT_SCOPE === "all"
+        ? r2(equipmentSubtotal) // not used by UI in this mode
+        : r2(equipmentSubtotal - discount),
+
     dateIssued: Timestamp.fromDate(new Date(dateIssuedArg)),
     notes:
       base?.notes ||
@@ -115,7 +134,7 @@ async function run() {
     nonEquipmentSubtotal,
     combinedSubtotal,
     discountScope: DISCOUNT_SCOPE,
-    discount: combinedDiscount,
+    discount,
     grandTotal,
   });
 }
