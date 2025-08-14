@@ -10,6 +10,7 @@ import {
   orderBy,
   query,
   Timestamp,
+  limit,
 } from "firebase/firestore";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { convertToDate, convertToTimestamp } from "@/lib/convert";
@@ -109,7 +110,7 @@ export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRe
   if ("status" in updates) {
     updatedData.status = updates.status;
     if (updates.status === "paid") {
-      updatedData.datePaid = Timestamp.fromDate(new Date()); 
+      updatedData.datePaid = Timestamp.fromDate(new Date());
     } else {
       updatedData.datePaid = null;
     }
@@ -181,17 +182,37 @@ export async function getChargeSlipsByProjectId(projectId: string): Promise<Char
   });
 }
 
+/**
+ * Generates the next charge slip number for a given year.
+ * Format: CS-YYYY-XXX (zero-padded to 3 digits while < 1000; from 1000 upward no padding)
+ */
 export async function generateNextChargeSlipNumber(year: number): Promise<string> {
   const prefix = `CS-${year}`;
-  const q = query(
+  const lower = `${prefix}-`;                  // inclusive: "CS-2025-"
+  const upper = `CS-${year + 1}-`;             // exclusive: "CS-2026-"
+
+  const qRef = query(
     collection(db, CHARGE_SLIPS_COLLECTION),
-    where("chargeSlipNumber", ">=", `${prefix}-000`),
-    orderBy("chargeSlipNumber", "desc")
+    where("chargeSlipNumber", ">=", lower),
+    where("chargeSlipNumber", "<", upper),
+    orderBy("chargeSlipNumber", "desc"),
+    limit(1)
   );
 
-  const snapshot = await getDocs(q);
-  const latest = snapshot.docs[0]?.data()?.chargeSlipNumber;
+  const snapshot = await getDocs(qRef);
 
-  const nextNum = latest ? parseInt(latest.split("-")[2], 10) + 1 : 1;
-  return `${prefix}-${nextNum}`;
+  let nextNumber = 1;
+  if (!snapshot.empty) {
+    const last: string =
+      snapshot.docs[0].data().chargeSlipNumber ?? snapshot.docs[0].id;
+    const lastNum = parseInt(last.split("-").pop() || "0", 10);
+    if (!Number.isNaN(lastNum)) nextNumber = lastNum + 1;
+  }
+
+  const suffix =
+    nextNumber < 1000
+      ? String(nextNumber).padStart(3, "0")
+      : String(nextNumber);
+
+  return `${prefix}-${suffix}`;
 }

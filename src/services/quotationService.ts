@@ -1,3 +1,4 @@
+
 import {
   collection,
   query,
@@ -7,6 +8,7 @@ import {
   doc,
   setDoc,
   getDoc,
+  limit,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { QuotationRecord } from "@/types/Quotation";
@@ -26,20 +28,23 @@ export async function getQuotationsByInquiryId(
 
   const snapshot = await getDocs(q);
 
-  console.log(`[Firestore] Found ${snapshot.size} quotations for inquiryId: ${inquiryId}`);
+  console.log(
+    `[Firestore] Found ${snapshot.size} quotations for inquiryId: ${inquiryId}`
+  );
 
   const records: QuotationRecord[] = [];
-  snapshot.forEach((doc) => {
-    const data = doc.data();
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
     const { clientInfo = {}, ...rest } = data;
 
     records.push({
-    ...rest,
-    ...clientInfo, // flatten name, institution, etc
-    id: doc.id,
-    dateIssued: typeof data.dateIssued === "string"
-        ? data.dateIssued
-        : data.dateIssued.toDate().toISOString(),
+      ...rest,
+      ...clientInfo, // flatten name, institution, etc
+      id: docSnap.id,
+      dateIssued:
+        typeof data.dateIssued === "string"
+          ? data.dateIssued
+          : data.dateIssued.toDate().toISOString(),
     } as QuotationRecord);
   });
 
@@ -84,11 +89,11 @@ export async function getAllQuotations(): Promise<QuotationRecord[]> {
   const snapshot = await getDocs(q);
 
   const records: QuotationRecord[] = [];
-  snapshot.forEach((doc) => {
-    const data = doc.data();
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
     records.push({
       ...data,
-      id: doc.id,
+      id: docSnap.id,
       dateIssued:
         typeof data.dateIssued === "string"
           ? data.dateIssued
@@ -99,31 +104,48 @@ export async function getAllQuotations(): Promise<QuotationRecord[]> {
   return records;
 }
 
-
-
 /**
- * Generates the next reference number from Firestore quotations.
- * Format: VMENF-Q-YYYY-XXX
+ * Generates the next reference number with a global counter that
+ * does NOT reset per year.
+ *
+ * Examples:
+ *  - Existing highest: VMENF-Q-2021-002
+ *    currentYear = 2022  => VMENF-Q-2022-003
+ *  - Existing highest: VMENF-Q-2025-099
+ *    currentYear = 2026  => VMENF-Q-2026-100
+ *  - Existing highest: VMENF-Q-2026-999
+ *    currentYear = 2027  => VMENF-Q-2027-1000  (no padding ≥ 1000)
  */
-export async function generateNextReferenceNumber(currentYear: number): Promise<string> {
-  const prefix = `VMENF-Q-${currentYear}`;
-  const quotationsRef = collection(db, "quotations");
+export async function generateNextReferenceNumber(
+  currentYear: number
+): Promise<string> {
+  const prefixForYear = `VMENF-Q-${currentYear}`;
 
-  const q = query(
-    quotationsRef,
-    where("referenceNumber", ">=", `${prefix}-000`),
-    orderBy("referenceNumber", "desc")
+  // Get the lexicographically last reference across ALL years.
+  const qRef = query(
+    collection(db, "quotations"),
+    orderBy("referenceNumber", "desc"),
+    limit(1)
   );
 
-  const snapshot = await getDocs(q);
+  const snapshot = await getDocs(qRef);
 
   let nextNumber = 1;
-
   if (!snapshot.empty) {
-    const lastRef = snapshot.docs[0].data().referenceNumber;
-    const lastNum = parseInt(lastRef.split("-").pop() || "0", 10);
-    nextNumber = lastNum + 1;
+    const lastRef: string =
+      snapshot.docs[0].data().referenceNumber ?? snapshot.docs[0].id;
+
+    // Extract trailing numeric segment after the last hyphen
+    const parts = lastRef.split("-");
+    const lastNum = parseInt(parts[parts.length - 1] || "0", 10);
+    if (!Number.isNaN(lastNum)) nextNumber = lastNum + 1;
   }
 
-  return `${prefix}-${nextNumber}`;
+  // Pad to 3 digits while < 1000; no padding once we hit 1000+
+  const suffix =
+    nextNumber < 1000
+      ? String(nextNumber).padStart(3, "0")
+      : String(nextNumber);
+
+  return `${prefixForYear}-${suffix}`;
 }

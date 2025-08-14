@@ -1,0 +1,23 @@
+[
+  { "category": "Nucleic Acid Extraction", "id": null, "name": "Bacterial (spin column)", "type": "laboratory", "unit": "lot", "price": 161238.00, "quantity": 1 },
+  { "category": "Nucleic Acid Extraction", "id": null, "name": "Animal blood (magnetic-bead)", "type": "laboratory", "unit": "lot", "price": 0.00, "quantity": 1 },
+  { "category": "Nucleic Acid Extraction", "id": null, "name": "Cell and tissue (magnetic-bead)", "type": "laboratory", "unit": "lot", "price": 0.00, "quantity": 1 },
+
+  { "category": "Nucleic Acid Quantification", "id": null, "name": "Qubit 4.0 fluorometry", "type": "laboratory", "unit": "lot", "price": 57981.00, "quantity": 1 },
+  { "category": "Nucleic Acid Quantification", "id": null, "name": "Agilent Bioanalyzer", "type": "laboratory", "unit": "lot", "price": 187440.00, "quantity": 1 },
+  { "category": "Nucleic Acid Quantification", "id": null, "name": "Agarose Gel Electrophoresis", "type": "laboratory", "unit": "lot", "price": 12980.00, "quantity": 1 },
+  { "category": "Nucleic Acid Quantification", "id": null, "name": "MultiScan Sky Spectrophotometry", "type": "laboratory", "unit": "lot", "price": 0.00, "quantity": 1 },
+
+  { "category": "DNA/PCR Purification", "id": null, "name": "Gel excision and purification (Recover kit)", "type": "laboratory", "unit": "lot", "price": 0.00, "quantity": 1 },
+
+  { "category": "PCR/Real-time PCR", "id": null, "name": "End-point PCR (Low Throughput)", "type": "laboratory", "unit": "lot", "price": 0.00, "quantity": 1 },
+  { "category": "PCR/Real-time PCR", "id": null, "name": "End-point PCR (High Throughput)", "type": "laboratory", "unit": "lot", "price": 0.00, "quantity": 1 },
+  { "category": "PCR/Real-time PCR", "id": null, "name": "Real-time PCR", "type": "laboratory", "unit": "lot", "price": 115710.00, "quantity": 1 },
+
+  { "category": "Retail Sales", "id": null, "name": "Liquid Nitrogen", "type": "laboratory", "unit": "lot", "price": 0.00, "quantity": 1 },
+  { "category": "Retail Sales", "id": null, "name": "Flake ice", "type": "laboratory", "unit": "lot", "price": 0.00, "quantity": 1 },
+  { "category": "Retail Sales", "id": null, "name": "Nuclease Free Water", "type": "laboratory", "unit": "lot", "price": 0.00, "quantity": 1 },
+
+  { "category": "Sequencing Reagents and Consumables", "id": null, "name": "SeqStudio Genetic Analyzer", "type": "laboratory", "unit": "lot", "price": 0.00, "quantity": 1 },
+  { "category": "Sequencing Reagents and Consumables", "id": null, "name": "Illumina iSeq 100", "type": "laboratory", "unit": "lot", "price": 411544.60, "quantity": 1 }
+]

@@ -1,4 +1,3 @@
-// src/app/admin/quotations/data-table.tsx
 "use client";
 
 import {
@@ -10,7 +9,7 @@ import {
   SortingState,
   useReactTable,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -40,16 +39,17 @@ export function DataTable<TData, TValue>({
   data,
   onRowClick,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  // default sort: newest first
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "dateIssued", desc: true },
+  ]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("__all");
 
   const table = useReactTable({
     data,
     columns,
-    state: {
-      sorting,
-    },
+    state: { sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -57,33 +57,30 @@ export function DataTable<TData, TValue>({
   });
 
   // Static categories to always show all
-  const allCategories = [
-    "Laboratory",
-    "Equipment",
-    "Bioinformatics",
-    "Retail Sales",
-  ];
+  const allCategories = ["Laboratory", "Equipment", "Bioinformatics", "Retail Sales"];
 
-  const filteredRows = table
-    .getRowModel()
-    .rows.filter((row) => {
+  // Apply search + category filters on top of the (already) sorted row model
+  const filteredRows = useMemo(() => {
+    const lowerQuery = globalFilter.toLowerCase();
+    return table.getRowModel().rows.filter((row) => {
       const matchesSearch = row
         .getAllCells()
         .some((cell) =>
-          String(cell.getValue())
+          String(cell.getValue() ?? "")
             .toLowerCase()
-            .includes(globalFilter.toLowerCase())
+            .includes(lowerQuery)
         );
 
+      const rowCats = (row.original as any).categories ?? [];
       const matchesCategory =
         categoryFilter === "__all" ||
-        (row.original as any).categories?.some(
-          (cat: string) =>
-            cat.toLowerCase() === categoryFilter.toLowerCase()
+        rowCats.some(
+          (cat: string) => cat?.toLowerCase?.() === categoryFilter.toLowerCase()
         );
 
       return matchesSearch && matchesCategory;
     });
+  }, [table, globalFilter, categoryFilter]);
 
   return (
     <div className="space-y-4">
@@ -115,16 +112,26 @@ export function DataTable<TData, TValue>({
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  const canSort = header.column.getCanSort?.();
+                  const sortDir = header.column.getIsSorted?.(); // false | "asc" | "desc"
+                  return (
+                    <TableHead
+                      key={header.id}
+                      onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                      className={canSort ? "cursor-pointer select-none" : undefined}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                      {canSort && (
+                        <span className="ml-1 text-xs opacity-60">
+                          {sortDir === "asc" ? "▲" : sortDir === "desc" ? "▼" : ""}
+                        </span>
+                      )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>

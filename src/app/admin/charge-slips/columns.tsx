@@ -20,15 +20,27 @@ const categoryColors: Record<ValidCategory, string> = {
   retail: "bg-orange-100 text-orange-800",
 };
 
+// normalize to epoch ms for proper numeric sorting
+function toMillis(v: unknown): number {
+  if (!v) return NaN;
+  if (typeof v === "number") return v;
+  if (typeof v === "string") return new Date(v).getTime();
+  const anyV = v as any;
+  if (typeof anyV?.toDate === "function") return anyV.toDate().getTime(); // Firestore Timestamp
+  if (v instanceof Date) return v.getTime();
+  return NaN;
+}
+
 export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
   {
-    accessorKey: "dateIssued",
+    id: "dateIssued",
     header: "Date",
-    cell: ({ row }) => {
-      const value = row.getValue("dateIssued") as Date | string | null | undefined;
-      const date = value instanceof Date ? value : new Date(value || "");
-      return isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-CA");
+    accessorFn: (row) => toMillis((row as any).dateIssued),
+    cell: ({ getValue }) => {
+      const ms = getValue<number>();
+      return isNaN(ms) ? "—" : new Date(ms).toLocaleDateString("en-CA");
     },
+    sortDescFirst: true,
   },
   {
     accessorKey: "chargeSlipNumber",
@@ -44,10 +56,10 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     accessorKey: "total",
     header: "Amount",
     cell: ({ row }) => {
-      const value = row.getValue("total") as number;
-      return `₱${value.toLocaleString(undefined, {
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1,
+      const value = Number(row.getValue("total") ?? 0);
+      return `₱${value.toLocaleString("en-PH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
       })}`;
     },
   },
@@ -55,13 +67,9 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const raw = (row.getValue("status") as string | undefined)?.toLowerCase() || "processing";
+      const raw = String(row.getValue("status") ?? "processing").toLowerCase();
       const color = statusColors[raw] || "bg-gray-100 text-gray-800";
-      return (
-        <Badge className={`capitalize ${color}`}>
-          {raw}
-        </Badge>
-      );
+      return <Badge className={`capitalize ${color}`}>{raw}</Badge>;
     },
   },
   {
@@ -89,8 +97,8 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     accessorKey: "categories",
     header: "Service Requested",
     cell: ({ row }) => {
-      const categories = row.getValue("categories") as ValidCategory[] | undefined;
-      if (!categories?.length) return "—";
+      const categories = (row.getValue("categories") as ValidCategory[] | undefined) ?? [];
+      if (!categories.length) return "—";
       return (
         <div className="flex flex-wrap gap-1">
           {categories.map((cat) => (
