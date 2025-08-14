@@ -86,6 +86,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     alignItems: "flex-end",
     textAlign: "right",
+    gap: 2,
   },
   italicNote: {
     fontStyle: "italic",
@@ -114,6 +115,28 @@ function formatMoney(num: number) {
   return result + "." + decimal;
 }
 
+function r2(n: number) {
+  return Math.round((n + Number.EPSILON) * 100) / 100;
+}
+
+type ServiceLike = SelectedService & {
+  id?: string | null;
+  type?: "equipment" | "laboratory" | "retail" | "bioinformatics" | string;
+  category?: string;
+  unit: string;
+  price: number;
+  quantity: number;
+  name: string;
+};
+
+// robust check: either explicit type === equipment or category includes “Equipment”
+function isEquipment(line: ServiceLike) {
+  return (
+    (line.type?.toLowerCase?.() === "equipment") ||
+    /equipment/i.test(line.category ?? "")
+  );
+}
+
 export function QuotationPDF({
   services,
   clientInfo,
@@ -135,22 +158,40 @@ export function QuotationPDF({
     position: string;
   };
 }) {
-  const groupedByCategory = services.reduce<Record<string, SelectedService[]>>(
+  const safeServices: ServiceLike[] = (services ?? []).filter(
+    (s): s is ServiceLike =>
+      s != null &&
+      typeof (s as any).price === "number" &&
+      typeof (s as any).quantity === "number"
+  );
+
+  // group by category (fallback to “Uncategorized”)
+  const groupedByCategory = safeServices.reduce<Record<string, ServiceLike[]>>(
     (acc, svc) => {
-      if (!acc[svc.category]) acc[svc.category] = [];
-      acc[svc.category].push(svc);
+      const key = svc.category && svc.category.trim() ? svc.category : "Uncategorized";
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(svc);
       return acc;
     },
     {}
   );
 
-  const totalWithoutDiscount = services.reduce(
-    (sum, svc) => sum + svc.quantity * svc.price,
-    0
+  // Correct math: discount applies to equipment only
+  const equipmentSubtotal = r2(
+    safeServices
+      .filter(isEquipment)
+      .reduce((sum, s) => sum + s.price * s.quantity, 0)
   );
 
-  const discount = useInternalPrice ? totalWithoutDiscount * 0.12 : 0;
-  const finalTotal = totalWithoutDiscount - discount;
+  const nonEquipmentSubtotal = r2(
+    safeServices
+      .filter((s) => !isEquipment(s))
+      .reduce((sum, s) => sum + s.price * s.quantity, 0)
+  );
+
+  const subtotalBeforeDiscount = r2(equipmentSubtotal + nonEquipmentSubtotal);
+  const discount = useInternalPrice ? r2(equipmentSubtotal * 0.12) : 0;
+  const finalTotal = r2(equipmentSubtotal - discount + nonEquipmentSubtotal);
 
   return (
     <Document>
@@ -191,19 +232,16 @@ export function QuotationPDF({
           {Object.entries(groupedByCategory).map(([category, items]) => (
             <View key={category}>
               <Text style={styles.categoryHeader}>{category}</Text>
-              {items.map((svc) => {
+              {items.map((svc, idx) => {
                 const amount = svc.price * svc.quantity;
+                const key = `${svc.id ?? "custom"}-${svc.name}-${idx}`;
                 return (
-                  <View style={styles.tableRow} key={svc.id}>
+                  <View style={styles.tableRow} key={key}>
                     <Text style={styles.cell}>{svc.name}</Text>
                     <Text style={styles.cell}>{svc.unit}</Text>
-                    <Text style={styles.cell}>
-                      {formatMoney(svc.price)}
-                    </Text>
+                    <Text style={styles.cell}>{formatMoney(svc.price)}</Text>
                     <Text style={styles.cell}>{svc.quantity}</Text>
-                    <Text style={styles.cell}>
-                      {formatMoney(amount)}
-                    </Text>
+                    <Text style={styles.cell}>{formatMoney(amount)}</Text>
                   </View>
                 );
               })}
@@ -213,9 +251,10 @@ export function QuotationPDF({
 
         {/* Summary */}
         <View style={styles.summary}>
-          <Text>
-            Subtotal: PHP {formatMoney(totalWithoutDiscount)}
-          </Text>
+          <Text>Subtotal: PHP {formatMoney(subtotalBeforeDiscount)}</Text>
+          {useInternalPrice && equipmentSubtotal > 0 ? (
+            <Text>Discount (12% on equipment only): -PHP {formatMoney(discount)}</Text>
+          ) : null}
           <Text style={{ fontWeight: "bold" }}>
             TOTAL: PHP {formatMoney(finalTotal)}
           </Text>

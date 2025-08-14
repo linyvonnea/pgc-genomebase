@@ -1,0 +1,1775 @@
+{
+  "inquiries": [
+    {
+      "id": "2F4K1GKxKn1YntfHaTMt",
+      "workflows": [
+        "quantification"
+      ],
+      "additionalInfo": null,
+      "projectBackground": null,
+      "projectBudget": null,
+      "specificTrainingNeed": null,
+      "targetTrainingDate": null,
+      "numberOfParticipants": null,
+      "serviceType": "laboratory",
+      "createdAt": {
+        "_seconds": 1752211676,
+        "_nanoseconds": 526000000
+      },
+      "haveSubmitted": true,
+      "name": "Portacio Marifer Garcia",
+      "designation": "Faculty Researcher",
+      "isApproved": false,
+      "email": "pmarifer@gmail.com",
+      "status": "Pending",
+      "affiliation": "UP Visayas"
+    },
+    {
+      "id": "cBe2DT1scGMK19SuiIbq",
+      "year": 2025,
+      "createdAt": {
+        "_seconds": 1741564800,
+        "_nanoseconds": 0
+      },
+      "name": "Tothelyn Anne dela Cruz",
+      "status": "Approved Client",
+      "isApproved": true,
+      "affiliation": "Natural Sciences Department, University of St. La Salle",
+      "designation": "Faculty Researcher",
+      "email": "tothelyn.delacruz@usls.edu.ph"
+    },
+    {
+      "id": "jkvozyHuua3zIyDya5jq",
+      "year": 2024,
+      "createdAt": {
+        "_seconds": 1734307200,
+        "_nanoseconds": 0
+      },
+      "name": "Leocadio Mabinni",
+      "affiliation": "SOTECH UPV",
+      "designation": "Project Assistant",
+      "email": "leocadio.mabinni@up.edu.ph",
+      "isApproved": false,
+      "status": "Quotation Only"
+    },
+    {
+      "id": "mgM5KMzdFxn1GY19MRSJ",
+      "year": 2025,
+      "createdAt": {
+        "_seconds": 1748822400,
+        "_nanoseconds": 0
+      },
+      "name": "PJ Sy",
+      "status": "Approved Client",
+      "isApproved": true,
+      "affiliation": "UP Los Banos",
+      "designation": "Faculty Researcher",
+      "email": "pjsy@up.edu.ph"
+    },
+    {
+      "id": "nJSdbBXBcBO8dU5T1jtv",
+      "workflows": [],
+      "additionalInfo": null,
+      "projectBackground": "rws",
+      "projectBudget": null,
+      "specificTrainingNeed": null,
+      "targetTrainingDate": null,
+      "numberOfParticipants": null,
+      "serviceType": "research",
+      "createdAt": {
+        "_seconds": 1752213392,
+        "_nanoseconds": 5000000
+      },
+      "haveSubmitted": true,
+      "affiliation": "DOST Region 6",
+      "name": "Lovella Remillo",
+      "designation": "Researcher",
+      "isApproved": false,
+      "email": "lremillo@gmail.com",
+      "status": "Pending"
+    },
+    {
+      "id": "qnt84GDe0Jk9ejS86yoM",
+      "year": 2025,
+      "createdAt": {
+        "_seconds": 1739871900,
+        "_nanoseconds": 0
+      },
+      "name": "Dr. Sarah Williams",
+      "affiliation": "International Rice Research Institute",
+      "designation": "Senior Research Scientist",
+      "email": "sarah.williams@irri.org",
+      "isApproved": false,
+      "status": "Quotation Only"
+    },
+    {
+      "id": "s7EjvUSE2Z3Bvp9dWjrQ",
+      "name": "Daniella Pailden",
+      "affiliation": "UPV CAS",
+      "designation": "Intern",
+      "email": "daniellalpailden@gmail.com",
+      "workflows": [
+        "dna-extraction",
+        "pcr-amplification"
+      ],
+      "additionalInfo": null,
+      "projectBackground": null,
+      "projectBudget": null,
+      "specificTrainingNeed": null,
+      "targetTrainingDate": null,
+      "numberOfParticipants": null,
+      "serviceType": "laboratory",
+      "createdAt": {
+        "_seconds": 1752820736,
+        "_nanoseconds": 509000000
+      },
+      "isApproved": true,
+      "status": "Approved Client",
+      "haveSubmitted": true
+    },
+    {
+      "id": "s9posE0AqN9MKvK1X2SG",
+      "year": 2024,
+      "createdAt": {
+        "_seconds": 1727740800,
+        "_nanoseconds": 0
+      },
+      "name": "Rufina Rafa Cabungcal",
+      "status": "Approved Client",
+      "isApproved": true,
+      "affiliation": "DOST VI",
+      "designation": "Researcher",
+      "email": "rufina.cabungcal@gmail.com"
+    },
+    {
+      "id": "umYo88uymtMEJ5uWsnNX",
+      "year": 2024,
+      "createdAt": {
+        "_seconds": 1731244500,
+        "_nanoseconds": 0
+      },
+      "name": "Dr. Michael Thompson",
+      "status": "Quotation Only",
+      "isApproved": false,
+      "affiliation": "Philippine General Hospital",
+      "designation": "Chief of Genetics",
+      "email": "michael.thompson@pgh.gov.ph"
+    },
+    {
+      "id": "varZnGn42hHKLDb3ZEBj",
+      "year": 2025,
+      "affiliation": "Ateneo de Manila University",
+      "designation": "Associate Professor",
+      "createdAt": {
+        "_seconds": 1706969700,
+        "_nanoseconds": 284000000
+      },
+      "name": "Daniella Pailden",
+      "email": "daniellalpailden@gmail.com",
+      "isApproved": true,
+      "status": "Approved Client"
+    },
+    {
+      "id": "yMyVDQamOJVh5drMXhBL",
+      "year": 2025,
+      "createdAt": {
+        "_seconds": 1742947200,
+        "_nanoseconds": 0
+      },
+      "name": "Corazon Marquee Lopez",
+      "status": "Approved Client",
+      "affiliation": "DOST Regional Office 6",
+      "designation": "Researcher",
+      "email": "corazon.lopez@dost.gov.ph",
+      "isApproved": true
+    }
+  ],
+  "quotations": [
+    {
+      "id": "VMENF-Q-2025-001",
+      "referenceNumber": "VMENF-Q-2025-001",
+      "name": "Daniella Pailden",
+      "institution": "Ateneo de Manila University",
+      "designation": "Associate Professor",
+      "email": "daniellalpailden@gmail.com",
+      "services": [
+        {
+          "type": "equipment",
+          "name": "Laminar Flow PCR Cabinet (Airclean System)",
+          "price": 200,
+          "id": "EQP-SVC-019",
+          "unit": "per hour",
+          "category": "Equipment Use (Without Consumables)",
+          "quantity": 2
+        },
+        {
+          "id": "EQP-SVC-020",
+          "name": "Loop Sterilizer (DLab ST800-3)",
+          "unit": "per hour",
+          "price": 110,
+          "type": "equipment",
+          "category": "Equipment Use (Without Consumables)",
+          "quantity": 1
+        },
+        {
+          "type": "retail",
+          "name": "Liquid Nitrogen",
+          "price": 620,
+          "id": "RTL-SVC-001",
+          "category": "Retail Sales",
+          "unit": "per liter",
+          "quantity": 5
+        }
+      ],
+      "isInternal": false,
+      "year": 2025,
+      "subtotal": 3610,
+      "discount": 0,
+      "total": 3610,
+      "preparedBy": {
+        "name": "Yvonne Lin",
+        "position": "Student Intern"
+      },
+      "categories": [
+        "equipment",
+        "retail"
+      ],
+      "inquiryId": "varZnGn42hHKLDb3ZEBj",
+      "dateIssued": "2025-07-15T05:58:31.368Z"
+    },
+    {
+      "id": "VMENF-Q-2025-002",
+      "referenceNumber": "VMENF-Q-2025-002",
+      "name": "Dr. Sarah Williams",
+      "institution": "International Rice Research Institute",
+      "designation": "Senior Research Scientist",
+      "email": "sarah.williams@irri.org",
+      "services": [
+        {
+          "type": "equipment",
+          "unit": "per hour",
+          "id": "EQP-SVC-003",
+          "price": 100,
+          "name": "Balance, top loading (Sartorius)",
+          "category": "Equipment Use (Without Consumables)",
+          "quantity": 5
+        },
+        {
+          "unit": "per hour",
+          "type": "equipment",
+          "name": "Balance, Analytical (Sartorius)",
+          "category": "Equipment Use (Without Consumables)",
+          "id": "EQP-SVC-004",
+          "price": 120,
+          "quantity": 2
+        }
+      ],
+      "isInternal": true,
+      "year": 2025,
+      "subtotal": 740,
+      "discount": 88.8,
+      "total": 651.2,
+      "preparedBy": {
+        "name": "Yvonne Lin",
+        "position": "Student Intern"
+      },
+      "categories": [
+        "equipment"
+      ],
+      "inquiryId": "qnt84GDe0Jk9ejS86yoM",
+      "dateIssued": "2025-07-15T05:59:23.040Z"
+    },
+    {
+      "id": "VMENF-Q-2025-003",
+      "referenceNumber": "VMENF-Q-2025-003",
+      "name": "PJ Sy",
+      "institution": "UP Los Banos",
+      "designation": "Faculty Researcher",
+      "email": "pj.sy@uplb.edu.ph",
+      "services": [
+        {
+          "unit": "per sample",
+          "name": "Spin Column Based Extraction",
+          "type": "laboratory",
+          "id": "LAB-SVC-001",
+          "category": "Nucleic Acid Extraction",
+          "price": 940,
+          "quantity": 1
+        },
+        {
+          "name": "DNA Library Preparation (Small and Large WG)",
+          "id": "LAB-SVC-013",
+          "category": "Library Preparation",
+          "unit": "per sample",
+          "price": 11350,
+          "type": "laboratory",
+          "quantity": 8
+        }
+      ],
+      "isInternal": true,
+      "year": 2025,
+      "subtotal": 91740,
+      "discount": 11008.8,
+      "total": 80731.2,
+      "preparedBy": {
+        "name": "Yvonne Lin",
+        "position": "Student Intern"
+      },
+      "categories": [
+        "laboratory"
+      ],
+      "inquiryId": "mgM5KMzdFxn1GY19MRSJ",
+      "dateIssued": "2025-07-16T05:59:57.586Z"
+    },
+    {
+      "id": "VMENF-Q-2025-004",
+      "referenceNumber": "VMENF-Q-2025-004",
+      "name": "Lovella Remillo",
+      "institution": "DOST Region 6",
+      "designation": "Researcher",
+      "email": "lremillo@gmail.com",
+      "services": [
+        {
+          "id": "LAB-SVC-005",
+          "name": "Agilent Bioanalyzer",
+          "type": "laboratory",
+          "category": "Nucleic Acid Quantification",
+          "unit": "per run (12 samples)",
+          "price": 13320,
+          "quantity": 1
+        },
+        {
+          "unit": "per run (12 samples)",
+          "category": "Nucleic Acid Quantification",
+          "id": "LAB-SVC-006",
+          "name": "Agarose Gel Electrophoresis",
+          "price": 590,
+          "type": "laboratory",
+          "quantity": 0.5
+        },
+        {
+          "category": "Nucleic Acid Quantification",
+          "unit": "per run (15 samples)",
+          "price": 300,
+          "type": "laboratory",
+          "name": "MultiSkan Sky Spectrophotometry",
+          "id": "LAB-SVC-007",
+          "quantity": 1
+        }
+      ],
+      "isInternal": false,
+      "year": 2025,
+      "subtotal": 13915,
+      "discount": 0,
+      "total": 13915,
+      "preparedBy": {
+        "name": "Yvonne Lin",
+        "position": "Student Intern"
+      },
+      "categories": [
+        "laboratory"
+      ],
+      "inquiryId": "nJSdbBXBcBO8dU5T1jtv",
+      "dateIssued": "2025-07-16T06:00:26.137Z"
+    },
+    {
+      "id": "VMENF-Q-2025-005",
+      "referenceNumber": "VMENF-Q-2025-005",
+      "name": "Lovella Remillo",
+      "institution": "DOST Region 6",
+      "designation": "Researcher",
+      "email": "lremillo@gmail.com",
+      "services": [
+        {
+          "type": "retail",
+          "id": "RTL-SVC-001",
+          "category": "Retail Sales",
+          "unit": "per liter",
+          "name": "Liquid Nitrogen",
+          "price": 620,
+          "quantity": 7
+        },
+        {
+          "type": "retail",
+          "category": "Retail Sales",
+          "price": 100,
+          "id": "RTL-SVC-002",
+          "name": "Flake Ice",
+          "unit": "per kilo",
+          "quantity": 10
+        }
+      ],
+      "isInternal": false,
+      "dateIssued": "2025-07-17T06:01:15.470Z",
+      "year": 2025,
+      "subtotal": 5340,
+      "discount": 0,
+      "total": 5340,
+      "preparedBy": {
+        "name": "Yvonne Lin",
+        "position": "Student Intern"
+      },
+      "categories": [
+        "retail"
+      ],
+      "inquiryId": "nJSdbBXBcBO8dU5T1jtv"
+    },
+    {
+      "id": "VMENF-Q-2025-006",
+      "referenceNumber": "VMENF-Q-2025-006",
+      "name": "Daniella Pailden",
+      "institution": "UPV CAS",
+      "designation": "Intern",
+      "email": "daniellalpailden@gmail.com",
+      "services": [
+        {
+          "unit": "per hour",
+          "type": "equipment",
+          "name": "Autoclave (ALP CL-32L)",
+          "category": "Equipment Use (Without Consumables)",
+          "price": 240,
+          "id": "EQP-SVC-001",
+          "quantity": 1
+        },
+        {
+          "price": 520,
+          "id": "EQP-SVC-002",
+          "unit": "per hour",
+          "type": "equipment",
+          "name": "Automated Extraction Machine (Kingfisher)",
+          "category": "Equipment Use (Without Consumables)",
+          "quantity": 3
+        },
+        {
+          "id": "EQP-SVC-003",
+          "unit": "per hour",
+          "price": 100,
+          "name": "Balance, top loading (Sartorius)",
+          "type": "equipment",
+          "category": "Equipment Use (Without Consumables)",
+          "quantity": 5
+        }
+      ],
+      "isInternal": true,
+      "dateIssued": "2025-07-18T06:41:05.461Z",
+      "year": 2025,
+      "subtotal": 2300,
+      "discount": 276,
+      "total": 2024,
+      "preparedBy": {
+        "name": "Duranne Duran",
+        "position": "Student Intern"
+      },
+      "categories": [
+        "equipment"
+      ],
+      "inquiryId": "s7EjvUSE2Z3Bvp9dWjrQ"
+    }
+  ],
+  "clients": [
+    {
+      "id": "CL-2025-001",
+      "affiliation": "DOST VI",
+      "affiliationAddress": "Bolho (Pob.), Miagao, Iloillo",
+      "designation": "Researcher",
+      "email": "rufina.cabungcal@gmail.com",
+      "name": "Rufina Rafa Cabungcal",
+      "phoneNumber": "09097738552",
+      "sex": "F",
+      "year": 2025,
+      "pid": "P-2024-001",
+      "cid": "CL-2025-001",
+      "createdAt": {
+        "_seconds": 1721196760,
+        "_nanoseconds": 498000000
+      }
+    },
+    {
+      "id": "CL-2025-002",
+      "affiliation": "Natural Sciences Department, University of St. La Salle",
+      "affiliationAddress": "Bacolod City",
+      "designation": "Faculty Researcher",
+      "email": "tothelyn.delacruz@usls.edu.ph",
+      "name": "Tothelyn Anne dela Cruz",
+      "phoneNumber": "09098837563",
+      "sex": "F",
+      "year": 2025,
+      "cid": "CL-2025-002",
+      "pid": "P-2024-002",
+      "createdAt": {
+        "_seconds": 1723443231,
+        "_nanoseconds": 526000000
+      }
+    },
+    {
+      "id": "CL-2025-003",
+      "affiliation": "Ateneo de Manila University",
+      "affiliationAddress": "Manila",
+      "designation": "Associate Professor",
+      "email": "daniellalpailden@gmail.com",
+      "name": "Daniella Pailden",
+      "phoneNumber": "09098887753",
+      "sex": "F",
+      "year": 2025,
+      "cid": "CL-2025-003",
+      "pid": "P-2025-001",
+      "createdAt": {
+        "_seconds": 1752732889,
+        "_nanoseconds": 937000000
+      }
+    },
+    {
+      "id": "CL-2025-004",
+      "affiliation": "DOST Regional Office 6",
+      "affiliationAddress": "Iloilo City",
+      "designation": "Researcher",
+      "email": "corazon.lopez@dost.gov.ph",
+      "name": "Corazon Marquee Lopez",
+      "phoneNumber": "09095883722",
+      "sex": "F",
+      "year": 2025,
+      "cid": "CL-2025-004",
+      "pid": "P-2025-002",
+      "createdAt": {
+        "_seconds": 1752732936,
+        "_nanoseconds": 242000000
+      }
+    },
+    {
+      "id": "CL-2025-005",
+      "affiliation": "UP Los Banos",
+      "affiliationAddress": "Los Banos",
+      "designation": "Faculty Researcher",
+      "name": "PJ Sy",
+      "phoneNumber": "09876567833",
+      "sex": "M",
+      "year": 2025,
+      "cid": "CL-2025-005",
+      "pid": "P-2025-003",
+      "createdAt": {
+        "_seconds": 1752733071,
+        "_nanoseconds": 97000000
+      },
+      "email": "pjsy@up.edu.ph"
+    },
+    {
+      "id": "CL-2025-006",
+      "name": "Daniella Pailden",
+      "email": "daniellalpailden@gmail.com",
+      "affiliation": "UPV CAS",
+      "designation": "Intern",
+      "sex": "M",
+      "phoneNumber": "09091772388",
+      "affiliationAddress": "Blk 50 Lot 17-16\nNHA Village, Barangay Malayuan",
+      "cid": "CL-2025-006",
+      "pid": "P-2025-004",
+      "year": 2025,
+      "inquiryId": "s7EjvUSE2Z3Bvp9dWjrQ",
+      "isContactPerson": true,
+      "createdAt": {
+        "_seconds": 1752821064,
+        "_nanoseconds": 153000000
+      }
+    }
+  ],
+  "projects": [
+    {
+      "id": "P-2024-001",
+      "iid": "s9posE0AqN9MKvK1X2SG",
+      "year": 2024,
+      "startDate": {
+        "_seconds": 1727740800,
+        "_nanoseconds": 0
+      },
+      "lead": "Dr. Camille Reyes",
+      "clientNames": [
+        "Rufina Rafa Cabungcal"
+      ],
+      "title": "Population Genomics of Indigenous Philippine Ethnolinguistic Groups",
+      "projectTag": "ETHNO",
+      "status": "Completed",
+      "sendingInstitution": "UP System",
+      "fundingCategory": "External",
+      "fundingInstitution": "UP System",
+      "serviceRequested": [
+        "Laboratory Services",
+        "Bioinformatics Analysis"
+      ],
+      "personnelAssigned": "Ms. Carmel Javier",
+      "notes": "",
+      "pid": "P-2024-001",
+      "createdAt": {
+        "_seconds": 1752732204,
+        "_nanoseconds": 416000000
+      }
+    },
+    {
+      "id": "P-2024-002",
+      "iid": "cBe2DT1scGMK19SuiIbq",
+      "year": 2024,
+      "startDate": {
+        "_seconds": 1741564800,
+        "_nanoseconds": 0
+      },
+      "lead": "Engr. Anton Velasco",
+      "clientNames": [
+        "Tothelyn Anne dela Cruz"
+      ],
+      "title": "DNA Barcoding of Marine Biodiversity in Coral Triangle Regions",
+      "projectTag": "TRIANGLE",
+      "status": "Ongoing",
+      "sendingInstitution": "SUC/HEI",
+      "fundingCategory": "External",
+      "fundingInstitution": "N/A",
+      "serviceRequested": [
+        "Laboratory Services",
+        "Retail Services",
+        "Equipment Use",
+        "Bioinformatics Analysis"
+      ],
+      "personnelAssigned": "Ms. Carmel Javier",
+      "notes": "",
+      "pid": "P-2024-002",
+      "createdAt": {
+        "_seconds": 1752732347,
+        "_nanoseconds": 736000000
+      }
+    },
+    {
+      "id": "P-2025-001",
+      "iid": "varZnGn42hHKLDb3ZEBj",
+      "lead": "Dr. Rex Sabado",
+      "title": "Genomic Surveillance of Antimicrobial Resistance in Hospital Wastewater",
+      "projectTag": "WASTE WATER",
+      "status": "Completed",
+      "sendingInstitution": "Government",
+      "fundingCategory": "In-House",
+      "fundingInstitution": "DOST",
+      "serviceRequested": [
+        "Laboratory Services",
+        "Equipment Use",
+        "Bioinformatics Analysis"
+      ],
+      "personnelAssigned": "Ms. Carmel Javier",
+      "notes": "",
+      "pid": "P-2025-001",
+      "createdAt": {
+        "_seconds": 1752732014,
+        "_nanoseconds": 538000000
+      },
+      "year": 2024,
+      "startDate": {
+        "_seconds": 1706889600,
+        "_nanoseconds": 0
+      },
+      "clientNames": [
+        "Daniella Pailden",
+        "Rufina Rafa Cabungcal"
+      ]
+    },
+    {
+      "id": "P-2025-002",
+      "iid": "yMyVDQamOJVh5drMXhBL",
+      "year": 2025,
+      "startDate": {
+        "_seconds": 1742947200,
+        "_nanoseconds": 0
+      },
+      "lead": "Dr. Julian Navarro",
+      "clientNames": [
+        "Corazon Marquee Lopez"
+      ],
+      "title": "De Novo Genome Assembly of a Novel Halophilic Bacteria from Iloilo Salt Pans",
+      "projectTag": "DE NOVO",
+      "status": "Ongoing",
+      "sendingInstitution": "International",
+      "fundingCategory": "In-House",
+      "fundingInstitution": "N/A",
+      "serviceRequested": [
+        "Laboratory Services",
+        "Equipment Use",
+        "Bioinformatics Analysis"
+      ],
+      "personnelAssigned": "Ms. Carmel Javier",
+      "notes": "",
+      "pid": "P-2025-002",
+      "createdAt": {
+        "_seconds": 1752732478,
+        "_nanoseconds": 760000000
+      }
+    },
+    {
+      "id": "P-2025-003",
+      "iid": "mgM5KMzdFxn1GY19MRSJ",
+      "year": 2025,
+      "startDate": {
+        "_seconds": 1748822400,
+        "_nanoseconds": 0
+      },
+      "lead": "Dr. Rex Sabado",
+      "clientNames": [
+        "PJ Sy"
+      ],
+      "title": "EpigenomeAtlas: DNA Methylation Mapping of Marine Organisms in Polluted Habitats",
+      "projectTag": "ATLAS",
+      "status": "Ongoing",
+      "sendingInstitution": "Government",
+      "fundingCategory": "In-House",
+      "fundingInstitution": "DOST",
+      "serviceRequested": [
+        "Bioinformatics Analysis",
+        "Equipment Use"
+      ],
+      "personnelAssigned": "Ms. Carmel Javier",
+      "notes": "",
+      "pid": "P-2025-003",
+      "createdAt": {
+        "_seconds": 1752732551,
+        "_nanoseconds": 524000000
+      }
+    },
+    {
+      "id": "P-2025-004",
+      "clientNames": [
+        "Daniella Pailden"
+      ],
+      "inquiryId": "s7EjvUSE2Z3Bvp9dWjrQ",
+      "year": 2025,
+      "pid": "P-2025-004",
+      "createdAt": {
+        "_seconds": 1752821088,
+        "_nanoseconds": 884000000
+      },
+      "notes": "",
+      "iid": "s7EjvUSE2Z3Bvp9dWjrQ",
+      "title": "WGC of Pineapple",
+      "fundingInstitution": "UP System",
+      "lead": "Dr. Albin",
+      "sendingInstitution": "Government",
+      "projectTag": "WGC",
+      "fundingCategory": "In-House",
+      "personnelAssigned": "Ms. Carmel Javier",
+      "startDate": {
+        "_seconds": 1752768000,
+        "_nanoseconds": 0
+      },
+      "serviceRequested": [
+        "Laboratory Services",
+        "Equipment Use"
+      ],
+      "status": "Ongoing"
+    }
+  ],
+  "chargeSlips": [
+    {
+      "id": "CS-2025-001",
+      "chargeSlipNumber": "CS-2025-001",
+      "cid": "CL-2025-001",
+      "projectId": "P-2024-001",
+      "client": {
+        "affiliation": "DOST VI",
+        "affiliationAddress": "Bolho (Pob.), Miagao, Iloillo",
+        "cid": "CL-2025-001",
+        "createdAt": {
+          "_seconds": 1752732760,
+          "_nanoseconds": 544000000
+        },
+        "designation": "Researcher",
+        "email": "rufina.cabungcal@gmail.com",
+        "name": "Rufina Rafa Cabungcal",
+        "phoneNumber": "09097738552",
+        "pid": "P-2024-001",
+        "sex": "F",
+        "year": 2025
+      },
+      "project": {
+        "pid": "P-2024-001",
+        "iid": "s9posE0AqN9MKvK1X2SG",
+        "year": 2024,
+        "startDate": "2024-10-01",
+        "createdAt": {
+          "_seconds": 1752732204,
+          "_nanoseconds": 416000000
+        },
+        "lead": "Dr. Camille Reyes",
+        "clientNames": [
+          "Rufina Rafa Cabungcal"
+        ],
+        "title": "Population Genomics of Indigenous Philippine Ethnolinguistic Groups",
+        "projectTag": "ETHNO",
+        "status": "Completed",
+        "sendingInstitution": "UP System",
+        "fundingCategory": "External",
+        "fundingInstitution": "UP System",
+        "serviceRequested": [
+          "Laboratory Services",
+          "Bioinformatics Analysis"
+        ],
+        "personnelAssigned": "Ms. Carmel Javier",
+        "notes": ""
+      },
+      "services": [
+        {
+          "name": "Storage Refrigerator, 2C - 8C (PHCBi)",
+          "type": "equipment",
+          "price": 100,
+          "unit": "per hour",
+          "category": "Equipment Use (Without Consumables)",
+          "id": "EQP-SVC-035",
+          "quantity": 5
+        },
+        {
+          "unit": "per hour",
+          "category": "Equipment Use (Without Consumables)",
+          "name": "Automated Extraction Machine (Kingfisher)",
+          "id": "EQP-SVC-002",
+          "type": "equipment",
+          "price": 520,
+          "quantity": 1
+        }
+      ],
+      "orNumber": "1234",
+      "useInternalPrice": true,
+      "preparedBy": {
+        "name": "Yvonne Lin",
+        "position": "Student Intern"
+      },
+      "approvedBy": {
+        "name": "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
+        "position": "AED, PGC Visayas"
+      },
+      "referenceNumber": "CS-2025-001",
+      "clientInfo": {
+        "name": "Rufina Rafa Cabungcal",
+        "institution": "DOST VI",
+        "designation": "Researcher",
+        "email": "rufina.cabungcal@gmail.com"
+      },
+      "subtotal": 1020,
+      "discount": 122.39999999999999,
+      "total": 897.6,
+      "categories": [
+        "equipment"
+      ],
+      "createdAt": {
+        "_seconds": 1752733075,
+        "_nanoseconds": 105000000
+      },
+      "dateOfOR": {
+        "_seconds": 1752733439,
+        "_nanoseconds": 337000000
+      },
+      "notes": "",
+      "dvNumber": "",
+      "status": "paid",
+      "datePaid": {
+        "_seconds": 1752474242,
+        "_nanoseconds": 23000000
+      },
+      "dateIssued": {
+        "_seconds": 1752473875,
+        "_nanoseconds": 838000000
+      }
+    },
+    {
+      "id": "CS-2025-002",
+      "chargeSlipNumber": "CS-2025-002",
+      "cid": "CL-2025-001",
+      "projectId": "P-2024-001",
+      "client": {
+        "affiliation": "DOST VI",
+        "affiliationAddress": "Bolho (Pob.), Miagao, Iloillo",
+        "cid": "CL-2025-001",
+        "createdAt": {
+          "_seconds": 1752732760,
+          "_nanoseconds": 544000000
+        },
+        "designation": "Researcher",
+        "email": "rufina.cabungcal@gmail.com",
+        "name": "Rufina Rafa Cabungcal",
+        "phoneNumber": "09097738552",
+        "pid": "P-2024-001",
+        "sex": "F",
+        "year": 2025
+      },
+      "project": {
+        "pid": "P-2024-001",
+        "iid": "s9posE0AqN9MKvK1X2SG",
+        "year": 2024,
+        "startDate": "2024-10-01",
+        "createdAt": {
+          "_seconds": 1752732204,
+          "_nanoseconds": 416000000
+        },
+        "lead": "Dr. Camille Reyes",
+        "clientNames": [
+          "Rufina Rafa Cabungcal"
+        ],
+        "title": "Population Genomics of Indigenous Philippine Ethnolinguistic Groups",
+        "projectTag": "ETHNO",
+        "status": "Completed",
+        "sendingInstitution": "UP System",
+        "fundingCategory": "External",
+        "fundingInstitution": "UP System",
+        "serviceRequested": [
+          "Laboratory Services",
+          "Bioinformatics Analysis"
+        ],
+        "personnelAssigned": "Ms. Carmel Javier",
+        "notes": ""
+      },
+      "services": [
+        {
+          "unit": "per sample",
+          "category": "Library Preparation",
+          "name": "TruSeq Stranded total RNA",
+          "price": 18700,
+          "id": "LAB-SVC-016",
+          "type": "laboratory",
+          "quantity": 5
+        },
+        {
+          "type": "laboratory",
+          "id": "LAB-SVC-017",
+          "category": "Library Preparation",
+          "price": 4750,
+          "name": "Targeted Metagenomics/Metabarcoding",
+          "unit": "per sample",
+          "quantity": 1
+        }
+      ],
+      "orNumber": "",
+      "useInternalPrice": true,
+      "preparedBy": {
+        "name": "Yvonne Lin",
+        "position": "Student Intern"
+      },
+      "approvedBy": {
+        "name": "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
+        "position": "AED, PGC Visayas"
+      },
+      "referenceNumber": "CS-2025-002",
+      "clientInfo": {
+        "name": "Rufina Rafa Cabungcal",
+        "institution": "DOST VI",
+        "designation": "Researcher",
+        "email": "rufina.cabungcal@gmail.com"
+      },
+      "subtotal": 98250,
+      "discount": 11790,
+      "total": 86460,
+      "categories": [
+        "library preparation"
+      ],
+      "dateOfOR": null,
+      "createdAt": {
+        "_seconds": 1752733122,
+        "_nanoseconds": 389000000
+      },
+      "notes": "",
+      "dvNumber": "",
+      "status": "paid",
+      "dateIssued": {
+        "_seconds": 1752560322,
+        "_nanoseconds": 330000000
+      },
+      "datePaid": {
+        "_seconds": 1752560339,
+        "_nanoseconds": 564000000
+      }
+    },
+    {
+      "id": "CS-2025-003",
+      "chargeSlipNumber": "CS-2025-003",
+      "cid": "CL-2025-002",
+      "projectId": "P-2024-002",
+      "client": {
+        "affiliation": "Natural Sciences Department, University of St. La Salle",
+        "affiliationAddress": "Bacolod City",
+        "cid": "CL-2025-002",
+        "createdAt": {
+          "_seconds": 1752732831,
+          "_nanoseconds": 4000000
+        },
+        "designation": "Faculty Researcher",
+        "email": "tothelyn.delacruz@usls.edu.ph",
+        "name": "Tothelyn Anne dela Cruz",
+        "phoneNumber": "09098837563",
+        "pid": "P-2024-002",
+        "sex": "F",
+        "year": 2025
+      },
+      "project": {
+        "pid": "P-2024-002",
+        "iid": "cBe2DT1scGMK19SuiIbq",
+        "year": 2024,
+        "startDate": "2025-03-10",
+        "createdAt": {
+          "_seconds": 1752732347,
+          "_nanoseconds": 736000000
+        },
+        "lead": "Engr. Anton Velasco",
+        "clientNames": [
+          "Tothelyn Anne dela Cruz"
+        ],
+        "title": "DNA Barcoding of Marine Biodiversity in Coral Triangle Regions",
+        "projectTag": "TRIANGLE",
+        "status": "Ongoing",
+        "sendingInstitution": "SUC/HEI",
+        "fundingCategory": "External",
+        "fundingInstitution": "N/A",
+        "serviceRequested": [
+          "Laboratory Services",
+          "Retail Services",
+          "Equipment Use",
+          "Bioinformatics Analysis"
+        ],
+        "personnelAssigned": "Ms. Carmel Javier",
+        "notes": ""
+      },
+      "services": [
+        {
+          "category": "Equipment Use (Without Consumables)",
+          "type": "equipment",
+          "unit": "per hour",
+          "id": "EQP-SVC-003",
+          "name": "Balance, top loading (Sartorius)",
+          "price": 100,
+          "quantity": 2
+        },
+        {
+          "unit": "per hour",
+          "type": "equipment",
+          "category": "Equipment Use (Without Consumables)",
+          "id": "EQP-SVC-004",
+          "price": 120,
+          "name": "Balance, Analytical (Sartorius)",
+          "quantity": 3
+        },
+        {
+          "type": "equipment",
+          "unit": "per hour",
+          "name": "Balance, Semi-microanalytical",
+          "price": 113,
+          "id": "EQP-SVC-005",
+          "category": "Equipment Use (Without Consumables)",
+          "quantity": 1
+        },
+        {
+          "id": "EQP-SVC-006",
+          "type": "equipment",
+          "category": "Equipment Use (Without Consumables)",
+          "unit": "per hour",
+          "name": "Bath type Sonicator (Elmasonic Elma Easy)",
+          "price": 200,
+          "quantity": 6
+        }
+      ],
+      "orNumber": "",
+      "useInternalPrice": false,
+      "preparedBy": {
+        "name": "Yvonne Lin",
+        "position": "Student Intern"
+      },
+      "approvedBy": {
+        "name": "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
+        "position": "AED, PGC Visayas"
+      },
+      "referenceNumber": "CS-2025-003",
+      "clientInfo": {
+        "name": "Tothelyn Anne dela Cruz",
+        "institution": "Natural Sciences Department, University of St. La Salle",
+        "designation": "Faculty Researcher",
+        "email": "tothelyn.delacruz@usls.edu.ph"
+      },
+      "dateIssued": {
+        "_seconds": 1752733175,
+        "_nanoseconds": 713000000
+      },
+      "subtotal": 1873,
+      "discount": 0,
+      "total": 1873,
+      "categories": [
+        "equipment"
+      ],
+      "dateOfOR": null,
+      "createdAt": {
+        "_seconds": 1752733175,
+        "_nanoseconds": 714000000
+      }
+    },
+    {
+      "id": "CS-2025-004",
+      "chargeSlipNumber": "CS-2025-004",
+      "cid": "CL-2025-003",
+      "projectId": "P-2025-001",
+      "client": {
+        "affiliation": "Ateneo de Manila University",
+        "affiliationAddress": "Manila",
+        "cid": "CL-2025-003",
+        "createdAt": {
+          "_seconds": 1752732889,
+          "_nanoseconds": 937000000
+        },
+        "designation": "Associate Professor",
+        "email": "daniellalpailden@gmail.com",
+        "name": "Daniella Pailden",
+        "phoneNumber": "09098887753",
+        "pid": "P-2025-001",
+        "sex": "F",
+        "year": 2025
+      },
+      "project": {
+        "pid": "P-2025-001",
+        "iid": "varZnGn42hHKLDb3ZEBj",
+        "year": 2024,
+        "startDate": "2024-02-02",
+        "createdAt": {
+          "_seconds": 1752732014,
+          "_nanoseconds": 538000000
+        },
+        "lead": "Dr. Rex Sabado",
+        "clientNames": [
+          "Daniella Pailden",
+          "Rufina Rafa Cabungcal"
+        ],
+        "title": "Genomic Surveillance of Antimicrobial Resistance in Hospital Wastewater",
+        "projectTag": "WASTE WATER",
+        "status": "Completed",
+        "sendingInstitution": "Government",
+        "fundingCategory": "In-House",
+        "fundingInstitution": "DOST",
+        "serviceRequested": [
+          "Laboratory Services",
+          "Equipment Use",
+          "Bioinformatics Analysis"
+        ],
+        "personnelAssigned": "Ms. Carmel Javier",
+        "notes": ""
+      },
+      "services": [
+        {
+          "name": "Type 1 (Ultrapure/Milli-Q) Water",
+          "unit": "per 3L",
+          "category": "Retail Sales",
+          "price": 900,
+          "id": "RTL-SVC-003",
+          "type": "retail",
+          "quantity": 40
+        },
+        {
+          "category": "Retail Sales",
+          "id": "RTL-SVC-004",
+          "unit": "per L",
+          "type": "retail",
+          "name": "Type 2 (Pure/Elix) Distilled Water",
+          "price": 280,
+          "quantity": 9
+        }
+      ],
+      "orNumber": "",
+      "useInternalPrice": false,
+      "preparedBy": {
+        "name": "Yvonne Lin",
+        "position": "Student Intern"
+      },
+      "approvedBy": {
+        "name": "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
+        "position": "AED, PGC Visayas"
+      },
+      "referenceNumber": "CS-2025-004",
+      "clientInfo": {
+        "name": "Daniella Pailden",
+        "institution": "Ateneo de Manila University",
+        "designation": "Associate Professor",
+        "email": "daniellalpailden@gmail.com"
+      },
+      "dateIssued": {
+        "_seconds": 1752733201,
+        "_nanoseconds": 518000000
+      },
+      "subtotal": 38520,
+      "discount": 0,
+      "total": 38520,
+      "categories": [
+        "retail"
+      ],
+      "dateOfOR": null,
+      "createdAt": {
+        "_seconds": 1752733201,
+        "_nanoseconds": 518000000
+      }
+    },
+    {
+      "id": "CS-2025-005",
+      "chargeSlipNumber": "CS-2025-005",
+      "cid": "CL-2025-003",
+      "projectId": "P-2025-001",
+      "client": {
+        "affiliation": "Ateneo de Manila University",
+        "affiliationAddress": "Manila",
+        "cid": "CL-2025-003",
+        "createdAt": {
+          "_seconds": 1752732889,
+          "_nanoseconds": 937000000
+        },
+        "designation": "Associate Professor",
+        "email": "daniellalpailden@gmail.com",
+        "name": "Daniella Pailden",
+        "phoneNumber": "09098887753",
+        "pid": "P-2025-001",
+        "sex": "F",
+        "year": 2025
+      },
+      "project": {
+        "pid": "P-2025-001",
+        "iid": "varZnGn42hHKLDb3ZEBj",
+        "year": 2024,
+        "startDate": "2024-02-02",
+        "createdAt": {
+          "_seconds": 1752732014,
+          "_nanoseconds": 538000000
+        },
+        "lead": "Dr. Rex Sabado",
+        "clientNames": [
+          "Daniella Pailden",
+          "Rufina Rafa Cabungcal"
+        ],
+        "title": "Genomic Surveillance of Antimicrobial Resistance in Hospital Wastewater",
+        "projectTag": "WASTE WATER",
+        "status": "Completed",
+        "sendingInstitution": "Government",
+        "fundingCategory": "In-House",
+        "fundingInstitution": "DOST",
+        "serviceRequested": [
+          "Laboratory Services",
+          "Equipment Use",
+          "Bioinformatics Analysis"
+        ],
+        "personnelAssigned": "Ms. Carmel Javier",
+        "notes": ""
+      },
+      "services": [
+        {
+          "name": "Autoclave (ALP CL-32L)",
+          "category": "Equipment Use (Without Consumables)",
+          "price": 240,
+          "unit": "per hour",
+          "type": "equipment",
+          "id": "EQP-SVC-001",
+          "quantity": 1
+        },
+        {
+          "id": "EQP-SVC-038",
+          "category": "Equipment Use (Without Consumables)",
+          "price": 100,
+          "unit": "per hour",
+          "type": "equipment",
+          "name": "Vortex Mixer (Thermo Scientific)",
+          "quantity": 3
+        }
+      ],
+      "orNumber": "",
+      "useInternalPrice": false,
+      "preparedBy": {
+        "name": "Yvonne Lin",
+        "position": "Student Intern"
+      },
+      "approvedBy": {
+        "name": "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
+        "position": "AED, PGC Visayas"
+      },
+      "referenceNumber": "CS-2025-005",
+      "clientInfo": {
+        "name": "Daniella Pailden",
+        "institution": "Ateneo de Manila University",
+        "designation": "Associate Professor",
+        "email": "daniellalpailden@gmail.com"
+      },
+      "subtotal": 540,
+      "discount": 0,
+      "total": 540,
+      "categories": [
+        "equipment"
+      ],
+      "dateOfOR": null,
+      "createdAt": {
+        "_seconds": 1752733221,
+        "_nanoseconds": 357000000
+      },
+      "dateIssued": {
+        "_seconds": 1752560421,
+        "_nanoseconds": 742000000
+      }
+    },
+    {
+      "id": "CS-2025-006",
+      "chargeSlipNumber": "CS-2025-006",
+      "cid": "CL-2025-004",
+      "projectId": "P-2025-002",
+      "client": {
+        "affiliation": "DOST Regional Office 6",
+        "affiliationAddress": "Iloilo City",
+        "cid": "CL-2025-004",
+        "createdAt": {
+          "_seconds": 1752732936,
+          "_nanoseconds": 242000000
+        },
+        "designation": "Researcher",
+        "email": "corazon.lopez@dost.gov.ph",
+        "name": "Corazon Marquee Lopez",
+        "phoneNumber": "09095883722",
+        "pid": "P-2025-002",
+        "sex": "F",
+        "year": 2025
+      },
+      "project": {
+        "pid": "P-2025-002",
+        "iid": "yMyVDQamOJVh5drMXhBL",
+        "year": 2025,
+        "startDate": "2025-03-26",
+        "createdAt": {
+          "_seconds": 1752732478,
+          "_nanoseconds": 760000000
+        },
+        "lead": "Dr. Julian Navarro",
+        "clientNames": [
+          "Corazon Marquee Lopez"
+        ],
+        "title": "De Novo Genome Assembly of a Novel Halophilic Bacteria from Iloilo Salt Pans",
+        "projectTag": "DE NOVO",
+        "status": "Ongoing",
+        "sendingInstitution": "International",
+        "fundingCategory": "In-House",
+        "fundingInstitution": "N/A",
+        "serviceRequested": [
+          "Laboratory Services",
+          "Equipment Use",
+          "Bioinformatics Analysis"
+        ],
+        "personnelAssigned": "Ms. Carmel Javier",
+        "notes": ""
+      },
+      "services": [
+        {
+          "unit": "per hour",
+          "id": "EQP-SVC-035",
+          "price": 100,
+          "category": "Equipment Use (Without Consumables)",
+          "type": "equipment",
+          "name": "Storage Refrigerator, 2C - 8C (PHCBi)",
+          "quantity": 7
+        },
+        {
+          "unit": "per hour",
+          "type": "equipment",
+          "name": "Strip tube Minifuge (Omlab D1008)",
+          "category": "Equipment Use (Without Consumables)",
+          "price": 100,
+          "id": "EQP-SVC-036",
+          "quantity": 4
+        },
+        {
+          "unit": "per hour",
+          "name": "Swinging bucket centrifuge, refrigerated (Beckman Coulter Avanti J-15R)",
+          "id": "EQP-SVC-037",
+          "price": 370,
+          "type": "equipment",
+          "category": "Equipment Use (Without Consumables)",
+          "quantity": 9
+        }
+      ],
+      "orNumber": "98765",
+      "useInternalPrice": true,
+      "preparedBy": {
+        "name": "Yvonne Lin",
+        "position": "Student Intern"
+      },
+      "approvedBy": {
+        "name": "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
+        "position": "AED, PGC Visayas"
+      },
+      "referenceNumber": "CS-2025-006",
+      "clientInfo": {
+        "name": "Corazon Marquee Lopez",
+        "institution": "DOST Regional Office 6",
+        "designation": "Researcher",
+        "email": "corazon.lopez@dost.gov.ph"
+      },
+      "subtotal": 4430,
+      "discount": 531.6,
+      "total": 3898.4,
+      "categories": [
+        "equipment"
+      ],
+      "createdAt": {
+        "_seconds": 1752733263,
+        "_nanoseconds": 519000000
+      },
+      "dateOfOR": {
+        "_seconds": 1752733375,
+        "_nanoseconds": 147000000
+      },
+      "notes": "",
+      "dvNumber": "",
+      "status": "cancelled",
+      "datePaid": {
+        "_seconds": 1752595200,
+        "_nanoseconds": 648000000
+      },
+      "dateIssued": {
+        "_seconds": 1752646863,
+        "_nanoseconds": 291000000
+      }
+    },
+    {
+      "id": "CS-2025-007",
+      "chargeSlipNumber": "CS-2025-007",
+      "cid": "CL-2025-005",
+      "projectId": "P-2025-003",
+      "client": {
+        "affiliation": "UP Los Banos",
+        "affiliationAddress": "Los Banos",
+        "cid": "CL-2025-005",
+        "createdAt": {
+          "_seconds": 1752733071,
+          "_nanoseconds": 97000000
+        },
+        "designation": "Faculty Researcher",
+        "email": "pjsy@up.edu.ph",
+        "name": "PJ Sy",
+        "phoneNumber": "09876567833",
+        "pid": "P-2025-003",
+        "sex": "M",
+        "year": 2025
+      },
+      "project": {
+        "pid": "P-2025-003",
+        "iid": "mgM5KMzdFxn1GY19MRSJ",
+        "year": 2025,
+        "startDate": "2025-06-02",
+        "createdAt": {
+          "_seconds": 1752732551,
+          "_nanoseconds": 524000000
+        },
+        "lead": "Dr. Rex Sabado",
+        "clientNames": [
+          "PJ Sy"
+        ],
+        "title": "EpigenomeAtlas: DNA Methylation Mapping of Marine Organisms in Polluted Habitats",
+        "projectTag": "ATLAS",
+        "status": "Ongoing",
+        "sendingInstitution": "Government",
+        "fundingCategory": "In-House",
+        "fundingInstitution": "DOST",
+        "serviceRequested": [
+          "Bioinformatics Analysis",
+          "Equipment Use"
+        ],
+        "personnelAssigned": "Ms. Carmel Javier",
+        "notes": ""
+      },
+      "services": [
+        {
+          "id": "EQP-SVC-011",
+          "category": "Equipment Use (Without Consumables)",
+          "name": "Flow Cytometer (Attune NxT)",
+          "unit": "per hour",
+          "type": "equipment",
+          "price": 790,
+          "quantity": 1
+        },
+        {
+          "id": "EQP-SVC-012",
+          "price": 300,
+          "unit": "per hour",
+          "type": "equipment",
+          "name": "Fluorometer (Qubit 4.0)",
+          "category": "Equipment Use (Without Consumables)",
+          "quantity": 6
+        },
+        {
+          "name": "Fumehood (Biobase FH1200)",
+          "category": "Equipment Use (Without Consumables)",
+          "type": "equipment",
+          "price": 170,
+          "unit": "per hour",
+          "id": "EQP-SVC-013",
+          "quantity": 1
+        },
+        {
+          "unit": "per hour",
+          "id": "EQP-SVC-035",
+          "price": 100,
+          "category": "Equipment Use (Without Consumables)",
+          "type": "equipment",
+          "name": "Storage Refrigerator, 2C - 8C (PHCBi)",
+          "quantity": 8
+        }
+      ],
+      "orNumber": "22333",
+      "useInternalPrice": true,
+      "preparedBy": {
+        "name": "Yvonne Lin",
+        "position": "Student Intern"
+      },
+      "approvedBy": {
+        "name": "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
+        "position": "AED, PGC Visayas"
+      },
+      "referenceNumber": "CS-2025-007",
+      "clientInfo": {
+        "name": "PJ Sy",
+        "institution": "UP Los Banos",
+        "designation": "Faculty Researcher",
+        "email": "pjsy@up.edu.ph"
+      },
+      "dateIssued": {
+        "_seconds": 1752733294,
+        "_nanoseconds": 159000000
+      },
+      "subtotal": 3560,
+      "discount": 427.2,
+      "total": 3132.8,
+      "categories": [
+        "equipment"
+      ],
+      "createdAt": {
+        "_seconds": 1752733294,
+        "_nanoseconds": 159000000
+      },
+      "dateOfOR": {
+        "_seconds": 1752733820,
+        "_nanoseconds": 721000000
+      },
+      "datePaid": {
+        "_seconds": 1752733824,
+        "_nanoseconds": 27000000
+      },
+      "notes": "",
+      "dvNumber": "",
+      "status": "paid"
+    },
+    {
+      "id": "CS-2025-008",
+      "chargeSlipNumber": "CS-2025-008",
+      "cid": "CL-2025-005",
+      "projectId": "P-2025-003",
+      "client": {
+        "affiliation": "UP Los Banos",
+        "affiliationAddress": "Los Banos",
+        "cid": "CL-2025-005",
+        "createdAt": {
+          "_seconds": 1752733071,
+          "_nanoseconds": 97000000
+        },
+        "designation": "Faculty Researcher",
+        "email": "pjsy@up.edu.ph",
+        "name": "PJ Sy",
+        "phoneNumber": "09876567833",
+        "pid": "P-2025-003",
+        "sex": "M",
+        "year": 2025
+      },
+      "project": {
+        "pid": "P-2025-003",
+        "iid": "mgM5KMzdFxn1GY19MRSJ",
+        "year": 2025,
+        "startDate": "2025-06-02",
+        "createdAt": {
+          "_seconds": 1752732551,
+          "_nanoseconds": 524000000
+        },
+        "lead": "Dr. Rex Sabado",
+        "clientNames": [
+          "PJ Sy"
+        ],
+        "title": "EpigenomeAtlas: DNA Methylation Mapping of Marine Organisms in Polluted Habitats",
+        "projectTag": "ATLAS",
+        "status": "Ongoing",
+        "sendingInstitution": "Government",
+        "fundingCategory": "In-House",
+        "fundingInstitution": "DOST",
+        "serviceRequested": [
+          "Bioinformatics Analysis",
+          "Equipment Use"
+        ],
+        "personnelAssigned": "Ms. Carmel Javier",
+        "notes": ""
+      },
+      "services": [
+        {
+          "name": "Liquid Nitrogen",
+          "category": "Retail Sales",
+          "price": 620,
+          "unit": "per liter",
+          "id": "RTL-SVC-001",
+          "type": "retail",
+          "quantity": 1
+        },
+        {
+          "name": "Flake Ice",
+          "type": "retail",
+          "unit": "per kilo",
+          "price": 100,
+          "id": "RTL-SVC-002",
+          "category": "Retail Sales",
+          "quantity": 4
+        }
+      ],
+      "useInternalPrice": true,
+      "preparedBy": {
+        "name": "Yvonne Lin",
+        "position": "Student Intern"
+      },
+      "approvedBy": {
+        "name": "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
+        "position": "AED, PGC Visayas"
+      },
+      "referenceNumber": "CS-2025-008",
+      "clientInfo": {
+        "name": "PJ Sy",
+        "institution": "UP Los Banos",
+        "designation": "Faculty Researcher",
+        "email": "pjsy@up.edu.ph"
+      },
+      "dateIssued": {
+        "_seconds": 1752733317,
+        "_nanoseconds": 268000000
+      },
+      "subtotal": 1020,
+      "discount": 122.39999999999999,
+      "total": 897.6,
+      "categories": [
+        "retail"
+      ],
+      "createdAt": {
+        "_seconds": 1752733317,
+        "_nanoseconds": 269000000
+      },
+      "dateOfOR": {
+        "_seconds": 1752733338,
+        "_nanoseconds": 118000000
+      },
+      "datePaid": {
+        "_seconds": 1752733365,
+        "_nanoseconds": 406000000
+      },
+      "notes": "Email back the Charge Slip",
+      "dvNumber": "11111",
+      "orNumber": "987",
+      "status": "paid"
+    },
+    {
+      "id": "CS-2025-009",
+      "chargeSlipNumber": "CS-2025-009",
+      "cid": "CL-2025-006",
+      "projectId": "P-2025-004",
+      "client": {
+        "affiliation": "UPV CAS",
+        "affiliationAddress": "Blk 50 Lot 17-16\nNHA Village, Barangay Malayuan",
+        "cid": "CL-2025-006",
+        "createdAt": {
+          "_seconds": 1752821064,
+          "_nanoseconds": 153000000
+        },
+        "designation": "Intern",
+        "email": "daniellalpailden@gmail.com",
+        "isContactPerson": true,
+        "name": "Daniella Pailden",
+        "phoneNumber": "09091772388",
+        "pid": "P-2025-004",
+        "sex": "M",
+        "year": 2025
+      },
+      "project": {
+        "pid": "P-2025-004",
+        "iid": "s7EjvUSE2Z3Bvp9dWjrQ",
+        "year": 2025,
+        "startDate": "2025-07-17",
+        "createdAt": {
+          "_seconds": 1752821088,
+          "_nanoseconds": 884000000
+        },
+        "lead": "Dr. Albin",
+        "clientNames": [
+          "Daniella Pailden"
+        ],
+        "title": "WGC of Pineapple",
+        "projectTag": "WGC",
+        "status": "Ongoing",
+        "sendingInstitution": "Government",
+        "fundingCategory": "In-House",
+        "fundingInstitution": "UP System",
+        "serviceRequested": [
+          "Laboratory Services",
+          "Equipment Use"
+        ],
+        "personnelAssigned": "Ms. Carmel Javier",
+        "notes": ""
+      },
+      "services": [
+        {
+          "name": "Balance, Analytical (Sartorius)",
+          "category": "Equipment Use (Without Consumables)",
+          "type": "equipment",
+          "id": "EQP-SVC-004",
+          "unit": "per hour",
+          "price": 120,
+          "quantity": 1
+        },
+        {
+          "type": "equipment",
+          "unit": "per hour",
+          "id": "EQP-SVC-005",
+          "name": "Balance, Semi-microanalytical",
+          "price": 113,
+          "category": "Equipment Use (Without Consumables)",
+          "quantity": 1
+        }
+      ],
+      "useInternalPrice": true,
+      "preparedBy": {
+        "name": "Duranne Duran",
+        "position": "Student Intern"
+      },
+      "approvedBy": {
+        "name": "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
+        "position": "AED, PGC Visayas"
+      },
+      "referenceNumber": "CS-2025-009",
+      "clientInfo": {
+        "name": "Daniella Pailden",
+        "institution": "UPV CAS",
+        "designation": "Intern",
+        "email": "daniellalpailden@gmail.com"
+      },
+      "dateIssued": {
+        "_seconds": 1752821195,
+        "_nanoseconds": 825000000
+      },
+      "subtotal": 233,
+      "discount": 27.959999999999997,
+      "total": 205.04,
+      "categories": [
+        "equipment"
+      ],
+      "createdAt": {
+        "_seconds": 1752821195,
+        "_nanoseconds": 825000000
+      },
+      "dateOfOR": {
+        "_seconds": 1752821212,
+        "_nanoseconds": 400000000
+      },
+      "datePaid": {
+        "_seconds": 1752821216,
+        "_nanoseconds": 257000000
+      },
+      "notes": "",
+      "dvNumber": "",
+      "orNumber": "123",
+      "status": "paid"
+    }
+  ]
+}

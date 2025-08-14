@@ -134,7 +134,7 @@
     },
     {
       "clientId": "CL-2020-012",
-      "name": "Kyle R. Casta\u00f1ares",
+      "name": "Kyle R. Castañares",
       "institution": "IA-Hatchery Complex, University of the Philippines Visayas, Miagao 5023, Iloilo",
       "designation": "Researcher/Technical Assistant",
       "sex": "M",
@@ -531,7 +531,7 @@
     {
       "clientId": "CL-2022-048",
       "name": "Philip Alviola",
-      "institution": "University of the Philippine Los Ba\u00f1os",
+      "institution": "University of the Philippine Los Baños",
       "designation": null,
       "sex": "M",
       "email": null,
@@ -553,7 +553,7 @@
     {
       "clientId": "CL-2022-050",
       "name": "Camille Rose T. Mueda",
-      "institution": "Institute of Biological Sciences, University of the Philippine Los Ba\u00f1os",
+      "institution": "Institute of Biological Sciences, University of the Philippine Los Baños",
       "designation": "MS Student",
       "sex": "F",
       "email": "ctmueda@up.edu.ph",
@@ -586,7 +586,7 @@
     {
       "clientId": "CL-2022-053",
       "name": "Kneessa Louie G. Dato-on",
-      "institution": "Institute of Biological Sciences, University of the Philippine Los Ba\u00f1os",
+      "institution": "Institute of Biological Sciences, University of the Philippine Los Baños",
       "designation": "MS Student",
       "sex": "F",
       "email": "kgdatoon@up.edu.ph",
@@ -596,7 +596,7 @@
     },
     {
       "clientId": "CL-2022-054",
-      "name": "Leogiver G. Ma\u00f1osca",
+      "name": "Leogiver G. Mañosca",
       "institution": "Philippine Science High School - MIMAROPA Region Campus",
       "designation": "Faculty",
       "sex": "M",
@@ -1113,7 +1113,7 @@
     },
     {
       "clientId": "CL-2023-100",
-      "name": "Krshna Mahakaola A. Due\u00f1as",
+      "name": "Krshna Mahakaola A. Dueñas",
       "institution": "West Visayas State University, College of Arts and Sciences - Biology Department",
       "designation": null,
       "sex": "F",
@@ -1267,7 +1267,7 @@
     },
     {
       "clientId": "CL-2023-114",
-      "name": "Maureen Emily V. Ni\u00f1o",
+      "name": "Maureen Emily V. Niño",
       "institution": "Division of Biological Sciences, CAS Bldg., UP Visayas, Miagao, Iloilo 5023",
       "designation": "Researcher/Technical Assistant",
       "sex": "F",
@@ -1718,11 +1718,11 @@
     },
     {
       "clientId": "CL-2024-155",
-      "name": "Lesther G. Tade\u00f1a",
+      "name": "Lesther G. Tadeña",
       "institution": "Natural Sciences Department, University of St. La Salle\nAdoracion St., Brgy. XIX, Victorias City, Negros Occidental",
       "designation": "Undergrad Student",
       "sex": "M",
-      "email": "lesthertade\u00f1a@gmail.com/ s2021049@usls.edu.ph\u00a0",
+      "email": "lesthertadeña@gmail.com/ s2021049@usls.edu.ph ",
       "mobileNumber": "9391932949",
       "dateReceived": "2024-04-03 00:00:00",
       "status": "Completed"
@@ -2323,7 +2323,7 @@
     },
     {
       "clientId": "CL-2024-210",
-      "name": "Janiela Marie Casta\u00f1o",
+      "name": "Janiela Marie Castaño",
       "institution": "SOTECH, UP Visayas",
       "designation": "Undergrad Student",
       "sex": "F",
@@ -2719,7 +2719,7 @@
     },
     {
       "clientId": "CL-2025-246",
-      "name": "I\u00f1aki Reforma",
+      "name": "Iñaki Reforma",
       "institution": "UP Visayas",
       "designation": "Researcher/Technical Assistant",
       "sex": "M",
@@ -2730,7 +2730,7 @@
     },
     {
       "clientId": "CL-2025-247",
-      "name": "Lilcah Angelique Opi\u00f1a",
+      "name": "Lilcah Angelique Opiña",
       "institution": "UP Visayas",
       "designation": "Faculty",
       "sex": "F",
@@ -3071,7 +3071,7 @@
     },
     {
       "clientId": "CL-2025-278",
-      "name": "Kayla Marie F Parre\u00f1o",
+      "name": "Kayla Marie F Parreño",
       "institution": "UPV CFOS IA",
       "designation": "Researcher/Technical Assistant",
       "sex": "F",
@@ -3268,7 +3268,7 @@
       "projectId": "P-2020-003",
       "title": "Transcriptome and Gut Metagenome Profile of Penaeus vannamei Exposed to Fluctuating Environmental Temperatures",
       "lead": "Angel Queenee D. Dequito",
-      "clientName": "Kyle R. Casta\u00f1ares\nMary Antonette F. Atilano",
+      "clientName": "Kyle R. Castañares\nMary Antonette F. Atilano",
       "startDate": "2020-06-08 00:00:00",
       "endDate": "2021-04-30 00:00:00",
       "status": "Completed",
@@ -3617,7 +3617,7 @@
     },
     {
       "projectId": "P-2022-030",
-      "title": "Marine Fisheries Assessment of Panay: Building Local Fisheries Information through Research Capability Enhancement in HEIs Component 3: Chemical Composition of Marine Fishes \u2013 Leverage Research Project (SP20-14)",
+      "title": "Marine Fisheries Assessment of Panay: Building Local Fisheries Information through Research Capability Enhancement in HEIs Component 3: Chemical Composition of Marine Fishes – Leverage Research Project (SP20-14)",
       "lead": "Zeth Rodario Bebit",
       "clientName": null,
       "startDate": "2022-06-17 00:00:00",
@@ -3943,7 +3943,7 @@
     {
       "projectId": "P-2023-054",
       "title": "Effects of Crown-of-Thorns (Acanthaster planci) Starfish as a Growth Enhacer in White Mice (Mus musculus)",
-      "lead": "Krshna Mahakaola A. Due\u00f1as",
+      "lead": "Krshna Mahakaola A. Dueñas",
       "clientName": null,
       "startDate": "2023-08-02 00:00:00",
       "endDate": "2023-08-11 00:00:00",
@@ -3995,7 +3995,7 @@
     {
       "projectId": "P-2023-058",
       "title": "Diversity assessment of freshwater zooplankton and macroinvertebrates towards identification of centers of biodiversity conservation in the Jalaur River Basin, Iloilo, Philippines",
-      "lead": "Maureen Emily V. Ni\u00f1o",
+      "lead": "Maureen Emily V. Niño",
       "clientName": "Eric Zeus C. Rizo",
       "startDate": "2023-09-21 00:00:00",
       "endDate": null,
@@ -4308,7 +4308,7 @@
       "projectId": "P-2024-082",
       "title": "Effects of pH and Temperature on the  Biofilm Formation  and algD Gene Expression in Pseudomonas aeruginosa Clinical Isolates",
       "lead": "Arlz Dominic E. Libanan",
-      "clientName": "Vien Lowell M. Mapa\nLesther G. Tade\u00f1a\nJoshua Miguel Javelosa",
+      "clientName": "Vien Lowell M. Mapa\nLesther G. Tadeña\nJoshua Miguel Javelosa",
       "startDate": "2024-04-03 00:00:00",
       "endDate": "2024-04-17 00:00:00",
       "status": "Completed",
@@ -4631,7 +4631,7 @@
     },
     {
       "projectId": "P-2024-107",
-      "title": "\u201cMorpho-Functional Traits and eDNA Metabarcoding of Freshwater Fishes and Invertebrate Communities in Panay Island\u201d. ",
+      "title": "“Morpho-Functional Traits and eDNA Metabarcoding of Freshwater Fishes and Invertebrate Communities in Panay Island”. ",
       "lead": "Erica Victoria Diaz",
       "clientName": "Eric Zeus C. Rizo",
       "startDate": "2024-11-15 00:00:00",
@@ -4892,7 +4892,7 @@
     {
       "projectId": "P-2025-127",
       "title": "Development of locally-available essential oil as a growth promoting and anti-microbial feed additive for saline tolerant tilapia Oreochromis niloticus",
-      "lead": "Kayla Marie F Parre\u00f1o",
+      "lead": "Kayla Marie F Parreño",
       "clientName": null,
       "startDate": "2025-04-25 00:00:00",
       "endDate": null,
@@ -5007,7 +5007,7 @@
       "personnelAssigned": "Nadelene Faith Cartago"
     }
   ],
-  "quotations": [],
+
   "chargeSlips": [
     {
       "chargeSlipNo": "CS-2020-12-001",
@@ -5657,7 +5657,7 @@
     },
     {
       "chargeSlipNo": "CS-2023-06-014",
-      "clientName": "Krshna Mahakaola A. Due\u00f1as",
+      "clientName": "Krshna Mahakaola A. Dueñas",
       "clientId": "CL-2023-100",
       "projectId": "P-2023-054",
       "date": "2023-08-08 00:00:00",
@@ -5929,7 +5929,7 @@
     },
     {
       "chargeSlipNo": "CS-2024-02-005",
-      "clientName": "NEED Project, \u2105 UPV-SPSO, PR No. NEED-2023-12-1",
+      "clientName": "NEED Project, ℅ UPV-SPSO, PR No. NEED-2023-12-1",
       "clientId": null,
       "projectId": null,
       "date": "2024-02-27 00:00:00",
@@ -6367,7 +6367,7 @@
       "dvNo": null,
       "orNo": "584484",
       "dateOfOR": "2024-11-05 00:00:00",
-      "notes": "NEED Project, \u2105 UPV-SPSO, PR No. NEED-2023-12-1"
+      "notes": "NEED Project, ℅ UPV-SPSO, PR No. NEED-2023-12-1"
     },
     {
       "chargeSlipNo": "CS-2024-09-032",
@@ -6422,7 +6422,7 @@
     },
     {
       "chargeSlipNo": "CS-2024-034",
-      "clientName": "Janiela Marie Casta\u00f1o",
+      "clientName": "Janiela Marie Castaño",
       "clientId": "CL-2024-210",
       "projectId": null,
       "date": "2024-11-13 00:00:00",
@@ -6524,7 +6524,7 @@
     },
     {
       "chargeSlipNo": "CS-2024-040",
-      "clientName": "Maureen Emily V. Ni\u00f1o",
+      "clientName": "Maureen Emily V. Niño",
       "clientId": "CL-2023-114",
       "projectId": "P-2023-058",
       "date": "2024-11-20 00:00:00",
@@ -6694,7 +6694,7 @@
     },
     {
       "chargeSlipNo": "CS-2025-006",
-      "clientName": "Janiela Marie Casta\u00f1o",
+      "clientName": "Janiela Marie Castaño",
       "clientId": "CL-2024-210",
       "projectId": null,
       "date": "2025-02-03 00:00:00",
@@ -6728,7 +6728,7 @@
     },
     {
       "chargeSlipNo": "CS-2025-008",
-      "clientName": "Janiela Marie Casta\u00f1o",
+      "clientName": "Janiela Marie Castaño",
       "clientId": "CL-2024-210",
       "projectId": null,
       "date": "2025-02-10 00:00:00",
@@ -6762,7 +6762,7 @@
     },
     {
       "chargeSlipNo": "CS-2025-010",
-      "clientName": "Maureen Emily V. Ni\u00f1o",
+      "clientName": "Maureen Emily V. Niño",
       "clientId": "CL-2023-114",
       "projectId": "P-2023-058",
       "date": "2025-02-21 00:00:00",
@@ -6956,7 +6956,7 @@
       "amount": 141999.44,
       "status": "PROCESSING",
       "address": "Division of Biological Sciences, College of Arts and Sciences, UP Visayas Miagao Iloilo",
-      "paymentFor": "\u201cMorpho-Functional Traits and eDNA Metabarcoding of Freshwater Fishes and Invertebrate Communities in Panay Island\u201d. ",
+      "paymentFor": "“Morpho-Functional Traits and eDNA Metabarcoding of Freshwater Fishes and Invertebrate Communities in Panay Island”. ",
       "serviceRequested": "Laboratory Service",
       "serviceDetails": "Extraction to Amplicon Sequencing",
       "dvNo": null,
@@ -7337,6 +7337,71 @@
       "orNo": null,
       "dateOfOR": null,
       "notes": null
+    }
+  ],
+     "inquiries": [],
+    "quotations": [
+    {
+      "referenceNumber": "VMENF-Q-2022-030",
+      "inquiryId": "I-2022-066",
+      "dateIssued": "2022-10-03 10:20:00",
+      "preparedBy": {
+        "name": "MA. CARMEL F. JAVIER, M.Sc.",
+        "position": "Science Research Specialist I"
+      },
+      "client": {
+        "name": "Aranza Gonzales",
+        "type": "internal"
+      },
+      "services": [
+        {
+          "id": "LAB-SVC-009",
+          "category": "Laboratory",
+          "name": "DNA Extraction - Tissue",
+          "unit": "per sample",
+          "unitPrice": 500,
+          "quantity": 3
+        },
+        {
+          "id": "LAB-SVC-010",
+          "category": "Laboratory",
+          "name": "DNA Extraction - Swab",
+          "unit": "per sample",
+          "unitPrice": 500,
+          "quantity": 1
+        },
+        {
+          "id": "LAB-SVC-005",
+          "category": "Laboratory",
+          "name": "Gel Electrophoresis",
+          "unit": "per gel",
+          "unitPrice": 200,
+          "quantity": 2
+        },
+        {
+          "id": "LAB-SVC-014",
+          "category": "Laboratory",
+          "name": "DNA Quantification (Nanodrop)",
+          "unit": "per sample",
+          "unitPrice": 100,
+          "quantity": 3
+        },
+        {
+          "id": "LAB-SVC-008",
+          "category": "Laboratory",
+          "name": "DNA Quantification (Qubit)",
+          "unit": "per sample",
+          "unitPrice": 300,
+          "quantity": 3
+        }
+      ],
+      "subtotal": 5760.0,
+      "discount": 691.2,
+      "total": 5068.8,
+      "remarks": "Urgent processing requested",
+      "categories": [
+        "Laboratory"
+      ]
     }
   ]
 }
