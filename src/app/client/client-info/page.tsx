@@ -234,7 +234,7 @@ export default function ClientFormEntry() {
                   Full Name <span className="text-[#B9273A]">*</span>
                 </Label>
                 <Input
-                  value={formData.name}
+                  value={formData.name ?? ""}
                   onChange={(e) => handleChange("name", e.target.value)}
                   placeholder="Enter your full name"
                   className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
@@ -251,7 +251,7 @@ export default function ClientFormEntry() {
                   Email Address <span className="text-[#B9273A]">*</span>
                 </Label>
                 <Input
-                  value={formData.email}
+                  value={formData.email ?? ""}
                   disabled
                   placeholder="Verified email address"
                   className="bg-slate-50 border-slate-200 text-slate-600 h-12 cursor-not-allowed"
@@ -268,7 +268,7 @@ export default function ClientFormEntry() {
                   Affiliation (Department & Institution) <span className="text-[#B9273A]">*</span>
                 </Label>
                 <Input
-                  value={formData.affiliation}
+                  value={formData.affiliation ?? ""}
                   onChange={(e) => handleChange("affiliation", e.target.value)}
                   placeholder="e.g. Division of Biological Sciences - UPV CAS"
                   className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
@@ -285,7 +285,7 @@ export default function ClientFormEntry() {
                   Designation <span className="text-[#B9273A]">*</span>
                 </Label>
                 <Input
-                  value={formData.designation}
+                  value={formData.designation ?? ""}
                   onChange={(e) => handleChange("designation", e.target.value)}
                   placeholder="e.g. Research Assistant, Professor"
                   className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
@@ -301,7 +301,7 @@ export default function ClientFormEntry() {
                 <Label className="text-sm font-semibold text-slate-700 mb-2 block">
                   Assigned sex at birth <span className="text-[#B9273A]">*</span>
                 </Label>
-                <Select value={formData.sex} onValueChange={(val) => handleChange("sex", val)}>
+                <Select value={formData.sex ?? ""} onValueChange={(val) => handleChange("sex", val)}>
                   <SelectTrigger className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12">
                     <SelectValue placeholder="Select sex" />
                   </SelectTrigger>
@@ -319,7 +319,7 @@ export default function ClientFormEntry() {
                   Mobile Number <span className="text-[#B9273A]">*</span>
                 </Label>
                 <Input
-                  value={formData.phoneNumber}
+                  value={formData.phoneNumber ?? ""}
                   onChange={(e) => handleChange("phoneNumber", e.target.value)}
                   placeholder="e.g. 09091234567"
                   className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
@@ -336,7 +336,7 @@ export default function ClientFormEntry() {
                   Affiliation Address <span className="text-[#B9273A]">*</span>
                 </Label>
                 <Textarea
-                  value={formData.affiliationAddress}
+                  value={formData.affiliationAddress ?? ""}
                   onChange={(e) => handleChange("affiliationAddress", e.target.value)}
                   placeholder="Enter complete address of your institution/organization"
                   className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[100px] resize-none"

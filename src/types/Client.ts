@@ -4,11 +4,11 @@ export interface Client {
   email?: string;
   affiliation?: string;
   designation?: string;
-  sex?: "M" | "F" | "Other";
+  sex?: "M" | "F" | "Other" | "";
   phoneNumber?: string;
   affiliationAddress?: string;
   pid?: string;
-  createdAt?: Date;
+  createdAt?: string |Date;
   haveSubmitted?: boolean;
   isContactPerson?: boolean;
   year?: number

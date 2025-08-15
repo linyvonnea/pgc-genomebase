@@ -1,3 +1,31 @@
+// Helper to recursively convert all nulls in an object to undefined (for parsed Zod output)
+function nullsToUndefined(obj: any): any {
+  if (obj === null) return undefined;
+  if (Array.isArray(obj)) return obj.map(nullsToUndefined);
+  if (typeof obj === "object" && obj !== null) {
+    const out: any = {};
+    for (const key in obj) {
+      const v = obj[key];
+      out[key] = v === null ? undefined : nullsToUndefined(v);
+    }
+    return out;
+  }
+  return obj;
+}
+// Helper to recursively convert all nulls in an object to undefined
+function cleanNulls(obj: any): any {
+  if (obj === null) return undefined;
+  if (Array.isArray(obj)) return obj.map(cleanNulls);
+  if (typeof obj === "object" && obj !== null) {
+    const out: any = {};
+    for (const key in obj) {
+      const v = obj[key];
+      out[key] = v === null ? undefined : v;
+    }
+    return out;
+  }
+  return obj;
+}
 // Service for fetching and generating client records from Firestore, with schema validation and ID generation.
 
 import {
@@ -43,24 +71,27 @@ export async function getClients(): Promise<Client[]> {
         data.startDate = data.startDate.toDate();
       }
 
-      const candidate = {
+      const candidate = cleanNulls({
         id: doc.id,
         ...data,
-      };
+      });
 
       // Validate with Zod schema
       const result = clientSchema.safeParse(candidate);
 
       if (result.success) {
         const raw = result.data;
-        const client: Client = {
-          ...raw,
-        };
+        // Convert all nulls to undefined to match Client interface
+        const client: Client = nullsToUndefined(raw);
         clients.push(client);
+      } else {
+        // Log failed parses for debugging
+        console.error("Client validation failed:", candidate, result.error);
       }
     });
 
-    return clients;
+  console.log("Fetched clients:", clients);
+  return clients;
   } catch (error) {
     throw new Error("Failed to fetch clients from database");
   }
