@@ -1,4 +1,3 @@
-// src/components/pdf/DownloadPDFLink.tsx
 "use client";
 
 import { PDFDownloadLink } from "@react-pdf/renderer";
@@ -20,27 +19,23 @@ interface Props {
     name: string;
     position: string;
   };
+  /** Optional overrides (from Firestore) for migrated quotes */
+  subtotal?: number;
+  discount?: number;
+  total?: number;
 }
 
-export default function DownloadPDFLink({
-  services,
-  clientInfo,
-  referenceNumber,
-  useInternalPrice,
-  preparedBy,
-}: Props) {
+export default function DownloadPDFLink(props: Props) {
+  const { subtotal, discount, total } = props;
+  const totalsOverride =
+    typeof subtotal === "number" && typeof total === "number"
+      ? { subtotal, discount: discount ?? 0, total }
+      : undefined;
+
   return (
     <PDFDownloadLink
-      document={
-        <QuotationPDF
-          services={services}
-          clientInfo={clientInfo}
-          referenceNumber={referenceNumber}
-          useInternalPrice={useInternalPrice}
-          preparedBy={preparedBy}
-        />
-      }
-      fileName={`${referenceNumber}.pdf`}
+      document={<QuotationPDF {...props} totalsOverride={totalsOverride} />}
+      fileName={`${props.referenceNumber}.pdf`}
     >
       {({ loading }) => (
         <Button variant="outline" disabled={loading}>
