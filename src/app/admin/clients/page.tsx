@@ -17,17 +17,8 @@ import { ClientFormModal } from "./modalform";
 async function getData(): Promise<Client[]> {
   try {
     const clients = await getClients();
-    // Filter out invalid/legacy records
-    const validatedData = clients.map((client) => {
-      if (
-        !client.cid ||
-        !client.affiliationAddress ||
-        !["M", "F", "Other"].includes(client.sex ?? "")
-      ) {
-        return null;
-      }
-      return client;
-    }).filter((c): c is Client => c !== null);
+    // Only filter out clients with missing cid (required key)
+    const validatedData = clients.filter((client) => !!client.cid);
     return validatedData;
   } catch (error) {
     console.error("Failed to fetch clients:", error);

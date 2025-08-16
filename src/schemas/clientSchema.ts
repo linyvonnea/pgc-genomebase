@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 export const clientFormSchema = z.object({
@@ -8,8 +7,8 @@ export const clientFormSchema = z.object({
   designation: z.string().min(1, "Designation is required"),
   sex: z.enum(["F", "M", "Other"]),
   phoneNumber: z
-  .string()
-  .regex(/^\d{11}$/, "Enter a valid 11-digit number with no spaces"),
+    .string()
+    .regex(/^[0-9]{11}$/, "Enter a valid 11-digit number with no spaces"),
   affiliationAddress: z.string().min(1, "Address is required"),
 });
 
@@ -17,19 +16,18 @@ export type ClientFormData = z.infer<typeof clientSchema>;
 
 // Full schema for Firestore/admin table
 export const clientSchema = z.object({
-  affiliation: z.string().optional(),
-  affiliationAddress: z.string().optional(),
-  cid: z.string().optional(),
-  createdAt: z.date().optional(),
-  designation: z.string().optional(),
-  email: z.string().optional(),
-  haveSubmitted: z.boolean().optional(),
-  isContactPerson: z.boolean().optional(),
-  name: z.string().optional(),
-  phoneNumber: z.string().optional(),
-  pid: z.string().optional(),
-  projectName: z.string().optional(),
-  sex: z.enum(["F", "M", "Other"]),
-  year: z.number().optional()
-
+  affiliation: z.string().nullable().optional(),
+  affiliationAddress: z.string().nullable().optional(),
+  cid: z.string().nullable().optional(),
+  createdAt: z.date().or(z.string()).nullable().optional(),
+  designation: z.string().nullable().optional(),
+  email: z.string().nullable().optional(),
+  haveSubmitted: z.boolean().or(z.string()).nullable().optional(),
+  isContactPerson: z.boolean().or(z.string()).nullable().optional(),
+  name: z.string().nullable().optional(),
+  phoneNumber: z.string().nullable().optional(),
+  pid: z.string().nullable().optional(),
+  projectName: z.string().nullable().optional(),
+  sex: z.enum(["F", "M", "Other", ""]).nullable().optional(),
+  year: z.number().or(z.string()).nullable().optional(),
 });
