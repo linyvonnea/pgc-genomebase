@@ -43,7 +43,25 @@ export async function getClientById(cid: string): Promise<Client | null> {
       return null;
     }
 
-    return parsed.data;
+    // Normalize parsed.client so it matches the Client type:
+    // - convert any nullable fields that are `null` to `undefined`
+    // - convert nullable cid (null) to undefined
+    // - normalize createdAt to a Date or undefined
+    const sanitized = Object.fromEntries(
+      Object.entries(parsed.data).map(([k, v]) => [k, v === null ? undefined : v])
+    ) as any;
+
+    const client: Client = {
+      ...sanitized,
+      cid: sanitized.cid ?? undefined,
+      createdAt: sanitized.createdAt
+        ? typeof sanitized.createdAt === "string"
+          ? new Date(sanitized.createdAt)
+          : sanitized.createdAt
+        : undefined,
+    };
+
+    return client;
   } catch (error) {
     console.error("Error fetching client:", error);
     return null;
@@ -77,13 +95,39 @@ export async function getProjectById(pid: string): Promise<Project | null> {
     }
 
     // Normalize and format project fields
+    const allowedStatuses = ["Ongoing", "Cancelled", "Completed"] as const;
+    const normalizedStatus = allowedStatuses.includes(
+      parsed.data.status as any
+    )
+      ? (parsed.data.status as typeof allowedStatuses[number])
+      : undefined;
+
     const project: Project = {
       ...parsed.data,
-      fundingCategory: parsed.data.fundingCategory || undefined,
-      status: parsed.data.status || undefined,
+      fundingCategory:
+        parsed.data.fundingCategory === "External" ||
+        parsed.data.fundingCategory === "In-House"
+          ? parsed.data.fundingCategory
+          : undefined,
+      // normalize sendingInstitution to the exact allowed union values
+      sendingInstitution:
+        parsed.data.sendingInstitution === "UP System" ||
+        parsed.data.sendingInstitution === "SUC/HEI" ||
+        parsed.data.sendingInstitution === "Government" ||
+        parsed.data.sendingInstitution === "Private/Local" ||
+        parsed.data.sendingInstitution === "International" ||
+        parsed.data.sendingInstitution === "N/A"
+          ? parsed.data.sendingInstitution
+          : undefined,
+      status: normalizedStatus,
       clientNames: parsed.data.clientNames?.map((s) => s.trim()) || [],
       startDate: parsed.data.startDate
         ? new Date(parsed.data.startDate).toISOString().split("T")[0]
+        : undefined,
+      createdAt: parsed.data.createdAt
+        ? typeof parsed.data.createdAt === "string"
+          ? new Date(parsed.data.createdAt)
+          : parsed.data.createdAt
         : undefined,
     };
 
