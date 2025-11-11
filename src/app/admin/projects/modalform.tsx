@@ -101,8 +101,11 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         // Generate next project ID (PID) for the given year
         const nextPid = await getNextPid(result.data.year);
         // Prepare clean data for Firestore
+        // Exclude any parsed createdAt (which may be a string) so we don't assign an incompatible type;
+        // Firestore will set createdAt via serverTimestamp() in the mutation function.
+        const { createdAt, ...rest } = result.data as any;
         const cleanData: Project = {
-          ...result.data,
+          ...rest,
           pid: nextPid,
           year: Number(result.data.year),
           clientNames: result.data.clientNames,
@@ -121,6 +124,8 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
               ? result.data.sendingInstitution
               : "Government"
           ) as Project["sendingInstitution"],
+          // ensure createdAt matches Project type (Date | undefined); Firestore will populate this server-side
+          createdAt: undefined,
         };
         mutation.mutate(cleanData);
       } catch (err) {
