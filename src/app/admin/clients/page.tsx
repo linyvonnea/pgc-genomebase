@@ -31,7 +31,10 @@ export default function ClientPage() {
   const [data, setData] = useState<Client[]>([]);
   // Fetch data and update state
   const fetchData = async () => {
+    console.log("ClientPage.fetchData: start"); // debug
     const clients = await getData();
+    console.log("ClientPage.fetchData: fetched clients.length =", clients?.length); // debug
+    if (clients?.length) console.log("ClientPage.fetchData: first client =", clients[0]); // debug
     setData(clients);
   };
   useEffect(() => {
@@ -62,6 +65,7 @@ export default function ClientPage() {
             </DialogContent>
           </Dialog>
         </div>
+
         {/* Data Table with instant update on add/edit/delete */}
         <DataTable columns={columns} data={data} meta={{ onSuccess: fetchData }} />
       </div>

@@ -21,10 +21,7 @@ const validateClient = (data: any) => {
 
 // Table columns definition for admin/clients
 export const columns: ColumnDef<Client>[] = [
-  {
-    accessorKey: "pid",
-    header: "Project ID",
-  },
+
   { 
     accessorKey: "cid",
     header: "Client ID",
