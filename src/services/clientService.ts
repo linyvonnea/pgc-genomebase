@@ -63,37 +63,42 @@ export async function getClients(): Promise<Client[]> {
     querySnapshot.forEach((doc) => {
       const data = doc.data();
 
-      // Convert Firestore Timestamps to JS Dates
-      if (data.createdAt && typeof data.createdAt.toDate === "function") {
+      // Convert Firestore Timestamps to JS Dates if present
+      if (data?.createdAt && typeof data.createdAt.toDate === "function") {
         data.createdAt = data.createdAt.toDate();
       }
-      if (data.startDate && typeof data.startDate.toDate === "function") {
+      if (data?.startDate && typeof data.startDate.toDate === "function") {
         data.startDate = data.startDate.toDate();
       }
 
+      // Normalize nulls -> undefined for better compatibility with TS types
       const candidate = cleanNulls({
         id: doc.id,
         ...data,
       });
 
-      // Validate with Zod schema
+      // Validate with Zod but DO NOT exclude documents on validation failure.
+      // Push the parsed/cleaned object either way so all clients are returned.
       const result = clientSchema.safeParse(candidate);
 
       if (result.success) {
         const raw = result.data;
-        // Convert all nulls to undefined to match Client interface
-        const client: Client = nullsToUndefined(raw);
-        clients.push(client);
+        clients.push(nullsToUndefined(raw));
       } else {
-        // Log failed parses for debugging
-        console.error("Client validation failed:", candidate, result.error);
+        // Log details for debugging but still include the record (cleaned)
+        console.warn("Client validation failed (including raw candidate):", doc.id, result.error);
+        clients.push(nullsToUndefined(candidate));
       }
     });
 
-  console.log("Fetched clients:", clients);
-  return clients;
+    // Visible debug output in browser console to confirm fetch in deployed builds
+    console.log("getClients: fetched count =", clients.length);
+    if (clients.length) console.log("getClients: first client sample =", clients[0]);
+
+    return clients;
   } catch (error) {
-    throw new Error("Failed to fetch clients from database");
+    console.error("getClients error:", error);
+    return [];
   }
 }
 

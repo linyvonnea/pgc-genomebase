@@ -49,7 +49,7 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
     email: "",
     sex: "F",
     phoneNumber: "",
-    createdAt: new Date(),
+    createdAt: new Date(), 
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof ClientFormData, string>>>({});
@@ -103,14 +103,14 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
       try {
         // Generate next client ID
         const nextCid = await getNextCid(result.data.year);
-        const { haveSubmitted, isContactPerson, ...cleanData } = result.data;
         const clientData: Client = {
-          ...cleanData,
+          ...result.data,
           cid: nextCid,
           year: result.data.year,
           pid: selectedPid,
-          haveSubmitted: Boolean(haveSubmitted),
-          isContactPerson: Boolean(isContactPerson),
+          // normalize fields that must be boolean | undefined on the Client type
+          haveSubmitted: typeof (result.data as any).haveSubmitted === "boolean" ? (result.data as any).haveSubmitted : undefined,
+          isContactPerson: typeof (result.data as any).isContactPerson === "boolean" ? (result.data as any).isContactPerson : undefined,
         };
         await mutation.mutateAsync(clientData);
         // Update project clientNames array
