@@ -100,15 +100,17 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       try {
         // Generate next project ID (PID) for the given year
         const nextPid = await getNextPid(result.data.year);
-        // Prepare clean data for Firestore
+        // Prepare clean data for Firestore - exclude problematic properties first
+        const { createdAt, ...cleanFormData } = result.data;
         const cleanData: Project = {
-          ...result.data,
+          ...cleanFormData,
           pid: nextPid,
           year: Number(result.data.year),
           clientNames: result.data.clientNames,
           serviceRequested: result.data.serviceRequested,
           lead: result.data.lead,
           notes: result.data.notes || "",
+          createdAt: createdAt instanceof Date ? createdAt : new Date(),
           sendingInstitution: (
             [
               "UP System",

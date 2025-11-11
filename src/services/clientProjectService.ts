@@ -43,7 +43,7 @@ export async function getClientById(cid: string): Promise<Client | null> {
       return null;
     }
 
-    return parsed.data;
+    return parsed.data as Client;
   } catch (error) {
     console.error("Error fetching client:", error);
     return null;
@@ -77,10 +77,13 @@ export async function getProjectById(pid: string): Promise<Project | null> {
     }
 
     // Normalize and format project fields
+    const { createdAt, fundingCategory, status, sendingInstitution, ...restData } = parsed.data;
     const project: Project = {
-      ...parsed.data,
-      fundingCategory: parsed.data.fundingCategory || undefined,
-      status: parsed.data.status || undefined,
+      ...restData,
+      fundingCategory: (fundingCategory as Project["fundingCategory"]) || undefined,
+      status: (status as Project["status"]) || undefined,
+      sendingInstitution: (sendingInstitution as Project["sendingInstitution"]) || undefined,
+      createdAt: createdAt instanceof Date ? createdAt : createdAt ? new Date(createdAt) : undefined,
       clientNames: parsed.data.clientNames?.map((s) => s.trim()) || [],
       startDate: parsed.data.startDate
         ? new Date(parsed.data.startDate).toISOString().split("T")[0]

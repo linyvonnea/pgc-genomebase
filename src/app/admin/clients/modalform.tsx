@@ -103,11 +103,14 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
       try {
         // Generate next client ID
         const nextCid = await getNextCid(result.data.year);
+        const { haveSubmitted, isContactPerson, ...cleanData } = result.data;
         const clientData: Client = {
-          ...result.data,
+          ...cleanData,
           cid: nextCid,
           year: result.data.year,
           pid: selectedPid,
+          haveSubmitted: Boolean(haveSubmitted),
+          isContactPerson: Boolean(isContactPerson),
         };
         await mutation.mutateAsync(clientData);
         // Update project clientNames array
