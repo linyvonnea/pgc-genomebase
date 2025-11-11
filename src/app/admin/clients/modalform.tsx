@@ -49,7 +49,7 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
     email: "",
     sex: "F",
     phoneNumber: "",
-    createdAt: new Date(),
+    createdAt: new Date(), 
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof ClientFormData, string>>>({});
