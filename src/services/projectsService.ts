@@ -82,16 +82,43 @@ export async function getProjects(): Promise<Project[]> {
       if (result.success) {
         const raw = result.data;
         // Normalize and format project fields
+        const allowedInstitutions = [
+          "UP System",
+          "SUC/HEI",
+          "Government",
+          "Private/Local",
+          "International",
+          "N/A",
+        ] as const;
+
         const project: Project = {
           ...raw,
-          fundingCategory: raw.fundingCategory === "" ? undefined : raw.fundingCategory,
+          createdAt:
+            raw.createdAt instanceof Date
+              ? raw.createdAt
+              : raw.createdAt
+              ? new Date(raw.createdAt)
+              : undefined,
+          fundingCategory:
+            raw.fundingCategory === "External" || raw.fundingCategory === "In-House"
+              ? raw.fundingCategory
+              : undefined,
           startDate: raw.startDate
             ? formatDateToMMDDYYYY(new Date(raw.startDate))
             : undefined,
           clientNames: raw.clientNames
             ? raw.clientNames.map((s) => s.trim())
             : undefined,
-          status: raw.status === "" ? undefined : raw.status,
+          status:
+            raw.status === "Ongoing" ||
+            raw.status === "Cancelled" ||
+            raw.status === "Completed"
+              ? raw.status
+              : undefined,
+          sendingInstitution:
+            allowedInstitutions.includes(raw.sendingInstitution as typeof allowedInstitutions[number])
+              ? (raw.sendingInstitution as typeof allowedInstitutions[number])
+              : undefined,
         };
         projects.push(project);
       } else {
