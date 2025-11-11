@@ -43,7 +43,33 @@ export async function getClientById(cid: string): Promise<Client | null> {
       return null;
     }
 
-    return parsed.data;
+    // Convert null values to undefined to match Client type
+    const client: Client = {
+      ...parsed.data,
+      cid: parsed.data.cid ?? undefined,
+      name: parsed.data.name ?? undefined,
+      email: parsed.data.email ?? undefined,
+      affiliation: parsed.data.affiliation ?? undefined,
+      designation: parsed.data.designation ?? undefined,
+      sex: parsed.data.sex ?? undefined,
+      phoneNumber: parsed.data.phoneNumber ?? undefined,
+      affiliationAddress: parsed.data.affiliationAddress ?? undefined,
+      pid: parsed.data.pid ?? undefined,
+      createdAt: parsed.data.createdAt ?? undefined,
+      haveSubmitted: typeof parsed.data.haveSubmitted === 'boolean' 
+        ? parsed.data.haveSubmitted 
+        : parsed.data.haveSubmitted === 'true' ? true 
+        : parsed.data.haveSubmitted === 'false' ? false 
+        : undefined,
+      isContactPerson: typeof parsed.data.isContactPerson === 'boolean' 
+        ? parsed.data.isContactPerson 
+        : parsed.data.isContactPerson === 'true' ? true 
+        : parsed.data.isContactPerson === 'false' ? false 
+        : undefined,
+      year: typeof parsed.data.year === 'number' ? parsed.data.year : undefined,
+    };
+
+    return client;
   } catch (error) {
     console.error("Error fetching client:", error);
     return null;
@@ -79,8 +105,20 @@ export async function getProjectById(pid: string): Promise<Project | null> {
     // Normalize and format project fields
     const project: Project = {
       ...parsed.data,
-      fundingCategory: parsed.data.fundingCategory || undefined,
-      status: parsed.data.status || undefined,
+      createdAt: parsed.data.createdAt instanceof Date 
+        ? parsed.data.createdAt 
+        : parsed.data.createdAt 
+        ? new Date(parsed.data.createdAt) 
+        : undefined,
+      fundingCategory: parsed.data.fundingCategory === "External" || parsed.data.fundingCategory === "In-House" 
+        ? parsed.data.fundingCategory 
+        : undefined,
+      status: parsed.data.status === "Ongoing" || parsed.data.status === "Cancelled" || parsed.data.status === "Completed"
+        ? parsed.data.status
+        : undefined,
+      sendingInstitution: ["UP System", "SUC/HEI", "Government", "Private/Local", "International", "N/A"].includes(parsed.data.sendingInstitution!)
+        ? parsed.data.sendingInstitution as "UP System" | "SUC/HEI" | "Government" | "Private/Local" | "International" | "N/A"
+        : undefined,
       clientNames: parsed.data.clientNames?.map((s) => s.trim()) || [],
       startDate: parsed.data.startDate
         ? new Date(parsed.data.startDate).toISOString().split("T")[0]
