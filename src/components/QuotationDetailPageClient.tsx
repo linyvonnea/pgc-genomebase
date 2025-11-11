@@ -1,4 +1,3 @@
-// src/components/QuotationDetailPageClient.tsx
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
@@ -73,8 +72,8 @@ export default function QuotationDetailPageClient() {
                 </Badge>
               </div>
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => router.push("/admin/quotations")}
               className="hover:bg-slate-50 border-slate-200"
             >
@@ -89,7 +88,7 @@ export default function QuotationDetailPageClient() {
             <div className="w-2 h-2 bg-gradient-to-r from-[#F69122] to-[#B9273A] rounded-full"></div>
             Client Information
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
               <div className="flex flex-col">
@@ -97,19 +96,19 @@ export default function QuotationDetailPageClient() {
                 <span className="text-sm font-medium text-slate-800">{name}</span>
                 <span className="text-xs text-slate-600">{email}</span>
               </div>
-              
+
               <div className="flex flex-col">
                 <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Institution</span>
                 <span className="text-sm font-medium text-slate-800">{institution}</span>
               </div>
             </div>
-            
+
             <div className="space-y-3">
               <div className="flex flex-col">
                 <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Designation</span>
                 <span className="text-sm font-medium text-slate-800">{designation}</span>
               </div>
-              
+
               <div className="flex flex-col">
                 <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Date Issued</span>
                 <span className="text-sm font-medium text-slate-800">
@@ -124,8 +123,8 @@ export default function QuotationDetailPageClient() {
               <span className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Categories</span>
               <div className="flex items-center gap-2 flex-wrap">
                 {categories.map((cat) => (
-                  <Badge 
-                    key={cat} 
+                  <Badge
+                    key={cat}
                     className="capitalize bg-gradient-to-r from-[#166FB5]/10 to-[#4038AF]/10 text-[#166FB5] border-[#166FB5]/20 hover:bg-[#166FB5]/20"
                   >
                     {cat}
@@ -142,20 +141,20 @@ export default function QuotationDetailPageClient() {
             <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#6E308E] rounded-full"></div>
             Financial Summary
           </h2>
-          
+
           <div className="space-y-3">
             <div className="flex justify-between items-center py-2">
               <span className="text-sm text-slate-600">Subtotal</span>
               <span className="font-medium text-slate-800">₱{subtotal.toLocaleString()}</span>
             </div>
-            
+
             {isInternal && (
               <div className="flex justify-between items-center py-2 bg-green-50/50 -mx-2 px-2 rounded-lg">
                 <span className="text-sm text-green-700">Discount (12%)</span>
                 <span className="font-medium text-green-700">-₱{discount.toLocaleString()}</span>
               </div>
             )}
-            
+
             <div className="border-t border-slate-100 pt-3">
               <div className="flex justify-between items-center">
                 <span className="text-lg font-semibold text-slate-800">Total</span>
@@ -173,7 +172,7 @@ export default function QuotationDetailPageClient() {
             <div className="w-2 h-2 bg-gradient-to-r from-[#4038AF] to-[#166FB5] rounded-full"></div>
             Preparation Details
           </h2>
-          
+
           <div className="flex flex-col">
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Prepared By</span>
             <span className="text-sm font-medium text-slate-800">{preparedByText}</span>
@@ -187,7 +186,7 @@ export default function QuotationDetailPageClient() {
             Generate PDF Document
           </h2>
           <p className="text-sm text-slate-600 mb-4">Download the official quotation document</p>
-          
+
           <DownloadButtonSection
             referenceNumber={referenceNumber as string}
             services={services}
@@ -198,6 +197,10 @@ export default function QuotationDetailPageClient() {
                 ? { name: preparedBy, position: "—" }
                 : preparedBy
             }
+            // ✅ pass Firestore numbers so PDF matches on migrated quotes
+            subtotal={subtotal}
+            discount={discount}
+            total={total}
           />
         </div>
       </div>

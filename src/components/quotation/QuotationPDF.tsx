@@ -50,18 +50,26 @@ type ServiceLike = SelectedService & {
   name: string;
 };
 
+type TotalsOverride = {
+  subtotal?: number;
+  discount?: number;
+  total?: number;
+};
+
 export function QuotationPDF({
   services,
   clientInfo,
   referenceNumber,
   useInternalPrice,
   preparedBy,
+  totalsOverride, // <-- NEW (optional)
 }: {
   services: SelectedService[];
   clientInfo: { name: string; institution: string; designation: string; email: string };
   referenceNumber: string;
   useInternalPrice: boolean;
   preparedBy: { name: string; position: string };
+  totalsOverride?: TotalsOverride;
 }) {
   const safeServices: ServiceLike[] = (services ?? []).filter(
     (s): s is ServiceLike =>
@@ -75,10 +83,15 @@ export function QuotationPDF({
     return acc;
   }, {});
 
-  // ✅ Correct policy: discount = 12% of subtotal (ALL lines)
-  const subtotal = r2(safeServices.reduce((sum, s) => sum + s.price * s.quantity, 0));
-  const discount = useInternalPrice ? r2(subtotal * 0.12) : 0;
-  const total = r2(subtotal - discount);
+  // Default math (new quotes): 12% of subtotal if internal
+  const computedSubtotal = r2(safeServices.reduce((sum, s) => sum + s.price * s.quantity, 0));
+  const computedDiscount = useInternalPrice ? r2(computedSubtotal * 0.12) : 0;
+  const computedTotal = r2(computedSubtotal - computedDiscount);
+
+  // ✅ If overrides are provided (migrated quotes), use them
+  const subtotal = totalsOverride?.subtotal ?? computedSubtotal;
+  const discount = totalsOverride?.discount ?? computedDiscount;
+  const total = totalsOverride?.total ?? computedTotal;
 
   return (
     <Document>
@@ -136,7 +149,7 @@ export function QuotationPDF({
         <View style={styles.summary}>
           <Text>Subtotal: PHP {formatMoney(subtotal)}</Text>
           {useInternalPrice && discount > 0 ? (
-            <Text>Discount (12% of subtotal): -PHP {formatMoney(discount)}</Text>
+            <Text>Less 12% discount (Internal Client): -PHP {formatMoney(discount)}</Text>
           ) : null}
           <Text style={{ fontWeight: "bold" }}>TOTAL: PHP {formatMoney(total)}</Text>
         </View>

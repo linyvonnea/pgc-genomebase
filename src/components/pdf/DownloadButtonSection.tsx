@@ -1,7 +1,5 @@
-// src/components/pdf/DownloadButtonSection.tsx
 "use client";
 
-import dynamic from "next/dynamic";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,16 +27,27 @@ interface Props {
     name: string;
     position: string;
   };
+  /** Optional overrides (from Firestore) for migrated quotes */
+  subtotal?: number;
+  discount?: number;
+  total?: number;
 }
 
 export default function DownloadButtonSection(props: Props) {
   const [open, setOpen] = useState(false);
+
+  const { subtotal, discount, total } = props;
+  const totalsOverride =
+    typeof subtotal === "number" && typeof total === "number"
+      ? { subtotal, discount: discount ?? 0, total }
+      : undefined;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="default">📄 Preview Quotation</Button>
       </DialogTrigger>
+
       <DialogContent
         className="max-w-5xl w-full h-[90vh] flex flex-col"
         aria-describedby="pdf-preview-desc"
@@ -46,19 +55,20 @@ export default function DownloadButtonSection(props: Props) {
         <div id="pdf-preview-desc" className="sr-only">
           This is a preview of the generated quotation PDF.
         </div>
+
         <DialogHeader>
           <DialogTitle>Quotation Preview</DialogTitle>
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden border">
           <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
-            <QuotationPDF {...props} />
+            <QuotationPDF {...props} totalsOverride={totalsOverride} />
           </PDFViewer>
         </div>
 
         <div className="pt-4 flex justify-end">
           <PDFDownloadLink
-            document={<QuotationPDF {...props} />}
+            document={<QuotationPDF {...props} totalsOverride={totalsOverride} />}
             fileName={`Quotation-${props.referenceNumber}.pdf`}
           >
             {({ loading }) => (

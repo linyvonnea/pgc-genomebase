@@ -3,8 +3,10 @@ import { db } from "@/lib/firebase";
 
 function calculateTotalIncome(slips: any[]) {
   return slips.reduce((sum, slip) => {
-    if (slip.status === "paid") {
-      return sum + (parseFloat(slip.total) || 0);
+    const status = slip.status ? slip.status.toString().toLowerCase().trim() : '';
+    if (status === "paid") {
+      const total = parseFloat(slip.total) || 0;
+      return sum + total;
     }
     return sum;
   }, 0);
@@ -24,11 +26,15 @@ export async function fetchAllData(setters: {
     getDocs(collection(db, "trainings"))
   ]);
   const mapDocs = (snap: any) => snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+  
+  const chargeSlips = mapDocs(cs);
+  const totalIncome = calculateTotalIncome(chargeSlips);
+  
   setters.setFilteredProjects(mapDocs(pr));
   setters.setFilteredClients(mapDocs(cl));
-  setters.setFilteredChargeSlips(mapDocs(cs));
+  setters.setFilteredChargeSlips(chargeSlips);
   setters.setFilteredTrainings(mapDocs(tr));
-  setters.setTotalIncome(calculateTotalIncome(mapDocs(cs)));
+  setters.setTotalIncome(totalIncome);
 }
 
 export async function fetchFilteredData(
@@ -45,18 +51,34 @@ export async function fetchFilteredData(
   const [pr, cl, cs, tr] = await Promise.all([
     getDocs(query(collection(db, "projects"), where("startDate", ">=", startTS), where("startDate", "<=", endTS))),
     getDocs(query(collection(db, "clients"), where("createdAt", ">=", startTS), where("createdAt", "<=", endTS))),
-    getDocs(query(
-      collection(db, "chargeSlips"),
-      where("datePaid", ">=", startTS),
-      where("datePaid", "<=", endTS),
-      where("status", "==", "paid")
-    )),
+    getDocs(collection(db, "chargeSlips")),
     getDocs(query(collection(db, "trainings"), where("dateConducted", ">=", startTS), where("dateConducted", "<=", endTS)))
   ]);
   const mapDocs = (snap: any) => snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
+  
+  const allChargeSlips = mapDocs(cs);
+  
+  const chargeSlips = allChargeSlips.filter((slip: any) => {
+    const status = slip.status ? slip.status.toString().toLowerCase().trim() : '';
+    const isPaid = status === "paid";
+    
+    if (!isPaid) return false;
+    
+    if (slip.datePaid) {
+      const datePaid = slip.datePaid.toDate ? slip.datePaid.toDate() : new Date(slip.datePaid);
+      const startDate = startTS.toDate();
+      const endDate = endTS.toDate();
+      return datePaid >= startDate && datePaid <= endDate;
+    }
+    
+    return false;
+  });
+  
+  const totalIncome = calculateTotalIncome(chargeSlips);
+  
   setters.setFilteredProjects(mapDocs(pr));
   setters.setFilteredClients(mapDocs(cl));
-  setters.setFilteredChargeSlips(mapDocs(cs));
+  setters.setFilteredChargeSlips(chargeSlips); 
   setters.setFilteredTrainings(mapDocs(tr));
-  setters.setTotalIncome(calculateTotalIncome(mapDocs(cs)));
+  setters.setTotalIncome(totalIncome);
 }
