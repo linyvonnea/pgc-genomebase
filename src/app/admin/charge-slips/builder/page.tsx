@@ -31,9 +31,11 @@ export default function ChargeSlipBuilderPage() {
         clientId={clientId}
         projectId={projectId}
         clientData={clientData || null}
-        projectData={projectData || null}  // allow empty project
+        projectData={projectData || null}  //allow empty project
         onSubmit={(data) => console.log("Form submitted:", data)}
       />
     </main>
   );
 }
+
+//test change
