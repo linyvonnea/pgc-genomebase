@@ -30,8 +30,8 @@ export default function ChargeSlipBuilderPage() {
       <ChargeSlipBuilder
         clientId={clientId}
         projectId={projectId}
-        clientData={clientData || null}
-        projectData={projectData || null}  // allow empty project
+        clientData={clientData}
+        projectData={projectData}
         onSubmit={(data) => console.log("Form submitted:", data)}
       />
     </main>
