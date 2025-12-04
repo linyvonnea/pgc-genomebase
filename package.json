@@ -36,7 +36,7 @@
     "dotenv": "^17.1.0",
     "file-saver": "^2.0.5",
     "firebase": "^11.10.0",
-    "firebase-admin": "^13.4.0",
+    "firebase-admin": "^13.6.0",
     "framer-motion": "^12.23.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
