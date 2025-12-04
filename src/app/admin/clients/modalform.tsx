@@ -111,6 +111,7 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
           // normalize fields that must be boolean | undefined on the Client type
           haveSubmitted: typeof (result.data as any).haveSubmitted === "boolean" ? (result.data as any).haveSubmitted : null,
           isContactPerson: typeof (result.data as any).isContactPerson === "boolean" ? (result.data as any).isContactPerson : null,
+          
         };
         await mutation.mutateAsync(clientData);
         // Update project clientNames array
