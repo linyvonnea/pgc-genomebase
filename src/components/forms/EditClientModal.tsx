@@ -197,19 +197,19 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="affiliationAddress"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Affiliation Address</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter affiliation address" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+//            <FormField
+//              control={form.control}
+//              name="affiliationAddress"
+//              render={({ field }) => (
+//                <FormItem>
+//                  <FormLabel>Affiliation Address</FormLabel>
+//                  <FormControl>
+//                    <Input placeholder="Enter affiliation address" {...field} />
+//                  </FormControl>
+//                  <FormMessage />
+//                </FormItem>
+//              )}
+//            />
            
             <div className="flex justify-between items-center pt-4">
               <button
