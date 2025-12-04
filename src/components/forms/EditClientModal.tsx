@@ -61,7 +61,6 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
     },
   });
 
-  
   const onSubmit = async (data: AdminClientData) => {
     setIsLoading(true);
     try {
