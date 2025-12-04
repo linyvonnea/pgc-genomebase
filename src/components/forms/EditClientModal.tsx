@@ -56,7 +56,7 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
       designation: client.designation || "",
       sex: client.sex || "M",
       phoneNumber: client.phoneNumber || "",
-      affiliationAddress: client.affiliationAddress || "",
+      //affiliationAddress: client.affiliationAddress || "",
       pid: client.pid || "",
     },
   });
@@ -197,7 +197,8 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
                 </FormItem>
               )}
             />
-//            <FormField
+
+//          <FormField
 //              control={form.control}
 //              name="affiliationAddress"
 //              render={({ field }) => (
