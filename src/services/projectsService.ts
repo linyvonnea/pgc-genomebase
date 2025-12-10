@@ -102,26 +102,26 @@ export async function getProjects(): Promise<Project[]> {
           //    : raw.createdAt
           //    ? new Date(raw.createdAt)
           //    : undefined,
-          fundingCategory:
-            raw.fundingCategory === "External" || raw.fundingCategory === "In-House"
-              ? raw.fundingCategory
-              : undefined,
+          //fundingCategory:
+          //  raw.fundingCategory === "External" || raw.fundingCategory === "In-House"
+          //    ? raw.fundingCategory
+          //    : undefined,
           //startDate: raw.startDate
           //  ? formatDateToMMDDYYYY(new Date(raw.startDate))
           //  : undefined,
-          clientNames: raw.clientNames
-            ? raw.clientNames.map((s) => s.trim())
-            : undefined,
-          status:
-            raw.status === "Ongoing" ||
-            raw.status === "Cancelled" ||
-            raw.status === "Completed"
-              ? raw.status
-              : undefined,
-          sendingInstitution:
-            allowedInstitutions.includes(raw.sendingInstitution as typeof allowedInstitutions[number])
-              ? (raw.sendingInstitution as typeof allowedInstitutions[number])
-              : undefined,
+          //clientNames: raw.clientNames
+          //  ? raw.clientNames.map((s) => s.trim())
+          //  : undefined,
+          //status:
+          //  raw.status === "Ongoing" ||
+          //  raw.status === "Cancelled" ||
+          //  raw.status === "Completed"
+          //    ? raw.status
+          //    : undefined,
+          //sendingInstitution:
+          //  allowedInstitutions.includes(raw.sendingInstitution as typeof allowedInstitutions[number])
+          //    ? (raw.sendingInstitution as typeof allowedInstitutions[number])
+          //    : undefined,
         };
         projects.push(project);
       } else {
