@@ -34,6 +34,7 @@ export async function getProjects(): Promise<Project[]> {
 
     querySnapshot.forEach((doc) => {
       const data = doc.data();
+}
 
       // Convert Firestore Timestamps to JS Dates
       if (data.createdAt && typeof data.createdAt.toDate === "function") {
@@ -95,32 +96,32 @@ export async function getProjects(): Promise<Project[]> {
 
         const project: Project = {
           ...raw,
-          createdAt:
-            raw.createdAt instanceof Date
-              ? raw.createdAt
-              : raw.createdAt
-              ? new Date(raw.createdAt)
-              : undefined,
-          fundingCategory:
-            raw.fundingCategory === "External" || raw.fundingCategory === "In-House"
-              ? raw.fundingCategory
-              : undefined,
-          startDate: raw.startDate
-            ? formatDateToMMDDYYYY(new Date(raw.startDate))
-            : undefined,
-          clientNames: raw.clientNames
-            ? raw.clientNames.map((s) => s.trim())
-            : undefined,
-          status:
-            raw.status === "Ongoing" ||
-            raw.status === "Cancelled" ||
-            raw.status === "Completed"
-              ? raw.status
-              : undefined,
-          sendingInstitution:
-            allowedInstitutions.includes(raw.sendingInstitution as typeof allowedInstitutions[number])
-              ? (raw.sendingInstitution as typeof allowedInstitutions[number])
-              : undefined,
+          //createdAt:
+          //  raw.createdAt instanceof Date
+          //    ? raw.createdAt
+          //    : raw.createdAt
+          //    ? new Date(raw.createdAt)
+          //    : undefined,
+          //fundingCategory:
+          //  raw.fundingCategory === "External" || raw.fundingCategory === "In-House"
+          //    ? raw.fundingCategory
+          //    : undefined,
+          //startDate: raw.startDate
+          //  ? formatDateToMMDDYYYY(new Date(raw.startDate))
+          //  : undefined,
+          //clientNames: raw.clientNames
+          //  ? raw.clientNames.map((s) => s.trim())
+          //  : undefined,
+          //status:
+          //  raw.status === "Ongoing" ||
+          //  raw.status === "Cancelled" ||
+          //  raw.status === "Completed"
+          //    ? raw.status
+          //    : undefined,
+          //sendingInstitution:
+          //  allowedInstitutions.includes(raw.sendingInstitution as typeof allowedInstitutions[number])
+          //    ? (raw.sendingInstitution as typeof allowedInstitutions[number])
+          //    : undefined,
         };
         projects.push(project);
       } else {
