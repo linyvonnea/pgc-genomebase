@@ -27,7 +27,7 @@ function formatDateToMMDDYYYY(date: Date): string {
 export async function getProjects(): Promise<Project[]> {
   try {
     const projectsRef = collection(db, "projects");
-    const projectsQuery = query(projectsRef, orderBy("pid", "desc"));
+    const projectsQuery = query(projectsRef, orderBy("startDate", "desc"));
     const querySnapshot = await getDocs(projectsQuery);
 
     const projects: Project[] = [];
