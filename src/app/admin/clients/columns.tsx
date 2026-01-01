@@ -38,10 +38,10 @@ export const columns: ColumnDef<Client>[] = [
     accessorKey: "affiliation",
     header: "Affiliation",
   },
-  //{
-  //  accessorKey: "affiliationAddress",
-  //  header: "Affiliation Address",
-  //},
+  {
+    accessorKey: "affiliationAddress",
+    header: "Affiliation Address",
+  },
   {
     accessorKey: "designation",
     header: "Designation",
