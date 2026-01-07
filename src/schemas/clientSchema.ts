@@ -12,7 +12,7 @@ export const clientFormSchema = z.object({
   affiliationAddress: z.string().min(1, "Address is required"),
 });
 
-export type ClientFormData = z.infer<typeof clientSchema>;
+export type ClientFormData = z.infer<typeof clientFormSchema>;
 
 // Full schema for Firestore/admin table
 export const clientSchema = z.object({
