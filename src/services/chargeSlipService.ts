@@ -157,7 +157,7 @@ export async function getChargeSlipsByProjectId(projectId: string): Promise<Char
     query(
       collection(db, CHARGE_SLIPS_COLLECTION),
       where("projectId", "==", projectId),
-      orderBy("chargeSlipNumber", "desc")
+      //orderBy("dateIssued", "desc")
     )
   );
 
