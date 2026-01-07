@@ -27,13 +27,14 @@ function formatDateToMMDDYYYY(date: Date): string {
 export async function getProjects(): Promise<Project[]> {
   try {
     const projectsRef = collection(db, "projects");
-    const projectsQuery = query(projectsRef, orderBy("createdAt", "desc"));
+    const projectsQuery = query(projectsRef, orderBy("startDate", "desc"));
     const querySnapshot = await getDocs(projectsQuery);
 
     const projects: Project[] = [];
 
     querySnapshot.forEach((doc) => {
       const data = doc.data();
+}
 
       // Convert Firestore Timestamps to JS Dates
       if (data.createdAt && typeof data.createdAt.toDate === "function") {
@@ -67,6 +68,7 @@ export async function getProjects(): Promise<Project[]> {
                 "Retail Services",
                 "Equipment Use",
                 "Bioinformatics Analysis",
+                "N/A"
               ].includes(val) && arr.indexOf(val) === idx
           );
       }
@@ -77,7 +79,8 @@ export async function getProjects(): Promise<Project[]> {
       };
 
       // Validate with Zod schema
-      const result = projectSchema.safeParse(candidate);
+      //const result = projectSchema.safeParse(candidate);
+      const result = projectSchema.strip().safeParse(candidate);
 
       if (result.success) {
         const raw = result.data;
@@ -93,32 +96,32 @@ export async function getProjects(): Promise<Project[]> {
 
         const project: Project = {
           ...raw,
-          createdAt:
-            raw.createdAt instanceof Date
-              ? raw.createdAt
-              : raw.createdAt
-              ? new Date(raw.createdAt)
-              : undefined,
-          fundingCategory:
-            raw.fundingCategory === "External" || raw.fundingCategory === "In-House"
-              ? raw.fundingCategory
-              : undefined,
-          startDate: raw.startDate
-            ? formatDateToMMDDYYYY(new Date(raw.startDate))
-            : undefined,
-          clientNames: raw.clientNames
-            ? raw.clientNames.map((s) => s.trim())
-            : undefined,
-          status:
-            raw.status === "Ongoing" ||
-            raw.status === "Cancelled" ||
-            raw.status === "Completed"
-              ? raw.status
-              : undefined,
-          sendingInstitution:
-            allowedInstitutions.includes(raw.sendingInstitution as typeof allowedInstitutions[number])
-              ? (raw.sendingInstitution as typeof allowedInstitutions[number])
-              : undefined,
+          //createdAt:
+          //  raw.createdAt instanceof Date
+          //    ? raw.createdAt
+          //    : raw.createdAt
+          //    ? new Date(raw.createdAt)
+          //    : undefined,
+          //fundingCategory:
+          //  raw.fundingCategory === "External" || raw.fundingCategory === "In-House"
+          //    ? raw.fundingCategory
+          //    : undefined,
+          //startDate: raw.startDate
+          //  ? formatDateToMMDDYYYY(new Date(raw.startDate))
+          //  : undefined,
+          //clientNames: raw.clientNames
+          //  ? raw.clientNames.map((s) => s.trim())
+          //  : undefined,
+          //status:
+          //  raw.status === "Ongoing" ||
+          //  raw.status === "Cancelled" ||
+          //  raw.status === "Completed"
+          //    ? raw.status
+          //    : undefined,
+          //sendingInstitution:
+          //  allowedInstitutions.includes(raw.sendingInstitution as typeof allowedInstitutions[number])
+          //    ? (raw.sendingInstitution as typeof allowedInstitutions[number])
+          //    : undefined,
         };
         projects.push(project);
       } else {
