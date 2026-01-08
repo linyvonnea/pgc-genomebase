@@ -25,13 +25,7 @@ const safeTimestamp = (value: any) =>
 
 export async function getAllChargeSlips(): Promise<ChargeSlipRecord[]> {
   const snapshot = await getDocs(
-<<<<<<< HEAD
-    query(collection(db, CHARGE_SLIPS_COLLECTION),
-    orderBy("chargeSlipNumber", "desc"))
-=======
-    query(collection(db, CHARGE_SLIPS_COLLECTION)
-    //orderBy("chargeSlipNumber", "desc"))
->>>>>>> bc6fd64d2bd20b8916cea99b5bc31b43b7901744
+    query(collection(db, CHARGE_SLIPS_COLLECTION), orderBy("dateIssued", "desc"))
   );
 
   return snapshot.docs.map((docSnap) => {
@@ -124,8 +118,7 @@ export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRe
   if ("notes" in updates) updatedData.notes = updates.notes;
 
   if ("dateIssued" in updates) {
-    // updatedData.dateIssued = safeTimestamp(updates.dateIssued);
-     updatedData.dateIssued = toISOStringSafe(updates.dateIssued) ?? new Date().toISOString();
+    updatedData.dateIssued = safeTimestamp(updates.dateIssued);
   }
 
   if ("dateOfOR" in updates) {
@@ -163,12 +156,8 @@ export async function getChargeSlipsByProjectId(projectId: string): Promise<Char
   const snapshot = await getDocs(
     query(
       collection(db, CHARGE_SLIPS_COLLECTION),
-<<<<<<< HEAD
-      where("projectId", "==", projectId), orderBy("dateIssued", "desc")
-=======
-      where("projectId", "==", projectId)
-      //orderBy("dateIssued", "desc")
->>>>>>> bc6fd64d2bd20b8916cea99b5bc31b43b7901744
+      where("projectId", "==", projectId),
+      orderBy("dateIssued", "desc")
     )
   );
 
