@@ -119,7 +119,8 @@ export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRe
   if ("notes" in updates) updatedData.notes = updates.notes;
 
   if ("dateIssued" in updates) {
-    updatedData.dateIssued = safeTimestamp(updates.dateIssued);
+    // updatedData.dateIssued = safeTimestamp(updates.dateIssued);
+     updatedData.dateIssued = toISOStringSafe(updates.dateIssued) ?? new Date().toISOString();
   }
 
   if ("dateOfOR" in updates) {
