@@ -25,8 +25,13 @@ const safeTimestamp = (value: any) =>
 
 export async function getAllChargeSlips(): Promise<ChargeSlipRecord[]> {
   const snapshot = await getDocs(
+<<<<<<< HEAD
     query(collection(db, CHARGE_SLIPS_COLLECTION),
     orderBy("chargeSlipNumber", "desc"))
+=======
+    query(collection(db, CHARGE_SLIPS_COLLECTION)
+    //orderBy("chargeSlipNumber", "desc"))
+>>>>>>> bc6fd64d2bd20b8916cea99b5bc31b43b7901744
   );
 
   return snapshot.docs.map((docSnap) => {
@@ -158,7 +163,12 @@ export async function getChargeSlipsByProjectId(projectId: string): Promise<Char
   const snapshot = await getDocs(
     query(
       collection(db, CHARGE_SLIPS_COLLECTION),
+<<<<<<< HEAD
       where("projectId", "==", projectId), orderBy("dateIssued", "desc")
+=======
+      where("projectId", "==", projectId)
+      //orderBy("dateIssued", "desc")
+>>>>>>> bc6fd64d2bd20b8916cea99b5bc31b43b7901744
     )
   );
 
