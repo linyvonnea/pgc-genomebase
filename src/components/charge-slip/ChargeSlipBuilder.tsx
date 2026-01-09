@@ -180,6 +180,7 @@ export default function ChargeSlipBuilder({
         {services.map((item) => {
           const isSelected = selectedServices.find((s) => s.id === item.id);
           const quantity = isSelected?.quantity ?? "";
+          const price = isSelected?.price ?? 0;
           const amount =
             isSelected && typeof quantity === "number"
               ? item.price * quantity
@@ -201,7 +202,7 @@ export default function ChargeSlipBuilder({
                   type="number"
                   min={0}
                   step="0.01"
-                  value={isSelected?.price ?? item.price}
+                  value={isSelected ? price : ""}
                   disabled={!isSelected}
                   onChange={(e) =>
                     updatePrice(
