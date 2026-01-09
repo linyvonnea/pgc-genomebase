@@ -124,7 +124,7 @@ export default function ChargeSlipBuilder({
       prev.map((svc) => (svc.id === id ? { ...svc, quantity: qty } : svc))
     );
   };
-
+// for new price textbox
   const updatePrice = (id: string, price: number | "") => {
     setSelectedServices((prev) =>
       prev.map((svc) =>
@@ -185,7 +185,7 @@ export default function ChargeSlipBuilder({
             isSelected && typeof quantity === "number"
               ? item.price * quantity
               : 0;
-
+// for new price textbox
           return (
             <TableRow key={item.id}>
               <TableCell>
