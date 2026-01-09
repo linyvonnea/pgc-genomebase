@@ -201,14 +201,15 @@ export default function ChargeSlipBuilder({
                 <Input
                   type="number"
                   min={0}
-                  value={price}
+                  step="0.01"
+                  value={isSelected?.price ?? item.price}
+                  disabled={!isSelected}
                   onChange={(e) =>
                     updatePrice(
                       item.id,
                       e.target.value === "" ? "" : +e.target.value
                     )
                   }
-                  disabled={!isSelected}
                 />
               </TableCell>
               <TableCell>
