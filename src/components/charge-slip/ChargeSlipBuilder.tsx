@@ -126,14 +126,14 @@ export default function ChargeSlipBuilder({
   };
 
   const updatePrice = (id: string, price: number | "") => {
-  setSelectedServices((prev) =>
-    prev.map((svc) =>
-      svc.id === id
-        ? { ...svc, price: price === "" ? 0 : price }
-        : svc
-    )
-  );
-};
+    setSelectedServices((prev) =>
+      prev.map((svc) =>
+        svc.id === id
+          ? { ...svc, price: price === "" ? 0 : price }
+          : svc
+      )
+    );
+  };
 
   const cleanedServices: StrictSelectedService[] = selectedServices
     .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
@@ -180,6 +180,7 @@ export default function ChargeSlipBuilder({
         {services.map((item) => {
           const isSelected = selectedServices.find((s) => s.id === item.id);
           const quantity = isSelected?.quantity ?? "";
+          const price = isSelected?.price ?? 0;
           const amount =
             isSelected && typeof quantity === "number"
               ? item.price * quantity
