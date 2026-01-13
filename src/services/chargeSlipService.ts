@@ -156,8 +156,8 @@ export async function getChargeSlipsByProjectId(projectId: string): Promise<Char
   const snapshot = await getDocs(
     query(
       collection(db, CHARGE_SLIPS_COLLECTION),
-      where("projectId", "==", projectId),
-      orderBy("chargeSlipNumber", "desc")
+      where("projectId", "==", projectId)
+      //orderBy("dateIssued", "desc")
     )
   );
 
