@@ -53,8 +53,9 @@ import {
 import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import useAuth from "@/hooks/useAuth";
 
-export type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
+export type EditableSelectedService = Omit<StrictSelectedService, "quantity"  | "price"> & {
   quantity: number | "";
+  price: number;
 };
 
 export default function ChargeSlipBuilder({
@@ -115,7 +116,7 @@ export default function ChargeSlipBuilder({
     setSelectedServices((prev) => {
       const exists = prev.find((s) => s.id === id);
       if (exists) return prev.filter((s) => s.id !== id);
-      return [...prev, { ...service, quantity: 1 }];
+      return [...prev, { ...service, quantity: 1, price: service.price }];
     });
   };
 
@@ -124,7 +125,7 @@ export default function ChargeSlipBuilder({
       prev.map((svc) => (svc.id === id ? { ...svc, quantity: qty } : svc))
     );
   };
-
+// for new price textbox
   const updatePrice = (id: string, price: number | "") => {
     setSelectedServices((prev) =>
       prev.map((svc) =>
@@ -183,9 +184,9 @@ export default function ChargeSlipBuilder({
           const price = isSelected?.price ?? 0;
           const amount =
             isSelected && typeof quantity === "number"
-              ? item.price * quantity
+              ? price * quantity
               : 0;
-
+// for new price textbox
           return (
             <TableRow key={item.id}>
               <TableCell>
