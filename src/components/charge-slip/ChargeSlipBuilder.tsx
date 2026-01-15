@@ -136,6 +136,16 @@ export default function ChargeSlipBuilder({
     );
   };
 
+  const updatePrice = (id: string, price: number | "") => {
+    setSelectedServices((prev) =>
+      prev.map((svc) =>
+        svc.id === id
+          ? { ...svc, price: price === "" ? 0 : price }
+          : svc
+      )
+    );
+  };
+
   const cleanedServices: StrictSelectedService[] = selectedServices
     .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
     .map((s) => ({ ...s, quantity: s.quantity as number }));
@@ -202,14 +212,15 @@ export default function ChargeSlipBuilder({
                 <Input
                   type="number"
                   min={0}
-                  value={price}
+                  step="0.01"
+                  value={isSelected?.price ?? item.price}
+                  disabled={!isSelected}
                   onChange={(e) =>
                     updatePrice(
                       item.id,
                       e.target.value === "" ? "" : +e.target.value
                     )
                   }
-                  disabled={!isSelected}
                 />
               </TableCell>
               <TableCell>
