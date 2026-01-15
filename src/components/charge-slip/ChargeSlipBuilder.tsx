@@ -126,11 +126,9 @@ export default function ChargeSlipBuilder({
     );
   };
 // Add for new price textbox
-  const updatePrice = (id: string, price: number | "") => {
+  const updatePrice = (id: string, price: number) => {
     setSelectedServices((prev) =>
-      prev.map((svc) => 
-        svc.id === id ? { ...svc, price } : svc
-      )
+      prev.map((svc) => svc.id === id ? { ...svc, price } : svc)
     );
   };
 
