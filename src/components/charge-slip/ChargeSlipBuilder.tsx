@@ -125,17 +125,7 @@ export default function ChargeSlipBuilder({
       prev.map((svc) => (svc.id === id ? { ...svc, quantity: qty } : svc))
     );
   };
-// Add for new price textbox
-  const updatePrice = (id: string, price: number | "") => {
-    setSelectedServices((prev) =>
-      prev.map((svc) =>
-        svc.id === id
-          ? { ...svc, price: price === "" ? 0 : price }
-          : svc
-      )
-    );
-  };
-
+// for new price textbox
   const updatePrice = (id: string, price: number | "") => {
     setSelectedServices((prev) =>
       prev.map((svc) =>
@@ -212,15 +202,14 @@ export default function ChargeSlipBuilder({
                 <Input
                   type="number"
                   min={0}
-                  step="0.01"
-                  value={isSelected?.price ?? item.price}
-                  disabled={!isSelected}
+                  value={price}
                   onChange={(e) =>
                     updatePrice(
                       item.id,
                       e.target.value === "" ? "" : +e.target.value
                     )
                   }
+                  disabled={!isSelected}
                 />
               </TableCell>
               <TableCell>
