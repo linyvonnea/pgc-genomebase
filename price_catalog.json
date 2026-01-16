@@ -521,7 +521,7 @@
   },
   {
     "id": "RTL-SVC-001",
-    "name": "Liquid Nitrogen Test",
+    "name": "Liquid Nitrogen",
     "category": "Retail Sales",
     "unit": "per liter",
     "price": 620,
