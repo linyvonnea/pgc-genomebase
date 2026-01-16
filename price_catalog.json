@@ -553,7 +553,7 @@
   },
   {
     "id": "BIO-SVC-001",
-    "name": "Bioinformatics Analysis",
+    "name": "Bioinformatics Analysis test",
     "category": "Bioinformatics",
     "unit": "Per hour",
     "price": 1500,
