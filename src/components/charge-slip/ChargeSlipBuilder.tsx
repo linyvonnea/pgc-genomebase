@@ -55,7 +55,7 @@ import useAuth from "@/hooks/useAuth";
 
 export type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
   quantity: number | "";
-  price: number;
+  price: number | "";
 };
 
 export default function ChargeSlipBuilder({
