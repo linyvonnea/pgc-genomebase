@@ -559,7 +559,7 @@
     "price": 1500,
     "type": "bioinformatics"
   },
-    {
+  {
     "id": "BIO-SVC-002",
     "name": "Bioinformatics Analysis2",
     "category": "Bioinformatics",
