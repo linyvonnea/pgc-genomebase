@@ -55,7 +55,6 @@ import useAuth from "@/hooks/useAuth";
 
 export type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
   quantity: number | "";
-  price: number | "";
 };
 
 export default function ChargeSlipBuilder({
@@ -116,19 +115,13 @@ export default function ChargeSlipBuilder({
     setSelectedServices((prev) => {
       const exists = prev.find((s) => s.id === id);
       if (exists) return prev.filter((s) => s.id !== id);
-      return [...prev, { ...service, quantity: 1, price: service.price }];
+      return [...prev, { ...service, quantity: 1}];
     });
   };
 
   const updateQuantity = (id: string, qty: number | "") => {
     setSelectedServices((prev) =>
       prev.map((svc) => (svc.id === id ? { ...svc, quantity: qty } : svc))
-    );
-  };
-// Add for new price textbox
-  const updatePrice = (id: string, price: number) => {
-    setSelectedServices((prev) =>
-      prev.map((svc) => svc.id === id ? { ...svc, price } : svc)
     );
   };
 
@@ -182,7 +175,7 @@ export default function ChargeSlipBuilder({
             isSelected && typeof quantity === "number"
               ? price * quantity
               : 0;
-// for new price textbox
+
           return (
             <TableRow key={item.id}>
               <TableCell>
@@ -193,20 +186,8 @@ export default function ChargeSlipBuilder({
               </TableCell>
               <TableCell>{item.name}</TableCell>
               <TableCell>{item.unit}</TableCell>
-
-              <TableCell>
-                <Input
-                  type="number"
-                  min={0}
-                  value={price}
-                  onChange={(e) =>
-                    updatePrice(
-                      item.id,
-                      e.target.value === "" ? 0 : Number(e.target.value)
-                    )
-                  }
-                  disabled={!isSelected}
-                />
+              <TableCell className="text-right">
+                {item.price.toFixed(2)}
               </TableCell>
               <TableCell>
                 <Input
