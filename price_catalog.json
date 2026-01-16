@@ -556,7 +556,7 @@
     "name": "Bioinformatics Analysis",
     "category": "Bioinformatics",
     "unit": "Per hour",
-    "price": 1,
+    "price": 1500,
     "type": "bioinformatics"
   },
     {
@@ -564,7 +564,7 @@
     "name": "Bioinformatics Analysis2",
     "category": "Bioinformatics",
     "unit": "Per hour",
-    "price": 2,
+    "price": 2000,
     "type": "bioinformatics"
   }
 ]
