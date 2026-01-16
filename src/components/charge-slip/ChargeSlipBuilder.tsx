@@ -215,7 +215,7 @@ export default function ChargeSlipBuilder({
     const lower = raw.toLowerCase();
     if (lower.includes("equipment")) return "equipment";
     if (lower.includes("lab")) return "laboratory";
-    if (lower.includes("bioinfo")) return "bioinformatics";
+    if (lower.includes("bioinformatics") || lower.includes("bioinfo")) return "bioinformatics";
     if (lower.includes("retail")) return "retail";
     return lower; // fallback
   };
