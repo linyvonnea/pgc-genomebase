@@ -204,12 +204,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
               <TableCell>{item.unit}</TableCell>
               <TableCell className="text-right">
                 {item.price.toFixed(2)}
-                {(item as any).minQuantity && (
-                  <div className="text-xs text-slate-500">
-                    Min: {(item as any).minQuantity} samples
-                </div>
-              )}
-            </TableCell>
+              </TableCell>
             {serviceType === "bioinformatics" && (
             <TableCell>
               <Input
@@ -223,7 +218,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
                   )
                 }
                 disabled={!isSelected}
-                placeholder="9"
+                placeholder="0"
               />
             </TableCell>
             )}
