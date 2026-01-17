@@ -206,7 +206,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
                 {item.price.toFixed(2)}
                 {(item as any).minQuantity && (
                   <div className="text-xs text-slate-500">
-                    Min: {(item as any).minQuantity} samples]
+                    Min: {(item as any).minQuantity} samples
                 </div>
               )}
             </TableCell>
@@ -214,9 +214,9 @@ const subtotal = cleanedServices.reduce((sum, item) => {
               <Input
                 type="number"
                 min={0}
-                value={quantity}
+                value={samples}
                 onChange={(e) =>
-                  updateQuantity(
+                  updateSamples(
                     item.id,
                     e.target.value === "" ? "" : +e.target.value
                   )
