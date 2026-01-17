@@ -163,7 +163,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
     return result;
   }, [search, catalog]);
 
-  const renderTable = (services: ServiceItem[]) => (
+  const renderTable = (services: ServiceItem[], serviceType: string) => (
     <Table>
       <TableHeader>
         <TableRow>
