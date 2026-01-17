@@ -115,7 +115,7 @@ export default function ChargeSlipBuilder({
     setSelectedServices((prev) => {
       const exists = prev.find((s) => s.id === id);
       if (exists) return prev.filter((s) => s.id !== id);
-      return [...prev, { ...service, quantity: 1, samples: 1}];
+      return [...prev, { ...service, quantity: 1, samples: 0}];
     });
   };
 
