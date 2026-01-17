@@ -8,13 +8,17 @@ export function calculateItemTotal(
   basePrice: number,
   rule?: PricingRule
 ): number {
+  // If no minimum or quantity is within minimum, charge base price once
   if (!rule?.minQuantity || quantity <= rule.minQuantity) {
-    return quantity * basePrice;
+    return basePrice;
   }
 
-  const minCost = rule.minQuantity * basePrice;
-  const additionalUnits = quantity - rule.minQuantity;
-  const additionalCost = additionalUnits * (rule.additionalUnitPrice || basePrice);
+  // Charge base price once (for 1 unit) + additional price for samples above minimum
+  const baseCost = basePrice;
+  
+  // For samples ABOVE minimum, charge the additional unit price per sample
+  const additionalSamples = quantity - rule.minQuantity;
+  const additionalCost = additionalSamples * (rule.additionalUnitPrice || basePrice);
 
-  return minCost + additionalCost;
+  return baseCost + additionalCost;
 }
