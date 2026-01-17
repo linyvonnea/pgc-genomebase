@@ -218,7 +218,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
                   )
                 }
                 disabled={!isSelected}
-                placeholder="1"
+                placeholder="0"
               />
             </TableCell>
             )}
