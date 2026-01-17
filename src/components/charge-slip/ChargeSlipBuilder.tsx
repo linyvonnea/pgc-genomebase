@@ -171,7 +171,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
           <TableHead>Service</TableHead>
           <TableHead>Unit</TableHead>
           <TableHead>Price</TableHead>
-          <TableHead>Samples</TableHead>
+          {serviceType === "bioinformatics" && <TableHead>Samples</TableHead>}
           <TableHead>Qty</TableHead>
           <TableHead>Amount</TableHead>
         </TableRow>
@@ -210,6 +210,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
                 </div>
               )}
             </TableCell>
+            {serviceType === "bioinformatics" && (
             <TableCell>
               <Input
                 type="number"
@@ -225,6 +226,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
                 placeholder="9"
               />
             </TableCell>
+            )}
             <TableCell>
               <Input
                 type="number"
