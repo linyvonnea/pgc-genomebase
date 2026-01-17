@@ -124,16 +124,23 @@ export default function ChargeSlipBuilder({
       prev.map((svc) => (svc.id === id ? { ...svc, quantity: qty } : svc))
     );
   };
-
+  const updateSamples = (id: string, samples: number | "") => {
+    setSelectedServices((prev) =>
+      prev.map((svc) => (svc.id === id ? { ...svc, samples } : svc))
+    );
+  };
   const cleanedServices: StrictSelectedService[] = selectedServices
     .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
     .map((s) => ({ ...s, quantity: s.quantity as number }));
 
-  const subtotal = cleanedServices.reduce((sum, item) => {
-    return sum + calculateItemTotal(item.quantity, item.price, {
-      minQuantity: (item as any).minQuantity,
-      additionalUnitPrice: (item as any).additionalUnitPrice,
+    // Update the subtotal calculation to use samples
+const subtotal = cleanedServices.reduce((sum, item) => {
+  const samples = (item as any).samples ?? 1;
+  const samplesAmount = calculateItemTotal(samples, item.price, {
+    minQuantity: (item as any).minQuantity,
+    additionalUnitPrice: (item as any).additionalUnitPrice,
   });
+  return sum + (samplesAmount * item.quantity);
 }, 0);
   const discount = isInternal ? subtotal * 0.12 : 0;
   const total = subtotal - discount;
@@ -164,6 +171,7 @@ export default function ChargeSlipBuilder({
           <TableHead>Service</TableHead>
           <TableHead>Unit</TableHead>
           <TableHead>Price</TableHead>
+          <TableHead>Samples</TableHead>
           <TableHead>Qty</TableHead>
           <TableHead>Amount</TableHead>
         </TableRow>
@@ -171,15 +179,17 @@ export default function ChargeSlipBuilder({
       <TableBody>
         {services.map((item) => {
           const isSelected = selectedServices.find((s) => s.id === item.id);
+          const samples = (isSelected as any)?.samples ?? "";
           const quantity = isSelected?.quantity ?? "";
           const price = isSelected?.price ?? 0;
-          // Calculate amount with tiered pricing
+
+          // Calculate amount based on samples with tiered pricing
           const amount =
-            isSelected && typeof quantity === "number"
-              ? calculateItemTotal(quantity, price, {
+            isSelected && typeof samples === "number" && typeof quantity === "number"
+              ? calculateItemTotal(samples, price, {
                   minQuantity: (item as any).minQuantity,
                   additionalUnitPrice: (item as any).additionalUnitPrice,
-                })
+                }) * quantity
               : 0;
 
           return (
@@ -196,31 +206,46 @@ export default function ChargeSlipBuilder({
                 {item.price.toFixed(2)}
                 {(item as any).minQuantity && (
                   <div className="text-xs text-slate-500">
-                    Min: {(item as any).minQuantity} units
+                    Min: {(item as any).minQuantity} samples]
                 </div>
               )}
-              </TableCell>
-              <TableCell>
-                <Input
-                  type="number"
-                  min={0}
-                  value={quantity}
-                  onChange={(e) =>
-                    updateQuantity(
-                      item.id,
-                      e.target.value === "" ? "" : +e.target.value
-                    )
-                  }
-                  disabled={!isSelected}
-                />
-              </TableCell>
-              <TableCell>{amount.toFixed(2)}</TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
-  );
+            </TableCell>
+            <TableCell>
+              <Input
+                type="number"
+                min={0}
+                value={quantity}
+                onChange={(e) =>
+                  updateQuantity(
+                    item.id,
+                    e.target.value === "" ? "" : +e.target.value
+                  )
+                }
+                disabled={!isSelected}
+                placeholder="9"
+              />
+            </TableCell>
+            <TableCell>
+              <Input
+                type="number"
+                min={0}
+                value={quantity}
+                onChange={(e) =>
+                  updateQuantity(
+                    item.id,
+                    e.target.value === "" ? "" : +e.target.value
+                  )
+                }
+                disabled={!isSelected}
+              />
+            </TableCell>
+            <TableCell>{amount.toFixed(2)}</TableCell>
+          </TableRow>
+        );
+      })}
+    </TableBody>
+  </Table>
+);
 
   const normalizeCategory = (raw: string): string => {
     const lower = raw.toLowerCase();
