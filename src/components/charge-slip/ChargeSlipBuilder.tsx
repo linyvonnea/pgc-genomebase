@@ -362,7 +362,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
                 <AccordionTrigger className="text-lg font-bold capitalize">
                   {type}
                 </AccordionTrigger>
-                <AccordionContent>{renderTable(items)}</AccordionContent>
+                <AccordionContent>{renderTable(items, type)}</AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
