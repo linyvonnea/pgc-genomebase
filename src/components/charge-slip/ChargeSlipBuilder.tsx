@@ -9,7 +9,7 @@ import { pdf, PDFViewer } from "@react-pdf/renderer";
 import { Timestamp } from "firebase/firestore";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { sanitizeObject } from "@/lib/sanitizeObject";
-
+import { calculateItemTotal } from "@/lib/calculatePrice";
 import { getServiceCatalog } from "@/services/serviceCatalogService";
 import {
   getClientById,
@@ -129,10 +129,12 @@ export default function ChargeSlipBuilder({
     .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
     .map((s) => ({ ...s, quantity: s.quantity as number }));
 
-  const subtotal = cleanedServices.reduce(
-    (sum, item) => sum + item.quantity * item.price,
-    0
-  );
+  const subtotal = cleanedServices.reduce((sum, item) => {
+    return sum + calculateItemTotal(item.quantity, item.price, {
+      minQuantity: (item as any).minQuantity,
+      additionalUnitPrice: (item as any).additionalUnitPrice,
+  });
+}, 0);
   const discount = isInternal ? subtotal * 0.12 : 0;
   const total = subtotal - discount;
 
@@ -171,9 +173,13 @@ export default function ChargeSlipBuilder({
           const isSelected = selectedServices.find((s) => s.id === item.id);
           const quantity = isSelected?.quantity ?? "";
           const price = isSelected?.price ?? 0;
+          // Calculate amount with tiered pricing
           const amount =
             isSelected && typeof quantity === "number"
-              ? price * quantity
+              ? calculateItemTotal(quantity, price, {
+                  minQuantity: (item as any).minQuantity,
+                  additionalUnitPrice: (item as any).additionalUnitPrice,
+                })
               : 0;
 
           return (
@@ -188,6 +194,11 @@ export default function ChargeSlipBuilder({
               <TableCell>{item.unit}</TableCell>
               <TableCell className="text-right">
                 {item.price.toFixed(2)}
+                {(item as any).minQuantity && (
+                  <div className="text-xs text-slate-500">
+                    Min: {(item as any).minQuantity} units
+                </div>
+              )}
               </TableCell>
               <TableCell>
                 <Input
