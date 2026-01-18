@@ -102,13 +102,13 @@ export async function getClients(): Promise<Client[]> {
       }
     });
 
-    // ✅ Sort in memory by client ID in descending order (newest first)
+    // ✅ Sort in memory by client ID in descending order (newest 2026 on top)
     // Client ID format: CL-YYYY-NNN, so string comparison works correctly
     // CL-2026-008 > CL-2025-309 > CL-2025-308
     clients.sort((a, b) => {
       const cidA = a.cid || "";
       const cidB = b.cid || "";
-      return cidA < cidB ? 1 : -1; // descending (newest on top)
+      return cidB.localeCompare(cidA); // descending (newest on top)
     });
 
     console.log("getClients: fetched count =", clients.length);
