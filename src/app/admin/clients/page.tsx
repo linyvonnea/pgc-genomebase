@@ -29,6 +29,7 @@ async function getData(): Promise<Client[]> {
 export default function ClientPage() {
   // State for client data
   const [data, setData] = useState<Client[]>([]);
+  const [openDialog, setOpenDialog] = useState(false);
   // Fetch data and update state
   const fetchData = async () => {
     console.log("ClientPage.fetchData: start"); // debug
@@ -53,7 +54,7 @@ export default function ClientPage() {
             </p>
           </div>
           {/* Add New Client Modal */}
-          <Dialog>
+          <Dialog open={openDialog} onOpenChange={setOpenDialog}>
             <DialogTrigger asChild>
               <Button variant="default">Add New Record</Button>
             </DialogTrigger>
@@ -61,7 +62,7 @@ export default function ClientPage() {
               <DialogHeader>
                 <DialogTitle>Add New Client</DialogTitle>
               </DialogHeader>
-              <ClientFormModal />
+              <ClientFormModal onSubmit={fetchData} onClose={() => setOpenDialog(false)} />
             </DialogContent>
           </Dialog>
         </div>

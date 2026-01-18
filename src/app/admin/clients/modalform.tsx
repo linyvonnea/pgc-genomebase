@@ -38,7 +38,7 @@ const clientSchema = baseClientSchema.extend({
 type ClientFormData = z.infer<typeof clientSchema>;
 
 // Modal form component for adding a client
-export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => void }) {
+export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Client) => void; onClose?: () => void }) {
   // Form state
   const [formData, setFormData] = useState<ClientFormData>({
     year: new Date().getFullYear(),
@@ -72,6 +72,7 @@ export function ClientFormModal({ onSubmit }: { onSubmit?: (data: Client) => voi
       toast.success("Client added successfully!");
       setTimeout(() => {
         onSubmit?.(data);
+        onClose?.();
       }, 200);
     },
     onError: (error) => {
