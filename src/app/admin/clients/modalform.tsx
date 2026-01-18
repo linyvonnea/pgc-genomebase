@@ -240,7 +240,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
         <Input
           value={formData.phoneNumber}
           onChange={(e) => handleChange("phoneNumber", e.target.value)}
-          placeholder="e.g. 09091234567"
+          placeholder="e.g. 09091234567 or N/A"
         />
         {errors.phoneNumber && <p className="text-red-500 text-sm">{errors.phoneNumber}</p>}
       </div>
