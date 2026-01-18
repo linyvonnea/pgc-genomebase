@@ -32,8 +32,7 @@ const clientSchema = baseClientSchema.extend({
     .regex(/^\d{11}$/, "Enter a valid 11-digit number with no spaces"),
   designation: z.string().min(1, "Designation is required"),
   email: z.string().email("Invalid email"),
-  createdAt: z.date().optional(),
-});
+}).omit({ createdAt: true });
 
 type ClientFormData = z.infer<typeof clientSchema>;
 
@@ -49,7 +48,6 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
     email: "",
     sex: "F",
     phoneNumber: "",
-    createdAt: new Date(), 
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof ClientFormData, string>>>({});
