@@ -65,8 +65,19 @@ export async function getClients(): Promise<Client[]> {
 
       // Convert Firestore Timestamps to JS Dates if present
       if (data?.createdAt && typeof data.createdAt.toDate === "function") {
-        data.createdAt = data.createdAt.toDate();
+        try {
+          data.createdAt = data.createdAt.toDate();
+        } catch (err) {
+          // Handle invalid timestamps (e.g., epoch 0)
+          console.warn(`Invalid createdAt for ${doc.id}:`, data.createdAt, err);
+          data.createdAt = new Date(); // Use current date as fallback
+        }
+      } else if (data?.createdAt?._seconds === 0 && data?.createdAt?._nanoseconds === 0) {
+        // Handle malformed Firestore timestamp objects
+        console.warn(`Malformed createdAt for ${doc.id}, using current date`);
+        data.createdAt = new Date();
       }
+
       if (data?.startDate && typeof data.startDate.toDate === "function") {
         data.startDate = data.startDate.toDate();
       }
