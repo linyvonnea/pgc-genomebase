@@ -55,7 +55,7 @@ function formatDateToMMDDYYYY(date: Date): string {
 export async function getClients(): Promise<Client[]> {
   try {
     const clientsRef = collection(db, "clients");
-    const clientsQuery = query(clientsRef, orderBy("createdAt", "desc"));
+    const clientsQuery = query(clientsRef);
     const querySnapshot = await getDocs(clientsQuery);
 
     const clients: Client[] = [];
@@ -70,7 +70,7 @@ export async function getClients(): Promise<Client[]> {
         } catch (err) {
           // Handle invalid timestamps (e.g., epoch 0)
           console.warn(`Invalid createdAt for ${doc.id}:`, data.createdAt, err);
-          data.createdAt = new Date(); // Use current date as fallback
+          data.createdAt = new Date(0); // Use epoch as fallback
         }
       } else if (data?.createdAt?._seconds === 0 && data?.createdAt?._nanoseconds === 0) {
         // Handle malformed Firestore timestamp objects
@@ -102,7 +102,13 @@ export async function getClients(): Promise<Client[]> {
       }
     });
 
-    // Visible debug output in browser console to confirm fetch in deployed builds
+    // ✅ Sort in memory by createdAt (newest first)
+    clients.sort((a, b) => {
+      const dateA = a.createdAt instanceof Date ? a.createdAt.getTime() : 0;
+      const dateB = b.createdAt instanceof Date ? b.createdAt.getTime() : 0;
+      return dateB - dateA; // descending order
+    });
+
     console.log("getClients: fetched count =", clients.length);
     if (clients.length) console.log("getClients: first client sample =", clients[0]);
 
@@ -112,7 +118,6 @@ export async function getClients(): Promise<Client[]> {
     return [];
   }
 }
-
 /**
  * Generate the next available client ID (cid) for a given year.
  * Looks for the highest existing cid for the year and increments it.
