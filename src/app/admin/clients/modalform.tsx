@@ -29,7 +29,10 @@ const clientSchema = baseClientSchema.extend({
   sex: z.enum(["F", "M", "Other"]),
   phoneNumber: z
     .string()
-    .regex(/^\d{11}$/, "Enter a valid 11-digit number with no spaces"),
+    .refine(
+      (val) => /^\d{11}$/.test(val) || val === "N/A",
+      "Enter a valid 11-digit number or 'N/A'"
+    ),
   designation: z.string().min(1, "Designation is required"),
   email: z.string().email("Invalid email"),
 }).omit({ createdAt: true });
