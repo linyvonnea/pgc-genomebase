@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
   italicNote: { fontStyle: "italic", fontSize: 9, marginTop: 4 },
   signature: { marginTop: 40, fontSize: 10 },
   footerSection: { marginTop: 24 },
-  pageFooter: { position: "absolute", bottom: 20, left: 36, right: 36, textAlign: "center", fontSize: 9, color: "#666" },
+  pageFooter: { position: "absolute", bottom: 20, left: 36, right: 36, textAlign: "center", fontSize: 9, color: "#999" },
 });
 
 function formatMoney(num: number) {
@@ -169,9 +169,10 @@ export function QuotationPDF({
           </View>
         </View>
 
-        <Text style={styles.pageFooter}>
-          Page <Text render={({ pageNumber }) => pageNumber} /> of <Text render={({ totalPages }) => totalPages} />
-        </Text>
+        {/* Page Footer - displays page number on each page */}
+        <View style={styles.pageFooter} fixed>
+          <Text render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} />
+        </View>
       </Page>
     </Document>
   );
