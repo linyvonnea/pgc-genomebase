@@ -49,15 +49,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 8,
   },
   logo: {
-    width: 60,
-    height: 60,
+    width: 45,
+    height: 45,
   },
   pgcLogo: {
-    width: 200,
-    height: 60,
+    width: 150,
+    height: 45,
     objectFit: "contain",
   },
   title: {
@@ -97,13 +97,13 @@ const styles = StyleSheet.create({
   noBorder: {
     borderRightWidth: 0,
   },
-  col1: { width: "38%" },
+  col1: { width: "45%" },
   col2: { width: "15%" },
-  col3: { width: "15%" },
-  col4: { width: "15%" },
+  col3: { width: "13%" },
+  col4: { width: "10%" },
   col5: { width: "17%" },
   signatureSection: {
-    marginTop: 24,
+    marginTop: 16,
     fontSize: 10,
   },
   signatureLabel: {
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   marginTop16: {
-    marginTop: 16,
+    marginTop: 12,
   },
 });
 
