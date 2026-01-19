@@ -287,7 +287,6 @@ export function ChargeSlipPDF({
         {/* Client Info */}
         <View style={styles.section}>
           <Text style={styles.bold}>CLIENT NAME: {clientInfo.name}</Text>
-          <Text>INCLUSIVE BILLING DATES: N/A</Text>
           <Text style={styles.bold}>ADDRESS: {client?.affiliationAddress || "—"}</Text>
           <Text style={styles.bold}>PAYMENT FOR: {project?.title || "—"}</Text>
         </View>
@@ -329,7 +328,6 @@ export function ChargeSlipPDF({
             <Text>Less 12% Discount: PHP {formatMoney(discount)}</Text>
           )}
           <Text style={styles.totalText}>TOTAL: PHP {formatMoney(total)}</Text>
-          <Text style={styles.bold}>OR Number: {orNumber || "—"}</Text>
         </View>
 
         {/* Amount in Words */}
