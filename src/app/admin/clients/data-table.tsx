@@ -48,7 +48,7 @@ export function DataTable<TData, TValue>({
   const [globalFilter, setGlobalFilter] = useState("")
   const [pagination, setPagination] = useState({
     pageIndex: 0,
-    pageSize: 50, // Increase from default 10 to 50
+    pageSize: 10, 
   })
 
   // Initialize TanStack Table instance
