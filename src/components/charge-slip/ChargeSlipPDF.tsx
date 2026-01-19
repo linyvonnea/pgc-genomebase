@@ -337,13 +337,13 @@ export function ChargeSlipPDF({
         </View>
 
         {/* Notes */}
-        <View style={[styles.section, { marginBottom: 4 }]}>
+        <View style={[styles.section, { marginBottom: 6 }]}>
           <Text style={styles.italicNote}>* This charge slip is valid for 30 days from the date of issue.</Text>
           <Text style={styles.italicNote}>* Payment terms: Full payment is required before the release of results.</Text>
         </View>
 
         {/* Signatures */}
-        <View style={[styles.signatureSection, { marginTop: 4 }]}>
+        <View style={[styles.signatureSection, { marginTop: 8 }]}>
           <Text style={styles.signatureLabel}>Prepared By:</Text>
           <Text>{"\n"}</Text>
           <Text style={styles.signatureName}>{preparedBy.name}</Text>
