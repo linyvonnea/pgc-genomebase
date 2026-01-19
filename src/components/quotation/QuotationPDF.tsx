@@ -173,10 +173,9 @@ export function QuotationPDF({
         <Text 
           style={styles.pageFooter}
           fixed
-          render={({ pageNumber, totalPages }) => (
-            `Page ${pageNumber} of ${totalPages}`
-          )}
-        />
+        >
+          Page TEST Footer
+        </Text>
       </Page>
     </Document>
   );
