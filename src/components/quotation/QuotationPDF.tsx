@@ -23,6 +23,7 @@ const styles = StyleSheet.create({
   summary: { marginTop: 12, alignItems: "flex-end", textAlign: "right", gap: 2 },
   italicNote: { fontStyle: "italic", fontSize: 9, marginTop: 4 },
   signature: { marginTop: 40, fontSize: 10 },
+  footerSection: { marginTop: 24 },
 });
 
 function formatMoney(num: number) {
@@ -154,15 +155,17 @@ export function QuotationPDF({
           <Text style={{ fontWeight: "bold" }}>TOTAL: PHP {formatMoney(total)}</Text>
         </View>
 
-        <Text style={styles.italicNote}>Quote Validity: 30 days</Text>
-        <Text style={styles.italicNote}>
-          Total cost does not include re-runs (if applicable). Prices are subject to change without prior notice.
-        </Text>
+        <View style={styles.footerSection} wrap={false}>
+          <Text style={styles.italicNote}>Quote Validity: 30 days</Text>
+          <Text style={styles.italicNote}>
+            Total cost does not include re-runs (if applicable). Prices are subject to change without prior notice.
+          </Text>
 
-        <View style={styles.signature}>
-          <Text>Sincerely,</Text>
-          <Text style={{ fontWeight: "bold", marginTop: 24 }}>{preparedBy.name}</Text>
-          <Text><Text style={{ fontStyle: "italic" }}>{preparedBy.position}</Text></Text>
+          <View style={styles.signature}>
+            <Text>Sincerely,</Text>
+            <Text style={{ fontWeight: "bold", marginTop: 24 }}>{preparedBy.name}</Text>
+            <Text><Text style={{ fontStyle: "italic" }}>{preparedBy.position}</Text></Text>
+          </View>
         </View>
       </Page>
     </Document>
