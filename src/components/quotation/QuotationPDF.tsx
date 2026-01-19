@@ -7,9 +7,9 @@ import { pgcLogo, schoolLogo } from "@/assets/logosBase64";
 
 const styles = StyleSheet.create({
   page: { padding: 36, fontSize: 10, fontFamily: "Helvetica", lineHeight: 1.4 },
-  logoRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  logo: { width: 60, height: 60 },
-  pgcLogo: { width: 200, height: 60, objectFit: "contain" },
+  logoRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  logo: { width: 45, height: 45 },
+  pgcLogo: { width: 150, height: 45, objectFit: "contain" },
   title: { fontSize: 14, fontWeight: "bold", textAlign: "center", marginVertical: 4 },
   subtitle: { fontSize: 10, textAlign: "center", marginBottom: 16 },
   section: { marginBottom: 10 },
