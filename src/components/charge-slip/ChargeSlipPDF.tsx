@@ -322,7 +322,7 @@ export function ChargeSlipPDF({
         </View>
 
         {/* Summary */}
-        <View style={styles.section}>
+        <View style={[styles.section, { alignItems: "flex-end" }]}>
           <Text style={styles.bold}>Subtotal: PHP {formatMoney(subtotal)}</Text>
           {useInternalPrice && (
             <Text>Less 12% Discount: PHP {formatMoney(discount)}</Text>
