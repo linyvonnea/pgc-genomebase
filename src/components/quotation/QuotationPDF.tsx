@@ -166,6 +166,9 @@ export function QuotationPDF({
           <Text style={styles.italicNote}>
             Total cost does not include re-runs (if applicable). Prices are subject to change without prior notice.
           </Text>
+          <Text style={styles.italicNote}>
+            *12% Discount is applicable only to the following: UP Constituents, Students, and Active PGC Visayas.
+          </Text>
 
           <View style={styles.signature}>
             <Text>Sincerely,</Text>
