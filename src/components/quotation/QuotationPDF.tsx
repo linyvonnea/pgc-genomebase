@@ -19,6 +19,11 @@ const styles = StyleSheet.create({
   tableHeader: { fontWeight: "bold", backgroundColor: "#eee" },
   headerCell: { flex: 1, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
   cell: { flex: 1, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
+  serviceCell: { flex: 3, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
+  unitCell: { flex: 1, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
+  priceCell: { flex: 1, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
+  qtyCell: { flex: 0.6, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
+  amountCell: { flex: 1.2, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
   categoryHeader: { padding: 4, fontWeight: "bold", backgroundColor: "#f0f0f0", borderBottom: "1pt solid black", fontSize: 10 },
   summary: { marginTop: 12, alignItems: "flex-end", textAlign: "right", gap: 2 },
   italicNote: { fontStyle: "italic", fontSize: 9, marginTop: 2 },
@@ -121,11 +126,11 @@ export function QuotationPDF({
 
         <View style={styles.table}>
           <View style={[styles.tableRow, styles.tableHeader]}>
-            <Text style={styles.headerCell}>Service</Text>
-            <Text style={styles.headerCell}>Unit</Text>
-            <Text style={styles.headerCell}>Price</Text>
-            <Text style={styles.headerCell}>Qty</Text>
-            <Text style={styles.headerCell}>Amount</Text>
+            <Text style={[styles.headerCell, { flex: 3 }]}>Service</Text>
+            <Text style={[styles.headerCell, { flex: 1 }]}>Unit</Text>
+            <Text style={[styles.headerCell, { flex: 1 }]}>Price</Text>
+            <Text style={[styles.headerCell, { flex: 0.6 }]}>Qty</Text>
+            <Text style={[styles.headerCell, { flex: 1.2 }]}>Amount</Text>
           </View>
 
           {Object.entries(groupedByCategory).map(([category, items]) => (
@@ -136,11 +141,11 @@ export function QuotationPDF({
                 const key = `${svc.id ?? "custom"}-${svc.name}-${idx}`;
                 return (
                   <View style={styles.tableRow} key={key}>
-                    <Text style={styles.cell}>{svc.name}</Text>
-                    <Text style={styles.cell}>{svc.unit}</Text>
-                    <Text style={styles.cell}>{formatMoney(svc.price)}</Text>
-                    <Text style={styles.cell}>{svc.quantity}</Text>
-                    <Text style={styles.cell}>{formatMoney(amount)}</Text>
+                    <Text style={styles.serviceCell}>{svc.name}</Text>
+                    <Text style={styles.unitCell}>{svc.unit}</Text>
+                    <Text style={styles.priceCell}>{formatMoney(svc.price)}</Text>
+                    <Text style={styles.qtyCell}>{svc.quantity}</Text>
+                    <Text style={styles.amountCell}>{formatMoney(amount)}</Text>
                   </View>
                 );
               })}
