@@ -170,7 +170,7 @@ export function QuotationPDF({
         </View>
 
         <Text style={styles.pageNumber} fixed>
-          Page 1 of 2
+          Page TEST is now here
         </Text>
       </Page>
     </Document>
