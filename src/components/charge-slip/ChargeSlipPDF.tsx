@@ -40,16 +40,16 @@ type Props = {
 
 const styles = StyleSheet.create({
   page: {
-    padding: 36,
+    padding: 28,
     fontSize: 10,
     fontFamily: "Helvetica",
-    lineHeight: 1.4,
+    lineHeight: 1.2,
   },
   logoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   logo: {
     width: 45,
@@ -64,21 +64,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     textAlign: "center",
-    marginVertical: 4,
+    marginVertical: 2,
   },
   subtitle: {
     fontSize: 10,
     textAlign: "center",
-    marginBottom: 10,
+    marginBottom: 6,
   },
   section: {
-    marginBottom: 12,
+    marginBottom: 8,
   },
   table: {
     width: "100%",
     borderWidth: 1,
     borderColor: "#000",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   tableRow: {
     flexDirection: "row",
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   cell: {
-    padding: 4,
+    padding: 3,
     borderRightWidth: 1,
     borderColor: "#000",
   },
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   col4: { width: "10%" },
   col5: { width: "17%" },
   signatureSection: {
-    marginTop: 16,
+    marginTop: 12,
     fontSize: 10,
   },
   signatureLabel: {
@@ -127,13 +127,13 @@ const styles = StyleSheet.create({
   },
   categoryHeaderCell: {
     flex: 1,
-    padding: 4,
+    padding: 3,
     fontWeight: "bold",
     textAlign: "center",
   },
   italicNote: {
     fontStyle: "italic",
-    marginTop: 4,
+    marginTop: 2,
   },
   bold: {
     fontWeight: "bold",
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   marginTop16: {
-    marginTop: 12,
+    marginTop: 8,
   },
 });
 
@@ -337,20 +337,20 @@ export function ChargeSlipPDF({
         </View>
 
         {/* Notes */}
-        <View style={styles.section}>
+        <View style={[styles.section, { marginBottom: 4 }]}>
           <Text style={styles.italicNote}>* This charge slip is valid for 30 days from the date of issue.</Text>
           <Text style={styles.italicNote}>* Payment terms: Full payment is required before the release of results.</Text>
         </View>
 
         {/* Signatures */}
-        <View style={styles.signatureSection}>
+        <View style={[styles.signatureSection, { marginTop: 4 }]}>
           <Text style={styles.signatureLabel}>Prepared By:</Text>
-          <Text>{"\n\n"}</Text>
+          <Text>{"\n"}</Text>
           <Text style={styles.signatureName}>{preparedBy.name}</Text>
           <Text style={styles.signaturePosition}>{preparedBy.position}</Text>
 
           <Text style={[styles.signatureLabel, styles.marginTop16]}>Approved:</Text>
-          <Text>{"\n\n"}</Text>
+          <Text>{"\n"}</Text>
           <Text style={styles.signatureName}>{approvedBy.name}</Text>
           <Text style={styles.signaturePosition}>{approvedBy.position}</Text>
         </View>
