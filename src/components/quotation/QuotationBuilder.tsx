@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { calculateItemTotal } from "@/lib/calculatePrice";
 import { getServiceCatalog } from "@/services/serviceCatalogService";
 import { getInquiryById } from "@/services/inquiryService";
 import { saveQuotationAction } from "@/app/actions/quotationActions";
@@ -48,7 +49,10 @@ import { QuotationHistoryPanel } from "./QuotationHistoryPanel";
 import useAuth from "@/hooks/useAuth";
 
 // Allow editable quantity ("" or number)
-type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & { quantity: number | "" };
+type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & { 
+  quantity: number | "";
+  samples?: number | "";
+};
 
 export default function QuotationBuilder({
   inquiryId,
@@ -114,7 +118,7 @@ export default function QuotationBuilder({
     setSelectedServices((prev) => {
       const exists = prev.find((s) => s.id === id);
       if (exists) return prev.filter((s) => s.id !== id);
-      return [...prev, { ...service, quantity: 1 }];
+      return [...prev, { ...service, quantity: 1, samples: 0 }];
     });
   };
 
@@ -124,14 +128,25 @@ export default function QuotationBuilder({
     );
   };
 
+  const updateSamples = (id: string, samples: number | "") => {
+    setSelectedServices((prev) =>
+      prev.map((svc) => (svc.id === id ? { ...svc, samples } : svc))
+    );
+  };
+
   const cleanedServices: StrictSelectedService[] = selectedServices
     .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
     .map((s) => ({ ...s, quantity: s.quantity as number }));
 
-  const subtotal = cleanedServices.reduce(
-    (sum, item) => sum + item.quantity * item.price,
-    0
-  );
+  // Update the subtotal calculation to use samples
+  const subtotal = cleanedServices.reduce((sum, item) => {
+    const samples = (item as any).samples ?? 1;
+    const samplesAmount = calculateItemTotal(samples, item.price, {
+      minQuantity: (item as any).minQuantity,
+      additionalUnitPrice: (item as any).additionalUnitPrice,
+    });
+    return sum + (samplesAmount * item.quantity);
+  }, 0);
   const discount = isInternal ? subtotal * 0.12 : 0;
   const total = subtotal - discount;
 
@@ -146,7 +161,7 @@ export default function QuotationBuilder({
     return result;
   }, [search, catalog]);
 
-  const renderTable = (services: ServiceItem[]) => (
+  const renderTable = (services: ServiceItem[], serviceType: string) => (
     <Table>
       <TableHeader>
         <TableRow>
@@ -154,6 +169,7 @@ export default function QuotationBuilder({
           <TableHead>Service</TableHead>
           <TableHead>Unit</TableHead>
           <TableHead>Price</TableHead>
+          {serviceType === "bioinformatics" && <TableHead>Samples</TableHead>}
           <TableHead>Qty</TableHead>
           <TableHead>Amount</TableHead>
         </TableRow>
@@ -161,10 +177,17 @@ export default function QuotationBuilder({
       <TableBody>
         {services.map((item) => {
           const isSelected = selectedServices.find((s) => s.id === item.id);
+          const samples = (isSelected as any)?.samples ?? "";
           const quantity = isSelected?.quantity ?? "";
+          const price = isSelected?.price ?? 0;
+
+          // Calculate amount based on samples with tiered pricing
           const amount =
-            isSelected && typeof quantity === "number"
-              ? item.price * quantity
+            isSelected && typeof samples === "number" && typeof quantity === "number"
+              ? calculateItemTotal(samples, price, {
+                  minQuantity: (item as any).minQuantity,
+                  additionalUnitPrice: (item as any).additionalUnitPrice,
+                }) * quantity
               : 0;
 
           return (
@@ -177,7 +200,26 @@ export default function QuotationBuilder({
               </TableCell>
               <TableCell>{item.name}</TableCell>
               <TableCell>{item.unit}</TableCell>
-              <TableCell>{item.price.toFixed(2)}</TableCell>
+              <TableCell className="text-right">
+                {item.price.toFixed(2)}
+              </TableCell>
+              {serviceType === "bioinformatics" && (
+                <TableCell>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={samples}
+                    onChange={(e) =>
+                      updateSamples(
+                        item.id,
+                        e.target.value === "" ? "" : +e.target.value
+                      )
+                    }
+                    disabled={!isSelected}
+                    placeholder="0"
+                  />
+                </TableCell>
+              )}
               <TableCell>
                 <Input
                   type="number"
@@ -273,7 +315,7 @@ export default function QuotationBuilder({
                 <AccordionTrigger className="text-lg font-bold capitalize">
                   {type}
                 </AccordionTrigger>
-                <AccordionContent>{renderTable(items)}</AccordionContent>
+                <AccordionContent>{renderTable(items, type)}</AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
@@ -283,14 +325,23 @@ export default function QuotationBuilder({
       <div className="w-96 shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
         <h3 className="text-lg font-bold mb-2">Summary</h3>
         <Separator className="mb-2" />
-        {cleanedServices.map((item) => (
-          <div key={item.id} className="flex justify-between text-sm mb-1">
-            <span>
-              {item.name} x {item.quantity}
-            </span>
-            <span>₱{(item.price * item.quantity).toFixed(2)}</span>
-          </div>
-        ))}
+        {cleanedServices.map((item) => {
+          const samples = (item as any).samples ?? 1;
+          const samplesAmount = calculateItemTotal(samples, item.price, {
+            minQuantity: (item as any).minQuantity,
+            additionalUnitPrice: (item as any).additionalUnitPrice,
+          });
+          const totalAmount = samplesAmount * item.quantity;
+          
+          return (
+            <div key={item.id} className="flex justify-between text-sm mb-1">
+              <span>
+                {item.name} x {item.quantity}
+              </span>
+              <span>₱{totalAmount.toFixed(2)}</span>
+            </div>
+          );
+        })}
         <Separator className="my-2" />
         <p className="text-sm">Subtotal: ₱{subtotal.toFixed(2)}</p>
         {isInternal && (
