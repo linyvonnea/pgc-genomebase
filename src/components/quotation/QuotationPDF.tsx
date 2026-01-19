@@ -169,11 +169,9 @@ export function QuotationPDF({
           </View>
         </View>
 
-        <Text 
-          style={styles.pageNumber} 
-          render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`} 
-          fixed 
-        />
+        <Text style={styles.pageNumber} fixed>
+          Page 1 of 2
+        </Text>
       </Page>
     </Document>
   );
