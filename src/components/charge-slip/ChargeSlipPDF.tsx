@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   marginTop16: {
-    marginTop: 8,
+    marginTop: 12,
   },
 });
 
