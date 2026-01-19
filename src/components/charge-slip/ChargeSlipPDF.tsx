@@ -345,12 +345,12 @@ export function ChargeSlipPDF({
         {/* Signatures */}
         <View style={styles.signatureSection}>
           <Text style={styles.signatureLabel}>Prepared By:</Text>
-          <Text>{"\n\n"}</Text>
+          <Text>{"\n"}</Text>
           <Text style={styles.signatureName}>{preparedBy.name}</Text>
           <Text style={styles.signaturePosition}>{preparedBy.position}</Text>
 
           <Text style={[styles.signatureLabel, styles.marginTop16]}>Approved:</Text>
-          <Text>{"\n\n"}</Text>
+          <Text>{"\n"}</Text>
           <Text style={styles.signatureName}>{approvedBy.name}</Text>
           <Text style={styles.signaturePosition}>{approvedBy.position}</Text>
         </View>
