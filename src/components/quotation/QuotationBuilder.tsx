@@ -355,12 +355,12 @@ export default function QuotationBuilder({
           <DialogTrigger asChild>
             <Button className="mt-4 w-full">Preview Quotation</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl h-[90vh] overflow-auto">
-            <DialogHeader>
+          <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+            <DialogHeader className="px-6 pt-6">
               <DialogTitle>Preview Quotation PDF</DialogTitle>
             </DialogHeader>
-            <div className="mt-4">
-              <PDFViewer width="100%" height="600">
+            <div className="flex-1 overflow-hidden px-6 pb-6">
+              <PDFViewer width="100%" height="100%" className="border rounded">
                 <QuotationPDF
                   services={cleanedServices}
                   clientInfo={clientInfo}
@@ -372,7 +372,9 @@ export default function QuotationBuilder({
                   }}
                 />
               </PDFViewer>
-              <div className="text-right mt-4">
+            </div>
+            <div className="px-6 pb-6 pt-4 border-t">
+              <div className="text-right">
                 <PDFDownloadLink
                   document={
                     <QuotationPDF
