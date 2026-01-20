@@ -48,6 +48,11 @@ export const columns: ColumnDef<Client>[] = [
     ),
   },
   {
+    accessorKey: "pid",
+    header: "Project ID",
+    size: 120,
+  },
+  {
     accessorKey: "affiliation",
     header: "Affiliation",
     size: 200,
