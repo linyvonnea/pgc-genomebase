@@ -47,7 +47,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     year: new Date().getFullYear(),
     startDate: new Date().toISOString().substring(0, 10),
     lead: "",
-    clientNames: "", // Keep as string for the input field
+    clientNames: [],
     title: "",
     projectTag: "",
     status: "Ongoing",
