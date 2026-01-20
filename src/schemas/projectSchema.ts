@@ -22,8 +22,9 @@ export const projectSchema = z.object({
   lead: z.string().optional().or(z.literal("")),
   clientNames: z
     .union([z.array(z.string()), z.string()])
-    .transform((val) => (typeof val === "string" ? val.split(",").map((s) => s.trim()) : val))
-    .optional(),
+    .transform((val) => (typeof val === "string" ? val.split(",").map((s) => s.trim()).filter(Boolean) : val))
+    .optional()
+    .default([]),
   title: z.string().optional().or(z.literal("")),
   projectTag: z.string().optional().or(z.literal("")),
   status: z.string().optional().or(z.literal("")),
