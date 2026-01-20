@@ -25,6 +25,7 @@ export const columns: ColumnDef<Client>[] = [
   { 
     accessorKey: "cid",
     header: "Client ID",
+    size: 120,
   },
   {
     accessorKey: "name",
@@ -39,34 +40,52 @@ export const columns: ColumnDef<Client>[] = [
   {
     accessorKey: "pid",
     header: "Project ID",
+    size: 120,
   },
   {
     accessorKey: "email",
     header: "Email",
+    size: 220,
+    cell: ({ getValue }) => (
+      <div className="max-w-[220px] truncate" title={getValue() as string}>
+        {getValue() as string}
+      </div>
+    ),
   },
   {
     accessorKey: "affiliation",
     header: "Affiliation",
+    size: 200,
+    cell: ({ getValue }) => (
+      <div className="max-w-[200px] line-clamp-2" title={getValue() as string}>
+        {getValue() as string}
+      </div>
+    ),
   },
-  {
-    accessorKey: "affiliationAddress",
-    header: "Affiliation Address",
-  },
+  // Affiliation Address - Hidden for cleaner view
+  // {
+  //   accessorKey: "affiliationAddress",
+  //   header: "Affiliation Address",
+  // },
   {
     accessorKey: "designation",
     header: "Designation",
+    size: 150,
   },
-  {
-    accessorKey: "sex",
-    header: "Sex",
-  },
+  // Sex - Hidden for cleaner view
+  // {
+  //   accessorKey: "sex",
+  //   header: "Sex",
+  // },
   {
     accessorKey: "phoneNumber",
-    header: "Phone Number",
+    header: "Phone",
+    size: 130,
   },
   {
     id: "actions",
     header: "Actions",
+    size: 200,
     // Render edit modal and charge slip button for each row
     cell: (ctx: any) => {
       const { row, meta } = ctx;
@@ -86,7 +105,8 @@ export const columns: ColumnDef<Client>[] = [
               );
             }}
             variant="outline"
-            className="text-sm"
+            size="sm"
+            className="whitespace-nowrap"
           >
             Charge Slip
           </Button>
