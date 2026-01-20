@@ -31,20 +31,20 @@ export function AdminSidebar() {
       label: "Dashboard", 
       icon: LayoutDashboard,
     },
-        { 
+    { 
       href: "/admin/inquiry", 
       label: "Inquiries", 
       icon: MessageSquare,
     },
     { 
-      href: "/admin/clients", 
-      label: "Clients", 
-      icon: Users,
-    },
-    { 
       href: "/admin/projects", 
       label: "Projects", 
       icon: LibraryBig,
+    },
+    { 
+      href: "/admin/clients", 
+      label: "Clients", 
+      icon: Users,
     },
     { 
       href: "/admin/quotations", 
