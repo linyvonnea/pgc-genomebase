@@ -308,7 +308,7 @@ export function ChargeSlipPDF({
               </View>
               {items.map((item, idx) => (
                 <View key={idx} style={styles.tableRow}>
-                  <Text style={[styles.cell, styles.col1]}>{item.name}</Text>
+                  <Text style={[styles.cell, styles.col1, { textAlign: "left" }]}>{item.name}</Text>
                   <Text style={[styles.cell, styles.col2]}>{item.unit}</Text>
                   <Text style={[styles.cell, styles.col3]}>PHP {formatMoney(item.price)}</Text>
                   <Text style={[styles.cell, styles.col4]}>{item.quantity}</Text>
