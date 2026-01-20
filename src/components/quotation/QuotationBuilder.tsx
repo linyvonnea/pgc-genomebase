@@ -96,6 +96,22 @@ export default function QuotationBuilder({
     fetchRef();
   }, []);
 
+  // Merge fresh catalog data (with descriptions) into selected services
+  useEffect(() => {
+    if (catalog.length > 0 && selectedServices.length > 0) {
+      setSelectedServices((prev) =>
+        prev.map((service) => {
+          const freshService = catalog.find((cat) => cat.id === service.id);
+          if (freshService && freshService.description && !service.description) {
+            console.log('Merging description for:', service.name, 'Description:', freshService.description);
+            return { ...service, description: freshService.description };
+          }
+          return service;
+        })
+      );
+    }
+  }, [catalog]);
+
   const clientInfo = initialClientInfo
     ? initialClientInfo
     : inquiryData
