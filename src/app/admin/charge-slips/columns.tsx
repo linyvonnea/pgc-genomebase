@@ -110,6 +110,20 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     },
   },
   {
+    accessorFn: (row) => row.project?.title,
+    id: "project.title",
+    header: "Payment For",
+    size: 220,
+    cell: ({ getValue }) => {
+      const title = getValue() as string || "—";
+      return (
+        <div className="max-w-[220px] truncate" title={title}>
+          {title}
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "datePaid",
     header: "Date Paid",
     size: 100,
