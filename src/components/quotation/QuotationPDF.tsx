@@ -116,7 +116,7 @@ export function QuotationPDF({
           <Text><Text style={styles.label}>Institution:</Text> {clientInfo.institution}</Text>
           <Text><Text style={styles.label}>Designation:</Text> {clientInfo.designation}</Text>
           <Text><Text style={styles.label}>Email:</Text> {clientInfo.email}</Text>
-          {useInternalPrice && <Text><Text style={styles.label}>12% Discount</Text></Text>}
+          <Text><Text style={styles.label}>12% Discount:</Text> {useInternalPrice ? "Yes" : "No"}</Text>
         </View>
 
         <Text style={{ marginBottom: 10 }}>
