@@ -12,20 +12,33 @@ import { useRouter } from "next/navigation"
 // Column definitions for the projects table
 export const columns: ColumnDef<Project>[] = [
   {
-    accessorKey: "startDate",
-    header: "Start Date",
+    accessorKey: "pid",
+    header: "Project ID",
+    size: 120,
   },
-  // {
-  //   accessorKey: "endDate",
-  //   header: "End Date",
-  // },
+  {
+    accessorKey: "title",
+    header: "Project Title",
+    size: 300,
+    cell: ({ getValue }) => (
+      <div className="max-w-[300px] truncate" title={getValue() as string}>
+        {getValue() as string}
+      </div>
+    ),
+  },
   {
     accessorKey: "clientNames",
     header: "Client Names",
+    size: 200,
     cell: ({ row }) => {
-      // Render client names as comma-separated string
+      // Render client names as comma-separated string with truncation
       const names = row.original.clientNames;
-      return names && names.length > 0 ? names.join(", ") : "";
+      const displayText = names && names.length > 0 ? names.join(", ") : "";
+      return (
+        <div className="max-w-[200px] truncate" title={displayText}>
+          {displayText}
+        </div>
+      );
     },
     // Enables global filtering by converting the array to a string
     filterFn: (row, columnId, filterValue) => {
@@ -36,31 +49,12 @@ export const columns: ColumnDef<Project>[] = [
   {
     accessorKey: "lead",
     header: "Project Lead",
-  },
-  {
-    accessorKey: "pid",
-    header: "Project ID",
-  },
-  {
-    accessorKey: "iid",
-    header: "Inquiry ID",
-    size: 80,
-    cell: ({ row }) => (
-      // Show inquiry ID 
-      <span className="block max-w-[80px] break-words whitespace-normal">{row.original.iid}</span>
-    ),
-  },
-  {
-    accessorKey: "title",
-    header: "Project Title",
-  },
-  {
-    accessorKey: "projectTag",
-    header: "Project Tag",
+    size: 150,
   },
   {
     accessorKey: "status",
     header: "Status",
+    size: 110,
     cell: ({ row }) => {
       // Render status with color-coded badge
       const status = row.original.status;
@@ -93,6 +87,7 @@ export const columns: ColumnDef<Project>[] = [
   {
     accessorKey: "sendingInstitution",
     header: "Sending Institution",
+    size: 160,
     cell: ({ row }) => {
       // Render sending institution with color-coded badge
       const value = row.original.sendingInstitution;
@@ -113,45 +108,44 @@ export const columns: ColumnDef<Project>[] = [
     },
   },
   {
-    accessorKey: "fundingCategory",
-    header: "Funding Category",
-    cell: ({ row }) => {
-      // Render funding category with color-coded badge
-      const value = row.original.fundingCategory;
-      let color = "bg-gray-100 text-gray-800";
-      if (value === "External") color = "bg-orange-100 text-orange-800";
-      if (value === "In-House") color = "bg-indigo-100 text-indigo-800";
-      return (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${color}`}>
-          {value || ""}
-        </span>
-      );
-    },
+    accessorKey: "startDate",
+    header: "Start Date",
+    size: 110,
   },
-  {
-    accessorKey: "fundingInstitution",
-    header: "Source of Funding",
-  },
-  {
-    accessorKey: "serviceRequested",
-    header: "Service Requested",
-    cell: ({ row }) => {
-      // Render requested services as comma-separated string
-      const services = row.original.serviceRequested
-      return services && services.length > 0 ? services.join(", ") : ""
-    },
-  },
-  {
-    accessorKey: "personnelAssigned",
-    header: "Personnel Assigned",
-  },
-  {
-    accessorKey: "notes",
-    header: "Notes",
-  },
+  // Hidden columns - Access via Edit Modal
+  // {
+  //   accessorKey: "iid",
+  //   header: "Inquiry ID",
+  // },
+  // {
+  //   accessorKey: "projectTag",
+  //   header: "Project Tag",
+  // },
+  // {
+  //   accessorKey: "fundingCategory",
+  //   header: "Funding Category",
+  // },
+  // {
+  //   accessorKey: "fundingInstitution",
+  //   header: "Source of Funding",
+  // },
+  // {
+  //   accessorKey: "serviceRequested",
+  //   header: "Service Requested",
+  // },
+  // {
+  //   accessorKey: "personnelAssigned",
+  //   header: "Personnel Assigned",
+  // },
+  // {
+  //   accessorKey: "notes",
+  //   header: "Notes",
+  // },
+  // },
   {
     id: "actions",
     header: "Actions",
+    size: 120,
     cell: (ctx: any) => {
       // Render edit modal for each project row
       const { row, meta } = ctx;
