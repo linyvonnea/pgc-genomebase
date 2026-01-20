@@ -6,4 +6,5 @@ export interface ServiceItem {
   type: "Laboratory" | "Equipment" | "Bioinformatics" | "Retail";
   unit: string;
   price: number;
+  description?: string; // Optional detailed description for service
 }

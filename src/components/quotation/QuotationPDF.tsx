@@ -139,13 +139,24 @@ export function QuotationPDF({
               {items.map((svc, idx) => {
                 const amount = svc.price * svc.quantity;
                 const key = `${svc.id ?? "custom"}-${svc.name}-${idx}`;
+                const hasDescription = (svc as any).description;
                 return (
-                  <View style={styles.tableRow} key={key}>
-                    <Text style={styles.serviceCell}>{svc.name}</Text>
-                    <Text style={styles.unitCell}>{svc.unit}</Text>
-                    <Text style={styles.priceCell}>{formatMoney(svc.price)}</Text>
-                    <Text style={styles.qtyCell}>{svc.quantity}</Text>
-                    <Text style={styles.amountCell}>{formatMoney(amount)}</Text>
+                  <View key={key}>
+                    <View style={styles.tableRow}>
+                      <Text style={styles.serviceCell}>{svc.name}</Text>
+                      <Text style={styles.unitCell}>{svc.unit}</Text>
+                      <Text style={styles.priceCell}>{formatMoney(svc.price)}</Text>
+                      <Text style={styles.qtyCell}>{svc.quantity}</Text>
+                      <Text style={styles.amountCell}>{formatMoney(amount)}</Text>
+                    </View>
+                    {hasDescription && (
+                      <View style={styles.tableRow}>
+                        <Text style={[styles.serviceCell, { fontSize: 8, fontStyle: "italic", paddingLeft: 8, color: "#555" }]}>
+                          {(svc as any).description}
+                        </Text>
+                        <Text style={[styles.cell, { flex: 2.8, borderLeft: 0 }]}></Text>
+                      </View>
+                    )}
                   </View>
                 );
               })}
