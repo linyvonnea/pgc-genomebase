@@ -23,7 +23,7 @@ const projectSchema = baseProjectSchema.extend({
   pid: z.string().optional(),
   iid: z.string().optional(),
   year: z.coerce.number().int().min(2000),
-  clientNames: z.string().optional().transform((val) => val ? val.split(",").map((v) => v.trim()) : []),
+  clientNames: z.string().optional().transform((val) => val && val.trim() ? val.split(",").map((v) => v.trim()) : []),
   projectTag: z.string().optional(),
   status: z.enum(["Ongoing", "Completed", "Cancelled"]).optional(),
   fundingCategory: z.enum(["External", "In-House"]).optional(),
@@ -191,8 +191,8 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       </div>
       {/* Client Names */}
       <div>
-        <Label>Client Names</Label>
-        <Input name="clientNames" placeholder="Separate with comma" value={formData.clientNames} onChange={handleChange} />
+        <Label>Client Names (Optional)</Label>
+        <Input name="clientNames" placeholder="Separate with comma (optional)" value={formData.clientNames} onChange={handleChange} />
         {errors.clientNames && <p className="text-red-500 text-xs mt-1">{errors.clientNames}</p>}
       </div>
       {/* Project Lead */}
