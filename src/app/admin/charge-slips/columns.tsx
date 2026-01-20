@@ -36,6 +36,7 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     id: "dateIssued",
     header: "Date",
     accessorFn: (row) => toMillis((row as any).dateIssued),
+    size: 100,
     cell: ({ getValue }) => {
       const ms = getValue<number>();
       return isNaN(ms) ? "—" : new Date(ms).toLocaleDateString("en-CA");
@@ -45,27 +46,42 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
   {
     accessorKey: "chargeSlipNumber",
     header: "Charge Slip No.",
+    size: 140,
   },
   {
     accessorFn: (row) => row.clientInfo?.name,
     id: "clientInfo.name",
     header: "Client Name",
-    cell: ({ getValue }) => getValue() || "—",
+    size: 200,
+    cell: ({ getValue }) => {
+      const name = getValue() as string || "—";
+      return (
+        <div className="max-w-[200px] truncate" title={name}>
+          {name}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "total",
     header: "Amount",
+    size: 120,
     cell: ({ row }) => {
       const value = Number(row.getValue("total") ?? 0);
-      return `₱${value.toLocaleString("en-PH", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`;
+      return (
+        <div className="text-right">
+          ₱{value.toLocaleString("en-PH", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </div>
+      );
     },
   },
   {
     accessorKey: "status",
     header: "Status",
+    size: 110,
     cell: ({ row }) => {
       const raw = String(row.getValue("status") ?? "processing").toLowerCase();
       const color = statusColors[raw] || "bg-gray-100 text-gray-800";
@@ -73,29 +89,9 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     },
   },
   {
-    accessorKey: "datePaid",
-    header: "Date Paid",
-    cell: ({ row }) => {
-      const raw = row.getValue("datePaid") as Date | string | undefined | null;
-      const date = raw instanceof Date ? raw : new Date(raw || "");
-      return isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-CA");
-    },
-  },
-  {
-    accessorFn: (row) => row.clientInfo?.address,
-    id: "clientInfo.address",
-    header: "Address",
-    cell: ({ getValue }) => getValue() || "—",
-  },
-  {
-    accessorFn: (row) => row.project?.title,
-    id: "project.title",
-    header: "Payment For",
-    cell: ({ getValue }) => getValue() || "—",
-  },
-  {
     accessorKey: "categories",
     header: "Service Requested",
+    size: 200,
     cell: ({ row }) => {
       const categories = (row.getValue("categories") as ValidCategory[] | undefined) ?? [];
       if (!categories.length) return "—";
@@ -114,33 +110,49 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     },
   },
   {
-    accessorKey: "dvNumber",
-    header: "DV No.",
-    cell: ({ row }) => row.getValue("dvNumber") || "—",
-  },
-  {
-    accessorKey: "orNumber",
-    header: "OR No.",
-    cell: ({ row }) => row.getValue("orNumber") || "—",
-  },
-  {
-    accessorKey: "dateOfOR",
-    header: "Date of OR",
+    accessorKey: "datePaid",
+    header: "Date Paid",
+    size: 100,
     cell: ({ row }) => {
-      const raw = row.getValue("dateOfOR") as Date | string | undefined | null;
+      const raw = row.getValue("datePaid") as Date | string | undefined | null;
       const date = raw instanceof Date ? raw : new Date(raw || "");
       return isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-CA");
     },
   },
   {
-    accessorKey: "notes",
-    header: "Notes",
-    cell: ({ row }) => row.getValue("notes") || "—",
+    accessorKey: "orNumber",
+    header: "OR No.",
+    size: 100,
+    cell: ({ row }) => row.getValue("orNumber") || "—",
   },
   {
-    accessorFn: (row) => row.preparedBy?.name,
-    id: "preparedBy.name",
-    header: "Prepared By",
-    cell: ({ getValue }) => getValue() || "—",
+    accessorKey: "dvNumber",
+    header: "DV No.",
+    size: 100,
+    cell: ({ row }) => row.getValue("dvNumber") || "—",
   },
+  // Hidden columns - Access via Detail View/Modal
+  // {
+  //   accessorFn: (row) => row.clientInfo?.address,
+  //   id: "clientInfo.address",
+  //   header: "Address",
+  // },
+  // {
+  //   accessorFn: (row) => row.project?.title,
+  //   id: "project.title",
+  //   header: "Payment For",
+  // },
+  // {
+  //   accessorKey: "dateOfOR",
+  //   header: "Date of OR",
+  // },
+  // {
+  //   accessorKey: "notes",
+  //   header: "Notes",
+  // },
+  // {
+  //   accessorFn: (row) => row.preparedBy?.name,
+  //   id: "preparedBy.name",
+  //   header: "Prepared By",
+  // },
 ];
