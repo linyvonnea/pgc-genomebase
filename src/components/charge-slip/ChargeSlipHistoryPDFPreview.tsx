@@ -21,7 +21,7 @@ export function ChargeSlipHistoryPDFPreview({ record }: { record: ChargeSlipReco
       referenceNumber={record.referenceNumber}
       clientInfo={record.clientInfo}
       approvedBy={record.approvedBy}
-      dateIssued={normalizeDate(record.dateIssued ?? "")}
+      dateIssued={normalizeDate(record.dateIssued)}
       subtotal={record.subtotal}
       discount={record.discount}
       total={record.total}
