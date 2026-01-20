@@ -38,11 +38,6 @@ export const columns: ColumnDef<Client>[] = [
     ),
   },
   {
-    accessorKey: "pid",
-    header: "Project ID",
-    size: 120,
-  },
-  {
     accessorKey: "email",
     header: "Email",
     size: 220,
