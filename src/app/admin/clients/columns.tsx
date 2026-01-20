@@ -31,6 +31,10 @@ export const columns: ColumnDef<Client>[] = [
     header: "Client Name",
   },
   {
+    accessorKey: "pid",
+    header: "Project ID",
+  },
+  {
     accessorKey: "email",
     header: "Email",
   },
