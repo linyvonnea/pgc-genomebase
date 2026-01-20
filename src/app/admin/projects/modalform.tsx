@@ -39,9 +39,14 @@ const projectSchema = baseProjectSchema.extend({
 
 type ProjectFormData = z.infer<typeof projectSchema>;
 
+// Form state type with string for clientNames (before transform)
+type ProjectFormState = Omit<ProjectFormData, 'clientNames'> & {
+  clientNames: string;
+};
+
 export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => void }) {
   // Form state for all project fields
-  const [formData, setFormData] = useState<ProjectFormData>({
+  const [formData, setFormData] = useState<ProjectFormState>({
     pid: "",
     iid: "",
     year: new Date().getFullYear(),
@@ -59,7 +64,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     notes: "",
   });
   // Error state for validation messages
-  const [errors, setErrors] = useState<Partial<Record<keyof ProjectFormData, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof ProjectFormState, string>>>({});
 
   // Mutation for adding/updating a project in Firestore
   const mutation = useMutation({
@@ -89,9 +94,9 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     const result = projectSchema.omit({ pid: true }).safeParse(formData); // omit pid for initial validation
     if (!result.success) {
       // Collect and display validation errors
-      const fieldErrors: Partial<Record<keyof ProjectFormData, string>> = {};
+      const fieldErrors: Partial<Record<keyof ProjectFormState, string>> = {};
       result.error.errors.forEach((err) => {
-        const field = err.path[0] as keyof ProjectFormData;
+        const field = err.path[0] as keyof ProjectFormState;
         fieldErrors[field] = err.message;
       });
       setErrors(fieldErrors);
@@ -147,7 +152,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
   };
 
   // Handle select dropdown changes
-  const handleSelect = (field: keyof ProjectFormData, value: string) => {
+  const handleSelect = (field: keyof ProjectFormState, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
