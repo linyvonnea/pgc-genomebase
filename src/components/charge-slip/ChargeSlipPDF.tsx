@@ -340,7 +340,7 @@ export function ChargeSlipPDF({
         <View style={[styles.section, { marginBottom: 8 }]}>
           <Text style={styles.italicNote}>* This charge slip is valid for 30 days from the date of issue.</Text>
           <Text style={styles.italicNote}>* Payment terms: Full payment is required before the release of results.</Text>
-          <Text style={styles.italicNote}>* 12% Discount is applicable only to the following: UP Constituents, Students, and Active PGC Visayas.</Text>
+          <Text style={styles.italicNote}>* 12% Discount is applicable only to the following: UP Constituents, Students, and Active PGC Visayas Consortium Members.</Text>
         </View>
 
         {/* Signatures */}
