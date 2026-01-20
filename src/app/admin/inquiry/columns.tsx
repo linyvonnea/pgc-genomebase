@@ -61,23 +61,67 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
     header: "Inquiry ID",
+    size: 120,
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Date",
+    size: 100,
+    cell: ({ row }) => {
+      // Custom date formatting with validation
+      const { isValid, data } = validateInquiry(row.original);
+      
+      if (!isValid || !data) {
+        return <span className="text-red-500">Invalid date</span>;
+      }
+      // Format date for display (YYYY-MM-DD format for consistency)
+      return new Date(data.createdAt).toLocaleDateString("en-CA");
+    },
   },
   {
     accessorKey: "name",
     header: "Name",
+    size: 180,
+    cell: ({ getValue }) => {
+      const name = getValue() as string;
+      return (
+        <div className="max-w-[180px] truncate" title={name}>
+          {name}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "email",
     header: "Email",
+    size: 200,
+    cell: ({ getValue }) => {
+      const email = getValue() as string || "—";
+      return (
+        <div className="max-w-[200px] truncate" title={email}>
+          {email}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "affiliation",
     header: "Affiliation",
+    size: 220,
+    cell: ({ getValue }) => {
+      const affiliation = getValue() as string;
+      return (
+        <div className="max-w-[220px] truncate" title={affiliation}>
+          {affiliation}
+        </div>
+      );
+    },
   },
-  {
-    accessorKey: "designation",
-    header: "Designation",
-  },
+  // Designation - Hidden for cleaner view
+  // {
+  //   accessorKey: "designation",
+  //   header: "Designation",
+  // },
   {
     accessorKey: "status",
     header: "Status",
@@ -103,22 +147,9 @@ export const columns: ColumnDef<Inquiry>[] = [
     },
   },
   {
-    accessorKey: "createdAt",
-    header: "Date",
-    cell: ({ row }) => {
-      // Custom date formatting with validation
-      const { isValid, data } = validateInquiry(row.original);
-      
-      if (!isValid || !data) {
-        return <span className="text-red-500">Invalid date</span>;
-      }
-      // Format date for display (MM/DD/YYYY format)
-      return new Date(data.createdAt).toLocaleDateString();
-    },
-  },
-  {
     id: "actions", // Custom column ID since it doesn't map to data
     header: "Actions",
+    size: 180,
     cell: ({ row }) => {
       const inquiry = row.original;
       const router = useRouter();
@@ -138,7 +169,8 @@ export const columns: ColumnDef<Inquiry>[] = [
               router.push(`/admin/quotations/new?inquiryId=${inquiry.id}`)
             }
             variant="outline"
-            className="text-sm"
+            size="sm"
+            className="whitespace-nowrap"
           >
             Quote
           </Button>
