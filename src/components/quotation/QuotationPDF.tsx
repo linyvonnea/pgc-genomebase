@@ -82,7 +82,12 @@ export function QuotationPDF({
     (s): s is ServiceLike =>
       s != null && typeof (s as any).price === "number" && typeof (s as any).quantity === "number"
   );
-
+  // Debug: Log services with descriptions
+  console.log('PDF Services:', safeServices.map(s => ({ 
+    name: s.name, 
+    description: s.description,
+    hasDescription: !!(s as any).description 
+  })));
   // group by category (fallback to “Uncategorized”)
   const groupedByCategory = safeServices.reduce<Record<string, ServiceLike[]>>((acc, svc) => {
     const key = svc.category && svc.category.trim() ? svc.category : "Uncategorized";

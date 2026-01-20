@@ -115,10 +115,13 @@ export default function QuotationBuilder({
   const currentYear = new Date().getFullYear();
 
   const toggleService = (id: string, service: ServiceItem) => {
+    console.log('Adding service:', service.name, 'Description:', service.description);
     setSelectedServices((prev) => {
       const exists = prev.find((s) => s.id === id);
       if (exists) return prev.filter((s) => s.id !== id);
-      return [...prev, { ...service, quantity: 1, samples: 0, description: service.description }];
+      const newService = { ...service, quantity: 1, samples: 0, description: service.description };
+      console.log('New service object:', newService);
+      return [...prev, newService];
     });
   };
 
