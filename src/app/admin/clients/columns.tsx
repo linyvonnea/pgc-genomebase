@@ -29,6 +29,16 @@ export const columns: ColumnDef<Client>[] = [
   {
     accessorKey: "name",
     header: "Client Name",
+    size: 250,
+    cell: ({ getValue }) => (
+      <div className="max-w-[250px] whitespace-normal break-words">
+        {getValue() as string}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "pid",
+    header: "Project ID",
   },
   {
     accessorKey: "pid",
