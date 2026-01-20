@@ -139,7 +139,7 @@ export function QuotationPDF({
               {items.map((svc, idx) => {
                 const amount = svc.price * svc.quantity;
                 const key = `${svc.id ?? "custom"}-${svc.name}-${idx}`;
-                const hasDescription = (svc as any).description;
+                const description = svc.description || (svc as any).description;
                 return (
                   <View key={key}>
                     <View style={styles.tableRow}>
@@ -149,10 +149,10 @@ export function QuotationPDF({
                       <Text style={styles.qtyCell}>{svc.quantity}</Text>
                       <Text style={styles.amountCell}>{formatMoney(amount)}</Text>
                     </View>
-                    {hasDescription && (
+                    {description && (
                       <View style={styles.tableRow}>
-                        <Text style={[styles.serviceCell, { fontSize: 8, fontStyle: "italic", paddingLeft: 8, color: "#555" }]}>
-                          {(svc as any).description}
+                        <Text style={[styles.serviceCell, { fontSize: 8, fontStyle: "italic", paddingLeft: 12, color: "#666", paddingTop: 2, paddingBottom: 4 }]}>
+                          {description}
                         </Text>
                         <Text style={[styles.cell, { flex: 2.8, borderLeft: 0 }]}></Text>
                       </View>
