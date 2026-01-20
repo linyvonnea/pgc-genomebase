@@ -7,4 +7,6 @@ export interface ServiceItem {
   unit: string;
   price: number;
   description?: string; // Optional detailed description for service
+  minQuantity?: number;
+  additionalUnitPrice?: number;
 }
