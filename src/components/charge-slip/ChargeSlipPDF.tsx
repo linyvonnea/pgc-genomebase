@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 3,
     fontWeight: "bold",
-    textAlign: "center",
+    textAlign: "left",
   },
   italicNote: {
     fontStyle: "italic",
