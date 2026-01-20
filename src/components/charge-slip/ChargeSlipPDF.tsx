@@ -276,11 +276,11 @@ export function ChargeSlipPDF({
         <View style={styles.section}>
           <Text>No. {chargeSlipNumber}</Text>
           <Text>
-            Date Issued: {dateIssued ? new Date(dateIssued).toLocaleDateString("en-PH", {
+            Date Issued: {new Date(dateIssued).toLocaleDateString("en-PH", {
               year: "numeric",
               month: "long",
               day: "numeric",
-            }) : "N/A"}
+            })}
           </Text>
         </View>
 
