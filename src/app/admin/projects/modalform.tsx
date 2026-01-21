@@ -27,7 +27,7 @@ const projectSchema = baseProjectSchema.extend({
   projectTag: z.string().optional(),
   status: z.enum(["Ongoing", "Completed", "Cancelled"]).optional(),
   fundingCategory: z.enum(["External", "In-House"]).optional(),
-  serviceRequested: z.array(z.string()).optional(),
+  serviceRequested: z.string().optional().transform((val) => val && val.trim() ? [val] : []),
   personnelAssigned: z.string().optional(),
   notes: z.string().optional(),
   startDate: z.string().optional(),
@@ -59,7 +59,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     sendingInstitution: "",
     fundingCategory: "In-House",
     fundingInstitution: "",
-    serviceRequested: [],
+    serviceRequested: "",
     personnelAssigned: "",
     notes: "",
   });
@@ -114,7 +114,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
           pid: nextPid,
           year: Number(result.data.year),
           clientNames: result.data.clientNames,
-          serviceRequested: result.data.serviceRequested,
+          serviceRequested: result.data.serviceRequested ? [result.data.serviceRequested] : [],
           lead: result.data.lead,
           notes: result.data.notes || "",
           sendingInstitution: (
@@ -159,25 +159,16 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     }));
   };
 
-  // Checkbox options for serviceRequested
+  // Dropdown options for serviceRequested
   const serviceOptions = [
     "Laboratory Services",
     "Retail Services",
     "Equipment Use",
-    "Bioinformatics Analysis"
+    "Bioinformatics Analysis",
+    "Training"
   ];
 
-  // Handle checkbox changes for serviceRequested
-  const handleServiceCheckbox = (service: string) => {
-    setFormData((prev) => {
-      const selected = prev.serviceRequested || [];
-      if (selected.includes(service)) {
-        return { ...prev, serviceRequested: selected.filter((s) => s !== service) };
-      } else {
-        return { ...prev, serviceRequested: [...selected, service] };
-      }
-    });
-  };
+
 
   // Render the project form
   return (
@@ -277,21 +268,17 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         <Input name="fundingInstitution" value={formData.fundingInstitution || ""} onChange={handleChange} />
         {errors.fundingInstitution && <p className="text-red-500 text-xs mt-1">{errors.fundingInstitution}</p>}
       </div>
-      {/* Service Requested checkboxes */}
+      {/* Service Requested dropdown */}
       <div>
         <Label>Service Requested</Label>
-        <div className="flex flex-col gap-2">
-          {serviceOptions.map((option) => (
-            <label key={option} className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={formData.serviceRequested?.includes(option) || false}
-                onChange={() => handleServiceCheckbox(option)}
-              />
-              {option}
-            </label>
-          ))}
-        </div>
+        <Select value={formData.serviceRequested || ""} onValueChange={val => handleSelect("serviceRequested", val)}>
+          <SelectTrigger><SelectValue placeholder="Select service" /></SelectTrigger>
+          <SelectContent>
+            {serviceOptions.map((option) => (
+              <SelectItem key={option} value={option}>{option}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {errors.serviceRequested && <p className="text-red-500 text-xs mt-1">{errors.serviceRequested}</p>}
       </div>
       {/* Personnel Assigned */}
