@@ -15,7 +15,8 @@ export const adminProjectSchema = z.object({
     "Laboratory Services",
     "Retail Services",
     "Equipment Use",
-    "Bioinformatics Analysis"
+    "Bioinformatics Analysis",
+    "Training"
   ])).optional().or(z.undefined()),
   personnelAssigned: z.string().optional(),
   notes: z.string().optional(),
