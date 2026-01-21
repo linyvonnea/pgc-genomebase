@@ -62,8 +62,8 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       fundingCategory: project.fundingCategory || "In-House",
       fundingInstitution: project.fundingInstitution || "",
       serviceRequested: Array.isArray(project.serviceRequested)
-        ? project.serviceRequested.filter((s): s is "Laboratory Services" | "Retail Services" | "Equipment Use" | "Bioinformatics Analysis" =>
-            ["Laboratory Services", "Retail Services", "Equipment Use", "Bioinformatics Analysis"].includes(s))
+        ? project.serviceRequested.filter((s): s is "Laboratory Services" | "Retail Services" | "Equipment Use" | "Bioinformatics Analysis" | "Training" =>
+            ["Laboratory Services", "Retail Services", "Equipment Use", "Bioinformatics Analysis", "Training"].includes(s))
         : [],
       notes: project.notes || "",
       personnelAssigned: project.personnelAssigned || "",
@@ -98,6 +98,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
         "Retail Services",
         "Equipment Use",
         "Bioinformatics Analysis",
+        "Training",
       ] as const;
       serviceRequested = (serviceRequested as string)
         .split(",")
@@ -148,7 +149,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Project</DialogTitle>
           <DialogDescription>
@@ -161,105 +162,118 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
               console.error("Form validation errors:", errors);
               toast.error("Please fix the errors in the form.");
             })}
-            className="space-y-4"
+            className="space-y-3"
           >
-            <FormField
-              control={form.control}
-              name="year"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Year</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter year"
-                      {...field}
-                      onChange={e => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="startDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Start Date</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={"w-full justify-start text-left font-normal" + (field.value ? "" : " text-muted-foreground")}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ?
-                          new Date(field.value).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })
-                          : "Pick a date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value ? new Date(field.value) : undefined}
-                        onSelect={date => field.onChange(date)}
-                        initialFocus
+            {/* Basic Information Section */}
+            <div className="border-b pb-2">
+              <h3 className="text-sm font-semibold text-gray-700">Basic Information</h3>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="year"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Year</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Enter year"
+                        className="h-9"
+                        {...field}
+                        onChange={e => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
                       />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="lead"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Project Lead</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter project lead" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Start Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={"w-full justify-start text-left font-normal h-9" + (field.value ? "" : " text-muted-foreground")}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {field.value ?
+                            new Date(field.value).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })
+                            : "Pick a date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ? new Date(field.value) : undefined}
+                          onSelect={date => field.onChange(date)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Project Title</FormLabel>
+                  <FormLabel className="text-xs">Project Title</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter project title" {...field} />
+                    <Input placeholder="Enter project title" className="h-9" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="projectTag"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Project Tag</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter project tag" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="lead"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Project Lead</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter project lead" className="h-9" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="projectTag"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Project Tag</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter project tag" className="h-9" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Status</FormLabel>
+                  <FormLabel className="text-xs">Status</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="w-full h-9">
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                     </FormControl>
@@ -273,75 +287,88 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="sendingInstitution"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Sending Institution</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select sending institution" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="UP System">UP System</SelectItem>
-                      <SelectItem value="SUC/HEI">SUC/HEI</SelectItem>
-                      <SelectItem value="Government">Government</SelectItem>
-                      <SelectItem value="Private/Local">Private/Local</SelectItem>
-                      <SelectItem value="International">International</SelectItem>
-                      <SelectItem value="N/A">N/A</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="fundingCategory"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Funding Category</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select funding category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="External">External</SelectItem>
-                      <SelectItem value="In-House">In-House</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
+            {/* Funding Section */}
+            <div className="border-b pb-2 pt-2">
+              <h3 className="text-sm font-semibold text-gray-700">Funding & Institution</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="sendingInstitution"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Sending Institution</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="w-full h-9">
+                          <SelectValue placeholder="Select institution" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="UP System">UP System</SelectItem>
+                        <SelectItem value="SUC/HEI">SUC/HEI</SelectItem>
+                        <SelectItem value="Government">Government</SelectItem>
+                        <SelectItem value="Private/Local">Private/Local</SelectItem>
+                        <SelectItem value="International">International</SelectItem>
+                        <SelectItem value="N/A">N/A</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="fundingCategory"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Funding Category</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="w-full h-9">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="External">External</SelectItem>
+                        <SelectItem value="In-House">In-House</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             <FormField
               control={form.control}
               name="fundingInstitution"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Funding Institution</FormLabel>
+                  <FormLabel className="text-xs">Funding Institution (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter funding institution" {...field} />
+                    <Input placeholder="Enter funding institution" className="h-9" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Services Section */}
+            <div className="border-b pb-2 pt-2">
+              <h3 className="text-sm font-semibold text-gray-700">Services & Personnel</h3>
+            </div>
             <FormField
               control={form.control}
               name="serviceRequested"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Service Requested</FormLabel>
+                  <FormLabel className="text-xs">Service Requested</FormLabel>
                   <FormControl>
-                    <div className="flex flex-col gap-2">
-                      {(["Laboratory Services", "Retail Services", "Equipment Use", "Bioinformatics Analysis"] as const).map(option => (
-                        <label key={option} className="flex items-center gap-2">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                      {(["Laboratory Services", "Retail Services", "Equipment Use", "Bioinformatics Analysis", "Training"] as const).map(option => (
+                        <label key={option} className="flex items-center gap-2 text-sm">
                           <input
                             type="checkbox"
                             checked={field.value?.includes(option) || false}
@@ -353,6 +380,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                                 field.onChange([...current, option]);
                               }
                             }}
+                            className="h-4 w-4"
                           />
                           {option}
                         </label>
@@ -363,33 +391,35 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="personnelAssigned"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Personnel Assigned</FormLabel>
+                  <FormLabel className="text-xs">Personnel Assigned (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter personnel assigned" {...field} />
+                    <Input placeholder="Enter personnel assigned" className="h-9" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Notes</FormLabel>
+                  <FormLabel className="text-xs">Notes (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter notes" {...field} />
+                    <Input placeholder="Enter notes" className="h-9" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="flex justify-between items-center pt-4">
+            <div className="flex justify-between items-center pt-3 mt-3 border-t">
               <button
                 type="button"
                 className="flex items-center gap-1 text-red-600 hover:text-red-700 text-sm font-medium bg-transparent border-none p-0 m-0 focus:outline-none"
@@ -405,11 +435,12 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                   variant="outline" 
                   onClick={() => setIsOpen(false)}
                   disabled={isLoading}
+                  className="px-4"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isLoading || form.formState.isSubmitting}>
-                  {(isLoading || form.formState.isSubmitting) ? "Saving..." : "Save changes"}
+                <Button type="submit" disabled={isLoading || form.formState.isSubmitting} className="px-6">
+                  {(isLoading || form.formState.isSubmitting) ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             </div>
