@@ -56,7 +56,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     title: "",
     projectTag: "",
     status: "Ongoing",
-    sendingInstitution: "Government",
+    sendingInstitution: "",
     fundingCategory: "In-House",
     fundingInstitution: "",
     serviceRequested: [],
