@@ -246,7 +246,17 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       {/* Sending Institution */}
       <div>
         <Label>Sending Institution</Label>
-        <Input name="sendingInstitution" value={formData.sendingInstitution || ""} onChange={handleChange} />
+        <Select value={formData.sendingInstitution || ""} onValueChange={val => handleSelect("sendingInstitution", val)}>
+          <SelectTrigger><SelectValue placeholder="Select sending institution" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="UP System">UP System</SelectItem>
+            <SelectItem value="SUC/HEI">SUC/HEI</SelectItem>
+            <SelectItem value="Government">Government</SelectItem>
+            <SelectItem value="Private/Local">Private/Local</SelectItem>
+            <SelectItem value="International">International</SelectItem>
+            <SelectItem value="N/A">N/A</SelectItem>
+          </SelectContent>
+        </Select>
         {errors.sendingInstitution && <p className="text-red-500 text-xs mt-1">{errors.sendingInstitution}</p>}
       </div>
       {/* Funding Category dropdown */}
