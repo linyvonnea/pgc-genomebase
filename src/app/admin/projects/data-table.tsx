@@ -72,6 +72,7 @@ export function DataTable<TData, TValue>({
     globalFilterFn: customGlobalFilterFn,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
+    getRowId: (row: any) => row.pid || String(Math.random()), // Use pid as unique row identifier
     state: {
       sorting,
       columnFilters,
