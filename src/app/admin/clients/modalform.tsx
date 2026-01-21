@@ -158,7 +158,18 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
         <Select value={selectedPid} onValueChange={setSelectedPid}>
           <SelectTrigger className="h-9 w-full">
             <SelectValue placeholder="Select or search project">
-              {selectedPid || "Select or search project"}
+              {selectedPid ? (
+                <div className="flex flex-col items-start" title={projectOptions.find(p => p.pid === selectedPid)?.title}>
+                  <span className="font-medium text-sm">{selectedPid}</span>
+                  {projectOptions.find(p => p.pid === selectedPid)?.title && (
+                    <span className="text-xs text-gray-500 truncate max-w-[250px]">
+                      {projectOptions.find(p => p.pid === selectedPid)?.title}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                "Select or search project"
+              )}
             </SelectValue>
           </SelectTrigger>
           <SelectContent className="max-h-[300px] w-[400px]">
