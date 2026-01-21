@@ -182,60 +182,63 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
 
   // Render the project form
   return (
-    <form className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-4" onSubmit={handleSubmit}>
+    <form className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4" onSubmit={handleSubmit}>
+      {/* Basic Information Section */}
+      <div className="col-span-2">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Basic Information</h3>
+      </div>
+      
       {/* Year */}
       <div>
-        <Label>Year</Label>
-        <Input type="number" name="year" value={formData.year} onChange={handleChange} />
+        <Label className="text-xs">Year</Label>
+        <Input type="number" name="year" value={formData.year} onChange={handleChange} className="h-9" />
         {errors.year && <p className="text-red-500 text-xs mt-1">{errors.year}</p>}
       </div>
       {/* Start Date */}
       <div>
-        <Label>Start Date</Label>
-        <Input type="date" name="startDate" value={formData.startDate} onChange={handleChange} />
+        <Label className="text-xs">Start Date</Label>
+        <Input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className="h-9" />
         {errors.startDate && <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>}
       </div>
-      {/* Client Names */}
-      <div>
-        <Label>Client Names (Optional)</Label>
-        <Input name="clientNames" placeholder="Separate with comma (optional)" value={formData.clientNames} onChange={handleChange} />
-        {errors.clientNames && <p className="text-red-500 text-xs mt-1">{errors.clientNames}</p>}
-      </div>
-      {/* Project Lead */}
-      <div>
-        <Label>Project Lead</Label>
-        <Input name="lead" value={formData.lead} onChange={handleChange} />
-        {errors.lead && <p className="text-red-500 text-xs mt-1">{errors.lead}</p>}
-      </div>
-      {/* Remove Project ID textbox */}
-      {/* <div>
-        <Label>Project ID</Label>
-        <Input name="pid" value={formData.pid} onChange={handleChange} />
-        {errors.pid && <p className="text-red-500 text-xs mt-1">{errors.pid}</p>}
-      </div> */}
-      {/* Inquiry ID */}
-      <div>
-        <Label>Inquiry ID</Label>
-        <Input name="iid" value={formData.iid} onChange={handleChange} />
-        {errors.iid && <p className="text-red-500 text-xs mt-1">{errors.iid}</p>}
-      </div>
-      {/* Project Title */}
-      <div>
-        <Label>Project Title</Label>
-        <Input name="title" value={formData.title} onChange={handleChange} />
+
+      {/* Project Title - Full Width */}
+      <div className="col-span-2">
+        <Label className="text-xs">Project Title</Label>
+        <Input name="title" value={formData.title} onChange={handleChange} className="h-9" />
         {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
       </div>
+
+      {/* Project Lead */}
+      <div>
+        <Label className="text-xs">Project Lead</Label>
+        <Input name="lead" value={formData.lead} onChange={handleChange} className="h-9" />
+        {errors.lead && <p className="text-red-500 text-xs mt-1">{errors.lead}</p>}
+      </div>
+      {/* Inquiry ID */}
+      <div>
+        <Label className="text-xs">Inquiry ID (Optional)</Label>
+        <Input name="iid" value={formData.iid} onChange={handleChange} className="h-9" />
+        {errors.iid && <p className="text-red-500 text-xs mt-1">{errors.iid}</p>}
+      </div>
+
+      {/* Client Names - Full Width */}
+      <div className="col-span-2">
+        <Label className="text-xs">Client Names (Optional)</Label>
+        <Input name="clientNames" placeholder="Separate with comma" value={formData.clientNames} onChange={handleChange} className="h-9" />
+        {errors.clientNames && <p className="text-red-500 text-xs mt-1">{errors.clientNames}</p>}
+      </div>
+
       {/* Project Tag */}
       <div>
-        <Label>Project Tag</Label>
-        <Input name="projectTag" value={formData.projectTag} onChange={handleChange} />
+        <Label className="text-xs">Project Tag</Label>
+        <Input name="projectTag" value={formData.projectTag} onChange={handleChange} className="h-9" />
         {errors.projectTag && <p className="text-red-500 text-xs mt-1">{errors.projectTag}</p>}
       </div>
       {/* Status dropdown */}
       <div>
-        <Label>Status</Label>
+        <Label className="text-xs">Status</Label>
         <Select value={formData.status || ""} onValueChange={val => handleSelect("status", val)}>
-          <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+          <SelectTrigger className="h-9"><SelectValue placeholder="Select status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="Ongoing">Ongoing</SelectItem>
             <SelectItem value="Completed">Completed</SelectItem>
@@ -244,11 +247,17 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         </Select>
         {errors.status && <p className="text-red-500 text-xs mt-1">{errors.status}</p>}
       </div>
+
+      {/* Funding Section */}
+      <div className="col-span-2 mt-2">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Funding & Institution</h3>
+      </div>
+
       {/* Sending Institution */}
       <div>
-        <Label>Sending Institution</Label>
+        <Label className="text-xs">Sending Institution</Label>
         <Select value={formData.sendingInstitution || ""} onValueChange={val => handleSelect("sendingInstitution", val)}>
-          <SelectTrigger><SelectValue placeholder="Select sending institution" /></SelectTrigger>
+          <SelectTrigger className="h-9"><SelectValue placeholder="Select institution" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="UP System">UP System</SelectItem>
             <SelectItem value="SUC/HEI">SUC/HEI</SelectItem>
@@ -262,9 +271,9 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       </div>
       {/* Funding Category dropdown */}
       <div>
-        <Label>Funding Category</Label>
+        <Label className="text-xs">Funding Category</Label>
         <Select value={formData.fundingCategory || ""} onValueChange={val => handleSelect("fundingCategory", val)}>
-          <SelectTrigger><SelectValue placeholder="Select funding category" /></SelectTrigger>
+          <SelectTrigger className="h-9"><SelectValue placeholder="Select category" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="External">External</SelectItem>
             <SelectItem value="In-House">In-House</SelectItem>
@@ -272,22 +281,30 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         </Select>
         {errors.fundingCategory && <p className="text-red-500 text-xs mt-1">{errors.fundingCategory}</p>}
       </div>
-      {/* Funding Institution */}
-      <div>
-        <Label>Funding Institution</Label>
-        <Input name="fundingInstitution" value={formData.fundingInstitution || ""} onChange={handleChange} />
+
+      {/* Funding Institution - Full Width */}
+      <div className="col-span-2">
+        <Label className="text-xs">Funding Institution (Optional)</Label>
+        <Input name="fundingInstitution" value={formData.fundingInstitution || ""} onChange={handleChange} className="h-9" />
         {errors.fundingInstitution && <p className="text-red-500 text-xs mt-1">{errors.fundingInstitution}</p>}
       </div>
-      {/* Service Requested checkboxes */}
-      <div>
-        <Label>Service Requested</Label>
-        <div className="flex flex-col gap-2">
+
+      {/* Services Section */}
+      <div className="col-span-2 mt-2">
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">Services & Personnel</h3>
+      </div>
+
+      {/* Service Requested checkboxes - Horizontal layout */}
+      <div className="col-span-2">
+        <Label className="text-xs">Service Requested</Label>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2">
           {serviceOptions.map((option) => (
-            <label key={option} className="flex items-center gap-2">
+            <label key={option} className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={formData.serviceRequested?.includes(option) || false}
                 onChange={() => handleServiceCheckbox(option)}
+                className="h-4 w-4"
               />
               {option}
             </label>
@@ -295,22 +312,25 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         </div>
         {errors.serviceRequested && <p className="text-red-500 text-xs mt-1">{errors.serviceRequested}</p>}
       </div>
-      {/* Personnel Assigned */}
-      <div>
-        <Label>Personnel Assigned</Label>
-        <Input name="personnelAssigned" value={formData.personnelAssigned || ""} onChange={handleChange} />
+
+      {/* Personnel Assigned - Full Width */}
+      <div className="col-span-2">
+        <Label className="text-xs">Personnel Assigned (Optional)</Label>
+        <Input name="personnelAssigned" value={formData.personnelAssigned || ""} onChange={handleChange} className="h-9" />
         {errors.personnelAssigned && <p className="text-red-500 text-xs mt-1">{errors.personnelAssigned}</p>}
       </div>
-      {/* Notes */}
-      <div>
-        <Label>Notes</Label>
-        <Textarea name="notes" value={formData.notes || ""} onChange={handleChange} />
+
+      {/* Notes - Full Width */}
+      <div className="col-span-2">
+        <Label className="text-xs">Notes (Optional)</Label>
+        <Textarea name="notes" value={formData.notes || ""} onChange={handleChange} rows={3} className="resize-none" />
         {errors.notes && <p className="text-red-500 text-xs mt-1">{errors.notes}</p>}
       </div>
+
       {/* Submit button */}
-      <div className="col-span-2 flex justify-end mt-4">
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "Saving..." : "Save"}
+      <div className="col-span-2 flex justify-end mt-2 pt-2 border-t">
+        <Button type="submit" disabled={mutation.isPending} className="px-6">
+          {mutation.isPending ? "Saving..." : "Save Project"}
         </Button>
       </div>
     </form>
