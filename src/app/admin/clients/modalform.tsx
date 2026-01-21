@@ -171,9 +171,8 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
   // Filter inquiry options by search
   const filteredInquiryOptions = inquiryOptions.filter(
     (inq) =>
-      inq.id?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
       inq.name?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
-      inq.email?.toLowerCase().includes(inquirySearch.toLowerCase())
+      inq.affiliation?.toLowerCase().includes(inquirySearch.toLowerCase())
   );
 
   return (
@@ -190,11 +189,13 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
           <SelectTrigger className="h-9 w-full">
             <SelectValue placeholder="Select inquiry to auto-fill">
               {selectedInquiry ? (
-                <div className="flex flex-col items-start" title={inquiryOptions.find(i => i.id === selectedInquiry)?.name}>
+                <div className="flex flex-col items-start" title={inquiryOptions.find(i => i.id === selectedInquiry)?.affiliation}>
                   <span className="font-medium text-sm">{inquiryOptions.find(i => i.id === selectedInquiry)?.name}</span>
-                  <span className="text-xs text-gray-500 truncate max-w-[250px]">
-                    {selectedInquiry}
-                  </span>
+                  {inquiryOptions.find(i => i.id === selectedInquiry)?.affiliation && (
+                    <span className="text-xs text-gray-500 truncate max-w-[250px]">
+                      {inquiryOptions.find(i => i.id === selectedInquiry)?.affiliation}
+                    </span>
+                  )}
                 </div>
               ) : (
                 "Select inquiry to auto-fill"
@@ -204,7 +205,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
           <SelectContent className="max-h-[300px] w-[400px]">
             <div className="sticky top-0 bg-white z-10 p-2 border-b">
               <Input
-                placeholder="Search by Inquiry ID, Name, or Email..."
+                placeholder="Search by Name or Affiliation..."
                 value={inquirySearch}
                 onChange={e => setInquirySearch(e.target.value)}
                 className="h-9 text-sm"
@@ -216,10 +217,11 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
                   <SelectItem key={inq.id} value={inq.id || ""} className="text-sm">
                     <div className="flex flex-col py-1">
                       <span className="font-medium text-gray-900">{inq.name}</span>
-                      <span className="text-xs text-gray-500">{inq.id}</span>
-                      <span className="text-xs text-gray-400 truncate max-w-[350px]" title={inq.email}>
-                        {inq.email}
-                      </span>
+                      {inq.affiliation && (
+                        <span className="text-xs text-gray-500 truncate max-w-[350px]" title={inq.affiliation}>
+                          {inq.affiliation}
+                        </span>
+                      )}
                     </div>
                   </SelectItem>
                 ))
