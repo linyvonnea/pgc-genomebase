@@ -18,6 +18,8 @@ import { toast } from "sonner";
 import { doc, setDoc, serverTimestamp, updateDoc, arrayUnion } from "firebase/firestore";
 import { getNextCid } from "@/services/clientService";
 import { getProjects } from "@/services/projectsService";
+import { getInquiries } from "@/services/inquiryService";
+import { Inquiry } from "@/types/Inquiry";
 import { DialogFooter } from "@/components/ui/dialog";
 
 // Extended client schema for admin modal validation
@@ -55,6 +57,9 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
   const [projectOptions, setProjectOptions] = useState<{ pid: string; title?: string }[]>([]);
   const [selectedPid, setSelectedPid] = useState<string>("");
   const [projectSearch, setProjectSearch] = useState("");
+  const [inquiryOptions, setInquiryOptions] = useState<Inquiry[]>([]);
+  const [selectedInquiry, setSelectedInquiry] = useState<string>("");
+  const [inquirySearch, setInquirySearch] = useState("");
 
   // Mutation for saving client to Firestore
   const mutation = useMutation({
@@ -80,12 +85,30 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
     },
   });
 
-  // Fetch project options for dropdown
+  // Fetch project and inquiry options for dropdowns
   useEffect(() => {
     getProjects().then((projects) => {
       setProjectOptions(projects.map((p) => ({ pid: p.pid!, title: p.title })));
     });
+    getInquiries().then((inquiries) => {
+      setInquiryOptions(inquiries);
+    });
   }, []);
+
+  // Handle inquiry selection - auto-populate form fields
+  const handleInquirySelect = (inquiryId: string) => {
+    setSelectedInquiry(inquiryId);
+    const inquiry = inquiryOptions.find(inq => inq.iid === inquiryId);
+    if (inquiry) {
+      setFormData(prev => ({
+        ...prev,
+        name: inquiry.fullName || "",
+        email: inquiry.email || "",
+        affiliation: inquiry.affiliation || "",
+        designation: inquiry.designation || "",
+      }));
+    }
+  };
 
   // Handle form submit: validate, save client, update project
   const handleSubmit = async (e: React.FormEvent) => {
@@ -145,8 +168,73 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
       (proj.title?.toLowerCase().includes(projectSearch.toLowerCase()) ?? false)
   );
 
+  // Filter inquiry options by search
+  const filteredInquiryOptions = inquiryOptions.filter(
+    (inq) =>
+      inq.iid?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
+      inq.fullName?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
+      inq.email?.toLowerCase().includes(inquirySearch.toLowerCase())
+  );
+
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
+      {/* Quick Fill Section */}
+      <div className="border-b pb-2">
+        <h3 className="text-sm font-semibold text-gray-700">Quick Fill from Inquiry</h3>
+      </div>
+
+      {/* Inquiry Dropdown */}
+      <div>
+        <Label className="text-xs">Select Inquiry (Optional)</Label>
+        <Select value={selectedInquiry} onValueChange={handleInquirySelect}>
+          <SelectTrigger className="h-9 w-full">
+            <SelectValue placeholder="Select inquiry to auto-fill">
+              {selectedInquiry ? (
+                <div className="flex flex-col items-start" title={inquiryOptions.find(i => i.iid === selectedInquiry)?.fullName}>
+                  <span className="font-medium text-sm">{selectedInquiry}</span>
+                  {inquiryOptions.find(i => i.iid === selectedInquiry)?.fullName && (
+                    <span className="text-xs text-gray-500 truncate max-w-[250px]">
+                      {inquiryOptions.find(i => i.iid === selectedInquiry)?.fullName}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                "Select inquiry to auto-fill"
+              )}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent className="max-h-[300px] w-[400px]">
+            <div className="sticky top-0 bg-white z-10 p-2 border-b">
+              <Input
+                placeholder="Search by Inquiry ID, Name, or Email..."
+                value={inquirySearch}
+                onChange={e => setInquirySearch(e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="max-h-[240px] overflow-y-auto">
+              {filteredInquiryOptions.length > 0 ? (
+                filteredInquiryOptions.map((inq) => (
+                  <SelectItem key={inq.iid} value={inq.iid || ""} className="text-sm">
+                    <div className="flex flex-col py-1">
+                      <span className="font-medium text-gray-900">{inq.iid}</span>
+                      <span className="text-xs text-gray-600">{inq.fullName}</span>
+                      <span className="text-xs text-gray-500 truncate max-w-[350px]" title={inq.email}>
+                        {inq.email}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="p-3 text-sm text-center text-gray-500">
+                  No inquiries found
+                </div>
+              )}
+            </div>
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Project Information Section */}
       <div className="border-b pb-2">
         <h3 className="text-sm font-semibold text-gray-700">Project Information</h3>
