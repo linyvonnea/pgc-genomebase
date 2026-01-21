@@ -156,10 +156,17 @@ export function QuotationPDF({
                     </View>
                     {description && (
                       <View style={styles.tableRow}>
-                        <Text style={[styles.serviceCell, { fontSize: 8, fontStyle: "italic", paddingLeft: 12, color: "#666", paddingTop: 2, paddingBottom: 4 }]}>
+                        <Text style={[styles.serviceCell, { 
+                          flex: 5.8,
+                          fontSize: 8, 
+                          fontStyle: "italic", 
+                          paddingLeft: 12, 
+                          color: "#666", 
+                          paddingTop: 2, 
+                          paddingBottom: 4 
+                        }]}>
                           {description}
                         </Text>
-                        <Text style={[styles.cell, { flex: 2.8, borderLeft: 0 }]}></Text>
                       </View>
                     )}
                   </View>
