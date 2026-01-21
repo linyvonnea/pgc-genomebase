@@ -56,7 +56,6 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
       designation: client.designation || "",
       sex: client.sex || "M",
       phoneNumber: client.phoneNumber || "",
-      affiliationAddress: client.affiliationAddress || "",
       pid: client.pid || "",
     },
   });
@@ -101,7 +100,7 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Client</DialogTitle>
           <DialogDescription>
@@ -109,15 +108,20 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            {/* Personal Information Section */}
+            <div className="border-b pb-2">
+              <h3 className="text-sm font-semibold text-gray-700">Personal Information</h3>
+            </div>
+
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel className="text-xs">Full Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter name" {...field} />
+                    <Input placeholder="Enter full name" className="h-9" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -128,22 +132,66 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel className="text-xs">Email Address</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="Enter email" {...field} />
+                    <Input type="email" placeholder="Enter email address" className="h-9" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="sex"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Sex</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Select sex" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="M">Male</SelectItem>
+                        <SelectItem value="F">Female</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="phoneNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Mobile Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="09091234567" className="h-9" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Professional Information Section */}
+            <div className="border-b pb-2 pt-2">
+              <h3 className="text-sm font-semibold text-gray-700">Professional Information</h3>
+            </div>
+
             <FormField
               control={form.control}
               name="affiliation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Affiliation</FormLabel>
+                  <FormLabel className="text-xs">Affiliation (Department & Institution)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter affiliation" {...field} />
+                    <Input placeholder="e.g. Division of Biological Sciences - UPV CAS" className="h-9" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -154,64 +202,16 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
               name="designation"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Designation</FormLabel>
+                  <FormLabel className="text-xs">Designation</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter designation" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="sex"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Sex</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select sex" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="M">Male</SelectItem>
-                      <SelectItem value="F">Female</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="phoneNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Mobile Number</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. 09091234567" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="affiliationAddress"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Affiliation Address</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter affiliation address" {...field} />
+                    <Input placeholder="Enter job title or position" className="h-9" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
            
-            <div className="flex justify-between items-center pt-4">
+            <div className="flex justify-between items-center pt-3 mt-3 border-t">
               <button
                 type="button"
                 className="flex items-center gap-1 text-red-600 hover:text-red-700 text-sm font-medium bg-transparent border-none p-0 m-0 focus:outline-none"
@@ -227,11 +227,12 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
                   variant="outline" 
                   onClick={() => setIsOpen(false)}
                   disabled={isLoading}
+                  className="px-4"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? "Saving..." : "Save changes"}
+                <Button type="submit" disabled={isLoading} className="px-6">
+                  {isLoading ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             </div>
