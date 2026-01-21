@@ -81,6 +81,18 @@ export default function QuotationBuilder({
     queryFn: getServiceCatalog,
   });
 
+  // Debug: Log catalog descriptions
+  useEffect(() => {
+    if (catalog.length > 0) {
+      const servicesWithDesc = catalog.filter(s => s.description);
+      console.log('Catalog loaded:', catalog.length, 'services');
+      console.log('Services with descriptions:', servicesWithDesc.length);
+      servicesWithDesc.forEach(s => {
+        console.log(`  - ${s.name}: ${s.description?.substring(0, 50)}...`);
+      });
+    }
+  }, [catalog]);
+
   const { data: inquiryData } = useQuery<Inquiry | undefined>({
     queryKey: ["inquiry", effectiveInquiryId],
     queryFn: () => getInquiryById(effectiveInquiryId),
