@@ -156,10 +156,12 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
       <div>
         <Label className="text-xs">Project ID</Label>
         <Select value={selectedPid} onValueChange={setSelectedPid}>
-          <SelectTrigger className="h-9">
-            <SelectValue placeholder="Select or search project" />
+          <SelectTrigger className="h-9 w-full">
+            <SelectValue placeholder="Select or search project">
+              {selectedPid || "Select or search project"}
+            </SelectValue>
           </SelectTrigger>
-          <SelectContent className="max-h-[300px]">
+          <SelectContent className="max-h-[300px] w-[400px]">
             <div className="sticky top-0 bg-white z-10 p-2 border-b">
               <Input
                 placeholder="Search by Project ID or Title..."
@@ -172,9 +174,13 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
               {filteredProjectOptions.length > 0 ? (
                 filteredProjectOptions.map((proj) => (
                   <SelectItem key={proj.pid} value={proj.pid} className="text-sm">
-                    <div className="flex flex-col">
-                      <span className="font-medium">{proj.pid}</span>
-                      {proj.title && <span className="text-xs text-gray-500">{proj.title}</span>}
+                    <div className="flex flex-col py-1">
+                      <span className="font-medium text-gray-900">{proj.pid}</span>
+                      {proj.title && (
+                        <span className="text-xs text-gray-500 truncate max-w-[350px]" title={proj.title}>
+                          {proj.title}
+                        </span>
+                      )}
                     </div>
                   </SelectItem>
                 ))
