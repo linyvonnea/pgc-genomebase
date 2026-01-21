@@ -29,6 +29,8 @@ async function getData(): Promise<Project[]> {
 export default function ProjectPage() {
   // State for project data
   const [data, setData] = useState<Project[]>([]);
+  // State for dialog open/close
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   // Fetch data and update state
   const fetchData = async () => {
     const projects = await getData();
@@ -37,6 +39,12 @@ export default function ProjectPage() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Handle successful form submission
+  const handleFormSuccess = async () => {
+    setIsDialogOpen(false);
+    await fetchData();
+  };
 
   // Count completed, ongoing, and total projects
   const completedCount = data.filter(project => project.status === "Completed").length;
@@ -55,7 +63,7 @@ export default function ProjectPage() {
             </p>
           </div>
           {/* Add New Project Modal */}
-          <Dialog>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="default">Add New Record</Button>
             </DialogTrigger>
@@ -63,7 +71,7 @@ export default function ProjectPage() {
               <DialogHeader>
                 <DialogTitle>Add New Project</DialogTitle>
               </DialogHeader>
-              <ProjectFormModal />
+              <ProjectFormModal onSubmit={handleFormSuccess} />
             </DialogContent>
           </Dialog>
         </div>
