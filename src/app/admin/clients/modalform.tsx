@@ -98,11 +98,11 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
   // Handle inquiry selection - auto-populate form fields
   const handleInquirySelect = (inquiryId: string) => {
     setSelectedInquiry(inquiryId);
-    const inquiry = inquiryOptions.find(inq => inq.iid === inquiryId);
+    const inquiry = inquiryOptions.find(inq => inq.id === inquiryId);
     if (inquiry) {
       setFormData(prev => ({
         ...prev,
-        name: inquiry.fullName || "",
+        name: inquiry.name || "",
         email: inquiry.email || "",
         affiliation: inquiry.affiliation || "",
         designation: inquiry.designation || "",
@@ -171,8 +171,8 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
   // Filter inquiry options by search
   const filteredInquiryOptions = inquiryOptions.filter(
     (inq) =>
-      inq.iid?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
-      inq.fullName?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
+      inq.id?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
+      inq.name?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
       inq.email?.toLowerCase().includes(inquirySearch.toLowerCase())
   );
 
@@ -190,11 +190,11 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
           <SelectTrigger className="h-9 w-full">
             <SelectValue placeholder="Select inquiry to auto-fill">
               {selectedInquiry ? (
-                <div className="flex flex-col items-start" title={inquiryOptions.find(i => i.iid === selectedInquiry)?.fullName}>
+                <div className="flex flex-col items-start" title={inquiryOptions.find(i => i.id === selectedInquiry)?.name}>
                   <span className="font-medium text-sm">{selectedInquiry}</span>
-                  {inquiryOptions.find(i => i.iid === selectedInquiry)?.fullName && (
+                  {inquiryOptions.find(i => i.id === selectedInquiry)?.name && (
                     <span className="text-xs text-gray-500 truncate max-w-[250px]">
-                      {inquiryOptions.find(i => i.iid === selectedInquiry)?.fullName}
+                      {inquiryOptions.find(i => i.id === selectedInquiry)?.name}
                     </span>
                   )}
                 </div>
@@ -215,10 +215,10 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
             <div className="max-h-[240px] overflow-y-auto">
               {filteredInquiryOptions.length > 0 ? (
                 filteredInquiryOptions.map((inq) => (
-                  <SelectItem key={inq.iid} value={inq.iid || ""} className="text-sm">
+                  <SelectItem key={inq.id} value={inq.id || ""} className="text-sm">
                     <div className="flex flex-col py-1">
-                      <span className="font-medium text-gray-900">{inq.iid}</span>
-                      <span className="text-xs text-gray-600">{inq.fullName}</span>
+                      <span className="font-medium text-gray-900">{inq.id}</span>
+                      <span className="text-xs text-gray-600">{inq.name}</span>
                       <span className="text-xs text-gray-500 truncate max-w-[350px]" title={inq.email}>
                         {inq.email}
                       </span>
