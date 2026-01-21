@@ -27,9 +27,9 @@ const styles = StyleSheet.create({
   categoryHeader: { padding: 4, fontWeight: "bold", backgroundColor: "#f0f0f0", borderBottom: "1pt solid black", fontSize: 10 },
   summary: { marginTop: 12, alignItems: "flex-end", textAlign: "right", gap: 2 },
   italicNote: { fontStyle: "italic", fontSize: 9, marginTop: 2 },
-  signature: { marginTop: 20, fontSize: 10 },
-  footerSection: { marginTop: 16 },
-  pageNumber: { position: "absolute", fontSize: 12, bottom: 30, left: 0, right: 0, textAlign: "center", color: "black" },
+  signature: { marginTop: 20, fontSize: 10, marginBottom: 40 },
+  footerSection: { marginTop: 16, marginBottom: 40 },
+  pageNumber: { position: "absolute", fontSize: 10, bottom: 20, left: 0, right: 0, textAlign: "center", color: "#333" },
 });
 
 function formatMoney(num: number) {
