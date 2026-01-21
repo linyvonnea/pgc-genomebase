@@ -23,7 +23,6 @@ import { DialogFooter } from "@/components/ui/dialog";
 // Extended client schema for admin modal validation
 const clientSchema = baseClientSchema.extend({
   affiliation: z.string().min(1, "Affiliation is required"),
-  affiliationAddress: z.string().min(1, "Affiliation address is required"),
   year: z.coerce.number().int().min(2000),
   name: z.string().min(1, "Name is required"),
   sex: z.enum(["F", "M", "Other"]),
@@ -35,7 +34,7 @@ const clientSchema = baseClientSchema.extend({
     ),
   designation: z.string().min(1, "Designation is required"),
   email: z.string().email("Invalid email"),
-}).omit({ createdAt: true });
+}).omit({ createdAt: true, affiliationAddress: true });
 
 type ClientFormData = z.infer<typeof clientSchema>;
 
@@ -46,7 +45,6 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
     year: new Date().getFullYear(),
     name: "",
     affiliation: "",
-    affiliationAddress: "",
     designation: "",
     email: "",
     sex: "F",
@@ -148,12 +146,17 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
   );
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="space-y-3">
+      {/* Project Information Section */}
+      <div className="border-b pb-2">
+        <h3 className="text-sm font-semibold text-gray-700">Project Information</h3>
+      </div>
+
       {/* Project ID Dropdown with search */}
       <div>
-        <Label>Project ID</Label>
+        <Label className="text-xs">Project ID (Optional)</Label>
         <Select value={selectedPid} onValueChange={setSelectedPid}>
-          <SelectTrigger>
+          <SelectTrigger className="h-9">
             <SelectValue placeholder="Select Project ID" />
           </SelectTrigger>
           <SelectContent>
@@ -162,7 +165,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
                 placeholder="Search Project ID or Title..."
                 value={projectSearch}
                 onChange={e => setProjectSearch(e.target.value)}
-                className="mb-2"
+                className="mb-2 h-9"
               />
             </div>
             {filteredProjectOptions.map((proj) => (
@@ -174,92 +177,99 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
         </Select>
       </div>
 
+      {/* Personal Information Section */}
+      <div className="border-b pb-2 pt-2">
+        <h3 className="text-sm font-semibold text-gray-700">Personal Information</h3>
+      </div>
+
       {/* Name Field */}
       <div>
-        <Label>Name</Label>
+        <Label className="text-xs">Full Name</Label>
         <Input
           value={formData.name}
           onChange={(e) => handleChange("name", e.target.value)}
-          placeholder="Enter name here"
+          placeholder="Enter full name"
+          className="h-9"
         />
-        {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
       </div>
 
       {/* Email Field */}
       <div>
-        <Label>Email</Label>
+        <Label className="text-xs">Email Address</Label>
         <Input
+          type="email"
           value={formData.email}
           onChange={(e) => handleChange("email", e.target.value)}
-          placeholder="Enter email here"
+          placeholder="Enter email address"
+          className="h-9"
         />
-        {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
+        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        {/* Sex Field */}
+        <div>
+          <Label className="text-xs">Sex</Label>
+          <Select value={formData.sex} onValueChange={(val) => handleChange("sex", val as ClientFormData["sex"])}>
+            <SelectTrigger className="h-9">
+              <SelectValue placeholder="Select" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="F">Female</SelectItem>
+              <SelectItem value="M">Male</SelectItem>
+              <SelectItem value="Other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+          {errors.sex && <p className="text-red-500 text-xs mt-1">{errors.sex}</p>}
+        </div>
+
+        {/* Mobile Number Field */}
+        <div>
+          <Label className="text-xs">Mobile Number</Label>
+          <Input
+            value={formData.phoneNumber}
+            onChange={(e) => handleChange("phoneNumber", e.target.value)}
+            placeholder="09091234567"
+            className="h-9"
+          />
+          {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>}
+        </div>
+      </div>
+
+      {/* Professional Information Section */}
+      <div className="border-b pb-2 pt-2">
+        <h3 className="text-sm font-semibold text-gray-700">Professional Information</h3>
       </div>
 
       {/* Affiliation Field */}
       <div>
-        <Label>Affiliation (Department & Institution)</Label>
+        <Label className="text-xs">Affiliation (Department & Institution)</Label>
         <Input
           value={formData.affiliation}
           onChange={(e) => handleChange("affiliation", e.target.value)}
           placeholder="e.g. Division of Biological Sciences - UPV CAS"
+          className="h-9"
         />
-        {errors.affiliation && <p className="text-red-500 text-sm">{errors.affiliation}</p>}
+        {errors.affiliation && <p className="text-red-500 text-xs mt-1">{errors.affiliation}</p>}
       </div>
 
       {/* Designation Field */}
       <div>
-        <Label>Designation</Label>
+        <Label className="text-xs">Designation</Label>
         <Input
           value={formData.designation}
           onChange={(e) => handleChange("designation", e.target.value)}
-          placeholder="Enter designation here"
+          placeholder="Enter job title or position"
+          className="h-9"
         />
-        {errors.designation && <p className="text-red-500 text-sm">{errors.designation}</p>}
-      </div>
-
-      {/* Sex Field */}
-      <div>
-        <Label>Sex</Label>
-        <Select value={formData.sex} onValueChange={(val) => handleChange("sex", val as ClientFormData["sex"])}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="F">Female</SelectItem>
-            <SelectItem value="M">Male</SelectItem>
-            <SelectItem value="Other">Other</SelectItem>
-          </SelectContent>
-        </Select>
-        {errors.sex && <p className="text-red-500 text-sm">{errors.sex}</p>}
-      </div>
-
-      {/* Mobile Number Field */}
-      <div>
-        <Label>Mobile Number</Label>
-        <Input
-          value={formData.phoneNumber}
-          onChange={(e) => handleChange("phoneNumber", e.target.value)}
-          placeholder="e.g. 09091234567 or N/A"
-        />
-        {errors.phoneNumber && <p className="text-red-500 text-sm">{errors.phoneNumber}</p>}
-      </div>
-
-      {/* Affiliation Address Field */}
-      <div className="mb-4">
-        <Label>Affiliation Address</Label>
-        <Textarea
-          value={formData.affiliationAddress}
-          onChange={(e) => handleChange("affiliationAddress", e.target.value)}
-          placeholder="Enter affiliation address here"
-        />
-        {errors.affiliationAddress && <p className="text-red-500 text-sm">{errors.affiliationAddress}</p>}
+        {errors.designation && <p className="text-red-500 text-xs mt-1">{errors.designation}</p>}
       </div>
 
       {/* Save Button */}
-      <DialogFooter>
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "Saving..." : "Save"}
+      <DialogFooter className="pt-3 mt-3 border-t">
+        <Button type="submit" disabled={mutation.isPending} className="px-6">
+          {mutation.isPending ? "Saving..." : "Save Client"}
         </Button>
       </DialogFooter>
     </form>
