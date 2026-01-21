@@ -306,17 +306,37 @@ export function ChargeSlipPDF({
               <View style={styles.categoryHeaderRow}>
                 <Text style={styles.categoryHeaderCell}>{category}</Text>
               </View>
-              {items.map((item, idx) => (
-                <View key={idx} style={styles.tableRow}>
-                  <Text style={[styles.cell, styles.col1, { textAlign: "left" }]}>{item.name}</Text>
-                  <Text style={[styles.cell, styles.col2]}>{item.unit}</Text>
-                  <Text style={[styles.cell, styles.col3]}>PHP {formatMoney(item.price)}</Text>
-                  <Text style={[styles.cell, styles.col4]}>{item.quantity}</Text>
-                  <Text style={[styles.cell, styles.col5, styles.noBorder]}>
-                    PHP {formatMoney(item.price * item.quantity)}
-                  </Text>
-                </View>
-              ))}
+              {items.map((item, idx) => {
+                const description = item.description || (item as any).description || "";
+                return (
+                  <View key={idx}>
+                    <View style={styles.tableRow}>
+                      <Text style={[styles.cell, styles.col1, { textAlign: "left" }]}>{item.name}</Text>
+                      <Text style={[styles.cell, styles.col2]}>{item.unit}</Text>
+                      <Text style={[styles.cell, styles.col3]}>PHP {formatMoney(item.price)}</Text>
+                      <Text style={[styles.cell, styles.col4]}>{item.quantity}</Text>
+                      <Text style={[styles.cell, styles.col5, styles.noBorder]}>
+                        PHP {formatMoney(item.price * item.quantity)}
+                      </Text>
+                    </View>
+                    {description && description.trim() !== "" && (
+                      <View style={[styles.tableRow, { borderBottomWidth: 1 }]}>
+                        <Text style={[styles.cell, styles.noBorder, { 
+                          width: "100%",
+                          fontSize: 8, 
+                          fontStyle: "italic", 
+                          paddingLeft: 12, 
+                          color: "#666", 
+                          paddingTop: 2, 
+                          paddingBottom: 4 
+                        }]}>
+                          {description}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
             </View>
           ))}
         </View>
