@@ -159,12 +159,13 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     }));
   };
 
-  // Checkbox options for serviceRequested
+  // Dropdown options for serviceRequested
   const serviceOptions = [
     "Laboratory Services",
     "Retail Services",
     "Equipment Use",
-    "Bioinformatics Analysis"
+    "Bioinformatics Analysis",
+    "Training"
   ];
 
   // Handle checkbox changes for serviceRequested
