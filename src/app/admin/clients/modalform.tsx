@@ -154,25 +154,36 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
 
       {/* Project ID Dropdown with search */}
       <div>
-        <Label className="text-xs">Project ID (Optional)</Label>
+        <Label className="text-xs">Project ID</Label>
         <Select value={selectedPid} onValueChange={setSelectedPid}>
           <SelectTrigger className="h-9">
-            <SelectValue placeholder="Select Project ID" />
+            <SelectValue placeholder="Select or search project" />
           </SelectTrigger>
-          <SelectContent>
-            <div className="p-2">
+          <SelectContent className="max-h-[300px]">
+            <div className="sticky top-0 bg-white z-10 p-2 border-b">
               <Input
-                placeholder="Search Project ID or Title..."
+                placeholder="Search by Project ID or Title..."
                 value={projectSearch}
                 onChange={e => setProjectSearch(e.target.value)}
-                className="mb-2 h-9"
+                className="h-9 text-sm"
               />
             </div>
-            {filteredProjectOptions.map((proj) => (
-              <SelectItem key={proj.pid} value={proj.pid}>
-                {proj.pid} {proj.title ? `- ${proj.title}` : ""}
-              </SelectItem>
-            ))}
+            <div className="max-h-[240px] overflow-y-auto">
+              {filteredProjectOptions.length > 0 ? (
+                filteredProjectOptions.map((proj) => (
+                  <SelectItem key={proj.pid} value={proj.pid} className="text-sm">
+                    <div className="flex flex-col">
+                      <span className="font-medium">{proj.pid}</span>
+                      {proj.title && <span className="text-xs text-gray-500">{proj.title}</span>}
+                    </div>
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="p-3 text-sm text-center text-gray-500">
+                  No projects found
+                </div>
+              )}
+            </div>
           </SelectContent>
         </Select>
       </div>
