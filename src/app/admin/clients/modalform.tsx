@@ -27,7 +27,7 @@ const clientSchema = baseClientSchema.extend({
   affiliation: z.string().min(1, "Affiliation is required"),
   year: z.coerce.number().int().min(2000),
   name: z.string().min(1, "Name is required"),
-  sex: z.enum(["F", "M", "Other"]),
+  sex: z.enum(["F", "M", "Other"]).or(z.literal("")),
   phoneNumber: z
     .string()
     .refine(
@@ -49,7 +49,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
     affiliation: "",
     designation: "",
     email: "",
-    sex: "F",
+    sex: "",
     phoneNumber: "",
   });
 
@@ -191,12 +191,10 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
             <SelectValue placeholder="Select inquiry to auto-fill">
               {selectedInquiry ? (
                 <div className="flex flex-col items-start" title={inquiryOptions.find(i => i.id === selectedInquiry)?.name}>
-                  <span className="font-medium text-sm">{selectedInquiry}</span>
-                  {inquiryOptions.find(i => i.id === selectedInquiry)?.name && (
-                    <span className="text-xs text-gray-500 truncate max-w-[250px]">
-                      {inquiryOptions.find(i => i.id === selectedInquiry)?.name}
-                    </span>
-                  )}
+                  <span className="font-medium text-sm">{inquiryOptions.find(i => i.id === selectedInquiry)?.name}</span>
+                  <span className="text-xs text-gray-500 truncate max-w-[250px]">
+                    {selectedInquiry}
+                  </span>
                 </div>
               ) : (
                 "Select inquiry to auto-fill"
@@ -217,9 +215,9 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
                 filteredInquiryOptions.map((inq) => (
                   <SelectItem key={inq.id} value={inq.id || ""} className="text-sm">
                     <div className="flex flex-col py-1">
-                      <span className="font-medium text-gray-900">{inq.id}</span>
-                      <span className="text-xs text-gray-600">{inq.name}</span>
-                      <span className="text-xs text-gray-500 truncate max-w-[350px]" title={inq.email}>
+                      <span className="font-medium text-gray-900">{inq.name}</span>
+                      <span className="text-xs text-gray-500">{inq.id}</span>
+                      <span className="text-xs text-gray-400 truncate max-w-[350px]" title={inq.email}>
                         {inq.email}
                       </span>
                     </div>

@@ -58,7 +58,7 @@ export default function ClientPage() {
             <DialogTrigger asChild>
               <Button variant="default">Add New Record</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-[35rem] w-full">
+            <DialogContent className="max-w-[35rem] w-full max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Client</DialogTitle>
               </DialogHeader>
