@@ -54,6 +54,19 @@ const normalizeTimestamp = (value: any): Timestamp => {
   return Timestamp.fromDate(new Date());
 };
 
+// Helper to remove undefined values from an object
+const removeUndefined = (obj: any): any => {
+  if (!obj || typeof obj !== 'object') return obj;
+  
+  const cleaned: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      cleaned[key] = value;
+    }
+  }
+  return cleaned;
+};
+
 export async function getAllChargeSlips(): Promise<ChargeSlipRecord[]> {
   const snapshot = await getDocs(
     query(collection(db, CHARGE_SLIPS_COLLECTION), orderBy("chargeSlipNumber", "desc"))
@@ -117,15 +130,15 @@ export async function saveChargeSlip(slip: ChargeSlipRecord): Promise<string> {
     dateIssued: safeTimestamp(slip.dateIssued),
     dateOfOR: slip.dateOfOR ? convertToTimestamp(slip.dateOfOR) : null,
     createdAt: safeTimestamp(slip.createdAt || new Date()),
-    client: slip.client ? {
+    client: slip.client ? removeUndefined({
       ...slip.client,
       createdAt: normalizeTimestamp(slip.client.createdAt),
-    } : null,
-    project: slip.project ? {
+    }) : null,
+    project: slip.project ? removeUndefined({
       ...slip.project,
       createdAt: normalizeTimestamp(slip.project.createdAt),
       startDate: slip.project.startDate ? normalizeTimestamp(slip.project.startDate) : null,
-    } : null,
+    }) : null,
   };
 
   await setDoc(docRef, payload);
