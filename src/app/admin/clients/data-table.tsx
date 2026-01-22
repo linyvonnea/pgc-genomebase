@@ -63,6 +63,7 @@ export function DataTable<TData, TValue>({
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
     onPaginationChange: setPagination,
+    getRowId: (row: any) => row.cid || String(Math.random()),
     state: {
       sorting,
       columnFilters,
