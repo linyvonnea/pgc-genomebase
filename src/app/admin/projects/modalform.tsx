@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,8 @@ import { collection, addDoc, serverTimestamp, Timestamp, FieldValue, doc, setDoc
 import { db } from "@/lib/firebase"; 
 import { toast } from "sonner";
 import { getNextPid } from "@/services/projectsService";
+import { getInquiries } from "@/services/inquiryService";
+import { Inquiry } from "@/types/Inquiry";
 
 // Extend the base project schema for form validation
 const projectSchema = baseProjectSchema.extend({
@@ -65,6 +67,25 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
   });
   // Error state for validation messages
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectFormState, string>>>({});
+  
+  // Inquiry dropdown state
+  const [inquiryOptions, setInquiryOptions] = useState<Inquiry[]>([]);
+  const [inquirySearch, setInquirySearch] = useState("");
+
+  // Fetch inquiry options
+  useEffect(() => {
+    getInquiries().then((inquiries) => {
+      setInquiryOptions(inquiries);
+    });
+  }, []);
+
+  // Filter inquiry options by search
+  const filteredInquiryOptions = inquiryOptions.filter(
+    (inq) =>
+      inq.id?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
+      inq.name?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
+      inq.affiliation?.toLowerCase().includes(inquirySearch.toLowerCase())
+  );
 
   // Mutation for adding/updating a project in Firestore
   const mutation = useMutation({
@@ -216,8 +237,56 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       </div>
       {/* Inquiry ID */}
       <div>
-        <Label className="text-xs">Inquiry ID (Optional)</Label>
-        <Input name="iid" value={formData.iid} onChange={handleChange} className="h-9" />
+        <Label className="text-xs">Inquiry ID</Label>
+        <Select value={formData.iid} onValueChange={(val) => handleSelect("iid", val)}>
+          <SelectTrigger className="h-9">
+            <SelectValue placeholder="Select inquiry">
+              {formData.iid ? (
+                <div className="flex flex-col items-start" title={inquiryOptions.find(i => i.id === formData.iid)?.name}>
+                  <span className="font-medium text-sm">{formData.iid}</span>
+                  {inquiryOptions.find(i => i.id === formData.iid)?.name && (
+                    <span className="text-xs text-gray-500 truncate max-w-[200px]">
+                      {inquiryOptions.find(i => i.id === formData.iid)?.name}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                "Select inquiry"
+              )}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent className="max-h-[300px] w-[400px]">
+            <div className="sticky top-0 bg-white z-10 p-2 border-b">
+              <Input
+                placeholder="Search by ID, Name, or Affiliation..."
+                value={inquirySearch}
+                onChange={e => setInquirySearch(e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="max-h-[240px] overflow-y-auto">
+              {filteredInquiryOptions.length > 0 ? (
+                filteredInquiryOptions.map((inq) => (
+                  <SelectItem key={inq.id} value={inq.id || ""} className="text-sm">
+                    <div className="flex flex-col py-1">
+                      <span className="font-medium text-gray-900">{inq.id}</span>
+                      <span className="text-xs text-gray-600">{inq.name}</span>
+                      {inq.affiliation && (
+                        <span className="text-xs text-gray-500 truncate max-w-[350px]" title={inq.affiliation}>
+                          {inq.affiliation}
+                        </span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="p-3 text-sm text-center text-gray-500">
+                  No inquiries found
+                </div>
+              )}
+            </div>
+          </SelectContent>
+        </Select>
         {errors.iid && <p className="text-red-500 text-xs mt-1">{errors.iid}</p>}
       </div>
 
