@@ -85,15 +85,16 @@ export async function saveChargeSlip(slip: ChargeSlipRecord): Promise<string> {
     ...slip,
     dateIssued: safeTimestamp(slip.dateIssued),
     dateOfOR: slip.dateOfOR ? convertToTimestamp(slip.dateOfOR) : null,
-    createdAt: safeTimestamp(slip.createdAt),
-    client: {
+    createdAt: safeTimestamp(slip.createdAt || new Date()),
+    client: slip.client ? {
       ...slip.client,
-      createdAt: safeTimestamp(slip.client?.createdAt),
-    },
-    project: {
+      createdAt: slip.client.createdAt ? safeTimestamp(slip.client.createdAt) : Timestamp.fromDate(new Date()),
+    } : null,
+    project: slip.project ? {
       ...slip.project,
-      createdAt: safeTimestamp(slip.project?.createdAt),
-    },
+      createdAt: slip.project.createdAt ? safeTimestamp(slip.project.createdAt) : Timestamp.fromDate(new Date()),
+      startDate: slip.project.startDate ? safeTimestamp(slip.project.startDate) : null,
+    } : null,
   };
 
   await setDoc(docRef, payload);
