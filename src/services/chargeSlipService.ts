@@ -23,6 +23,37 @@ const CHARGE_SLIPS_COLLECTION = "chargeSlips";
 const safeTimestamp = (value: any) =>
   value ? convertToTimestamp(value) : convertToTimestamp(new Date());
 
+// Helper to handle malformed timestamps with _seconds and _nanoseconds
+const normalizeTimestamp = (value: any): Timestamp => {
+  if (!value) {
+    return Timestamp.fromDate(new Date());
+  }
+  
+  // Already a Firestore Timestamp
+  if (value instanceof Timestamp) {
+    return value;
+  }
+  
+  // Malformed timestamp with _seconds and _nanoseconds
+  if (value._seconds !== undefined) {
+    const seconds = value._seconds || 0;
+    const nanoseconds = value._nanoseconds || 0;
+    return new Timestamp(seconds, nanoseconds);
+  }
+  
+  // Date object or string
+  if (value instanceof Date) {
+    return Timestamp.fromDate(value);
+  }
+  
+  if (typeof value === 'string') {
+    return Timestamp.fromDate(new Date(value));
+  }
+  
+  // Fallback
+  return Timestamp.fromDate(new Date());
+};
+
 export async function getAllChargeSlips(): Promise<ChargeSlipRecord[]> {
   const snapshot = await getDocs(
     query(collection(db, CHARGE_SLIPS_COLLECTION), orderBy("chargeSlipNumber", "desc"))
@@ -88,12 +119,12 @@ export async function saveChargeSlip(slip: ChargeSlipRecord): Promise<string> {
     createdAt: safeTimestamp(slip.createdAt || new Date()),
     client: slip.client ? {
       ...slip.client,
-      createdAt: slip.client.createdAt ? safeTimestamp(slip.client.createdAt) : Timestamp.fromDate(new Date()),
+      createdAt: normalizeTimestamp(slip.client.createdAt),
     } : null,
     project: slip.project ? {
       ...slip.project,
-      createdAt: slip.project.createdAt ? safeTimestamp(slip.project.createdAt) : Timestamp.fromDate(new Date()),
-      startDate: slip.project.startDate ? safeTimestamp(slip.project.startDate) : null,
+      createdAt: normalizeTimestamp(slip.project.createdAt),
+      startDate: slip.project.startDate ? normalizeTimestamp(slip.project.startDate) : null,
     } : null,
   };
 
