@@ -331,7 +331,6 @@ const subtotal = cleanedServices.reduce((sum, item) => {
       onSubmit?.(record);
     } catch (error) {
       console.error("Failed to save charge slip:", error);
-      console.error("Charge slip data:", rawRecord);
       toast.error(`Failed to save charge slip: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
