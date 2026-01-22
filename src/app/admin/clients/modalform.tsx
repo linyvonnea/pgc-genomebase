@@ -32,8 +32,8 @@ const clientSchema = baseClientSchema.extend({
     .string()
     .min(1, "Mobile number is required")
     .refine(
-      (val) => /^\d{11}$/.test(val),
-      "Enter a valid 11-digit mobile number"
+      (val) => /^\d{11}$/.test(val) || val === "N/A",
+      "Enter a valid 11-digit mobile number or 'N/A'"
     ),
   designation: z.string().min(1, "Designation is required"),
   email: z.string().email("Invalid email"),
