@@ -111,8 +111,11 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
             <DialogDescription>
               Update the inquiry information. Click save when you're done.
             </DialogDescription>
-            <div className="pt-2 px-1">
-              <span className="text-sm font-semibold text-blue-600">Inquiry ID: {inquiry.id}</span>
+            <div className="flex items-center gap-2 pt-3 pb-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-md">
+                <span className="text-xs font-medium text-gray-600">Inquiry ID:</span>
+                <span className="text-sm font-semibold text-purple-700">{inquiry.id}</span>
+              </div>
             </div>
           </DialogHeader>
           <Form {...form}>
