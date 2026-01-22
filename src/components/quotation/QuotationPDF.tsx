@@ -120,7 +120,7 @@ export function QuotationPDF({
         <View style={styles.section}>
           <Text><Text style={styles.label}>Reference No:</Text> {referenceNumber}</Text>
           {dateOfIssue && (
-            <Text><Text style={styles.label}>Date of Issue:</Text> {dateOfIssue}</Text>
+            <Text><Text style={styles.label}>Date Issued:</Text> {dateOfIssue}</Text>
           )}
           <Text><Text style={styles.label}>Client Name:</Text> {clientInfo.name}</Text>
           <Text><Text style={styles.label}>Institution:</Text> {clientInfo.institution}</Text>
