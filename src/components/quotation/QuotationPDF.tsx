@@ -70,6 +70,7 @@ export function QuotationPDF({
   useInternalPrice,
   preparedBy,
   totalsOverride, // <-- NEW (optional)
+  dateOfIssue, // <-- Date when quotation was generated
 }: {
   services: SelectedService[];
   clientInfo: { name: string; institution: string; designation: string; email: string };
@@ -77,6 +78,7 @@ export function QuotationPDF({
   useInternalPrice: boolean;
   preparedBy: { name: string; position: string };
   totalsOverride?: TotalsOverride;
+  dateOfIssue?: string; // ISO date string or formatted date
 }) {
   const safeServices: ServiceLike[] = (services ?? []).filter(
     (s): s is ServiceLike =>
@@ -117,6 +119,9 @@ export function QuotationPDF({
 
         <View style={styles.section}>
           <Text><Text style={styles.label}>Reference No:</Text> {referenceNumber}</Text>
+          {dateOfIssue && (
+            <Text><Text style={styles.label}>Date of Issue:</Text> {dateOfIssue}</Text>
+          )}
           <Text><Text style={styles.label}>Client Name:</Text> {clientInfo.name}</Text>
           <Text><Text style={styles.label}>Institution:</Text> {clientInfo.institution}</Text>
           <Text><Text style={styles.label}>Designation:</Text> {clientInfo.designation}</Text>

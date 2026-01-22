@@ -401,6 +401,7 @@ export default function QuotationBuilder({
                     name: adminInfo?.name || "—",
                     position: adminInfo?.position || "—",
                   }}
+                  dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                 />
               </PDFViewer>
             </div>
@@ -417,6 +418,7 @@ export default function QuotationBuilder({
                         name: adminInfo?.name || "—",
                         position: adminInfo?.position || "—",
                       }}
+                      dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                     />
                   }
                   fileName={`${referenceNumber}.pdf`}

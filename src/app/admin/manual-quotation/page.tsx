@@ -247,6 +247,7 @@ export default function ManualQuotationPage() {
                     name: adminInfo?.name || "Admin",
                     position: adminInfo?.position || "N/A",
                   }}
+                  dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                 />
               </PDFViewer>
               <div className="text-right mt-4">
@@ -261,6 +262,7 @@ export default function ManualQuotationPage() {
                         name: adminInfo?.name || "Admin",
                         position: adminInfo?.position || "N/A",
                       }}
+                      dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                     />
                   }
                   fileName={`${referenceNumber || "manual-quotation"}.pdf`}
