@@ -23,6 +23,50 @@ const CHARGE_SLIPS_COLLECTION = "chargeSlips";
 const safeTimestamp = (value: any) =>
   value ? convertToTimestamp(value) : convertToTimestamp(new Date());
 
+// Helper to handle malformed timestamps with _seconds and _nanoseconds
+const normalizeTimestamp = (value: any): Timestamp => {
+  if (!value) {
+    return Timestamp.fromDate(new Date());
+  }
+  
+  // Already a Firestore Timestamp
+  if (value instanceof Timestamp) {
+    return value;
+  }
+  
+  // Malformed timestamp with _seconds and _nanoseconds
+  if (value._seconds !== undefined) {
+    const seconds = value._seconds || 0;
+    const nanoseconds = value._nanoseconds || 0;
+    return new Timestamp(seconds, nanoseconds);
+  }
+  
+  // Date object or string
+  if (value instanceof Date) {
+    return Timestamp.fromDate(value);
+  }
+  
+  if (typeof value === 'string') {
+    return Timestamp.fromDate(new Date(value));
+  }
+  
+  // Fallback
+  return Timestamp.fromDate(new Date());
+};
+
+// Helper to remove undefined values from an object
+const removeUndefined = (obj: any): any => {
+  if (!obj || typeof obj !== 'object') return obj;
+  
+  const cleaned: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) {
+      cleaned[key] = value;
+    }
+  }
+  return cleaned;
+};
+
 export async function getAllChargeSlips(): Promise<ChargeSlipRecord[]> {
   const snapshot = await getDocs(
     query(collection(db, CHARGE_SLIPS_COLLECTION), orderBy("chargeSlipNumber", "desc"))
@@ -86,15 +130,15 @@ export async function saveChargeSlip(slip: ChargeSlipRecord): Promise<string> {
     dateIssued: safeTimestamp(slip.dateIssued),
     dateOfOR: slip.dateOfOR ? convertToTimestamp(slip.dateOfOR) : null,
     createdAt: safeTimestamp(slip.createdAt || new Date()),
-    client: slip.client ? {
+    client: slip.client ? removeUndefined({
       ...slip.client,
-      createdAt: slip.client.createdAt ? safeTimestamp(slip.client.createdAt) : Timestamp.fromDate(new Date()),
-    } : null,
-    project: slip.project ? {
+      createdAt: normalizeTimestamp(slip.client.createdAt),
+    }) : null,
+    project: slip.project ? removeUndefined({
       ...slip.project,
-      createdAt: slip.project.createdAt ? safeTimestamp(slip.project.createdAt) : Timestamp.fromDate(new Date()),
-      startDate: slip.project.startDate ? safeTimestamp(slip.project.startDate) : null,
-    } : null,
+      createdAt: normalizeTimestamp(slip.project.createdAt),
+      startDate: slip.project.startDate ? normalizeTimestamp(slip.project.startDate) : null,
+    }) : null,
   };
 
   await setDoc(docRef, payload);
