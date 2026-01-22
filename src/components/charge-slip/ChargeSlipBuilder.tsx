@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { pdf, PDFViewer } from "@react-pdf/renderer";
 import { Timestamp } from "firebase/firestore";
+import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { sanitizeObject } from "@/lib/sanitizeObject";
 import { calculateItemTotal } from "@/lib/calculatePrice";
@@ -265,63 +266,73 @@ const subtotal = cleanedServices.reduce((sum, item) => {
     return lower; // fallback
   };
   const handleSaveAndDownload = async () => {
-    const rawRecord = {
-      id: chargeSlipNumber,
-      chargeSlipNumber,
-      cid: client?.cid || effectiveClientId,
-      projectId: effectiveProjectId,
-      client,
-      project,
-      services: cleanedServices,
-      orNumber,
-      useInternalPrice: isInternal,
-      preparedBy: {
-        name: adminInfo?.name || "—",
-        position: adminInfo?.position || "—",
-      },
-      approvedBy: {
-        name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
-        position: "AED, PGC Visayas",
-      },
-      referenceNumber: chargeSlipNumber,
-      clientInfo,
-      dateIssued: Timestamp.fromDate(new Date()),
-      subtotal,
-      discount,
-      total,
+    try {
+      const rawRecord = {
+        id: chargeSlipNumber,
+        chargeSlipNumber,
+        cid: client?.cid || effectiveClientId,
+        projectId: effectiveProjectId,
+        client,
+        project,
+        services: cleanedServices,
+        orNumber,
+        useInternalPrice: isInternal,
+        preparedBy: {
+          name: adminInfo?.name || "—",
+          position: adminInfo?.position || "—",
+        },
+        approvedBy: {
+          name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
+          position: "AED, PGC Visayas",
+        },
+        referenceNumber: chargeSlipNumber,
+        clientInfo,
+        dateIssued: Timestamp.fromDate(new Date()),
+        subtotal,
+        discount,
+        total,
+        
+        categories: Array.from(new Set(cleanedServices.map((s) => normalizeCategory(s.category)))),
+      };
+
+      const record = sanitizeObject(rawRecord) as ChargeSlipRecord;
+
+      // Save to Firestore first
+      await saveChargeSlip(record);
+
+      // Generate PDF after save completes
+      const blob = await pdf(
+        <ChargeSlipPDF
+          services={cleanedServices}
+          client={client}
+          project={project}
+          chargeSlipNumber={chargeSlipNumber}
+          orNumber={orNumber}
+          useInternalPrice={isInternal}
+          preparedBy={record.preparedBy}
+          approvedBy={record.approvedBy}
+          referenceNumber={chargeSlipNumber}
+          clientInfo={clientInfo}
+          dateIssued={new Date().toISOString()}
+          subtotal={subtotal}
+          discount={discount}
+          total={total}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${chargeSlipNumber}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
       
-      categories: Array.from(new Set(cleanedServices.map((s) => normalizeCategory(s.category)))),
-    };
-
-    const record = sanitizeObject(rawRecord) as ChargeSlipRecord;
-
-    await saveChargeSlip(record);
-
-    const blob = await pdf(
-      <ChargeSlipPDF
-        services={cleanedServices}
-        client={client}
-        project={project}
-        chargeSlipNumber={chargeSlipNumber}
-        orNumber={orNumber}
-        useInternalPrice={isInternal}
-        preparedBy={record.preparedBy}
-        approvedBy={record.approvedBy}
-        referenceNumber={chargeSlipNumber}
-        clientInfo={clientInfo}
-        dateIssued={new Date().toISOString()}
-        subtotal={subtotal}
-        discount={discount}
-        total={total}
-      />
-    ).toBlob();
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${chargeSlipNumber}.pdf`;
-    link.click();
-    URL.revokeObjectURL(url);
+      toast.success("Charge slip saved and downloaded successfully!");
+      onSubmit?.(record);
+    } catch (error) {
+      console.error("Failed to save charge slip:", error);
+      toast.error("Failed to save charge slip. Please try again.");
+    }
   };
 
   return (
