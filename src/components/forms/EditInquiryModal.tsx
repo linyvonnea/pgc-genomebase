@@ -111,6 +111,9 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
             <DialogDescription>
               Update the inquiry information. Click save when you're done.
             </DialogDescription>
+            <div className="pt-2 px-1">
+              <span className="text-sm font-semibold text-blue-600">Inquiry ID: {inquiry.id}</span>
+            </div>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

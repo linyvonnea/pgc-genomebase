@@ -106,6 +106,9 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
           <DialogDescription>
             Update the client information. Click save when you're done.
           </DialogDescription>
+          <div className="pt-2 px-1">
+            <span className="text-sm font-semibold text-blue-600">Client ID: {client.cid}</span>
+          </div>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
