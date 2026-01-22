@@ -290,13 +290,6 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         {errors.iid && <p className="text-red-500 text-xs mt-1">{errors.iid}</p>}
       </div>
 
-      {/* Client Names - Full Width */}
-      <div className="col-span-2">
-        <Label className="text-xs">Client Names (Optional)</Label>
-        <Input name="clientNames" placeholder="Separate with comma" value={formData.clientNames} onChange={handleChange} className="h-9" />
-        {errors.clientNames && <p className="text-red-500 text-xs mt-1">{errors.clientNames}</p>}
-      </div>
-
       {/* Project Tag */}
       <div>
         <Label className="text-xs">Project Tag</Label>
@@ -353,7 +346,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
 
       {/* Funding Institution - Full Width */}
       <div className="col-span-2">
-        <Label className="text-xs">Funding Institution (Optional)</Label>
+        <Label className="text-xs">Funding Institution</Label>
         <Input name="fundingInstitution" value={formData.fundingInstitution || ""} onChange={handleChange} className="h-9" />
         {errors.fundingInstitution && <p className="text-red-500 text-xs mt-1">{errors.fundingInstitution}</p>}
       </div>
@@ -384,14 +377,14 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
 
       {/* Personnel Assigned - Full Width */}
       <div className="col-span-2">
-        <Label className="text-xs">Personnel Assigned (Optional)</Label>
+        <Label className="text-xs">Personnel Assigned</Label>
         <Input name="personnelAssigned" value={formData.personnelAssigned || ""} onChange={handleChange} className="h-9" />
         {errors.personnelAssigned && <p className="text-red-500 text-xs mt-1">{errors.personnelAssigned}</p>}
       </div>
 
       {/* Notes - Full Width */}
       <div className="col-span-2">
-        <Label className="text-xs">Notes (Optional)</Label>
+        <Label className="text-xs">Notes</Label>
         <Textarea name="notes" value={formData.notes || ""} onChange={handleChange} rows={3} className="resize-none" />
         {errors.notes && <p className="text-red-500 text-xs mt-1">{errors.notes}</p>}
       </div>

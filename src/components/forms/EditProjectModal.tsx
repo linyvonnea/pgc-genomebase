@@ -155,6 +155,9 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
           <DialogDescription>
             Update the project information. Click save when you're done.
           </DialogDescription>
+          <div className="pt-2 px-1">
+            <span className="text-sm font-semibold text-blue-600">Project ID: {project.pid}</span>
+          </div>
         </DialogHeader>
         <Form {...form}>
           <form
