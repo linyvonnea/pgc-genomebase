@@ -352,7 +352,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
               name="fundingInstitution"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs">Funding Institution (Optional)</FormLabel>
+                  <FormLabel className="text-xs">Funding Institution</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter funding institution" className="h-9" {...field} />
                   </FormControl>
@@ -403,7 +403,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
               name="personnelAssigned"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs">Personnel Assigned (Optional)</FormLabel>
+                  <FormLabel className="text-xs">Personnel Assigned</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter personnel assigned" className="h-9" {...field} />
                   </FormControl>
@@ -417,7 +417,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs">Notes (Optional)</FormLabel>
+                  <FormLabel className="text-xs">Notes</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter notes" className="h-9" {...field} />
                   </FormControl>
