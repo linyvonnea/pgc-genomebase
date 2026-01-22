@@ -102,6 +102,13 @@ export default function ChargeSlipBuilder({
   const client = sanitizeObject(clientData || fetchedClient || {});
   const project = sanitizeObject(projectData || fetchedProject || {});
 
+  // Log warning if client data is missing
+  useEffect(() => {
+    if (effectiveClientId && !client?.name) {
+      console.warn(`Client data not found or incomplete for CID: ${effectiveClientId}`);
+    }
+  }, [effectiveClientId, client]);
+
   useEffect(() => {
     const fetchRef = async () => {
       const year = new Date().getFullYear();
@@ -151,9 +158,9 @@ const subtotal = cleanedServices.reduce((sum, item) => {
   const total = subtotal - discount;
 
   const clientInfo = {
-    name: client?.name || "Unknown",
-    institution: client?.affiliation || "N/A",
-    designation: client?.designation || "N/A",
+    name: client?.name || "Unknown Client",
+    institution: client?.affiliation || "No Institution",
+    designation: client?.designation || "No Designation",
     email: client?.email || "",
   };
 
