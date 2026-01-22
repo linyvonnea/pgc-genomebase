@@ -27,12 +27,13 @@ const clientSchema = baseClientSchema.extend({
   affiliation: z.string().min(1, "Affiliation is required"),
   year: z.coerce.number().int().min(2000),
   name: z.string().min(1, "Name is required"),
-  sex: z.enum(["F", "M", "Other"]).or(z.literal("")),
+  sex: z.enum(["F", "M", "Other"], { required_error: "Sex is required" }),
   phoneNumber: z
     .string()
+    .min(1, "Mobile number is required")
     .refine(
-      (val) => /^\d{11}$/.test(val) || val === "N/A",
-      "Enter a valid 11-digit number or 'N/A'"
+      (val) => /^\d{11}$/.test(val),
+      "Enter a valid 11-digit mobile number"
     ),
   designation: z.string().min(1, "Designation is required"),
   email: z.string().email("Invalid email"),
@@ -113,6 +114,13 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
   // Handle form submit: validate, save client, update project
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate that Project ID is selected
+    if (!selectedPid) {
+      toast.error("Please select a Project ID");
+      return;
+    }
+    
     const result = clientSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors: Partial<Record<keyof ClientFormData, string>> = {};
@@ -242,7 +250,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
 
       {/* Project ID Dropdown with search */}
       <div>
-        <Label className="text-xs">Project ID</Label>
+        <Label className="text-xs">Project ID <span className="text-red-500">*</span></Label>
         <Select value={selectedPid} onValueChange={setSelectedPid}>
           <SelectTrigger className="h-9 w-full">
             <SelectValue placeholder="Select or search project">
@@ -291,6 +299,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
             </div>
           </SelectContent>
         </Select>
+        {!selectedPid && <p className="text-red-500 text-xs mt-1">Project ID is required</p>}
       </div>
 
       {/* Personal Information Section */}
@@ -300,7 +309,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
 
       {/* Name Field */}
       <div>
-        <Label className="text-xs">Full Name</Label>
+        <Label className="text-xs">Full Name <span className="text-red-500">*</span></Label>
         <Input
           value={formData.name}
           onChange={(e) => handleChange("name", e.target.value)}
@@ -326,7 +335,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
       <div className="grid grid-cols-2 gap-3">
         {/* Sex Field */}
         <div>
-          <Label className="text-xs">Sex</Label>
+          <Label className="text-xs">Sex <span className="text-red-500">*</span></Label>
           <Select value={formData.sex} onValueChange={(val) => handleChange("sex", val as ClientFormData["sex"])}>
             <SelectTrigger className="h-9">
               <SelectValue placeholder="Select" />
@@ -342,7 +351,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
 
         {/* Mobile Number Field */}
         <div>
-          <Label className="text-xs">Mobile Number</Label>
+          <Label className="text-xs">Mobile Number <span className="text-red-500">*</span></Label>
           <Input
             value={formData.phoneNumber}
             onChange={(e) => handleChange("phoneNumber", e.target.value)}
@@ -360,7 +369,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
 
       {/* Affiliation Field */}
       <div>
-        <Label className="text-xs">Affiliation (Department & Institution)</Label>
+        <Label className="text-xs">Affiliation (Department & Institution) <span className="text-red-500">*</span></Label>
         <Input
           value={formData.affiliation}
           onChange={(e) => handleChange("affiliation", e.target.value)}
@@ -372,7 +381,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
 
       {/* Designation Field */}
       <div>
-        <Label className="text-xs">Designation</Label>
+        <Label className="text-xs">Designation <span className="text-red-500">*</span></Label>
         <Input
           value={formData.designation}
           onChange={(e) => handleChange("designation", e.target.value)}
