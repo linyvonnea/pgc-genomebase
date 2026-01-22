@@ -39,7 +39,7 @@ const clientSchema = baseClientSchema.extend({
   email: z.string().email("Invalid email"),
 }).omit({ createdAt: true, affiliationAddress: true });
 
-type ClientFormData = z.infer<typeof clientSchema>;
+type ClientFormData = Omit<z.infer<typeof clientSchema>, 'sex'> & { sex: "F" | "M" | "Other" | "" };
 
 // Modal form component for adding a client
 export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Client) => void; onClose?: () => void }) {
@@ -118,6 +118,12 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
     // Validate that Project ID is selected
     if (!selectedPid) {
       toast.error("Please select a Project ID");
+      return;
+    }
+    
+    // Validate sex is not empty
+    if (!formData.sex) {
+      setErrors({ ...errors, sex: "Sex is required" });
       return;
     }
     
