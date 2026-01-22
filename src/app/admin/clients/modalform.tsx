@@ -305,7 +305,6 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
             </div>
           </SelectContent>
         </Select>
-        {!selectedPid && <p className="text-red-500 text-xs mt-1">Project ID is required</p>}
       </div>
 
       {/* Personal Information Section */}
