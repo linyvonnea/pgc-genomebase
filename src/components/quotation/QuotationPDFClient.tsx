@@ -10,6 +10,11 @@ export default function QuotationPDFClient({
 }: {
   quotation: QuotationRecord;
 }) {
+  // Format the dateIssued to a readable format
+  const dateOfIssue = quotation.dateIssued 
+    ? new Date(quotation.dateIssued).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    : undefined;
+
   return (
     <PDFViewer width="100%" height="600">
       <QuotationPDF
@@ -23,6 +28,7 @@ export default function QuotationPDFClient({
         }}
         useInternalPrice={quotation.isInternal}
         preparedBy={quotation.preparedBy}
+        dateOfIssue={dateOfIssue}
       />
     </PDFViewer>
   );
