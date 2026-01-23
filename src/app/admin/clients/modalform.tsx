@@ -443,23 +443,34 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
       {/* Save Button */}
       <DialogFooter className="pt-3 mt-3">
         <Separator className="mb-4" />
-        <Button 
-          type="submit" 
-          disabled={mutation.isPending} 
-          className="min-w-[120px] bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md"
-        >
-          {mutation.isPending ? (
-            <>
-              <span className="mr-2">Saving...</span>
-              <span className="animate-spin">⏳</span>
-            </>
-          ) : (
-            <>
-              <Save className="mr-2 h-4 w-4" />
-              Save Client
-            </>
-          )}
-        </Button>
+        <div className="flex gap-3 justify-end w-full">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onClose}
+            disabled={mutation.isPending}
+            className="min-w-[100px]"
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit" 
+            disabled={mutation.isPending} 
+            className="min-w-[120px] bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md"
+          >
+            {mutation.isPending ? (
+              <>
+                <span className="mr-2">Saving...</span>
+                <span className="animate-spin">⏳</span>
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Save Client
+              </>
+            )}
+          </Button>
+        </div>
       </DialogFooter>
     </form>
   );
