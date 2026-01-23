@@ -63,11 +63,28 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
   const onSubmit = async (data: AdminClientData) => {
     setIsLoading(true);
     try {
-      // Omit pid and cid from data before updating
-      const { pid, cid, ...safeData } = data as any;
-      // If pid changed, update client doc with new pid and update both old and new projects
+      // Check if pid changed
       const pidChanged = client.pid !== data.pid;
-      await updateClientAndProjectName(client.cid!, safeData, client.name, pidChanged ? client.pid : undefined);
+      
+      // Include pid in the update data
+      const updateData = {
+        name: data.name,
+        email: data.email,
+        affiliation: data.affiliation,
+        designation: data.designation,
+        sex: data.sex,
+        phoneNumber: data.phoneNumber,
+        pid: data.pid,
+      };
+      
+      // Update client and handle project name synchronization
+      await updateClientAndProjectName(
+        client.cid!, 
+        updateData, 
+        client.name, 
+        pidChanged ? client.pid : undefined
+      );
+      
       toast.success("Client updated successfully!");
       setIsOpen(false);
       onSuccess?.();
@@ -189,6 +206,20 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
             <div className="border-b pb-2 pt-2">
               <h3 className="text-sm font-semibold text-gray-700">Professional Information</h3>
             </div>
+
+            <FormField
+              control={form.control}
+              name="pid"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Project ID</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter project ID" className="h-9" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
