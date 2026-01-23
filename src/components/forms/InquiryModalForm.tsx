@@ -123,7 +123,7 @@ export function AddInquiryModal({ onSuccess }: AddInquiryModalProps) {
                       </FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="John Doe" 
+                          placeholder="Juan dela Cruz" 
                           className="h-10 focus-visible:ring-blue-500"
                           {...field} 
                         />
@@ -144,7 +144,7 @@ export function AddInquiryModal({ onSuccess }: AddInquiryModalProps) {
                       <FormControl>
                         <Input 
                           type="email" 
-                          placeholder="john.doe@example.com" 
+                          placeholder="juan.cruz@example.com" 
                           className="h-10 focus-visible:ring-blue-500"
                           {...field} 
                         />
@@ -179,7 +179,7 @@ export function AddInquiryModal({ onSuccess }: AddInquiryModalProps) {
                       </FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="University of the Philippines Manila" 
+                          placeholder="University of the Philippines Visayas" 
                           className="h-10 focus-visible:ring-blue-500"
                           {...field} 
                         />
@@ -202,7 +202,7 @@ export function AddInquiryModal({ onSuccess }: AddInquiryModalProps) {
                       </FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Research Scientist, Professor, etc." 
+                          placeholder="Researcher, Faculty, etc." 
                           className="h-10 focus-visible:ring-blue-500"
                           {...field} 
                         />
