@@ -7,8 +7,26 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
+import { logActivity } from "@/services/activityLogService";
+import useAuth from "@/hooks/useAuth";
 
 export function ChargeSlipHistoryPDFPreview({ record }: { record: ChargeSlipRecord }) {
+  const { adminInfo } = useAuth();
+  
+  const handleDownload = async () => {
+    // Log DOWNLOAD activity
+    await logActivity({
+      userId: adminInfo?.email || "system",
+      userEmail: adminInfo?.email || "system@pgc.admin",
+      userName: adminInfo?.name || "System",
+      action: "DOWNLOAD",
+      entityType: "charge_slip",
+      entityId: record.referenceNumber || record.chargeSlipNumber,
+      entityName: `Charge Slip ${record.chargeSlipNumber}`,
+      description: `Downloaded charge slip PDF: ${record.chargeSlipNumber}`,
+    });
+  };
+  
   const pdfDoc = (
     <ChargeSlipPDF
       services={record.services}
@@ -45,7 +63,10 @@ export function ChargeSlipHistoryPDFPreview({ record }: { record: ChargeSlipReco
           fileName={`${record.chargeSlipNumber}.pdf`}
         >
           {({ loading }) => (
-            <Button disabled={loading}>
+            <Button 
+              disabled={loading}
+              onClick={handleDownload}
+            >
               {loading ? "Preparing PDF..." : "Download Final PDF"}
             </Button>
           )}

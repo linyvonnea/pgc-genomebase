@@ -17,6 +17,8 @@ import {
 import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { Timestamp } from "firebase/firestore";
+import { logActivity } from "@/services/activityLogService";
+import useAuth from "@/hooks/useAuth";
 
 // Utility to normalize to string date
 const formatDate = (val: Date | string | Timestamp | null | undefined): string => {
@@ -35,6 +37,7 @@ const isTimestamp = (val: any): val is Timestamp =>
   val?.seconds !== undefined && val?.nanoseconds !== undefined;
 
 export default function ChargeSlipDetailPage() {
+  const { adminInfo } = useAuth();
   const { chargeSlipNumber } = useParams() as { chargeSlipNumber: string };
   const router = useRouter();
 
@@ -62,10 +65,22 @@ export default function ChargeSlipDetailPage() {
       if (isTimestamp(rawDate)) setDateOfOR(rawDate);
       else if (typeof rawDate === "string") setDateOfOR(Timestamp.fromDate(new Date(rawDate)));
 
+      // Log VIEW activity
+      await logActivity({
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
+        action: "VIEW",
+        entityType: "charge_slip",
+        entityId: chargeSlipNumber,
+        entityName: `Charge Slip ${chargeSlipNumber}`,
+        description: `Viewed charge slip: ${chargeSlipNumber}`,
+      });
+
       setLoading(false);
     };
     fetch();
-  }, [chargeSlipNumber]);
+  }, [chargeSlipNumber, adminInfo]);
 
   useEffect(() => {
     if (orNumber.trim() && !dateOfOR) {
@@ -77,12 +92,28 @@ export default function ChargeSlipDetailPage() {
     if (!record?.id) return;
 
     try {
-      await updateChargeSlip(record.id, {
+      const updates = {
         dvNumber,
         orNumber,
         notes,
         status,
         dateOfOR,
+      };
+      
+      await updateChargeSlip(record.id, updates);
+
+      // Log UPDATE activity
+      await logActivity({
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
+        action: "UPDATE",
+        entityType: "charge_slip",
+        entityId: record.referenceNumber || record.chargeSlipNumber,
+        entityName: `Charge Slip ${record.chargeSlipNumber}`,
+        description: `Updated charge slip: ${record.chargeSlipNumber}`,
+        changesAfter: updates,
+        changedFields: Object.keys(updates),
       });
 
       toast.success("Charge slip updated successfully.");
