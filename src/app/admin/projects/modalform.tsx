@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,8 @@ type ProjectFormState = Omit<ProjectFormData, 'clientNames'> & {
 
 export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => void }) {
   const { adminInfo } = useAuth();
+  const pidInputRef = useRef<HTMLInputElement>(null);
+  
   // Form state for all project fields
   const [formData, setFormData] = useState<ProjectFormState>({
     pid: "",
@@ -167,6 +169,9 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     
     if (pidExists) {
       setPidError("This Project ID already exists. Please choose a different ID.");
+      // Scroll to the PID field and focus it
+      pidInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      pidInputRef.current?.focus();
       return;
     }
     
@@ -283,6 +288,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         <div>
           <Label className="text-xs">Project ID</Label>
           <Input 
+            ref={pidInputRef}
             name="pid" 
             value={formData.pid} 
             onChange={handleChange} 
