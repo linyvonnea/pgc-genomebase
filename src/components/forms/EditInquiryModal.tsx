@@ -86,7 +86,10 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      await deleteInquiryAction(inquiry.id);
+      await deleteInquiryAction(
+        inquiry.id,
+        adminInfo ? { name: adminInfo.name, email: adminInfo.email } : undefined
+      );
       toast.success("Inquiry deleted successfully!");
       setShowDeleteAlert(false);
       setIsOpen(false);
