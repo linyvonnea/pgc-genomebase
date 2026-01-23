@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { adminClientSchema, AdminClientData } from "@/schemas/adminClientSchema";
@@ -32,6 +32,8 @@ import {
 } from "@/components/ui/form";
 import { Pencil } from "lucide-react";
 import { Client } from "@/types/Client";
+import { Project } from "@/types/Project";
+import { getProjects } from "@/services/projectsService";
 import { updateClientAndProjectName } from "@/services/updateClientAndProjectName";
 import { toast } from "sonner";
 import { deleteDoc, doc, getDoc } from "firebase/firestore";
@@ -49,6 +51,10 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  // Project dropdown state
+  const [projectOptions, setProjectOptions] = useState<Project[]>([]);
+  const [projectSearch, setProjectSearch] = useState("");
 
   const form = useForm<AdminClientData & { pid?: string }>({
     resolver: zodResolver(adminClientSchema),
@@ -62,6 +68,21 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
       pid: client.pid || "",
     },
   });
+
+  // Fetch project options
+  useEffect(() => {
+    getProjects().then((projects) => {
+      setProjectOptions(projects);
+    });
+  }, []);
+
+  // Filter project options by search
+  const filteredProjectOptions = projectOptions.filter(
+    (proj) =>
+      proj.pid?.toLowerCase().includes(projectSearch.toLowerCase()) ||
+      proj.title?.toLowerCase().includes(projectSearch.toLowerCase()) ||
+      proj.lead?.toLowerCase().includes(projectSearch.toLowerCase())
+  );
 
   const onSubmit = async (data: AdminClientData) => {
     setIsLoading(true);
@@ -258,9 +279,57 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs">Project ID</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter project ID" className="h-9" {...field} />
-                  </FormControl>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="Select project">
+                          {field.value ? (
+                            <div className="flex flex-col items-start" title={projectOptions.find(p => p.pid === field.value)?.title}>
+                              <span className="font-medium text-sm">{field.value}</span>
+                              {projectOptions.find(p => p.pid === field.value)?.title && (
+                                <span className="text-xs text-gray-500 truncate max-w-[200px]">
+                                  {projectOptions.find(p => p.pid === field.value)?.title}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            "Select project"
+                          )}
+                        </SelectValue>
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="max-h-[300px] w-[400px]">
+                      <div className="sticky top-0 bg-white z-10 p-2 border-b">
+                        <Input
+                          placeholder="Search by ID, Title, or Lead..."
+                          value={projectSearch}
+                          onChange={e => setProjectSearch(e.target.value)}
+                          className="h-9 text-sm"
+                        />
+                      </div>
+                      <div className="max-h-[240px] overflow-y-auto">
+                        {filteredProjectOptions.length > 0 ? (
+                          filteredProjectOptions.map((proj) => (
+                            <SelectItem key={proj.pid} value={proj.pid || ""} className="text-sm">
+                              <div className="flex flex-col py-1">
+                                <span className="font-medium text-gray-900">{proj.pid}</span>
+                                <span className="text-xs text-gray-600">{proj.title}</span>
+                                {proj.lead && (
+                                  <span className="text-xs text-gray-500 truncate max-w-[350px]" title={proj.lead}>
+                                    Lead: {proj.lead}
+                                  </span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <div className="p-3 text-sm text-center text-gray-500">
+                            No projects found
+                          </div>
+                        )}
+                      </div>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
