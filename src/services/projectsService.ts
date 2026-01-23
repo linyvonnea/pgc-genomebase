@@ -166,3 +166,13 @@ export async function getNextPid(year: number): Promise<string> {
 
   return `P-${year}-${padded}`;
 }
+
+/**
+ * Check if a project ID already exists in Firestore
+ */
+export async function checkPidExists(pid: string): Promise<boolean> {
+  const projectsRef = collection(db, "projects");
+  const projectsQuery = query(projectsRef, where("pid", "==", pid));
+  const snapshot = await getDocs(projectsQuery);
+  return !snapshot.empty;
+}
