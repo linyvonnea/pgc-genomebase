@@ -434,7 +434,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       <div>
         <Label className="text-xs">Funding Category</Label>
         <Select value={formData.fundingCategory || ""} onValueChange={val => handleSelect("fundingCategory", val)}>
-          <SelectTrigger className="h-9"><SelectValue placeholder="Select category" /></SelectTrigger>
+          <SelectTrigger className="h-9"><SelectValue placeholder="Select Funding Category" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="External">External</SelectItem>
             <SelectItem value="In-House">In-House</SelectItem>
