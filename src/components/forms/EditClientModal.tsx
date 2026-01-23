@@ -6,7 +6,9 @@ import { useForm } from "react-hook-form";
 import { adminClientSchema, AdminClientData } from "@/schemas/adminClientSchema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2 } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Trash2, Pencil, UserCog, User, Mail, Phone, Building2, Briefcase, FolderOpen, Save } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -30,7 +32,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Pencil } from "lucide-react";
 import { Client } from "@/types/Client";
 import { Project } from "@/types/Project";
 import { getProjects } from "@/services/projectsService";
@@ -184,23 +185,37 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit Client</DialogTitle>
-          <DialogDescription>
-            Update the client information. Click save when you're done.
-          </DialogDescription>
-          <div className="flex items-center gap-2 pt-3 pb-1">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-md">
-              <span className="text-xs font-medium text-gray-600">Client ID:</span>
-              <span className="text-sm font-semibold text-green-700">{client.cid}</span>
+        <DialogHeader className="space-y-3 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-50 rounded-lg">
+              <UserCog className="h-6 w-6 text-green-600" />
+            </div>
+            <div>
+              <DialogTitle className="text-2xl">Edit Client</DialogTitle>
+              <DialogDescription className="text-sm mt-1">
+                Update client information and manage associations
+              </DialogDescription>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs px-3 py-1">
+              ID: {client.cid}
+            </Badge>
+          </div>
         </DialogHeader>
+
+        <Separator className="my-1" />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             {/* Personal Information Section */}
-            <div className="border-b pb-2">
-              <h3 className="text-sm font-semibold text-gray-700">Personal Information</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-blue-50 rounded-md">
+                  <User className="h-4 w-4 text-blue-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-700">Personal Information</h3>
+              </div>
+              <Separator />
             </div>
 
             <FormField
@@ -269,8 +284,14 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
             </div>
 
             {/* Professional Information Section */}
-            <div className="border-b pb-2 pt-2">
-              <h3 className="text-sm font-semibold text-gray-700">Professional Information</h3>
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-purple-50 rounded-md">
+                  <Briefcase className="h-4 w-4 text-purple-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-700">Professional Information</h3>
+              </div>
+              <Separator />
             </div>
 
             <FormField
@@ -362,28 +383,45 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
               )}
             />
            
-            <div className="flex justify-between items-center pt-3 mt-3 border-t">
-              <button
+            <Separator className="my-4" />
+            
+            <div className="flex justify-between items-center pt-2">
+              <Button
                 type="button"
-                className="flex items-center gap-1 text-red-600 hover:text-red-700 text-sm font-medium bg-transparent border-none p-0 m-0 focus:outline-none"
+                variant="destructive"
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={isLoading}
-                style={{ boxShadow: "none", background: "none" }}
+                className="min-w-[100px] hover:bg-red-600"
               >
-                <Trash2 className="h-4 w-4" /> Delete
-              </button>
-              <div className="flex gap-2">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+              <div className="flex gap-3">
                 <Button 
                   type="button" 
                   variant="outline" 
                   onClick={() => setIsOpen(false)}
                   disabled={isLoading}
-                  className="px-4"
+                  className="min-w-[100px]"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isLoading} className="px-6">
-                  {isLoading ? "Saving..." : "Save Changes"}
+                <Button 
+                  type="submit" 
+                  disabled={isLoading} 
+                  className="min-w-[120px] bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md"
+                >
+                  {isLoading ? (
+                    <>
+                      <span className="mr-2">Saving...</span>
+                      <span className="animate-spin">⏳</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save Changes
+                    </>
+                  )}
                 </Button>
               </div>
             </div>

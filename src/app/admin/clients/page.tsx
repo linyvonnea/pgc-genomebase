@@ -8,8 +8,10 @@ import { columns } from "./columns";
 import { DataTable } from "./data-table";
 import { Client } from "@/types/Client";
 import { getClients } from "@/services/clientService";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { Plus, UserPlus } from "lucide-react"
 import { ProjectFormModal } from "@/app/admin/projects/modalform"
 import { ClientFormModal } from "./modalform";
 
@@ -56,12 +58,26 @@ export default function ClientPage() {
           {/* Add New Client Modal */}
           <Dialog open={openDialog} onOpenChange={setOpenDialog}>
             <DialogTrigger asChild>
-              <Button variant="default">Add New Client</Button>
+              <Button className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transition-all duration-200">
+                <Plus className="mr-2 h-4 w-4" />
+                Add New Client
+              </Button>
             </DialogTrigger>
             <DialogContent className="max-w-[35rem] w-full max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Add New Client</DialogTitle>
+              <DialogHeader className="space-y-3 pb-2">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-50 rounded-lg">
+                    <UserPlus className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-2xl">Add New Client</DialogTitle>
+                    <DialogDescription className="text-sm mt-1">
+                      Create a new client record and link to project
+                    </DialogDescription>
+                  </div>
+                </div>
               </DialogHeader>
+              <Separator />
               <ClientFormModal onSubmit={fetchData} onClose={() => setOpenDialog(false)} />
             </DialogContent>
           </Dialog>
