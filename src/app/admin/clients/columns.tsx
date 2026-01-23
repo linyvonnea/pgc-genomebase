@@ -7,7 +7,8 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Client } from "@/types/Client"
 import { clientSchema } from "@/schemas/clientSchema"
 import { Button } from "@/components/ui/button"
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"
+import { ArrowUpDown } from "lucide-react";
 
 // Helper to validate client data using Zod schema
 const validateClient = (data: any) => {
@@ -24,12 +25,34 @@ export const columns: ColumnDef<Client>[] = [
 
   { 
     accessorKey: "cid",
-    header: "Client ID",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-accent"
+        >
+          Client ID
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     size: 120,
   },
   {
     accessorKey: "name",
-    header: "Client Name",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-accent"
+        >
+          Client Name
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
     size: 250,
     cell: ({ getValue }) => (
       <div className="max-w-[250px] whitespace-normal break-words">
