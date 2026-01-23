@@ -9,8 +9,10 @@ import { z } from "zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { UserPlus, FolderOpen, User, Briefcase, Save } from "lucide-react";
 import { Client } from "@/types/Client";
 import { clientSchema as baseClientSchema } from "@/schemas/clientSchema";
 import { db } from "@/lib/firebase"; 
@@ -210,8 +212,14 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       {/* Quick Fill Section */}
-      <div className="border-b pb-2">
-        <h3 className="text-sm font-semibold text-gray-700">Quick Fill from Inquiry</h3>
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 bg-amber-50 rounded-md">
+            <UserPlus className="h-4 w-4 text-amber-600" />
+          </div>
+          <h3 className="text-sm font-semibold text-gray-700">Quick Fill from Inquiry</h3>
+        </div>
+        <Separator />
       </div>
 
       {/* Inquiry Dropdown */}
@@ -268,8 +276,14 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
       </div>
 
       {/* Project Information Section */}
-      <div className="border-b pb-2">
-        <h3 className="text-sm font-semibold text-gray-700">Project Information</h3>
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 bg-blue-50 rounded-md">
+            <FolderOpen className="h-4 w-4 text-blue-600" />
+          </div>
+          <h3 className="text-sm font-semibold text-gray-700">Project Information</h3>
+        </div>
+        <Separator />
       </div>
 
       {/* Project ID Dropdown with search */}
@@ -326,8 +340,14 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
       </div>
 
       {/* Personal Information Section */}
-      <div className="border-b pb-2 pt-2">
-        <h3 className="text-sm font-semibold text-gray-700">Personal Information</h3>
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 bg-green-50 rounded-md">
+            <User className="h-4 w-4 text-green-600" />
+          </div>
+          <h3 className="text-sm font-semibold text-gray-700">Personal Information</h3>
+        </div>
+        <Separator />
       </div>
 
       {/* Name Field */}
@@ -386,8 +406,14 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
       </div>
 
       {/* Professional Information Section */}
-      <div className="border-b pb-2 pt-2">
-        <h3 className="text-sm font-semibold text-gray-700">Professional Information</h3>
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 bg-purple-50 rounded-md">
+            <Briefcase className="h-4 w-4 text-purple-600" />
+          </div>
+          <h3 className="text-sm font-semibold text-gray-700">Professional Information</h3>
+        </div>
+        <Separator />
       </div>
 
       {/* Affiliation Field */}
@@ -415,9 +441,24 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
       </div>
 
       {/* Save Button */}
-      <DialogFooter className="pt-3 mt-3 border-t">
-        <Button type="submit" disabled={mutation.isPending} className="px-6">
-          {mutation.isPending ? "Saving..." : "Save Client"}
+      <DialogFooter className="pt-3 mt-3">
+        <Separator className="mb-4" />
+        <Button 
+          type="submit" 
+          disabled={mutation.isPending} 
+          className="min-w-[120px] bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md"
+        >
+          {mutation.isPending ? (
+            <>
+              <span className="mr-2">Saving...</span>
+              <span className="animate-spin">⏳</span>
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Save Client
+            </>
+          )}
         </Button>
       </DialogFooter>
     </form>
