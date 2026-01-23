@@ -22,6 +22,7 @@ interface ChargeSlipPDFActionsProps {
   chargeSlipNumber: string;
   orNumber?: string;
   useInternalPrice: boolean;
+  useAffiliationAsClientName?: boolean;
   preparedBy: AdminInfo;
   referenceNumber: string;
   clientInfo: {
@@ -50,6 +51,7 @@ export default function ChargeSlipPDFActions({
   chargeSlipNumber,
   orNumber = "",
   useInternalPrice,
+  useAffiliationAsClientName,
   preparedBy,
   referenceNumber,
   clientInfo,
@@ -74,6 +76,7 @@ export default function ChargeSlipPDFActions({
         project,
         services,
         useInternalPrice,
+        useAffiliationAsClientName,
         preparedBy,
         approvedBy,
         clientInfo,
@@ -102,6 +105,7 @@ export default function ChargeSlipPDFActions({
             chargeSlipNumber={chargeSlipNumber}
             orNumber={orNumber}
             useInternalPrice={useInternalPrice}
+            useAffiliationAsClientName={useAffiliationAsClientName}
             preparedBy={preparedBy}
             approvedBy={approvedBy}
             referenceNumber={referenceNumber}

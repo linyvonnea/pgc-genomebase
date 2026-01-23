@@ -73,6 +73,7 @@ export default function ChargeSlipBuilder({
 }) {
   const [selectedServices, setSelectedServices] = useState<EditableSelectedService[]>([]);
   const [isInternal, setIsInternal] = useState(false);
+  const [useAffiliationAsClientName, setUseAffiliationAsClientName] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
   const [search, setSearch] = useState("");
   const [chargeSlipNumber, setChargeSlipNumber] = useState<string>("");
@@ -278,6 +279,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
         services: cleanedServices,
         orNumber,
         useInternalPrice: isInternal,
+        useAffiliationAsClientName,
         preparedBy: {
           name: adminInfo?.name || "—",
           position: adminInfo?.position || "—",
@@ -308,6 +310,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
           client={client}
           project={project}
           chargeSlipNumber={chargeSlipNumber}
+          useAffiliationAsClientName={useAffiliationAsClientName}
           orNumber={orNumber}
           useInternalPrice={isInternal}
           preparedBy={record.preparedBy}
@@ -348,6 +351,14 @@ const subtotal = cleanedServices.reduce((sum, item) => {
           <p className="text-muted-foreground">
             {clientInfo.name} – {clientInfo.institution}, {clientInfo.designation}
           </p>
+        </div>
+
+        <div className="mb-4 flex items-center gap-2 p-3 bg-gray-50 rounded-md">
+          <Checkbox
+            checked={useAffiliationAsClientName}
+            onCheckedChange={(val) => setUseAffiliationAsClientName(!!val)}
+          />
+          <span className="text-sm">Display affiliation as client name in PDF</span>
         </div>
 
         <div className="flex items-center justify-between mb-4">
@@ -429,6 +440,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
                   chargeSlipNumber={chargeSlipNumber}
                   orNumber={orNumber}
                   useInternalPrice={isInternal}
+                  useAffiliationAsClientName={useAffiliationAsClientName}
                   preparedBy={{
                     name: adminInfo?.name || "—",
                     position: adminInfo?.position || "—",

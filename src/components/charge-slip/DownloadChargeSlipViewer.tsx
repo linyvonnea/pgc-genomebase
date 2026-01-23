@@ -26,6 +26,7 @@ export default function DownloadChargeSlipViewer({ record }: Props) {
       chargeSlipNumber={record.chargeSlipNumber}
       orNumber={record.orNumber ?? ""}
       useInternalPrice={record.useInternalPrice}
+      useAffiliationAsClientName={record.useAffiliationAsClientName}
       preparedBy={record.preparedBy}
       approvedBy={record.approvedBy}
       referenceNumber={record.referenceNumber}

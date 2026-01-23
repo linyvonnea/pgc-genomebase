@@ -32,6 +32,7 @@ export default function DownloadChargeSlipWrapper({ record }: Props) {
           chargeSlipNumber={sanitizedRecord.chargeSlipNumber}
           orNumber={sanitizedRecord.orNumber ?? ""}
           useInternalPrice={sanitizedRecord.useInternalPrice}
+          useAffiliationAsClientName={sanitizedRecord.useAffiliationAsClientName}
           preparedBy={sanitizedRecord.preparedBy}
           approvedBy={sanitizedRecord.approvedBy}
           referenceNumber={sanitizedRecord.referenceNumber}

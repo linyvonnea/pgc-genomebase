@@ -20,6 +20,7 @@ type Props = {
   chargeSlipNumber: string;
   orNumber: string;
   useInternalPrice: boolean;
+  useAffiliationAsClientName?: boolean;
   preparedBy: AdminInfo;
   referenceNumber: string;
   clientInfo: {
@@ -242,6 +243,7 @@ export function ChargeSlipPDF({
   chargeSlipNumber,
   orNumber,
   useInternalPrice,
+  useAffiliationAsClientName,
   preparedBy,
   referenceNumber,
   clientInfo,
@@ -286,7 +288,7 @@ export function ChargeSlipPDF({
 
         {/* Client Info */}
         <View style={styles.section}>
-          <Text style={styles.bold}>CLIENT NAME: {clientInfo.name}</Text>
+          <Text style={styles.bold}>CLIENT NAME: {useAffiliationAsClientName ? (client?.affiliation || clientInfo.name) : clientInfo.name}</Text>
           <Text style={styles.bold}>ADDRESS: {client?.affiliationAddress || client?.affiliation || "—"}</Text>
           <Text style={styles.bold}>PAYMENT FOR: {project?.title || "—"}</Text>
         </View>
