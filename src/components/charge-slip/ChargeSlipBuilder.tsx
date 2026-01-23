@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { ChargeSlipHistoryPanel } from "./ChargeSlipHistoryPanel";
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { pdf, PDFViewer } from "@react-pdf/renderer";
 import { Timestamp } from "firebase/firestore";
 import { toast } from "sonner";
@@ -79,6 +79,7 @@ export default function ChargeSlipBuilder({
   const [orNumber, setOrNumber] = useState<string>("");
 
   const { adminInfo } = useAuth();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const effectiveClientId = clientId || searchParams.get("clientId") || "";
   const effectiveProjectId = projectId || searchParams.get("projectId") || "";
@@ -326,6 +327,9 @@ const subtotal = cleanedServices.reduce((sum, item) => {
       link.download = `${chargeSlipNumber}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
+      
+      // Invalidate charge slip history to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["chargeSlipHistory", effectiveProjectId] });
       
       toast.success("Charge slip saved and downloaded successfully!");
       onSubmit?.(record);
