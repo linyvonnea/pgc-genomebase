@@ -399,21 +399,21 @@ const subtotal = cleanedServices.reduce((sum, item) => {
           </p>
         </div>
 
-        <div className="mb-4 flex items-center gap-2 p-3 bg-gray-50 rounded-md">
-          <Checkbox
-            checked={useAffiliationAsClientName}
-            onCheckedChange={(val) => setUseAffiliationAsClientName(!!val)}
-          />
-          <span className="text-sm">Display affiliation as client name in PDF</span>
-        </div>
+        <div className="space-y-3 mb-4">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={useAffiliationAsClientName}
+              onCheckedChange={(val) => setUseAffiliationAsClientName(!!val)}
+            />
+            <span className="text-sm">Display affiliation as client name in PDF</span>
+          </div>
 
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-2">
             <Checkbox
               checked={isInternal}
               onCheckedChange={(val: boolean) => setIsInternal(!!val)}
             />
-            <span>Internal Client (Apply 12% discount)</span>
+            <span className="text-sm">Internal Client (Apply 12% discount)</span>
           </div>
         </div>
 
