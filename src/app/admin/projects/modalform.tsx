@@ -286,7 +286,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
             name="pid" 
             value={formData.pid} 
             onChange={handleChange} 
-            className="h-9 font-mono" 
+            className="h-9 font-mono bg-blue-50" 
             placeholder="P-2026-001"
           />
           {pidError && <p className="text-red-500 text-xs mt-1">{pidError}</p>}
