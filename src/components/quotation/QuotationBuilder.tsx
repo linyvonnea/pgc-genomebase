@@ -358,36 +358,76 @@ export default function QuotationBuilder({
 
       <div className="w-96 shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
         <h3 className="text-lg font-bold mb-2">Summary</h3>
-        <Separator className="mb-2" />
-        {cleanedServices.map((item) => {
-          const samples = (item as any).samples ?? 1;
-          const samplesAmount = calculateItemTotal(samples, item.price, {
-            minQuantity: (item as any).minQuantity,
-            additionalUnitPrice: (item as any).additionalUnitPrice,
-          });
-          const totalAmount = samplesAmount * item.quantity;
-          
-          return (
-            <div key={item.id} className="flex justify-between text-sm mb-1">
-              <span>
-                {item.name} x {item.quantity}
-              </span>
-              <span>₱{totalAmount.toFixed(2)}</span>
-            </div>
-          );
-        })}
-        <Separator className="my-2" />
-        <p className="text-sm">Subtotal: ₱{subtotal.toFixed(2)}</p>
-        {isInternal && (
-          <p className="text-sm">Discount (12%): ₱{discount.toFixed(2)}</p>
-        )}
-        <p className="text-base font-semibold text-primary">
-          Total: ₱{total.toFixed(2)}
+        <p className="text-sm text-muted-foreground mb-2">
+          {cleanedServices.length} {cleanedServices.length === 1 ? 'service' : 'services'} selected
         </p>
+        <Separator className="mb-2" />
+        {cleanedServices.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p className="text-sm">No services selected</p>
+            <p className="text-xs mt-1">Select services from the list to continue</p>
+          </div>
+        ) : (
+          <>
+            {Object.entries(
+              cleanedServices.reduce((acc, item) => {
+                const category = item.type || 'Other';
+                if (!acc[category]) acc[category] = [];
+                acc[category].push(item);
+                return acc;
+              }, {} as Record<string, typeof cleanedServices>)
+            ).map(([category, items]) => (
+              <div key={category} className="mb-3">
+                <p className="text-xs font-semibold text-gray-600 uppercase mb-1">
+                  {category} ({items.length})
+                </p>
+                {items.map((item) => {
+                  const samples = (item as any).samples ?? 1;
+                  const samplesAmount = calculateItemTotal(samples, item.price, {
+                    minQuantity: (item as any).minQuantity,
+                    additionalUnitPrice: (item as any).additionalUnitPrice,
+                  });
+                  const totalAmount = samplesAmount * item.quantity;
+                  return (
+                    <div key={item.id} className="flex justify-between text-sm mb-1 pl-2">
+                      <span className="truncate">
+                        {item.name} x {item.quantity}
+                      </span>
+                      <span className="font-medium">₱{totalAmount.toFixed(2)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </>
+        )}
+        <Separator className="my-2" />
+        <div className="space-y-1">
+          <div className="flex justify-between text-sm">
+            <span>Subtotal:</span>
+            <span>₱{subtotal.toFixed(2)}</span>
+          </div>
+          {isInternal && (
+            <div className="flex justify-between text-sm text-green-600">
+              <span>Discount (12%):</span>
+              <span>-₱{discount.toFixed(2)}</span>
+            </div>
+          )}
+        </div>
+        <Separator className="my-2" />
+        <div className="flex justify-between text-lg font-bold text-primary">
+          <span>Total:</span>
+          <span>₱{total.toFixed(2)}</span>
+        </div>
 
         <Dialog open={openPreview} onOpenChange={setOpenPreview}>
           <DialogTrigger asChild>
-            <Button className="mt-4 w-full">Preview Quotation</Button>
+            <Button 
+              className="mt-4 w-full"
+              disabled={cleanedServices.length === 0}
+            >
+              Preview Quotation
+            </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
             <DialogHeader className="px-6 pt-6">
@@ -428,7 +468,7 @@ export default function QuotationBuilder({
                 >
                   {({ loading }) => (
                     <Button
-                      disabled={loading}
+                      disabled={loading || cleanedServices.length === 0}
                       onClick={async () => {
                         try {
                           const quotationToSave = {
