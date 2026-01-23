@@ -17,12 +17,15 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Pencil, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Pencil, Trash2, FileEdit, FileText, Banknote, Briefcase, Save } from "lucide-react";
 import { Project } from "@/types/Project";
 import { db } from "@/lib/firebase";
 import { doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
@@ -204,18 +207,26 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit Project</DialogTitle>
-          <DialogDescription>
-            Update the project information. Click save when you're done.
-          </DialogDescription>
-          <div className="flex items-center gap-2 pt-3 pb-1">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-md">
-              <span className="text-xs font-medium text-gray-600">Project ID:</span>
-              <span className="text-sm font-semibold text-blue-700">{project.pid}</span>
+        <DialogHeader className="space-y-3 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <FileEdit className="h-6 w-6 text-blue-600" />
+            </div>
+            <div>
+              <DialogTitle className="text-2xl">Edit Project</DialogTitle>
+              <DialogDescription className="text-sm mt-1">
+                Update project information and track changes
+              </DialogDescription>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs px-3 py-1">
+              ID: {project.pid}
+            </Badge>
+          </div>
         </DialogHeader>
+
+        <Separator className="my-1" />
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit, (errors) => {
@@ -225,8 +236,14 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
             className="space-y-3"
           >
             {/* Basic Information Section */}
-            <div className="border-b pb-2">
-              <h3 className="text-sm font-semibold text-gray-700">Basic Information</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-blue-50 rounded-md">
+                  <FileText className="h-4 w-4 text-blue-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-700">Basic Information</h3>
+              </div>
+              <Separator />
             </div>
             
             <div className="grid grid-cols-2 gap-3">
@@ -349,8 +366,14 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
             />
 
             {/* Funding Section */}
-            <div className="border-b pb-2 pt-2">
-              <h3 className="text-sm font-semibold text-gray-700">Funding & Institution</h3>
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-emerald-50 rounded-md">
+                  <Banknote className="h-4 w-4 text-emerald-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-700">Funding & Institution</h3>
+              </div>
+              <Separator />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <FormField
@@ -416,8 +439,14 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
             />
 
             {/* Services Section */}
-            <div className="border-b pb-2 pt-2">
-              <h3 className="text-sm font-semibold text-gray-700">Services & Personnel</h3>
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-purple-50 rounded-md">
+                  <Briefcase className="h-4 w-4 text-purple-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-700">Services & Personnel</h3>
+              </div>
+              <Separator />
             </div>
             <FormField
               control={form.control}
@@ -479,28 +508,45 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                 </FormItem>
               )}
             />
-            <div className="flex justify-between items-center pt-3 mt-3 border-t">
-              <button
+            <Separator className="my-4" />
+            
+            <div className="flex justify-between items-center pt-2">
+              <Button
                 type="button"
-                className="flex items-center gap-1 text-red-600 hover:text-red-700 text-sm font-medium bg-transparent border-none p-0 m-0 focus:outline-none"
+                variant="destructive"
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={isLoading}
-                style={{ boxShadow: "none", background: "none" }}
+                className="min-w-[100px] hover:bg-red-600"
               >
-                <Trash2 className="h-4 w-4" /> Delete
-              </button>
-              <div className="flex gap-2">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+              <div className="flex gap-3">
                 <Button 
                   type="button" 
                   variant="outline" 
                   onClick={() => setIsOpen(false)}
                   disabled={isLoading}
-                  className="px-4"
+                  className="min-w-[100px]"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isLoading || form.formState.isSubmitting} className="px-6">
-                  {(isLoading || form.formState.isSubmitting) ? "Saving..." : "Save Changes"}
+                <Button 
+                  type="submit" 
+                  disabled={isLoading || form.formState.isSubmitting} 
+                  className="min-w-[120px] bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md"
+                >
+                  {(isLoading || form.formState.isSubmitting) ? (
+                    <>
+                      <span className="mr-2">Saving...</span>
+                      <span className="animate-spin">⏳</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save Changes
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
