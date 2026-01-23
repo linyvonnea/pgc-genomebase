@@ -34,6 +34,7 @@ export interface ChargeSlipRecord {
 
   services: SelectedService[];
   useInternalPrice: boolean;
+  useAffiliationAsClientName?: boolean; // Display affiliation instead of name in PDF
 
   preparedBy: AdminInfo;
   approvedBy: {

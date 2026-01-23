@@ -35,6 +35,7 @@ export function ChargeSlipHistoryPDFPreview({ record }: { record: ChargeSlipReco
       chargeSlipNumber={record.chargeSlipNumber}
       orNumber={record.orNumber ?? ""}
       useInternalPrice={record.useInternalPrice}
+      useAffiliationAsClientName={record.useAffiliationAsClientName}
       preparedBy={record.preparedBy}
       referenceNumber={record.referenceNumber}
       clientInfo={record.clientInfo}
