@@ -271,32 +271,34 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         <h3 className="text-sm font-semibold text-gray-700 mb-3">Basic Information</h3>
       </div>
       
-      {/* Year */}
-      <div>
-        <Label className="text-xs">Year</Label>
-        <Input type="number" name="year" value={formData.year} onChange={handleChange} className="h-9" />
-        {errors.year && <p className="text-red-500 text-xs mt-1">{errors.year}</p>}
-      </div>
-      {/* Project ID - Editable */}
-      <div>
-        <Label className="text-xs">Project ID</Label>
-        <Input 
-          name="pid" 
-          value={formData.pid} 
-          onChange={handleChange} 
-          className="h-9 font-mono" 
-          placeholder="P-2026-001"
-        />
-        {pidError && <p className="text-red-500 text-xs mt-1">{pidError}</p>}
-        {errors.pid && <p className="text-red-500 text-xs mt-1">{errors.pid}</p>}
-        <p className="text-xs text-gray-500 mt-1">Auto-generated, but can be edited</p>
-      </div>
-      
-      {/* Start Date */}
-      <div className="col-span-2">
-        <Label className="text-xs">Start Date</Label>
-        <Input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className="h-9" />
-        {errors.startDate && <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>}
+      {/* Year, Project ID, and Start Date in one row */}
+      <div className="col-span-2 grid grid-cols-[100px_1fr_1fr] gap-4">
+        {/* Year */}
+        <div>
+          <Label className="text-xs">Year</Label>
+          <Input type="number" name="year" value={formData.year} onChange={handleChange} className="h-9" />
+          {errors.year && <p className="text-red-500 text-xs mt-1">{errors.year}</p>}
+        </div>
+        {/* Project ID - Editable */}
+        <div>
+          <Label className="text-xs">Project ID</Label>
+          <Input 
+            name="pid" 
+            value={formData.pid} 
+            onChange={handleChange} 
+            className="h-9 font-mono" 
+            placeholder="P-2026-001"
+          />
+          {pidError && <p className="text-red-500 text-xs mt-1">{pidError}</p>}
+          {errors.pid && <p className="text-red-500 text-xs mt-1">{errors.pid}</p>}
+          <p className="text-xs text-gray-500 mt-1">Auto-generated, but can be edited</p>
+        </div>
+        {/* Start Date */}
+        <div>
+          <Label className="text-xs">Start Date</Label>
+          <Input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className="h-9" />
+          {errors.startDate && <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>}
+        </div>
       </div>
 
       {/* Project Title - Full Width */}
