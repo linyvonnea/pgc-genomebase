@@ -220,7 +220,7 @@ export async function updateInquiryAction(id: string, data: AdminInquiryData) {
       entityId: id,
       entityName: data.name,
       description: `Updated inquiry for ${data.name}`,
-      changesBefore: oldData,
+      changesBefore: oldData || undefined,
       changesAfter: { ...oldData, ...updateData },
       changedFields: Object.keys(updateData),
     });
@@ -264,7 +264,7 @@ export async function deleteInquiryAction(id: string) {
       entityId: id,
       entityName: inquiryData?.name || "Unknown",
       description: `Deleted inquiry for ${inquiryData?.name || id}`,
-      changesBefore: inquiryData,
+      changesBefore: inquiryData || undefined,
     });
     
     // Revalidate the admin inquiry page to remove the deleted entry

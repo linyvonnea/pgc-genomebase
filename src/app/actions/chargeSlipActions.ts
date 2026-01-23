@@ -21,7 +21,7 @@ export async function saveChargeSlipAction(slip: ChargeSlipRecord) {
       action: "GENERATE",
       entityType: "charge_slip",
       entityId: slip.referenceNumber || slip.id || "unknown",
-      entityName: `Charge Slip for ${slip.pid || "Unknown Project"}`,
+      entityName: `Charge Slip for ${slip.projectId || "Unknown Project"}`,
       description: `Generated charge slip: ${slip.referenceNumber || slip.id}`,
       changesAfter: slip,
     });

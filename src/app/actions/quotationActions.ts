@@ -17,7 +17,7 @@ export async function saveQuotationAction(quotation: QuotationRecord) {
       action: "GENERATE",
       entityType: "quotation",
       entityId: quotation.referenceNumber || quotation.id || "unknown",
-      entityName: `Quotation for ${quotation.pid || "Unknown Project"}`,
+      entityName: `Quotation for ${quotation.name || "Unknown Client"}`,
       description: `Generated quotation: ${quotation.referenceNumber || quotation.id}`,
       changesAfter: quotation,
     });
