@@ -34,12 +34,15 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Pencil, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Pencil, Trash2, Mail, Building2, CheckCircle2, FileEdit } from "lucide-react";
 import { Inquiry } from "@/types/Inquiry";
 import { updateInquiryAction, deleteInquiryAction } from "@/app/actions/inquiryActions";
 import useAuth from "@/hooks/useAuth";
@@ -110,130 +113,238 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
             <Pencil className="h-4 w-4" />
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Edit Inquiry</DialogTitle>
-            <DialogDescription>
-              Update the inquiry information. Click save when you're done.
-            </DialogDescription>
-            <div className="flex items-center gap-2 pt-3 pb-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-md">
-                <span className="text-xs font-medium text-gray-600">Inquiry ID:</span>
-                <span className="text-sm font-semibold text-purple-700">{inquiry.id}</span>
+        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="space-y-3 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-50 rounded-lg">
+                <FileEdit className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl">Edit Inquiry</DialogTitle>
+                <DialogDescription className="text-sm mt-1">
+                  Update inquiry information and track status changes
+                </DialogDescription>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 text-xs px-3 py-1">
+                ID: {inquiry.id}
+              </Badge>
+            </div>
           </DialogHeader>
+
+          <Separator className="my-1" />
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel> 
-                      Name <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Contact Information Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-gray-500" />
+                  <h3 className="text-sm font-semibold text-gray-700">Contact Information</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-4 pl-6">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-medium flex items-center gap-1">
+                          Full Name <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="John Doe" 
+                            className="h-10 focus-visible:ring-purple-500"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-medium flex items-center gap-1">
+                          Email Address <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="email" 
+                            placeholder="john.doe@example.com" 
+                            className="h-10 focus-visible:ring-purple-500"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs text-gray-500">
+                          Primary contact email for correspondence
+                        </FormDescription>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Professional Information Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-gray-500" />
+                  <h3 className="text-sm font-semibold text-gray-700">Professional Details</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-4 pl-6">
+                  <FormField
+                    control={form.control}
+                    name="affiliation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-medium flex items-center gap-1">
+                          Affiliation <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="University of the Philippines Manila" 
+                            className="h-10 focus-visible:ring-purple-500"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs text-gray-500">
+                          Institution or organization name
+                        </FormDescription>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="designation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-medium flex items-center gap-1">
+                          Designation <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Research Scientist, Professor, etc." 
+                            className="h-10 focus-visible:ring-purple-500"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs text-gray-500">
+                          Job title or position
+                        </FormDescription>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Status Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-gray-500" />
+                  <h3 className="text-sm font-semibold text-gray-700">Inquiry Status</h3>
+                </div>
+                
+                <div className="pl-6">
+                  <FormField
+                    control={form.control}
+                    name="status"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-medium">Status</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-10 focus-visible:ring-purple-500">
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Pending">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                                  Pending
+                                </Badge>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="Approved Client">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                  Approved Client
+                                </Badge>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="Quotation Only">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                  Quotation Only
+                                </Badge>
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription className="text-xs text-gray-500">
+                          Current processing status of this inquiry
+                        </FormDescription>
+                        <FormMessage className="text-xs" />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
               
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Email <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="Enter email" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <Separator className="my-4" />
               
-              <FormField
-                control={form.control}
-                name="affiliation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Affiliation <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter affiliation" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="designation"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Designation <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter designation" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Approved Client">Approved Client</SelectItem>
-                        <SelectItem value="Quotation Only">Quotation Only</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="flex justify-between pt-4">
+              {/* Action Buttons */}
+              <div className="flex justify-between pt-2">
                 <Button
                   type="button"
                   variant="destructive"
                   onClick={() => setShowDeleteAlert(true)}
                   disabled={isLoading || isDeleting}
+                  className="min-w-[100px] hover:bg-red-600"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete
                 </Button>
                 
-                <div className="flex space-x-2">
+                <div className="flex gap-3">
                   <Button 
                     type="button" 
                     variant="outline" 
                     onClick={() => setIsOpen(false)}
                     disabled={isLoading || isDeleting}
+                    className="min-w-[100px]"
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={isLoading || isDeleting}>
-                    {isLoading ? "Saving..." : "Save changes"}
+                  <Button 
+                    type="submit" 
+                    disabled={isLoading || isDeleting}
+                    className="min-w-[120px] bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-md"
+                  >
+                    {isLoading ? (
+                      <>
+                        <span className="mr-2">Saving...</span>
+                        <span className="animate-spin">⏳</span>
+                      </>
+                    ) : (
+                      <>
+                        <Pencil className="mr-2 h-4 w-4" />
+                        Save Changes
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
