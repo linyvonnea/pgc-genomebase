@@ -222,80 +222,34 @@ const subtotal = cleanedServices.reduce((sum, item) => {
               </TableCell>
             {serviceType === "bioinformatics" && (
             <TableCell>
-              <div className="flex items-center gap-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => updateSamples(item.id, Math.max(0, (samples || 0) - 1))}
-                  disabled={!isSelected || samples === 0}
-                >
-                  -
-                </Button>
-                <Input
-                  type="number"
-                  min={0}
-                  value={samples}
-                  onChange={(e) =>
-                    updateSamples(
-                      item.id,
-                      e.target.value === "" ? "" : +e.target.value
-                    )
-                  }
-                  disabled={!isSelected}
-                  placeholder="0"
-                  className="w-16 text-center"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => updateSamples(item.id, (samples || 0) + 1)}
-                  disabled={!isSelected}
-                >
-                  +
-                </Button>
-              </div>
+              <Input
+                type="number"
+                min={0}
+                value={samples}
+                onChange={(e) =>
+                  updateSamples(
+                    item.id,
+                    e.target.value === "" ? "" : +e.target.value
+                  )
+                }
+                disabled={!isSelected}
+                placeholder="0"
+              />
             </TableCell>
             )}
             <TableCell>
-              <div className="flex items-center gap-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => updateQuantity(item.id, Math.max(0, (quantity || 0) - 1))}
-                  disabled={!isSelected || quantity === 0}
-                >
-                  -
-                </Button>
-                <Input
-                  type="number"
-                  min={0}
-                  value={quantity}
-                  onChange={(e) =>
-                    updateQuantity(
-                      item.id,
-                      e.target.value === "" ? "" : +e.target.value
-                    )
-                  }
-                  disabled={!isSelected}
-                  className="w-16 text-center"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => updateQuantity(item.id, (quantity || 0) + 1)}
-                  disabled={!isSelected}
-                >
-                  +
-                </Button>
-              </div>
+              <Input
+                type="number"
+                min={0}
+                value={quantity}
+                onChange={(e) =>
+                  updateQuantity(
+                    item.id,
+                    e.target.value === "" ? "" : +e.target.value
+                  )
+                }
+                disabled={!isSelected}
+              />
             </TableCell>
             <TableCell>{amount.toFixed(2)}</TableCell>
           </TableRow>
@@ -399,21 +353,21 @@ const subtotal = cleanedServices.reduce((sum, item) => {
           </p>
         </div>
 
-        <div className="mb-4 flex items-center gap-2 p-3 bg-gray-50 rounded-md">
-          <Checkbox
-            checked={useAffiliationAsClientName}
-            onCheckedChange={(val) => setUseAffiliationAsClientName(!!val)}
-          />
-          <span className="text-sm">Display affiliation as client name in PDF</span>
-        </div>
+        <div className="space-y-3 mb-4">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={useAffiliationAsClientName}
+              onCheckedChange={(val) => setUseAffiliationAsClientName(!!val)}
+            />
+            <span className="text-sm">Display affiliation as client name in PDF</span>
+          </div>
 
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-2">
             <Checkbox
               checked={isInternal}
               onCheckedChange={(val: boolean) => setIsInternal(!!val)}
             />
-            <span>Internal Client (Apply 12% discount)</span>
+            <span className="text-sm">Internal Client (Apply 12% discount)</span>
           </div>
         </div>
 
