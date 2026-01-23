@@ -64,9 +64,9 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     clientNames: "", // Keep as string for the input field
     title: "",
     projectTag: "",
-    status: "Ongoing",
+    status: undefined,
     sendingInstitution: "",
-    fundingCategory: "In-House",
+    fundingCategory: undefined,
     fundingInstitution: "",
     serviceRequested: [],
     personnelAssigned: "",
