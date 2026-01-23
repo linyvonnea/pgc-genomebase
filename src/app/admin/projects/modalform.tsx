@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { FolderPlus, FileText, Building2, DollarSign, Briefcase, Save } from "lucide-react";
+import { FolderPlus, FileText, Building2, Banknote, Briefcase, Save } from "lucide-react";
 import { Project } from "@/types/Project";
 import { projectSchema as baseProjectSchema } from "@/schemas/projectSchema";
 import { collection, addDoc, serverTimestamp, Timestamp, FieldValue, doc, setDoc } from "firebase/firestore";
@@ -407,7 +407,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       <div className="col-span-2 mt-2">
         <div className="flex items-center gap-2 mb-3">
           <div className="p-1.5 bg-emerald-50 rounded-md">
-            <DollarSign className="h-4 w-4 text-emerald-600" />
+            <Banknote className="h-4 w-4 text-emerald-600" />
           </div>
           <h3 className="text-sm font-semibold text-gray-700">Funding & Institution</h3>
         </div>
