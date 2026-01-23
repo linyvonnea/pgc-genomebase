@@ -222,34 +222,80 @@ const subtotal = cleanedServices.reduce((sum, item) => {
               </TableCell>
             {serviceType === "bioinformatics" && (
             <TableCell>
-              <Input
-                type="number"
-                min={0}
-                value={samples}
-                onChange={(e) =>
-                  updateSamples(
-                    item.id,
-                    e.target.value === "" ? "" : +e.target.value
-                  )
-                }
-                disabled={!isSelected}
-                placeholder="0"
-              />
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => updateSamples(item.id, Math.max(0, (samples || 0) - 1))}
+                  disabled={!isSelected || samples === 0}
+                >
+                  -
+                </Button>
+                <Input
+                  type="number"
+                  min={0}
+                  value={samples}
+                  onChange={(e) =>
+                    updateSamples(
+                      item.id,
+                      e.target.value === "" ? "" : +e.target.value
+                    )
+                  }
+                  disabled={!isSelected}
+                  placeholder="0"
+                  className="w-16 text-center"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => updateSamples(item.id, (samples || 0) + 1)}
+                  disabled={!isSelected}
+                >
+                  +
+                </Button>
+              </div>
             </TableCell>
             )}
             <TableCell>
-              <Input
-                type="number"
-                min={0}
-                value={quantity}
-                onChange={(e) =>
-                  updateQuantity(
-                    item.id,
-                    e.target.value === "" ? "" : +e.target.value
-                  )
-                }
-                disabled={!isSelected}
-              />
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => updateQuantity(item.id, Math.max(0, (quantity || 0) - 1))}
+                  disabled={!isSelected || quantity === 0}
+                >
+                  -
+                </Button>
+                <Input
+                  type="number"
+                  min={0}
+                  value={quantity}
+                  onChange={(e) =>
+                    updateQuantity(
+                      item.id,
+                      e.target.value === "" ? "" : +e.target.value
+                    )
+                  }
+                  disabled={!isSelected}
+                  className="w-16 text-center"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => updateQuantity(item.id, (quantity || 0) + 1)}
+                  disabled={!isSelected}
+                >
+                  +
+                </Button>
+              </div>
             </TableCell>
             <TableCell>{amount.toFixed(2)}</TableCell>
           </TableRow>
