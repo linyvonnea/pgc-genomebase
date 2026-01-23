@@ -56,7 +56,7 @@ export default function ClientPage() {
           {/* Add New Client Modal */}
           <Dialog open={openDialog} onOpenChange={setOpenDialog}>
             <DialogTrigger asChild>
-              <Button variant="default">Add New Record</Button>
+              <Button variant="default">Add New Client</Button>
             </DialogTrigger>
             <DialogContent className="max-w-[35rem] w-full max-h-[90vh] overflow-y-auto">
               <DialogHeader>

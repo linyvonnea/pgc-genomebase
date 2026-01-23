@@ -69,7 +69,7 @@ export default function ProjectPage() {
             <DialogTrigger asChild>
               <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200">
                 <Plus className="mr-2 h-4 w-4" />
-                Add New Record
+                Add New Project
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
