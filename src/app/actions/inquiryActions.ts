@@ -15,11 +15,12 @@
 
 'use server'
 
-import { collection, addDoc, serverTimestamp, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { revalidatePath } from "next/cache";
 import { InquiryFormData } from "@/schemas/inquirySchema";
 import { AdminInquiryData } from "@/schemas/adminInquirySchema";
+import { logActivity } from "@/services/activityLogService";
 
 /**
  * Creates a new inquiry from user form submission
@@ -156,6 +157,19 @@ export async function createAdminInquiryAction(data: AdminInquiryData) {
     // Add the inquiry document to Firestore
     const docRef = await addDoc(collection(db, "inquiries"), transformedData);
     
+    // Log the activity
+    await logActivity({
+      userId: "system",
+      userEmail: "system@pgc.admin",
+      userName: "System",
+      action: "CREATE",
+      entityType: "inquiry",
+      entityId: docRef.id,
+      entityName: data.name,
+      description: `Created inquiry for ${data.name}`,
+      changesAfter: transformedData,
+    });
+    
     // Revalidate the admin inquiry page to show the new entry
     revalidatePath('/admin/inquiry');
     
@@ -180,14 +194,35 @@ export async function updateInquiryAction(id: string, data: AdminInquiryData) {
     // Create reference to the specific inquiry document
     const docRef = doc(db, "inquiries", id);
     
-    // Update only the editable fields
-    await updateDoc(docRef, {
+    // Get old data for logging
+    const oldDoc = await getDoc(docRef);
+    const oldData = oldDoc.exists() ? oldDoc.data() : null;
+    
+    const updateData = {
       name: data.name,
       email: data.email,
       affiliation: data.affiliation,
       designation: data.designation,
       status: data.status,
-      isApproved: data.status === 'Approved Client', // Auto-update approval based on status
+      isApproved: data.status === 'Approved Client',
+    };
+    
+    // Update only the editable fields
+    await updateDoc(docRef, updateData);
+    
+    // Log the activity
+    await logActivity({
+      userId: "system",
+      userEmail: "system@pgc.admin",
+      userName: "System",
+      action: "UPDATE",
+      entityType: "inquiry",
+      entityId: id,
+      entityName: data.name,
+      description: `Updated inquiry for ${data.name}`,
+      changesBefore: oldData || undefined,
+      changesAfter: { ...oldData, ...updateData },
+      changedFields: Object.keys(updateData),
     });
     
     // Revalidate the admin inquiry page to reflect changes
@@ -212,8 +247,25 @@ export async function deleteInquiryAction(id: string) {
     // Create reference to the specific inquiry document
     const docRef = doc(db, "inquiries", id);
     
+    // Get data before deletion for logging
+    const docSnap = await getDoc(docRef);
+    const inquiryData = docSnap.exists() ? docSnap.data() : null;
+    
     // Permanently delete the document from Firestore
     await deleteDoc(docRef);
+    
+    // Log the activity
+    await logActivity({
+      userId: "system",
+      userEmail: "system@pgc.admin",
+      userName: "System",
+      action: "DELETE",
+      entityType: "inquiry",
+      entityId: id,
+      entityName: inquiryData?.name || "Unknown",
+      description: `Deleted inquiry for ${inquiryData?.name || id}`,
+      changesBefore: inquiryData || undefined,
+    });
     
     // Revalidate the admin inquiry page to remove the deleted entry
     revalidatePath('/admin/inquiry');

@@ -25,13 +25,14 @@ import {
 import { Pencil, Trash2 } from "lucide-react";
 import { Project } from "@/types/Project";
 import { db } from "@/lib/firebase";
-import { doc, setDoc, deleteDoc } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { editProject } from "@/services/editProject";
+import { logActivity } from "@/services/activityLogService";
 
 interface EditProjectModalProps {
   project: Project;
@@ -110,7 +111,39 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
     const updatedData = { ...data, pid, serviceRequested };
   
     try {
+      // Get old project data for logging
+      const projectRef = doc(db, "projects", pid);
+      const projectDoc = await getDoc(projectRef);
+      const oldData = projectDoc.data();
+      
       await editProject(updatedData);
+      
+      // Log the activity
+      const changedFields = Object.keys(updatedData).filter(
+        (key) => {
+          const oldVal = oldData?.[key];
+          const newVal = updatedData[key as keyof typeof updatedData];
+          // Handle array comparison
+          if (Array.isArray(oldVal) && Array.isArray(newVal)) {
+            return JSON.stringify(oldVal) !== JSON.stringify(newVal);
+          }
+          return oldVal !== newVal;
+        }
+      );
+      await logActivity({
+        userId: "system",
+        userEmail: "system@pgc.admin",
+        userName: "System",
+        action: "UPDATE",
+        entityType: "project",
+        entityId: pid,
+        entityName: data.title || pid,
+        description: `Updated project: ${data.title || pid}`,
+        changesBefore: oldData,
+        changesAfter: { ...oldData, ...updatedData },
+        changedFields,
+      });
+      
       toast.success("Project updated successfully!");
       setIsOpen(false);
       // Call onSuccess after modal is closed
@@ -128,7 +161,26 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
   const handleDelete = async () => {
     if (!project.pid) return;
     try {
-      await deleteDoc(doc(db, "projects", project.pid));
+      // Get project data before deletion for logging
+      const projectRef = doc(db, "projects", project.pid);
+      const projectDoc = await getDoc(projectRef);
+      const projectData = projectDoc.data();
+      
+      await deleteDoc(projectRef);
+      
+      // Log the activity
+      await logActivity({
+        userId: "system",
+        userEmail: "system@pgc.admin",
+        userName: "System",
+        action: "DELETE",
+        entityType: "project",
+        entityId: project.pid,
+        entityName: project.title || project.pid,
+        description: `Deleted project: ${project.title || project.pid}`,
+        changesBefore: projectData,
+      });
+      
       toast.success("Project deleted successfully!");
       setShowDeleteConfirm(false);
       setIsOpen(false);

@@ -34,8 +34,9 @@ import { Pencil } from "lucide-react";
 import { Client } from "@/types/Client";
 import { updateClientAndProjectName } from "@/services/updateClientAndProjectName";
 import { toast } from "sonner";
-import { deleteDoc, doc } from "firebase/firestore";
+import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { logActivity } from "@/services/activityLogService";
 
 interface EditClientModalProps {
   client: Client;
@@ -63,6 +64,11 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
   const onSubmit = async (data: AdminClientData) => {
     setIsLoading(true);
     try {
+      // Get old client data for logging
+      const clientRef = doc(db, "clients", client.cid!);
+      const clientDoc = await getDoc(clientRef);
+      const oldData = clientDoc.data();
+      
       // Check if pid changed
       const pidChanged = client.pid !== data.pid;
       
@@ -85,6 +91,24 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
         pidChanged ? client.pid : undefined
       );
       
+      // Log the activity
+      const changedFields = Object.keys(updateData).filter(
+        (key) => (oldData?.[key] ?? null) !== (updateData[key as keyof typeof updateData] ?? null)
+      );
+      await logActivity({
+        userId: "system",
+        userEmail: "system@pgc.admin",
+        userName: "System",
+        action: "UPDATE",
+        entityType: "client",
+        entityId: client.cid!,
+        entityName: data.name || client.cid!,
+        description: `Updated client: ${data.name || client.cid!}`,
+        changesBefore: oldData,
+        changesAfter: { ...oldData, ...updateData },
+        changedFields,
+      });
+      
       toast.success("Client updated successfully!");
       setIsOpen(false);
       onSuccess?.();
@@ -99,7 +123,26 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
   const handleDelete = async () => {
     if (!client.cid) return;
     try {
-      await deleteDoc(doc(db, "clients", client.cid));
+      // Get client data before deletion for logging
+      const clientRef = doc(db, "clients", client.cid);
+      const clientDoc = await getDoc(clientRef);
+      const clientData = clientDoc.data();
+      
+      await deleteDoc(clientRef);
+      
+      // Log the activity
+      await logActivity({
+        userId: "system",
+        userEmail: "system@pgc.admin",
+        userName: "System",
+        action: "DELETE",
+        entityType: "client",
+        entityId: client.cid,
+        entityName: client.name || client.cid,
+        description: `Deleted client: ${client.name || client.cid}`,
+        changesBefore: clientData,
+      });
+      
       toast.success("Client deleted successfully!");
       setShowDeleteConfirm(false);
       setIsOpen(false);
