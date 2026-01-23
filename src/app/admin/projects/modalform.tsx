@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { FolderPlus, FileText, Building2, DollarSign, Briefcase, Save } from "lucide-react";
 import { Project } from "@/types/Project";
 import { projectSchema as baseProjectSchema } from "@/schemas/projectSchema";
 import { collection, addDoc, serverTimestamp, Timestamp, FieldValue, doc, setDoc } from "firebase/firestore";
@@ -273,7 +275,13 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     <form className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4" onSubmit={handleSubmit}>
       {/* Basic Information Section */}
       <div className="col-span-2">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Basic Information</h3>
+        <div className="flex items-center gap-2 mb-3">
+          <div className="p-1.5 bg-blue-50 rounded-md">
+            <FileText className="h-4 w-4 text-blue-600" />
+          </div>
+          <h3 className="text-sm font-semibold text-gray-700">Basic Information</h3>
+        </div>
+        <Separator className="mb-3" />
       </div>
       
       {/* Year, Project ID, and Start Date in one row */}
@@ -397,7 +405,13 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
 
       {/* Funding Section */}
       <div className="col-span-2 mt-2">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Funding & Institution</h3>
+        <div className="flex items-center gap-2 mb-3">
+          <div className="p-1.5 bg-emerald-50 rounded-md">
+            <DollarSign className="h-4 w-4 text-emerald-600" />
+          </div>
+          <h3 className="text-sm font-semibold text-gray-700">Funding & Institution</h3>
+        </div>
+        <Separator className="mb-3" />
       </div>
 
       {/* Sending Institution */}
@@ -438,7 +452,13 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
 
       {/* Services Section */}
       <div className="col-span-2 mt-2">
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">Services & Personnel</h3>
+        <div className="flex items-center gap-2 mb-3">
+          <div className="p-1.5 bg-purple-50 rounded-md">
+            <Briefcase className="h-4 w-4 text-purple-600" />
+          </div>
+          <h3 className="text-sm font-semibold text-gray-700">Services & Personnel</h3>
+        </div>
+        <Separator className="mb-3" />
       </div>
 
       {/* Service Requested checkboxes - Horizontal layout */}
@@ -475,9 +495,29 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       </div>
 
       {/* Submit button */}
-      <div className="col-span-2 flex justify-end mt-2 pt-2 border-t">
-        <Button type="submit" disabled={mutation.isPending || isPidChecking} className="px-6">
-          {isPidChecking ? "Checking ID..." : mutation.isPending ? "Saving..." : "Save Project"}
+      <div className="col-span-2 flex justify-end mt-2 pt-3">
+        <Separator className="mb-4" />
+        <Button 
+          type="submit" 
+          disabled={mutation.isPending || isPidChecking} 
+          className="px-6 min-w-[140px] bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md"
+        >
+          {isPidChecking ? (
+            <>
+              <span className="mr-2">Checking ID...</span>
+              <span className="animate-spin">⏳</span>
+            </>
+          ) : mutation.isPending ? (
+            <>
+              <span className="mr-2">Saving...</span>
+              <span className="animate-spin">⏳</span>
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Save Project
+            </>
+          )}
         </Button>
       </div>
     </form>

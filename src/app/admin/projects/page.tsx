@@ -11,6 +11,7 @@ import { Project } from "@/types/Project"
 import { projectSchema } from "@/schemas/projectSchema"
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
 import { ProjectFormModal } from "@/app/admin/projects/modalform"
 import { getProjects } from "@/services/projectsService"
 
@@ -65,12 +66,26 @@ export default function ProjectPage() {
           {/* Add New Project Modal */}
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="default">Add New Record</Button>
+              <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200">
+                <Plus className="mr-2 h-4 w-4" />
+                Add New Record
+              </Button>
             </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Project</DialogTitle>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader className="space-y-3 pb-2">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-50 rounded-lg">
+                    <FolderPlus className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-2xl">Add New Project</DialogTitle>
+                    <DialogDescription className="text-sm mt-1">
+                      Create a new project record with complete details
+                    </DialogDescription>
+                  </div>
+                </div>
               </DialogHeader>
+              <Separator />
               <ProjectFormModal onSubmit={handleFormSuccess} />
             </DialogContent>
           </Dialog>
