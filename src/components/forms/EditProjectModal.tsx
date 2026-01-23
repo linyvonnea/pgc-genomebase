@@ -33,6 +33,7 @@ import { CalendarIcon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { editProject } from "@/services/editProject";
 import { logActivity } from "@/services/activityLogService";
+import useAuth from "@/hooks/useAuth";
 
 interface EditProjectModalProps {
   project: Project;
@@ -40,6 +41,7 @@ interface EditProjectModalProps {
 }
 
 export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) {
+  const { adminInfo } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [serviceRequestedInput, setServiceRequestedInput] = useState(
@@ -131,9 +133,9 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
         }
       );
       await logActivity({
-        userId: "system",
-        userEmail: "system@pgc.admin",
-        userName: "System",
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
         action: "UPDATE",
         entityType: "project",
         entityId: pid,
@@ -170,9 +172,9 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       
       // Log the activity
       await logActivity({
-        userId: "system",
-        userEmail: "system@pgc.admin",
-        userName: "System",
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
         action: "DELETE",
         entityType: "project",
         entityId: project.pid,

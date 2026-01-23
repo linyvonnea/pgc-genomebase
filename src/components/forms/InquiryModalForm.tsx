@@ -31,12 +31,14 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { createAdminInquiryAction } from "@/app/actions/inquiryActions";
+import useAuth from "@/hooks/useAuth";
 
 interface AddInquiryModalProps {
   onSuccess?: () => void;
 }
 
 export function AddInquiryModal({ onSuccess }: AddInquiryModalProps) {
+  const { adminInfo } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -54,7 +56,10 @@ export function AddInquiryModal({ onSuccess }: AddInquiryModalProps) {
   const onSubmit = async (data: AdminInquiryData) => {
     setIsLoading(true);
     try {
-      await createAdminInquiryAction(data);
+      await createAdminInquiryAction(data, {
+        name: adminInfo?.name || "System",
+        email: adminInfo?.email || "system@pgc.admin"
+      });
       
       toast.success("Inquiry added successfully!");
       form.reset();

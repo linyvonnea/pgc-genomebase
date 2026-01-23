@@ -22,6 +22,7 @@ import { getInquiries } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { DialogFooter } from "@/components/ui/dialog";
 import { logActivity } from "@/services/activityLogService";
+import useAuth from "@/hooks/useAuth";
 
 // Extended client schema for admin modal validation
 const clientSchema = baseClientSchema.extend({
@@ -44,6 +45,7 @@ type ClientFormData = Omit<z.infer<typeof clientSchema>, 'sex'> & { sex: "F" | "
 
 // Modal form component for adding a client
 export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Client) => void; onClose?: () => void }) {
+  const { adminInfo } = useAuth();
   // Form state
   const [formData, setFormData] = useState<ClientFormData>({
     year: new Date().getFullYear(),
@@ -76,9 +78,9 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
       
       // Log the activity
       await logActivity({
-        userId: "system",
-        userEmail: "system@pgc.admin",
-        userName: "System",
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
         action: "CREATE",
         entityType: "client",
         entityId: data.cid,

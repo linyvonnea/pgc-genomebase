@@ -42,6 +42,7 @@ import {
 import { Pencil, Trash2 } from "lucide-react";
 import { Inquiry } from "@/types/Inquiry";
 import { updateInquiryAction, deleteInquiryAction } from "@/app/actions/inquiryActions";
+import useAuth from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 interface EditInquiryModalProps {
@@ -50,6 +51,7 @@ interface EditInquiryModalProps {
 }
 
 export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) {
+  const { adminInfo } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);

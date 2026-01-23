@@ -298,7 +298,10 @@ export default function QuotationBuilder({
         inquiryId: effectiveInquiryId.trim(),
       };
 
-      const result = await saveQuotationAction(quotationRecord);
+      const result = await saveQuotationAction(quotationRecord, {
+        name: adminInfo?.name || "System",
+        email: adminInfo?.email || "system@pgc.admin"
+      });
 
       if (result.success) {
         toast.success("Quotation saved successfully!");

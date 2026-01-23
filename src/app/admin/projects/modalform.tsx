@@ -20,6 +20,7 @@ import { getNextPid } from "@/services/projectsService";
 import { getInquiries } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { logActivity } from "@/services/activityLogService";
+import useAuth from "@/hooks/useAuth";
 
 // Extend the base project schema for form validation
 const projectSchema = baseProjectSchema.extend({
@@ -48,6 +49,7 @@ type ProjectFormState = Omit<ProjectFormData, 'clientNames'> & {
 };
 
 export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => void }) {
+  const { adminInfo } = useAuth();
   // Form state for all project fields
   const [formData, setFormData] = useState<ProjectFormState>({
     pid: "",
@@ -90,7 +92,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
 
   // Mutation for adding/updating a project in Firestore
   const mutation = useMutation({
-    mutationFn: async (data: Project) => {
+    mutationFn: async (data: Project & { userInfo?: { name: string; email: string } }) => {
       if (!data.pid) throw new Error("Project ID is required");
       const docRef = doc(db, "projects", data.pid);
       const projectData = {
@@ -98,13 +100,16 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         startDate: Timestamp.fromDate(new Date(data.startDate ?? "")),
         createdAt: serverTimestamp(),
       };
+      // Remove userInfo from projectData before saving
+      delete (projectData as any).userInfo;
+      
       await setDoc(docRef, projectData);
       
       // Log the activity
       await logActivity({
-        userId: "system",
-        userEmail: "system@pgc.admin",
-        userName: "System",
+        userId: data.userInfo?.email || "system",
+        userEmail: data.userInfo?.email || "system@pgc.admin",
+        userName: data.userInfo?.name || "System",
         action: "CREATE",
         entityType: "project",
         entityId: data.pid,
@@ -168,7 +173,8 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
           ) as Project["sendingInstitution"],
           // ensure createdAt matches Project type (Date | undefined); Firestore will populate this server-side
           createdAt: undefined,
-        };
+          userInfo: adminInfo ? { name: adminInfo.name, email: adminInfo.email } : undefined,
+        } as Project & { userInfo?: { name: string; email: string } };
         mutation.mutate(cleanData);
       } catch (err) {
         toast.error("Failed to generate project ID.");
