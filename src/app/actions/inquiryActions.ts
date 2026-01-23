@@ -129,7 +129,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
  * Note: This creates a minimal inquiry record with default values for
  * service-specific fields since it's created by admin, not user submission.
  */
-export async function createAdminInquiryAction(data: AdminInquiryData) {
+export async function createAdminInquiryAction(data: AdminInquiryData, userInfo?: { name: string; email: string }) {
   try {
     // Transform admin data to database format with defaults for service fields
     const transformedData = {
@@ -159,9 +159,9 @@ export async function createAdminInquiryAction(data: AdminInquiryData) {
     
     // Log the activity
     await logActivity({
-      userId: "system",
-      userEmail: "system@pgc.admin",
-      userName: "System",
+      userId: userInfo?.email || "system",
+      userEmail: userInfo?.email || "system@pgc.admin",
+      userName: userInfo?.name || "System",
       action: "CREATE",
       entityType: "inquiry",
       entityId: docRef.id,
@@ -189,7 +189,11 @@ export async function createAdminInquiryAction(data: AdminInquiryData) {
  * Note: Only updates core fields that can be modified by admin.
  * Service-specific fields are preserved from original submission.
  */
-export async function updateInquiryAction(id: string, data: AdminInquiryData) {
+export async function updateInquiryAction(
+  id: string,
+  data: AdminInquiryData,
+  userInfo?: { name: string; email: string }
+) {
   try {
     // Create reference to the specific inquiry document
     const docRef = doc(db, "inquiries", id);
@@ -212,9 +216,9 @@ export async function updateInquiryAction(id: string, data: AdminInquiryData) {
     
     // Log the activity
     await logActivity({
-      userId: "system",
-      userEmail: "system@pgc.admin",
-      userName: "System",
+      userId: userInfo?.email || "system",
+      userEmail: userInfo?.email || "system@pgc.admin",
+      userName: userInfo?.name || "System",
       action: "UPDATE",
       entityType: "inquiry",
       entityId: id,
@@ -242,7 +246,7 @@ export async function updateInquiryAction(id: string, data: AdminInquiryData) {
  * Use with caution as this operation cannot be undone.
  * 
  */
-export async function deleteInquiryAction(id: string) {
+export async function deleteInquiryAction(id: string, userInfo?: { name: string; email: string }) {
   try {
     // Create reference to the specific inquiry document
     const docRef = doc(db, "inquiries", id);
@@ -256,9 +260,9 @@ export async function deleteInquiryAction(id: string) {
     
     // Log the activity
     await logActivity({
-      userId: "system",
-      userEmail: "system@pgc.admin",
-      userName: "System",
+      userId: userInfo?.email || "system",
+      userEmail: userInfo?.email || "system@pgc.admin",
+      userName: userInfo?.name || "System",
       action: "DELETE",
       entityType: "inquiry",
       entityId: id,

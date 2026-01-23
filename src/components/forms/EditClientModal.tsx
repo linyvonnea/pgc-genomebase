@@ -37,6 +37,7 @@ import { toast } from "sonner";
 import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { logActivity } from "@/services/activityLogService";
+import useAuth from "@/hooks/useAuth";
 
 interface EditClientModalProps {
   client: Client;
@@ -44,6 +45,7 @@ interface EditClientModalProps {
 }
 
 export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
+  const { adminInfo } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -96,9 +98,9 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
         (key) => (oldData?.[key] ?? null) !== (updateData[key as keyof typeof updateData] ?? null)
       );
       await logActivity({
-        userId: "system",
-        userEmail: "system@pgc.admin",
-        userName: "System",
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
         action: "UPDATE",
         entityType: "client",
         entityId: client.cid!,
@@ -132,9 +134,9 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
       
       // Log the activity
       await logActivity({
-        userId: "system",
-        userEmail: "system@pgc.admin",
-        userName: "System",
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
         action: "DELETE",
         entityType: "client",
         entityId: client.cid,

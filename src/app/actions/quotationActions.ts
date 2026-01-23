@@ -5,15 +5,18 @@ import { saveQuotationToFirestore, getAllQuotations } from "@/services/quotation
 import { QuotationRecord } from "@/types/Quotation";
 import { logActivity } from "@/services/activityLogService";
 
-export async function saveQuotationAction(quotation: QuotationRecord) {
+export async function saveQuotationAction(
+  quotation: QuotationRecord,
+  userInfo?: { name: string; email: string }
+) {
   try {
     await saveQuotationToFirestore(quotation);
     
     // Log the activity
     await logActivity({
-      userId: "system",
-      userEmail: "system@pgc.admin",
-      userName: "System",
+      userId: userInfo?.email || "system",
+      userEmail: userInfo?.email || "system@pgc.admin",
+      userName: userInfo?.name || "System",
       action: "GENERATE",
       entityType: "quotation",
       entityId: quotation.referenceNumber || quotation.id || "unknown",

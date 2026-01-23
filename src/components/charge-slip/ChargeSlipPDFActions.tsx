@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { sanitizeObject } from "@/lib/sanitizeObject";
 import { normalizeDate } from "@/lib/formatters";
+import useAuth from "@/hooks/useAuth";
 
 interface ChargeSlipPDFActionsProps {
   services: SelectedService[];
@@ -58,6 +59,7 @@ export default function ChargeSlipPDFActions({
   discount,
   total,
 }: ChargeSlipPDFActionsProps) {
+  const { adminInfo } = useAuth();
   const router = useRouter();
 
   const handleGenerateAndSave = async () => {
@@ -86,7 +88,10 @@ export default function ChargeSlipPDFActions({
       };
 
       const sanitized = sanitizeObject(rawRecord) as ChargeSlipRecord;
-      const result = await saveChargeSlipAction(sanitized);
+      const result = await saveChargeSlipAction(sanitized, {
+        name: adminInfo?.name || "System",
+        email: adminInfo?.email || "system@pgc.admin"
+      });
 
       if (result.success) {
         const blob = await pdf(

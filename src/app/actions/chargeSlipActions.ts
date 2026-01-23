@@ -9,15 +9,18 @@ import {
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { logActivity } from "@/services/activityLogService";
 
-export async function saveChargeSlipAction(slip: ChargeSlipRecord) {
+export async function saveChargeSlipAction(
+  slip: ChargeSlipRecord,
+  userInfo?: { name: string; email: string }
+) {
   try {
     const result = await saveChargeSlip(slip);
     
     // Log the activity
     await logActivity({
-      userId: "system",
-      userEmail: "system@pgc.admin",
-      userName: "System",
+      userId: userInfo?.email || "system",
+      userEmail: userInfo?.email || "system@pgc.admin",
+      userName: userInfo?.name || "System",
       action: "GENERATE",
       entityType: "charge_slip",
       entityId: slip.referenceNumber || slip.id || "unknown",
@@ -35,15 +38,19 @@ export async function saveChargeSlipAction(slip: ChargeSlipRecord) {
   }
 }
 
-export async function updateChargeSlipAction(id: string, updates: Partial<ChargeSlipRecord>) {
+export async function updateChargeSlipAction(
+  id: string,
+  updates: Partial<ChargeSlipRecord>,
+  userInfo?: { name: string; email: string }
+) {
   try {
     await updateChargeSlip(id, updates);
     
     // Log the activity
     await logActivity({
-      userId: "system",
-      userEmail: "system@pgc.admin",
-      userName: "System",
+      userId: userInfo?.email || "system",
+      userEmail: userInfo?.email || "system@pgc.admin",
+      userName: userInfo?.name || "System",
       action: "UPDATE",
       entityType: "charge_slip",
       entityId: id,
