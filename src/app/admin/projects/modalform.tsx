@@ -16,7 +16,7 @@ import { projectSchema as baseProjectSchema } from "@/schemas/projectSchema";
 import { collection, addDoc, serverTimestamp, Timestamp, FieldValue, doc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase"; 
 import { toast } from "sonner";
-import { getNextPid } from "@/services/projectsService";
+import { getNextPid, checkPidExists } from "@/services/projectsService";
 import { getInquiries } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { logActivity } from "@/services/activityLogService";
@@ -74,6 +74,10 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
   // Inquiry dropdown state
   const [inquiryOptions, setInquiryOptions] = useState<Inquiry[]>([]);
   const [inquirySearch, setInquirySearch] = useState("");
+  
+  // PID validation state
+  const [isPidChecking, setIsPidChecking] = useState(false);
+  const [pidError, setPidError] = useState<string>("");
 
   // Fetch inquiry options
   useEffect(() => {
@@ -81,6 +85,22 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       setInquiryOptions(inquiries);
     });
   }, []);
+
+  // Auto-generate PID when year changes
+  useEffect(() => {
+    const generatePid = async () => {
+      if (formData.year) {
+        try {
+          const nextPid = await getNextPid(formData.year);
+          setFormData((prev) => ({ ...prev, pid: nextPid }));
+          setPidError("");
+        } catch (err) {
+          console.error("Failed to generate PID:", err);
+        }
+      }
+    };
+    generatePid();
+  }, [formData.year]);
 
   // Filter inquiry options by search
   const filteredInquiryOptions = inquiryOptions.filter(
@@ -133,7 +153,24 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
   // Handle form submission: validate, generate PID, and submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = projectSchema.omit({ pid: true }).safeParse(formData); // omit pid for initial validation
+    
+    // Validate PID
+    if (!formData.pid) {
+      setPidError("Project ID is required");
+      return;
+    }
+    
+    // Check if PID already exists
+    setIsPidChecking(true);
+    const pidExists = await checkPidExists(formData.pid);
+    setIsPidChecking(false);
+    
+    if (pidExists) {
+      setPidError("This Project ID already exists. Please choose a different ID.");
+      return;
+    }
+    
+    const result = projectSchema.safeParse(formData);
     if (!result.success) {
       // Collect and display validation errors
       const fieldErrors: Partial<Record<keyof ProjectFormState, string>> = {};
@@ -145,15 +182,13 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     } else {
       setErrors({});
       try {
-        // Generate next project ID (PID) for the given year
-        const nextPid = await getNextPid(result.data.year);
         // Prepare clean data for Firestore
         // Exclude any parsed createdAt (which may be a string) so we don't assign an incompatible type;
         // Firestore will set createdAt via serverTimestamp() in the mutation function.
         const { createdAt, ...rest } = result.data as any;
         const cleanData: Project = {
           ...rest,
-          pid: nextPid,
+          pid: formData.pid,
           year: Number(result.data.year),
           clientNames: result.data.clientNames,
           serviceRequested: result.data.serviceRequested,
@@ -192,6 +227,11 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       ...prev,
       [name]: value,
     }));
+    
+    // Clear PID error when user edits the PID
+    if (name === "pid") {
+      setPidError("");
+    }
   };
 
   // Handle select dropdown changes
@@ -237,8 +277,23 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         <Input type="number" name="year" value={formData.year} onChange={handleChange} className="h-9" />
         {errors.year && <p className="text-red-500 text-xs mt-1">{errors.year}</p>}
       </div>
-      {/* Start Date */}
+      {/* Project ID - Editable */}
       <div>
+        <Label className="text-xs">Project ID</Label>
+        <Input 
+          name="pid" 
+          value={formData.pid} 
+          onChange={handleChange} 
+          className="h-9 font-mono" 
+          placeholder="P-2026-001"
+        />
+        {pidError && <p className="text-red-500 text-xs mt-1">{pidError}</p>}
+        {errors.pid && <p className="text-red-500 text-xs mt-1">{errors.pid}</p>}
+        <p className="text-xs text-gray-500 mt-1">Auto-generated, but can be edited</p>
+      </div>
+      
+      {/* Start Date */}
+      <div className="col-span-2">
         <Label className="text-xs">Start Date</Label>
         <Input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className="h-9" />
         {errors.startDate && <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>}
@@ -413,8 +468,8 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
 
       {/* Submit button */}
       <div className="col-span-2 flex justify-end mt-2 pt-2 border-t">
-        <Button type="submit" disabled={mutation.isPending} className="px-6">
-          {mutation.isPending ? "Saving..." : "Save Project"}
+        <Button type="submit" disabled={mutation.isPending || isPidChecking} className="px-6">
+          {isPidChecking ? "Checking ID..." : mutation.isPending ? "Saving..." : "Save Project"}
         </Button>
       </div>
     </form>
