@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { getNextPid } from "@/services/projectsService";
 import { getInquiries } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
+import { logActivity } from "@/services/activityLogService";
 
 // Extend the base project schema for form validation
 const projectSchema = baseProjectSchema.extend({
@@ -92,11 +93,26 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     mutationFn: async (data: Project) => {
       if (!data.pid) throw new Error("Project ID is required");
       const docRef = doc(db, "projects", data.pid);
-      await setDoc(docRef, {
+      const projectData = {
         ...data,
         startDate: Timestamp.fromDate(new Date(data.startDate ?? "")),
         createdAt: serverTimestamp(),
+      };
+      await setDoc(docRef, projectData);
+      
+      // Log the activity
+      await logActivity({
+        userId: "system",
+        userEmail: "system@pgc.admin",
+        userName: "System",
+        action: "CREATE",
+        entityType: "project",
+        entityId: data.pid,
+        entityName: data.title || data.pid,
+        description: `Created project: ${data.title || data.pid}`,
+        changesAfter: projectData,
       });
+      
       return data;
     },
     onSuccess: (data) => {

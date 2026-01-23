@@ -7,10 +7,25 @@ import {
   getAllChargeSlips 
 } from "@/services/chargeSlipService";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
+import { logActivity } from "@/services/activityLogService";
 
 export async function saveChargeSlipAction(slip: ChargeSlipRecord) {
   try {
     const result = await saveChargeSlip(slip);
+    
+    // Log the activity
+    await logActivity({
+      userId: "system",
+      userEmail: "system@pgc.admin",
+      userName: "System",
+      action: "GENERATE",
+      entityType: "charge_slip",
+      entityId: slip.referenceNumber || slip.id || "unknown",
+      entityName: `Charge Slip for ${slip.pid || "Unknown Project"}`,
+      description: `Generated charge slip: ${slip.referenceNumber || slip.id}`,
+      changesAfter: slip,
+    });
+    
     revalidatePath('/admin/charge-slips');
     revalidatePath('/admin/projects');
     return { success: true, data: result };
@@ -23,6 +38,21 @@ export async function saveChargeSlipAction(slip: ChargeSlipRecord) {
 export async function updateChargeSlipAction(id: string, updates: Partial<ChargeSlipRecord>) {
   try {
     await updateChargeSlip(id, updates);
+    
+    // Log the activity
+    await logActivity({
+      userId: "system",
+      userEmail: "system@pgc.admin",
+      userName: "System",
+      action: "UPDATE",
+      entityType: "charge_slip",
+      entityId: id,
+      entityName: `Charge Slip ${id}`,
+      description: `Updated charge slip: ${id}`,
+      changesAfter: updates,
+      changedFields: Object.keys(updates),
+    });
+    
     revalidatePath('/admin/charge-slips');
     revalidatePath(`/admin/charge-slips/${id}`);
     return { success: true };

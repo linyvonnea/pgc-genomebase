@@ -21,6 +21,7 @@ import { getProjects } from "@/services/projectsService";
 import { getInquiries } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { DialogFooter } from "@/components/ui/dialog";
+import { logActivity } from "@/services/activityLogService";
 
 // Extended client schema for admin modal validation
 const clientSchema = baseClientSchema.extend({
@@ -67,10 +68,25 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
     mutationFn: async (data: Client) => {
       if (!data.cid) throw new Error("Client ID is required");
       const docRef = doc(db, "clients", data.cid);
-      await setDoc(docRef, {
+      const clientData = {
         ...data,
         createdAt: serverTimestamp(),
+      };
+      await setDoc(docRef, clientData);
+      
+      // Log the activity
+      await logActivity({
+        userId: "system",
+        userEmail: "system@pgc.admin",
+        userName: "System",
+        action: "CREATE",
+        entityType: "client",
+        entityId: data.cid,
+        entityName: data.name || data.cid,
+        description: `Created client: ${data.name || data.cid}`,
+        changesAfter: clientData,
       });
+      
       return data;
     },
     onSuccess: (data) => {
