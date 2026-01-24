@@ -203,7 +203,10 @@ const subtotal = cleanedServices.reduce((sum, item) => {
     return result;
   }, [search, catalog]);
 
-  const renderTable = (services: ServiceItem[], serviceType: string) => (
+  const renderTable = (services: ServiceItem[], serviceType: string) => {
+    const normalizedType = serviceType.toLowerCase();
+    
+    return (
     <Table>
       <TableHeader>
         <TableRow>
@@ -211,8 +214,8 @@ const subtotal = cleanedServices.reduce((sum, item) => {
           <TableHead>Service</TableHead>
           <TableHead>Unit</TableHead>
           <TableHead>Price</TableHead>
-          {serviceType === "bioinformatics" && <TableHead>Samples</TableHead>}
-          {serviceType === "training" && <TableHead>No. of Participants</TableHead>}
+          {normalizedType === "bioinformatics" && <TableHead>Samples</TableHead>}
+          {normalizedType === "training" && <TableHead>No. of Participants</TableHead>}
           <TableHead>Qty</TableHead>
           <TableHead>Amount</TableHead>
         </TableRow>
@@ -228,13 +231,13 @@ const subtotal = cleanedServices.reduce((sum, item) => {
           // Calculate amount based on service type
           let amount = 0;
           if (isSelected && typeof quantity === "number") {
-            if (serviceType === "bioinformatics" && typeof samples === "number") {
+            if (normalizedType === "bioinformatics" && typeof samples === "number") {
               const samplesAmount = calculateItemTotal(samples, price, {
                 minQuantity: (item as any).minQuantity,
                 additionalUnitPrice: (item as any).additionalUnitPrice,
               });
               amount = samplesAmount * quantity;
-            } else if (serviceType === "training" && typeof participants === "number") {
+            } else if (normalizedType === "training" && typeof participants === "number") {
               const participantsAmount = calculateItemTotal(participants, price, {
                 minQuantity: (item as any).minParticipants,
                 additionalUnitPrice: (item as any).additionalParticipantPrice,
@@ -258,7 +261,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
               <TableCell className="text-right">
                 {item.price.toFixed(2)}
               </TableCell>
-            {serviceType === "bioinformatics" && (
+            {normalizedType === "bioinformatics" && (
             <TableCell>
               <Input
                 type="number"
@@ -275,7 +278,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
               />
             </TableCell>
             )}
-            {serviceType === "training" && (
+            {normalizedType === "training" && (
             <TableCell>
               <Input
                 type="number"
@@ -312,7 +315,8 @@ const subtotal = cleanedServices.reduce((sum, item) => {
       })}
     </TableBody>
   </Table>
-);
+  );
+};
 
   const normalizeCategory = (raw: string): string => {
     const lower = raw.toLowerCase();
