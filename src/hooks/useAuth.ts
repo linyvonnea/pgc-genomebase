@@ -8,6 +8,7 @@ import {
   User,
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
+import { logActivity } from "@/services/activityLogService";
 
 interface AdminInfo {
   name: string;
@@ -82,13 +83,48 @@ export default function useAuth() {
 
   const signIn = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      
+      // Log the login activity
+      try {
+        await logActivity({
+          userId: user.email || user.uid,
+          userEmail: user.email || "unknown@user.com",
+          userName: user.displayName || "Unknown User",
+          action: "LOGIN",
+          entityType: "user",
+          entityId: user.uid,
+          entityName: user.displayName || user.email || "User",
+          description: `User ${user.displayName || user.email} logged in`,
+        });
+      } catch (logError) {
+        console.error("Failed to log login activity:", logError);
+      }
     } catch (error) {
       console.error("Google sign-in error:", error);
     }
   };
 
   const signOut = async () => {
+    // Log the logout activity before signing out
+    if (user) {
+      try {
+        await logActivity({
+          userId: user.email || user.uid,
+          userEmail: user.email || "unknown@user.com",
+          userName: user.displayName || "Unknown User",
+          action: "LOGOUT",
+          entityType: "user",
+          entityId: user.uid,
+          entityName: user.displayName || user.email || "User",
+          description: `User ${user.displayName || user.email} logged out`,
+        });
+      } catch (logError) {
+        console.error("Failed to log logout activity:", logError);
+      }
+    }
+    
     await firebaseSignOut(auth);
     setUser(null);
     setIsAdmin(false);
