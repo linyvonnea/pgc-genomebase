@@ -409,7 +409,7 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
                 <Button 
                   type="submit" 
                   disabled={isLoading} 
-                  className="min-w-[120px] bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md"
+                  className="min-w-[120px] bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md"
                 >
                   {isLoading ? (
                     <>
