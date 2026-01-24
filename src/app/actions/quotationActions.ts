@@ -7,16 +7,16 @@ import { logActivity } from "@/services/activityLogService";
 
 export async function saveQuotationAction(
   quotation: QuotationRecord,
-  userInfo?: { name: string; email: string }
+  userInfo: { name: string; email: string }
 ) {
   try {
     await saveQuotationToFirestore(quotation);
     
     // Log the activity
     await logActivity({
-      userId: userInfo?.email || "system",
-      userEmail: userInfo?.email || "system@pgc.admin",
-      userName: userInfo?.name || "System",
+      userId: userInfo.email,
+      userEmail: userInfo.email,
+      userName: userInfo.name,
       action: "GENERATE",
       entityType: "quotation",
       entityId: quotation.referenceNumber || quotation.id || "unknown",
