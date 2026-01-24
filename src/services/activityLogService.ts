@@ -103,8 +103,8 @@ export async function getActivityLogs(options?: {
     
     // Always sort in memory by timestamp descending
     logs.sort((a, b) => {
-      const aTime = a.timestamp instanceof Date ? a.timestamp : new Date(a.timestamp);
-      const bTime = b.timestamp instanceof Date ? b.timestamp : new Date(b.timestamp);
+      const aTime = a.timestamp instanceof Date ? a.timestamp : (a.timestamp as any).toDate();
+      const bTime = b.timestamp instanceof Date ? b.timestamp : (b.timestamp as any).toDate();
       return bTime.getTime() - aTime.getTime();
     });
     
