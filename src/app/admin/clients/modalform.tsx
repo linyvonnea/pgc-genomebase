@@ -398,7 +398,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
           <Input
             value={formData.phoneNumber}
             onChange={(e) => handleChange("phoneNumber", e.target.value)}
-            placeholder="09091234567"
+            placeholder="09191234567 or N/A"
             className="h-9"
           />
           {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>}
@@ -456,7 +456,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
           <Button 
             type="submit" 
             disabled={mutation.isPending} 
-            className="min-w-[120px] bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md"
+            className="min-w-[120px] bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md"
           >
             {mutation.isPending ? (
               <>

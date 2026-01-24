@@ -35,7 +35,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { createAdminInquiryAction } from "@/app/actions/inquiryActions";
 import useAuth from "@/hooks/useAuth";
-import { Plus, UserPlus, Mail, Building2, Briefcase, CheckCircle2 } from "lucide-react";
+import { Plus, UserPlus, Mail, Building2, Briefcase, CheckCircle2, Save } from "lucide-react";
 
 interface AddInquiryModalProps {
   onSuccess?: () => void;
@@ -296,13 +296,13 @@ export function AddInquiryModal({ onSuccess }: AddInquiryModalProps) {
               >
                 {isLoading ? (
                   <>
-                    <span className="mr-2">Adding...</span>
+                    <span className="mr-2">Saving...</span>
                     <span className="animate-spin">⏳</span>
                   </>
                 ) : (
                   <>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Inquiry
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Inquiry
                   </>
                 )}
               </Button>
