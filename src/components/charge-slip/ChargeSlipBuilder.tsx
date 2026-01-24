@@ -187,6 +187,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
           <TableHead>Unit</TableHead>
           <TableHead>Price</TableHead>
           {serviceType === "bioinformatics" && <TableHead>Samples</TableHead>}
+          {serviceType === "training" && <TableHead>No. of Participants</TableHead>}
           <TableHead>Qty</TableHead>
           <TableHead>Amount</TableHead>
         </TableRow>
@@ -237,6 +238,23 @@ const subtotal = cleanedServices.reduce((sum, item) => {
               />
             </TableCell>
             )}
+            {serviceType === "training" && (
+            <TableCell>
+              <Input
+                type="number"
+                min={0}
+                value={samples}
+                onChange={(e) =>
+                  updateSamples(
+                    item.id,
+                    e.target.value === "" ? "" : +e.target.value
+                  )
+                }
+                disabled={!isSelected}
+                placeholder="0"
+              />
+            </TableCell>
+            )}
             <TableCell>
               <Input
                 type="number"
@@ -265,6 +283,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
     if (lower.includes("lab")) return "laboratory";
     if (lower.includes("bioinformatics") || lower.includes("bioinfo")) return "bioinformatics";
     if (lower.includes("retail")) return "retail";
+    if (lower.includes("training")) return "training";
     return lower; // fallback
   };
   const handleSaveAndDownload = async () => {
