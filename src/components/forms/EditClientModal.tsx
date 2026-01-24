@@ -275,7 +275,7 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
                   <FormItem>
                     <FormLabel className="text-xs">Mobile Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="09091234567" className="h-9" {...field} />
+                      <Input placeholder="09191234567 or N/A" className="h-9" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
