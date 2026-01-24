@@ -215,7 +215,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
           <TableHead>Unit</TableHead>
           <TableHead>Price</TableHead>
           {normalizedType === "bioinformatics" && <TableHead>Samples</TableHead>}
-          {normalizedType === "training" && <TableHead>No. of Participants</TableHead>}
+          {normalizedType === "training" && <TableHead>Participants</TableHead>}
           <TableHead>Qty</TableHead>
           <TableHead>Amount</TableHead>
         </TableRow>
