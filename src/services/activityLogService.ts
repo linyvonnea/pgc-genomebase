@@ -70,6 +70,9 @@ export async function getActivityLogs(options?: {
     let q = query(collection(db, LOGS_COLLECTION));
     
     // Apply filters
+    // Note: We don't use orderBy() in the Firestore query to avoid composite index requirements
+    // Instead, we'll sort in memory after fetching all documents
+    
     if (options?.userId) {
       q = query(q, where("userId", "==", options.userId));
     }
@@ -89,21 +92,28 @@ export async function getActivityLogs(options?: {
       q = query(q, where("timestamp", "<=", Timestamp.fromDate(options.endDate)));
     }
     
-    // Order by timestamp descending
-    q = query(q, orderBy("timestamp", "desc"));
-    
-    // Apply limit
-    if (options?.limitCount) {
-      q = query(q, limit(options.limitCount));
-    }
-    
     const snapshot = await getDocs(q);
     
-    return snapshot.docs.map(doc => ({
+    // Convert to ActivityLog objects
+    let logs = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
       timestamp: doc.data().timestamp?.toDate() || new Date(),
     } as ActivityLog));
+    
+    // Always sort in memory by timestamp descending
+    logs.sort((a, b) => {
+      const aTime = a.timestamp instanceof Date ? a.timestamp : new Date(a.timestamp);
+      const bTime = b.timestamp instanceof Date ? b.timestamp : new Date(b.timestamp);
+      return bTime.getTime() - aTime.getTime();
+    });
+    
+    // Apply limit after sorting
+    if (options?.limitCount) {
+      logs = logs.slice(0, options.limitCount);
+    }
+    
+    return logs;
   } catch (error) {
     console.error("Failed to fetch activity logs:", error);
     return [];
