@@ -19,6 +19,8 @@ export async function getServiceCatalog(): Promise<ServiceItem[]> {
       description: data.description, // Keep undefined if not present, don't default to ""
       minQuantity: data.minQuantity,
       additionalUnitPrice: data.additionalUnitPrice,
+      minParticipants: data.minParticipants,
+      additionalParticipantPrice: data.additionalParticipantPrice,
     };
     
     // Debug: Log services with descriptions
