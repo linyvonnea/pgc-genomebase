@@ -58,7 +58,7 @@ export default function ClientPage() {
           {/* Add New Client Modal */}
           <Dialog open={openDialog} onOpenChange={setOpenDialog}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 shadow-md hover:shadow-lg transition-all duration-200">
+              <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200">
                 <Plus className="mr-2 h-4 w-4" />
                 Add New Client
               </Button>

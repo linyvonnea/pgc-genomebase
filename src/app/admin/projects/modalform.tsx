@@ -318,14 +318,14 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       {/* Project Title - Full Width */}
       <div className="col-span-2">
         <Label className="text-xs">Project Title</Label>
-        <Input name="title" value={formData.title} onChange={handleChange} className="h-9" />
+        <Input name="title" value={formData.title} onChange={handleChange} className="h-9" placeholder="Enter project title" />
         {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
       </div>
 
       {/* Project Lead */}
       <div>
         <Label className="text-xs">Project Lead</Label>
-        <Input name="lead" value={formData.lead} onChange={handleChange} className="h-9" />
+        <Input name="lead" value={formData.lead} onChange={handleChange} className="h-9" placeholder="Juan dela Cruz" />
         {errors.lead && <p className="text-red-500 text-xs mt-1">{errors.lead}</p>}
       </div>
       {/* Inquiry ID */}
@@ -386,7 +386,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       {/* Project Tag */}
       <div>
         <Label className="text-xs">Project Tag</Label>
-        <Input name="projectTag" value={formData.projectTag} onChange={handleChange} className="h-9" />
+        <Input name="projectTag" value={formData.projectTag} onChange={handleChange} className="h-9" placeholder="Enter project tag" />
         {errors.projectTag && <p className="text-red-500 text-xs mt-1">{errors.projectTag}</p>}
       </div>
       {/* Status dropdown */}
@@ -446,7 +446,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       {/* Funding Institution - Full Width */}
       <div className="col-span-2">
         <Label className="text-xs">Funding Institution</Label>
-        <Input name="fundingInstitution" value={formData.fundingInstitution || ""} onChange={handleChange} className="h-9" />
+        <Input name="fundingInstitution" value={formData.fundingInstitution || ""} onChange={handleChange} className="h-9" placeholder="Enter funding institution" />
         {errors.fundingInstitution && <p className="text-red-500 text-xs mt-1">{errors.fundingInstitution}</p>}
       </div>
 
@@ -483,20 +483,29 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       {/* Personnel Assigned - Full Width */}
       <div className="col-span-2">
         <Label className="text-xs">Personnel Assigned</Label>
-        <Input name="personnelAssigned" value={formData.personnelAssigned || ""} onChange={handleChange} className="h-9" />
+        <Input name="personnelAssigned" value={formData.personnelAssigned || ""} onChange={handleChange} className="h-9" placeholder="Enter personnel assigned" />
         {errors.personnelAssigned && <p className="text-red-500 text-xs mt-1">{errors.personnelAssigned}</p>}
       </div>
 
       {/* Notes - Full Width */}
       <div className="col-span-2">
         <Label className="text-xs">Notes</Label>
-        <Textarea name="notes" value={formData.notes || ""} onChange={handleChange} rows={3} className="resize-none" />
+        <Textarea name="notes" value={formData.notes || ""} onChange={handleChange} rows={3} className="resize-none" placeholder="Enter additional notes" />
         {errors.notes && <p className="text-red-500 text-xs mt-1">{errors.notes}</p>}
       </div>
 
       {/* Submit button */}
-      <div className="col-span-2 flex justify-end mt-2 pt-3">
+      <div className="col-span-2 flex justify-end gap-3 mt-2 pt-3">
         <Separator className="mb-4" />
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onSubmit ? () => window.location.reload() : undefined}
+          disabled={mutation.isPending || isPidChecking}
+          className="min-w-[100px]"
+        >
+          Cancel
+        </Button>
         <Button 
           type="submit" 
           disabled={mutation.isPending || isPidChecking} 
