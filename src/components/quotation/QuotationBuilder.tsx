@@ -298,9 +298,15 @@ export default function QuotationBuilder({
         inquiryId: effectiveInquiryId.trim(),
       };
 
+      // Ensure admin info is available before saving
+      if (!adminInfo?.email) {
+        toast.error("User authentication required to save quotation");
+        return;
+      }
+
       const result = await saveQuotationAction(quotationRecord, {
-        name: adminInfo?.name || "System",
-        email: adminInfo?.email || "system@pgc.admin"
+        name: adminInfo.name || adminInfo.email,
+        email: adminInfo.email
       });
 
       if (result.success) {
