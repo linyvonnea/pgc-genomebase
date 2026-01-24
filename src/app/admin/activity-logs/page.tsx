@@ -66,6 +66,8 @@ export default function ActivityLogsPage() {
       case "GENERATE": return "bg-purple-100 text-purple-800";
       case "DOWNLOAD": return "bg-orange-100 text-orange-800";
       case "VIEW": return "bg-gray-100 text-gray-800";
+      case "LOGIN": return "bg-indigo-100 text-indigo-800";
+      case "LOGOUT": return "bg-slate-100 text-slate-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
@@ -159,6 +161,8 @@ export default function ActivityLogsPage() {
               <SelectItem value="GENERATE">Generate</SelectItem>
               <SelectItem value="DOWNLOAD">Download</SelectItem>
               <SelectItem value="VIEW">View</SelectItem>
+              <SelectItem value="LOGIN">Login</SelectItem>
+              <SelectItem value="LOGOUT">Logout</SelectItem>
             </SelectContent>
           </Select>
         </div>
