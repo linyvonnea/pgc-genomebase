@@ -238,10 +238,19 @@ const subtotal = cleanedServices.reduce((sum, item) => {
               });
               amount = samplesAmount * quantity;
             } else if (normalizedType === "training" && typeof participants === "number") {
+              console.log('Training Item:', {
+                name: item.name,
+                participants,
+                price,
+                minParticipants: (item as any).minParticipants,
+                additionalParticipantPrice: (item as any).additionalParticipantPrice,
+                itemData: item
+              });
               const participantsAmount = calculateItemTotal(participants, price, {
                 minQuantity: (item as any).minParticipants,
                 additionalUnitPrice: (item as any).additionalParticipantPrice,
               });
+              console.log('Participants amount calculated:', participantsAmount);
               amount = participantsAmount * quantity;
             } else {
               amount = price * quantity;
