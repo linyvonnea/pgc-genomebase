@@ -56,6 +56,8 @@ import useAuth from "@/hooks/useAuth";
 
 export type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
   quantity: number | "";
+  samples?: number | "";
+  participants?: number | "";
 };
 
 export default function ChargeSlipBuilder({
@@ -129,6 +131,7 @@ export default function ChargeSlipBuilder({
         ...service, 
         quantity: 1, 
         samples: 0,
+        participants: 0,
         description: service.description // Preserve description from catalog
       }];
     });
@@ -144,18 +147,40 @@ export default function ChargeSlipBuilder({
       prev.map((svc) => (svc.id === id ? { ...svc, samples } : svc))
     );
   };
+  
+  const updateParticipants = (id: string, participants: number | "") => {
+    setSelectedServices((prev) =>
+      prev.map((svc) => (svc.id === id ? { ...svc, participants } : svc))
+    );
+  };
   const cleanedServices: StrictSelectedService[] = selectedServices
     .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
     .map((s) => ({ ...s, quantity: s.quantity as number }));
 
-    // Update the subtotal calculation to use samples
+    // Update the subtotal calculation to use samples or participants based on service type
 const subtotal = cleanedServices.reduce((sum, item) => {
-  const samples = (item as any).samples ?? 1;
-  const samplesAmount = calculateItemTotal(samples, item.price, {
-    minQuantity: (item as any).minQuantity,
-    additionalUnitPrice: (item as any).additionalUnitPrice,
-  });
-  return sum + (samplesAmount * item.quantity);
+  const serviceType = item.type.toLowerCase();
+  
+  if (serviceType.includes('bioinformatics') || serviceType.includes('bioinfo')) {
+    // Use samples for bioinformatics
+    const samples = (item as any).samples ?? 1;
+    const samplesAmount = calculateItemTotal(samples, item.price, {
+      minQuantity: (item as any).minQuantity,
+      additionalUnitPrice: (item as any).additionalUnitPrice,
+    });
+    return sum + (samplesAmount * item.quantity);
+  } else if (serviceType.includes('training')) {
+    // Use participants for training
+    const participants = (item as any).participants ?? 1;
+    const participantsAmount = calculateItemTotal(participants, item.price, {
+      minQuantity: (item as any).minParticipants,
+      additionalUnitPrice: (item as any).additionalParticipantPrice,
+    });
+    return sum + (participantsAmount * item.quantity);
+  } else {
+    // Default calculation for other services
+    return sum + (item.price * item.quantity);
+  }
 }, 0);
   const discount = isInternal ? subtotal * 0.12 : 0;
   const total = subtotal - discount;
@@ -196,17 +221,29 @@ const subtotal = cleanedServices.reduce((sum, item) => {
         {services.map((item) => {
           const isSelected = selectedServices.find((s) => s.id === item.id);
           const samples = (isSelected as any)?.samples ?? "";
+          const participants = (isSelected as any)?.participants ?? "";
           const quantity = isSelected?.quantity ?? "";
           const price = isSelected?.price ?? 0;
 
-          // Calculate amount based on samples with tiered pricing
-          const amount =
-            isSelected && typeof samples === "number" && typeof quantity === "number"
-              ? calculateItemTotal(samples, price, {
-                  minQuantity: (item as any).minQuantity,
-                  additionalUnitPrice: (item as any).additionalUnitPrice,
-                }) * quantity
-              : 0;
+          // Calculate amount based on service type
+          let amount = 0;
+          if (isSelected && typeof quantity === "number") {
+            if (serviceType === "bioinformatics" && typeof samples === "number") {
+              const samplesAmount = calculateItemTotal(samples, price, {
+                minQuantity: (item as any).minQuantity,
+                additionalUnitPrice: (item as any).additionalUnitPrice,
+              });
+              amount = samplesAmount * quantity;
+            } else if (serviceType === "training" && typeof participants === "number") {
+              const participantsAmount = calculateItemTotal(participants, price, {
+                minQuantity: (item as any).minParticipants,
+                additionalUnitPrice: (item as any).additionalParticipantPrice,
+              });
+              amount = participantsAmount * quantity;
+            } else {
+              amount = price * quantity;
+            }
+          }
 
           return (
             <TableRow key={item.id}>
@@ -243,9 +280,9 @@ const subtotal = cleanedServices.reduce((sum, item) => {
               <Input
                 type="number"
                 min={0}
-                value={samples}
+                value={participants}
                 onChange={(e) =>
-                  updateSamples(
+                  updateParticipants(
                     item.id,
                     e.target.value === "" ? "" : +e.target.value
                   )
