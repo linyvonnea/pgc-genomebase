@@ -116,11 +116,11 @@ export default function ServicesManagementPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="laboratory">Laboratory</SelectItem>
-              <SelectItem value="equipment">Equipment</SelectItem>
-              <SelectItem value="bioinformatics">Bioinformatics</SelectItem>
-              <SelectItem value="retail">Retail</SelectItem>
-              <SelectItem value="training">Training</SelectItem>
+              <SelectItem value="laboratory">laboratory</SelectItem>
+              <SelectItem value="equipment">equipment</SelectItem>
+              <SelectItem value="bioinformatics">bioinformatics</SelectItem>
+              <SelectItem value="retail">retail</SelectItem>
+              <SelectItem value="training">training</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -132,6 +132,7 @@ export default function ServicesManagementPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[120px]">ID</TableHead>
                 <TableHead className="w-[250px]">Service Name</TableHead>
                 <TableHead className="w-[120px]">Type</TableHead>
                 <TableHead className="w-[150px]">Category</TableHead>
@@ -144,13 +145,13 @@ export default function ServicesManagementPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center h-32">
+                  <TableCell colSpan={8} className="text-center h-32">
                     Loading services...
                   </TableCell>
                 </TableRow>
               ) : filteredServices.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center h-32 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center h-32 text-muted-foreground">
                     No services found. Try adjusting your filters or add a new service.
                   </TableCell>
                 </TableRow>
@@ -166,6 +167,7 @@ export default function ServicesManagementPage() {
 
                   return (
                     <TableRow key={service.id}>
+                      <TableCell className="font-mono text-xs text-muted-foreground">{service.id}</TableCell>
                       <TableCell className="font-medium">{service.name}</TableCell>
                       <TableCell>
                         <Badge className={getTypeBadgeColor(service.type)}>
