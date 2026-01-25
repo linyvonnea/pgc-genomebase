@@ -73,7 +73,7 @@ export async function getAdminByEmail(email: string): Promise<Admin | null> {
 }
 
 export async function saveAdmin(admin: Admin): Promise<void> {
-  const adminRef = doc(db, "users", admin.uid);
+  const adminRef = doc(db, "users", admin.email);
   await setDoc(adminRef, {
     email: admin.email,
     name: admin.name,
