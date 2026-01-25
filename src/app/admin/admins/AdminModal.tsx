@@ -1,10 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Admin } from "@/services/adminService";
+import { Admin, AdminRole, ADMIN_ROLES } from "@/services/adminService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +41,7 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
     name: admin?.name || "",
     position: admin?.position || "",
     photoURL: admin?.photoURL || "",
+    role: admin?.role || "admin" as AdminRole,
   });
 
   const handleChange = (field: string, value: string) => {
@@ -42,7 +50,7 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
 
   const handleSubmit = async () => {
     // Validation
-    if (!formData.email || !formData.name || !formData.position) {
+    if (!formData.email || !formData.name || !formData.position || !formData.role) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -61,7 +69,7 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
         email: formData.email,
         name: formData.name,
         position: formData.position,
-        role: "admin",
+        role: formData.role,
         photoURL: formData.photoURL || undefined,
         createdAt: admin?.createdAt || new Date(),
         lastLogin: admin?.lastLogin || null,
@@ -183,6 +191,34 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Role Selector */}
+            <div className="space-y-2">
+              <Label htmlFor="role">
+                Role <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value) => handleChange("role", value as AdminRole)}
+              >
+                <SelectTrigger className="w-full">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-muted-foreground" />
+                    <SelectValue placeholder="Select a role" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  {ADMIN_ROLES.map((role) => (
+                    <SelectItem key={role.value} value={role.value}>
+                      <div className="flex flex-col py-1">
+                        <span className="font-medium">{role.label}</span>
+                        <span className="text-xs text-muted-foreground">{role.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

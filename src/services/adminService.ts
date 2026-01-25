@@ -1,31 +1,43 @@
 import { collection, getDocs, doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
+export type AdminRole = "super-admin" | "admin" | "moderator" | "viewer";
+
 export interface Admin {
   uid: string;
   email: string;
   name: string;
   position: string;
-  role: "admin";
+  role: AdminRole;
   photoURL?: string;
   createdAt?: Date | any;
   lastLogin?: Date | any;
 }
 
+export const ADMIN_ROLES: { value: AdminRole; label: string; description: string }[] = [
+  { value: "super-admin", label: "Super Admin", description: "Full system access with all privileges" },
+  { value: "admin", label: "Admin", description: "Manage users, content, and system settings" },
+  { value: "moderator", label: "Moderator", description: "Moderate content and manage basic operations" },
+  { value: "viewer", label: "Viewer", description: "Read-only access to admin panel" },
+];
+
 export async function getAllAdmins(): Promise<Admin[]> {
   const usersRef = collection(db, "users");
   const snapshot = await getDocs(usersRef);
   
+  const validRoles: AdminRole[] = ["super-admin", "admin", "moderator", "viewer"];
+  
   const admins = snapshot.docs
     .map(doc => {
       const data = doc.data();
-      if (data.role === "admin") {
+      // Check if role is any admin type
+      if (validRoles.includes(data.role as AdminRole)) {
         return {
           uid: doc.id,
           email: doc.id,
           name: data.name || "",
           position: data.position || "",
-          role: "admin" as const,
+          role: data.role as AdminRole,
           photoURL: data.photoURL || undefined,
           createdAt: data.createdAt,
           lastLogin: data.lastLogin,
@@ -45,7 +57,8 @@ export async function getAdminByEmail(email: string): Promise<Admin | null> {
   if (!snapshot.exists()) return null;
   
   const data = snapshot.data();
-  if (data.role !== "admin") return null;
+  const validRoles: AdminRole[] = ["super-admin", "admin", "moderator", "viewer"];
+  if (!validRoles.includes(data.role as AdminRole)) return null;
   
   return {
     uid: snapshot.id,
