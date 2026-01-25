@@ -73,11 +73,12 @@ export async function getAdminByEmail(email: string): Promise<Admin | null> {
 }
 
 export async function saveAdmin(admin: Admin): Promise<void> {
-  const adminRef = doc(db, "users", admin.email);
+  const adminRef = doc(db, "users", admin.uid);
   await setDoc(adminRef, {
+    email: admin.email,
     name: admin.name,
     position: admin.position,
-    role: "admin",
+    role: admin.role,
     photoURL: admin.photoURL || null,
     createdAt: admin.createdAt || new Date(),
     lastLogin: admin.lastLogin || null,
