@@ -14,6 +14,8 @@ import { Separator } from "@/components/ui/separator"
 import { Plus, UserPlus } from "lucide-react"
 import { ProjectFormModal } from "@/app/admin/projects/modalform"
 import { ClientFormModal } from "./modalform";
+import { useAdminRole } from "@/hooks/useAdminRole";
+import { hasPermission } from "@/lib/permissions";
 
 // Fetch and validate client data from Firestore
 async function getData(): Promise<Client[]> {
@@ -32,6 +34,9 @@ export default function ClientPage() {
   // State for client data
   const [data, setData] = useState<Client[]>([]);
   const [openDialog, setOpenDialog] = useState(false);
+  const { role } = useAdminRole();
+  const canManageClients = hasPermission(role, "manage_clients");
+  
   // Fetch data and update state
   const fetchData = async () => {
     console.log("ClientPage.fetchData: start"); // debug
@@ -56,13 +61,14 @@ export default function ClientPage() {
             </p>
           </div>
           {/* Add New Client Modal */}
-          <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200">
-                <Plus className="mr-2 h-4 w-4" />
-                Add New Client
-              </Button>
-            </DialogTrigger>
+          {canManageClients && (
+            <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add New Client
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-[35rem] w-full max-h-[90vh] overflow-y-auto">
               <DialogHeader className="space-y-3 pb-2">
                 <div className="flex items-center gap-3">
@@ -81,6 +87,7 @@ export default function ClientPage() {
               <ClientFormModal onSubmit={fetchData} onClose={() => setOpenDialog(false)} />
             </DialogContent>
           </Dialog>
+          )}
         </div>
 
         {/* Data Table with instant update on add/edit/delete */}
