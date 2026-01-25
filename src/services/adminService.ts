@@ -21,6 +21,29 @@ export const ADMIN_ROLES: { value: AdminRole; label: string; description: string
   { value: "viewer", label: "Viewer", description: "Read-only access to admin panel" },
 ];
 
+/**
+ * Normalize role strings from Firestore to match AdminRole type
+ * Handles common variations like "superadmin" -> "super-admin"
+ */
+function normalizeRole(role: string | undefined): AdminRole {
+  if (!role) return "viewer";
+  
+  const normalized = role.toLowerCase().trim();
+  
+  // Handle variations
+  if (normalized === "superadmin" || normalized === "super-admin" || normalized === "super admin") {
+    return "super-admin";
+  }
+  if (normalized === "admin") {
+    return "admin";
+  }
+  if (normalized === "moderator" || normalized === "mod") {
+    return "moderator";
+  }
+  
+  return "viewer";
+}
+
 export async function getAllAdmins(): Promise<Admin[]> {
   const adminsRef = collection(db, "admins");
   const snapshot = await getDocs(adminsRef);
@@ -32,7 +55,7 @@ export async function getAllAdmins(): Promise<Admin[]> {
       email: doc.id,
       name: data.name || "",
       position: data.position || "",
-      role: data.role || "admin" as AdminRole,
+      role: normalizeRole(data.role),
       photoURL: data.photoURL || undefined,
       createdAt: data.createdAt,
       lastLogin: data.lastLogin,
@@ -55,7 +78,7 @@ export async function getAdminByEmail(email: string): Promise<Admin | null> {
     email: snapshot.id,
     name: data.name || "",
     position: data.position || "",
-    role: "admin",
+    role: normalizeRole(data.role),
     photoURL: data.photoURL,
     createdAt: data.createdAt,
     lastLogin: data.lastLogin,

@@ -7,6 +7,30 @@ import { doc, getDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
 /**
+ * Normalize role strings to match AdminRole type
+ */
+function normalizeRole(role: string | undefined): AdminRole | undefined {
+  if (!role) return undefined;
+  
+  const normalized = role.toLowerCase().trim();
+  
+  if (normalized === "superadmin" || normalized === "super-admin" || normalized === "super admin") {
+    return "super-admin";
+  }
+  if (normalized === "admin") {
+    return "admin";
+  }
+  if (normalized === "moderator" || normalized === "mod") {
+    return "moderator";
+  }
+  if (normalized === "viewer") {
+    return "viewer";
+  }
+  
+  return undefined;
+}
+
+/**
  * Hook to get the current user's admin role
  * Returns the role and loading state
  */
@@ -26,9 +50,9 @@ export function useAdminRole() {
           const adminDoc = await getDoc(doc(db, "admins", user.email));
           if (adminDoc.exists()) {
             const adminData = adminDoc.data();
-            const validRoles: AdminRole[] = ["super-admin", "admin", "moderator", "viewer"];
-            if (validRoles.includes(adminData.role as AdminRole)) {
-              setRole(adminData.role as AdminRole);
+            const normalizedRole = normalizeRole(adminData.role);
+            if (normalizedRole) {
+              setRole(normalizedRole);
             }
           }
         } catch (error) {
