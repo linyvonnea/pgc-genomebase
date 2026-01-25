@@ -34,7 +34,7 @@ export async function getAllAdmins(): Promise<Admin[]> {
       if (validRoles.includes(data.role as AdminRole)) {
         return {
           uid: doc.id,
-          email: doc.id,
+          email: data.email || doc.id,
           name: data.name || "",
           position: data.position || "",
           role: data.role as AdminRole,
@@ -62,7 +62,7 @@ export async function getAdminByEmail(email: string): Promise<Admin | null> {
   
   return {
     uid: snapshot.id,
-    email: snapshot.id,
+    email: data.email || snapshot.id,
     name: data.name || "",
     position: data.position || "",
     role: "admin",
