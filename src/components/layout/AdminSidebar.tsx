@@ -13,6 +13,7 @@ import {
   Calculator,
   Receipt,
   ScrollText,
+  Settings,
 } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -61,6 +62,11 @@ export function AdminSidebar() {
       href: "/admin/manual-quotation", 
       label: "Manual Quotation", 
       icon: Calculator,
+    },
+    { 
+      href: "/admin/services", 
+      label: "Service Catalog", 
+      icon: Settings,
     },
     { 
       href: "/admin/activity-logs", 

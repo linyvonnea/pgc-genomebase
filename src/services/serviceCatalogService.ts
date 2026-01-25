@@ -1,4 +1,4 @@
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { ServiceItem } from "@/types/ServiceItem";
 
@@ -23,16 +23,30 @@ export async function getServiceCatalog(): Promise<ServiceItem[]> {
       additionalParticipantPrice: data.additionalParticipantPrice,
     };
     
-    // Debug: Log services with descriptions
-    if (service.description) {
-      console.log('Service with description:', service.name, 'Description:', service.description);
-    }
-    
     return service;
   });
   
-  console.log('Total services loaded:', services.length);
-  console.log('Services with descriptions:', services.filter(s => s.description).length);
-  
   return services;
+}
+
+export async function saveService(service: ServiceItem): Promise<void> {
+  const serviceRef = doc(db, "services", service.id);
+  await setDoc(serviceRef, {
+    id: service.id,
+    name: service.name,
+    category: service.category,
+    type: service.type,
+    unit: service.unit,
+    price: service.price,
+    description: service.description || "",
+    minQuantity: service.minQuantity || null,
+    additionalUnitPrice: service.additionalUnitPrice || null,
+    minParticipants: service.minParticipants || null,
+    additionalParticipantPrice: service.additionalParticipantPrice || null,
+  });
+}
+
+export async function deleteService(serviceId: string): Promise<void> {
+  const serviceRef = doc(db, "services", serviceId);
+  await deleteDoc(serviceRef);
 }
