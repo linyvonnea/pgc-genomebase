@@ -14,6 +14,7 @@ import {
   Receipt,
   ScrollText,
   Settings,
+  ShieldCheck,
 } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -67,6 +68,11 @@ export function AdminSidebar() {
       href: "/admin/services", 
       label: "Service Catalog", 
       icon: Settings,
+    },
+    { 
+      href: "/admin/admins", 
+      label: "Admins", 
+      icon: ShieldCheck,
     },
     { 
       href: "/admin/activity-logs", 
