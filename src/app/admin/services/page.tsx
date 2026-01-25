@@ -5,6 +5,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getServiceCatalog } from "@/services/serviceCatalogService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAdminRole } from "@/hooks/useAdminRole";
+import { hasPermission } from "@/lib/permissions";
 import {
   Table,
   TableBody,
@@ -32,6 +34,10 @@ export default function ServicesManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<ServiceItem | null>(null);
   const queryClient = useQueryClient();
+  const { role } = useAdminRole();
+  const canManageServices = hasPermission(role, "manage_services");
+  const canEditService = hasPermission(role, "edit_service");
+  const canDeleteService = hasPermission(role, "delete_service");
 
   const { data: services = [], isLoading } = useQuery({
     queryKey: ["serviceCatalog"],
@@ -91,10 +97,12 @@ export default function ServicesManagementPage() {
             Manage all services, pricing, and configurations ({filteredServices.length} services)
           </p>
         </div>
-        <Button onClick={handleAdd} className="shadow-md">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Service
-        </Button>
+        {canManageServices && (
+          <Button onClick={handleAdd} className="shadow-md">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Service
+          </Button>
+        )}
       </div>
 
       {/* Filters */}
@@ -190,13 +198,15 @@ export default function ServicesManagementPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(service)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
+                          {canEditService && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEdit(service)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

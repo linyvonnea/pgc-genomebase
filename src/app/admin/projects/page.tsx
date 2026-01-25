@@ -15,6 +15,8 @@ import { Separator } from "@/components/ui/separator"
 import { Plus, FolderPlus } from "lucide-react"
 import { ProjectFormModal } from "@/app/admin/projects/modalform"
 import { getProjects } from "@/services/projectsService"
+import { useAdminRole } from "@/hooks/useAdminRole";
+import { hasPermission } from "@/lib/permissions";
 
 // Fetch all projects from Firestore
 async function getData(): Promise<Project[]> {
@@ -33,6 +35,9 @@ export default function ProjectPage() {
   const [data, setData] = useState<Project[]>([]);
   // State for dialog open/close
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { role } = useAdminRole();
+  const canManageProjects = hasPermission(role, "manage_projects");
+  
   // Fetch data and update state
   const fetchData = async () => {
     const projects = await getData();
@@ -65,9 +70,10 @@ export default function ProjectPage() {
             </p>
           </div>
           {/* Add New Project Modal */}
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200">
+          {canManageProjects && (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200">
                 <Plus className="mr-2 h-4 w-4" />
                 Add New Project
               </Button>
@@ -90,6 +96,7 @@ export default function ProjectPage() {
               <ProjectFormModal onSubmit={handleFormSuccess} />
             </DialogContent>
           </Dialog>
+          )}
         </div>
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
