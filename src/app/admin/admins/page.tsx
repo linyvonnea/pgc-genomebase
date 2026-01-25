@@ -5,6 +5,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getAllAdmins } from "@/services/adminService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAdminRole } from "@/hooks/useAdminRole";
+import { canManageAdmins, canEdit, canDelete } from "@/lib/permissions";
 import {
   Table,
   TableBody,
@@ -25,6 +27,11 @@ export default function AdminsManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
   const queryClient = useQueryClient();
+  const { role: currentUserRole, loading: roleLoading } = useAdminRole();
+
+  const canManage = canManageAdmins(currentUserRole);
+  const canEditAdmin = canEdit(currentUserRole, "admin");
+  const canDeleteAdmin = canDelete(currentUserRole, "admin");
 
   const { data: admins = [], isLoading } = useQuery({
     queryKey: ["admins"],
@@ -84,10 +91,12 @@ export default function AdminsManagementPage() {
             Manage system administrators and their permissions ({filteredAdmins.length} admins)
           </p>
         </div>
-        <Button onClick={handleAdd} className="shadow-md">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Admin
-        </Button>
+        {canManage && (
+          <Button onClick={handleAdd} className="shadow-md">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Admin
+          </Button>
+        )}
       </div>
 
       {/* Search */}
@@ -169,13 +178,16 @@ export default function AdminsManagementPage() {
                       {formatDate(admin.lastLogin)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(admin)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+                      {(canEditAdmin || canDeleteAdmin) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(admin)}
+                          disabled={!canEditAdmin && !canDeleteAdmin}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
