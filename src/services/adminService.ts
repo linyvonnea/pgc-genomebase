@@ -22,47 +22,37 @@ export const ADMIN_ROLES: { value: AdminRole; label: string; description: string
 ];
 
 export async function getAllAdmins(): Promise<Admin[]> {
-  const usersRef = collection(db, "users");
-  const snapshot = await getDocs(usersRef);
+  const adminsRef = collection(db, "admins");
+  const snapshot = await getDocs(adminsRef);
   
-  const validRoles: AdminRole[] = ["super-admin", "admin", "moderator", "viewer"];
-  
-  const admins = snapshot.docs
-    .map(doc => {
-      const data = doc.data();
-      // Check if role is any admin type
-      if (validRoles.includes(data.role as AdminRole)) {
-        return {
-          uid: doc.id,
-          email: data.email || doc.id,
-          name: data.name || "",
-          position: data.position || "",
-          role: data.role as AdminRole,
-          photoURL: data.photoURL || undefined,
-          createdAt: data.createdAt,
-          lastLogin: data.lastLogin,
-        } as Admin;
-      }
-      return null;
-    })
-    .filter((admin): admin is Admin => admin !== null);
+  const admins = snapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      uid: doc.id,
+      email: doc.id,
+      name: data.name || "",
+      position: data.position || "",
+      role: data.role || "admin" as AdminRole,
+      photoURL: data.photoURL || undefined,
+      createdAt: data.createdAt,
+      lastLogin: data.lastLogin,
+    } as Admin;
+  });
   
   return admins;
 }
 
 export async function getAdminByEmail(email: string): Promise<Admin | null> {
-  const adminRef = doc(db, "users", email);
+  const adminRef = doc(db, "admins", email);
   const snapshot = await getDoc(adminRef);
   
   if (!snapshot.exists()) return null;
   
   const data = snapshot.data();
-  const validRoles: AdminRole[] = ["super-admin", "admin", "moderator", "viewer"];
-  if (!validRoles.includes(data.role as AdminRole)) return null;
   
   return {
     uid: snapshot.id,
-    email: data.email || snapshot.id,
+    email: snapshot.id,
     name: data.name || "",
     position: data.position || "",
     role: "admin",
@@ -73,9 +63,8 @@ export async function getAdminByEmail(email: string): Promise<Admin | null> {
 }
 
 export async function saveAdmin(admin: Admin): Promise<void> {
-  const adminRef = doc(db, "users", admin.uid);
+  const adminRef = doc(db, "admins", admin.email);
   await setDoc(adminRef, {
-    email: admin.email,
     name: admin.name,
     position: admin.position,
     role: admin.role,
@@ -86,12 +75,12 @@ export async function saveAdmin(admin: Admin): Promise<void> {
 }
 
 export async function deleteAdmin(email: string): Promise<void> {
-  const adminRef = doc(db, "users", email);
+  const adminRef = doc(db, "admins", email);
   await deleteDoc(adminRef);
 }
 
 export async function updateAdminPosition(email: string, position: string): Promise<void> {
-  const adminRef = doc(db, "users", email);
+  const adminRef = doc(db, "admins", email);
   await setDoc(adminRef, {
     position,
   }, { merge: true });

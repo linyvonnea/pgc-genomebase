@@ -23,12 +23,12 @@ export function useAdminRole() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user?.email) {
         try {
-          const userDoc = await getDoc(doc(db, "users", user.email));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
+          const adminDoc = await getDoc(doc(db, "admins", user.email));
+          if (adminDoc.exists()) {
+            const adminData = adminDoc.data();
             const validRoles: AdminRole[] = ["super-admin", "admin", "moderator", "viewer"];
-            if (validRoles.includes(userData.role as AdminRole)) {
-              setRole(userData.role as AdminRole);
+            if (validRoles.includes(adminData.role as AdminRole)) {
+              setRole(adminData.role as AdminRole);
             }
           }
         } catch (error) {
