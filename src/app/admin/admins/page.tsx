@@ -85,16 +85,16 @@ export default function AdminsManagementPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Shield className="h-8 w-8 text-blue-600" />
-            Admin Management
+            Users & Permissions
           </h1>
           <p className="text-muted-foreground mt-1">
-            Manage system administrators and their permissions ({filteredAdmins.length} admins)
+            Manage system users and their access levels ({filteredAdmins.length} users)
           </p>
         </div>
         {canManage && (
           <Button onClick={handleAdd} className="shadow-md">
             <Plus className="h-4 w-4 mr-2" />
-            Add Admin
+            Add User
           </Button>
         )}
       </div>
