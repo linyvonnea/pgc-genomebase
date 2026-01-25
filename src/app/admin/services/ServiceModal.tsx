@@ -41,7 +41,7 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
     id: service?.id || "",
     name: service?.name || "",
     category: service?.category || "",
-    type: service?.type || "Laboratory",
+    type: service?.type || "laboratory",
     unit: service?.unit || "",
     price: service?.price || 0,
     description: service?.description || "",
@@ -51,8 +51,8 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
     additionalParticipantPrice: service?.additionalParticipantPrice || undefined,
   });
 
-  const showBioinformaticsFields = formData.type === "Bioinformatics";
-  const showTrainingFields = formData.type === "Training";
+  const showBioinformaticsFields = formData.type === "bioinformatics";
+  const showTrainingFields = formData.type === "training";
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -170,11 +170,11 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Laboratory">Laboratory</SelectItem>
-                    <SelectItem value="Equipment">Equipment</SelectItem>
-                    <SelectItem value="Bioinformatics">Bioinformatics</SelectItem>
-                    <SelectItem value="Retail">Retail</SelectItem>
-                    <SelectItem value="Training">Training</SelectItem>
+                    <SelectItem value="laboratory">laboratory</SelectItem>
+                    <SelectItem value="equipment">equipment</SelectItem>
+                    <SelectItem value="bioinformatics">bioinformatics</SelectItem>
+                    <SelectItem value="retail">retail</SelectItem>
+                    <SelectItem value="training">training</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
