@@ -71,7 +71,7 @@ export function AdminSidebar() {
     },
     { 
       href: "/admin/admins", 
-      label: "Admins", 
+      label: "Users & Permissions", 
       icon: ShieldCheck,
     },
     { 

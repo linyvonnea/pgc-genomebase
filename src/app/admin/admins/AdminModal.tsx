@@ -83,7 +83,7 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
       };
 
       await saveAdmin(adminData);
-      toast.success(isEdit ? "Admin updated successfully!" : "Admin added successfully!");
+      toast.success(isEdit ? "User updated successfully!" : "User added successfully!");
       onSuccess();
     } catch (error) {
       console.error("Error saving admin:", error);
@@ -94,14 +94,14 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
   };
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to remove this admin? This action cannot be undone.")) {
+    if (!confirm("Are you sure you want to remove this user? This action cannot be undone.")) {
       return;
     }
 
     setDeleteLoading(true);
     try {
       await deleteAdmin(formData.email);
-      toast.success("Admin removed successfully!");
+      toast.success("User removed successfully!");
       onSuccess();
     } catch (error) {
       console.error("Error deleting admin:", error);
@@ -132,7 +132,7 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3">
             <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-blue-800">
-              You have view-only access. Contact a Super Admin to make changes to this admin account.
+              You have view-only access. Contact a Super Admin to make changes to this user account.
             </p>
           </div>
         )}
@@ -141,7 +141,7 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
           <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex gap-3">
             <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-amber-800">
-              The admin must sign in with their Google account matching the email address provided below
+              The user must sign in with their Google account matching the email address provided below
               to access the system.
             </p>
           </div>
@@ -152,7 +152,7 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm font-semibold">
               <User className="h-4 w-4 text-blue-600" />
-              Admin Information
+              User Information
             </div>
             <Separator />
 
@@ -265,7 +265,7 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
                 disabled={deleteLoading || loading}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                {deleteLoading ? "Removing..." : "Remove Admin"}
+                {deleteLoading ? "Removing..." : "Remove User"}
               </Button>
             )}
             <div className={`flex gap-2 ${!isEdit || !canDeleteAdmin ? "w-full justify-end" : ""}`}>
@@ -279,7 +279,7 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
                   className="shadow-md"
                 >
                   <Save className="h-4 w-4 mr-2" />
-                  {loading ? "Saving..." : isEdit ? "Save Changes" : "Add Admin"}
+                  {loading ? "Saving..." : isEdit ? "Save Changes" : "Add User"}
                 </Button>
               )}
             </div>
