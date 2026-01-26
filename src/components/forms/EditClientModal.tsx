@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Trash2, Pencil, UserCog, User, Mail, Phone, Building2, Briefcase, FolderOpen, Save } from 'lucide-react';
+import { Trash2, Pencil, UserCog, User, Mail, Phone, Building2, Briefcase, FolderOpen, Save, Plus, X } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +38,7 @@ import { Client } from "@/types/Client";
 import { Project } from "@/types/Project";
 import { getProjects } from "@/services/projectsService";
 import { updateClientAndProjectName } from "@/services/updateClientAndProjectName";
+import { getClientProjects, addProjectToClient, removeProjectFromClient } from "@/services/clientProjectRelationService";
 import { toast } from "sonner";
 import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -52,10 +55,16 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [activeTab, setActiveTab] = useState<"info" | "projects">("info");
   
   // Project dropdown state
   const [projectOptions, setProjectOptions] = useState<Project[]>([]);
   const [projectSearch, setProjectSearch] = useState("");
+  
+  // Additional projects state
+  const [additionalProjects, setAdditionalProjects] = useState<string[]>([]);
+  const [selectedNewProject, setSelectedNewProject] = useState<string>("");
+  const [loadingProjects, setLoadingProjects] = useState(false);
 
   const form = useForm<AdminClientData & { pid?: string }>({
     resolver: zodResolver(adminClientSchema),
@@ -71,12 +80,27 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
     },
   });
 
-  // Fetch project options
+  // Fetch project options and additional projects
   useEffect(() => {
     getProjects().then((projects) => {
       setProjectOptions(projects);
     });
-  }, []);
+    
+    // Load additional projects when modal opens
+    if (isOpen && client.cid) {
+      setLoadingProjects(true);
+      getClientProjects(client.cid).then((projects) => {
+        // Filter out the main project if it exists
+        const filtered = client.pid 
+          ? projects.filter(p => p !== client.pid)
+          : projects;
+        setAdditionalProjects(filtered);
+        setLoadingProjects(false);
+      }).catch(() => {
+        setLoadingProjects(false);
+      });
+    }
+  }, [isOpen, client.cid, client.pid]);
 
   // Filter project options by search
   const filteredProjectOptions = projectOptions.filter(
@@ -146,6 +170,65 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
     }
   };
 
+  const handleAddProject = async () => {
+    if (!selectedNewProject || !client.cid) return;
+    
+    // Check if project already exists
+    if (additionalProjects.includes(selectedNewProject) || client.pid === selectedNewProject) {
+      toast.error("Project already linked to this client");
+      return;
+    }
+    
+    try {
+      await addProjectToClient(client.cid, selectedNewProject);
+      setAdditionalProjects(prev => [...prev, selectedNewProject]);
+      setSelectedNewProject("");
+      
+      // Log activity
+      await logActivity({
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
+        action: "ADD_PROJECT",
+        entityType: "client",
+        entityId: client.cid,
+        entityName: client.name || client.cid,
+        description: `Added project ${selectedNewProject} to client ${client.name || client.cid}`,
+      });
+      
+      toast.success("Project added successfully!");
+    } catch (error) {
+      console.error("Error adding project:", error);
+      toast.error("Failed to add project");
+    }
+  };
+
+  const handleRemoveProject = async (projectId: string) => {
+    if (!client.cid) return;
+    
+    try {
+      await removeProjectFromClient(client.cid, projectId);
+      setAdditionalProjects(prev => prev.filter(p => p !== projectId));
+      
+      // Log activity
+      await logActivity({
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
+        action: "REMOVE_PROJECT",
+        entityType: "client",
+        entityId: client.cid,
+        entityName: client.name || client.cid,
+        description: `Removed project ${projectId} from client ${client.name || client.cid}`,
+      });
+      
+      toast.success("Project removed successfully!");
+    } catch (error) {
+      console.error("Error removing project:", error);
+      toast.error("Failed to remove project");
+    }
+  };
+
   const handleDelete = async () => {
     if (!client.cid) return;
     try {
@@ -207,8 +290,16 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
         </DialogHeader>
 
         <Separator className="my-1" />
+        
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "info" | "projects")} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="info">Client Info</TabsTrigger>
+            <TabsTrigger value="projects">Projects ({(additionalProjects.length + (client.pid ? 1 : 0))})</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="info" className="space-y-3 mt-4">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3"
             {/* Personal Information Section */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
@@ -463,6 +554,105 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
             )}
           </form>
         </Form>
+          </TabsContent>
+          
+          <TabsContent value="projects" className="space-y-4 mt-4">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">Primary Project</h3>
+                {client.pid ? (
+                  <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="h-4 w-4 text-blue-600" />
+                      <div>
+                        <p className="text-sm font-medium">{client.pid}</p>
+                        <p className="text-xs text-gray-500">
+                          {projectOptions.find(p => p.pid === client.pid)?.title || "Loading..."}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">Primary</Badge>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 italic">No primary project assigned</p>
+                )}
+              </div>
+              
+              <Separator />
+              
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">Additional Projects</h3>
+                
+                {loadingProjects ? (
+                  <p className="text-sm text-gray-500">Loading projects...</p>
+                ) : (
+                  <>
+                    {additionalProjects.length > 0 ? (
+                      <div className="space-y-2 mb-3">
+                        {additionalProjects.map((projId) => {
+                          const project = projectOptions.find(p => p.pid === projId);
+                          return (
+                            <div key={projId} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <FolderOpen className="h-4 w-4 text-gray-600" />
+                                <div>
+                                  <p className="text-sm font-medium">{projId}</p>
+                                  <p className="text-xs text-gray-500">
+                                    {project?.title || "Loading..."}
+                                  </p>
+                                </div>
+                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveProject(projId)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500 italic mb-3">No additional projects linked</p>
+                    )}
+                    
+                    <div className="flex gap-2">
+                      <Select value={selectedNewProject} onValueChange={setSelectedNewProject}>
+                        <SelectTrigger className="h-9 flex-1">
+                          <SelectValue placeholder="Select project to add" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[200px]">
+                          {projectOptions
+                            .filter(p => p.pid !== client.pid && !additionalProjects.includes(p.pid || ""))
+                            .map((proj) => (
+                              <SelectItem key={proj.pid} value={proj.pid || ""}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium text-sm">{proj.pid}</span>
+                                  <span className="text-xs text-gray-500">{proj.title}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleAddProject}
+                        disabled={!selectedNewProject}
+                        className="h-9"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
