@@ -41,7 +41,8 @@ const clientSchema = baseClientSchema.extend({
     ),
   designation: z.string().min(1, "Designation is required"),
   email: z.string().email("Invalid email"),
-}).omit({ createdAt: true, affiliationAddress: true });
+  affiliationAddress: z.string().optional(),
+}).omit({ createdAt: true });
 
 type ClientFormData = Omit<z.infer<typeof clientSchema>, 'sex'> & { sex: "F" | "M" | "Other" | "" };
 
@@ -53,6 +54,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
     year: new Date().getFullYear(),
     name: "",
     affiliation: "",
+    affiliationAddress: "",
     designation: "",
     email: "",
     sex: "",
@@ -426,6 +428,18 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
           className="h-9"
         />
         {errors.affiliation && <p className="text-red-500 text-xs mt-1">{errors.affiliation}</p>}
+      </div>
+
+      {/* Affiliation Address Field */}
+      <div>
+        <Label className="text-xs">Affiliation Address</Label>
+        <Input
+          value={formData.affiliationAddress || ""}
+          onChange={(e) => handleChange("affiliationAddress", e.target.value)}
+          placeholder="Enter complete address"
+          className="h-9"
+        />
+        {errors.affiliationAddress && <p className="text-red-500 text-xs mt-1">{errors.affiliationAddress}</p>}
       </div>
 
       {/* Designation Field */}

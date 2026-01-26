@@ -63,6 +63,7 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
       name: client.name || "",
       email: client.email || "",
       affiliation: client.affiliation || "",
+      affiliationAddress: client.affiliationAddress || "",
       designation: client.designation || "",
       sex: client.sex || "M",
       phoneNumber: client.phoneNumber || "",
@@ -101,6 +102,7 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
         name: data.name,
         email: data.email,
         affiliation: data.affiliation,
+        affiliationAddress: data.affiliationAddress,
         designation: data.designation,
         sex: data.sex,
         phoneNumber: data.phoneNumber,
@@ -364,6 +366,19 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
                   <FormLabel className="text-xs">Affiliation (Department & Institution)</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g. Division of Biological Sciences - UPV CAS" className="h-9" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="affiliationAddress"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs">Affiliation Address</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter complete address" className="h-9" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
