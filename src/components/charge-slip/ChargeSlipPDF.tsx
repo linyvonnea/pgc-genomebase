@@ -98,11 +98,11 @@ const styles = StyleSheet.create({
   noBorder: {
     borderRightWidth: 0,
   },
-  col1: { width: "45%" },
-  col2: { width: "15%" },
-  col3: { width: "13%" },
+  col1: { width: "42%" },
+  col2: { width: "14%" },
+  col3: { width: "16%" },
   col4: { width: "10%" },
-  col5: { width: "17%" },
+  col5: { width: "18%" },
   signatureSection: {
     marginTop: 12,
     fontSize: 10,
