@@ -85,11 +85,16 @@ export const columns: ColumnDef<Client>[] = [
       </div>
     ),
   },
-  // Affiliation Address - Hidden for cleaner view
-  // {
-  //   accessorKey: "affiliationAddress",
-  //   header: "Affiliation Address",
-  // },
+  {
+    accessorKey: "affiliationAddress",
+    header: "Affiliation Address",
+    size: 180,
+    cell: ({ getValue }) => (
+      <div className="max-w-[180px] line-clamp-2" title={getValue() as string}>
+        {getValue() as string || "-"}
+      </div>
+    ),
+  },
   {
     accessorKey: "designation",
     header: "Designation",
