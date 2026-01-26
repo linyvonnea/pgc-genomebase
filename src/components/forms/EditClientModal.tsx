@@ -37,7 +37,6 @@ import { Client } from "@/types/Client";
 import { Project } from "@/types/Project";
 import { getProjects } from "@/services/projectsService";
 import { updateClientAndProjectName } from "@/services/updateClientAndProjectName";
-import { getClientProjects, addProjectToClient, removeProjectFromClient } from "@/services/clientProjectRelationService";
 import { toast } from "sonner";
 import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -85,10 +84,12 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
       setProjectOptions(projects);
     });
     
-    // Load projects from client document
+    // Load projects from client's pid array (pid is now an array)
     if (isOpen) {
-      const clientProjects = client.pid || [];
+      const clientProjects = Array.isArray(client.pid) ? client.pid : (client.pid ? [client.pid] : []);
       setProjects(clientProjects);
+      // Update form to show primary project (first in array)
+      form.setValue("pid", clientProjects[0] || "");
       setLoadingProjects(false);
     }
   }, [isOpen, client.pid]);
@@ -193,7 +194,9 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
 
   const handleSetPrimaryProject = (projectId: string) => {
     // Move selected project to first position
-    setProjects(prev => [projectId, ...prev.filter(p => p !== projectId)]);
+    const newProjects = [projectId, ...projects.filter(p => p !== projectId)];
+    setProjects(newProjects);
+    // Update form to show new primary project
     form.setValue("pid", projectId);
     toast.success("Primary project updated! Click Save to apply changes.");
   };
@@ -363,58 +366,25 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
               name="pid"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs">Project ID</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger className="h-9">
-                        <SelectValue placeholder="Select project">
-                          {field.value ? (
-                            <div className="flex flex-col items-start" title={projectOptions.find(p => p.pid === field.value)?.title}>
-                              <span className="font-medium text-sm">{field.value}</span>
-                              {projectOptions.find(p => p.pid === field.value)?.title && (
-                                <span className="text-xs text-gray-500 truncate max-w-[200px]">
-                                  {projectOptions.find(p => p.pid === field.value)?.title}
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            "Select project"
-                          )}
-                        </SelectValue>
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="max-h-[300px] w-[400px]">
-                      <div className="sticky top-0 bg-white z-10 p-2 border-b">
-                        <Input
-                          placeholder="Search by ID, Title, or Lead..."
-                          value={projectSearch}
-                          onChange={e => setProjectSearch(e.target.value)}
-                          className="h-9 text-sm"
-                        />
+                  <FormLabel className="text-xs">Primary Project ID</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input 
+                        value={field.value || "(No primary project)"} 
+                        readOnly 
+                        className="h-9 bg-gray-50 cursor-default" 
+                        title="Manage projects in the Projects tab"
+                      />
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">
+                        View Projects tab
                       </div>
-                      <div className="max-h-[240px] overflow-y-auto">
-                        {filteredProjectOptions.length > 0 ? (
-                          filteredProjectOptions.map((proj) => (
-                            <SelectItem key={proj.pid} value={proj.pid || ""} className="text-sm">
-                              <div className="flex flex-col py-1">
-                                <span className="font-medium text-gray-900">{proj.pid}</span>
-                                <span className="text-xs text-gray-600">{proj.title}</span>
-                                {proj.lead && (
-                                  <span className="text-xs text-gray-500 truncate max-w-[350px]" title={proj.lead}>
-                                    Lead: {proj.lead}
-                                  </span>
-                                )}
-                              </div>
-                            </SelectItem>
-                          ))
-                        ) : (
-                          <div className="p-3 text-sm text-center text-gray-500">
-                            No projects found
-                          </div>
-                        )}
-                      </div>
-                    </SelectContent>
-                  </Select>
+                    </div>
+                  </FormControl>
+                  {field.value && projectOptions.find(p => p.pid === field.value)?.title && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      {projectOptions.find(p => p.pid === field.value)?.title}
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}

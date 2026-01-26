@@ -104,36 +104,35 @@ export const columns: ColumnDef<Client>[] = [
     },
   },
   {
-    accessorKey: "projects",
-    header: "All Projects",
+    accessorKey: "pid",
+    header: "Projects",
     size: 200,
     cell: ({ row }) => {
-      const primaryProject = row.original.pid;
-      const additionalProjects = row.original.projects || [];
-      const allProjects = primaryProject 
-        ? [primaryProject, ...additionalProjects.filter(p => p !== primaryProject)]
-        : additionalProjects;
+      // pid is now an array, first element is primary
+      const projects = Array.isArray(row.original.pid) 
+        ? row.original.pid 
+        : (row.original.pid ? [row.original.pid] : []);
       
-      if (allProjects.length === 0) return <span className="text-gray-400">-</span>;
+      if (projects.length === 0) return <span className="text-gray-400">-</span>;
       
       return (
         <div className="max-w-[200px]">
           <div className="flex flex-wrap gap-1">
-            {allProjects.slice(0, 2).map((proj, idx) => (
+            {projects.slice(0, 2).map((proj, idx) => (
               <span
                 key={proj}
                 className={`text-xs px-2 py-0.5 rounded ${
-                  idx === 0 && primaryProject === proj
+                  idx === 0
                     ? "bg-blue-100 text-blue-700 font-medium"
                     : "bg-gray-100 text-gray-700"
                 }`}
-                title={proj}
+                title={idx === 0 ? `${proj} (Primary)` : proj}
               >
                 {proj}
               </span>
             ))}
-            {allProjects.length > 2 && (
-              <span className="text-xs text-gray-500">+{allProjects.length - 2}</span>
+            {projects.length > 2 && (
+              <span className="text-xs text-gray-500">+{projects.length - 2}</span>
             )}
           </div>
         </div>
