@@ -126,7 +126,7 @@ export function QuotationPDF({
           <Text><Text style={styles.label}>Institution:</Text> {clientInfo.institution}</Text>
           <Text><Text style={styles.label}>Designation:</Text> {clientInfo.designation}</Text>
           <Text><Text style={styles.label}>Email:</Text> {clientInfo.email}</Text>
-          <Text><Text style={styles.label}>12% Discount:</Text> {useInternalPrice ? "Yes" : "No"}</Text>
+          <Text><Text style={styles.label}>Applied 12% Discount:</Text> {useInternalPrice ? "Yes" : "No"}</Text>
         </View>
 
         <Text style={{ marginBottom: 10 }}>
@@ -184,7 +184,7 @@ export function QuotationPDF({
         <View style={styles.summary}>
           <Text>Subtotal: PHP {formatMoney(subtotal)}</Text>
           {useInternalPrice && discount > 0 ? (
-            <Text>Less 12% discount (Internal Client): -PHP {formatMoney(discount)}</Text>
+            <Text>Applied 12% Discount (Internal Client): -PHP {formatMoney(discount)}</Text>
           ) : null}
           <Text style={{ fontWeight: "bold" }}>TOTAL: PHP {formatMoney(total)}</Text>
         </View>
