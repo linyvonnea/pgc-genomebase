@@ -4,7 +4,7 @@ const admin = require('firebase-admin');
 const path = require('path');
 
 // Initialize Firebase Admin
-const serviceAccount = require(path.join(__dirname, '../serviceAccountKey.json'));
+const serviceAccount = require('./serviceAccountKey.json.json');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
