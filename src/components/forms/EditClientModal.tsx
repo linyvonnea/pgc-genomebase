@@ -37,6 +37,7 @@ import { Client } from "@/types/Client";
 import { Project } from "@/types/Project";
 import { getProjects } from "@/services/projectsService";
 import { updateClientAndProjectName } from "@/services/updateClientAndProjectName";
+import { getClientProjects, addProjectToClient, removeProjectFromClient } from "@/services/clientProjectRelationService";
 import { toast } from "sonner";
 import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
