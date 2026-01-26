@@ -344,12 +344,12 @@ export function ChargeSlipPDF({
         </View>
 
         {/* Summary */}
-        <View style={[styles.section, { alignItems: "flex-end" }]}>
-          <Text style={styles.bold}>Subtotal: PHP {formatMoney(subtotal)}</Text>
+        <View style={[styles.section, { alignItems: "flex-end", marginTop: 12, textAlign: "right", gap: 2 }]}>
+          <Text>Subtotal: PHP {formatMoney(subtotal)}</Text>
           {useInternalPrice && (
             <Text>Less 12% Discount: PHP {formatMoney(discount)}</Text>
           )}
-          <Text style={styles.totalText}>TOTAL: PHP {formatMoney(total)}</Text>
+          <Text style={{ fontWeight: "bold" }}>TOTAL: PHP {formatMoney(total)}</Text>
         </View>
 
         {/* Amount in Words */}
