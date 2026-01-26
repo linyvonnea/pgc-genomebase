@@ -60,8 +60,8 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
   const [projectOptions, setProjectOptions] = useState<Project[]>([]);
   const [projectSearch, setProjectSearch] = useState("");
   
-  // Additional projects state
-  const [additionalProjects, setAdditionalProjects] = useState<string[]>([]);
+  // Projects state (pid is now an array)
+  const [projects, setProjects] = useState<string[]>([]);
   const [selectedNewProject, setSelectedNewProject] = useState<string>("");
   const [loadingProjects, setLoadingProjects] = useState(false);
 
@@ -75,7 +75,7 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
       designation: client.designation || "",
       sex: client.sex || "M",
       phoneNumber: client.phoneNumber || "",
-      pid: client.pid || "",
+      pid: client.pid?.[0] || "",
     },
   });
 
@@ -87,11 +87,11 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
     
     // Load projects from client document
     if (isOpen) {
-      const clientProjects = client.projects || [];
-      setAdditionalProjects(clientProjects);
+      const clientProjects = client.pid || [];
+      setProjects(clientProjects);
       setLoadingProjects(false);
     }
-  }, [isOpen, client.projects]);
+  }, [isOpen, client.pid]);
 
   // Filter project options by search
   const filteredProjectOptions = projectOptions.filter(
@@ -109,10 +109,12 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
       const clientDoc = await getDoc(clientRef);
       const oldData = clientDoc.data();
       
-      // Check if pid changed
-      const pidChanged = client.pid !== data.pid;
+      // Check if pid array changed (compare primary project)
+      const oldPrimaryPid = Array.isArray(client.pid) ? client.pid[0] : client.pid;
+      const newPrimaryPid = projects[0];
+      const pidChanged = oldPrimaryPid !== newPrimaryPid;
       
-      // Include pid and projects in the update data
+      // Include pid as array in the update data
       const updateData = {
         name: data.name,
         email: data.email,
@@ -121,8 +123,7 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
         designation: data.designation,
         sex: data.sex,
         phoneNumber: data.phoneNumber,
-        pid: data.pid,
-        projects: additionalProjects,
+        pid: projects,
       };
       
       // Update client and handle project name synchronization
@@ -130,7 +131,7 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
         client.cid!, 
         updateData, 
         client.name, 
-        pidChanged ? client.pid : undefined
+        pidChanged ? oldPrimaryPid : undefined
       );
       
       // Log the activity
@@ -166,12 +167,12 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
     if (!selectedNewProject) return;
     
     // Check if project already exists
-    if (additionalProjects.includes(selectedNewProject)) {
+    if (projects.includes(selectedNewProject)) {
       toast.error("Project already linked to this client");
       return;
     }
     
-    setAdditionalProjects(prev => [...prev, selectedNewProject]);
+    setProjects(prev => [...prev, selectedNewProject]);
     setSelectedNewProject("");
     toast.success("Project added! Click Save to apply changes.");
   };
@@ -179,17 +180,20 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
   const handleRemoveProject = (projectId: string) => {
     const currentPid = form.watch("pid");
     
-    // If removing the primary project, clear it
+    // If removing the primary project, update form to next project or empty
     if (projectId === currentPid) {
-      form.setValue("pid", "");
+      const remainingProjects = projects.filter(p => p !== projectId);
+      form.setValue("pid", remainingProjects[0] || "");
     }
     
-    // Remove from additional projects array
-    setAdditionalProjects(prev => prev.filter(p => p !== projectId));
+    // Remove from projects array
+    setProjects(prev => prev.filter(p => p !== projectId));
     toast.success("Project removed! Click Save to apply changes.");
   };
 
   const handleSetPrimaryProject = (projectId: string) => {
+    // Move selected project to first position
+    setProjects(prev => [projectId, ...prev.filter(p => p !== projectId)]);
     form.setValue("pid", projectId);
     toast.success("Primary project updated! Click Save to apply changes.");
   };
@@ -260,7 +264,7 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="info">Client Info</TabsTrigger>
             <TabsTrigger value="projects">
-              Projects ({[...new Set([form.watch("pid"), ...additionalProjects].filter(Boolean))].length})
+              Projects ({projects.length})
             </TabsTrigger>
           </TabsList>
           
@@ -533,14 +537,13 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
                   <p className="text-sm text-gray-500">Loading projects...</p>
                 ) : (
                   <>
-                    {/* Display all projects (primary + additional) */}
+                    {/* Display all projects */}
                     {(() => {
                       const currentPid = form.watch("pid");
-                      const allProjectIds = [...new Set([currentPid, ...additionalProjects].filter(Boolean))];
                       
-                      return allProjectIds.length > 0 ? (
+                      return projects.length > 0 ? (
                         <div className="space-y-2 mb-3">
-                          {allProjectIds.map((projId) => {
+                          {projects.map((projId) => {
                             const project = projectOptions.find(p => p.pid === projId);
                             const isPrimary = projId === currentPid;
                             
@@ -609,11 +612,7 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
                           </SelectTrigger>
                           <SelectContent className="max-h-[200px]">
                             {projectOptions
-                              .filter(p => {
-                                const currentPid = form.watch("pid");
-                                const allProjectIds = [currentPid, ...additionalProjects];
-                                return !allProjectIds.includes(p.pid || "");
-                              })
+                              .filter(p => !projects.includes(p.pid || ""))
                               .map((proj) => (
                                 <SelectItem key={proj.pid} value={proj.pid || ""}>
                                   <div className="flex flex-col">

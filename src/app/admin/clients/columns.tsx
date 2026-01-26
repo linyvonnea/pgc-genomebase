@@ -72,8 +72,36 @@ export const columns: ColumnDef<Client>[] = [
   },
   {
     accessorKey: "pid",
-    header: "Primary Project",
-    size: 120,
+    header: "Projects",
+    size: 200,
+    cell: ({ row }) => {
+      const projects = row.original.pid || [];
+      
+      if (projects.length === 0) return <span className="text-gray-400">-</span>;
+      
+      return (
+        <div className="max-w-[200px]">
+          <div className="flex flex-wrap gap-1">
+            {projects.slice(0, 2).map((proj, idx) => (
+              <span
+                key={proj}
+                className={`text-xs px-2 py-0.5 rounded ${
+                  idx === 0
+                    ? "bg-blue-100 text-blue-700 font-medium"
+                    : "bg-gray-100 text-gray-700"
+                }`}
+                title={proj}
+              >
+                {proj}
+              </span>
+            ))}
+            {projects.length > 2 && (
+              <span className="text-xs text-gray-500">+{projects.length - 2}</span>
+            )}
+          </div>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "projects",
