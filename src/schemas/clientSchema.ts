@@ -26,7 +26,7 @@ export const clientSchema = z.object({
   isContactPerson: z.boolean().or(z.string()).nullable().optional(),
   name: z.string().nullable().optional(),
   phoneNumber: z.string().nullable().optional(),
-  pid: z.string().nullable().optional(),
+  pid: z.union([z.string(), z.array(z.string())]).nullable().optional(),
   projectName: z.string().nullable().optional(),
   sex: z.enum(["F", "M", "Other", ""]).nullable().optional(),
   year: z.number().or(z.string()).nullable().optional(),
