@@ -165,18 +165,40 @@ export default function QuotationBuilder({
     );
   };
 
+  const updateParticipants = (id: string, participants: number | "") => {
+    setSelectedServices((prev) =>
+      prev.map((svc) => (svc.id === id ? { ...svc, participants } : svc))
+    );
+  };
+
   const cleanedServices: StrictSelectedService[] = selectedServices
     .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
     .map((s) => ({ ...s, quantity: s.quantity as number }));
 
-  // Update the subtotal calculation to use samples
+  // Update the subtotal calculation to use samples or participants based on service type
   const subtotal = cleanedServices.reduce((sum, item) => {
-    const samples = (item as any).samples ?? 1;
-    const samplesAmount = calculateItemTotal(samples, item.price, {
-      minQuantity: (item as any).minQuantity,
-      additionalUnitPrice: (item as any).additionalUnitPrice,
-    });
-    return sum + (samplesAmount * item.quantity);
+    const serviceType = item.type.toLowerCase();
+    
+    if (serviceType.includes('bioinformatics') || serviceType.includes('bioinfo')) {
+      // Use samples for bioinformatics
+      const samples = (item as any).samples ?? 1;
+      const samplesAmount = calculateItemTotal(samples, item.price, {
+        minQuantity: (item as any).minQuantity,
+        additionalUnitPrice: (item as any).additionalUnitPrice,
+      });
+      return sum + (samplesAmount * item.quantity);
+    } else if (serviceType.includes('training')) {
+      // Use participants for training
+      const participants = (item as any).participants ?? 1;
+      const participantsAmount = calculateItemTotal(participants, item.price, {
+        minQuantity: (item as any).minParticipants,
+        additionalUnitPrice: (item as any).additionalParticipantPrice,
+      });
+      return sum + (participantsAmount * item.quantity);
+    } else {
+      // Default calculation
+      return sum + (item.price * item.quantity);
+    }
   }, 0);
   const discount = isInternal ? subtotal * 0.12 : 0;
   const total = subtotal - discount;
@@ -201,6 +223,7 @@ export default function QuotationBuilder({
           <TableHead>Unit</TableHead>
           <TableHead>Price</TableHead>
           {serviceType === "bioinformatics" && <TableHead>Samples</TableHead>}
+          {serviceType === "training" && <TableHead>Participants</TableHead>}
           <TableHead>Qty</TableHead>
           <TableHead>Amount</TableHead>
         </TableRow>
@@ -209,17 +232,29 @@ export default function QuotationBuilder({
         {services.map((item) => {
           const isSelected = selectedServices.find((s) => s.id === item.id);
           const samples = (isSelected as any)?.samples ?? "";
+          const participants = (isSelected as any)?.participants ?? "";
           const quantity = isSelected?.quantity ?? "";
           const price = isSelected?.price ?? 0;
 
-          // Calculate amount based on samples with tiered pricing
-          const amount =
-            isSelected && typeof samples === "number" && typeof quantity === "number"
-              ? calculateItemTotal(samples, price, {
-                  minQuantity: (item as any).minQuantity,
-                  additionalUnitPrice: (item as any).additionalUnitPrice,
-                }) * quantity
-              : 0;
+          // Calculate amount based on service type
+          let amount = 0;
+          if (isSelected && typeof quantity === "number") {
+            if (serviceType === "bioinformatics" && typeof samples === "number") {
+              const samplesAmount = calculateItemTotal(samples, price, {
+                minQuantity: (item as any).minQuantity,
+                additionalUnitPrice: (item as any).additionalUnitPrice,
+              });
+              amount = samplesAmount * quantity;
+            } else if (serviceType === "training" && typeof participants === "number") {
+              const participantsAmount = calculateItemTotal(participants, price, {
+                minQuantity: (item as any).minParticipants,
+                additionalUnitPrice: (item as any).additionalParticipantPrice,
+              });
+              amount = participantsAmount * quantity;
+            } else {
+              amount = price * quantity;
+            }
+          }
 
           return (
             <TableRow key={item.id}>
@@ -242,6 +277,23 @@ export default function QuotationBuilder({
                     value={samples}
                     onChange={(e) =>
                       updateSamples(
+                        item.id,
+                        e.target.value === "" ? "" : +e.target.value
+                      )
+                    }
+                    disabled={!isSelected}
+                    placeholder="0"
+                  />
+                </TableCell>
+              )}
+              {serviceType === "training" && (
+                <TableCell>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={participants}
+                    onChange={(e) =>
+                      updateParticipants(
                         item.id,
                         e.target.value === "" ? "" : +e.target.value
                       )
@@ -415,7 +467,7 @@ export default function QuotationBuilder({
           </div>
           {isInternal && (
             <div className="flex justify-between text-sm text-green-600">
-              <span>Discount (12%):</span>
+              <span>Applied 12% Discount:</span>
               <span>-₱{discount.toFixed(2)}</span>
             </div>
           )}
