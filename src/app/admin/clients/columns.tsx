@@ -72,69 +72,36 @@ export const columns: ColumnDef<Client>[] = [
   },
   {
     accessorKey: "pid",
-    header: "Projects",
-    size: 200,
-    cell: ({ row }) => {
-      const projects = row.original.pid || [];
-      
-      if (projects.length === 0) return <span className="text-gray-400">-</span>;
-      
+    header: ({ column }) => {
       return (
-        <div className="max-w-[200px]">
-          <div className="flex flex-wrap gap-1">
-            {projects.slice(0, 2).map((proj, idx) => (
-              <span
-                key={proj}
-                className={`text-xs px-2 py-0.5 rounded ${
-                  idx === 0
-                    ? "bg-blue-100 text-blue-700 font-medium"
-                    : "bg-gray-100 text-gray-700"
-                }`}
-                title={proj}
-              >
-                {proj}
-              </span>
-            ))}
-            {projects.length > 2 && (
-              <span className="text-xs text-gray-500">+{projects.length - 2}</span>
-            )}
-          </div>
-        </div>
-      );
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-accent"
+        >
+          Projects
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
     },
-  },
-  {
-    accessorKey: "pid",
-    header: "Projects",
-    size: 200,
+    size: 180,
     cell: ({ row }) => {
       // pid is now an array, first element is primary
       const projects = Array.isArray(row.original.pid) 
         ? row.original.pid 
         : (row.original.pid ? [row.original.pid] : []);
       
-      if (projects.length === 0) return <span className="text-gray-400">-</span>;
+      if (projects.length === 0) return <span className="text-gray-400 text-sm">-</span>;
+      
+      // Create comma-separated string
+      const projectsText = projects.join(", ");
       
       return (
-        <div className="max-w-[200px]">
-          <div className="flex flex-wrap gap-1">
-            {projects.slice(0, 2).map((proj, idx) => (
-              <span
-                key={proj}
-                className={`text-xs px-2 py-0.5 rounded ${
-                  idx === 0
-                    ? "bg-blue-100 text-blue-700 font-medium"
-                    : "bg-gray-100 text-gray-700"
-                }`}
-                title={idx === 0 ? `${proj} (Primary)` : proj}
-              >
-                {proj}
-              </span>
-            ))}
-            {projects.length > 2 && (
-              <span className="text-xs text-gray-500">+{projects.length - 2}</span>
-            )}
-          </div>
+        <div 
+          className="max-w-[180px] truncate text-sm" 
+          title={projectsText}
+        >
+          {projectsText}
         </div>
       );
     },
