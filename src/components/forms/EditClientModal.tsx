@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Trash2, Pencil, UserCog, User, Mail, Phone, Building2, Briefcase, FolderOpen, Save, Plus, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -189,7 +188,7 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
         userId: adminInfo?.email || "system",
         userEmail: adminInfo?.email || "system@pgc.admin",
         userName: adminInfo?.name || "System",
-        action: "ADD_PROJECT",
+        action: "UPDATE",
         entityType: "client",
         entityId: client.cid,
         entityName: client.name || client.cid,
@@ -215,7 +214,7 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
         userId: adminInfo?.email || "system",
         userEmail: adminInfo?.email || "system@pgc.admin",
         userName: adminInfo?.name || "System",
-        action: "REMOVE_PROJECT",
+        action: "UPDATE",
         entityType: "client",
         entityId: client.cid,
         entityName: client.name || client.cid,
@@ -299,7 +298,7 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
           
           <TabsContent value="info" className="space-y-3 mt-4">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3"
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             {/* Personal Information Section */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
