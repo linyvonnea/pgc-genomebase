@@ -24,34 +24,42 @@ export async function updateClientAndProjectName(cid: string, data: Partial<Clie
   }
 
   // Remove client name from old project if pid changed (legacy logic)
-  if (oldPid && oldPid !== data.pid && oldName && oldName.trim()) {
-    const oldProjectRef = doc(db, "projects", oldPid);
-    const oldProjectSnap = await getDoc(oldProjectRef);
-    if (oldProjectSnap.exists()) {
-      let clientNames: string[] = Array.isArray(oldProjectSnap.data().clientNames) ? oldProjectSnap.data().clientNames : [];
-      // Remove oldName from clientNames array
-      clientNames = clientNames.filter(n => n !== oldName);
-      await updateDoc(oldProjectRef, { clientNames });
+  if (oldPid && oldName && oldName.trim()) {
+    const newPrimaryPid = Array.isArray(data.pid) ? data.pid[0] : data.pid;
+    if (oldPid !== newPrimaryPid) {
+      const oldProjectRef = doc(db, "projects", oldPid);
+      const oldProjectSnap = await getDoc(oldProjectRef);
+      if (oldProjectSnap.exists()) {
+        let clientNames: string[] = Array.isArray(oldProjectSnap.data().clientNames) ? oldProjectSnap.data().clientNames : [];
+        // Remove oldName from clientNames array
+        clientNames = clientNames.filter(n => n !== oldName);
+        await updateDoc(oldProjectRef, { clientNames });
+      }
     }
   }
 
-  // Add or update client name in new project (legacy logic)
+  // Add or update client name in new project(s) (handle pid as array)
   if (data.name && data.pid) {
-    const projectRef = doc(db, "projects", data.pid);
-    const projectSnap = await getDoc(projectRef);
-    if (projectSnap.exists()) {
-      let clientNames: string[] = Array.isArray(projectSnap.data().clientNames) ? projectSnap.data().clientNames : [];
-      // Remove old name if present
-      if (oldName && clientNames.includes(oldName)) {
-        clientNames = clientNames.filter(n => n !== oldName);
+    const projectIds = Array.isArray(data.pid) ? data.pid : [data.pid];
+    const primaryPid = projectIds[0];
+    
+    if (primaryPid) {
+      const projectRef = doc(db, "projects", primaryPid);
+      const projectSnap = await getDoc(projectRef);
+      if (projectSnap.exists()) {
+        let clientNames: string[] = Array.isArray(projectSnap.data().clientNames) ? projectSnap.data().clientNames : [];
+        // Remove old name if present
+        if (oldName && clientNames.includes(oldName)) {
+          clientNames = clientNames.filter(n => n !== oldName);
+        }
+        // Add new name if not present
+        if (data.name.trim() && !clientNames.includes(data.name)) {
+          clientNames.push(data.name);
+        }
+        // Remove any empty strings from the array
+        clientNames = clientNames.filter(n => n && n.trim());
+        await updateDoc(projectRef, { clientNames });
       }
-      // Add new name if not present
-      if (data.name.trim() && !clientNames.includes(data.name)) {
-        clientNames.push(data.name);
-      }
-      // Remove any empty strings from the array
-      clientNames = clientNames.filter(n => n && n.trim());
-      await updateDoc(projectRef, { clientNames });
     }
   }
 }

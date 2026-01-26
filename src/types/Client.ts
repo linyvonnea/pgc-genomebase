@@ -7,8 +7,7 @@ export interface Client {
   sex?: "M" | "F" | "Other" | "";
   phoneNumber?: string;
   affiliationAddress?: string;
-  pid?: string;
-  projects?: string[];
+  pid?: string[];
   createdAt?: string |Date;
   haveSubmitted?: boolean;
   isContactPerson?: boolean;
