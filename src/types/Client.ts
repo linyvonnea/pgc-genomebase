@@ -8,6 +8,7 @@ export interface Client {
   phoneNumber?: string;
   affiliationAddress?: string;
   pid?: string;
+  projects?: string[];
   createdAt?: string |Date;
   haveSubmitted?: boolean;
   isContactPerson?: boolean;

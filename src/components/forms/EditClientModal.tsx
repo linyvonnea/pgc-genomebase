@@ -37,7 +37,6 @@ import { Client } from "@/types/Client";
 import { Project } from "@/types/Project";
 import { getProjects } from "@/services/projectsService";
 import { updateClientAndProjectName } from "@/services/updateClientAndProjectName";
-import { getClientProjects, addProjectToClient, removeProjectFromClient } from "@/services/clientProjectRelationService";
 import { toast } from "sonner";
 import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -79,27 +78,19 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
     },
   });
 
-  // Fetch project options and additional projects
+  // Fetch project options and load client's projects
   useEffect(() => {
     getProjects().then((projects) => {
       setProjectOptions(projects);
     });
     
-    // Load additional projects when modal opens
-    if (isOpen && client.cid) {
-      setLoadingProjects(true);
-      getClientProjects(client.cid).then((projects) => {
-        // Filter out the main project if it exists
-        const filtered = client.pid 
-          ? projects.filter(p => p !== client.pid)
-          : projects;
-        setAdditionalProjects(filtered);
-        setLoadingProjects(false);
-      }).catch(() => {
-        setLoadingProjects(false);
-      });
+    // Load projects from client document
+    if (isOpen) {
+      const clientProjects = client.projects || [];
+      setAdditionalProjects(clientProjects);
+      setLoadingProjects(false);
     }
-  }, [isOpen, client.cid, client.pid]);
+  }, [isOpen, client.projects]);
 
   // Filter project options by search
   const filteredProjectOptions = projectOptions.filter(
@@ -120,7 +111,7 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
       // Check if pid changed
       const pidChanged = client.pid !== data.pid;
       
-      // Include pid in the update data
+      // Include pid and projects in the update data
       const updateData = {
         name: data.name,
         email: data.email,
@@ -130,6 +121,7 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
         sex: data.sex,
         phoneNumber: data.phoneNumber,
         pid: data.pid,
+        projects: additionalProjects,
       };
       
       // Update client and handle project name synchronization
@@ -170,62 +162,35 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
   };
 
   const handleAddProject = async () => {
-    if (!selectedNewProject || !client.cid) return;
+    if (!selectedNewProject) return;
     
     // Check if project already exists
-    if (additionalProjects.includes(selectedNewProject) || client.pid === selectedNewProject) {
+    if (additionalProjects.includes(selectedNewProject)) {
       toast.error("Project already linked to this client");
       return;
     }
     
-    try {
-      await addProjectToClient(client.cid, selectedNewProject);
-      setAdditionalProjects(prev => [...prev, selectedNewProject]);
-      setSelectedNewProject("");
-      
-      // Log activity
-      await logActivity({
-        userId: adminInfo?.email || "system",
-        userEmail: adminInfo?.email || "system@pgc.admin",
-        userName: adminInfo?.name || "System",
-        action: "UPDATE",
-        entityType: "client",
-        entityId: client.cid,
-        entityName: client.name || client.cid,
-        description: `Added project ${selectedNewProject} to client ${client.name || client.cid}`,
-      });
-      
-      toast.success("Project added successfully!");
-    } catch (error) {
-      console.error("Error adding project:", error);
-      toast.error("Failed to add project");
-    }
+    setAdditionalProjects(prev => [...prev, selectedNewProject]);
+    setSelectedNewProject("");
+    toast.success("Project added! Click Save to apply changes.");
   };
 
-  const handleRemoveProject = async (projectId: string) => {
-    if (!client.cid) return;
+  const handleRemoveProject = (projectId: string) => {
+    const currentPid = form.watch("pid");
     
-    try {
-      await removeProjectFromClient(client.cid, projectId);
-      setAdditionalProjects(prev => prev.filter(p => p !== projectId));
-      
-      // Log activity
-      await logActivity({
-        userId: adminInfo?.email || "system",
-        userEmail: adminInfo?.email || "system@pgc.admin",
-        userName: adminInfo?.name || "System",
-        action: "UPDATE",
-        entityType: "client",
-        entityId: client.cid,
-        entityName: client.name || client.cid,
-        description: `Removed project ${projectId} from client ${client.name || client.cid}`,
-      });
-      
-      toast.success("Project removed successfully!");
-    } catch (error) {
-      console.error("Error removing project:", error);
-      toast.error("Failed to remove project");
+    // If removing the primary project, clear it
+    if (projectId === currentPid) {
+      form.setValue("pid", "");
     }
+    
+    // Remove from additional projects array
+    setAdditionalProjects(prev => prev.filter(p => p !== projectId));
+    toast.success("Project removed! Click Save to apply changes.");
+  };
+
+  const handleSetPrimaryProject = (projectId: string) => {
+    form.setValue("pid", projectId);
+    toast.success("Primary project updated! Click Save to apply changes.");
   };
 
   const handleDelete = async () => {
@@ -293,7 +258,9 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "info" | "projects")} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="info">Client Info</TabsTrigger>
-            <TabsTrigger value="projects">Projects ({(additionalProjects.length + (client.pid ? 1 : 0))})</TabsTrigger>
+            <TabsTrigger value="projects">
+              Projects ({[...new Set([form.watch("pid"), ...additionalProjects].filter(Boolean))].length})
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="info" className="space-y-3 mt-4">
@@ -558,93 +525,115 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
           <TabsContent value="projects" className="space-y-4 mt-4">
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">Primary Project</h3>
-                {client.pid ? (
-                  <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <FolderOpen className="h-4 w-4 text-blue-600" />
-                      <div>
-                        <p className="text-sm font-medium">{client.pid}</p>
-                        <p className="text-xs text-gray-500">
-                          {projectOptions.find(p => p.pid === client.pid)?.title || "Loading..."}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge variant="secondary" className="text-xs">Primary</Badge>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 italic">No primary project assigned</p>
-                )}
-              </div>
-              
-              <Separator />
-              
-              <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">Additional Projects</h3>
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">All Projects</h3>
+                <p className="text-xs text-gray-500 mb-3">Manage project associations. The primary project is highlighted in blue.</p>
                 
                 {loadingProjects ? (
                   <p className="text-sm text-gray-500">Loading projects...</p>
                 ) : (
                   <>
-                    {additionalProjects.length > 0 ? (
-                      <div className="space-y-2 mb-3">
-                        {additionalProjects.map((projId) => {
-                          const project = projectOptions.find(p => p.pid === projId);
-                          return (
-                            <div key={projId} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                              <div className="flex items-center gap-2">
-                                <FolderOpen className="h-4 w-4 text-gray-600" />
-                                <div>
-                                  <p className="text-sm font-medium">{projId}</p>
-                                  <p className="text-xs text-gray-500">
-                                    {project?.title || "Loading..."}
-                                  </p>
+                    {/* Display all projects (primary + additional) */}
+                    {(() => {
+                      const currentPid = form.watch("pid");
+                      const allProjectIds = [...new Set([currentPid, ...additionalProjects].filter(Boolean))];
+                      
+                      return allProjectIds.length > 0 ? (
+                        <div className="space-y-2 mb-3">
+                          {allProjectIds.map((projId) => {
+                            const project = projectOptions.find(p => p.pid === projId);
+                            const isPrimary = projId === currentPid;
+                            
+                            return (
+                              <div 
+                                key={projId} 
+                                className={`flex items-center justify-between p-3 border rounded-lg ${
+                                  isPrimary 
+                                    ? "bg-blue-50 border-blue-200" 
+                                    : "bg-gray-50 border-gray-200"
+                                }`}
+                              >
+                                <div className="flex items-center gap-2 flex-1">
+                                  <FolderOpen className={`h-4 w-4 ${isPrimary ? "text-blue-600" : "text-gray-600"}`} />
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <p className="text-sm font-medium">{projId}</p>
+                                      {isPrimary && (
+                                        <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
+                                          Primary
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-gray-500">
+                                      {project?.title || "Loading..."}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex gap-1">
+                                  {!isPrimary && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleSetPrimaryProject(projId)}
+                                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 text-xs h-7 px-2"
+                                    >
+                                      Set Primary
+                                    </Button>
+                                  )}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleRemoveProject(projId)}
+                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
                                 </div>
                               </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRemoveProject(projId)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500 italic mb-3">No additional projects linked</p>
-                    )}
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500 italic mb-3">No projects linked</p>
+                      );
+                    })()}
                     
-                    <div className="flex gap-2">
-                      <Select value={selectedNewProject} onValueChange={setSelectedNewProject}>
-                        <SelectTrigger className="h-9 flex-1">
-                          <SelectValue placeholder="Select project to add" />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-[200px]">
-                          {projectOptions
-                            .filter(p => p.pid !== client.pid && !additionalProjects.includes(p.pid || ""))
-                            .map((proj) => (
-                              <SelectItem key={proj.pid} value={proj.pid || ""}>
-                                <div className="flex flex-col">
-                                  <span className="font-medium text-sm">{proj.pid}</span>
-                                  <span className="text-xs text-gray-500">{proj.title}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={handleAddProject}
-                        disabled={!selectedNewProject}
-                        className="h-9"
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add
-                      </Button>
+                    <Separator className="my-3" />
+                    
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Add New Project</h4>
+                      <div className="flex gap-2">
+                        <Select value={selectedNewProject} onValueChange={setSelectedNewProject}>
+                          <SelectTrigger className="h-9 flex-1">
+                            <SelectValue placeholder="Select project to add" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[200px]">
+                            {projectOptions
+                              .filter(p => {
+                                const currentPid = form.watch("pid");
+                                const allProjectIds = [currentPid, ...additionalProjects];
+                                return !allProjectIds.includes(p.pid || "");
+                              })
+                              .map((proj) => (
+                                <SelectItem key={proj.pid} value={proj.pid || ""}>
+                                  <div className="flex flex-col">
+                                    <span className="font-medium text-sm">{proj.pid}</span>
+                                    <span className="text-xs text-gray-500">{proj.title}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handleAddProject}
+                          disabled={!selectedNewProject}
+                          className="h-9"
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add
+                        </Button>
+                      </div>
                     </div>
                   </>
                 )}
