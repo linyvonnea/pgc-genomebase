@@ -8,7 +8,9 @@ import { Client } from "@/types/Client"
 import { clientSchema } from "@/schemas/clientSchema"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown } from "lucide-react"
+import useAuth from "@/hooks/useAuth"
+import { usePermissions } from "@/hooks/usePermissions"
 
 // Helper to validate client data using Zod schema
 const validateClient = (data: any) => {
@@ -152,25 +154,32 @@ export const columns: ColumnDef<Client>[] = [
       // Lazy load EditClientModal to avoid SSR issues
       const EditClientModal = require("@/components/forms/EditClientModal").EditClientModal;
       const router = useRouter();
+      const { adminInfo } = useAuth();
+      const { canEdit, canCreate } = usePermissions(adminInfo?.role);
+
       return (
         <div className="flex items-center gap-2">
-          {/* Edit client modal button */}
-          <EditClientModal client={client} onSuccess={meta?.onSuccess} />
-          {/* Charge slip button */}
-          <Button
-            onClick={() => {
-              // Use primary project ID (first in array)
-              const primaryPid = Array.isArray(client.pid) ? client.pid[0] : client.pid;
-              router.push(
-                `/admin/charge-slips/new?clientId=${client.cid}&projectId=${primaryPid}`
-              );
-            }}
-            variant="outline"
-            size="sm"
-            className="whitespace-nowrap"
-          >
-            Charge Slip
-          </Button>
+          {/* Edit client modal button - only show if user has edit permission */}
+          {canEdit("clients") && (
+            <EditClientModal client={client} onSuccess={meta?.onSuccess} />
+          )}
+          {/* Charge slip button - only show if user can create charge slips */}
+          {canCreate("chargeSlips") && (
+            <Button
+              onClick={() => {
+                // Use primary project ID (first in array)
+                const primaryPid = Array.isArray(client.pid) ? client.pid[0] : client.pid;
+                router.push(
+                  `/admin/charge-slips/new?clientId=${client.cid}&projectId=${primaryPid}`
+                );
+              }}
+              variant="outline"
+              size="sm"
+              className="whitespace-nowrap"
+            >
+              Charge Slip
+            </Button>
+          )}
         </div>
       );
     },

@@ -19,6 +19,7 @@ import { getInquiries } from "@/services/inquiryService"
 import { AddInquiryModal } from "@/components/forms/InquiryModalForm"
 import { revalidatePath } from "next/cache"
 import { PermissionGuard } from "@/components/PermissionGuard"
+import { InquiryPageClient } from "./page-client"
 
 // Force dynamic rendering - this prevents static generation
 export const dynamic = 'force-dynamic';
@@ -75,6 +76,13 @@ export default async function InquiryPage() {
 
   return (
     <PermissionGuard module="inquiries" action="view">
+      <InquiryPageClient data={data} />
+    </PermissionGuard>
+  )
+}
+
+// Moved to page-client.tsx to avoid server/client component conflicts
+/*
       <div className="container mx-auto py-10">
         <div className="space-y-6">
           {/* Page Header */}
