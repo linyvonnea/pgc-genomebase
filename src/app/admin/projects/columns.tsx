@@ -3,7 +3,7 @@
 
 "use client"
 
-import { ColumnDef } from "@/tanstack/react-table"
+import { ColumnDef } from "@tanstack/react-table"
 import { Project } from "@/types/Project"
 import { projectSchema } from "@/schemas/projectSchema"
 import { Button } from "@/components/ui/button"
