@@ -13,6 +13,8 @@ import { Inquiry } from "@/types/Inquiry";
 import { inquirySchema } from "@/schemas/inquirySchema";
 import { Button } from "@/components/ui/button";
 import { EditInquiryModal } from "@/components/forms/EditInquiryModal";
+import useAuth from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 
 /**
  * Utility function to validate inquiry data using Zod schema
@@ -153,27 +155,33 @@ export const columns: ColumnDef<Inquiry>[] = [
     cell: ({ row }) => {
       const inquiry = row.original;
       const router = useRouter();
+      const { adminInfo } = useAuth();
+      const { canEdit, canCreate } = usePermissions(adminInfo?.role);
 
       return (
         <div className="flex items-center gap-2">
-          {/* Edit inquiry modal trigger */}
-          <EditInquiryModal
-            key={inquiry.id} // Force re-render when inquiry changes
-            inquiry={inquiry}
-            onSuccess={() => router.refresh()}
-          />
+          {/* Edit inquiry modal trigger - only show if user has edit permission */}
+          {canEdit("inquiries") && (
+            <EditInquiryModal
+              key={inquiry.id} // Force re-render when inquiry changes
+              inquiry={inquiry}
+              onSuccess={() => router.refresh()}
+            />
+          )}
           
-          {/* Generate quotation button */}
-          <Button
-            onClick={() =>
-              router.push(`/admin/quotations/new?inquiryId=${inquiry.id}`)
-            }
-            variant="outline"
-            size="sm"
-            className="whitespace-nowrap"
-          >
-            Quote
-          </Button>
+          {/* Generate quotation button - only show if user can create quotations */}
+          {canCreate("quotations") && (
+            <Button
+              onClick={() =>
+                router.push(`/admin/quotations/new?inquiryId=${inquiry.id}`)
+              }
+              variant="outline"
+              size="sm"
+              className="whitespace-nowrap"
+            >
+              Quote
+            </Button>
+          )}
         </div>
       );
     },

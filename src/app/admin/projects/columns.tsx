@@ -8,6 +8,8 @@ import { Project } from "@/types/Project"
 import { projectSchema } from "@/schemas/projectSchema"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import useAuth from "@/hooks/useAuth"
+import { usePermissions } from "@/hooks/usePermissions"
 
 // Column definitions for the projects table
 export const columns: ColumnDef<Project>[] = [
@@ -152,6 +154,14 @@ export const columns: ColumnDef<Project>[] = [
       const project = row.original;
       const EditProjectModal = require("@/components/forms/EditProjectModal").EditProjectModal;
       const router = useRouter();
+      const { adminInfo } = useAuth();
+      const { canEdit } = usePermissions(adminInfo?.role);
+
+      // Only show edit button if user has edit permission
+      if (!canEdit("projects")) {
+        return null;
+      }
+
       return (
         <div className="flex items-center gap-2">
           <EditProjectModal project={project} onSuccess={meta?.onSuccess} />
