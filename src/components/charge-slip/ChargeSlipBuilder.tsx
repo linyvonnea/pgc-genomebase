@@ -86,7 +86,7 @@ export default function ChargeSlipBuilder({
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const effectiveClientId = clientId || searchParams.get("clientId") || "";
-  const effectiveProjectId = projectId || searchParams.get("projectId") || "";
+  const urlProjectId = projectId || searchParams.get("projectId") || "";
 
   const { data: catalog = [] } = useQuery({
     queryKey: ["serviceCatalog"],
@@ -99,13 +99,16 @@ export default function ChargeSlipBuilder({
     enabled: !!effectiveClientId,
   });
 
+  // Use primary project (first pid) if no specific projectId provided
+  const client = sanitizeObject(clientData || fetchedClient || {});
+  const effectiveProjectId = urlProjectId || (Array.isArray(client?.pid) && client.pid.length > 0 ? client.pid[0] : "");
+
   const { data: fetchedProject } = useQuery({
     queryKey: ["project", effectiveProjectId],
     queryFn: () => getProjectById(effectiveProjectId),
     enabled: !!effectiveProjectId,
   });
 
-  const client = sanitizeObject(clientData || fetchedClient || {});
   const project = sanitizeObject(projectData || fetchedProject || {});
 
   // Log warning if client data is missing
