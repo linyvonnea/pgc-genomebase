@@ -9,11 +9,13 @@ import {
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { logActivity } from "@/services/activityLogService";
+import { UserRole } from "@/types/Permissions";
 
 interface AdminInfo {
   name: string;
   position: string;
-  email: string; 
+  email: string;
+  role?: UserRole;
 }
 
 export default function useAuth() {
@@ -42,9 +44,9 @@ export default function useAuth() {
       const adminSnap = await getDoc(adminRef);
 
       if (adminSnap.exists()) {
-        const { name, position } = adminSnap.data();
+        const { name, position, role } = adminSnap.data();
         setIsAdmin(true);
-        setAdminInfo({ name, position, email });
+        setAdminInfo({ name, position, email, role: role || "viewer" });
 
         // Save admin in /users if not already
         const userRef = doc(db, "users", uid);

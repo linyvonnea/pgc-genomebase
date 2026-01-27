@@ -21,8 +21,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus, Pencil, Search, Shield } from "lucide-react";
 import AdminModal from "./AdminModal";
 import { Admin } from "@/services/adminService";
+import { PermissionGuard } from "@/components/PermissionGuard";
 
 export default function AdminsManagementPage() {
+  return (
+    <PermissionGuard module="usersPermissions" action="view">
+      <AdminsManagementContent />
+    </PermissionGuard>
+  );
+}
+
+function AdminsManagementContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);

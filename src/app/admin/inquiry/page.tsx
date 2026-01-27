@@ -18,6 +18,7 @@ import { Inquiry } from "@/types/Inquiry"
 import { getInquiries } from "@/services/inquiryService"
 import { AddInquiryModal } from "@/components/forms/InquiryModalForm"
 import { revalidatePath } from "next/cache"
+import { PermissionGuard } from "@/components/PermissionGuard"
 
 // Force dynamic rendering - this prevents static generation
 export const dynamic = 'force-dynamic';
@@ -73,55 +74,57 @@ export default async function InquiryPage() {
   const totalCount = data.length
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="space-y-6">
-        {/* Page Header */}
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Inquiry Management</h1>
-            <p className="text-muted-foreground">
-              Manage and review research inquiries submitted to the database.
-            </p>
+    <PermissionGuard module="inquiries" action="view">
+      <div className="container mx-auto py-10">
+        <div className="space-y-6">
+          {/* Page Header */}
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Inquiry Management</h1>
+              <p className="text-muted-foreground">
+                Manage and review research inquiries submitted to the database.
+              </p>
+            </div>
+            {/* Add new inquiry button - opens modal */}
+            <AddInquiryModal />
           </div>
-          {/* Add new inquiry button - opens modal */}
-          <AddInquiryModal />
+          
+          {/* Statistics Dashboard Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Approved Clients Card - Green theme */}
+            <div className="rounded-lg border p-4">
+              <div className="text-2xl font-bold text-green-600">{approvedClientCount}</div>
+              <div className="text-sm text-muted-foreground">Approved Clients</div>
+            </div>
+            
+            {/* Quotation Only Card - Blue theme */}
+            <div className="rounded-lg border p-4">
+              <div className="text-2xl font-bold text-blue-600">{quotationOnlyCount}</div>
+              <div className="text-sm text-muted-foreground">Quotation Only</div>
+            </div>
+            
+            {/* Pending Inquiries Card - Yellow theme */}
+            <div className="rounded-lg border p-4">
+              <div className="text-2xl font-bold text-yellow-600">{pendingCount}</div>
+              <div className="text-sm text-muted-foreground">Pending</div>
+            </div>
+            
+            {/* Total Count Card - Gray theme */}
+            <div className="rounded-lg border p-4">
+              <div className="text-2xl font-bold text-gray-600">{totalCount}</div>
+              <div className="text-sm text-muted-foreground">Total Inquiries</div>
+            </div>
+          </div>
+          
+          {/* Main Data Table */}
+          {/* 
+            Uses the DataTable component with predefined columns.
+            Provides sorting, filtering, pagination, and search functionality.
+            Data is passed down from server-side fetch.
+          */}
+          <DataTable columns={columns} data={data} />
         </div>
-        
-        {/* Statistics Dashboard Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Approved Clients Card - Green theme */}
-          <div className="rounded-lg border p-4">
-            <div className="text-2xl font-bold text-green-600">{approvedClientCount}</div>
-            <div className="text-sm text-muted-foreground">Approved Clients</div>
-          </div>
-          
-          {/* Quotation Only Card - Blue theme */}
-          <div className="rounded-lg border p-4">
-            <div className="text-2xl font-bold text-blue-600">{quotationOnlyCount}</div>
-            <div className="text-sm text-muted-foreground">Quotation Only</div>
-          </div>
-          
-          {/* Pending Inquiries Card - Yellow theme */}
-          <div className="rounded-lg border p-4">
-            <div className="text-2xl font-bold text-yellow-600">{pendingCount}</div>
-            <div className="text-sm text-muted-foreground">Pending</div>
-          </div>
-          
-          {/* Total Count Card - Gray theme */}
-          <div className="rounded-lg border p-4">
-            <div className="text-2xl font-bold text-gray-600">{totalCount}</div>
-            <div className="text-sm text-muted-foreground">Total Inquiries</div>
-          </div>
-        </div>
-        
-        {/* Main Data Table */}
-        {/* 
-          Uses the DataTable component with predefined columns.
-          Provides sorting, filtering, pagination, and search functionality.
-          Data is passed down from server-side fetch.
-        */}
-        <DataTable columns={columns} data={data} />
       </div>
-    </div>
+    </PermissionGuard>
   )
 }

@@ -19,6 +19,7 @@ import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { Timestamp } from "firebase/firestore";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
+import { PermissionGuard } from "@/components/PermissionGuard";
 
 // Utility to normalize to string date
 const formatDate = (val: Date | string | Timestamp | null | undefined): string => {
@@ -37,6 +38,14 @@ const isTimestamp = (val: any): val is Timestamp =>
   val?.seconds !== undefined && val?.nanoseconds !== undefined;
 
 export default function ChargeSlipDetailPage() {
+  return (
+    <PermissionGuard module="chargeSlips" action="view">
+      <ChargeSlipDetailContent />
+    </PermissionGuard>
+  );
+}
+
+function ChargeSlipDetailContent() {
   const { adminInfo } = useAuth();
   const { chargeSlipNumber } = useParams() as { chargeSlipNumber: string };
   const router = useRouter();

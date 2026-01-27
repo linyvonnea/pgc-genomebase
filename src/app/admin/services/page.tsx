@@ -27,8 +27,17 @@ import { Card } from "@/components/ui/card";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import ServiceModal from "./ServiceModal";
 import { ServiceItem } from "@/types/ServiceItem";
+import { PermissionGuard } from "@/components/PermissionGuard";
 
 export default function ServicesManagementPage() {
+  return (
+    <PermissionGuard module="serviceCatalog" action="view">
+      <ServicesManagementContent />
+    </PermissionGuard>
+  );
+}
+
+function ServicesManagementContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [isModalOpen, setIsModalOpen] = useState(false);

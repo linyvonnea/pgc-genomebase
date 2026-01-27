@@ -30,7 +30,17 @@ async function getData(): Promise<Client[]> {
   }
 }
 
+import { PermissionGuard } from "@/components/PermissionGuard";
+
 export default function ClientPage() {
+  return (
+    <PermissionGuard module="clients" action="view">
+      <ClientPageContent />
+    </PermissionGuard>
+  );
+}
+
+function ClientPageContent() {
   // State for client data
   const [data, setData] = useState<Client[]>([]);
   const [openDialog, setOpenDialog] = useState(false);

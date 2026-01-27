@@ -5,8 +5,17 @@ import ChargeSlipBuilder from "@/components/charge-slip/ChargeSlipBuilder";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { getClientById, getProjectById } from "@/services/clientProjectService";
+import { PermissionGuard } from "@/components/PermissionGuard";
 
 export default function ChargeSlipBuilderPage() {
+  return (
+    <PermissionGuard module="chargeSlips" action="view">
+      <ChargeSlipBuilderContent />
+    </PermissionGuard>
+  );
+}
+
+function ChargeSlipBuilderContent() {
   const searchParams = useSearchParams();
   const clientId = searchParams.get("clientId") || "";
   const projectId = searchParams.get("projectId") || "";

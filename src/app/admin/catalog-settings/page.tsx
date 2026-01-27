@@ -15,8 +15,17 @@ import {
 } from "@/services/catalogSettingsService";
 import { CatalogSettings, CatalogItem, CatalogType, CATALOG_LABELS } from "@/types/CatalogSettings";
 import { Badge } from "@/components/ui/badge";
+import { PermissionGuard } from "@/components/PermissionGuard";
 
 export default function CatalogManagementPage() {
+  return (
+    <PermissionGuard module="catalogSettings" action="view">
+      <CatalogManagementContent />
+    </PermissionGuard>
+  );
+}
+
+function CatalogManagementContent() {
   const [catalogs, setCatalogs] = useState<CatalogSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<{ type: CatalogType; id: string; value: string; position?: string } | null>(null);

@@ -10,8 +10,17 @@ import { TimeFilter } from "@/components/dashboard/TimeFilter";
 import { useDashboardData } from "@/hooks/dashboardHook";
 import { DashboardContent } from "@/components/dashboard/DashboardContent";
 import { ExportButton } from "@/components/dashboard/ExportButton";
+import { PermissionGuard } from "@/components/PermissionGuard";
 
 export default function Dashboard() {
+  return (
+    <PermissionGuard module="dashboard" action="view">
+      <DashboardContent />
+    </PermissionGuard>
+  );
+}
+
+function DashboardContent() {
   // Custom hook to fetch and manage dashboard data and state
   const {
     userName,              

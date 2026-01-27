@@ -30,7 +30,17 @@ async function getData(): Promise<Project[]> {
   }
 }
 
+import { PermissionGuard } from "@/components/PermissionGuard";
+
 export default function ProjectPage() {
+  return (
+    <PermissionGuard module="projects" action="view">
+      <ProjectPageContent />
+    </PermissionGuard>
+  );
+}
+
+function ProjectPageContent() {
   // State for project data
   const [data, setData] = useState<Project[]>([]);
   // State for dialog open/close
