@@ -59,7 +59,7 @@ export type Permission =
  * Permission matrix defining what each role can do
  */
 const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
-  "super-admin": [
+  "superadmin": [
     // Full access to everything
     "manage_admins", "view_admins", "edit_admin", "delete_admin",
     "manage_clients", "view_clients", "edit_client", "delete_client",

@@ -167,14 +167,14 @@ function AdminsManagementContent() {
                     <TableCell>
                       <Badge 
                         className={
-                          admin.role === "super-admin" ? "bg-purple-100 text-purple-800" :
+                          admin.role === "superadmin" ? "bg-purple-100 text-purple-800" :
                           admin.role === "admin" ? "bg-blue-100 text-blue-800" :
                           admin.role === "moderator" ? "bg-green-100 text-green-800" :
                           "bg-gray-100 text-gray-800"
                         }
                       >
                         <Shield className="h-3 w-3 mr-1" />
-                        {admin.role === "super-admin" ? "Super Admin" :
+                        {admin.role === "superadmin" ? "Super Admin" :
                          admin.role === "admin" ? "Admin" :
                          admin.role === "moderator" ? "Moderator" :
                          "Viewer"}

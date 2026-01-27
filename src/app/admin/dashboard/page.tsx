@@ -15,12 +15,12 @@ import { PermissionGuard } from "@/components/PermissionGuard";
 export default function Dashboard() {
   return (
     <PermissionGuard module="dashboard" action="view">
-      <DashboardContent />
+      <DashboardPage />
     </PermissionGuard>
   );
 }
 
-function DashboardContent() {
+function DashboardPage() {
   // Custom hook to fetch and manage dashboard data and state
   const {
     userName,              
