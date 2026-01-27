@@ -23,7 +23,7 @@ import { PermissionGuard } from "@/components/PermissionGuard";
 
 export default function RoleManagementPage() {
   return (
-    <PermissionGuard module="roleManagement" action="view">
+    <PermissionGuard module="usersPermissions" action="view">
       <RoleManagementContent />
     </PermissionGuard>
   );

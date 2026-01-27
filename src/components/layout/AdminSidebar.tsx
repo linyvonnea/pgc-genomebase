@@ -37,7 +37,7 @@ const ROUTE_MODULE_MAP: Record<string, keyof RolePermissions> = {
   "/admin/manual-quotation": "manualQuotation",
   "/admin/services": "serviceCatalog",
   "/admin/catalog-settings": "catalogSettings",
-  "/admin/roles": "roleManagement",
+  "/admin/roles": "usersPermissions",
   "/admin/admins": "usersPermissions",
   "/admin/activity-logs": "activityLogs",
 };
