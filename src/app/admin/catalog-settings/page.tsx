@@ -63,12 +63,38 @@ export default function CatalogManagementPage() {
       const itemData = type === "personnelAssigned" 
         ? { value, position: newPersonnelPosition.trim() }
         : value;
-      await addCatalogItem(type, itemData as any);
+      
+      // Create the new item locally
+      const maxOrder = catalogs?.[type].reduce((max, item) => Math.max(max, item.order), 0) || 0;
+      const newItem = {
+        id: `${type}-${Date.now()}`,
+        value,
+        ...(type === "personnelAssigned" && newPersonnelPosition ? { position: newPersonnelPosition.trim() } : {}),
+        order: maxOrder + 1,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      // Update state immediately (optimistic update)
+      setCatalogs((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          [type]: [...prev[type], newItem],
+        };
+      });
+      
+      // Clear inputs
       setNewItemValue((prev) => ({ ...prev, [type]: "" }));
       setNewPersonnelPosition("");
-      await loadCatalogs();
+      
+      // Save to database in background
+      await addCatalogItem(type, itemData as any);
       toast.success("Item added successfully");
     } catch (error) {
+      // Revert on error
+      await loadCatalogs();
       toast.error("Failed to add item");
       console.error(error);
     }
@@ -85,11 +111,26 @@ export default function CatalogManagementPage() {
       if (type === "personnelAssigned" && newPosition !== undefined) {
         updates.position = newPosition;
       }
-      await updateCatalogItem(type, itemId, updates);
+      
+      // Update state immediately
+      setCatalogs((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          [type]: prev[type].map((item) =>
+            item.id === itemId ? { ...item, ...updates, updatedAt: new Date() } : item
+          ),
+        };
+      });
+      
       setEditingItem(null);
-      await loadCatalogs();
+      
+      // Save to database in background
+      await updateCatalogItem(type, itemId, updates);
       toast.success("Item updated successfully");
     } catch (error) {
+      // Revert on error
+      await loadCatalogs();
       toast.error("Failed to update item");
       console.error(error);
     }
@@ -99,10 +140,21 @@ export default function CatalogManagementPage() {
     if (!confirm("Are you sure you want to delete this item?")) return;
 
     try {
+      // Update state immediately (remove item)
+      setCatalogs((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          [type]: prev[type].filter((item) => item.id !== itemId),
+        };
+      });
+      
+      // Delete from database in background
       await deleteCatalogItem(type, itemId);
-      await loadCatalogs();
       toast.success("Item deleted successfully");
     } catch (error) {
+      // Revert on error
+      await loadCatalogs();
       toast.error("Failed to delete item");
       console.error(error);
     }
@@ -110,10 +162,25 @@ export default function CatalogManagementPage() {
 
   const handleToggleActive = async (type: CatalogType, item: CatalogItem) => {
     try {
-      await updateCatalogItem(type, item.id, { isActive: !item.isActive });
-      await loadCatalogs();
+      const newActiveState = !item.isActive;
+      
+      // Update state immediately
+      setCatalogs((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          [type]: prev[type].map((i) =>
+            i.id === item.id ? { ...i, isActive: newActiveState, updatedAt: new Date() } : i
+          ),
+        };
+      });
+      
+      // Save to database in background
+      await updateCatalogItem(type, item.id, { isActive: newActiveState });
       toast.success(item.isActive ? "Item deactivated" : "Item activated");
     } catch (error) {
+      // Revert on error
+      await loadCatalogs();
       toast.error("Failed to update item status");
       console.error(error);
     }
@@ -143,6 +210,12 @@ export default function CatalogManagementPage() {
                 onChange={(e) =>
                   setNewItemValue((prev) => ({ ...prev, [type]: e.target.value }))
                 }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddItem(type);
+                  }
+                }}
                 className="h-9"
               />
               <div className="flex gap-2">
@@ -151,7 +224,10 @@ export default function CatalogManagementPage() {
                   value={newPersonnelPosition}
                   onChange={(e) => setNewPersonnelPosition(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") handleAddItem(type);
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddItem(type);
+                    }
                   }}
                   className="h-9 flex-1"
                 />
@@ -170,7 +246,10 @@ export default function CatalogManagementPage() {
                   setNewItemValue((prev) => ({ ...prev, [type]: e.target.value }))
                 }
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleAddItem(type);
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddItem(type);
+                  }
                 }}
                 className="h-9"
               />
@@ -206,6 +285,13 @@ export default function CatalogManagementPage() {
                             onChange={(e) =>
                               setEditingItem({ ...editingItem, value: e.target.value })
                             }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleUpdateItem(type, item.id, editingItem.value, editingItem.position);
+                              }
+                              if (e.key === "Escape") setEditingItem(null);
+                            }}
                             placeholder="Name"
                             className="h-8"
                             autoFocus
@@ -216,8 +302,10 @@ export default function CatalogManagementPage() {
                               setEditingItem({ ...editingItem, position: e.target.value })
                             }
                             onKeyDown={(e) => {
-                              if (e.key === "Enter")
+                              if (e.key === "Enter") {
+                                e.preventDefault();
                                 handleUpdateItem(type, item.id, editingItem.value, editingItem.position);
+                              }
                               if (e.key === "Escape") setEditingItem(null);
                             }}
                             placeholder="Position"
@@ -231,8 +319,10 @@ export default function CatalogManagementPage() {
                             setEditingItem({ ...editingItem, value: e.target.value })
                           }
                           onKeyDown={(e) => {
-                            if (e.key === "Enter")
+                            if (e.key === "Enter") {
+                              e.preventDefault();
                               handleUpdateItem(type, item.id, editingItem.value);
+                            }
                             if (e.key === "Escape") setEditingItem(null);
                           }}
                           className="h-8 flex-1"
