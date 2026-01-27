@@ -101,15 +101,21 @@ export default function ChargeSlipBuilder({
 
   // Use primary project (first pid) if no specific projectId provided
   const client = sanitizeObject(clientData || fetchedClient || {});
-  const effectiveProjectId = urlProjectId || (Array.isArray(client?.pid) && client.pid.length > 0 ? client.pid[0] : "");
+  
+  // Get the effective project ID - prioritize URL param, then primary project from client's pid array
+  let effectiveProjectId = urlProjectId;
+  if (!effectiveProjectId && client && Array.isArray(client.pid) && client.pid.length > 0) {
+    effectiveProjectId = client.pid[0];
+    console.log("Using primary project ID from client:", effectiveProjectId);
+  }
 
-  const { data: fetchedProject } = useQuery({
+  const { data: fetchedProject, isLoading: isProjectLoading } = useQuery({
     queryKey: ["project", effectiveProjectId],
-    queryFn: () => getProjectById(effectiveProjectId),
+    queryFn: () => getProjectById(effectiveProjectId!),
     enabled: !!effectiveProjectId,
   });
 
-  const project = sanitizeObject(projectData || fetchedProject || {});
+  const project = projectData || fetchedProject || null;
 
   // Log warning if client data is missing
   useEffect(() => {
