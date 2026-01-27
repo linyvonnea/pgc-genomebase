@@ -30,6 +30,7 @@ export interface RolePermissions {
   
   // Administration
   usersPermissions: ModulePermission;
+  roleManagement: ModulePermission;
   activityLogs: ModulePermission;
 }
 
@@ -44,6 +45,7 @@ export const MODULE_LABELS: Record<keyof RolePermissions, string> = {
   serviceCatalog: "Service Catalog",
   catalogSettings: "Catalog Settings",
   usersPermissions: "Users & Permissions",
+  roleManagement: "Role Management",
   activityLogs: "Activity Logs",
 };
 
@@ -58,7 +60,7 @@ export const MODULE_SECTIONS = {
     "manualQuotation",
   ],
   configuration: ["serviceCatalog", "catalogSettings"],
-  administration: ["usersPermissions", "activityLogs"],
+  administration: ["usersPermissions", "roleManagement", "activityLogs"],
 } as const;
 
 // Default permissions for each role
@@ -74,6 +76,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     serviceCatalog: { view: true, create: false, edit: false, delete: false },
     catalogSettings: { view: false, create: false, edit: false, delete: false },
     usersPermissions: { view: false, create: false, edit: false, delete: false },
+    roleManagement: { view: false, create: false, edit: false, delete: false },
     activityLogs: { view: false, create: false, edit: false, delete: false },
   },
   moderator: {
@@ -87,6 +90,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     serviceCatalog: { view: true, create: false, edit: false, delete: false },
     catalogSettings: { view: false, create: false, edit: false, delete: false },
     usersPermissions: { view: false, create: false, edit: false, delete: false },
+    roleManagement: { view: false, create: false, edit: false, delete: false },
     activityLogs: { view: false, create: false, edit: false, delete: false },
   },
   admin: {
@@ -100,6 +104,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     serviceCatalog: { view: true, create: true, edit: true, delete: true },
     catalogSettings: { view: true, create: true, edit: true, delete: true },
     usersPermissions: { view: false, create: false, edit: false, delete: false },
+    roleManagement: { view: false, create: false, edit: false, delete: false },
     activityLogs: { view: true, create: false, edit: false, delete: false },
   },
   superadmin: {
@@ -113,6 +118,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     serviceCatalog: { view: true, create: true, edit: true, delete: true },
     catalogSettings: { view: true, create: true, edit: true, delete: true },
     usersPermissions: { view: true, create: true, edit: true, delete: true },
+    roleManagement: { view: true, create: false, edit: true, delete: false },
     activityLogs: { view: true, create: false, edit: false, delete: true },
   },
 };
