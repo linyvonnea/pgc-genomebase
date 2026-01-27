@@ -159,8 +159,10 @@ export const columns: ColumnDef<Client>[] = [
           {/* Charge slip button */}
           <Button
             onClick={() => {
+              // Use primary project ID (first in array)
+              const primaryPid = Array.isArray(client.pid) ? client.pid[0] : client.pid;
               router.push(
-                `/admin/charge-slips/new?clientId=${client.cid}&projectId=${client.pid}`
+                `/admin/charge-slips/new?clientId=${client.cid}&projectId=${primaryPid}`
               );
             }}
             variant="outline"
