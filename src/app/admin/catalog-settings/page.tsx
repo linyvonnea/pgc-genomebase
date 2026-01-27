@@ -16,6 +16,8 @@ import {
 import { CatalogSettings, CatalogItem, CatalogType, CATALOG_LABELS } from "@/types/CatalogSettings";
 import { Badge } from "@/components/ui/badge";
 import { PermissionGuard } from "@/components/PermissionGuard";
+import useAuth from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export default function CatalogManagementPage() {
   return (
@@ -26,6 +28,8 @@ export default function CatalogManagementPage() {
 }
 
 function CatalogManagementContent() {
+  const { adminInfo } = useAuth();
+  const { canDelete } = usePermissions(adminInfo?.role);
   const [catalogs, setCatalogs] = useState<CatalogSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<{ type: CatalogType; id: string; value: string; position?: string } | null>(null);
@@ -395,14 +399,16 @@ function CatalogManagementContent() {
                           <Check className="h-4 w-4 text-green-600" />
                         )}
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDeleteItem(type, item.id)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Trash2 className="h-4 w-4 text-red-600" />
-                      </Button>
+                      {canDelete("catalogSettings") && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDeleteItem(type, item.id)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
+                      )}
                     </>
                   )}
                 </div>

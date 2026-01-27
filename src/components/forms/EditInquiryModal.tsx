@@ -46,6 +46,7 @@ import { Pencil, Trash2, Mail, Building2, CheckCircle2, FileEdit } from "lucide-
 import { Inquiry } from "@/types/Inquiry";
 import { updateInquiryAction, deleteInquiryAction } from "@/app/actions/inquiryActions";
 import useAuth from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
 
 interface EditInquiryModalProps {
@@ -55,6 +56,7 @@ interface EditInquiryModalProps {
 
 export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) {
   const { adminInfo } = useAuth();
+  const { canDelete } = usePermissions(adminInfo?.role);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
@@ -308,18 +310,20 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
               
               {/* Action Buttons */}
               <div className="flex justify-between pt-2">
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={() => setShowDeleteAlert(true)}
-                  disabled={isLoading || isDeleting}
-                  className="min-w-[100px] hover:bg-red-600"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
+                {canDelete("inquiries") && (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => setShowDeleteAlert(true)}
+                    disabled={isLoading || isDeleting}
+                    className="min-w-[100px] hover:bg-red-600"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                )}
                 
-                <div className="flex gap-3">
+                <div className={`flex gap-3 ${!canDelete("inquiries") ? "w-full justify-end" : ""}`}>
                   <Button 
                     type="button" 
                     variant="outline" 
