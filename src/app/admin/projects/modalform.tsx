@@ -91,9 +91,15 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
   useEffect(() => {
     getInquiries().then((inquiries) => {
       setInquiryOptions(inquiries);
+    }).catch((error) => {
+      console.error("Error fetching inquiries:", error);
     });
+    
     getActiveCatalogItems("personnelAssigned").then((personnel) => {
       setPersonnelOptions(personnel);
+    }).catch((error) => {
+      console.error("Error fetching personnel options:", error);
+      setPersonnelOptions([]); // Set empty array as fallback
     });
   }, []);
 
