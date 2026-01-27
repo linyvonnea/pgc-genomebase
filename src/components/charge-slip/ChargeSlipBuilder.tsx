@@ -225,10 +225,10 @@ const subtotal = cleanedServices.reduce((sum, item) => {
           <TableHead className="w-[100px]">Unit</TableHead>
           <TableHead className="w-[100px] text-right">Price</TableHead>
           <TableHead className="w-[100px]">
-            <span className={!isBioinformatics ? "text-gray-300" : ""}>Samples</span>
+            <span className={isBioinformatics ? "font-semibold" : "font-normal"}>Samples</span>
           </TableHead>
           <TableHead className="w-[120px]">
-            <span className={!isTraining ? "text-gray-300" : ""}>Participants</span>
+            <span className={isTraining ? "font-semibold" : "font-normal"}>Participants</span>
           </TableHead>
           <TableHead className="w-[80px]">Qty</TableHead>
           <TableHead className="w-[120px] text-right">Amount</TableHead>
@@ -288,7 +288,6 @@ const subtotal = cleanedServices.reduce((sum, item) => {
                   }
                   disabled={!isSelected || !isBioinformatics}
                   placeholder={isBioinformatics ? "0" : "—"}
-                  className={!isBioinformatics ? "bg-gray-50 text-gray-400" : ""}
                 />
               </TableCell>
               <TableCell>
@@ -304,7 +303,6 @@ const subtotal = cleanedServices.reduce((sum, item) => {
                   }
                   disabled={!isSelected || !isTraining}
                   placeholder={isTraining ? "0" : "—"}
-                  className={!isTraining ? "bg-gray-50 text-gray-400" : ""}
                 />
               </TableCell>
               <TableCell>
