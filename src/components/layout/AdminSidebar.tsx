@@ -15,6 +15,7 @@ import {
   ScrollText,
   Settings,
   ShieldCheck,
+  Sliders,
 } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,61 +29,77 @@ export function AdminSidebar() {
 
   const isActive = (href: string) => pathname === href;
 
-  const navItems = [
-    { 
-      href: "/admin/dashboard", 
-      label: "Dashboard", 
-      icon: LayoutDashboard,
+  // Navigation sections with grouped items
+  const navigationSections = [
+    {
+      title: "OPERATIONS",
+      items: [
+        { 
+          href: "/admin/dashboard", 
+          label: "Dashboard", 
+          icon: LayoutDashboard,
+        },
+        { 
+          href: "/admin/inquiry", 
+          label: "Inquiries", 
+          icon: MessageSquare,
+        },
+        { 
+          href: "/admin/projects", 
+          label: "Projects", 
+          icon: LibraryBig,
+        },
+        { 
+          href: "/admin/clients", 
+          label: "Clients", 
+          icon: Users,
+        },
+        { 
+          href: "/admin/quotations", 
+          label: "Quotations", 
+          icon: FileText,
+        },
+        { 
+          href: "/admin/charge-slips", 
+          label: "Charge Slips", 
+          icon: Receipt,
+        },
+        { 
+          href: "/admin/manual-quotation", 
+          label: "Manual Quotation", 
+          icon: Calculator,
+        },
+      ]
     },
-    { 
-      href: "/admin/inquiry", 
-      label: "Inquiries", 
-      icon: MessageSquare,
+    {
+      title: "CONFIGURATION",
+      items: [
+        { 
+          href: "/admin/services", 
+          label: "Service Catalog", 
+          icon: Settings,
+        },
+        { 
+          href: "/admin/catalog-settings", 
+          label: "Catalog Settings", 
+          icon: Sliders,
+        },
+      ]
     },
-    { 
-      href: "/admin/projects", 
-      label: "Projects", 
-      icon: LibraryBig,
-    },
-    { 
-      href: "/admin/clients", 
-      label: "Clients", 
-      icon: Users,
-    },
-    { 
-      href: "/admin/quotations", 
-      label: "Quotations", 
-      icon: FileText,
-    },
-    { 
-      href: "/admin/charge-slips", 
-      label: "Charge Slips", 
-      icon: Receipt,
-    },
-    { 
-      href: "/admin/manual-quotation", 
-      label: "Manual Quotation", 
-      icon: Calculator,
-    },
-    { 
-      href: "/admin/services", 
-      label: "Service Catalog", 
-      icon: Settings,
-    },
-    { 
-      href: "/admin/catalog-settings", 
-      label: "Catalog Settings", 
-      icon: Settings,
-    },
-    { 
-      href: "/admin/admins", 
-      label: "Users & Permissions", 
-      icon: ShieldCheck,
-    },
-    { 
-      href: "/admin/activity-logs", 
-      label: "Activity Logs", 
-      icon: ScrollText,
+    {
+      title: "ADMINISTRATION",
+      items: [
+        { 
+          href: "/admin/admins", 
+          label: "Users & Permissions", 
+          icon: ShieldCheck,
+        },
+        { 
+          href: "/admin/activity-logs", 
+          label: "Activity Logs", 
+          icon: ScrollText,
+        },
+      ]
     },
   ];
 
@@ -106,22 +123,41 @@ export function AdminSidebar() {
       </div>
 
       {/* Clean Navigation */}
-      <div className="flex-1 p-4">
-        <nav className="space-y-1">
-          {navItems.map(({ href, label, icon: Icon }) => (
-            <Link key={href} href={href}>
-              <div
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-                  isActive(href)
-                    ? "bg-[#166FB5] text-white"
-                    : "text-slate-700 hover:bg-slate-50"
-                )}
-              >
-                <Icon className="w-4 h-4" />
-                <span className="text-sm font-medium flex-1">{label}</span>
+      <div className="flex-1 overflow-y-auto p-4">
+        <nav className="space-y-6">
+          {navigationSections.map((section, sectionIndex) => (
+            <div key={section.title}>
+              {/* Section Header */}
+              <div className="px-3 mb-2">
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  {section.title}
+                </h3>
               </div>
-            </Link>
+              
+              {/* Section Items */}
+              <div className="space-y-1">
+                {section.items.map(({ href, label, icon: Icon }) => (
+                  <Link key={href} href={href}>
+                    <div
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+                        isActive(href)
+                          ? "bg-[#166FB5] text-white"
+                          : "text-slate-700 hover:bg-slate-50"
+                      )}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span className="text-sm font-medium flex-1">{label}</span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              
+              {/* Divider between sections (except last) */}
+              {sectionIndex < navigationSections.length - 1 && (
+                <div className="mt-4 border-t border-slate-100" />
+              )}
+            </div>
           ))}
         </nav>
       </div>
