@@ -16,6 +16,7 @@ import {
   Settings,
   ShieldCheck,
   Sliders,
+  Shield,
 } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -89,6 +90,11 @@ export function AdminSidebar() {
     {
       title: "ADMINISTRATION",
       items: [
+        { 
+          href: "/admin/roles", 
+          label: "Role Management", 
+          icon: Shield,
+        },
         { 
           href: "/admin/admins", 
           label: "Users & Permissions", 
