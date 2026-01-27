@@ -497,14 +497,18 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       <div className="col-span-2">
         <Label className="text-xs">Personnel Assigned</Label>
         <Select value={formData.personnelAssigned || ""} onValueChange={val => handleSelect("personnelAssigned", val)}>
-          <SelectTrigger className="h-9"><SelectValue placeholder="Select personnel" /></SelectTrigger>
+          <SelectTrigger className="h-9">
+            <SelectValue placeholder={personnelOptions.length > 0 ? "Select personnel" : "No personnel available"} />
+          </SelectTrigger>
           <SelectContent>
             {personnelOptions.length > 0 ? (
               personnelOptions.map((person) => (
                 <SelectItem key={person} value={person}>{person}</SelectItem>
               ))
             ) : (
-              <SelectItem value="" disabled>No personnel available</SelectItem>
+              <div className="p-2 text-sm text-center text-gray-500">
+                No personnel configured. Add personnel in Catalog Settings.
+              </div>
             )}
           </SelectContent>
         </Select>
