@@ -388,19 +388,21 @@ function CatalogManagementContent() {
                           <Pencil className="h-4 w-4 text-blue-600" />
                         </Button>
                       )}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleToggleActive(type, item)}
-                        className="h-8 w-8 p-0"
-                        title={item.isActive ? "Deactivate" : "Activate"}
-                      >
-                        {item.isActive ? (
-                          <X className="h-4 w-4 text-orange-600" />
-                        ) : (
-                          <Check className="h-4 w-4 text-green-600" />
-                        )}
-                      </Button>
+                      {canEdit("catalogSettings") && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleToggleActive(type, item)}
+                          className="h-8 w-8 p-0"
+                          title={item.isActive ? "Deactivate" : "Activate"}
+                        >
+                          {item.isActive ? (
+                            <X className="h-4 w-4 text-orange-600" />
+                          ) : (
+                            <Check className="h-4 w-4 text-green-600" />
+                          )}
+                        </Button>
+                      )}
                       {canDelete("catalogSettings") && (
                         <Button
                           size="sm"
