@@ -222,18 +222,27 @@ export default function QuotationBuilder({
     return result;
   }, [search, catalog, showSelectedOnly, selectedServices]);
 
-  const renderTable = (services: ServiceItem[], serviceType: string) => (
+  const renderTable = (services: ServiceItem[], serviceType: string) => {
+    const normalizedType = serviceType.toLowerCase();
+    const isBioinformatics = normalizedType === "bioinformatics";
+    const isTraining = normalizedType === "training";
+    
+    return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>✔</TableHead>
-          <TableHead>Service</TableHead>
-          <TableHead>Unit</TableHead>
-          <TableHead>Price</TableHead>
-          {serviceType === "bioinformatics" && <TableHead>Samples</TableHead>}
-          {serviceType === "training" && <TableHead>Participants</TableHead>}
-          <TableHead>Qty</TableHead>
-          <TableHead>Amount</TableHead>
+          <TableHead className="w-[50px]">✔</TableHead>
+          <TableHead className="min-w-[250px]">Service</TableHead>
+          <TableHead className="w-[100px]">Unit</TableHead>
+          <TableHead className="w-[100px] text-right">Price</TableHead>
+          <TableHead className="w-[100px]">
+            <span className={!isBioinformatics ? "text-gray-300" : ""}>Samples</span>
+          </TableHead>
+          <TableHead className="w-[120px]">
+            <span className={!isTraining ? "text-gray-300" : ""}>Participants</span>
+          </TableHead>
+          <TableHead className="w-[80px]">Qty</TableHead>
+          <TableHead className="w-[120px] text-right">Amount</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -247,13 +256,13 @@ export default function QuotationBuilder({
           // Calculate amount based on service type
           let amount = 0;
           if (isSelected && typeof quantity === "number") {
-            if (serviceType === "bioinformatics" && typeof samples === "number") {
+            if (isBioinformatics && typeof samples === "number") {
               const samplesAmount = calculateItemTotal(samples, price, {
                 minQuantity: (item as any).minQuantity,
                 additionalUnitPrice: (item as any).additionalUnitPrice,
               });
               amount = samplesAmount * quantity;
-            } else if (serviceType === "training" && typeof participants === "number") {
+            } else if (isTraining && typeof participants === "number") {
               const participantsAmount = calculateItemTotal(participants, price, {
                 minQuantity: (item as any).minParticipants,
                 additionalUnitPrice: (item as any).additionalParticipantPrice,
@@ -277,40 +286,38 @@ export default function QuotationBuilder({
               <TableCell className="text-right">
                 {item.price.toFixed(2)}
               </TableCell>
-              {serviceType === "bioinformatics" && (
-                <TableCell>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={samples}
-                    onChange={(e) =>
-                      updateSamples(
-                        item.id,
-                        e.target.value === "" ? "" : +e.target.value
-                      )
-                    }
-                    disabled={!isSelected}
-                    placeholder="0"
-                  />
-                </TableCell>
-              )}
-              {serviceType === "training" && (
-                <TableCell>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={participants}
-                    onChange={(e) =>
-                      updateParticipants(
-                        item.id,
-                        e.target.value === "" ? "" : +e.target.value
-                      )
-                    }
-                    disabled={!isSelected}
-                    placeholder="0"
-                  />
-                </TableCell>
-              )}
+              <TableCell>
+                <Input
+                  type="number"
+                  min={0}
+                  value={samples}
+                  onChange={(e) =>
+                    updateSamples(
+                      item.id,
+                      e.target.value === "" ? "" : +e.target.value
+                    )
+                  }
+                  disabled={!isSelected || !isBioinformatics}
+                  placeholder={isBioinformatics ? "0" : "—"}
+                  className={!isBioinformatics ? "bg-gray-50 text-gray-400" : ""}
+                />
+              </TableCell>
+              <TableCell>
+                <Input
+                  type="number"
+                  min={0}
+                  value={participants}
+                  onChange={(e) =>
+                    updateParticipants(
+                      item.id,
+                      e.target.value === "" ? "" : +e.target.value
+                    )
+                  }
+                  disabled={!isSelected || !isTraining}
+                  placeholder={isTraining ? "0" : "—"}
+                  className={!isTraining ? "bg-gray-50 text-gray-400" : ""}
+                />
+              </TableCell>
               <TableCell>
                 <Input
                   type="number"
@@ -325,13 +332,14 @@ export default function QuotationBuilder({
                   disabled={!isSelected}
                 />
               </TableCell>
-              <TableCell>{amount.toFixed(2)}</TableCell>
+              <TableCell className="text-right">{amount.toFixed(2)}</TableCell>
             </TableRow>
           );
         })}
       </TableBody>
     </Table>
-  );
+    );
+  };
 
   const handleSaveQuotation = async () => {
     try {
