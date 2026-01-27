@@ -5,8 +5,8 @@ import { Admin, AdminRole, ADMIN_ROLES } from "@/services/adminService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAdminRole } from "@/hooks/useAdminRole";
-import { canEdit, canDelete, canManageAdmins } from "@/lib/permissions";
+import useAuth from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   Select,
   SelectContent,
@@ -37,11 +37,8 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
   const isEdit = !!admin;
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const { role: currentUserRole } = useAdminRole();
-  
-  const canEditAdmin = canEdit(currentUserRole, "admin");
-  const canDeleteAdmin = canDelete(currentUserRole, "admin");
-  const canManage = canManageAdmins(currentUserRole);
+  const { adminInfo } = useAuth();
+  const { canEdit: canEditPerm, canDelete: canDeletePerm } = usePermissions(adminInfo?.role);
 
   const [formData, setFormData] = useState({
     email: admin?.email || "",
@@ -128,7 +125,7 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
           </DialogDescription>
         </DialogHeader>
 
-        {!canEditAdmin && isEdit && (
+        {!canEditPerm("usersPermissions") && isEdit && (
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3">
             <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-blue-800">
@@ -189,7 +186,7 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
                   placeholder="Enter full name"
                   value={formData.name}
                   onChange={(e) => handleChange("name", e.target.value)}
-                  disabled={isEdit && !canEditAdmin}
+                  disabled={isEdit && !canEditPerm("usersPermissions")}
                 />
               </div>
 
@@ -205,7 +202,7 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
                     value={formData.position}
                     onChange={(e) => handleChange("position", e.target.value)}
                     className="pl-9"
-                    disabled={isEdit && !canEditAdmin}
+                    disabled={isEdit && !canEditPerm("usersPermissions")}
                   />
                 </div>
               </div>
@@ -219,7 +216,7 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
               <Select
                 value={formData.role}
                 onValueChange={(value) => handleChange("role", value as AdminRole)}
-                disabled={isEdit && !canEditAdmin}
+                disabled={isEdit && !canEditPerm("usersPermissions")}
               >
                 <SelectTrigger className="w-full">
                   <div className="flex items-center gap-2">
@@ -248,7 +245,7 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
                 placeholder="https://example.com/photo.jpg"
                 value={formData.photoURL}
                 onChange={(e) => handleChange("photoURL", e.target.value)}
-                disabled={isEdit && !canEditAdmin}
+                disabled={isEdit && !canEditPerm("usersPermissions")}
               />
               <p className="text-xs text-muted-foreground">
                 Leave empty to use Google account photo
@@ -258,7 +255,7 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
 
           {/* Actions */}
           <div className="flex justify-between pt-4">
-            {isEdit && canDeleteAdmin && (
+            {isEdit && canDeletePerm("usersPermissions") && (
               <Button
                 variant="destructive"
                 onClick={handleDelete}
@@ -268,14 +265,14 @@ export default function AdminModal({ admin, onClose, onSuccess }: AdminModalProp
                 {deleteLoading ? "Removing..." : "Remove User"}
               </Button>
             )}
-            <div className={`flex gap-2 ${!isEdit || !canDeleteAdmin ? "w-full justify-end" : ""}`}>
+            <div className={`flex gap-2 ${!isEdit || !canDeletePerm("usersPermissions") ? "w-full justify-end" : ""}`}>
               <Button variant="outline" onClick={onClose} disabled={loading || deleteLoading}>
                 Cancel
               </Button>
-              {(canEditAdmin || !isEdit) && (
+              {(canEditPerm("usersPermissions") || !isEdit) && (
                 <Button
                   onClick={handleSubmit}
-                  disabled={loading || deleteLoading || (isEdit && !canEditAdmin)}
+                  disabled={loading || deleteLoading || (isEdit && !canEditPerm("usersPermissions"))}
                   className="shadow-md"
                 >
                   <Save className="h-4 w-4 mr-2" />
