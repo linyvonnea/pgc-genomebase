@@ -152,3 +152,13 @@ export async function getNextCid(year: number): Promise<string> {
 
   return `CL-${year}-${padded}`;
 }
+
+/**
+ * Check if a client ID already exists in the database.
+ */
+export async function checkCidExists(cid: string): Promise<boolean> {
+  const clientsRef = collection(db, "clients");
+  const clientsQuery = query(clientsRef, where("cid", "==", cid));
+  const snapshot = await getDocs(clientsQuery);
+  return !snapshot.empty;
+}
