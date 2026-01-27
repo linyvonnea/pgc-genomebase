@@ -20,17 +20,21 @@ export function PermissionGuard({
   fallbackPath = "/admin/dashboard" 
 }: PermissionGuardProps) {
   const router = useRouter();
-  const { adminInfo } = useAuth();
-  const { checkPermission, loading } = usePermissions(adminInfo?.role);
+  const { adminInfo, loading: authLoading } = useAuth();
+  const { checkPermission, loading: permissionsLoading } = usePermissions(adminInfo?.role);
+
+  // Wait for both auth and permissions to load
+  const isLoading = authLoading || permissionsLoading;
 
   useEffect(() => {
-    if (!loading && !checkPermission(module, action)) {
+    // Only check permissions after both auth and permissions are loaded
+    if (!isLoading && (!adminInfo || !checkPermission(module, action))) {
       router.push(fallbackPath);
     }
-  }, [loading, module, action, checkPermission, router, fallbackPath]);
+  }, [isLoading, adminInfo, module, action, checkPermission, router, fallbackPath]);
 
-  // Show loading or nothing while checking permissions
-  if (loading || !checkPermission(module, action)) {
+  // Show loading while checking auth or permissions
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -39,6 +43,11 @@ export function PermissionGuard({
         </div>
       </div>
     );
+  }
+
+  // If not loading and no permission, show nothing (will redirect via useEffect)
+  if (!checkPermission(module, action)) {
+    return null;
   }
 
   return <>{children}</>;
