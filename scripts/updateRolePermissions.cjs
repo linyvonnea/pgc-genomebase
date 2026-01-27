@@ -1,70 +1,23 @@
 /**
- * Role-Based Access Control (RBAC) Types
- * Defines roles, permissions, and access control structure
+ * Update Role Permissions in Firestore
+ * This script updates the rolePermissions collection with the latest default permissions
  */
 
-export type UserRole = "viewer" | "moderator" | "admin" | "superadmin";
+const admin = require("firebase-admin");
+const path = require("path");
 
-export type PermissionAction = "view" | "create" | "edit" | "delete";
+// Initialize Firebase Admin
+const serviceAccount = require(path.join(__dirname, "serviceAccountKey.json"));
 
-export type ModulePermission = {
-  view: boolean;
-  create: boolean;
-  edit: boolean;
-  delete: boolean;
-};
-
-export interface RolePermissions {
-  // Operations
-  dashboard: ModulePermission;
-  inquiries: ModulePermission;
-  projects: ModulePermission;
-  clients: ModulePermission;
-  quotations: ModulePermission;
-  chargeSlips: ModulePermission;
-  manualQuotation: ModulePermission;
-  
-  // Configuration
-  serviceCatalog: ModulePermission;
-  catalogSettings: ModulePermission;
-  
-  // Administration
-  usersPermissions: ModulePermission;
-  roleManagement: ModulePermission;
-  activityLogs: ModulePermission;
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
 }
 
-export const MODULE_LABELS: Record<keyof RolePermissions, string> = {
-  dashboard: "Dashboard",
-  inquiries: "Inquiries",
-  projects: "Projects",
-  clients: "Clients",
-  quotations: "Quotations",
-  chargeSlips: "Charge Slips",
-  manualQuotation: "Manual Quotation",
-  serviceCatalog: "Service Catalog",
-  catalogSettings: "Catalog Settings",
-  usersPermissions: "Users & Permissions",
-  roleManagement: "Role Management",
-  activityLogs: "Activity Logs",
-};
+const db = admin.firestore();
 
-export const MODULE_SECTIONS = {
-  operations: [
-    "dashboard",
-    "inquiries",
-    "projects",
-    "clients",
-    "quotations",
-    "chargeSlips",
-    "manualQuotation",
-  ],
-  configuration: ["serviceCatalog", "catalogSettings"],
-  administration: ["usersPermissions", "roleManagement", "activityLogs"],
-} as const;
-
-// Default permissions for each role
-export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
+const DEFAULT_ROLE_PERMISSIONS = {
   viewer: {
     dashboard: { view: true, create: false, edit: false, delete: false },
     inquiries: { view: true, create: false, edit: false, delete: false },
@@ -123,16 +76,42 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
   },
 };
 
-export const ROLE_LABELS: Record<UserRole, string> = {
-  viewer: "Viewer",
-  moderator: "Moderator",
-  admin: "Admin",
-  superadmin: "Superadmin",
-};
+async function updateRolePermissions() {
+  try {
+    console.log("🔄 Updating role permissions in Firestore...\n");
 
-export const ROLE_DESCRIPTIONS: Record<UserRole, string> = {
-  viewer: "Read-only access to view data",
-  moderator: "Can create and edit operational records",
-  admin: "Full control except user management",
-  superadmin: "Complete system access and control",
-};
+    const roles = ["viewer", "moderator", "admin", "superadmin"];
+
+    for (const role of roles) {
+      const roleRef = db.collection("rolePermissions").doc(role);
+      const permissions = DEFAULT_ROLE_PERMISSIONS[role];
+
+      await roleRef.set(
+        {
+          ...permissions,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedBy: "migration-script",
+        },
+        { merge: true }
+      );
+
+      console.log(`✅ Updated permissions for role: ${role}`);
+      console.log(`   - Service Catalog Create: ${permissions.serviceCatalog.create}`);
+      console.log(`   - Role Management View: ${permissions.roleManagement.view}`);
+      console.log("");
+    }
+
+    console.log("✅ All role permissions updated successfully!");
+    console.log("\n📝 Summary:");
+    console.log("   - Admin role: serviceCatalog.create = true");
+    console.log("   - Admin role: roleManagement = all false");
+    console.log("   - Only Superadmin can access Role Management");
+    
+    process.exit(0);
+  } catch (error) {
+    console.error("❌ Error updating role permissions:", error);
+    process.exit(1);
+  }
+}
+
+updateRolePermissions();
