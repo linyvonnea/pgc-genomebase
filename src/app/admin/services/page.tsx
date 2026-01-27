@@ -5,8 +5,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getServiceCatalog } from "@/services/serviceCatalogService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAdminRole } from "@/hooks/useAdminRole";
-import { hasPermission } from "@/lib/permissions";
+import useAuth from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   Table,
   TableBody,
@@ -43,10 +43,8 @@ function ServicesManagementContent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<ServiceItem | null>(null);
   const queryClient = useQueryClient();
-  const { role } = useAdminRole();
-  const canManageServices = hasPermission(role, "manage_services");
-  const canEditService = hasPermission(role, "edit_service");
-  const canDeleteService = hasPermission(role, "delete_service");
+  const { adminInfo } = useAuth();
+  const { canCreate, canEdit } = usePermissions(adminInfo?.role);
 
   const { data: services = [], isLoading } = useQuery({
     queryKey: ["serviceCatalog"],
@@ -106,7 +104,7 @@ function ServicesManagementContent() {
             Manage all services, pricing, and configurations ({filteredServices.length} services)
           </p>
         </div>
-        {canManageServices && (
+        {canCreate("serviceCatalog") && (
           <Button onClick={handleAdd} className="shadow-md">
             <Plus className="h-4 w-4 mr-2" />
             Add Service
@@ -207,7 +205,7 @@ function ServicesManagementContent() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          {canEditService && (
+                          {canEdit("serviceCatalog") && (
                             <Button
                               variant="ghost"
                               size="sm"
