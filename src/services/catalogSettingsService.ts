@@ -169,14 +169,22 @@ export async function reorderCatalogItems(
 
 /**
  * Get active items only (for use in forms)
+ * Returns string[] for most catalogs, but CatalogItem[] for personnelAssigned to include position
  */
-export async function getActiveCatalogItems(type: CatalogType): Promise<string[]> {
+export async function getActiveCatalogItems(type: CatalogType): Promise<string[] | CatalogItem[]> {
   try {
     const items = await getCatalog(type);
-    return items
+    const activeItems = items
       .filter((item) => item.isActive)
-      .sort((a, b) => a.order - b.order)
-      .map((item) => item.value);
+      .sort((a, b) => a.order - b.order);
+    
+    // For personnelAssigned, return full items with position
+    if (type === "personnelAssigned") {
+      return activeItems;
+    }
+    
+    // For other catalogs, return just the values as strings
+    return activeItems.map((item) => item.value);
   } catch (error) {
     console.error(`Error fetching active catalog items for ${type}:`, error);
     return []; // Return empty array as fallback
