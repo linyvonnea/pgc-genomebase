@@ -42,6 +42,7 @@ import { deleteDoc, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface EditClientModalProps {
   client: Client;
@@ -50,6 +51,7 @@ interface EditClientModalProps {
 
 export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
   const { adminInfo } = useAuth();
+  const { canDelete } = usePermissions(adminInfo?.role);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -433,17 +435,19 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
             <Separator className="my-4" />
             
             <div className="flex justify-between items-center pt-2">
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => setShowDeleteConfirm(true)}
-                disabled={isLoading}
-                className="min-w-[100px] hover:bg-red-600"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </Button>
-              <div className="flex gap-3">
+              {canDelete("clients") && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={isLoading}
+                  className="min-w-[100px] hover:bg-red-600"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              )}
+              <div className={`flex gap-3 ${!canDelete("clients") ? "w-full justify-end" : ""}`}>
                 <Button 
                   type="button" 
                   variant="outline" 

@@ -25,6 +25,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { saveService, deleteService } from "@/services/serviceCatalogService";
 import { FileText, DollarSign, Settings, Save, Trash2 } from "lucide-react";
+import useAuth from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface ServiceModalProps {
   service: ServiceItem | null;
@@ -34,6 +36,8 @@ interface ServiceModalProps {
 
 export default function ServiceModal({ service, onClose, onSuccess }: ServiceModalProps) {
   const isEdit = !!service;
+  const { adminInfo } = useAuth();
+  const { canDelete } = usePermissions(adminInfo?.role);
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
@@ -338,7 +342,7 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
 
           {/* Actions */}
           <div className="flex justify-between pt-4">
-            {isEdit && (
+            {isEdit && canDelete("serviceCatalog") && (
               <Button
                 variant="destructive"
                 onClick={handleDelete}
@@ -348,7 +352,7 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
                 {deleteLoading ? "Deleting..." : "Delete"}
               </Button>
             )}
-            <div className={`flex gap-2 ${!isEdit ? "w-full" : ""}`}>
+            <div className={`flex gap-2 ${!isEdit || !canDelete("serviceCatalog") ? "w-full justify-end" : ""}`}>
               <Button variant="outline" onClick={onClose} disabled={loading || deleteLoading}>
                 Cancel
               </Button>
