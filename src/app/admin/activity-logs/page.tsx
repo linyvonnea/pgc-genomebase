@@ -33,8 +33,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Eye, Download, RefreshCw } from "lucide-react";
+import { PermissionGuard } from "@/components/PermissionGuard";
 
 export default function ActivityLogsPage() {
+  return (
+    <PermissionGuard module="activityLogs" action="view">
+      <ActivityLogsContent />
+    </PermissionGuard>
+  );
+}
+
+function ActivityLogsContent() {
   const [entityTypeFilter, setEntityTypeFilter] = useState<EntityType | "all">("all");
   const [actionFilter, setActionFilter] = useState<ActionType | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");

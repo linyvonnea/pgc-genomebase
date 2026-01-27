@@ -1,7 +1,9 @@
 import { collection, getDocs, doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { UserRole, ROLE_LABELS, ROLE_DESCRIPTIONS } from "@/types/Permissions";
 
-export type AdminRole = "super-admin" | "admin" | "moderator" | "viewer";
+// Use UserRole from Permissions for consistency
+export type AdminRole = UserRole;
 
 export interface Admin {
   uid: string;
@@ -15,24 +17,24 @@ export interface Admin {
 }
 
 export const ADMIN_ROLES: { value: AdminRole; label: string; description: string }[] = [
-  { value: "super-admin", label: "Super Admin", description: "Full system access with all privileges" },
-  { value: "admin", label: "Admin", description: "Manage users, content, and system settings" },
-  { value: "moderator", label: "Moderator", description: "Moderate content and manage basic operations" },
-  { value: "viewer", label: "Viewer", description: "Read-only access to admin panel" },
+  { value: "superadmin", label: ROLE_LABELS.superadmin, description: ROLE_DESCRIPTIONS.superadmin },
+  { value: "admin", label: ROLE_LABELS.admin, description: ROLE_DESCRIPTIONS.admin },
+  { value: "moderator", label: ROLE_LABELS.moderator, description: ROLE_DESCRIPTIONS.moderator },
+  { value: "viewer", label: ROLE_LABELS.viewer, description: ROLE_DESCRIPTIONS.viewer },
 ];
 
 /**
- * Normalize role strings from Firestore to match AdminRole type
- * Handles common variations like "superadmin" -> "super-admin"
+ * Normalize role strings from Firestore to match UserRole type
+ * Handles common variations and converts to permission system format
  */
 function normalizeRole(role: string | undefined): AdminRole {
   if (!role) return "viewer";
   
   const normalized = role.toLowerCase().trim();
   
-  // Handle variations
+  // Handle variations and convert to UserRole format
   if (normalized === "superadmin" || normalized === "super-admin" || normalized === "super admin") {
-    return "super-admin";
+    return "superadmin";
   }
   if (normalized === "admin") {
     return "admin";

@@ -19,14 +19,33 @@ import {
   Shield,
 } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { RolePermissions } from "@/types/Permissions";
+
+// Map routes to permission modules
+const ROUTE_MODULE_MAP: Record<string, keyof RolePermissions> = {
+  "/admin/dashboard": "dashboard",
+  "/admin/inquiry": "inquiries",
+  "/admin/projects": "projects",
+  "/admin/clients": "clients",
+  "/admin/quotations": "quotations",
+  "/admin/charge-slips": "chargeSlips",
+  "/admin/manual-quotation": "manualQuotation",
+  "/admin/services": "serviceCatalog",
+  "/admin/catalog-settings": "catalogSettings",
+  "/admin/roles": "usersPermissions",
+  "/admin/admins": "usersPermissions",
+  "/admin/activity-logs": "activityLogs",
+};
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const { user, signOut, adminInfo } = useAuth();
+  const { canView, loading: permissionsLoading } = usePermissions(adminInfo?.role);
 
   const isActive = (href: string) => pathname === href;
 
@@ -109,6 +128,17 @@ export function AdminSidebar() {
     },
   ];
 
+  // Filter navigation items based on permissions
+  const filteredSections = navigationSections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => {
+        const module = ROUTE_MODULE_MAP[item.href];
+        return module && canView(module);
+      }),
+    }))
+    .filter((section) => section.items.length > 0); // Hide empty sections
+
   return (
     <div className="flex flex-col h-full w-64 bg-white border-r border-slate-200">
       {/* Simple Logo Header */}
@@ -131,7 +161,7 @@ export function AdminSidebar() {
       {/* Clean Navigation */}
       <div className="flex-1 overflow-y-auto p-4">
         <nav className="space-y-6">
-          {navigationSections.map((section, sectionIndex) => (
+          {filteredSections.map((section, sectionIndex) => (
             <div key={section.title}>
               {/* Section Header */}
               <div className="px-3 mb-2">
@@ -160,7 +190,7 @@ export function AdminSidebar() {
               </div>
               
               {/* Divider between sections (except last) */}
-              {sectionIndex < navigationSections.length - 1 && (
+              {sectionIndex < filteredSections.length - 1 && (
                 <div className="mt-4 border-t border-slate-100" />
               )}
             </div>
@@ -171,7 +201,7 @@ export function AdminSidebar() {
       {/* Simple User Profile */}
       {user && (
         <div className="p-4 border-t border-slate-100">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 mb-2">
             <Avatar className="h-8 w-8">
               <AvatarImage src={user.photoURL || ""} />
               <AvatarFallback className="bg-[#166FB5] text-white text-sm">
@@ -192,6 +222,24 @@ export function AdminSidebar() {
               <LogOut className="w-4 h-4" />
             </Button>
           </div>
+          
+          {/* Role Badge */}
+          {adminInfo?.role && (
+            <div className="mt-2 flex justify-center">
+              <Badge 
+                variant="outline" 
+                className={cn(
+                  "text-xs font-medium capitalize",
+                  adminInfo.role === "superadmin" && "border-purple-300 text-purple-700 bg-purple-50",
+                  adminInfo.role === "admin" && "border-blue-300 text-blue-700 bg-blue-50",
+                  adminInfo.role === "moderator" && "border-green-300 text-green-700 bg-green-50",
+                  adminInfo.role === "viewer" && "border-slate-300 text-slate-700 bg-slate-50"
+                )}
+              >
+                {adminInfo.role}
+              </Badge>
+            </div>
+          )}
         </div>
       )}
     </div>

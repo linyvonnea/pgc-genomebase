@@ -37,6 +37,7 @@ import { getServiceCatalog } from "@/services/serviceCatalogService";
 import { QuotationPDF } from "@/components/quotation/QuotationPDF";
 import { ServiceItem } from "@/types/ServiceItem";
 import { SelectedService as StrictSelectedService } from "@/types/SelectedService";
+import { PermissionGuard } from "@/components/PermissionGuard";
 
 // Editable version for input
 type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
@@ -44,6 +45,14 @@ type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
 };
 
 export default function ManualQuotationPage() {
+  return (
+    <PermissionGuard module="manualQuotation" action="view">
+      <ManualQuotationContent />
+    </PermissionGuard>
+  );
+}
+
+function ManualQuotationContent() {
   const router = useRouter();
   const { user, isAdmin, loading, adminInfo } = useAuth();
 

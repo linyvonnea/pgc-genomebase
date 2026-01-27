@@ -18,8 +18,17 @@ import {
   ROLE_DESCRIPTIONS,
   PermissionAction,
 } from "@/types/Permissions";
+import { PermissionGuard } from "@/components/PermissionGuard";
 
 export default function RoleManagementPage() {
+  return (
+    <PermissionGuard module="usersPermissions" action="view">
+      <RoleManagementContent />
+    </PermissionGuard>
+  );
+}
+
+function RoleManagementContent() {
   const [selectedRole, setSelectedRole] = useState<UserRole>("viewer");
   const [permissions, setPermissions] = useState<RolePermissions>(
     DEFAULT_ROLE_PERMISSIONS[selectedRole]
