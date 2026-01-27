@@ -96,7 +96,11 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     });
     
     getActiveCatalogItems("personnelAssigned").then((personnel) => {
-      setPersonnelOptions(personnel as any);
+      console.log("Fetched personnel:", personnel);
+      // Cast to the proper type - should be CatalogItem[] for personnelAssigned
+      const personnelItems = personnel as Array<{ id: string; value: string; position?: string }>;
+      console.log("Personnel items:", personnelItems);
+      setPersonnelOptions(personnelItems);
     }).catch((error) => {
       console.error("Error fetching personnel options:", error);
       setPersonnelOptions([]); // Set empty array as fallback
@@ -517,8 +521,8 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
           </SelectTrigger>
           <SelectContent>
             {personnelOptions.length > 0 ? (
-              personnelOptions.map((person) => (
-                <SelectItem key={person.id} value={person.value} className="py-2">
+              personnelOptions.map((person, index) => (
+                <SelectItem key={person.id || `personnel-${index}`} value={person.value} className="py-2">
                   <div className="flex flex-col">
                     <span className="font-medium text-sm">{person.value}</span>
                     {person.position && (
