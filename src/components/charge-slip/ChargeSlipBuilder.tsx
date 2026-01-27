@@ -104,6 +104,14 @@ export default function ChargeSlipBuilder({
   
   // Get the effective project ID - prioritize URL param, then primary project from client's pid array
   let effectiveProjectId = urlProjectId;
+  
+  // If projectId from URL contains comma-separated values, use only the first one (primary)
+  if (effectiveProjectId && effectiveProjectId.includes(',')) {
+    effectiveProjectId = effectiveProjectId.split(',')[0].trim();
+    console.log("Multiple PIDs detected in URL, using primary:", effectiveProjectId);
+  }
+  
+  // If still no projectId, get from client's primary pid
   if (!effectiveProjectId && client && Array.isArray(client.pid) && client.pid.length > 0) {
     effectiveProjectId = client.pid[0];
     console.log("Using primary project ID from client:", effectiveProjectId);
