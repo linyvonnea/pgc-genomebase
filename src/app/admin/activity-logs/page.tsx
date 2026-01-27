@@ -6,8 +6,8 @@ import { getActivityLogs, ActivityLog, EntityType, ActionType } from "@/services
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useAdminRole } from "@/hooks/useAdminRole";
-import { hasPermission } from "@/lib/permissions";
+import useAuth from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   Select,
   SelectContent,
@@ -47,8 +47,8 @@ function ActivityLogsContent() {
   const [entityTypeFilter, setEntityTypeFilter] = useState<EntityType | "all">("all");
   const [actionFilter, setActionFilter] = useState<ActionType | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const { role } = useAdminRole();
-  const canViewActivityLogs = hasPermission(role, "view_activity_logs");
+  const { adminInfo } = useAuth();
+  const { canDelete } = usePermissions(adminInfo?.role);
 
   const { data: logs = [], isLoading, refetch } = useQuery({
     queryKey: ["activityLogs", entityTypeFilter, actionFilter],
@@ -117,15 +117,6 @@ function ActivityLogsContent() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {!canViewActivityLogs ? (
-        <Card className="p-8 text-center">
-          <h2 className="text-2xl font-bold text-muted-foreground mb-2">Access Restricted</h2>
-          <p className="text-muted-foreground">
-            You don't have permission to view activity logs. Contact a Super Admin for access.
-          </p>
-        </Card>
-      ) : (
-        <>
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -372,8 +363,6 @@ function ActivityLogsContent() {
           </Table>
         </div>
       </Card>
-      </>
-      )}
     </div>
   );
 }

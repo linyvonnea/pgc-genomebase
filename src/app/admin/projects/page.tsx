@@ -15,8 +15,8 @@ import { Separator } from "@/components/ui/separator"
 import { Plus, FolderPlus } from "lucide-react"
 import { ProjectFormModal } from "@/app/admin/projects/modalform"
 import { getProjects } from "@/services/projectsService"
-import { useAdminRole } from "@/hooks/useAdminRole";
-import { hasPermission } from "@/lib/permissions";
+import useAuth from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 
 // Fetch all projects from Firestore
 async function getData(): Promise<Project[]> {
@@ -45,8 +45,8 @@ function ProjectPageContent() {
   const [data, setData] = useState<Project[]>([]);
   // State for dialog open/close
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { role } = useAdminRole();
-  const canManageProjects = hasPermission(role, "manage_projects");
+  const { adminInfo } = useAuth();
+  const { canCreate } = usePermissions(adminInfo?.role);
   
   // Fetch data and update state
   const fetchData = async () => {
@@ -80,7 +80,7 @@ function ProjectPageContent() {
             </p>
           </div>
           {/* Add New Project Modal */}
-          {canManageProjects && (
+          {canCreate("projects") && (
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200">

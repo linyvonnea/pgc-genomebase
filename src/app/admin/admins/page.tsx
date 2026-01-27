@@ -5,8 +5,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getAllAdmins } from "@/services/adminService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAdminRole } from "@/hooks/useAdminRole";
-import { canManageAdmins, canEdit, canDelete } from "@/lib/permissions";
+import useAuth from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   Table,
   TableBody,
@@ -36,11 +36,8 @@ function AdminsManagementContent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
   const queryClient = useQueryClient();
-  const { role: currentUserRole, loading: roleLoading } = useAdminRole();
-
-  const canManage = canManageAdmins(currentUserRole);
-  const canEditAdmin = canEdit(currentUserRole, "admin");
-  const canDeleteAdmin = canDelete(currentUserRole, "admin");
+  const { adminInfo } = useAuth();
+  const { canCreate, canEdit } = usePermissions(adminInfo?.role);
 
   const { data: admins = [], isLoading } = useQuery({
     queryKey: ["admins"],
@@ -100,7 +97,7 @@ function AdminsManagementContent() {
             Manage system users and their access levels ({filteredAdmins.length} users)
           </p>
         </div>
-        {canManage && (
+        {canCreate("usersPermissions") && (
           <Button onClick={handleAdd} className="shadow-md">
             <Plus className="h-4 w-4 mr-2" />
             Add User
@@ -187,12 +184,11 @@ function AdminsManagementContent() {
                       {formatDate(admin.lastLogin)}
                     </TableCell>
                     <TableCell className="text-right">
-                      {(canEditAdmin || canDeleteAdmin) && (
+                      {canEdit("usersPermissions") && (
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleEdit(admin)}
-                          disabled={!canEditAdmin && !canDeleteAdmin}
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
