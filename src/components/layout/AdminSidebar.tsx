@@ -70,6 +70,11 @@ export function AdminSidebar() {
       icon: Settings,
     },
     { 
+      href: "/admin/catalog-settings", 
+      label: "Catalog Settings", 
+      icon: Settings,
+    },
+    { 
       href: "/admin/admins", 
       label: "Users & Permissions", 
       icon: ShieldCheck,

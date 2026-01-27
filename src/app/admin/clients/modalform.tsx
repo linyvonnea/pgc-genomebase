@@ -316,47 +316,22 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
         </Select>
       </div>
 
-      {/* Client Information Section */}
-      <div className="space-y-3 pt-2">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 bg-green-50 rounded-md">
-            <User className="h-4 w-4 text-green-600" />
-          </div>
-          <h3 className="text-sm font-semibold text-gray-700">Client Information</h3>
-        </div>
-        <Separator />
-      </div>
-
-      {/* Year and Client ID in one row */}
-      <div className="grid grid-cols-[100px_1fr] gap-4">
-        {/* Year */}
-        <div>
-          <Label className="text-xs">Year</Label>
-          <Input 
-            type="number" 
-            name="year" 
-            value={formData.year} 
-            onChange={(e) => handleChange("year", e.target.value)} 
-            className="h-9" 
-          />
-        </div>
-        {/* Client ID - Editable */}
-        <div>
-          <Label className="text-xs">Client ID</Label>
-          <Input 
-            ref={cidInputRef}
-            name="cid" 
-            value={cid} 
-            onChange={(e) => {
-              setCid(e.target.value);
-              setCidError("");
-            }} 
-            className="h-9 font-mono bg-green-50" 
-            placeholder="CL-2026-001"
-          />
-          {cidError && <p className="text-red-500 text-xs mt-1">{cidError}</p>}
-          <p className="text-xs text-gray-500 mt-1">Auto-generated, but can be edited</p>
-        </div>
+      {/* Client ID - Editable */}
+      <div>
+        <Label className="text-xs">Client ID</Label>
+        <Input 
+          ref={cidInputRef}
+          name="cid" 
+          value={cid} 
+          onChange={(e) => {
+            setCid(e.target.value);
+            setCidError("");
+          }} 
+          className="h-9 font-mono bg-green-50" 
+          placeholder="CL-2026-001"
+        />
+        {cidError && <p className="text-red-500 text-xs mt-1">{cidError}</p>}
+        <p className="text-xs text-gray-500 mt-1">Auto-generated, but can be edited</p>
       </div>
 
       {/* Project Information Section */}
