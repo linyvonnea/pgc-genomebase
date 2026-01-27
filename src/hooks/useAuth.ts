@@ -7,7 +7,7 @@ import {
   onAuthStateChanged,
   User,
 } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 import { logActivity } from "@/services/activityLogService";
 import { UserRole } from "@/types/Permissions";
 
@@ -41,43 +41,48 @@ export default function useAuth() {
 
       // Check if admin (from "admins" collection by email)
       const adminRef = doc(db, "admins", email);
-      const adminSnap = await getDoc(adminRef);
+      
+      // Use real-time listener for admin role changes
+      const unsubscribeAdmin = onSnapshot(adminRef, async (adminSnap) => {
+        if (adminSnap.exists()) {
+          const { name, position, role } = adminSnap.data();
+          setIsAdmin(true);
+          setAdminInfo({ name, position, email, role: role || "viewer" });
 
-      if (adminSnap.exists()) {
-        const { name, position, role } = adminSnap.data();
-        setIsAdmin(true);
-        setAdminInfo({ name, position, email, role: role || "viewer" });
-
-        // Save admin in /users if not already
-        const userRef = doc(db, "users", uid);
-        const userSnap = await getDoc(userRef);
-        if (!userSnap.exists()) {
-          await setDoc(userRef, {
-            uid,
-            name,
-            email,
-            photoURL: firebaseUser.photoURL || "",
-            role: "admin",
-            createdAt: new Date().toISOString(),
-          });
+          // Save admin in /users if not already
+          const userRef = doc(db, "users", uid);
+          const userSnap = await getDoc(userRef);
+          if (!userSnap.exists()) {
+            await setDoc(userRef, {
+              uid,
+              name,
+              email,
+              photoURL: firebaseUser.photoURL || "",
+              role: "admin",
+              createdAt: new Date().toISOString(),
+            });
+          }
+        } else {
+          // Save non-admin as client in /users
+          const userRef = doc(db, "users", uid);
+          const userSnap = await getDoc(userRef);
+          if (!userSnap.exists()) {
+            await setDoc(userRef, {
+              uid,
+              name: firebaseUser.displayName || "",
+              email,
+              photoURL: firebaseUser.photoURL || "",
+              role: "client",
+              createdAt: new Date().toISOString(),
+            });
+          }
         }
-      } else {
-        // Save non-admin as client in /users
-        const userRef = doc(db, "users", uid);
-        const userSnap = await getDoc(userRef);
-        if (!userSnap.exists()) {
-          await setDoc(userRef, {
-            uid,
-            name: firebaseUser.displayName || "",
-            email,
-            photoURL: firebaseUser.photoURL || "",
-            role: "client",
-            createdAt: new Date().toISOString(),
-          });
-        }
-      }
 
-      setLoading(false);
+        setLoading(false);
+      });
+      
+      // Store unsubscribe function to clean up later
+      return () => unsubscribeAdmin();
     });
 
     return () => unsubscribe();
