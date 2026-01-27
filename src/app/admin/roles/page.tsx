@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Shield, Save, RotateCcw, Info } from "lucide-react";
 import { toast } from "sonner";
 import { getRolePermissions, updateRolePermissions } from "@/services/permissionService";
+import useAuth from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 import {
   UserRole,
   RolePermissions,
@@ -30,6 +32,8 @@ export default function RoleManagementPage() {
 }
 
 function RoleManagementContent() {
+  const { adminInfo } = useAuth();
+  const { canCreate, canEdit, canDelete } = usePermissions(adminInfo?.role);
   const [selectedRole, setSelectedRole] = useState<UserRole>("viewer");
   const [permissions, setPermissions] = useState<RolePermissions>(
     DEFAULT_ROLE_PERMISSIONS[selectedRole]
@@ -69,6 +73,11 @@ function RoleManagementContent() {
     module: keyof RolePermissions,
     action: PermissionAction
   ) => {
+    // Check if user has permission to edit
+    if (!canEdit("roleManagement")) {
+      toast.error("You don't have permission to edit role permissions");
+      return;
+    }
     setPermissions((prev) => ({
       ...prev,
       [module]: {
@@ -120,7 +129,7 @@ function RoleManagementContent() {
             <Checkbox
               checked={modulePerms[action]}
               onCheckedChange={() => handlePermissionToggle(module, action)}
-              disabled={loading}
+              disabled={loading || !canEdit("roleManagement")}
               className="h-5 w-5"
             />
           </div>
@@ -215,26 +224,28 @@ function RoleManagementContent() {
                     {ROLE_DESCRIPTIONS[selectedRole]}
                   </CardDescription>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleReset}
-                    disabled={!hasChanges || loading}
-                  >
-                    <RotateCcw className="h-4 w-4 mr-1" />
-                    Reset
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleSave}
-                    disabled={!hasChanges || loading}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <Save className="h-4 w-4 mr-1" />
-                    {loading ? "Saving..." : "Save Changes"}
-                  </Button>
-                </div>
+                {canEdit("roleManagement") && (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleReset}
+                      disabled={!hasChanges || loading}
+                    >
+                      <RotateCcw className="h-4 w-4 mr-1" />
+                      Reset
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleSave}
+                      disabled={!hasChanges || loading}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <Save className="h-4 w-4 mr-1" />
+                      {loading ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardHeader>
             <CardContent>
