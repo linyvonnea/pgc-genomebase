@@ -63,7 +63,7 @@ export async function getCatalog(type: CatalogType): Promise<CatalogItem[]> {
  */
 export async function addCatalogItem(
   type: CatalogType,
-  value: string
+  value: string | { value: string; position?: string }
 ): Promise<void> {
   try {
     const docRef = doc(db, "settings", CATALOG_DOC_ID);
@@ -71,9 +71,13 @@ export async function addCatalogItem(
     
     const maxOrder = settings[type].reduce((max, item) => Math.max(max, item.order), 0);
     
+    const itemValue = typeof value === "string" ? value : value.value;
+    const itemPosition = typeof value === "object" ? value.position : undefined;
+    
     const newItem: CatalogItem = {
       id: `${type}-${Date.now()}`,
-      value,
+      value: itemValue,
+      ...(itemPosition && { position: itemPosition }),
       order: maxOrder + 1,
       isActive: true,
       createdAt: new Date(),

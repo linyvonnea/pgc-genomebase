@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 export default function CatalogManagementPage() {
   const [catalogs, setCatalogs] = useState<CatalogSettings | null>(null);
   const [loading, setLoading] = useState(true);
-  const [editingItem, setEditingItem] = useState<{ type: CatalogType; id: string; value: string } | null>(null);
+  const [editingItem, setEditingItem] = useState<{ type: CatalogType; id: string; value: string; position?: string } | null>(null);
   const [newItemValue, setNewItemValue] = useState<Record<CatalogType, string>>({
     sendingInstitutions: "",
     fundingCategories: "",
@@ -27,6 +27,7 @@ export default function CatalogManagementPage() {
     serviceRequested: "",
     personnelAssigned: "",
   });
+  const [newPersonnelPosition, setNewPersonnelPosition] = useState("");
 
   useEffect(() => {
     loadCatalogs();
@@ -52,9 +53,19 @@ export default function CatalogManagementPage() {
       return;
     }
 
+    // For personnel, validate position is also provided
+    if (type === "personnelAssigned" && !newPersonnelPosition.trim()) {
+      toast.error("Please enter both name and position");
+      return;
+    }
+
     try {
-      await addCatalogItem(type, value);
+      const itemData = type === "personnelAssigned" 
+        ? { value, position: newPersonnelPosition.trim() }
+        : value;
+      await addCatalogItem(type, itemData as any);
       setNewItemValue((prev) => ({ ...prev, [type]: "" }));
+      setNewPersonnelPosition("");
       await loadCatalogs();
       toast.success("Item added successfully");
     } catch (error) {
@@ -63,14 +74,18 @@ export default function CatalogManagementPage() {
     }
   };
 
-  const handleUpdateItem = async (type: CatalogType, itemId: string, newValue: string) => {
+  const handleUpdateItem = async (type: CatalogType, itemId: string, newValue: string, newPosition?: string) => {
     if (!newValue.trim()) {
       toast.error("Value cannot be empty");
       return;
     }
 
     try {
-      await updateCatalogItem(type, itemId, { value: newValue });
+      const updates: any = { value: newValue };
+      if (type === "personnelAssigned" && newPosition !== undefined) {
+        updates.position = newPosition;
+      }
+      await updateCatalogItem(type, itemId, updates);
       setEditingItem(null);
       await loadCatalogs();
       toast.success("Item updated successfully");
@@ -120,23 +135,51 @@ export default function CatalogManagementPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           {/* Add new item */}
-          <div className="flex gap-2">
-            <Input
-              placeholder="Add new item..."
-              value={newItemValue[type]}
-              onChange={(e) =>
-                setNewItemValue((prev) => ({ ...prev, [type]: e.target.value }))
-              }
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleAddItem(type);
-              }}
-              className="h-9"
-            />
-            <Button onClick={() => handleAddItem(type)} size="sm" className="shrink-0">
-              <Plus className="h-4 w-4 mr-1" />
-              Add
-            </Button>
-          </div>
+          {type === "personnelAssigned" ? (
+            <div className="space-y-2">
+              <Input
+                placeholder="Enter name..."
+                value={newItemValue[type]}
+                onChange={(e) =>
+                  setNewItemValue((prev) => ({ ...prev, [type]: e.target.value }))
+                }
+                className="h-9"
+              />
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter position..."
+                  value={newPersonnelPosition}
+                  onChange={(e) => setNewPersonnelPosition(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleAddItem(type);
+                  }}
+                  className="h-9 flex-1"
+                />
+                <Button onClick={() => handleAddItem(type)} size="sm" className="shrink-0">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                placeholder="Add new item..."
+                value={newItemValue[type]}
+                onChange={(e) =>
+                  setNewItemValue((prev) => ({ ...prev, [type]: e.target.value }))
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleAddItem(type);
+                }}
+                className="h-9"
+              />
+              <Button onClick={() => handleAddItem(type)} size="sm" className="shrink-0">
+                <Plus className="h-4 w-4 mr-1" />
+                Add
+              </Button>
+            </div>
+          )}
 
           <Separator />
 
@@ -156,23 +199,50 @@ export default function CatalogManagementPage() {
                   
                   {editingItem?.id === item.id ? (
                     <>
-                      <Input
-                        value={editingItem.value}
-                        onChange={(e) =>
-                          setEditingItem({ ...editingItem, value: e.target.value })
-                        }
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter")
-                            handleUpdateItem(type, item.id, editingItem.value);
-                          if (e.key === "Escape") setEditingItem(null);
-                        }}
-                        className="h-8 flex-1"
-                        autoFocus
-                      />
+                      {type === "personnelAssigned" ? (
+                        <div className="flex-1 flex flex-col gap-2">
+                          <Input
+                            value={editingItem.value}
+                            onChange={(e) =>
+                              setEditingItem({ ...editingItem, value: e.target.value })
+                            }
+                            placeholder="Name"
+                            className="h-8"
+                            autoFocus
+                          />
+                          <Input
+                            value={editingItem.position || ""}
+                            onChange={(e) =>
+                              setEditingItem({ ...editingItem, position: e.target.value })
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter")
+                                handleUpdateItem(type, item.id, editingItem.value, editingItem.position);
+                              if (e.key === "Escape") setEditingItem(null);
+                            }}
+                            placeholder="Position"
+                            className="h-8"
+                          />
+                        </div>
+                      ) : (
+                        <Input
+                          value={editingItem.value}
+                          onChange={(e) =>
+                            setEditingItem({ ...editingItem, value: e.target.value })
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter")
+                              handleUpdateItem(type, item.id, editingItem.value);
+                            if (e.key === "Escape") setEditingItem(null);
+                          }}
+                          className="h-8 flex-1"
+                          autoFocus
+                        />
+                      )}
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => handleUpdateItem(type, item.id, editingItem.value)}
+                        onClick={() => handleUpdateItem(type, item.id, editingItem.value, editingItem.position)}
                         className="h-8 w-8 p-0"
                       >
                         <Check className="h-4 w-4 text-green-600" />
@@ -188,7 +258,16 @@ export default function CatalogManagementPage() {
                     </>
                   ) : (
                     <>
-                      <span className="flex-1 text-sm">{item.value}</span>
+                      {type === "personnelAssigned" ? (
+                        <div className="flex-1">
+                          <div className="text-sm font-medium">{item.value}</div>
+                          {item.position && (
+                            <div className="text-xs text-gray-500">{item.position}</div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="flex-1 text-sm">{item.value}</span>
+                      )}
                       {!item.isActive && (
                         <Badge variant="secondary" className="text-xs">
                           Inactive
@@ -198,7 +277,7 @@ export default function CatalogManagementPage() {
                         size="sm"
                         variant="ghost"
                         onClick={() =>
-                          setEditingItem({ type, id: item.id, value: item.value })
+                          setEditingItem({ type, id: item.id, value: item.value, position: item.position })
                         }
                         className="h-8 w-8 p-0"
                       >

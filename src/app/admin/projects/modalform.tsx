@@ -81,7 +81,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
   const [inquirySearch, setInquirySearch] = useState("");
   
   // Personnel options from catalog settings
-  const [personnelOptions, setPersonnelOptions] = useState<string[]>([]);
+  const [personnelOptions, setPersonnelOptions] = useState<Array<{ id: string; value: string; position?: string }>>([]);
   
   // PID validation state
   const [isPidChecking, setIsPidChecking] = useState(false);
@@ -96,7 +96,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     });
     
     getActiveCatalogItems("personnelAssigned").then((personnel) => {
-      setPersonnelOptions(personnel);
+      setPersonnelOptions(personnel as any);
     }).catch((error) => {
       console.error("Error fetching personnel options:", error);
       setPersonnelOptions([]); // Set empty array as fallback
@@ -498,12 +498,34 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         <Label className="text-xs">Personnel Assigned</Label>
         <Select value={formData.personnelAssigned || ""} onValueChange={val => handleSelect("personnelAssigned", val)}>
           <SelectTrigger className="h-9">
-            <SelectValue placeholder={personnelOptions.length > 0 ? "Select personnel" : "No personnel available"} />
+            <SelectValue placeholder={personnelOptions.length > 0 ? "Select personnel" : "No personnel available"}>
+              {formData.personnelAssigned && personnelOptions.length > 0 ? (
+                <div className="flex flex-col items-start">
+                  <span className="font-medium text-sm">
+                    {personnelOptions.find(p => p.value === formData.personnelAssigned)?.value}
+                  </span>
+                  {personnelOptions.find(p => p.value === formData.personnelAssigned)?.position && (
+                    <span className="text-xs text-gray-500">
+                      {personnelOptions.find(p => p.value === formData.personnelAssigned)?.position}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                formData.personnelAssigned || (personnelOptions.length > 0 ? "Select personnel" : "No personnel available")
+              )}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {personnelOptions.length > 0 ? (
               personnelOptions.map((person) => (
-                <SelectItem key={person} value={person}>{person}</SelectItem>
+                <SelectItem key={person.id} value={person.value} className="py-2">
+                  <div className="flex flex-col">
+                    <span className="font-medium text-sm">{person.value}</span>
+                    {person.position && (
+                      <span className="text-xs text-gray-500">{person.position}</span>
+                    )}
+                  </div>
+                </SelectItem>
               ))
             ) : (
               <div className="p-2 text-sm text-center text-gray-500">

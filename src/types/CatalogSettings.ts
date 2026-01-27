@@ -6,6 +6,7 @@
 export interface CatalogItem {
   id: string;
   value: string;
+  position?: string; // For personnel assigned
   order: number;
   isActive: boolean;
   createdAt?: Date;
