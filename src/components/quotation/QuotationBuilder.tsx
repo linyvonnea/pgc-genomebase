@@ -70,6 +70,7 @@ export default function QuotationBuilder({
   const [isInternal, setIsInternal] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
   const [search, setSearch] = useState("");
+  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState<string>("");
 
   const { adminInfo } = useAuth();
@@ -205,14 +206,21 @@ export default function QuotationBuilder({
 
   const groupedByType = useMemo(() => {
     const result: Record<string, ServiceItem[]> = {};
+    const selectedIds = new Set(selectedServices.map(s => s.id));
+    
     for (const item of catalog) {
-      if (!search || item.name.toLowerCase().includes(search.toLowerCase())) {
+      // Filter by search
+      const matchesSearch = !search || item.name.toLowerCase().includes(search.toLowerCase());
+      // Filter by selected if showSelectedOnly is true
+      const matchesFilter = !showSelectedOnly || selectedIds.has(item.id);
+      
+      if (matchesSearch && matchesFilter) {
         if (!result[item.type]) result[item.type] = [];
         result[item.type].push(item);
       }
     }
     return result;
-  }, [search, catalog]);
+  }, [search, catalog, showSelectedOnly, selectedServices]);
 
   const renderTable = (services: ServiceItem[], serviceType: string) => (
     <Table>
@@ -393,12 +401,26 @@ export default function QuotationBuilder({
           </div>
         </div>
 
-        <Input
-          placeholder="Search services..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="mb-4"
-        />
+        <div className="flex gap-2 mb-4">
+          <Input
+            placeholder="Search services..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1"
+          />
+          <Button
+            variant={showSelectedOnly ? "default" : "outline"}
+            onClick={() => setShowSelectedOnly(!showSelectedOnly)}
+            className="whitespace-nowrap"
+          >
+            {showSelectedOnly ? "Show All" : "Show Selected"}
+            {selectedServices.length > 0 && (
+              <span className="ml-2 bg-white text-primary rounded-full px-2 py-0.5 text-xs font-semibold">
+                {selectedServices.length}
+              </span>
+            )}
+          </Button>
+        </div>
 
         <ScrollArea className="h-[65vh] pr-2">
           <Accordion type="multiple" className="space-y-4">
