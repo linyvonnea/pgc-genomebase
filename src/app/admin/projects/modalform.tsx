@@ -22,6 +22,7 @@ import { getNextPid, checkPidExists } from "@/services/projectsService";
 import { getInquiries } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { logActivity } from "@/services/activityLogService";
+import { getActiveCatalogItems } from "@/services/catalogSettingsService";
 import useAuth from "@/hooks/useAuth";
 
 // Extend the base project schema for form validation
@@ -79,14 +80,20 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
   const [inquiryOptions, setInquiryOptions] = useState<Inquiry[]>([]);
   const [inquirySearch, setInquirySearch] = useState("");
   
+  // Personnel options from catalog settings
+  const [personnelOptions, setPersonnelOptions] = useState<string[]>([]);
+  
   // PID validation state
   const [isPidChecking, setIsPidChecking] = useState(false);
   const [pidError, setPidError] = useState<string>("");
 
-  // Fetch inquiry options
+  // Fetch inquiry options and personnel options
   useEffect(() => {
     getInquiries().then((inquiries) => {
       setInquiryOptions(inquiries);
+    });
+    getActiveCatalogItems("personnelAssigned").then((personnel) => {
+      setPersonnelOptions(personnel);
     });
   }, []);
 
@@ -483,7 +490,18 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       {/* Personnel Assigned - Full Width */}
       <div className="col-span-2">
         <Label className="text-xs">Personnel Assigned</Label>
-        <Input name="personnelAssigned" value={formData.personnelAssigned || ""} onChange={handleChange} className="h-9" placeholder="Enter personnel assigned" />
+        <Select value={formData.personnelAssigned || ""} onValueChange={val => handleSelect("personnelAssigned", val)}>
+          <SelectTrigger className="h-9"><SelectValue placeholder="Select personnel" /></SelectTrigger>
+          <SelectContent>
+            {personnelOptions.length > 0 ? (
+              personnelOptions.map((person) => (
+                <SelectItem key={person} value={person}>{person}</SelectItem>
+              ))
+            ) : (
+              <SelectItem value="" disabled>No personnel available</SelectItem>
+            )}
+          </SelectContent>
+        </Select>
         {errors.personnelAssigned && <p className="text-red-500 text-xs mt-1">{errors.personnelAssigned}</p>}
       </div>
 
