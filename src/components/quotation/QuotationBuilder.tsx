@@ -231,18 +231,18 @@ export default function QuotationBuilder({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-[50px]">✔</TableHead>
-          <TableHead className="min-w-[250px]">Service</TableHead>
-          <TableHead className="w-[100px]">Unit</TableHead>
-          <TableHead className="w-[100px] text-right">Price</TableHead>
+          <TableHead className="w-[50px] font-semibold">✔</TableHead>
+          <TableHead className="min-w-[250px] font-semibold">Service</TableHead>
+          <TableHead className="w-[100px] font-semibold">Unit</TableHead>
+          <TableHead className="w-[100px] text-right font-semibold">Price</TableHead>
           <TableHead className="w-[100px]">
             <span className={isBioinformatics ? "font-semibold" : "font-normal"}>Samples</span>
           </TableHead>
           <TableHead className="w-[120px]">
             <span className={isTraining ? "font-semibold" : "font-normal"}>Participants</span>
           </TableHead>
-          <TableHead className="w-[80px]">Qty</TableHead>
-          <TableHead className="w-[120px] text-right">Amount</TableHead>
+          <TableHead className="w-[80px] font-semibold">Qty</TableHead>
+          <TableHead className="w-[120px] text-right font-semibold">Amount</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
