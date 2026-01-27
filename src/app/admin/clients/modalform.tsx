@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ import { clientSchema as baseClientSchema } from "@/schemas/clientSchema";
 import { db } from "@/lib/firebase"; 
 import { toast } from "sonner";
 import { doc, setDoc, serverTimestamp, updateDoc, arrayUnion } from "firebase/firestore";
-import { getNextCid } from "@/services/clientService";
+import { getNextCid, checkCidExists } from "@/services/clientService";
 import { getProjects } from "@/services/projectsService";
 import { getInquiries } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
@@ -49,6 +49,8 @@ type ClientFormData = Omit<z.infer<typeof clientSchema>, 'sex'> & { sex: "F" | "
 // Modal form component for adding a client
 export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Client) => void; onClose?: () => void }) {
   const { adminInfo } = useAuth();
+  const cidInputRef = useRef<HTMLInputElement>(null);
+  
   // Form state
   const [formData, setFormData] = useState<ClientFormData>({
     year: new Date().getFullYear(),
@@ -60,6 +62,10 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
     sex: "",
     phoneNumber: "",
   });
+  
+  const [cid, setCid] = useState<string>("");
+  const [isCidChecking, setIsCidChecking] = useState(false);
+  const [cidError, setCidError] = useState<string>("");
 
   const [errors, setErrors] = useState<Partial<Record<keyof ClientFormData, string>>>({});
   const [projectOptions, setProjectOptions] = useState<{ pid: string; title?: string }[]>([]);
@@ -108,6 +114,22 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
     },
   });
 
+  // Auto-generate CID when year changes
+  useEffect(() => {
+    const generateCid = async () => {
+      if (formData.year) {
+        try {
+          const nextCid = await getNextCid(formData.year);
+          setCid(nextCid);
+          setCidError("");
+        } catch (err) {
+          console.error("Failed to generate CID:", err);
+        }
+      }
+    };
+    generateCid();
+  }, [formData.year]);
+  
   // Fetch project and inquiry options for dropdowns
   useEffect(() => {
     getProjects().then((projects) => {
@@ -137,6 +159,25 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate CID
+    if (!cid) {
+      setCidError("Client ID is required");
+      return;
+    }
+    
+    // Check if CID already exists
+    setIsCidChecking(true);
+    const cidExists = await checkCidExists(cid);
+    setIsCidChecking(false);
+    
+    if (cidExists) {
+      setCidError("This Client ID already exists. Please choose a different ID.");
+      // Scroll to the CID field and focus it
+      cidInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      cidInputRef.current?.focus();
+      return;
+    }
+    
     // Validate that Project ID is selected
     if (!selectedPid) {
       toast.error("Please select a Project ID");
@@ -160,11 +201,9 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
     } else {
       setErrors({});
       try {
-        // Generate next client ID
-        const nextCid = await getNextCid(result.data.year);
         const clientData: Client = {
           ...result.data,
-          cid: nextCid,
+          cid: cid,
           year: result.data.year,
           pid: selectedPid ? [selectedPid] : [],
           // normalize fields that must be boolean | undefined on the Client type
@@ -275,6 +314,49 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
             </div>
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Client Information Section */}
+      <div className="space-y-3 pt-2">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 bg-green-50 rounded-md">
+            <User className="h-4 w-4 text-green-600" />
+          </div>
+          <h3 className="text-sm font-semibold text-gray-700">Client Information</h3>
+        </div>
+        <Separator />
+      </div>
+
+      {/* Year and Client ID in one row */}
+      <div className="grid grid-cols-[100px_1fr] gap-4">
+        {/* Year */}
+        <div>
+          <Label className="text-xs">Year</Label>
+          <Input 
+            type="number" 
+            name="year" 
+            value={formData.year} 
+            onChange={(e) => handleChange("year", e.target.value)} 
+            className="h-9" 
+          />
+        </div>
+        {/* Client ID - Editable */}
+        <div>
+          <Label className="text-xs">Client ID</Label>
+          <Input 
+            ref={cidInputRef}
+            name="cid" 
+            value={cid} 
+            onChange={(e) => {
+              setCid(e.target.value);
+              setCidError("");
+            }} 
+            className="h-9 font-mono bg-green-50" 
+            placeholder="CL-2026-001"
+          />
+          {cidError && <p className="text-red-500 text-xs mt-1">{cidError}</p>}
+          <p className="text-xs text-gray-500 mt-1">Auto-generated, but can be edited</p>
+        </div>
       </div>
 
       {/* Project Information Section */}
