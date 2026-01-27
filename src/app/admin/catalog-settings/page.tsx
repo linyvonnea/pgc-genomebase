@@ -210,6 +210,12 @@ export default function CatalogManagementPage() {
                 onChange={(e) =>
                   setNewItemValue((prev) => ({ ...prev, [type]: e.target.value }))
                 }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddItem(type);
+                  }
+                }}
                 className="h-9"
               />
               <div className="flex gap-2">
@@ -218,7 +224,10 @@ export default function CatalogManagementPage() {
                   value={newPersonnelPosition}
                   onChange={(e) => setNewPersonnelPosition(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") handleAddItem(type);
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddItem(type);
+                    }
                   }}
                   className="h-9 flex-1"
                 />
@@ -237,7 +246,10 @@ export default function CatalogManagementPage() {
                   setNewItemValue((prev) => ({ ...prev, [type]: e.target.value }))
                 }
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") handleAddItem(type);
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddItem(type);
+                  }
                 }}
                 className="h-9"
               />
@@ -273,6 +285,13 @@ export default function CatalogManagementPage() {
                             onChange={(e) =>
                               setEditingItem({ ...editingItem, value: e.target.value })
                             }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleUpdateItem(type, item.id, editingItem.value, editingItem.position);
+                              }
+                              if (e.key === "Escape") setEditingItem(null);
+                            }}
                             placeholder="Name"
                             className="h-8"
                             autoFocus
@@ -283,8 +302,10 @@ export default function CatalogManagementPage() {
                               setEditingItem({ ...editingItem, position: e.target.value })
                             }
                             onKeyDown={(e) => {
-                              if (e.key === "Enter")
+                              if (e.key === "Enter") {
+                                e.preventDefault();
                                 handleUpdateItem(type, item.id, editingItem.value, editingItem.position);
+                              }
                               if (e.key === "Escape") setEditingItem(null);
                             }}
                             placeholder="Position"
@@ -298,8 +319,10 @@ export default function CatalogManagementPage() {
                             setEditingItem({ ...editingItem, value: e.target.value })
                           }
                           onKeyDown={(e) => {
-                            if (e.key === "Enter")
+                            if (e.key === "Enter") {
+                              e.preventDefault();
                               handleUpdateItem(type, item.id, editingItem.value);
+                            }
                             if (e.key === "Escape") setEditingItem(null);
                           }}
                           className="h-8 flex-1"
