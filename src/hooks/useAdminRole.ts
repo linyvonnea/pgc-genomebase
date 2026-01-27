@@ -15,7 +15,7 @@ function normalizeRole(role: string | undefined): AdminRole | undefined {
   const normalized = role.toLowerCase().trim();
   
   if (normalized === "superadmin" || normalized === "super-admin" || normalized === "super admin") {
-    return "super-admin";
+    return "superadmin";
   }
   if (normalized === "admin") {
     return "admin";
