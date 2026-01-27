@@ -12,8 +12,9 @@ export function usePermissions(userRole: UserRole | undefined) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userRole) {
-      setLoading(false);
+    // Keep loading true if userRole is undefined (auth not ready yet)
+    if (userRole === undefined) {
+      setLoading(true);
       return;
     }
 
