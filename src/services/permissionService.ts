@@ -44,10 +44,21 @@ export async function updateRolePermissions(
 ): Promise<void> {
   try {
     const docRef = doc(db, ROLES_COLLECTION, role);
-    await updateDoc(docRef, {
-      ...permissions,
-      updatedAt: serverTimestamp(),
-    });
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      await updateDoc(docRef, {
+        ...permissions,
+        updatedAt: serverTimestamp(),
+      });
+    } else {
+      // Create the document if it doesn't exist
+      await setDoc(docRef, {
+        ...permissions,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+    }
   } catch (error) {
     console.error(`Error updating permissions for ${role}:`, error);
     throw error;

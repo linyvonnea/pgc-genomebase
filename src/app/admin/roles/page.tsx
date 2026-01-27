@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Save, RotateCcw, Info } from "lucide-react";
 import { toast } from "sonner";
+import { getRolePermissions, updateRolePermissions } from "@/services/permissionService";
 import {
   UserRole,
   RolePermissions,
@@ -34,6 +35,24 @@ function RoleManagementContent() {
     DEFAULT_ROLE_PERMISSIONS[selectedRole]
   );
   const [hasChanges, setHasChanges] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Load permissions from Firestore when role changes
+  useEffect(() => {
+    const loadPermissions = async () => {
+      setLoading(true);
+      try {
+        const rolePerms = await getRolePermissions(selectedRole);
+        setPermissions(rolePerms);
+      } catch (error) {
+        console.error("Error loading permissions:", error);
+        toast.error("Failed to load permissions");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadPermissions();
+  }, [selectedRole]);
 
   const handleRoleChange = (role: UserRole) => {
     if (hasChanges) {
@@ -42,8 +61,8 @@ function RoleManagementContent() {
       }
     }
     setSelectedRole(role);
-    setPermissions(DEFAULT_ROLE_PERMISSIONS[role]);
     setHasChanges(false);
+    // Permissions will be loaded by useEffect
   };
 
   const handlePermissionToggle = (
@@ -61,23 +80,32 @@ function RoleManagementContent() {
   };
 
   const handleSave = async () => {
+    setLoading(true);
     try {
-      // TODO: Implement save to Firestore/database
-      // await updateRolePermissions(selectedRole, permissions);
-      
-      console.log("Saving permissions for role:", selectedRole, permissions);
+      await updateRolePermissions(selectedRole, permissions);
       toast.success(`Permissions updated for ${ROLE_LABELS[selectedRole]}`);
       setHasChanges(false);
     } catch (error) {
       toast.error("Failed to save permissions");
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleReset = () => {
-    setPermissions(DEFAULT_ROLE_PERMISSIONS[selectedRole]);
-    setHasChanges(false);
-    toast.info("Reset to default permissions");
+  const handleReset = async () => {
+    setLoading(true);
+    try {
+      const rolePerms = await getRolePermissions(selectedRole);
+      setPermissions(rolePerms);
+      setHasChanges(false);
+      toast.info("Reset to saved permissions");
+    } catch (error) {
+      console.error("Error resetting permissions:", error);
+      toast.error("Failed to reset permissions");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderPermissionRow = (module: keyof RolePermissions) => {
@@ -92,6 +120,7 @@ function RoleManagementContent() {
             <Checkbox
               checked={modulePerms[action]}
               onCheckedChange={() => handlePermissionToggle(module, action)}
+              disabled={loading}
               className="h-5 w-5"
             />
           </div>
@@ -191,7 +220,7 @@ function RoleManagementContent() {
                     variant="outline"
                     size="sm"
                     onClick={handleReset}
-                    disabled={!hasChanges}
+                    disabled={!hasChanges || loading}
                   >
                     <RotateCcw className="h-4 w-4 mr-1" />
                     Reset
@@ -199,11 +228,11 @@ function RoleManagementContent() {
                   <Button
                     size="sm"
                     onClick={handleSave}
-                    disabled={!hasChanges}
+                    disabled={!hasChanges || loading}
                     className="bg-green-600 hover:bg-green-700"
                   >
                     <Save className="h-4 w-4 mr-1" />
-                    Save Changes
+                    {loading ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
               </div>
