@@ -29,7 +29,7 @@ export default function CatalogManagementPage() {
 
 function CatalogManagementContent() {
   const { adminInfo } = useAuth();
-  const { canDelete } = usePermissions(adminInfo?.role);
+  const { canCreate, canEdit, canDelete } = usePermissions(adminInfo?.role);
   const [catalogs, setCatalogs] = useState<CatalogSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<{ type: CatalogType; id: string; value: string; position?: string } | null>(null);
@@ -215,7 +215,7 @@ function CatalogManagementContent() {
         </CardHeader>
         <CardContent className="space-y-3">
           {/* Add new item */}
-          {type === "personnelAssigned" ? (
+          {type === "personnelAssigned" && canCreate("catalogSettings") ? (
             <div className="space-y-2">
               <Input
                 placeholder="Enter name..."
@@ -250,7 +250,7 @@ function CatalogManagementContent() {
                 </Button>
               </div>
             </div>
-          ) : (
+          ) : canCreate("catalogSettings") ? (
             <div className="flex gap-2">
               <Input
                 placeholder="Add new item..."
@@ -271,7 +271,7 @@ function CatalogManagementContent() {
                 Add
               </Button>
             </div>
-          )}
+          ) : null}
 
           <Separator />
 
@@ -376,16 +376,18 @@ function CatalogManagementContent() {
                           Inactive
                         </Badge>
                       )}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() =>
-                          setEditingItem({ type, id: item.id, value: item.value, position: item.position })
-                        }
-                        className="h-8 w-8 p-0"
-                      >
-                        <Pencil className="h-4 w-4 text-blue-600" />
-                      </Button>
+                      {canEdit("catalogSettings") && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() =>
+                            setEditingItem({ type, id: item.id, value: item.value, position: item.position })
+                          }
+                          className="h-8 w-8 p-0"
+                        >
+                          <Pencil className="h-4 w-4 text-blue-600" />
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="ghost"
