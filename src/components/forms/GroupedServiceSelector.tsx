@@ -110,7 +110,7 @@ export function GroupedServiceSelector({
             {categoryNames.map((cat) => [
               // Category separator row
               <TableRow key={cat + "-sep"} className="bg-gray-50">
-                <TableCell colSpan={7} className="!p-3 !pl-4 text-lg font-extrabold text-gray-700 border-b border-gray-200 tracking-wide">
+                <TableCell colSpan={7} className="!p-3 !pl-4 text-base font-bold text-gray-700 border-b border-gray-200 tracking-wide">
                   {cat}
                 </TableCell>
               </TableRow>,
@@ -217,12 +217,12 @@ export function GroupedServiceSelector({
             value={type}
             className="border rounded-lg overflow-hidden shadow-sm"
           >
-            <AccordionTrigger className={`px-4 py-3 ${getTypeBadgeColor(type)} hover:no-underline`}>
+            <AccordionTrigger className={`px-4 py-4 ${getTypeBadgeColor(type)} hover:no-underline`}>
               <div className="flex items-center gap-3">
-                <Badge variant="outline" className={`${getTypeBadgeColor(type)} font-semibold`}>
+                <Badge variant="outline" className={`${getTypeBadgeColor(type)} font-extrabold text-xl px-4 py-2`}>
                   {type}
                 </Badge>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-base text-muted-foreground font-semibold">
                   ({services.length} service{services.length !== 1 ? 's' : ''})
                 </span>
               </div>
