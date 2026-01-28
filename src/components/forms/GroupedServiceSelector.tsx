@@ -217,7 +217,7 @@ export function GroupedServiceSelector({
             value={type}
             className="border rounded-lg overflow-hidden shadow-sm"
           >
-            <AccordionTrigger className={`px-4 py-3 ${getTypeBadgeColor(type)} hover:no-underline`}>
+            <AccordionTrigger className={`px-4 py-4 ${getTypeBadgeColor(type)} hover:no-underline`}>
               <div className="flex items-center gap-3">
                 <Badge variant="outline" className={`${getTypeBadgeColor(type)} font-bold text-base px-3 py-1`}>
                   {type}
