@@ -47,7 +47,6 @@ import { PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
 import { QuotationPDF } from "./QuotationPDF";
 import { QuotationHistoryPanel } from "./QuotationHistoryPanel";
 import useAuth from "@/hooks/useAuth";
-import { GroupedServiceSelector } from "@/components/forms/GroupedServiceSelector";
 
 // Allow editable quantity ("" or number)
 type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & { 
@@ -412,16 +411,16 @@ export default function QuotationBuilder({
         </div>
 
         <ScrollArea className="h-[65vh] pr-2">
-          <GroupedServiceSelector
-            catalog={catalog}
-            selectedServices={selectedServices}
-            search={search}
-            showSelectedOnly={showSelectedOnly}
-            onToggleService={toggleService}
-            onUpdateQuantity={updateQuantity}
-            onUpdateSamples={updateSamples}
-            onUpdateParticipants={updateParticipants}
-          />
+          <Accordion type="multiple" className="space-y-4">
+            {Object.entries(groupedByType).map(([type, items]) => (
+              <AccordionItem key={type} value={type}>
+                <AccordionTrigger className="text-lg font-bold capitalize">
+                  {type}
+                </AccordionTrigger>
+                <AccordionContent>{renderTable(items, type)}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </ScrollArea>
       </div>
 
