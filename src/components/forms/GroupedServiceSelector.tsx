@@ -189,7 +189,7 @@ export function GroupedServiceSelector({
                         }
                         disabled={!isSelected}
                         placeholder="0"
-                        className="h-8 w-28 md:w-32 lg:w-36"
+                        className="h-8 w-12 min-w-[2.5rem] text-center"
                       />
                     </TableCell>
                     <TableCell className="text-right font-semibold">
