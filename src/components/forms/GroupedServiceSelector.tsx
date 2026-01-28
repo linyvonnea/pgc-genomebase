@@ -65,8 +65,10 @@ export function GroupedServiceSelector({
       const matchesFilter = !showSelectedOnly || selectedIds.has(item.id);
       
       if (matchesSearch && matchesFilter) {
-        if (!result[item.type]) result[item.type] = [];
-        result[item.type].push(item);
+        // Normalize the type to capitalized version for grouping
+        const normalizedType = item.type.charAt(0).toUpperCase() + item.type.slice(1).toLowerCase();
+        if (!result[normalizedType]) result[normalizedType] = [];
+        result[normalizedType].push(item);
       }
     }
     return result;
