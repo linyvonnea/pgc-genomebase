@@ -235,13 +235,10 @@ export default function QuotationBuilder({
           <TableHead className="min-w-[250px] font-semibold">Service</TableHead>
           <TableHead className="w-[100px] font-semibold">Unit</TableHead>
           <TableHead className="w-[100px] text-right font-semibold">Price</TableHead>
-          <TableHead className="w-[100px]">
-            <span className={isBioinformatics ? "font-semibold" : "font-normal"}>Samples</span>
-          </TableHead>
           <TableHead className="w-[120px]">
             <span className={isTraining ? "font-semibold" : "font-normal"}>Participants</span>
           </TableHead>
-          <TableHead className="w-[80px] font-semibold">Qty</TableHead>
+          <TableHead className="w-[150px] font-semibold">Qty</TableHead>
           <TableHead className="w-[120px] text-right font-semibold">Amount</TableHead>
         </TableRow>
       </TableHeader>
@@ -285,21 +282,6 @@ export default function QuotationBuilder({
               <TableCell>{item.unit}</TableCell>
               <TableCell className="text-right">
                 {item.price.toFixed(2)}
-              </TableCell>
-              <TableCell>
-                <Input
-                  type="number"
-                  min={0}
-                  value={samples}
-                  onChange={(e) =>
-                    updateSamples(
-                      item.id,
-                      e.target.value === "" ? "" : +e.target.value
-                    )
-                  }
-                  disabled={!isSelected || !isBioinformatics}
-                  placeholder={isBioinformatics ? "0" : "—"}
-                />
               </TableCell>
               <TableCell>
                 <Input
