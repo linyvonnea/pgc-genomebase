@@ -334,45 +334,113 @@ function ManualQuotationContent() {
 
       <div className="w-96 shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
         <h3 className="text-lg font-bold mb-2">Summary</h3>
-        <Separator className="mb-2" />
-        {cleanedServices.map((item) => (
-          <div key={item.id} className="flex justify-between text-sm mb-1">
-            <span>{item.name} x {item.quantity}</span>
-            <span>₱{(item.price * item.quantity).toFixed(2)}</span>
-          </div>
-        ))}
-        <Separator className="my-2" />
-        <p className="text-sm">Subtotal: ₱{subtotal.toFixed(2)}</p>
-        {isInternal && (
-          <p className="text-sm">Discount (12%): ₱{discount.toFixed(2)}</p>
-        )}
-        <p className="text-base font-semibold text-primary">
-          Total: ₱{total.toFixed(2)}
+        <p className="text-sm text-muted-foreground mb-2">
+          {cleanedServices.length} {cleanedServices.length === 1 ? 'service' : 'services'} selected
         </p>
+        <Separator className="mb-2" />
+        {cleanedServices.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p className="text-sm">No services selected</p>
+            <p className="text-xs mt-1">Select services from the list to continue</p>
+          </div>
+        ) : (
+          <>
+            {Object.entries(
+              cleanedServices.reduce((acc, item) => {
+                const category = item.type || 'Other';
+                if (!acc[category]) acc[category] = [];
+                acc[category].push(item);
+                return acc;
+              }, {} as Record<string, typeof cleanedServices>)
+            ).map(([category, items]) => (
+              <div key={category} className="mb-3">
+                <p className="text-xs font-semibold text-gray-600 uppercase mb-1">
+                  {category} ({items.length})
+                </p>
+                {items.map((item) => {
+                  const serviceType = item.type.toLowerCase();
+                  let totalAmount = 0;
+                  
+                  if (serviceType.includes('bioinformatics') || serviceType.includes('bioinfo')) {
+                    const samples = (item as any).samples ?? 1;
+                    const samplesAmount = calculateItemTotal(samples, item.price, {
+                      minQuantity: (item as any).minQuantity,
+                      additionalUnitPrice: (item as any).additionalUnitPrice,
+                    });
+                    totalAmount = samplesAmount * item.quantity;
+                  } else if (serviceType.includes('training')) {
+                    const participants = (item as any).participants ?? 1;
+                    const participantsAmount = calculateItemTotal(participants, item.price, {
+                      minQuantity: (item as any).minParticipants,
+                      additionalUnitPrice: (item as any).additionalParticipantPrice,
+                    });
+                    totalAmount = participantsAmount * item.quantity;
+                  } else {
+                    totalAmount = item.price * item.quantity;
+                  }
+                  
+                  return (
+                    <div key={item.id} className="flex justify-between text-sm mb-1 pl-2">
+                      <span className="truncate">
+                        {item.name} x {item.quantity}
+                      </span>
+                      <span className="font-medium">₱{totalAmount.toFixed(2)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </>
+        )}
+        <Separator className="my-2" />
+        <div className="space-y-1">
+          <div className="flex justify-between text-sm">
+            <span>Subtotal:</span>
+            <span>₱{subtotal.toFixed(2)}</span>
+          </div>
+          {isInternal && (
+            <div className="flex justify-between text-sm text-green-600">
+              <span>Applied 12% Discount:</span>
+              <span>-₱{discount.toFixed(2)}</span>
+            </div>
+          )}
+        </div>
+        <Separator className="my-2" />
+        <div className="flex justify-between text-lg font-bold text-primary">
+          <span>Total:</span>
+          <span>₱{total.toFixed(2)}</span>
+        </div>
 
         <Dialog open={openPreview} onOpenChange={setOpenPreview}>
           <DialogTrigger asChild>
-            <Button className="mt-4 w-full">Preview Quotation</Button>
+            <Button 
+              className="mt-4 w-full"
+              disabled={cleanedServices.length === 0}
+            >
+              Preview Quotation
+            </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl h-[90vh] overflow-auto">
-            <DialogHeader>
+          <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+            <DialogHeader className="px-6 pt-6">
               <DialogTitle>Preview Quotation PDF</DialogTitle>
             </DialogHeader>
-            <div className="mt-4">
-              <PDFViewer width="100%" height="600">
+            <div className="flex-1 overflow-hidden px-6 pb-6">
+              <PDFViewer width="100%" height="100%" className="border rounded">
                 <QuotationPDF
                   services={cleanedServices}
                   clientInfo={clientInfo}
                   referenceNumber={referenceNumber}
                   useInternalPrice={isInternal}
                   preparedBy={{
-                    name: adminInfo?.name || "Admin",
-                    position: adminInfo?.position || "N/A",
+                    name: adminInfo?.name || "—",
+                    position: adminInfo?.position || "—",
                   }}
                   dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                 />
               </PDFViewer>
-              <div className="text-right mt-4">
+            </div>
+            <div className="px-6 pb-6 pt-4 border-t">
+              <div className="text-right">
                 <PDFDownloadLink
                   document={
                     <QuotationPDF
@@ -381,8 +449,8 @@ function ManualQuotationContent() {
                       referenceNumber={referenceNumber}
                       useInternalPrice={isInternal}
                       preparedBy={{
-                        name: adminInfo?.name || "Admin",
-                        position: adminInfo?.position || "N/A",
+                        name: adminInfo?.name || "—",
+                        position: adminInfo?.position || "—",
                       }}
                       dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                     />
@@ -390,7 +458,7 @@ function ManualQuotationContent() {
                   fileName={`${referenceNumber || "manual-quotation"}.pdf`}
                 >
                   {({ loading }) => (
-                    <Button disabled={loading}>
+                    <Button disabled={loading || cleanedServices.length === 0}>
                       {loading ? "Preparing..." : "Download Quotation PDF"}
                     </Button>
                   )}
