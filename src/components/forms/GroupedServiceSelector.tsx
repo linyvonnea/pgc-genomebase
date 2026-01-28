@@ -43,7 +43,8 @@ export function GroupedServiceSelector({
   onUpdateParticipants,
 }: GroupedServiceSelectorProps) {
   
-  const serviceTypes = ["Bioinformatics", "Laboratory", "Equipment", "Retail", "Training"];
+  // Professional order: Laboratory, Equipment, Bioinformatics, Retail, Training
+  const serviceTypes = ["Laboratory", "Equipment", "Bioinformatics", "Retail", "Training"];
   
   const getTypeBadgeColor = (type: string) => {
     const colors: Record<string, string> = {
