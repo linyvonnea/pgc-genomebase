@@ -76,9 +76,8 @@ export function GroupedServiceSelector({
 
   const renderServiceTable = (services: ServiceItem[], serviceType: string) => {
     const normalizedType = serviceType.toLowerCase();
-    const isBioinformatics = normalizedType === "bioinformatics";
     const isTraining = normalizedType === "training";
-    
+
     return (
       <div className="border rounded-md overflow-hidden">
         <Table>
@@ -91,7 +90,7 @@ export function GroupedServiceSelector({
               <TableHead className="w-[100px]">Unit</TableHead>
               <TableHead className="w-[100px] text-right">Price</TableHead>
               <TableHead className="w-[120px]">
-                {isBioinformatics ? "Samples" : isTraining ? <span className="font-semibold">Participants</span> : "—"}
+                {isTraining ? <span className="font-semibold">Participants</span> : "—"}
               </TableHead>
               <TableHead className="w-[100px]">Qty</TableHead>
               <TableHead className="w-[120px] text-right">Amount</TableHead>
@@ -100,20 +99,13 @@ export function GroupedServiceSelector({
           <TableBody>
             {services.map((item) => {
               const isSelected = selectedServices.find((s) => s.id === item.id);
-              const samples = (isSelected as any)?.samples ?? "";
               const participants = (isSelected as any)?.participants ?? "";
               const quantity = isSelected?.quantity ?? "";
               const price = isSelected?.price ?? 0;
 
               let amount = 0;
               if (isSelected && typeof quantity === "number") {
-                if (isBioinformatics && typeof samples === "number") {
-                  const samplesAmount = calculateItemTotal(samples, price, {
-                    minQuantity: (item as any).minQuantity,
-                    additionalUnitPrice: (item as any).additionalUnitPrice,
-                  });
-                  amount = samplesAmount * quantity;
-                } else if (isTraining && typeof participants === "number") {
+                if (isTraining && typeof participants === "number") {
                   const participantsAmount = calculateItemTotal(participants, price, {
                     minQuantity: (item as any).minParticipants,
                     additionalUnitPrice: (item as any).additionalParticipantPrice,
@@ -149,22 +141,6 @@ export function GroupedServiceSelector({
                     ₱{item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </TableCell>
                   <TableCell>
-                    {isBioinformatics && (
-                      <Input
-                        type="number"
-                        min={0}
-                        value={samples}
-                        onChange={(e) =>
-                          onUpdateSamples(
-                            item.id,
-                            e.target.value === "" ? "" : +e.target.value
-                          )
-                        }
-                        disabled={!isSelected}
-                        placeholder="0"
-                        className="h-8"
-                      />
-                    )}
                     {isTraining && (
                       <Input
                         type="number"
