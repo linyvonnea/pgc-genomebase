@@ -90,7 +90,16 @@ export function GroupedServiceSelector({
 
     return (
       <div className="border rounded-md overflow-hidden">
-        <Table>
+        <Table className="table-fixed w-full">
+          <colgroup>
+            <col style={{ width: '50px' }} />
+            <col style={{ width: '280px' }} />
+            <col style={{ width: '100px' }} />
+            <col style={{ width: '100px' }} />
+            <col style={{ width: '120px' }} />
+            <col style={{ width: '100px' }} />
+            <col style={{ width: '120px' }} />
+          </colgroup>
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="w-[50px]">✔</TableHead>
@@ -110,7 +119,7 @@ export function GroupedServiceSelector({
             {categoryNames.map((cat) => [
               // Category separator row
               <TableRow key={cat + "-sep"} className="bg-gray-50">
-                <TableCell colSpan={7} className="!p-3 !pl-4 text-base font-bold text-gray-700 border-b border-gray-200 tracking-wide">
+                <TableCell colSpan={7} className="!p-3 !pl-4 text-sm font-semibold text-gray-700 border-b border-gray-200 tracking-wide">
                   {cat}
                 </TableCell>
               </TableRow>,
