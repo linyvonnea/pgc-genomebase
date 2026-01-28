@@ -38,10 +38,13 @@ import { QuotationPDF } from "@/components/quotation/QuotationPDF";
 import { ServiceItem } from "@/types/ServiceItem";
 import { SelectedService as StrictSelectedService } from "@/types/SelectedService";
 import { PermissionGuard } from "@/components/PermissionGuard";
+import { calculateItemTotal } from "@/lib/calculatePrice";
 
 // Editable version for input
 type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
   quantity: number | "";
+  samples?: number | "";
+  participants?: number | "";
 };
 
 export default function ManualQuotationPage() {
@@ -64,6 +67,7 @@ function ManualQuotationContent() {
   });
   const [selectedServices, setSelectedServices] = useState<EditableSelectedService[]>([]);
   const [search, setSearch] = useState("");
+  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [isInternal, setIsInternal] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState("");
   const [openPreview, setOpenPreview] = useState(false);
@@ -81,7 +85,7 @@ function ManualQuotationContent() {
     setSelectedServices((prev) => {
       const exists = prev.find((s) => s.id === id);
       if (exists) return prev.filter((s) => s.id !== id);
-      return [...prev, { ...service, quantity: 1, description: service.description }];
+      return [...prev, { ...service, quantity: 1, samples: 0, participants: 0, description: service.description }];
     });
   };
 
@@ -91,16 +95,55 @@ function ManualQuotationContent() {
     );
   };
 
+  const updateSamples = (id: string, samples: number | "") => {
+    setSelectedServices((prev) =>
+      prev.map((svc) => (svc.id === id ? { ...svc, samples } : svc))
+    );
+  };
+
+  const updateParticipants = (id: string, participants: number | "") => {
+    setSelectedServices((prev) =>
+      prev.map((svc) => (svc.id === id ? { ...svc, participants } : svc))
+    );
+  };
+
   const cleanedServices: StrictSelectedService[] = selectedServices
     .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
     .map((s) => ({ ...s, quantity: s.quantity as number }));
 
-  const subtotal = cleanedServices.reduce((sum, item) => sum + item.quantity * item.price, 0);
+  const subtotal = cleanedServices.reduce((sum, item) => {
+    const serviceType = item.type.toLowerCase();
+    
+    if (serviceType.includes('bioinformatics') || serviceType.includes('bioinfo')) {
+      // Use samples for bioinformatics
+      const samples = (item as any).samples ?? 1;
+      const samplesAmount = calculateItemTotal(samples, item.price, {
+        minQuantity: (item as any).minQuantity,
+        additionalUnitPrice: (item as any).additionalUnitPrice,
+      });
+      return sum + (samplesAmount * item.quantity);
+    } else if (serviceType.includes('training')) {
+      // Use participants for training
+      const participants = (item as any).participants ?? 1;
+      const participantsAmount = calculateItemTotal(participants, item.price, {
+        minQuantity: (item as any).minParticipants,
+        additionalUnitPrice: (item as any).additionalParticipantPrice,
+      });
+      return sum + (participantsAmount * item.quantity);
+    } else {
+      // Default calculation
+      return sum + (item.price * item.quantity);
+    }
+  }, 0);
   const discount = isInternal ? subtotal * 0.12 : 0;
   const total = subtotal - discount;
 
   const groupedByType = catalog.reduce<Record<string, ServiceItem[]>>((acc, item) => {
-    if (!search || item.name.toLowerCase().includes(search.toLowerCase())) {
+    const selectedIds = new Set(selectedServices.map(s => s.id));
+    const matchesSearch = !search || item.name.toLowerCase().includes(search.toLowerCase());
+    const matchesFilter = !showSelectedOnly || selectedIds.has(item.id);
+    
+    if (matchesSearch && matchesFilter) {
       acc[item.type] = acc[item.type] || [];
       acc[item.type].push(item);
     }
@@ -146,12 +189,21 @@ function ManualQuotationContent() {
           </div>
         </div>
 
-        <Input
-          placeholder="Search services..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="mb-4"
-        />
+        <div className="flex gap-4 items-center mb-4">
+          <Input
+            placeholder="Search services..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1"
+          />
+          <div className="flex items-center gap-2 whitespace-nowrap">
+            <Checkbox
+              checked={showSelectedOnly}
+              onCheckedChange={(val) => setShowSelectedOnly(!!val)}
+            />
+            <span className="text-sm">Show selected only</span>
+          </div>
+        </div>
 
         <ScrollArea className="h-[60vh] pr-2">
           <Accordion type="multiple" className="space-y-4">
@@ -164,22 +216,53 @@ function ManualQuotationContent() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>✔</TableHead>
-                        <TableHead>Service</TableHead>
-                        <TableHead>Unit</TableHead>
-                        <TableHead>Price</TableHead>
-                        <TableHead>Qty</TableHead>
-                        <TableHead>Amount</TableHead>
+                        <TableHead className="w-[50px] font-semibold">✔</TableHead>
+                        <TableHead className="min-w-[250px] font-semibold">Service</TableHead>
+                        <TableHead className="w-[100px] font-semibold">Unit</TableHead>
+                        <TableHead className="w-[100px] text-right font-semibold">Price</TableHead>
+                        <TableHead className="w-[100px]">
+                          <span className={type.toLowerCase().includes('bioinformatics') || type.toLowerCase().includes('bioinfo') ? "font-semibold" : "font-normal"}>
+                            Samples
+                          </span>
+                        </TableHead>
+                        <TableHead className="w-[120px]">
+                          <span className={type.toLowerCase().includes('training') ? "font-semibold" : "font-normal"}>
+                            Participants
+                          </span>
+                        </TableHead>
+                        <TableHead className="w-[80px] font-semibold">Qty</TableHead>
+                        <TableHead className="w-[120px] text-right font-semibold">Amount</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {items.map((item) => {
                         const isSelected = selectedServices.find((s) => s.id === item.id);
+                        const samples = (isSelected as any)?.samples ?? "";
+                        const participants = (isSelected as any)?.participants ?? "";
                         const quantity = isSelected?.quantity ?? "";
-                        const amount =
-                          isSelected && typeof quantity === "number"
-                            ? item.price * quantity
-                            : 0;
+                        const price = isSelected?.price ?? 0;
+                        const isBioinformatics = type.toLowerCase().includes('bioinformatics') || type.toLowerCase().includes('bioinfo');
+                        const isTraining = type.toLowerCase().includes('training');
+
+                        // Calculate amount based on service type
+                        let amount = 0;
+                        if (isSelected && typeof quantity === "number") {
+                          if (isBioinformatics && typeof samples === "number") {
+                            const samplesAmount = calculateItemTotal(samples, price, {
+                              minQuantity: (item as any).minQuantity,
+                              additionalUnitPrice: (item as any).additionalUnitPrice,
+                            });
+                            amount = samplesAmount * quantity;
+                          } else if (isTraining && typeof participants === "number") {
+                            const participantsAmount = calculateItemTotal(participants, price, {
+                              minQuantity: (item as any).minParticipants,
+                              additionalUnitPrice: (item as any).additionalParticipantPrice,
+                            });
+                            amount = participantsAmount * quantity;
+                          } else {
+                            amount = price * quantity;
+                          }
+                        }
 
                         return (
                           <TableRow key={item.id}>
@@ -191,7 +274,37 @@ function ManualQuotationContent() {
                             </TableCell>
                             <TableCell>{item.name}</TableCell>
                             <TableCell>{item.unit}</TableCell>
-                            <TableCell>{item.price.toFixed(2)}</TableCell>
+                            <TableCell className="text-right">{item.price.toFixed(2)}</TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                min={0}
+                                value={samples}
+                                onChange={(e) =>
+                                  updateSamples(
+                                    item.id,
+                                    e.target.value === "" ? "" : +e.target.value
+                                  )
+                                }
+                                disabled={!isSelected || !isBioinformatics}
+                                placeholder={isBioinformatics ? "0" : "—"}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                min={0}
+                                value={participants}
+                                onChange={(e) =>
+                                  updateParticipants(
+                                    item.id,
+                                    e.target.value === "" ? "" : +e.target.value
+                                  )
+                                }
+                                disabled={!isSelected || !isTraining}
+                                placeholder={isTraining ? "0" : "—"}
+                              />
+                            </TableCell>
                             <TableCell>
                               <Input
                                 type="number"
@@ -206,7 +319,7 @@ function ManualQuotationContent() {
                                 disabled={!isSelected}
                               />
                             </TableCell>
-                            <TableCell>{amount.toFixed(2)}</TableCell>
+                            <TableCell className="text-right">{amount.toFixed(2)}</TableCell>
                           </TableRow>
                         );
                       })}
