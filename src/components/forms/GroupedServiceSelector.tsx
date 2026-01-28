@@ -78,6 +78,15 @@ export function GroupedServiceSelector({
     const normalizedType = serviceType.toLowerCase();
     const isTraining = normalizedType === "training";
 
+    // Group services by category
+    const servicesByCategory: Record<string, ServiceItem[]> = {};
+    for (const svc of services) {
+      const cat = svc.category || 'Uncategorized';
+      if (!servicesByCategory[cat]) servicesByCategory[cat] = [];
+      servicesByCategory[cat].push(svc);
+    }
+    const categoryNames = Object.keys(servicesByCategory);
+
     return (
       <div className="border rounded-md overflow-hidden">
         <Table>
@@ -97,57 +106,82 @@ export function GroupedServiceSelector({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {services.map((item) => {
-              const isSelected = selectedServices.find((s) => s.id === item.id);
-              const participants = (isSelected as any)?.participants ?? "";
-              const quantity = isSelected?.quantity ?? "";
-              const price = isSelected?.price ?? 0;
+            {categoryNames.map((cat) => [
+              // Category separator row
+              <TableRow key={cat + "-sep"} className="bg-gray-50">
+                <TableCell colSpan={7} className="!p-2 !pl-4 text-xs font-bold text-gray-600 border-b border-gray-200">
+                  {cat}
+                </TableCell>
+              </TableRow>,
+              // Services in this category
+              ...servicesByCategory[cat].map((item) => {
+                const isSelected = selectedServices.find((s) => s.id === item.id);
+                const participants = (isSelected as any)?.participants ?? "";
+                const quantity = isSelected?.quantity ?? "";
+                const price = isSelected?.price ?? 0;
 
-              let amount = 0;
-              if (isSelected && typeof quantity === "number") {
-                if (isTraining && typeof participants === "number") {
-                  const participantsAmount = calculateItemTotal(participants, price, {
-                    minQuantity: (item as any).minParticipants,
-                    additionalUnitPrice: (item as any).additionalParticipantPrice,
-                  });
-                  amount = participantsAmount * quantity;
-                } else {
-                  amount = price * quantity;
+                let amount = 0;
+                if (isSelected && typeof quantity === "number") {
+                  if (isTraining && typeof participants === "number") {
+                    const participantsAmount = calculateItemTotal(participants, price, {
+                      minQuantity: (item as any).minParticipants,
+                      additionalUnitPrice: (item as any).additionalParticipantPrice,
+                    });
+                    amount = participantsAmount * quantity;
+                  } else {
+                    amount = price * quantity;
+                  }
                 }
-              }
 
-              return (
-                <TableRow key={item.id} className={isSelected ? "bg-blue-50/50" : ""}>
-                  <TableCell>
-                    <Checkbox
-                      checked={!!isSelected}
-                      onCheckedChange={() => onToggleService(item.id, item)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="font-medium truncate max-w-[280px]" title={item.name}>
-                        {item.name}
-                      </div>
-                      {item.description && (
-                        <div className="text-xs text-muted-foreground line-clamp-1" title={item.description}>
-                          {item.description}
+                return (
+                  <TableRow key={item.id} className={isSelected ? "bg-blue-50/50" : ""}>
+                    <TableCell>
+                      <Checkbox
+                        checked={!!isSelected}
+                        onCheckedChange={() => onToggleService(item.id, item)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="font-medium truncate max-w-[280px]" title={item.name}>
+                          {item.name}
                         </div>
+                        {item.description && (
+                          <div className="text-xs text-muted-foreground line-clamp-1" title={item.description}>
+                            {item.description}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{item.unit}</TableCell>
+                    <TableCell className="text-right font-medium">
+                      ₱{item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </TableCell>
+                    <TableCell>
+                      {isTraining && (
+                        <Input
+                          type="number"
+                          min={0}
+                          value={participants}
+                          onChange={(e) =>
+                            onUpdateParticipants(
+                              item.id,
+                              e.target.value === "" ? "" : +e.target.value
+                            )
+                          }
+                          disabled={!isSelected}
+                          placeholder="0"
+                          className="h-8"
+                        />
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{item.unit}</TableCell>
-                  <TableCell className="text-right font-medium">
-                    ₱{item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </TableCell>
-                  <TableCell>
-                    {isTraining && (
+                    </TableCell>
+                    <TableCell>
                       <Input
                         type="number"
-                        min={0}
-                        value={participants}
+                        min={1}
+                        value={quantity}
                         onChange={(e) =>
-                          onUpdateParticipants(
+                          onUpdateQuantity(
                             item.id,
                             e.target.value === "" ? "" : +e.target.value
                           )
@@ -156,30 +190,14 @@ export function GroupedServiceSelector({
                         placeholder="0"
                         className="h-8"
                       />
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      min={1}
-                      value={quantity}
-                      onChange={(e) =>
-                        onUpdateQuantity(
-                          item.id,
-                          e.target.value === "" ? "" : +e.target.value
-                        )
-                      }
-                      disabled={!isSelected}
-                      placeholder="0"
-                      className="h-8"
-                    />
-                  </TableCell>
-                  <TableCell className="text-right font-semibold">
-                    {amount > 0 ? `₱${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {amount > 0 ? `₱${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
+            ])}
           </TableBody>
         </Table>
       </div>
