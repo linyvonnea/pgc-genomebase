@@ -39,6 +39,7 @@ import { ServiceItem } from "@/types/ServiceItem";
 import { SelectedService as StrictSelectedService } from "@/types/SelectedService";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import { calculateItemTotal } from "@/lib/calculatePrice";
+import { GroupedServiceSelector } from "@/components/forms/GroupedServiceSelector";
 
 // Editable version for input
 type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
@@ -206,109 +207,16 @@ function ManualQuotationContent() {
         </div>
 
         <ScrollArea className="h-[60vh] pr-2">
-          <Accordion type="multiple" className="space-y-4">
-            {Object.entries(groupedByType).map(([type, items]) => (
-              <AccordionItem key={type} value={type}>
-                <AccordionTrigger className="capitalize font-semibold text-md">
-                  {type}
-                </AccordionTrigger>
-                <AccordionContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[50px] font-semibold">✔</TableHead>
-                        <TableHead className="min-w-[250px] font-semibold">Service</TableHead>
-                        <TableHead className="w-[100px] font-semibold">Unit</TableHead>
-                        <TableHead className="w-[100px] text-right font-semibold">Price</TableHead>
-                        <TableHead className="w-[120px]">
-                          <span className={type.toLowerCase().includes('training') ? "font-semibold" : "font-normal"}>
-                            Participants
-                          </span>
-                        </TableHead>
-                        <TableHead className="w-[150px] font-semibold">Qty</TableHead>
-                        <TableHead className="w-[120px] text-right font-semibold">Amount</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {items.map((item) => {
-                        const isSelected = selectedServices.find((s) => s.id === item.id);
-                        const samples = (isSelected as any)?.samples ?? "";
-                        const participants = (isSelected as any)?.participants ?? "";
-                        const quantity = isSelected?.quantity ?? "";
-                        const price = isSelected?.price ?? 0;
-                        const isBioinformatics = type.toLowerCase().includes('bioinformatics') || type.toLowerCase().includes('bioinfo');
-                        const isTraining = type.toLowerCase().includes('training');
-
-                        // Calculate amount based on service type
-                        let amount = 0;
-                        if (isSelected && typeof quantity === "number") {
-                          if (isBioinformatics && typeof samples === "number") {
-                            const samplesAmount = calculateItemTotal(samples, price, {
-                              minQuantity: (item as any).minQuantity,
-                              additionalUnitPrice: (item as any).additionalUnitPrice,
-                            });
-                            amount = samplesAmount * quantity;
-                          } else if (isTraining && typeof participants === "number") {
-                            const participantsAmount = calculateItemTotal(participants, price, {
-                              minQuantity: (item as any).minParticipants,
-                              additionalUnitPrice: (item as any).additionalParticipantPrice,
-                            });
-                            amount = participantsAmount * quantity;
-                          } else {
-                            amount = price * quantity;
-                          }
-                        }
-
-                        return (
-                          <TableRow key={item.id}>
-                            <TableCell>
-                              <Checkbox
-                                checked={!!isSelected}
-                                onCheckedChange={() => toggleService(item.id, item)}
-                              />
-                            </TableCell>
-                            <TableCell>{item.name}</TableCell>
-                            <TableCell>{item.unit}</TableCell>
-                            <TableCell className="text-right">{item.price.toFixed(2)}</TableCell>
-                            <TableCell>
-                              <Input
-                                type="number"
-                                min={0}
-                                value={participants}
-                                onChange={(e) =>
-                                  updateParticipants(
-                                    item.id,
-                                    e.target.value === "" ? "" : +e.target.value
-                                  )
-                                }
-                                disabled={!isSelected || !isTraining}
-                                placeholder={isTraining ? "0" : "—"}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Input
-                                type="number"
-                                value={quantity}
-                                min={0}
-                                onChange={(e) =>
-                                  updateQuantity(
-                                    item.id,
-                                    e.target.value === "" ? "" : +e.target.value
-                                  )
-                                }
-                                disabled={!isSelected}
-                              />
-                            </TableCell>
-                            <TableCell className="text-right">{amount.toFixed(2)}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          <GroupedServiceSelector
+            catalog={catalog}
+            selectedServices={selectedServices}
+            search={search}
+            showSelectedOnly={showSelectedOnly}
+            onToggleService={toggleService}
+            onUpdateQuantity={updateQuantity}
+            onUpdateSamples={updateSamples}
+            onUpdateParticipants={updateParticipants}
+          />
         </ScrollArea>
       </div>
 
