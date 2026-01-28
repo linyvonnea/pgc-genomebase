@@ -203,7 +203,6 @@ export function GroupedServiceSelector({
                 <Badge variant="outline" className={`${getTypeBadgeColor(type)} font-semibold`}>
                   {type}
                 </Badge>
-                <span className="font-semibold text-base">{type}</span>
                 <span className="text-sm text-muted-foreground">
                   ({services.length} service{services.length !== 1 ? 's' : ''})
                 </span>
