@@ -45,7 +45,7 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
     id: service?.id || "",
     name: service?.name || "",
     category: service?.category || "",
-    type: service?.type || "Laboratory",
+    type: service?.type || "laboratory",
     unit: service?.unit || "",
     price: service?.price || 0,
     description: service?.description || "",
@@ -55,8 +55,8 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
     additionalParticipantPrice: service?.additionalParticipantPrice || undefined,
   });
 
-  const showBioinformaticsFields = formData.type === "Bioinformatics";
-  const showTrainingFields = formData.type === "Training";
+  const showBioinformaticsFields = formData.type === "bioinformatics";
+  const showTrainingFields = formData.type === "training";
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -174,36 +174,26 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Bioinformatics">
-                      <div className="font-medium">Bioinformatics</div>
-                    </SelectItem>
-                    <SelectItem value="Laboratory">
-                      <div className="font-medium">Laboratory</div>
-                    </SelectItem>
-                    <SelectItem value="Equipment">
-                      <div className="font-medium">Equipment</div>
-                    </SelectItem>
-                    <SelectItem value="Retail">
-                      <div className="font-medium">Retail</div>
-                    </SelectItem>
-                    <SelectItem value="Training">
-                      <div className="font-medium">Training</div>
-                    </SelectItem>
+                    <SelectItem value="laboratory">laboratory</SelectItem>
+                    <SelectItem value="equipment">equipment</SelectItem>
+                    <SelectItem value="bioinformatics">bioinformatics</SelectItem>
+                    <SelectItem value="retail">retail</SelectItem>
+                    <SelectItem value="training">training</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Position</Label>
-              <div className="p-3 bg-muted/50 rounded-md border border-muted">
-                <div className="text-sm font-semibold text-foreground capitalize">
-                  {formData.type || 'Select a service type above'}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Services will be grouped under this category
-                </p>
-              </div>
+              <Label htmlFor="name">
+                Service Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="name"
+                placeholder="Enter service name"
+                value={formData.name}
+                onChange={(e) => handleChange("name", e.target.value)}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -217,9 +207,6 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
                   value={formData.category}
                   onChange={(e) => handleChange("category", e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Subcategory for grouping related services
-                </p>
               </div>
 
               <div className="space-y-2">
@@ -233,24 +220,6 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
                   onChange={(e) => handleChange("unit", e.target.value)}
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="name">
-                Service Name <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="name"
-                placeholder="Enter service name"
-                value={formData.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                className="max-w-full"
-              />
-              {formData.name && formData.name.length > 50 && (
-                <p className="text-xs text-amber-600 flex items-center gap-1">
-                  <span>⚠</span> Name may be truncated in displays
-                </p>
-              )}
             </div>
 
             <div className="space-y-2">

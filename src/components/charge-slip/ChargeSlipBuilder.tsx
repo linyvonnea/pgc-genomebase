@@ -53,6 +53,7 @@ import {
 
 import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import useAuth from "@/hooks/useAuth";
+import { GroupedServiceSelector } from "@/components/forms/GroupedServiceSelector";
 
 export type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
   quantity: number | "";
@@ -472,16 +473,16 @@ const subtotal = cleanedServices.reduce((sum, item) => {
         </div>
 
         <ScrollArea className="h-[65vh] pr-2">
-          <Accordion type="multiple" className="space-y-4">
-            {Object.entries(groupedByType).map(([type, items]) => (
-              <AccordionItem key={type} value={type}>
-                <AccordionTrigger className="text-lg font-bold capitalize">
-                  {type}
-                </AccordionTrigger>
-                <AccordionContent>{renderTable(items, type)}</AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          <GroupedServiceSelector
+            catalog={catalog}
+            selectedServices={selectedServices}
+            search={search}
+            showSelectedOnly={showSelectedOnly}
+            onToggleService={toggleService}
+            onUpdateQuantity={updateQuantity}
+            onUpdateSamples={updateSamples}
+            onUpdateParticipants={updateParticipants}
+          />
         </ScrollArea>
       </div>
 
