@@ -206,7 +206,7 @@ function ManualQuotationContent() {
           </div>
         </div>
 
-        <ScrollArea className="h-[60vh] pr-2">
+        <ScrollArea className="h-[60vh] pr-2 w-[56vw] min-w-[520px] max-w-[700px]">
           <GroupedServiceSelector
             catalog={catalog}
             selectedServices={selectedServices}
@@ -220,7 +220,7 @@ function ManualQuotationContent() {
         </ScrollArea>
       </div>
 
-      <div className="w-96 shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
+      <div className="w-[28vw] min-w-[320px] max-w-[420px] shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
         <h3 className="text-lg font-bold mb-2">Summary</h3>
         <p className="text-sm text-muted-foreground mb-2">
           {cleanedServices.length} {cleanedServices.length === 1 ? 'service' : 'services'} selected
