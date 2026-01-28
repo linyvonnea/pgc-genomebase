@@ -110,7 +110,7 @@ export function GroupedServiceSelector({
             {categoryNames.map((cat) => [
               // Category separator row
               <TableRow key={cat + "-sep"} className="bg-gray-50">
-                <TableCell colSpan={7} className="!p-2 !pl-4 text-xs font-bold text-gray-600 border-b border-gray-200">
+                <TableCell colSpan={7} className="!p-3 !pl-4 text-lg font-extrabold text-gray-700 border-b border-gray-200 tracking-wide">
                   {cat}
                 </TableCell>
               </TableRow>,
