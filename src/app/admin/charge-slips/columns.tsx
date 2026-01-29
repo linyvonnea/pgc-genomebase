@@ -18,6 +18,7 @@ const categoryColors: Record<ValidCategory, string> = {
   equipment: "bg-blue-100 text-blue-800",
   bioinformatics: "bg-purple-100 text-purple-800",
   retail: "bg-orange-100 text-orange-800",
+  training: "bg-indigo-100 text-indigo-800",
 };
 
 // normalize to epoch ms for proper numeric sorting
