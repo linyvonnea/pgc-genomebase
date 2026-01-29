@@ -37,7 +37,9 @@ class ErrorBoundary extends React.Component<any, { hasError: boolean; error?: an
 export default function ChargeSlipBuilderPage() {
   return (
     <PermissionGuard module="chargeSlips" action="view">
-      <ChargeSlipBuilderContent />
+      <ErrorBoundary>
+        <ChargeSlipBuilderContent />
+      </ErrorBoundary>
     </PermissionGuard>
   );
 }
