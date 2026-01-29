@@ -13,10 +13,9 @@ const SERVICE_CATEGORIES = [
   "Equipment Use",
   "Bioinformatics Analysis",
   "Retail Sales",
-  "Training",
 ] as const;
 
-type ServiceCategory = (typeof SERVICE_CATEGORIES)[number];
+type ServiceCategory = typeof SERVICE_CATEGORIES[number];
 
 // Colors for each category in the pie chart
 const CATEGORY_COLORS: Record<ServiceCategory, string> = {
@@ -24,7 +23,6 @@ const CATEGORY_COLORS: Record<ServiceCategory, string> = {
   "Equipment Use": "#FFB74D",
   "Bioinformatics Analysis": "#FFF176",
   "Retail Sales": "#81C784",
-  Training: "#4F46E5",
 };
 
 // Type guard to check if a string is a ServiceCategory
