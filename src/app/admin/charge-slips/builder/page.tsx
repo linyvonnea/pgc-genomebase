@@ -49,18 +49,29 @@ function ChargeSlipBuilderContent() {
   const clientId = searchParams.get("clientId") || "";
   const projectId = searchParams.get("projectId") || "";
 
-  const { data: clientData } = useQuery({
+  if (!clientId || !projectId) {
+    return <div className="text-red-600 p-4">Missing clientId or projectId in URL.</div>;
+  }
+
+  const { data: clientData, isLoading: clientLoading, error: clientError } = useQuery({
     queryKey: ["client", clientId],
     queryFn: () => getClientById(clientId),
     enabled: !!clientId,
   });
 
-  const { data: projectData } = useQuery({
+  const { data: projectData, isLoading: projectLoading, error: projectError } = useQuery({
     queryKey: ["project", projectId],
     queryFn: () => getProjectById(projectId),
     enabled: !!projectId,
   });
 
+  if (clientLoading || projectLoading) {
+    return <div className="p-4">Loading...</div>;
+  }
+
+  if (clientError || projectError) {
+    return <div className="p-4 text-red-600">Failed to load client or project data.</div>;
+  }
 
   return (
     <main className="p-4">
