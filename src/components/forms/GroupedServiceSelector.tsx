@@ -111,7 +111,7 @@ export function GroupedServiceSelector({
               <TableHead className="w-[120px]">
                 {isTraining ? <span className="font-semibold">Participants</span> : "—"}
               </TableHead>
-              <TableHead className="w-[100px] text-right pr-5">Qty</TableHead>
+              <TableHead className="w-[100px] pl-2">Qty</TableHead>
               <TableHead className="w-[120px] pl-4">Amount</TableHead>
             </TableRow>
           </TableHeader>
