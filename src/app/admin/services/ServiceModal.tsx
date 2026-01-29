@@ -79,10 +79,10 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
     try {
       const serviceData: ServiceItem = {
         id: formData.id,
-        name: formData.name.toLowerCase(),
-        category: formData.category.toLowerCase(),
+        name: formData.name,
+        category: formData.category,
         type: formData.type.toLowerCase() as any,
-        unit: formData.unit.toLowerCase(),
+        unit: formData.unit,
         price: Number(formData.price),
         description: formData.description || undefined,
         minQuantity: formData.minQuantity ? Number(formData.minQuantity) : undefined,
@@ -171,10 +171,10 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
                   Service Type <span className="text-red-500">*</span>
                 </Label>
                 <Select value={formData.type} onValueChange={(val) => handleChange("type", val)}>
-                  <SelectTrigger className="lowercase">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="lowercase">
+                  <SelectContent>
                     <SelectItem value="bioinformatics">bioinformatics</SelectItem>
                     <SelectItem value="laboratory">laboratory</SelectItem>
                     <SelectItem value="equipment">equipment</SelectItem>
@@ -188,7 +188,7 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
             <div className="space-y-2">
               <Label>Position</Label>
               <div className="p-3 bg-muted/50 rounded-md border border-muted">
-                <div className="text-sm font-semibold text-foreground lowercase">
+                <div className="text-sm font-semibold text-foreground">
                   {formData.type || 'select a service type above'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
