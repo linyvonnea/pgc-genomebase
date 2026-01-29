@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectTrigger,
@@ -41,6 +43,9 @@ export function ChargeSlipTable({ data, columns }: Props) {
   ]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("__all");
+  const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
+
+  const allCategories = ["laboratory", "equipment", "bioinformatics", "retail", "training"];
 
   const table = useReactTable({
     data,
@@ -63,9 +68,14 @@ export function ChargeSlipTable({ data, columns }: Props) {
       const matchesStatus =
         statusFilter === "__all" || status === statusFilter.toLowerCase();
 
-      return matchesSearch && matchesStatus;
+      const rowCategories: string[] = (row.original as any).categories || [];
+      const matchesCategory =
+        categoryFilters.length === 0 ||
+        rowCategories.some((cat) => categoryFilters.includes(cat.toLowerCase()));
+
+      return matchesSearch && matchesStatus && matchesCategory;
     });
-  }, [table, globalFilter, statusFilter]);
+  }, [table, globalFilter, statusFilter, categoryFilters]);
 
   const totalAmount = useMemo(() => {
     return filteredRows.reduce((sum, row) => {
@@ -96,6 +106,46 @@ export function ChargeSlipTable({ data, columns }: Props) {
             <SelectItem value="cancelled">Cancelled</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      {/* Category Checkboxes */}
+      <div className="flex flex-wrap items-center gap-6 p-3 bg-muted/30 rounded-lg border border-dashed">
+        <span className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+          Service Requested:
+        </span>
+        <div className="flex flex-wrap gap-4">
+          {allCategories.map((cat) => (
+            <div key={cat} className="flex items-center space-x-2">
+              <Checkbox
+                id={`cat-${cat}`}
+                checked={categoryFilters.includes(cat)}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    setCategoryFilters((prev) => [...prev, cat]);
+                  } else {
+                    setCategoryFilters((prev) => prev.filter((c) => c !== cat));
+                  }
+                }}
+              />
+              <Label
+                htmlFor={`cat-${cat}`}
+                className="text-sm font-medium leading-none cursor-pointer capitalize"
+              >
+                {cat}
+              </Label>
+            </div>
+          ))}
+          {categoryFilters.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCategoryFilters([])}
+              className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive"
+            >
+              Reset Filters
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Stats */}
