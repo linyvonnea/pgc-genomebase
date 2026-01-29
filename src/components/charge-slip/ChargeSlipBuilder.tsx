@@ -102,17 +102,17 @@ function ChargeSlipBuilderInner({
   });
 
   // Use primary project (first pid) if no specific projectId provided
-  const client = sanitizeObject(clientData || fetchedClient || {});
-  
+  const client = useMemo(() => sanitizeObject(clientData || fetchedClient || {}), [clientData, fetchedClient]);
+
   // Get the effective project ID - prioritize URL param, then primary project from client's pid array
   let effectiveProjectId = urlProjectId;
-  
+
   // If projectId from URL contains comma-separated values, use only the first one (primary)
   if (effectiveProjectId && effectiveProjectId.includes(',')) {
     effectiveProjectId = effectiveProjectId.split(',')[0].trim();
     console.log("Multiple PIDs detected in URL, using primary:", effectiveProjectId);
   }
-  
+
   // If still no projectId, get from client's primary pid
   if (!effectiveProjectId && client && Array.isArray(client.pid) && client.pid.length > 0) {
     effectiveProjectId = client.pid[0];
@@ -147,9 +147,9 @@ function ChargeSlipBuilderInner({
     setSelectedServices((prev) => {
       const exists = prev.find((s) => s.id === id);
       if (exists) return prev.filter((s) => s.id !== id);
-      return [...prev, { 
-        ...service, 
-        quantity: 1, 
+      return [...prev, {
+        ...service,
+        quantity: 1,
         samples: 0,
         participants: 0,
         description: service.description // Preserve description from catalog
@@ -167,7 +167,7 @@ function ChargeSlipBuilderInner({
       prev.map((svc) => (svc.id === id ? { ...svc, samples } : svc))
     );
   };
-  
+
   const updateParticipants = (id: string, participants: number | "") => {
     setSelectedServices((prev) =>
       prev.map((svc) => (svc.id === id ? { ...svc, participants } : svc))
@@ -177,31 +177,31 @@ function ChargeSlipBuilderInner({
     .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
     .map((s) => ({ ...s, quantity: s.quantity as number }));
 
-    // Update the subtotal calculation to use samples or participants based on service type
-const subtotal = cleanedServices.reduce((sum, item) => {
-  const serviceType = item.type.toLowerCase();
-  
-  if (serviceType.includes('bioinformatics') || serviceType.includes('bioinfo')) {
-    // Use samples for bioinformatics
-    const samples = (item as any).samples ?? 1;
-    const samplesAmount = calculateItemTotal(samples, item.price, {
-      minQuantity: (item as any).minQuantity,
-      additionalUnitPrice: (item as any).additionalUnitPrice,
-    });
-    return sum + (samplesAmount * item.quantity);
-  } else if (serviceType.includes('training')) {
-    // Use participants for training
-    const participants = (item as any).participants ?? 1;
-    const participantsAmount = calculateItemTotal(participants, item.price, {
-      minQuantity: (item as any).minParticipants,
-      additionalUnitPrice: (item as any).additionalParticipantPrice,
-    });
-    return sum + (participantsAmount * item.quantity);
-  } else {
-    // Default calculation for other services
-    return sum + (item.price * item.quantity);
-  }
-}, 0);
+  // Update the subtotal calculation to use samples or participants based on service type
+  const subtotal = cleanedServices.reduce((sum, item) => {
+    const serviceType = item.type.toLowerCase();
+
+    if (serviceType.includes('bioinformatics') || serviceType.includes('bioinfo')) {
+      // Use samples for bioinformatics
+      const samples = (item as any).samples ?? 1;
+      const samplesAmount = calculateItemTotal(samples, item.price, {
+        minQuantity: (item as any).minQuantity,
+        additionalUnitPrice: (item as any).additionalUnitPrice,
+      });
+      return sum + (samplesAmount * item.quantity);
+    } else if (serviceType.includes('training')) {
+      // Use participants for training
+      const participants = (item as any).participants ?? 1;
+      const participantsAmount = calculateItemTotal(participants, item.price, {
+        minQuantity: (item as any).minParticipants,
+        additionalUnitPrice: (item as any).additionalParticipantPrice,
+      });
+      return sum + (participantsAmount * item.quantity);
+    } else {
+      // Default calculation for other services
+      return sum + (item.price * item.quantity);
+    }
+  }, 0);
   const discount = isInternal ? subtotal * 0.12 : 0;
   const total = subtotal - discount;
 
@@ -225,13 +225,13 @@ const subtotal = cleanedServices.reduce((sum, item) => {
   const groupedByType = useMemo(() => {
     const result: Record<string, ServiceItem[]> = {};
     const selectedIds = new Set(selectedServices.map(s => s.id));
-    
+
     for (const item of catalog) {
       // Filter by search
       const matchesSearch = !search || item.name.toLowerCase().includes(search.toLowerCase());
       // Filter by selected if showSelectedOnly is true
       const matchesFilter = !showSelectedOnly || selectedIds.has(item.id);
-      
+
       if (matchesSearch && matchesFilter) {
         if (!result[item.type]) result[item.type] = [];
         result[item.type].push(item);
@@ -244,101 +244,101 @@ const subtotal = cleanedServices.reduce((sum, item) => {
     const normalizedType = serviceType.toLowerCase();
     const isBioinformatics = normalizedType === "bioinformatics";
     const isTraining = normalizedType === "training";
-    
+
     return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[50px] font-semibold">✔</TableHead>
-          <TableHead className="min-w-[250px] font-semibold">Service</TableHead>
-          <TableHead className="w-[100px] text-center">Unit</TableHead>
-          <TableHead className="w-[100px] text-center font-semibold">Price</TableHead>
-          <TableHead className="w-[120px]">
-            <span className={isTraining ? "font-semibold" : "font-normal"}>Participants</span>
-          </TableHead>
-          <TableHead className="w-[150px] text-center font-semibold">Qty</TableHead>
-          <TableHead className="w-[120px] text-right font-semibold">Amount</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {services.map((item) => {
-          const isSelected = selectedServices.find((s) => s.id === item.id);
-          const samples = (isSelected as any)?.samples ?? "";
-          const participants = (isSelected as any)?.participants ?? "";
-          const quantity = isSelected?.quantity ?? "";
-          const price = isSelected?.price ?? 0;
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[50px] font-semibold">✔</TableHead>
+            <TableHead className="min-w-[250px] font-semibold">Service</TableHead>
+            <TableHead className="w-[100px] text-center">Unit</TableHead>
+            <TableHead className="w-[100px] text-center font-semibold">Price</TableHead>
+            <TableHead className="w-[120px]">
+              <span className={isTraining ? "font-semibold" : "font-normal"}>Participants</span>
+            </TableHead>
+            <TableHead className="w-[150px] text-center font-semibold">Qty</TableHead>
+            <TableHead className="w-[120px] text-right font-semibold">Amount</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {services.map((item) => {
+            const isSelected = selectedServices.find((s) => s.id === item.id);
+            const samples = (isSelected as any)?.samples ?? "";
+            const participants = (isSelected as any)?.participants ?? "";
+            const quantity = isSelected?.quantity ?? "";
+            const price = isSelected?.price ?? 0;
 
-          // Calculate amount based on service type
-          let amount = 0;
-          if (isSelected && typeof quantity === "number") {
-            if (isBioinformatics && typeof samples === "number") {
-              const samplesAmount = calculateItemTotal(samples, price, {
-                minQuantity: (item as any).minQuantity,
-                additionalUnitPrice: (item as any).additionalUnitPrice,
-              });
-              amount = samplesAmount * quantity;
-            } else if (isTraining && typeof participants === "number") {
-              const participantsAmount = calculateItemTotal(participants, price, {
-                minQuantity: (item as any).minParticipants,
-                additionalUnitPrice: (item as any).additionalParticipantPrice,
-              });
-              amount = participantsAmount * quantity;
-            } else {
-              amount = price * quantity;
+            // Calculate amount based on service type
+            let amount = 0;
+            if (isSelected && typeof quantity === "number") {
+              if (isBioinformatics && typeof samples === "number") {
+                const samplesAmount = calculateItemTotal(samples, price, {
+                  minQuantity: (item as any).minQuantity,
+                  additionalUnitPrice: (item as any).additionalUnitPrice,
+                });
+                amount = samplesAmount * quantity;
+              } else if (isTraining && typeof participants === "number") {
+                const participantsAmount = calculateItemTotal(participants, price, {
+                  minQuantity: (item as any).minParticipants,
+                  additionalUnitPrice: (item as any).additionalParticipantPrice,
+                });
+                amount = participantsAmount * quantity;
+              } else {
+                amount = price * quantity;
+              }
             }
-          }
 
-          return (
-            <TableRow key={item.id}>
-              <TableCell>
-                <Checkbox
-                  checked={!!isSelected}
-                  onCheckedChange={() => toggleService(item.id, item)}
-                />
-              </TableCell>
-              <TableCell>{item.name}</TableCell>
-              <TableCell className="text-center pr-6">{item.unit}</TableCell>
-              <TableCell className="text-right">
-                {item.price.toFixed(2)}
-              </TableCell>
-              <TableCell>
-                <Input
-                  type="number"
-                  min={0}
-                  value={participants}
-                  onChange={(e) =>
-                    updateParticipants(
-                      item.id,
-                      e.target.value === "" ? "" : +e.target.value
-                    )
-                  }
-                  disabled={!isSelected || !isTraining}
-                  placeholder={isTraining ? "0" : "—"}
-                />
-              </TableCell>
-              <TableCell className="text-center pr-5">
-                <Input
-                  type="number"
-                  min={0}
-                  value={quantity}
-                  onChange={(e) =>
-                    updateQuantity(
-                      item.id,
-                      e.target.value === "" ? "" : +e.target.value
-                    )
-                  }
-                  disabled={!isSelected}
-                  className="h-8 w-20 min-w-[3.5rem] text-center"
-                />
-              </TableCell>
-              <TableCell className="pl-4 font-semibold">{amount > 0 ? `₱${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}</TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-  </Table>
-  );
-};
+            return (
+              <TableRow key={item.id}>
+                <TableCell>
+                  <Checkbox
+                    checked={!!isSelected}
+                    onCheckedChange={() => toggleService(item.id, item)}
+                  />
+                </TableCell>
+                <TableCell>{item.name}</TableCell>
+                <TableCell className="text-center pr-6">{item.unit}</TableCell>
+                <TableCell className="text-right">
+                  {item.price.toFixed(2)}
+                </TableCell>
+                <TableCell>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={participants}
+                    onChange={(e) =>
+                      updateParticipants(
+                        item.id,
+                        e.target.value === "" ? "" : +e.target.value
+                      )
+                    }
+                    disabled={!isSelected || !isTraining}
+                    placeholder={isTraining ? "0" : "—"}
+                  />
+                </TableCell>
+                <TableCell className="text-center pr-5">
+                  <Input
+                    type="number"
+                    min={0}
+                    value={quantity}
+                    onChange={(e) =>
+                      updateQuantity(
+                        item.id,
+                        e.target.value === "" ? "" : +e.target.value
+                      )
+                    }
+                    disabled={!isSelected}
+                    className="h-8 w-20 min-w-[3.5rem] text-center"
+                  />
+                </TableCell>
+                <TableCell className="pl-4 font-semibold">{amount > 0 ? `₱${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}</TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    );
+  };
 
   const normalizeCategory = (raw: string): string => {
     const lower = raw.toLowerCase();
@@ -376,7 +376,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
         subtotal,
         discount,
         total,
-        
+
         categories: Array.from(new Set(cleanedServices.map((s) => normalizeCategory(s.category)))),
       };
 
@@ -412,10 +412,10 @@ const subtotal = cleanedServices.reduce((sum, item) => {
       link.download = `${chargeSlipNumber}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
-      
+
       // Invalidate charge slip history to refresh the list
       queryClient.invalidateQueries({ queryKey: ["chargeSlipHistory", effectiveProjectId] });
-      
+
       toast.success("Charge slip saved and downloaded successfully!");
       onSubmit?.(record);
     } catch (error) {
@@ -587,8 +587,8 @@ const subtotal = cleanedServices.reduce((sum, item) => {
 
         <Dialog open={openPreview} onOpenChange={setOpenPreview}>
           <DialogTrigger asChild>
-            <Button 
-              className="mt-4 w-full" 
+            <Button
+              className="mt-4 w-full"
               disabled={cleanedServices.length === 0}
             >
               Preview Charge Slip
@@ -625,7 +625,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
                 />
               </PDFViewer>
               <div className="text-right mt-4">
-                <Button 
+                <Button
                   onClick={handleSaveAndDownload}
                   disabled={cleanedServices.length === 0}
                 >
