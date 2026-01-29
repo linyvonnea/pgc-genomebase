@@ -240,12 +240,12 @@ const subtotal = cleanedServices.reduce((sum, item) => {
         <TableRow>
           <TableHead className="w-[50px] font-semibold">✔</TableHead>
           <TableHead className="min-w-[250px] font-semibold">Service</TableHead>
-          <TableHead className="w-[100px] text-center">Unit</TableHead>
-          <TableHead className="w-[100px] text-center font-semibold">Price</TableHead>
+          <TableHead className="w-[100px] font-semibold">Unit</TableHead>
+          <TableHead className="w-[100px] text-right font-semibold">Price</TableHead>
           <TableHead className="w-[120px]">
             <span className={isTraining ? "font-semibold" : "font-normal"}>Participants</span>
           </TableHead>
-          <TableHead className="w-[150px] text-center font-semibold">Qty</TableHead>
+          <TableHead className="w-[150px] font-semibold">Qty</TableHead>
           <TableHead className="w-[120px] text-right font-semibold">Amount</TableHead>
         </TableRow>
       </TableHeader>
@@ -286,7 +286,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
                 />
               </TableCell>
               <TableCell>{item.name}</TableCell>
-              <TableCell className="text-center pr-6">{item.unit}</TableCell>
+              <TableCell>{item.unit}</TableCell>
               <TableCell className="text-right">
                 {item.price.toFixed(2)}
               </TableCell>
@@ -305,7 +305,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
                   placeholder={isTraining ? "0" : "—"}
                 />
               </TableCell>
-              <TableCell className="text-center pr-5">
+              <TableCell>
                 <Input
                   type="number"
                   min={0}
@@ -317,10 +317,9 @@ const subtotal = cleanedServices.reduce((sum, item) => {
                     )
                   }
                   disabled={!isSelected}
-                  className="h-8 w-20 min-w-[3.5rem] text-center"
                 />
               </TableCell>
-              <TableCell className="pl-4 font-semibold">{amount > 0 ? `₱${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}</TableCell>
+              <TableCell className="text-right">{amount.toFixed(2)}</TableCell>
             </TableRow>
           );
         })}
@@ -416,58 +415,30 @@ const subtotal = cleanedServices.reduce((sum, item) => {
   return (
     <div className="p-6 flex gap-6">
       {/* Left Column */}
-      <div className="flex-[2] min-w-[520px]">
+      <div className="w-[56vw] min-w-[520px] max-w-[700px]">
         <div className="mb-6">
-          <h1 className="text-xl font-semibold mb-2">Build Charge Slip for:</h1>
-          <Accordion type="single" collapsible defaultValue="">
-            <AccordionItem value="client-info" className="border rounded-lg overflow-hidden shadow-sm">
-              <AccordionTrigger className="px-4 py-3 hover:no-underline bg-white text-base font-semibold">
-                Client Information
-              </AccordionTrigger>
-              <AccordionContent className="px-0 pb-0">
-                <div className="pl-6 pr-4 pb-3">
-                  <table className="w-full text-sm">
-                    <tbody>
-                      <tr>
-                        <td className="py-1 pr-4 text-muted-foreground w-40">Charge Slip Number</td>
-                        <td><Input placeholder="Charge Slip Number" value={chargeSlipNumber} onChange={e => setChargeSlipNumber(e.target.value)} /></td>
-                      </tr>
-                      <tr>
-                        <td className="py-1 pr-4 text-muted-foreground">Client Name</td>
-                        <td><Input placeholder="Client Name" value={clientInfo.name} onChange={e => setClientInfo({ ...clientInfo, name: e.target.value })} /></td>
-                      </tr>
-                      <tr>
-                        <td className="py-1 pr-4 text-muted-foreground">Institution</td>
-                        <td><Input placeholder="Institution" value={clientInfo.institution} onChange={e => setClientInfo({ ...clientInfo, institution: e.target.value })} /></td>
-                      </tr>
-                      <tr>
-                        <td className="py-1 pr-4 text-muted-foreground">Designation</td>
-                        <td><Input placeholder="Designation" value={clientInfo.designation} onChange={e => setClientInfo({ ...clientInfo, designation: e.target.value })} /></td>
-                      </tr>
-                      <tr>
-                        <td className="py-1 pr-4 text-muted-foreground">Email</td>
-                        <td><Input placeholder="Email" value={clientInfo.email} onChange={e => setClientInfo({ ...clientInfo, email: e.target.value })} /></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                  <div className="flex items-center gap-2 pt-2">
-                    <Checkbox
-                      checked={useAffiliationAsClientName}
-                      onCheckedChange={val => setUseAffiliationAsClientName(!!val)}
-                    />
-                    <span className="text-sm">Display affiliation as client name in PDF</span>
-                  </div>
-                  <div className="flex items-center gap-2 pt-2">
-                    <Checkbox
-                      checked={isInternal}
-                      onCheckedChange={val => setIsInternal(!!val)}
-                    />
-                    <span className="text-sm">Internal Client (Apply 12% discount)</span>
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+          <h1 className="text-xl font-semibold mb-1">Build Charge Slip for:</h1>
+          <p className="text-muted-foreground">
+            {clientInfo.name} – {clientInfo.institution}, {clientInfo.designation}
+          </p>
+        </div>
+
+        <div className="space-y-3 mb-4">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={useAffiliationAsClientName}
+              onCheckedChange={(val) => setUseAffiliationAsClientName(!!val)}
+            />
+            <span className="text-sm">Display affiliation as client name in PDF</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={isInternal}
+              onCheckedChange={(val: boolean) => setIsInternal(!!val)}
+            />
+            <span className="text-sm">Internal Client (Apply 12% discount)</span>
+          </div>
         </div>
 
         <div className="mb-4">
@@ -480,7 +451,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
           />
         </div>
 
-        <div className="flex gap-2 mb-4 items-center">
+        <div className="flex gap-2 mb-4">
           <Input
             placeholder="Search services..."
             value={search}
@@ -501,24 +472,22 @@ const subtotal = cleanedServices.reduce((sum, item) => {
           </Button>
         </div>
 
-        <ScrollArea className="h-[65vh] pr-2 w-full">
-          <div className="w-full">
-            <GroupedServiceSelector
-              catalog={catalog}
-              selectedServices={selectedServices}
-              search={search}
-              showSelectedOnly={showSelectedOnly}
-              onToggleService={toggleService}
-              onUpdateQuantity={updateQuantity}
-              onUpdateSamples={updateSamples}
-              onUpdateParticipants={updateParticipants}
-            />
-          </div>
+        <ScrollArea className="h-[65vh] pr-2">
+          <GroupedServiceSelector
+            catalog={catalog}
+            selectedServices={selectedServices}
+            search={search}
+            showSelectedOnly={showSelectedOnly}
+            onToggleService={toggleService}
+            onUpdateQuantity={updateQuantity}
+            onUpdateSamples={updateSamples}
+            onUpdateParticipants={updateParticipants}
+          />
         </ScrollArea>
       </div>
 
       {/* Right Summary Column */}
-      <div className="flex-[1] min-w-[320px] max-w-[420px] shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
+      <div className="w-[28vw] min-w-[320px] max-w-[420px] shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
         <h3 className="text-lg font-bold mb-2">Summary</h3>
         <p className="text-sm text-muted-foreground mb-2">
           {cleanedServices.length} {cleanedServices.length === 1 ? 'service' : 'services'} selected
