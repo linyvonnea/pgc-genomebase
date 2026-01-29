@@ -42,10 +42,10 @@ export function GroupedServiceSelector({
   onUpdateSamples,
   onUpdateParticipants,
 }: GroupedServiceSelectorProps) {
-  
+
   // Professional order: Laboratory, Equipment, Bioinformatics, Retail, Training
   const serviceTypes = ["Laboratory", "Equipment", "Bioinformatics", "Retail", "Training"];
-  
+
   const getTypeBadgeColor = (type: string) => {
     const colors: Record<string, string> = {
       bioinformatics: "bg-purple-100 text-purple-800 border-purple-300",
@@ -60,11 +60,11 @@ export function GroupedServiceSelector({
   const groupedByType = useMemo(() => {
     const result: Record<string, ServiceItem[]> = {};
     const selectedIds = new Set(selectedServices.map(s => s.id));
-    
+
     for (const item of catalog) {
       const matchesSearch = !search || item.name.toLowerCase().includes(search.toLowerCase());
       const matchesFilter = !showSelectedOnly || selectedIds.has(item.id);
-      
+
       if (matchesSearch && matchesFilter) {
         // Normalize the type to capitalized version for grouping
         const normalizedType = item.type.charAt(0).toUpperCase() + item.type.slice(1).toLowerCase();
@@ -101,18 +101,28 @@ export function GroupedServiceSelector({
             <col style={{ width: '90px' }} />
           </colgroup>
           <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="w-[50px]">✔</TableHead>
-              <TableHead className="min-w-[280px]">
-                <div className="font-semibold">Service</div>
+            <TableRow className="bg-slate-50 border-b-2">
+              <TableHead className="w-[48px] text-center">✔</TableHead>
+              <TableHead className="min-w-[240px]">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Service Description</span>
               </TableHead>
-              <TableHead className="w-[100px] text-center">Unit</TableHead>
-              <TableHead className="w-[100px] text-center">Price</TableHead>
-              <TableHead className="w-[120px]">
-                {isTraining ? <span className="font-semibold">Participants</span> : "—"}
+              <TableHead className="text-center">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Unit</span>
               </TableHead>
-              <TableHead className="w-[100px] text-center">Qty</TableHead>
-              <TableHead className="w-[120px] pl-4">Amount</TableHead>
+              <TableHead className="text-right">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Unit Price</span>
+              </TableHead>
+              <TableHead className="text-center">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  {isTraining ? "Participants" : "Details"}
+                </span>
+              </TableHead>
+              <TableHead className="text-center">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Quantity</span>
+              </TableHead>
+              <TableHead className="text-right pr-6">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Subtotal</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -144,65 +154,84 @@ export function GroupedServiceSelector({
                 }
 
                 return (
-                  <TableRow key={item.id} className={isSelected ? "bg-blue-50/50" : ""}>
-                    <TableCell>
+                  <TableRow key={item.id} className={`${isSelected ? "bg-blue-50/40 hover:bg-blue-50/60" : "hover:bg-slate-50/80"} transition-colors border-b last:border-0`}>
+                    <TableCell className="text-center">
                       <Checkbox
                         checked={!!isSelected}
                         onCheckedChange={() => onToggleService(item.id, item)}
+                        className="data-[state=checked]:bg-blue-600 border-slate-300"
                       />
                     </TableCell>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <div className="font-medium truncate max-w-[280px]" title={item.name}>
+                    <TableCell className="py-3">
+                      <div className="flex flex-col gap-0.5">
+                        <div className={`text-sm font-bold ${isSelected ? "text-blue-700" : "text-slate-700"} truncate max-w-[320px]`} title={item.name}>
                           {item.name}
                         </div>
                         {item.description && (
-                          <div className="text-xs text-muted-foreground line-clamp-1" title={item.description}>
+                          <div className="text-[11px] text-slate-400 font-medium line-clamp-1 leading-relaxed" title={item.description}>
                             {item.description}
                           </div>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground text-right pr-6">{item.unit}</TableCell>
-                    <TableCell className="text-right font-medium">
-                      ₱{item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <TableCell className="text-center">
+                      <Badge variant="outline" className="text-[10px] font-bold bg-slate-50 text-slate-500 border-slate-200 px-1.5 py-0">
+                        {item.unit}
+                      </Badge>
                     </TableCell>
-                    <TableCell>
-                      {isTraining && (
+                    <TableCell className="text-right pr-4">
+                      <span className="text-sm font-semibold text-slate-600 tabular-nums">
+                        ₱{item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-2">
+                      <div className="flex justify-center">
+                        {isTraining ? (
+                          <Input
+                            type="number"
+                            min={0}
+                            value={participants}
+                            onChange={(e) =>
+                              onUpdateParticipants(
+                                item.id,
+                                e.target.value === "" ? "" : +e.target.value
+                              )
+                            }
+                            disabled={!isSelected}
+                            placeholder="0"
+                            className="h-8 w-16 text-center text-xs font-bold border-slate-200 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all rounded-md shadow-sm"
+                          />
+                        ) : (
+                          <span className="text-slate-300 text-xs">—</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-2">
+                      <div className="flex justify-center">
                         <Input
                           type="number"
-                          min={0}
-                          value={participants}
+                          min={1}
+                          value={quantity}
                           onChange={(e) =>
-                            onUpdateParticipants(
+                            onUpdateQuantity(
                               item.id,
                               e.target.value === "" ? "" : +e.target.value
                             )
                           }
                           disabled={!isSelected}
-                          placeholder="0"
-                          className="h-8"
+                          placeholder="1"
+                          className={`h-8 w-16 text-center text-xs font-bold border-slate-200 focus:border-blue-400 focus:ring-1 focus:ring-blue-100 transition-all rounded-md shadow-sm ${isSelected ? "bg-white" : "bg-slate-50/50"}`}
                         />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right pr-6 font-bold text-slate-900 tabular-nums">
+                      {amount > 0 ? (
+                        <span className="text-sm">
+                          ₱{amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300 text-xs">—</span>
                       )}
-                    </TableCell>
-                    <TableCell className="text-right pr-5">
-                      <Input
-                        type="number"
-                        min={1}
-                        value={quantity}
-                        onChange={(e) =>
-                          onUpdateQuantity(
-                            item.id,
-                            e.target.value === "" ? "" : +e.target.value
-                          )
-                        }
-                        disabled={!isSelected}
-                        placeholder="0"
-                        className="h-8 w-20 min-w-[3.5rem] text-center"
-                      />
-                    </TableCell>
-                    <TableCell className="pl-4 font-semibold">
-                      {amount > 0 ? `₱${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
                     </TableCell>
                   </TableRow>
                 );
@@ -219,10 +248,10 @@ export function GroupedServiceSelector({
       {serviceTypes.map((type) => {
         const services = groupedByType[type] || [];
         if (services.length === 0) return null;
-        
+
         return (
-          <AccordionItem 
-            key={type} 
+          <AccordionItem
+            key={type}
             value={type}
             className="border rounded-lg overflow-hidden shadow-sm"
           >
