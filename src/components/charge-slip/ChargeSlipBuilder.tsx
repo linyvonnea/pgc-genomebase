@@ -240,12 +240,12 @@ const subtotal = cleanedServices.reduce((sum, item) => {
         <TableRow>
           <TableHead className="w-[50px] font-semibold">✔</TableHead>
           <TableHead className="min-w-[250px] font-semibold">Service</TableHead>
-          <TableHead className="w-[100px] font-semibold">Unit</TableHead>
-          <TableHead className="w-[100px] text-right font-semibold">Price</TableHead>
+          <TableHead className="w-[100px] text-center">Unit</TableHead>
+          <TableHead className="w-[100px] text-center font-semibold">Price</TableHead>
           <TableHead className="w-[120px]">
             <span className={isTraining ? "font-semibold" : "font-normal"}>Participants</span>
           </TableHead>
-          <TableHead className="w-[150px] font-semibold">Qty</TableHead>
+          <TableHead className="w-[150px] text-center font-semibold">Qty</TableHead>
           <TableHead className="w-[120px] text-right font-semibold">Amount</TableHead>
         </TableRow>
       </TableHeader>
@@ -286,7 +286,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
                 />
               </TableCell>
               <TableCell>{item.name}</TableCell>
-              <TableCell>{item.unit}</TableCell>
+              <TableCell className="text-center pr-6">{item.unit}</TableCell>
               <TableCell className="text-right">
                 {item.price.toFixed(2)}
               </TableCell>
@@ -305,7 +305,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
                   placeholder={isTraining ? "0" : "—"}
                 />
               </TableCell>
-              <TableCell>
+              <TableCell className="text-center pr-5">
                 <Input
                   type="number"
                   min={0}
@@ -317,9 +317,10 @@ const subtotal = cleanedServices.reduce((sum, item) => {
                     )
                   }
                   disabled={!isSelected}
+                  className="h-8 w-20 min-w-[3.5rem] text-center"
                 />
               </TableCell>
-              <TableCell className="text-right">{amount.toFixed(2)}</TableCell>
+              <TableCell className="pl-4 font-semibold">{amount > 0 ? `₱${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}</TableCell>
             </TableRow>
           );
         })}
