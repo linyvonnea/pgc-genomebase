@@ -1,11 +1,38 @@
 // src/app/admin/charge-slips/builder/page.tsx
 "use client";
 
-import ChargeSlipBuilder from "@/components/charge-slip/ChargeSlipBuilder";
+import React from "react";
+import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { getClientById, getProjectById } from "@/services/clientProjectService";
 import { PermissionGuard } from "@/components/PermissionGuard";
+
+const ChargeSlipBuilder = dynamic(() => import("@/components/charge-slip/ChargeSlipBuilder"), { ssr: false });
+
+class ErrorBoundary extends React.Component<any, { hasError: boolean; error?: any }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: any, info: any) {
+    console.error("ChargeSlipBuilder render error:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6">
+          <h2 className="text-xl font-semibold text-red-600">Failed to load Charge Slip Builder</h2>
+          <pre className="mt-4 text-sm text-gray-700">{String(this.state.error)}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function ChargeSlipBuilderPage() {
   return (
