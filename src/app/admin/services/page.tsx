@@ -58,7 +58,7 @@ function ServicesManagementContent() {
       !searchQuery ||
       service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       service.category.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesType =
       typeFilter === "all" || (service.type || "").toLowerCase() === typeFilter.toLowerCase();
 
@@ -87,14 +87,14 @@ function ServicesManagementContent() {
 
   const getTypeBadgeColor = (type: string) => {
     const colors: Record<string, string> = {
-      Laboratory: "bg-blue-100 text-blue-800",
-      Equipment: "bg-green-100 text-green-800",
-      Bioinformatics: "bg-purple-100 text-purple-800",
-      Retail: "bg-orange-100 text-orange-800",
-      Training: "bg-indigo-100 text-indigo-800",
+      laboratory: "bg-blue-100 text-blue-800",
+      equipment: "bg-green-100 text-green-800",
+      bioinformatics: "bg-purple-100 text-purple-800",
+      retail: "bg-orange-100 text-orange-800",
+      training: "bg-indigo-100 text-indigo-800",
     };
     if (!type) return "bg-gray-100 text-gray-800";
-    const normalized = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+    const normalized = type.toLowerCase();
     return colors[normalized] || "bg-gray-100 text-gray-800";
   };
 
@@ -187,11 +187,12 @@ function ServicesManagementContent() {
                 </TableRow>
               ) : (
                 filteredServices.map((service) => {
+                  const normalizedType = (service.type || "").toLowerCase();
                   const hasSpecialPricing =
-                    (service.type === "Bioinformatics" &&
+                    (normalizedType === "bioinformatics" &&
                       service.minQuantity &&
                       service.additionalUnitPrice) ||
-                    (service.type === "Training" &&
+                    (normalizedType === "training" &&
                       service.minParticipants &&
                       service.additionalParticipantPrice);
 
@@ -205,7 +206,7 @@ function ServicesManagementContent() {
                       </TableCell>
                       <TableCell>
                         <Badge className={getTypeBadgeColor(service.type)}>
-                          {service.type}
+                          {service.type?.toLowerCase()}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">

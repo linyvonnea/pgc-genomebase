@@ -40,23 +40,13 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
   const { canDelete } = usePermissions(adminInfo?.role);
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const formatType = (raw?: string) => {
-    if (!raw) return undefined;
-    const lower = raw.toLowerCase();
-    if (lower.includes("bio")) return "Bioinformatics";
-    if (lower.includes("labor")) return "Laboratory";
-    if (lower.includes("equip")) return "Equipment";
-    if (lower.includes("retail")) return "Retail";
-    if (lower.includes("train")) return "Training";
-    // Fallback: capitalize first letter
-    return raw.charAt(0).toUpperCase() + raw.slice(1);
-  };
+  // Removed formatType that forced PascalCase
 
   const [formData, setFormData] = useState({
     id: service?.id || "",
     name: service?.name || "",
     category: service?.category || "",
-    type: service?.type ? formatType(service.type) : "Laboratory",
+    type: service?.type ? service.type.toLowerCase() : "laboratory",
     unit: service?.unit || "",
     price: service?.price || 0,
     description: service?.description || "",
@@ -66,8 +56,8 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
     additionalParticipantPrice: service?.additionalParticipantPrice || undefined,
   });
 
-  const showBioinformaticsFields = formData.type === "Bioinformatics";
-  const showTrainingFields = formData.type === "Training";
+  const showBioinformaticsFields = formData.type?.toLowerCase() === "bioinformatics";
+  const showTrainingFields = formData.type?.toLowerCase() === "training";
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -89,10 +79,10 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
     try {
       const serviceData: ServiceItem = {
         id: formData.id,
-        name: formData.name,
-        category: formData.category,
-        type: formData.type as any,
-        unit: formData.unit,
+        name: formData.name.toLowerCase(),
+        category: formData.category.toLowerCase(),
+        type: formData.type.toLowerCase() as any,
+        unit: formData.unit.toLowerCase(),
         price: Number(formData.price),
         description: formData.description || undefined,
         minQuantity: formData.minQuantity ? Number(formData.minQuantity) : undefined,
@@ -182,24 +172,14 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
                 </Label>
                 <Select value={formData.type} onValueChange={(val) => handleChange("type", val)}>
                   <SelectTrigger className="lowercase">
-                      <SelectValue />
-                    </SelectTrigger>
-                  <SelectContent>
-                      <SelectItem value="Bioinformatics">
-                        <div className="font-medium lowercase">bioinformatics</div>
-                      </SelectItem>
-                      <SelectItem value="Laboratory">
-                        <div className="font-medium lowercase">laboratory</div>
-                      </SelectItem>
-                      <SelectItem value="Equipment">
-                        <div className="font-medium lowercase">equipment</div>
-                      </SelectItem>
-                      <SelectItem value="Retail">
-                        <div className="font-medium lowercase">retail</div>
-                      </SelectItem>
-                      <SelectItem value="Training">
-                        <div className="font-medium lowercase">training</div>
-                      </SelectItem>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="lowercase">
+                    <SelectItem value="bioinformatics">bioinformatics</SelectItem>
+                    <SelectItem value="laboratory">laboratory</SelectItem>
+                    <SelectItem value="equipment">equipment</SelectItem>
+                    <SelectItem value="retail">retail</SelectItem>
+                    <SelectItem value="training">training</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
