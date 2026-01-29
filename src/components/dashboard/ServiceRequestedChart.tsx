@@ -13,16 +13,18 @@ const SERVICE_CATEGORIES = [
   "Equipment Use",
   "Bioinformatics Analysis",
   "Retail Sales",
+  "Training",
 ] as const;
 
-type ServiceCategory = typeof SERVICE_CATEGORIES[number];
+type ServiceCategory = (typeof SERVICE_CATEGORIES)[number];
 
 // Colors for each category in the pie chart
 const CATEGORY_COLORS: Record<ServiceCategory, string> = {
-  "Laboratory Services": "#F06292",   
-  "Equipment Use": "#FFB74D",           
-  "Bioinformatics Analysis": "#FFF176",  
-  "Retail Sales": "#81C784",        
+  "Laboratory Services": "#F06292",
+  "Equipment Use": "#FFB74D",
+  "Bioinformatics Analysis": "#FFF176",
+  "Retail Sales": "#81C784",
+  Training: "#4F46E5",
 };
 
 // Type guard to check if a string is a ServiceCategory
@@ -41,9 +43,9 @@ export function ServiceRequestedChart({ projects }: { projects: Project[] }) {
     const services = Array.isArray(project.serviceRequested)
       ? project.serviceRequested
       : project.serviceRequested
-      ? [project.serviceRequested]
-      : [];
-    
+        ? [project.serviceRequested]
+        : [];
+
     services.forEach((service) => {
       if (service && isServiceCategory(service)) {
         serviceCounts[service] += 1;
