@@ -154,40 +154,50 @@ function ManualQuotationContent() {
   return (
     <div className="p-6 flex gap-6">
       <div className="flex-[2] min-w-[520px]">
-        <div className="mb-4 space-y-2">
-          <h1 className="text-xl font-semibold">Manual Quotation Builder</h1>
-          <Input
-            placeholder="Reference Number"
-            value={referenceNumber}
-            onChange={(e) => setReferenceNumber(e.target.value)}
-          />
-          <Input
-            placeholder="Client Name"
-            value={clientInfo.name}
-            onChange={(e) => setClientInfo({ ...clientInfo, name: e.target.value })}
-          />
-          <Input
-            placeholder="Institution"
-            value={clientInfo.institution}
-            onChange={(e) => setClientInfo({ ...clientInfo, institution: e.target.value })}
-          />
-          <Input
-            placeholder="Designation"
-            value={clientInfo.designation}
-            onChange={(e) => setClientInfo({ ...clientInfo, designation: e.target.value })}
-          />
-          <Input
-            placeholder="Email"
-            value={clientInfo.email}
-            onChange={(e) => setClientInfo({ ...clientInfo, email: e.target.value })}
-          />
-          <div className="flex items-center gap-2 pt-2">
-            <Checkbox
-              checked={isInternal}
-              onCheckedChange={(val) => setIsInternal(!!val)}
-            />
-            <span>Internal Client (Apply 12% discount)</span>
-          </div>
+        <div className="mb-4">
+          <h1 className="text-xl font-semibold mb-2">Manual Quotation Builder</h1>
+          <Accordion type="single" collapsible defaultValue="">
+            <AccordionItem value="client-info" className="border rounded-lg overflow-hidden shadow-sm">
+              <AccordionTrigger className="px-4 py-3 hover:no-underline bg-white text-base font-semibold">
+                Client Information
+              </AccordionTrigger>
+              <AccordionContent className="px-0 pb-0">
+                <div className="pl-6 pr-4 pb-3">
+                  <table className="w-full text-sm">
+                    <tbody>
+                      <tr>
+                        <td className="py-1 pr-4 text-muted-foreground w-40">Reference Number</td>
+                        <td><Input placeholder="Reference Number" value={referenceNumber} onChange={e => setReferenceNumber(e.target.value)} /></td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 pr-4 text-muted-foreground">Client Name</td>
+                        <td><Input placeholder="Client Name" value={clientInfo.name} onChange={e => setClientInfo({ ...clientInfo, name: e.target.value })} /></td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 pr-4 text-muted-foreground">Institution</td>
+                        <td><Input placeholder="Institution" value={clientInfo.institution} onChange={e => setClientInfo({ ...clientInfo, institution: e.target.value })} /></td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 pr-4 text-muted-foreground">Designation</td>
+                        <td><Input placeholder="Designation" value={clientInfo.designation} onChange={e => setClientInfo({ ...clientInfo, designation: e.target.value })} /></td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 pr-4 text-muted-foreground">Email</td>
+                        <td><Input placeholder="Email" value={clientInfo.email} onChange={e => setClientInfo({ ...clientInfo, email: e.target.value })} /></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div className="flex items-center gap-2 pt-2">
+                    <Checkbox
+                      checked={isInternal}
+                      onCheckedChange={val => setIsInternal(!!val)}
+                    />
+                    <span>Internal Client (Apply 12% discount)</span>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
 
         <div className="flex gap-2 mb-4 items-center">
