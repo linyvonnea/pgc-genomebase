@@ -21,13 +21,14 @@ export default async function QuotationPage() {
 
   const countByCategory = (category: string) =>
     data.filter((q) =>
-        q.categories.some((c) => c.toLowerCase() === category.toLowerCase())
+      q.categories.some((c) => c.toLowerCase() === category.toLowerCase())
     ).length;
 
   const lab = countByCategory("Laboratory")
   const equip = countByCategory("Equipment")
   const bioinfo = countByCategory("Bioinformatics")
   const retail = countByCategory("Retail")
+  const training = countByCategory("Training")
   const total = data.length
 
   return (
@@ -40,7 +41,7 @@ export default async function QuotationPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         <div className="rounded-lg border p-4">
           <div className="text-2xl font-bold text-green-600">{lab}</div>
           <div className="text-sm text-muted-foreground">Laboratory</div>
@@ -56,6 +57,10 @@ export default async function QuotationPage() {
         <div className="rounded-lg border p-4">
           <div className="text-2xl font-bold text-orange-600">{retail}</div>
           <div className="text-sm text-muted-foreground">Retail Sales</div>
+        </div>
+        <div className="rounded-lg border p-4">
+          <div className="text-2xl font-bold text-indigo-600">{training}</div>
+          <div className="text-sm text-muted-foreground">Training</div>
         </div>
         <div className="rounded-lg border p-4">
           <div className="text-2xl font-bold text-gray-700">{total}</div>
