@@ -1,2 +1,2 @@
 // src/types/ValidCategory.ts
-export type ValidCategory = "laboratory" | "equipment" | "bioinformatics" | "retail";
+export type ValidCategory = "laboratory" | "equipment" | "bioinformatics" | "retail" | "training";
