@@ -24,6 +24,7 @@ const CATEGORY_COLORS: Record<ServiceCategory, string> = {
   "Equipment Use": "#FFB74D",
   "Bioinformatics Analysis": "#FFF176",
   "Retail Sales": "#81C784",
+  "Training": "#7986CB",
 };
 
 // Type guard to check if a string is a ServiceCategory
