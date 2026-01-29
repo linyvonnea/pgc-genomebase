@@ -390,6 +390,28 @@ export default function QuotationBuilder({
           </div>
         </div>
 
+        {/* Reference Number editable last 3 digits */}
+        <div className="flex items-end gap-4 mb-2">
+          <div className="flex flex-col">
+            <label htmlFor="refnum" className="text-xs font-medium text-muted-foreground mb-1">Reference Number</label>
+            <div className="flex items-center gap-1">
+              <span className="text-base font-mono bg-muted px-2 py-1 rounded-l border border-r-0 border-input select-none">
+                {referenceNumber.slice(0, -3)}
+              </span>
+              <Input
+                id="refnum"
+                value={referenceNumber.slice(-3)}
+                maxLength={3}
+                onChange={e => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 3);
+                  setReferenceNumber(referenceNumber.slice(0, -3) + val);
+                }}
+                className="w-16 rounded-l-none rounded-r border-l-0 text-center font-mono"
+              />
+            </div>
+          </div>
+        </div>
+
         <div className="flex gap-2 mb-4">
           <Input
             placeholder="Search services..."
