@@ -89,7 +89,7 @@ export function GroupedServiceSelector({
     const categoryNames = Object.keys(servicesByCategory);
 
     return (
-      <div className="border rounded-md overflow-hidden">
+      <div className="border rounded-md overflow-hidden w-full">
         <Table className="table-fixed w-full">
           <colgroup>
             <col style={{ width: '40px' }} />
