@@ -190,20 +190,25 @@ function ManualQuotationContent() {
           </div>
         </div>
 
-        <div className="flex gap-4 items-center mb-4">
+        <div className="flex gap-2 mb-4 items-center">
           <Input
             placeholder="Search services..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="flex-1"
           />
-          <div className="flex items-center gap-2 whitespace-nowrap">
-            <Checkbox
-              checked={showSelectedOnly}
-              onCheckedChange={(val) => setShowSelectedOnly(!!val)}
-            />
-            <span className="text-sm">Show selected only</span>
-          </div>
+          <Button
+            variant={showSelectedOnly ? "default" : "outline"}
+            onClick={() => setShowSelectedOnly(!showSelectedOnly)}
+            className="whitespace-nowrap"
+          >
+            {showSelectedOnly ? "Show All" : "Show Selected"}
+            {selectedServices.length > 0 && (
+              <span className="ml-2 bg-white text-primary rounded-full px-2 py-0.5 text-xs font-semibold">
+                {selectedServices.length}
+              </span>
+            )}
+          </Button>
         </div>
 
         <ScrollArea className="h-[60vh] pr-2 w-full">
