@@ -60,7 +60,7 @@ function ServicesManagementContent() {
       service.category.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesType =
-      typeFilter === "all" || service.type === typeFilter;
+      typeFilter === "all" || (service.type || "").toLowerCase() === typeFilter.toLowerCase();
 
     return matchesSearch && matchesType;
   });
@@ -93,7 +93,9 @@ function ServicesManagementContent() {
       Retail: "bg-orange-100 text-orange-800",
       Training: "bg-indigo-100 text-indigo-800",
     };
-    return colors[type] || "bg-gray-100 text-gray-800";
+    if (!type) return "bg-gray-100 text-gray-800";
+    const normalized = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+    return colors[normalized] || "bg-gray-100 text-gray-800";
   };
 
   // Group services by type
@@ -144,11 +146,11 @@ function ServicesManagementContent() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="Bioinformatics">bioinformatics</SelectItem>
-              <SelectItem value="Laboratory">laboratory</SelectItem>
-              <SelectItem value="Equipment">equipment</SelectItem>
-              <SelectItem value="Retail">retail</SelectItem>
-              <SelectItem value="Training">training</SelectItem>
+              <SelectItem value="bioinformatics">bioinformatics</SelectItem>
+              <SelectItem value="laboratory">laboratory</SelectItem>
+              <SelectItem value="equipment">equipment</SelectItem>
+              <SelectItem value="retail">retail</SelectItem>
+              <SelectItem value="training">training</SelectItem>
             </SelectContent>
           </Select>
         </div>
