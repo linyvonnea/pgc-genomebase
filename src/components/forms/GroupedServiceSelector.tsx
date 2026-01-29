@@ -67,7 +67,7 @@ export function GroupedServiceSelector({
 
       if (matchesSearch && matchesFilter) {
         // Normalize the type to capitalized version for grouping
-        const normalizedType = item.type.charAt(0).toUpperCase() + item.type.slice(1).toLowerCase();
+        const normalizedType = item.type.charAt(0).toUpperCase() + item.type.slice(1);
         if (!result[normalizedType]) result[normalizedType] = [];
         result[normalizedType].push(item);
       }
@@ -209,8 +209,14 @@ export function GroupedServiceSelector({
 
   return (
     <Accordion type="multiple" className="space-y-3">
+      {/* First, render the standard types in order */}
       {serviceTypes.map((type) => {
-        const services = groupedByType[type] || [];
+        // Find if we have any group that matches this type (case-insensitive)
+        const matchingKey = Object.keys(groupedByType).find(
+          key => key.toLowerCase() === type.toLowerCase()
+        );
+
+        const services = matchingKey ? groupedByType[matchingKey] : [];
         if (services.length === 0) return null;
 
         return (
@@ -221,7 +227,7 @@ export function GroupedServiceSelector({
           >
             <AccordionTrigger className="px-4 py-3 hover:no-underline bg-white">
               <div className="flex items-center gap-3">
-                <span className="font-bold text-base">{type}</span>
+                <span className="font-bold text-base">{matchingKey || type}</span>
                 <span className="text-base text-muted-foreground font-semibold">
                   ({services.length} service{services.length !== 1 ? 's' : ''})
                 </span>
@@ -229,12 +235,40 @@ export function GroupedServiceSelector({
             </AccordionTrigger>
             <AccordionContent className="px-0 pb-0">
               <div className="pl-6 pr-4 pb-3">
-                {renderServiceTable(services, type)}
+                {renderServiceTable(services, matchingKey || type)}
               </div>
             </AccordionContent>
           </AccordionItem>
         );
       })}
+
+      {/* Then, render any custom types not in the standard list */}
+      {Object.keys(groupedByType)
+        .filter(key => !serviceTypes.some(t => t.toLowerCase() === key.toLowerCase()))
+        .map((type) => {
+          const services = groupedByType[type];
+          return (
+            <AccordionItem
+              key={type}
+              value={type}
+              className="border rounded-lg overflow-hidden shadow-sm"
+            >
+              <AccordionTrigger className="px-4 py-3 hover:no-underline bg-white">
+                <div className="flex items-center gap-3">
+                  <span className="font-bold text-base">{type}</span>
+                  <span className="text-base text-muted-foreground font-semibold">
+                    ({services.length} service{services.length !== 1 ? 's' : ''})
+                  </span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-0 pb-0">
+                <div className="pl-6 pr-4 pb-3">
+                  {renderServiceTable(services, type)}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          );
+        })}
     </Accordion>
   );
 }
