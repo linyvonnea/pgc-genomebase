@@ -441,12 +441,9 @@ export default function QuotationBuilder({
               <div className="flex items-center gap-2 bg-white border rounded-md px-2 py-1 shadow-sm">
                 <Hash className="w-3 h-3 text-slate-400" />
                 <span className="text-[10px] font-bold text-slate-500 uppercase">Ref:</span>
-                <input
-                  value={referenceNumber}
-                  onChange={e => setReferenceNumber(e.target.value)}
-                  className="w-32 bg-transparent text-xs font-mono font-bold focus:outline-none border-none p-0 h-auto"
-                  placeholder="REF-000"
-                />
+                <span className="text-xs font-mono font-bold text-slate-700 min-w-[120px]">
+                  {referenceNumber}
+                </span>
               </div>
 
               <div className="flex items-center gap-2 pr-2">
@@ -463,54 +460,42 @@ export default function QuotationBuilder({
             </div>
           </div>
 
-          {/* Bottom Bar: Multi-Column Editable Details */}
+          {/* Bottom Bar: Multi-Column Display Details */}
           <div className="px-4 py-2.5 grid grid-cols-2 lg:grid-cols-4 gap-4 items-center">
             <div className="space-y-1">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter flex items-center gap-1">
                 <User className="w-2.5 h-2.5" /> Full Name
               </label>
-              <input
-                value={clientInfo.name}
-                onChange={e => setClientInfo({ ...clientInfo, name: e.target.value })}
-                className="w-full text-xs font-medium focus:ring-0 focus:outline-none bg-transparent p-0 border-none h-4 text-slate-700"
-                placeholder="Client Name"
-              />
+              <div className="text-xs font-semibold text-slate-700 h-4 border-none py-0">
+                {clientInfo.name}
+              </div>
             </div>
 
             <div className="space-y-1 border-l pl-4">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter flex items-center gap-1">
                 <Building2 className="w-2.5 h-2.5" /> Institution/Affiliation
               </label>
-              <input
-                value={clientInfo.institution}
-                onChange={e => setClientInfo({ ...clientInfo, institution: e.target.value })}
-                className="w-full text-xs font-medium focus:ring-0 focus:outline-none bg-transparent p-0 border-none h-4 text-slate-700"
-                placeholder="Institution"
-              />
+              <div className="text-xs font-semibold text-slate-700 h-4 border-none py-0 truncate" title={clientInfo.institution}>
+                {clientInfo.institution}
+              </div>
             </div>
 
             <div className="space-y-1 border-l pl-4">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter flex items-center gap-1">
                 <ChevronRight className="w-2.5 h-2.5" /> Designation
               </label>
-              <input
-                value={clientInfo.designation}
-                onChange={e => setClientInfo({ ...clientInfo, designation: e.target.value })}
-                className="w-full text-xs font-medium focus:ring-0 focus:outline-none bg-transparent p-0 border-none h-4 text-slate-700"
-                placeholder="Designation"
-              />
+              <div className="text-xs font-semibold text-slate-700 h-4 border-none py-0 truncate" title={clientInfo.designation}>
+                {clientInfo.designation}
+              </div>
             </div>
 
             <div className="space-y-1 border-l pl-4">
               <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter flex items-center gap-1">
                 <Mail className="w-2.5 h-2.5" /> Email Address
               </label>
-              <input
-                value={clientInfo.email}
-                onChange={e => setClientInfo({ ...clientInfo, email: e.target.value })}
-                className="w-full text-xs font-medium focus:ring-0 focus:outline-none bg-transparent p-0 border-none h-4 text-slate-700"
-                placeholder="Email Address"
-              />
+              <div className="text-xs font-semibold text-slate-700 h-4 border-none py-0 truncate" title={clientInfo.email}>
+                {clientInfo.email || "N/A"}
+              </div>
             </div>
           </div>
         </div>
