@@ -87,6 +87,12 @@ export default function QuotationBuilder({
   const [search, setSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState<string>("");
+  const [clientInfo, setClientInfo] = useState({
+    name: "",
+    institution: "",
+    designation: "",
+    email: "",
+  });
 
   const { adminInfo } = useAuth();
   const queryClient = useQueryClient();
@@ -101,12 +107,7 @@ export default function QuotationBuilder({
   // Debug: Log catalog descriptions
   useEffect(() => {
     if (catalog.length > 0) {
-      const servicesWithDesc = catalog.filter(s => s.description);
       console.log('Catalog loaded:', catalog.length, 'services');
-      console.log('Services with descriptions:', servicesWithDesc.length);
-      servicesWithDesc.forEach(s => {
-        console.log(`  - ${s.name}: ${s.description?.substring(0, 50)}...`);
-      });
     }
   }, [catalog]);
 
@@ -115,6 +116,20 @@ export default function QuotationBuilder({
     queryFn: () => getInquiryById(effectiveInquiryId),
     enabled: !!effectiveInquiryId && !initialClientInfo,
   });
+
+  // Sync clientInfo state with fetched inquiry data or initial props
+  useEffect(() => {
+    if (initialClientInfo) {
+      setClientInfo(initialClientInfo);
+    } else if (inquiryData) {
+      setClientInfo({
+        name: inquiryData.name || "Unknown",
+        institution: inquiryData.affiliation || "N/A",
+        designation: inquiryData.designation || "N/A",
+        email: inquiryData.email || "",
+      });
+    }
+  }, [initialClientInfo, inquiryData]);
 
   useEffect(() => {
     const fetchRef = async () => {
@@ -142,22 +157,6 @@ export default function QuotationBuilder({
       );
     }
   }, [catalog]);
-
-  const clientInfo = initialClientInfo
-    ? initialClientInfo
-    : inquiryData
-      ? {
-        name: inquiryData.name,
-        institution: inquiryData.affiliation,
-        designation: inquiryData.designation,
-        email: inquiryData.email ?? "",
-      }
-      : {
-        name: "Unknown",
-        institution: "N/A",
-        designation: "N/A",
-        email: "",
-      };
 
   const currentYear = new Date().getFullYear();
 
@@ -415,91 +414,103 @@ export default function QuotationBuilder({
   return (
     <div className="p-6 flex gap-6">
       <div className="flex-[2] min-w-[520px]">
-        {/* Professional Header Section */}
-        <div className="bg-white border rounded-xl overflow-hidden shadow-sm mb-6">
-          <div className="bg-slate-50 border-b px-4 py-2 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-blue-100 text-blue-700 rounded-md">
+        {/* Premium Super-Compact Configuration Bar */}
+        <div className="bg-white border rounded-xl shadow-sm mb-6 divide-y overflow-hidden">
+          {/* Top Bar: Primary Identity & Ref */}
+          <div className="bg-slate-50/80 px-4 py-2 flex items-center justify-between gap-6">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="p-1.5 bg-blue-600 text-white rounded-lg shadow-sm">
                 <FileText className="w-4 h-4" />
               </div>
-              <h1 className="text-sm font-bold text-slate-700 uppercase tracking-tighter">
-                Quotation Configuration
-              </h1>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest leading-none mb-1">
+                  Drafting Quotation
+                </p>
+                <h1 className="text-sm font-bold text-slate-900 truncate flex items-center gap-2">
+                  {clientInfo.name || "Unnamed Client"}
+                  {isInternal && (
+                    <Badge className="h-4 px-1 bg-green-100 text-green-700 hover:bg-green-100 border-none text-[9px] font-black uppercase">
+                      Internal
+                    </Badge>
+                  )}
+                </h1>
+              </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="refnum" className="text-[10px] font-bold text-slate-500 uppercase">
-                  Ref No.
+
+            <div className="flex items-center gap-4 shrink-0">
+              <div className="flex items-center gap-2 bg-white border rounded-md px-2 py-1 shadow-sm">
+                <Hash className="w-3 h-3 text-slate-400" />
+                <span className="text-[10px] font-bold text-slate-500 uppercase">Ref:</span>
+                <input
+                  value={referenceNumber}
+                  onChange={e => setReferenceNumber(e.target.value)}
+                  className="w-32 bg-transparent text-xs font-mono font-bold focus:outline-none border-none p-0 h-auto"
+                  placeholder="REF-000"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pr-2">
+                <Checkbox
+                  id="internal-toggle"
+                  checked={isInternal}
+                  onCheckedChange={(val: boolean) => setIsInternal(!!val)}
+                  className="w-4 h-4 rounded-full border-slate-300 data-[state=checked]:bg-blue-600"
+                />
+                <Label htmlFor="internal-toggle" className="text-[11px] font-bold text-slate-600 cursor-pointer whitespace-nowrap">
+                  Apply Internal Rate
                 </Label>
-                <div className="relative">
-                  <Hash className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
-                  <Input
-                    id="refnum"
-                    value={referenceNumber}
-                    onChange={e => setReferenceNumber(e.target.value)}
-                    className="h-7 w-40 pl-7 text-xs font-mono bg-white border-slate-200"
-                  />
-                </div>
               </div>
             </div>
           </div>
 
-          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Client Info Column */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 border shadow-sm">
-                  <User className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-bold text-slate-900 leading-none">
-                      {clientInfo.name}
-                    </h2>
-                    {isInternal && (
-                      <Badge variant="outline" className="h-5 px-1.5 bg-green-50 text-green-700 border-green-200 text-[10px] font-bold uppercase">
-                        Internal
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 text-slate-500 mt-1">
-                    <Building2 className="w-3.5 h-3.5" />
-                    <span className="text-xs font-medium truncate max-w-[250px]">
-                      {clientInfo.institution} • {clientInfo.designation}
-                    </span>
-                  </div>
-                </div>
-              </div>
+          {/* Bottom Bar: Multi-Column Editable Details */}
+          <div className="px-4 py-2.5 grid grid-cols-2 lg:grid-cols-4 gap-4 items-center">
+            <div className="space-y-1">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter flex items-center gap-1">
+                <User className="w-2.5 h-2.5" /> Full Name
+              </label>
+              <input
+                value={clientInfo.name}
+                onChange={e => setClientInfo({ ...clientInfo, name: e.target.value })}
+                className="w-full text-xs font-medium focus:ring-0 focus:outline-none bg-transparent p-0 border-none h-4 text-slate-700"
+                placeholder="Client Name"
+              />
             </div>
 
-            {/* Settings Column */}
-            <div className="flex flex-col justify-center border-l pl-6 bg-slate-50/50">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Settings2 className="w-3.5 h-3.5 text-slate-500" />
-                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Settings</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Checkbox
-                      id="internal-toggle"
-                      checked={isInternal}
-                      onCheckedChange={(val: boolean) => setIsInternal(!!val)}
-                      className="data-[state=checked]:bg-blue-600"
-                    />
-                    <Label htmlFor="internal-toggle" className="text-xs font-medium text-slate-600 cursor-pointer">
-                      Apply 12% Internal Discount
-                    </Label>
-                  </div>
-                </div>
-                <div className="pr-4">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Client Email</div>
-                  <div className="flex items-center gap-1.5 text-xs text-slate-600">
-                    <Mail className="w-3 h-3" />
-                    {clientInfo.email || "N/A"}
-                  </div>
-                </div>
-              </div>
+            <div className="space-y-1 border-l pl-4">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter flex items-center gap-1">
+                <Building2 className="w-2.5 h-2.5" /> Institution/Affiliation
+              </label>
+              <input
+                value={clientInfo.institution}
+                onChange={e => setClientInfo({ ...clientInfo, institution: e.target.value })}
+                className="w-full text-xs font-medium focus:ring-0 focus:outline-none bg-transparent p-0 border-none h-4 text-slate-700"
+                placeholder="Institution"
+              />
+            </div>
+
+            <div className="space-y-1 border-l pl-4">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter flex items-center gap-1">
+                <ChevronRight className="w-2.5 h-2.5" /> Designation
+              </label>
+              <input
+                value={clientInfo.designation}
+                onChange={e => setClientInfo({ ...clientInfo, designation: e.target.value })}
+                className="w-full text-xs font-medium focus:ring-0 focus:outline-none bg-transparent p-0 border-none h-4 text-slate-700"
+                placeholder="Designation"
+              />
+            </div>
+
+            <div className="space-y-1 border-l pl-4">
+              <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter flex items-center gap-1">
+                <Mail className="w-2.5 h-2.5" /> Email Address
+              </label>
+              <input
+                value={clientInfo.email}
+                onChange={e => setClientInfo({ ...clientInfo, email: e.target.value })}
+                className="w-full text-xs font-medium focus:ring-0 focus:outline-none bg-transparent p-0 border-none h-4 text-slate-700"
+                placeholder="Email Address"
+              />
             </div>
           </div>
         </div>
