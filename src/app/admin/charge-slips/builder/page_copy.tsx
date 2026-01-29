@@ -32,7 +32,7 @@ export default function ChargeSlipBuilderPage() {
         projectId={projectId}
         clientData={clientData}
         projectData={projectData}
-        onSubmit={(data) => console.log("Form submitted:", data)}
+        onSubmit={(data: any) => console.log("Form submitted:", data)}
       />
     </main>
   );
