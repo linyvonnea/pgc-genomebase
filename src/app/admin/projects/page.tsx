@@ -47,7 +47,7 @@ function ProjectPageContent() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { adminInfo } = useAuth();
   const { canCreate } = usePermissions(adminInfo?.role);
-  
+
   // Fetch data and update state
   const fetchData = async () => {
     const projects = await getData();
@@ -66,6 +66,7 @@ function ProjectPageContent() {
   // Count completed, ongoing, and total projects
   const completedCount = data.filter(project => project.status === "Completed").length;
   const ongoingCount = data.filter(project => project.status === "Ongoing").length;
+  const cancelledCount = data.filter(project => project.status === "Cancelled").length;
   const totalCount = data.length;
 
   return (
@@ -84,32 +85,32 @@ function ProjectPageContent() {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200">
-                <Plus className="mr-2 h-4 w-4" />
-                Add New Project
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader className="space-y-3 pb-2">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    <FolderPlus className="h-6 w-6 text-blue-600" />
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add New Project
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader className="space-y-3 pb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 rounded-lg">
+                      <FolderPlus className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <DialogTitle className="text-2xl">Add New Project</DialogTitle>
+                      <DialogDescription className="text-sm mt-1">
+                        Create a new project record with complete details
+                      </DialogDescription>
+                    </div>
                   </div>
-                  <div>
-                    <DialogTitle className="text-2xl">Add New Project</DialogTitle>
-                    <DialogDescription className="text-sm mt-1">
-                      Create a new project record with complete details
-                    </DialogDescription>
-                  </div>
-                </div>
-              </DialogHeader>
-              <Separator />
-              <ProjectFormModal onSubmit={handleFormSuccess} />
-            </DialogContent>
-          </Dialog>
+                </DialogHeader>
+                <Separator />
+                <ProjectFormModal onSubmit={handleFormSuccess} />
+              </DialogContent>
+            </Dialog>
           )}
         </div>
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="rounded-lg border p-4">
             <div className="text-2xl font-bold text-green-600">{completedCount}</div>
             <div className="text-sm text-muted-foreground">Completed Projects</div>
@@ -117,6 +118,10 @@ function ProjectPageContent() {
           <div className="rounded-lg border p-4">
             <div className="text-2xl font-bold text-yellow-600">{ongoingCount}</div>
             <div className="text-sm text-muted-foreground">Ongoing Projects</div>
+          </div>
+          <div className="rounded-lg border p-4">
+            <div className="text-2xl font-bold text-red-600">{cancelledCount}</div>
+            <div className="text-sm text-muted-foreground">Cancelled Projects</div>
           </div>
           <div className="rounded-lg border p-4">
             <div className="text-2xl font-bold text-blue-600">{totalCount}</div>
