@@ -198,10 +198,10 @@ export function GroupedServiceSelector({
                         }
                         disabled={!isSelected}
                         placeholder="0"
-                        className="h-8 w-12 min-w-[2.5rem] text-center"
+                        className="h-8 w-20 min-w-[3.5rem] text-center"
                       />
                     </TableCell>
-                    <TableCell className="text-right font-semibold">
+                    <TableCell className="text-right font-semibold pr-4">
                       {amount > 0 ? `₱${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
                     </TableCell>
                   </TableRow>
