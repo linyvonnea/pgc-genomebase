@@ -3,7 +3,8 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { pdf } from "@react-pdf/renderer";
 import { toast } from "sonner";
 
 import { calculateItemTotal } from "@/lib/calculatePrice";
@@ -43,14 +44,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-import { PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
+import { PDFViewer } from "@react-pdf/renderer";
 import { QuotationPDF } from "./QuotationPDF";
 import { QuotationHistoryPanel } from "./QuotationHistoryPanel";
 import useAuth from "@/hooks/useAuth";
 import { GroupedServiceSelector } from "@/components/forms/GroupedServiceSelector";
 
 // Allow editable quantity ("" or number)
-type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & { 
+type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
   quantity: number | "";
   samples?: number | "";
 };
@@ -75,6 +76,7 @@ export default function QuotationBuilder({
   const [referenceNumber, setReferenceNumber] = useState<string>("");
 
   const { adminInfo } = useAuth();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const effectiveInquiryId = inquiryId || searchParams.get("inquiryId") || "";
 
@@ -131,13 +133,13 @@ export default function QuotationBuilder({
   const clientInfo = initialClientInfo
     ? initialClientInfo
     : inquiryData
-    ? {
+      ? {
         name: inquiryData.name,
         institution: inquiryData.affiliation,
         designation: inquiryData.designation,
         email: inquiryData.email ?? "",
       }
-    : {
+      : {
         name: "Unknown",
         institution: "N/A",
         designation: "N/A",
@@ -182,7 +184,7 @@ export default function QuotationBuilder({
   // Update the subtotal calculation to use samples or participants based on service type
   const subtotal = cleanedServices.reduce((sum, item) => {
     const serviceType = item.type.toLowerCase();
-    
+
     if (serviceType.includes('bioinformatics') || serviceType.includes('bioinfo')) {
       // Use samples for bioinformatics
       const samples = (item as any).samples ?? 1;
@@ -210,13 +212,13 @@ export default function QuotationBuilder({
   const groupedByType = useMemo(() => {
     const result: Record<string, ServiceItem[]> = {};
     const selectedIds = new Set(selectedServices.map(s => s.id));
-    
+
     for (const item of catalog) {
       // Filter by search
       const matchesSearch = !search || item.name.toLowerCase().includes(search.toLowerCase());
       // Filter by selected if showSelectedOnly is true
       const matchesFilter = !showSelectedOnly || selectedIds.has(item.id);
-      
+
       if (matchesSearch && matchesFilter) {
         if (!result[item.type]) result[item.type] = [];
         result[item.type].push(item);
@@ -229,102 +231,102 @@ export default function QuotationBuilder({
     const normalizedType = serviceType.toLowerCase();
     const isBioinformatics = normalizedType === "bioinformatics";
     const isTraining = normalizedType === "training";
-    
+
     return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[50px] font-semibold">✔</TableHead>
-          <TableHead className="min-w-[250px] font-semibold">Service</TableHead>
-          <TableHead className="w-[100px] font-semibold">Unit</TableHead>
-          <TableHead className="w-[100px] text-right font-semibold">Price</TableHead>
-          <TableHead className="w-[120px]">
-            <span className={isTraining ? "font-semibold" : "font-normal"}>Participants</span>
-          </TableHead>
-          <TableHead className="w-[150px] font-semibold">Qty</TableHead>
-          <TableHead className="w-[120px] text-right font-semibold">Amount</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {services.map((item) => {
-          const isSelected = selectedServices.find((s) => s.id === item.id);
-          const samples = (isSelected as any)?.samples ?? "";
-          const participants = (isSelected as any)?.participants ?? "";
-          const quantity = isSelected?.quantity ?? "";
-          const price = isSelected?.price ?? 0;
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[50px] font-semibold">✔</TableHead>
+            <TableHead className="min-w-[250px] font-semibold">Service</TableHead>
+            <TableHead className="w-[100px] font-semibold">Unit</TableHead>
+            <TableHead className="w-[100px] text-right font-semibold">Price</TableHead>
+            <TableHead className="w-[120px]">
+              <span className={isTraining ? "font-semibold" : "font-normal"}>Participants</span>
+            </TableHead>
+            <TableHead className="w-[150px] font-semibold">Qty</TableHead>
+            <TableHead className="w-[120px] text-right font-semibold">Amount</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {services.map((item) => {
+            const isSelected = selectedServices.find((s) => s.id === item.id);
+            const samples = (isSelected as any)?.samples ?? "";
+            const participants = (isSelected as any)?.participants ?? "";
+            const quantity = isSelected?.quantity ?? "";
+            const price = isSelected?.price ?? 0;
 
-          // Calculate amount based on service type
-          let amount = 0;
-          if (isSelected && typeof quantity === "number") {
-            if (isBioinformatics && typeof samples === "number") {
-              const samplesAmount = calculateItemTotal(samples, price, {
-                minQuantity: (item as any).minQuantity,
-                additionalUnitPrice: (item as any).additionalUnitPrice,
-              });
-              amount = samplesAmount * quantity;
-            } else if (isTraining && typeof participants === "number") {
-              const participantsAmount = calculateItemTotal(participants, price, {
-                minQuantity: (item as any).minParticipants,
-                additionalUnitPrice: (item as any).additionalParticipantPrice,
-              });
-              amount = participantsAmount * quantity;
-            } else {
-              amount = price * quantity;
+            // Calculate amount based on service type
+            let amount = 0;
+            if (isSelected && typeof quantity === "number") {
+              if (isBioinformatics && typeof samples === "number") {
+                const samplesAmount = calculateItemTotal(samples, price, {
+                  minQuantity: (item as any).minQuantity,
+                  additionalUnitPrice: (item as any).additionalUnitPrice,
+                });
+                amount = samplesAmount * quantity;
+              } else if (isTraining && typeof participants === "number") {
+                const participantsAmount = calculateItemTotal(participants, price, {
+                  minQuantity: (item as any).minParticipants,
+                  additionalUnitPrice: (item as any).additionalParticipantPrice,
+                });
+                amount = participantsAmount * quantity;
+              } else {
+                amount = price * quantity;
+              }
             }
-          }
 
-          return (
-            <TableRow key={item.id}>
-              <TableCell>
-                <Checkbox
-                  checked={!!isSelected}
-                  onCheckedChange={() => toggleService(item.id, item)}
-                />
-              </TableCell>
-              <TableCell>{item.name}</TableCell>
-              <TableCell>{item.unit}</TableCell>
-              <TableCell className="text-right">
-                {item.price.toFixed(2)}
-              </TableCell>
-              <TableCell>
-                <Input
-                  type="number"
-                  min={0}
-                  value={participants}
-                  onChange={(e) =>
-                    updateParticipants(
-                      item.id,
-                      e.target.value === "" ? "" : +e.target.value
-                    )
-                  }
-                  disabled={!isSelected || !isTraining}
-                  placeholder={isTraining ? "0" : "—"}
-                />
-              </TableCell>
-              <TableCell>
-                <Input
-                  type="number"
-                  min={0}
-                  value={quantity}
-                  onChange={(e) =>
-                    updateQuantity(
-                      item.id,
-                      e.target.value === "" ? "" : +e.target.value
-                    )
-                  }
-                  disabled={!isSelected}
-                />
-              </TableCell>
-              <TableCell className="text-right">{amount.toFixed(2)}</TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+            return (
+              <TableRow key={item.id}>
+                <TableCell>
+                  <Checkbox
+                    checked={!!isSelected}
+                    onCheckedChange={() => toggleService(item.id, item)}
+                  />
+                </TableCell>
+                <TableCell>{item.name}</TableCell>
+                <TableCell>{item.unit}</TableCell>
+                <TableCell className="text-right">
+                  {item.price.toFixed(2)}
+                </TableCell>
+                <TableCell>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={participants}
+                    onChange={(e) =>
+                      updateParticipants(
+                        item.id,
+                        e.target.value === "" ? "" : +e.target.value
+                      )
+                    }
+                    disabled={!isSelected || !isTraining}
+                    placeholder={isTraining ? "0" : "—"}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={quantity}
+                    onChange={(e) =>
+                      updateQuantity(
+                        item.id,
+                        e.target.value === "" ? "" : +e.target.value
+                      )
+                    }
+                    disabled={!isSelected}
+                  />
+                </TableCell>
+                <TableCell className="text-right">{amount.toFixed(2)}</TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
     );
   };
 
-  const handleSaveQuotation = async () => {
+  const handleSaveAndDownload = async () => {
     try {
       const quotationRecord = {
         referenceNumber,
@@ -355,17 +357,35 @@ export default function QuotationBuilder({
         return;
       }
 
-      const result = await saveQuotationAction(quotationRecord, {
-        name: adminInfo.name || adminInfo.email,
-        email: adminInfo.email
-      });
+      await saveQuotationToFirestore(quotationRecord);
 
-      if (result.success) {
-        toast.success("Quotation saved successfully!");
-        // router.push("/admin/quotations"); // Uncomment if you want to redirect
-      } else {
-        toast.error(result.error || "Failed to save quotation");
-      }
+      const blob = await pdf(
+        <QuotationPDF
+          services={cleanedServices}
+          clientInfo={clientInfo}
+          referenceNumber={referenceNumber}
+          useInternalPrice={isInternal}
+          preparedBy={{
+            name: adminInfo?.name || "—",
+            position: adminInfo?.position || "—",
+          }}
+          dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${referenceNumber}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      // Invalidate quotation history to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["quotationHistory", effectiveInquiryId] });
+
+      toast.success("Quotation saved and downloaded successfully!");
+      setOpenPreview(false);
+
     } catch (error) {
       console.error("Error saving quotation:", error);
       toast.error("Failed to save quotation.");
@@ -510,7 +530,7 @@ export default function QuotationBuilder({
 
         <Dialog open={openPreview} onOpenChange={setOpenPreview}>
           <DialogTrigger asChild>
-            <Button 
+            <Button
               className="mt-4 w-full"
               disabled={cleanedServices.length === 0}
             >
@@ -538,59 +558,12 @@ export default function QuotationBuilder({
             </div>
             <div className="px-6 pb-6 pt-4 border-t">
               <div className="text-right">
-                <PDFDownloadLink
-                  document={
-                    <QuotationPDF
-                      services={cleanedServices}
-                      clientInfo={clientInfo}
-                      referenceNumber={referenceNumber}
-                      useInternalPrice={isInternal}
-                      preparedBy={{
-                        name: adminInfo?.name || "—",
-                        position: adminInfo?.position || "—",
-                      }}
-                      dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                    />
-                  }
-                  fileName={`${referenceNumber}.pdf`}
+                <Button
+                  onClick={handleSaveAndDownload}
+                  disabled={cleanedServices.length === 0}
                 >
-                  {({ loading }) => (
-                    <Button
-                      disabled={loading || cleanedServices.length === 0}
-                      onClick={async () => {
-                        try {
-                          const quotationToSave = {
-                            referenceNumber,
-                            name: clientInfo.name,
-                            institution: clientInfo.institution,
-                            designation: clientInfo.designation,
-                            email: clientInfo.email,
-                            services: cleanedServices,
-                            isInternal,
-                            dateIssued: new Date().toISOString(),
-                            year: currentYear,
-                            subtotal,
-                            discount,
-                            total,
-                            preparedBy: {
-                              name: adminInfo?.name || "—",
-                              position: adminInfo?.position || "—",
-                            },
-                            categories: Array.from(
-                              new Set(cleanedServices.map((s) => s.type))
-                            ),
-                            inquiryId: effectiveInquiryId.trim(),
-                          };
-                          await saveQuotationToFirestore(quotationToSave);
-                        } catch (err) {
-                          console.error("Failed to save quotation", err);
-                        }
-                      }}
-                    >
-                      {loading ? "Preparing..." : "Generate Final Quotation"}
-                    </Button>
-                  )}
-                </PDFDownloadLink>
+                  Generate Final Quotation
+                </Button>
               </div>
             </div>
           </DialogContent>
