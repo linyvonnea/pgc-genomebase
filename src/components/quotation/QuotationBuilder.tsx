@@ -110,12 +110,7 @@ export default function QuotationBuilder({
     fetchRef();
   }, []);
 
-  // Keep a separate controlled state for the last 3 digits to avoid caret/stale-slice issues
-  const [refSuffix, setRefSuffix] = useState(() => referenceNumber.slice(-3));
-
-  useEffect(() => {
-    setRefSuffix(referenceNumber.slice(-3));
-  }, [referenceNumber]);
+  // Reference number is edited as a whole in one input
 
   // Merge fresh catalog data (with descriptions) into selected services
   useEffect(() => {
@@ -402,19 +397,11 @@ export default function QuotationBuilder({
           <div className="flex flex-col">
             <label htmlFor="refnum" className="text-xs font-medium text-muted-foreground mb-1">Reference Number</label>
             <div className="flex items-center gap-1">
-              <span className="text-base font-mono bg-muted px-2 py-1 rounded-l border border-r-0 border-input select-none">
-                {referenceNumber.slice(0, -3)}
-              </span>
               <Input
                 id="refnum"
-                value={refSuffix}
-                maxLength={3}
-                onChange={e => {
-                  const val = e.target.value.replace(/\D/g, '').slice(0, 3);
-                  setRefSuffix(val);
-                  setReferenceNumber(prev => prev.slice(0, -3) + val);
-                }}
-                className="w-16 rounded-l-none rounded-r border-l-0 text-center font-mono"
+                value={referenceNumber}
+                onChange={e => setReferenceNumber(e.target.value)}
+                className="w-48 text-mono font-mono"
               />
             </div>
           </div>
