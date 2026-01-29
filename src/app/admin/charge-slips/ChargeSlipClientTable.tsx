@@ -28,16 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { Filter, Info } from "lucide-react";
 import { columns as defaultColumns } from "./columns";
-import { VALID_CATEGORIES } from "@/types/ChargeSlipRecord";
 
 import type { ValidCategory } from "@/types/ChargeSlipRecord";
 
@@ -85,7 +76,6 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("__all");
-  const [categoryFilter, setCategoryFilter] = useState<ValidCategory[]>([]);
 
   const table = useReactTable({
     data,
@@ -110,14 +100,9 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       const matchesStatus =
         statusFilter === "__all" || row.original.status === statusFilter;
 
-      const recordCategories = row.original.categories || [];
-      const matchesCategory =
-        categoryFilter.length === 0 ||
-        categoryFilter.some((cat) => recordCategories.includes(cat));
-
-      return matchesSearch && matchesStatus && matchesCategory;
+      return matchesSearch && matchesStatus;
     });
-  }, [table, globalFilter, statusFilter, categoryFilter]);
+  }, [table, globalFilter, statusFilter]);
 
   const countByStatus = (status: string) =>
     filteredRows.filter((row) => row.original.status === status).length;
@@ -125,7 +110,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   const totalAmount = useMemo(() => {
     return filteredRows.reduce((sum, row) =>
       row.original.status === "paid" ? sum + (row.original.total || 0) : sum,
-      0);
+    0);
   }, [filteredRows]);
 
   return (
@@ -139,71 +124,17 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
           className="w-72"
         />
 
-        <div className="flex items-center gap-3">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="flex gap-2 items-center">
-                <Filter className="h-4 w-4" />
-                Service Categories
-                {categoryFilter.length > 0 && (
-                  <Badge variant="secondary" className="ml-1 px-1 h-5 min-w-[20px] justify-center">
-                    {categoryFilter.length}
-                  </Badge>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-56 p-3" align="end">
-              <div className="space-y-3">
-                <div className="font-medium text-sm border-b pb-2">Filter by Service</div>
-                <div className="space-y-2">
-                  {VALID_CATEGORIES.map((cat) => (
-                    <div key={cat} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`cat-${cat}`}
-                        checked={categoryFilter.includes(cat)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setCategoryFilter((prev) => [...prev, cat]);
-                          } else {
-                            setCategoryFilter((prev) => prev.filter((c) => c !== cat));
-                          }
-                        }}
-                      />
-                      <label
-                        htmlFor={`cat-${cat}`}
-                        className="text-sm font-medium leading-none cursor-pointer capitalize"
-                      >
-                        {cat}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-                {categoryFilter.length > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full h-8 text-xs text-muted-foreground hover:text-red-600"
-                    onClick={() => setCategoryFilter([])}
-                  >
-                    Clear filters
-                  </Button>
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Filter by Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all">All Statuses</SelectItem>
-              <SelectItem value="processing">Processing</SelectItem>
-              <SelectItem value="paid">Paid</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-56">
+            <SelectValue placeholder="Filter by Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all">All Statuses</SelectItem>
+            <SelectItem value="processing">Processing</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Stats Cards */}

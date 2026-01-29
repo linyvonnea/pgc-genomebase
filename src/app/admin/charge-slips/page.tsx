@@ -23,7 +23,7 @@ function toDateSafe(value: string | Timestamp | Date | null | undefined): Date |
 }
 
 // Allowed top-level categories
-const VALID_CATEGORIES: ValidCategory[] = ["laboratory", "equipment", "bioinformatics", "retail", "training"];
+const VALID_CATEGORIES: ValidCategory[] = ["laboratory", "equipment", "bioinformatics", "retail"];
 
 // Extracts only valid service `type` values
 function extractValidCategories(services: any[]): ValidCategory[] {
@@ -58,7 +58,7 @@ export default async function ChargeSlipPage() {
       dateIssued: toDateSafe(record.dateIssued),
       dateOfOR: toDateSafe(record.dateOfOR),
       createdAt: toDateSafe(record.createdAt),
-      datePaid: toDateSafe(record.datePaid),
+      datePaid: toDateSafe(record.datePaid), 
 
       client: {
         ...record.client,
