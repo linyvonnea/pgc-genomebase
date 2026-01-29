@@ -427,7 +427,7 @@ export default function QuotationBuilder({
               </PDFViewer>
               <div className="text-right mt-4">
                 <Button
-                  onClick={handleSaveAndDownload}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest h-11 shadow-md shadow-blue-100 transition-all active:scale-[0.98]"
                   disabled={cleanedServices.length === 0}
                 >
                   Generate Final Quotation
