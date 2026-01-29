@@ -372,7 +372,7 @@ export default function QuotationBuilder({
 
   return (
     <div className="p-6 flex gap-6">
-      <div className="w-[56vw] min-w-[520px] max-w-[700px]">
+      <div className="flex-[2] min-w-[520px]">
         <div className="mb-6">
           <h1 className="text-xl font-semibold mb-1">Build Quotation for:</h1>
           <p className="text-muted-foreground">
@@ -411,21 +411,23 @@ export default function QuotationBuilder({
           </Button>
         </div>
 
-        <ScrollArea className="h-[65vh] pr-2">
-          <GroupedServiceSelector
-            catalog={catalog}
-            selectedServices={selectedServices}
-            search={search}
-            showSelectedOnly={showSelectedOnly}
-            onToggleService={toggleService}
-            onUpdateQuantity={updateQuantity}
-            onUpdateSamples={updateSamples}
-            onUpdateParticipants={updateParticipants}
-          />
+        <ScrollArea className="h-[65vh] pr-2 w-full">
+          <div className="w-full">
+            <GroupedServiceSelector
+              catalog={catalog}
+              selectedServices={selectedServices}
+              search={search}
+              showSelectedOnly={showSelectedOnly}
+              onToggleService={toggleService}
+              onUpdateQuantity={updateQuantity}
+              onUpdateSamples={updateSamples}
+              onUpdateParticipants={updateParticipants}
+            />
+          </div>
         </ScrollArea>
       </div>
 
-      <div className="w-[28vw] min-w-[320px] max-w-[420px] shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
+      <div className="flex-[1] min-w-[320px] max-w-[420px] shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
         <h3 className="text-lg font-bold mb-2">Summary</h3>
         <p className="text-sm text-muted-foreground mb-2">
           {cleanedServices.length} {cleanedServices.length === 1 ? 'service' : 'services'} selected
