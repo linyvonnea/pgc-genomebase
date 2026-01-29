@@ -170,25 +170,25 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
                   Service Type <span className="text-red-500">*</span>
                 </Label>
                 <Select value={formData.type} onValueChange={(val) => handleChange("type", val)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger className="lowercase">
+                      <SelectValue />
+                    </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Bioinformatics">
-                      <div className="font-medium">Bioinformatics</div>
-                    </SelectItem>
-                    <SelectItem value="Laboratory">
-                      <div className="font-medium">Laboratory</div>
-                    </SelectItem>
-                    <SelectItem value="Equipment">
-                      <div className="font-medium">Equipment</div>
-                    </SelectItem>
-                    <SelectItem value="Retail">
-                      <div className="font-medium">Retail</div>
-                    </SelectItem>
-                    <SelectItem value="Training">
-                      <div className="font-medium">Training</div>
-                    </SelectItem>
+                      <SelectItem value="Bioinformatics">
+                        <div className="font-medium lowercase">bioinformatics</div>
+                      </SelectItem>
+                      <SelectItem value="Laboratory">
+                        <div className="font-medium lowercase">laboratory</div>
+                      </SelectItem>
+                      <SelectItem value="Equipment">
+                        <div className="font-medium lowercase">equipment</div>
+                      </SelectItem>
+                      <SelectItem value="Retail">
+                        <div className="font-medium lowercase">retail</div>
+                      </SelectItem>
+                      <SelectItem value="Training">
+                        <div className="font-medium lowercase">training</div>
+                      </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -197,8 +197,8 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
             <div className="space-y-2">
               <Label>Position</Label>
               <div className="p-3 bg-muted/50 rounded-md border border-muted">
-                <div className="text-sm font-semibold text-foreground capitalize">
-                  {formData.type || 'Select a service type above'}
+                <div className="text-sm font-semibold text-foreground lowercase">
+                  {formData.type || 'select a service type above'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Services will be grouped under this category

@@ -139,16 +139,16 @@ function ServicesManagementContent() {
           </div>
 
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] lowercase">
               <SelectValue placeholder="Service Type" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="Bioinformatics">Bioinformatics</SelectItem>
-              <SelectItem value="Laboratory">Laboratory</SelectItem>
-              <SelectItem value="Equipment">Equipment</SelectItem>
-              <SelectItem value="Retail">Retail</SelectItem>
-              <SelectItem value="Training">Training</SelectItem>
+              <SelectItem value="Bioinformatics">bioinformatics</SelectItem>
+              <SelectItem value="Laboratory">laboratory</SelectItem>
+              <SelectItem value="Equipment">equipment</SelectItem>
+              <SelectItem value="Retail">retail</SelectItem>
+              <SelectItem value="Training">training</SelectItem>
             </SelectContent>
           </Select>
         </div>
