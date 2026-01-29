@@ -215,7 +215,7 @@ export function GroupedServiceSelector({
   };
 
   return (
-    <Accordion type="multiple" className="space-y-3" defaultValue={serviceTypes}>
+    <Accordion type="multiple" className="space-y-3">
       {serviceTypes.map((type) => {
         const services = groupedByType[type] || [];
         if (services.length === 0) return null;

@@ -415,7 +415,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
   return (
     <div className="p-6 flex gap-6">
       {/* Left Column */}
-      <div className="flex-1">
+      <div className="w-[56vw] min-w-[520px] max-w-[700px]">
         <div className="mb-6">
           <h1 className="text-xl font-semibold mb-1">Build Charge Slip for:</h1>
           <p className="text-muted-foreground">
@@ -487,7 +487,7 @@ const subtotal = cleanedServices.reduce((sum, item) => {
       </div>
 
       {/* Right Summary Column */}
-      <div className="w-96 shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
+      <div className="w-[28vw] min-w-[320px] max-w-[420px] shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
         <h3 className="text-lg font-bold mb-2">Summary</h3>
         <p className="text-sm text-muted-foreground mb-2">
           {cleanedServices.length} {cleanedServices.length === 1 ? 'service' : 'services'} selected
