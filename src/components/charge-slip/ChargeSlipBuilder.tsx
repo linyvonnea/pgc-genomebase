@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { Label } from "@/components/ui/label";
 import { ChargeSlipHistoryPanel } from "./ChargeSlipHistoryPanel";
 import { useState, useMemo, useEffect } from "react";
@@ -61,7 +62,7 @@ export type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & 
   participants?: number | "";
 };
 
-export default function ChargeSlipBuilder({
+function ChargeSlipBuilderInner({
   clientId,
   projectId,
   clientData,
@@ -638,5 +639,37 @@ const subtotal = cleanedServices.reduce((sum, item) => {
         <ChargeSlipHistoryPanel projectId={effectiveProjectId} />
       </div>
     </div>
+  );
+}
+
+class ChargeSlipErrorBoundary extends React.Component<any, { hasError: boolean; error?: any }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: any, info: any) {
+    console.error("ChargeSlipBuilder render error:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6">
+          <h2 className="text-xl font-semibold text-red-600">Failed to load Charge Slip Builder</h2>
+          <pre className="mt-4 text-sm text-gray-700 break-words">{String(this.state.error)}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function ChargeSlipBuilder(props: any) {
+  return (
+    <ChargeSlipErrorBoundary>
+      <ChargeSlipBuilderInner {...props} />
+    </ChargeSlipErrorBoundary>
   );
 }
