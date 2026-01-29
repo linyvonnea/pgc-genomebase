@@ -110,6 +110,13 @@ export default function QuotationBuilder({
     fetchRef();
   }, []);
 
+  // Keep a separate controlled state for the last 3 digits to avoid caret/stale-slice issues
+  const [refSuffix, setRefSuffix] = useState(() => referenceNumber.slice(-3));
+
+  useEffect(() => {
+    setRefSuffix(referenceNumber.slice(-3));
+  }, [referenceNumber]);
+
   // Merge fresh catalog data (with descriptions) into selected services
   useEffect(() => {
     if (catalog.length > 0 && selectedServices.length > 0) {
@@ -400,11 +407,12 @@ export default function QuotationBuilder({
               </span>
               <Input
                 id="refnum"
-                value={referenceNumber.slice(-3)}
+                value={refSuffix}
                 maxLength={3}
                 onChange={e => {
                   const val = e.target.value.replace(/\D/g, '').slice(0, 3);
-                  setReferenceNumber(referenceNumber.slice(0, -3) + val);
+                  setRefSuffix(val);
+                  setReferenceNumber(prev => prev.slice(0, -3) + val);
                 }}
                 className="w-16 rounded-l-none rounded-r border-l-0 text-center font-mono"
               />
