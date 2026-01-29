@@ -106,13 +106,13 @@ export function GroupedServiceSelector({
               <TableHead className="min-w-[280px]">
                 <div className="font-semibold">Service</div>
               </TableHead>
-              <TableHead className="w-[100px]">Unit</TableHead>
+              <TableHead className="w-[100px] text-right pr-6">Unit</TableHead>
               <TableHead className="w-[100px] text-right">Price</TableHead>
               <TableHead className="w-[120px]">
                 {isTraining ? <span className="font-semibold">Participants</span> : "—"}
               </TableHead>
-              <TableHead className="w-[100px]">Qty</TableHead>
-              <TableHead className="w-[120px] text-right">Amount</TableHead>
+              <TableHead className="w-[100px] text-right pr-5">Qty</TableHead>
+              <TableHead className="w-[120px] pl-4">Amount</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -163,7 +163,7 @@ export function GroupedServiceSelector({
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{item.unit}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground text-right pr-6">{item.unit}</TableCell>
                     <TableCell className="text-right font-medium">
                       ₱{item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </TableCell>
@@ -185,7 +185,7 @@ export function GroupedServiceSelector({
                         />
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right pr-5">
                       <Input
                         type="number"
                         min={1}
@@ -201,7 +201,7 @@ export function GroupedServiceSelector({
                         className="h-8 w-20 min-w-[3.5rem] text-center"
                       />
                     </TableCell>
-                    <TableCell className="text-right font-semibold pr-4">
+                    <TableCell className="pl-4 font-semibold">
                       {amount > 0 ? `₱${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
                     </TableCell>
                   </TableRow>
