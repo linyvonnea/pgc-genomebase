@@ -204,12 +204,22 @@ const subtotal = cleanedServices.reduce((sum, item) => {
   const discount = isInternal ? subtotal * 0.12 : 0;
   const total = subtotal - discount;
 
-  const clientInfo = {
+
+  const [clientInfo, setClientInfo] = useState({
     name: client?.name || "Unknown Client",
     institution: client?.affiliation || "No Institution",
     designation: client?.designation || "No Designation",
     email: client?.email || "",
-  };
+  });
+
+  useEffect(() => {
+    setClientInfo({
+      name: client?.name || "Unknown Client",
+      institution: client?.affiliation || "No Institution",
+      designation: client?.designation || "No Designation",
+      email: client?.email || "",
+    });
+  }, [client]);
 
   const groupedByType = useMemo(() => {
     const result: Record<string, ServiceItem[]> = {};
