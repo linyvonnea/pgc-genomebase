@@ -82,7 +82,7 @@ export function DataTable<TData, TValue>({
   });
 
   // Static categories to always show all
-  const allCategories = ["Laboratory", "Equipment", "Bioinformatics", "Retail"];
+  const allCategories = ["Laboratory", "Equipment", "Bioinformatics", "Retail", "Training"];
 
   return (
     <div className="space-y-4">
