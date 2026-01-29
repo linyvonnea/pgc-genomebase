@@ -4,14 +4,16 @@ import { revalidatePath } from "next/cache";
 import { saveQuotationToFirestore, getAllQuotations } from "@/services/quotationService";
 import { QuotationRecord } from "@/types/Quotation";
 import { logActivity } from "@/services/activityLogService";
+import { sanitizeObject } from "@/lib/sanitizeObject";
 
 export async function saveQuotationAction(
   quotation: QuotationRecord,
   userInfo: { name: string; email: string }
 ) {
   try {
-    await saveQuotationToFirestore(quotation);
-    
+    const cleanedQuotation = sanitizeObject(quotation) as QuotationRecord;
+    await saveQuotationToFirestore(cleanedQuotation);
+
     // Log the activity
     await logActivity({
       userId: userInfo.email,
@@ -24,7 +26,7 @@ export async function saveQuotationAction(
       description: `Generated quotation: ${quotation.referenceNumber || quotation.id}`,
       changesAfter: quotation,
     });
-    
+
     revalidatePath('/admin/quotations');
     revalidatePath('/admin/inquiries');
     return { success: true };

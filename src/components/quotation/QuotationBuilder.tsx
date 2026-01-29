@@ -8,10 +8,12 @@ import { pdf } from "@react-pdf/renderer";
 import { toast } from "sonner";
 
 import { calculateItemTotal } from "@/lib/calculatePrice";
+import { sanitizeObject } from "@/lib/sanitizeObject";
 import { getServiceCatalog } from "@/services/serviceCatalogService";
 import { getInquiryById } from "@/services/inquiryService";
 import { saveQuotationAction } from "@/app/actions/quotationActions";
 
+import { QuotationRecord } from "@/types/Quotation";
 import { SelectedService as StrictSelectedService } from "@/types/SelectedService";
 import { ServiceItem } from "@/types/ServiceItem";
 import { Inquiry } from "@/types/Inquiry";
@@ -357,7 +359,14 @@ export default function QuotationBuilder({
         return;
       }
 
-      await saveQuotationToFirestore(quotationRecord);
+      const result = await saveQuotationAction(quotationRecord, {
+        name: adminInfo.name || adminInfo.email!,
+        email: adminInfo.email!
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to save quotation");
+      }
 
       const blob = await pdf(
         <QuotationPDF
@@ -388,7 +397,7 @@ export default function QuotationBuilder({
 
     } catch (error) {
       console.error("Error saving quotation:", error);
-      toast.error("Failed to save quotation.");
+      toast.error(`Failed to save quotation: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
