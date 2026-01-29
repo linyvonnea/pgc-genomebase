@@ -8,6 +8,7 @@ import { Client } from "@/types/Client"
 import { clientSchema } from "@/schemas/clientSchema"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner";
 import { ArrowUpDown } from "lucide-react"
 import useAuth from "@/hooks/useAuth"
 import { usePermissions } from "@/hooks/usePermissions"
@@ -169,9 +170,22 @@ export const columns: ColumnDef<Client>[] = [
               onClick={() => {
                 // Use primary project ID (first in array)
                 const primaryPid = Array.isArray(client.pid) ? client.pid[0] : client.pid;
-                router.push(
-                  `/admin/charge-slips/new?clientId=${client.cid}&projectId=${primaryPid}`
-                );
+                if (!client.cid) {
+                  toast.error("Client ID missing for this record");
+                  return;
+                }
+                if (!primaryPid) {
+                  toast.error("No project associated with this client");
+                  return;
+                }
+                try {
+                  router.push(
+                    `/admin/charge-slips/new?clientId=${encodeURIComponent(client.cid)}&projectId=${encodeURIComponent(primaryPid)}`
+                  );
+                } catch (err) {
+                  console.error('Navigation error to charge slip builder', err);
+                  toast.error('Failed to open charge slip builder');
+                }
               }}
               variant="outline"
               size="sm"
