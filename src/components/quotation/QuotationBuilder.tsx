@@ -542,30 +542,17 @@ export default function QuotationBuilder({
         </ScrollArea>
       </div>
 
-      <div className="flex-[1] min-w-[320px] max-w-[420px] shrink-0 sticky top-6 h-fit bg-slate-50/30 border rounded-xl shadow-lg flex flex-col overflow-hidden">
-        {/* Summary Header */}
-        <div className="bg-slate-900 text-white p-5">
-          <div className="flex items-center gap-2 mb-1">
-            <Receipt className="w-5 h-5 text-blue-400" />
-            <h3 className="text-sm font-black uppercase tracking-[0.2em]">Live Summary</h3>
-          </div>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            {cleanedServices.length} {cleanedServices.length === 1 ? 'service' : 'services'} ready for export
-          </p>
-        </div>
+      <div className="flex-[1] min-w-[320px] max-w-[420px] shrink-0 sticky top-6 h-fit bg-white border rounded-lg shadow-sm p-5 flex flex-col">
+        <h3 className="text-lg font-bold mb-4">Summary</h3>
 
-        <div className="p-5 flex-1 space-y-6">
+        <div className="flex-1 space-y-6">
           {cleanedServices.length === 0 ? (
-            <div className="text-center py-12 px-4 rounded-lg bg-white border border-dashed border-slate-200">
-              <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Info className="w-6 h-6 text-slate-300" />
-              </div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Empty Selection</p>
-              <p className="text-[11px] text-slate-400 mt-1">Select services from the catalog to build your quotation.</p>
+            <div className="text-center py-8 text-muted-foreground border border-dashed rounded-md">
+              <p className="text-sm">No services selected</p>
             </div>
           ) : (
-            <ScrollArea className="max-h-[40vh] -mx-1 px-1">
-              <div className="space-y-4">
+            <ScrollArea className="max-h-[40vh]">
+              <div className="space-y-4 pr-3">
                 {Object.entries(
                   cleanedServices.reduce((acc, item) => {
                     const category = item.type || 'Other';
@@ -574,14 +561,8 @@ export default function QuotationBuilder({
                     return acc;
                   }, {} as Record<string, typeof cleanedServices>)
                 ).map(([category, items]) => (
-                  <div key={category} className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="h-[1px] flex-1 bg-slate-100"></div>
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-2">
-                        {category}
-                      </span>
-                      <div className="h-[1px] flex-1 bg-slate-100"></div>
-                    </div>
+                  <div key={category} className="space-y-1">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase">{category}</p>
                     {items.map((item) => {
                       const participants = (item as any).participants ?? 1;
                       const baseAmount = calculateItemTotal(participants, item.price, {
@@ -591,19 +572,9 @@ export default function QuotationBuilder({
                       const subtotalItem = baseAmount * item.quantity;
 
                       return (
-                        <div key={item.id} className="flex flex-col gap-0.5 pl-1 pr-1 py-1 rounded hover:bg-slate-50 transition-colors">
-                          <div className="flex justify-between items-start gap-3">
-                            <span className="text-xs font-bold text-slate-700 leading-tight">
-                              {item.name}
-                            </span>
-                            <span className="text-xs font-bold text-slate-900 tabular-nums shrink-0">
-                              ₱{subtotalItem.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center text-[10px] font-medium text-slate-400">
-                            <span>{item.quantity} unit{item.quantity !== 1 ? 's' : ''} × {item.unit}</span>
-                            {isInternal && <span className="text-[9px] text-green-600 font-bold uppercase">Incl Discount</span>}
-                          </div>
+                        <div key={item.id} className="flex justify-between text-sm py-0.5">
+                          <span className="truncate pr-2">{item.name} x {item.quantity}</span>
+                          <span className="font-medium whitespace-nowrap">₱{subtotalItem.toFixed(2)}</span>
                         </div>
                       );
                     })}
@@ -613,98 +584,76 @@ export default function QuotationBuilder({
             </ScrollArea>
           )}
 
-          {/* Pricing Totals Card */}
-          <div className="bg-white border rounded-xl p-4 shadow-sm space-y-3">
-            <div className="space-y-2 pb-3 border-b border-slate-50">
-              <div className="flex justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wide">
-                <span>Gross Subtotal</span>
-                <span className="tabular-nums text-slate-700">₱{subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-              </div>
+          <Separator />
 
-              {isInternal && (
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-1.5 bg-green-50 text-green-700 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter">
-                    <TrendingDown className="w-3 h-3" /> 12% Internal
-                  </div>
-                  <span className="text-[11px] font-bold text-green-700 tabular-nums">-₱{discount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                </div>
-              )}
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Subtotal:</span>
+              <span>₱{subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
 
-            <div className="flex justify-between items-end pt-1">
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none mb-1">
-                  Proposed Total
-                </span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xs font-bold text-slate-400">PHP</span>
-                  <span className="text-2xl font-black text-slate-900 tabular-nums tracking-tighter">
-                    {total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </span>
-                </div>
+            {isInternal && (
+              <div className="flex justify-between text-green-600 font-medium">
+                <span>Internal Discount (12%):</span>
+                <span>-₱{discount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
-              <CreditCard className="w-8 h-8 text-slate-100 mb-1" />
-            </div>
+            )}
 
-            <Dialog open={openPreview} onOpenChange={setOpenPreview}>
-              <DialogTrigger asChild>
-                <Button
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest h-11 shadow-md shadow-blue-100 transition-all active:scale-[0.98]"
-                  disabled={cleanedServices.length === 0}
-                >
-                  Confirm & Review
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0 border-none shadow-2xl bg-slate-900">
-                <DialogHeader className="px-6 py-4 bg-slate-900 text-white border-b border-slate-800">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <DialogTitle className="text-lg font-black uppercase tracking-widest text-blue-400">Quotation Preview</DialogTitle>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Reference: {referenceNumber}</p>
-                    </div>
-                  </div>
-                </DialogHeader>
-                <div className="flex-1 bg-slate-800/50 p-6 overflow-hidden">
-                  <PDFViewer width="100%" height="100%" className="rounded-lg shadow-2xl">
-                    <QuotationPDF
-                      services={cleanedServices}
-                      clientInfo={clientInfo}
-                      referenceNumber={referenceNumber}
-                      useInternalPrice={isInternal}
-                      preparedBy={{
-                        name: adminInfo?.name || "—",
-                        position: adminInfo?.position || "—",
-                      }}
-                      dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                    />
-                  </PDFViewer>
-                </div>
-                <div className="p-6 bg-slate-900 border-t border-slate-800">
-                  <div className="flex justify-between items-center">
-                    <div className="text-left">
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Final Payable</p>
-                      <p className="text-xl font-black text-white">₱{total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                    </div>
-                    <Button
-                      size="lg"
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-[0.2em] px-12"
-                      onClick={handleSaveAndDownload}
-                      disabled={cleanedServices.length === 0}
-                    >
-                      Process & Transmit
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Separator className="my-2" />
+
+            <div className="flex justify-between text-lg font-bold text-primary">
+              <span>Total:</span>
+              <span>₱{total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
           </div>
 
-          {/* History Section Integrated */}
-          <div className="pt-2 border-t border-slate-100">
-            <div className="flex items-center gap-2 mb-4">
-              <History className="w-3.5 h-3.5 text-slate-400" />
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Version History</h4>
-            </div>
+          <Dialog open={openPreview} onOpenChange={setOpenPreview}>
+            <DialogTrigger asChild>
+              <Button
+                className="w-full"
+                disabled={cleanedServices.length === 0}
+              >
+                Preview Quotation
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+              <DialogHeader className="px-6 py-4 border-b bg-muted/30">
+                <DialogTitle>Quotation Preview</DialogTitle>
+              </DialogHeader>
+              <div className="flex-1 p-6 overflow-hidden">
+                <PDFViewer width="100%" height="100%" className="rounded border shadow-sm">
+                  <QuotationPDF
+                    services={cleanedServices}
+                    clientInfo={clientInfo}
+                    referenceNumber={referenceNumber}
+                    useInternalPrice={isInternal}
+                    preparedBy={{
+                      name: adminInfo?.name || "—",
+                      position: adminInfo?.position || "—",
+                    }}
+                    dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  />
+                </PDFViewer>
+              </div>
+              <div className="p-4 border-t bg-muted/10 flex justify-between items-center px-6">
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Reference: </span>
+                  <span className="font-bold">{referenceNumber}</span>
+                </div>
+                <Button
+                  onClick={handleSaveAndDownload}
+                  disabled={cleanedServices.length === 0}
+                >
+                  Save & Download PDF
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <Separator />
+
+          <div className="pt-2">
+            <p className="text-xs font-bold text-muted-foreground uppercase mb-3">Quotation History</p>
             <QuotationHistoryPanel inquiryId={effectiveInquiryId} />
           </div>
         </div>
