@@ -68,7 +68,7 @@ function ChargeSlipBuilderContent() {
         projectId={projectId}
         clientData={clientData || null}
         projectData={projectData || null}  //allow empty project
-        onSubmit={(data) => console.log("Form submitted:", data)}
+        onSubmit={(data: any) => console.log("Form submitted:", data)}
       />
     </main>
   );
