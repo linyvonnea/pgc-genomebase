@@ -153,7 +153,7 @@ function ManualQuotationContent() {
 
   return (
     <div className="p-6 flex gap-6">
-      <div className="flex-1">
+      <div className="flex-[2] min-w-[520px]">
         <div className="mb-4 space-y-2">
           <h1 className="text-xl font-semibold">Manual Quotation Builder</h1>
           <Input
@@ -206,21 +206,23 @@ function ManualQuotationContent() {
           </div>
         </div>
 
-        <ScrollArea className="h-[60vh] pr-2 w-[56vw] min-w-[520px] max-w-[700px]">
-          <GroupedServiceSelector
-            catalog={catalog}
-            selectedServices={selectedServices}
-            search={search}
-            showSelectedOnly={showSelectedOnly}
-            onToggleService={toggleService}
-            onUpdateQuantity={updateQuantity}
-            onUpdateSamples={updateSamples}
-            onUpdateParticipants={updateParticipants}
-          />
+        <ScrollArea className="h-[60vh] pr-2 w-full">
+          <div className="w-full">
+            <GroupedServiceSelector
+              catalog={catalog}
+              selectedServices={selectedServices}
+              search={search}
+              showSelectedOnly={showSelectedOnly}
+              onToggleService={toggleService}
+              onUpdateQuantity={updateQuantity}
+              onUpdateSamples={updateSamples}
+              onUpdateParticipants={updateParticipants}
+            />
+          </div>
         </ScrollArea>
       </div>
 
-      <div className="w-[28vw] min-w-[320px] max-w-[420px] shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
+      <div className="flex-[1] min-w-[320px] max-w-[420px] shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
         <h3 className="text-lg font-bold mb-2">Summary</h3>
         <p className="text-sm text-muted-foreground mb-2">
           {cleanedServices.length} {cleanedServices.length === 1 ? 'service' : 'services'} selected
