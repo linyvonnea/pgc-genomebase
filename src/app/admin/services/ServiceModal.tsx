@@ -40,12 +40,23 @@ export default function ServiceModal({ service, onClose, onSuccess }: ServiceMod
   const { canDelete } = usePermissions(adminInfo?.role);
   const [loading, setLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const formatType = (raw?: string) => {
+    if (!raw) return undefined;
+    const lower = raw.toLowerCase();
+    if (lower.includes("bio")) return "Bioinformatics";
+    if (lower.includes("labor")) return "Laboratory";
+    if (lower.includes("equip")) return "Equipment";
+    if (lower.includes("retail")) return "Retail";
+    if (lower.includes("train")) return "Training";
+    // Fallback: capitalize first letter
+    return raw.charAt(0).toUpperCase() + raw.slice(1);
+  };
 
   const [formData, setFormData] = useState({
     id: service?.id || "",
     name: service?.name || "",
     category: service?.category || "",
-    type: service?.type || "Laboratory",
+    type: service?.type ? formatType(service.type) : "Laboratory",
     unit: service?.unit || "",
     price: service?.price || 0,
     description: service?.description || "",
