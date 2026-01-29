@@ -34,6 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -51,6 +52,16 @@ import { QuotationPDF } from "./QuotationPDF";
 import { QuotationHistoryPanel } from "./QuotationHistoryPanel";
 import useAuth from "@/hooks/useAuth";
 import { GroupedServiceSelector } from "@/components/forms/GroupedServiceSelector";
+import {
+  User,
+  Building2,
+  Mail,
+  FileText,
+  Hash,
+  Settings2,
+  ChevronRight
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 // Allow editable quantity ("" or number)
 type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
@@ -404,34 +415,91 @@ export default function QuotationBuilder({
   return (
     <div className="p-6 flex gap-6">
       <div className="flex-[2] min-w-[520px]">
-        <div className="mb-6">
-          <h1 className="text-xl font-semibold mb-1">Build Quotation for:</h1>
-          <p className="text-muted-foreground">
-            {clientInfo.name} – {clientInfo.institution}, {clientInfo.designation}
-          </p>
-        </div>
-
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex gap-4 items-center">
-            <Checkbox
-              checked={isInternal}
-              onCheckedChange={(val: boolean) => setIsInternal(!!val)}
-            />
-            <span>Internal Client (Apply 12% discount)</span>
+        {/* Professional Header Section */}
+        <div className="bg-white border rounded-xl overflow-hidden shadow-sm mb-6">
+          <div className="bg-slate-50 border-b px-4 py-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-blue-100 text-blue-700 rounded-md">
+                <FileText className="w-4 h-4" />
+              </div>
+              <h1 className="text-sm font-bold text-slate-700 uppercase tracking-tighter">
+                Quotation Configuration
+              </h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="refnum" className="text-[10px] font-bold text-slate-500 uppercase">
+                  Ref No.
+                </Label>
+                <div className="relative">
+                  <Hash className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
+                  <Input
+                    id="refnum"
+                    value={referenceNumber}
+                    onChange={e => setReferenceNumber(e.target.value)}
+                    className="h-7 w-40 pl-7 text-xs font-mono bg-white border-slate-200"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Reference Number editable last 3 digits */}
-        <div className="flex items-end gap-4 mb-2">
-          <div className="flex flex-col">
-            <label htmlFor="refnum" className="text-xs font-medium text-muted-foreground mb-1">Reference Number</label>
-            <div className="flex items-center gap-1">
-              <Input
-                id="refnum"
-                value={referenceNumber}
-                onChange={e => setReferenceNumber(e.target.value)}
-                className="w-48 text-mono font-mono"
-              />
+          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Client Info Column */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 border shadow-sm">
+                  <User className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-slate-900 leading-none">
+                      {clientInfo.name}
+                    </h2>
+                    {isInternal && (
+                      <Badge variant="outline" className="h-5 px-1.5 bg-green-50 text-green-700 border-green-200 text-[10px] font-bold uppercase">
+                        Internal
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-slate-500 mt-1">
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span className="text-xs font-medium truncate max-w-[250px]">
+                      {clientInfo.institution} • {clientInfo.designation}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Settings Column */}
+            <div className="flex flex-col justify-center border-l pl-6 bg-slate-50/50">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Settings2 className="w-3.5 h-3.5 text-slate-500" />
+                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Settings</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      id="internal-toggle"
+                      checked={isInternal}
+                      onCheckedChange={(val: boolean) => setIsInternal(!!val)}
+                      className="data-[state=checked]:bg-blue-600"
+                    />
+                    <Label htmlFor="internal-toggle" className="text-xs font-medium text-slate-600 cursor-pointer">
+                      Apply 12% Internal Discount
+                    </Label>
+                  </div>
+                </div>
+                <div className="pr-4">
+                  <div className="text-[10px] font-bold text-slate-400 uppercase leading-none mb-1">Client Email</div>
+                  <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                    <Mail className="w-3 h-3" />
+                    {clientInfo.email || "N/A"}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
