@@ -13,9 +13,10 @@ const SERVICE_CATEGORIES = [
   "Equipment Use",
   "Bioinformatics Analysis",
   "Retail Sales",
+  "Training",
 ] as const;
 
-type ServiceCategory = typeof SERVICE_CATEGORIES[number];
+type ServiceCategory = (typeof SERVICE_CATEGORIES)[number];
 
 // Colors for each category in the pie chart
 const CATEGORY_COLORS: Record<ServiceCategory, string> = {
