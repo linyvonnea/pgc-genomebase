@@ -37,7 +37,9 @@ class ErrorBoundary extends React.Component<any, { hasError: boolean; error?: an
 export default function ChargeSlipBuilderPage() {
   return (
     <PermissionGuard module="chargeSlips" action="view">
-      <ChargeSlipBuilderContent />
+      <ErrorBoundary>
+        <ChargeSlipBuilderContent />
+      </ErrorBoundary>
     </PermissionGuard>
   );
 }
@@ -68,7 +70,7 @@ function ChargeSlipBuilderContent() {
         projectId={projectId}
         clientData={clientData || null}
         projectData={projectData || null}  //allow empty project
-        onSubmit={(data) => console.log("Form submitted:", data)}
+        onSubmit={(data: any) => console.log("Form submitted:", data)}
       />
     </main>
   );
