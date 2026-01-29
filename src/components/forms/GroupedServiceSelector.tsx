@@ -145,6 +145,7 @@ export function GroupedServiceSelector({
                       <Checkbox
                         checked={!!isSelected}
                         onCheckedChange={() => onToggleService(item.id, item)}
+                        className="data-[state=checked]:bg-blue-600 border-slate-300"
                       />
                     </TableCell>
                     <TableCell>
@@ -163,10 +164,10 @@ export function GroupedServiceSelector({
                       {isTraining ? (
                         <Input
                           type="number"
-                          min={0}
-                          value={participants}
+                          min={1}
+                          value={quantity}
                           onChange={(e) =>
-                            onUpdateParticipants(
+                            onUpdateQuantity(
                               item.id,
                               e.target.value === "" ? "" : +e.target.value
                             )
