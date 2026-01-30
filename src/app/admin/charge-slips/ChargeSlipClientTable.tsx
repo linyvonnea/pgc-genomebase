@@ -162,6 +162,9 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             {countByStatus("processing")}
           </div>
           <div className="text-sm text-muted-foreground">Processing</div>
+          <div className="text-xs font-semibold text-blue-600 mt-1">
+            ₱{totalsByStatus.processing.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
         </div>
         <div
           className={`rounded-lg border p-4 text-center cursor-pointer transition-all hover:shadow-md hover:scale-105 ${statusFilter === "paid" ? "ring-2 ring-green-600 bg-green-50" : "hover:bg-green-50/50"
@@ -172,6 +175,9 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             {countByStatus("paid")}
           </div>
           <div className="text-sm text-muted-foreground">Paid</div>
+          <div className="text-xs font-semibold text-green-600 mt-1">
+            ₱{totalsByStatus.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
         </div>
         <div
           className={`rounded-lg border p-4 text-center cursor-pointer transition-all hover:shadow-md hover:scale-105 ${statusFilter === "cancelled" ? "ring-2 ring-red-600 bg-red-50" : "hover:bg-red-50/50"
@@ -182,6 +188,9 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             {countByStatus("cancelled")}
           </div>
           <div className="text-sm text-muted-foreground">Cancelled</div>
+          <div className="text-xs font-semibold text-red-600 mt-1">
+            ₱{totalsByStatus.cancelled.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
         </div>
         <div className="rounded-lg border p-4 text-center bg-gradient-to-br from-slate-50 to-slate-100">
           <div className="text-2xl font-bold text-slate-700">
@@ -253,6 +262,9 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             >
               <div className={`text-sm font-semibold capitalize ${colors.text}`}>
                 {cat}
+              </div>
+              <div className={`text-xs font-medium ${colors.text} mt-1`}>
+                ₱{totalsByCategory[cat].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
           );
