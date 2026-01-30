@@ -430,7 +430,7 @@ function ChargeSlipBuilderInner({
       <div className="flex-[2] min-w-[520px]">
         <div className="mb-6">
           <h1 className="text-xl font-semibold mb-2">Build Charge Slip for:</h1>
-          <Accordion type="single" collapsible defaultValue="">
+          <Accordion type="single" collapsible defaultValue="client-info">
             <AccordionItem value="client-info" className="border rounded-lg overflow-hidden shadow-sm">
               <AccordionTrigger className="px-4 py-3 hover:no-underline bg-white text-base font-semibold">
                 Client Information
@@ -440,24 +440,24 @@ function ChargeSlipBuilderInner({
                   <table className="w-full text-sm">
                     <tbody>
                       <tr>
-                        <td className="py-1 pr-4 text-muted-foreground w-40">Charge Slip Number</td>
-                        <td><Input placeholder="Charge Slip Number" value={chargeSlipNumber} onChange={e => setChargeSlipNumber(e.target.value)} /></td>
+                        <td className="py-2 pr-4 text-muted-foreground w-40">Charge Slip Number</td>
+                        <td className="py-2 font-mono font-bold text-slate-700">{chargeSlipNumber}</td>
                       </tr>
                       <tr>
-                        <td className="py-1 pr-4 text-muted-foreground">Client Name</td>
-                        <td><Input placeholder="Client Name" value={clientInfo.name} onChange={e => setClientInfo({ ...clientInfo, name: e.target.value })} /></td>
+                        <td className="py-2 pr-4 text-muted-foreground">Client Name</td>
+                        <td className="py-2 font-semibold text-slate-900">{clientInfo.name}</td>
                       </tr>
                       <tr>
-                        <td className="py-1 pr-4 text-muted-foreground">Institution</td>
-                        <td><Input placeholder="Institution" value={clientInfo.institution} onChange={e => setClientInfo({ ...clientInfo, institution: e.target.value })} /></td>
+                        <td className="py-2 pr-4 text-muted-foreground">Institution</td>
+                        <td className="py-2 text-slate-700">{clientInfo.institution}</td>
                       </tr>
                       <tr>
-                        <td className="py-1 pr-4 text-muted-foreground">Designation</td>
-                        <td><Input placeholder="Designation" value={clientInfo.designation} onChange={e => setClientInfo({ ...clientInfo, designation: e.target.value })} /></td>
+                        <td className="py-2 pr-4 text-muted-foreground">Designation</td>
+                        <td className="py-2 text-slate-700">{clientInfo.designation}</td>
                       </tr>
                       <tr>
-                        <td className="py-1 pr-4 text-muted-foreground">Email</td>
-                        <td><Input placeholder="Email" value={clientInfo.email} onChange={e => setClientInfo({ ...clientInfo, email: e.target.value })} /></td>
+                        <td className="py-2 pr-4 text-muted-foreground">Email</td>
+                        <td className="py-2 text-slate-700">{clientInfo.email || "N/A"}</td>
                       </tr>
                     </tbody>
                   </table>
