@@ -86,38 +86,55 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("__all");
   const [categoryFilter, setCategoryFilter] = useState<ValidCategory[]>([]);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
 
-  const table = useReactTable({
-    data,
-    columns,
-    state: { sorting },
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-  });
+  // Filter data manually before passing to table
+  const filteredData = useMemo(() => {
+    return data.filter((item) => {
+      const matchesSearch =
+        item.chargeSlipNumber?.toLowerCase().includes(globalFilter.toLowerCase()) ||
+        item.clientInfo?.name?.toLowerCase().includes(globalFilter.toLowerCase()) ||
+        item.client?.name?.toLowerCase().includes(globalFilter.toLowerCase()) ||
+        item.project?.title?.toLowerCase().includes(globalFilter.toLowerCase()) ||
+        item.cid?.toLowerCase().includes(globalFilter.toLowerCase()) ||
+        item.projectId?.toLowerCase().includes(globalFilter.toLowerCase());
 
-  const filteredRows = useMemo(() => {
-    return table.getRowModel().rows.filter((row) => {
-      const matchesSearch = row
-        .getAllCells()
-        .some((cell) =>
-          String(cell.getValue())
-            .toLowerCase()
-            .includes(globalFilter.toLowerCase())
-        );
+      const matchesStatus = statusFilter === "__all" || item.status === statusFilter;
 
-      const matchesStatus =
-        statusFilter === "__all" || row.original.status === statusFilter;
-
-      const recordCategories = row.original.categories || [];
+      const recordCategories = item.categories || [];
       const matchesCategory =
         categoryFilter.length === 0 ||
         categoryFilter.some((cat) => recordCategories.includes(cat));
 
       return matchesSearch && matchesStatus && matchesCategory;
     });
-  }, [table, globalFilter, statusFilter, categoryFilter]);
+  }, [data, globalFilter, statusFilter, categoryFilter]);
+
+  // Reset to first page when filters change
+  const prevFilterRef = useState({ globalFilter, statusFilter, categoryFilter })[0];
+  if (
+    prevFilterRef.globalFilter !== globalFilter ||
+    prevFilterRef.statusFilter !== statusFilter ||
+    JSON.stringify(prevFilterRef.categoryFilter) !== JSON.stringify(categoryFilter)
+  ) {
+    prevFilterRef.globalFilter = globalFilter;
+    prevFilterRef.statusFilter = statusFilter;
+    prevFilterRef.categoryFilter = categoryFilter;
+    setPagination({ ...pagination, pageIndex: 0 });
+  }
+
+  const table = useReactTable({
+    data: filteredData,
+    columns,
+    state: { sorting, pagination },
+    onSortingChange: setSorting,
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    manualPagination: false,
+  });
+
 
   const countByStatus = (status: string) =>
     data.filter((item) => item.status === status).length;
@@ -298,8 +315,8 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
           </TableHeader>
 
           <TableBody>
-            {filteredRows.length ? (
-              filteredRows.map((row) => (
+            {table.getRowModel().rows.length ? (
+              table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
                   onClick={() =>
@@ -326,23 +343,71 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-end space-x-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
-        >
-          Previous
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
-        >
-          Next
-        </Button>
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          Showing {table.getRowModel().rows.length > 0 ? pagination.pageIndex * pagination.pageSize + 1 : 0} to{" "}
+          {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)} of{" "}
+          {filteredData.length} filtered results
+          {filteredData.length !== data.length && ` (${data.length} total)`}
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Rows per page:</span>
+            <Select
+              value={String(pagination.pageSize)}
+              onValueChange={(value) => setPagination({ pageIndex: 0, pageSize: Number(value) })}
+            >
+              <SelectTrigger className="w-20 h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+            >
+              First
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Previous
+            </Button>
+            <div className="text-sm font-medium px-2">
+              Page {pagination.pageIndex + 1} of {table.getPageCount()}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+            >
+              Last
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
