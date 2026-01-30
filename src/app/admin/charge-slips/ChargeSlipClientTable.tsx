@@ -106,9 +106,9 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
           return recordCats.some(c => c?.toLowerCase() === target.toLowerCase());
         });
 
-      return matchesSearch && matchesCategory;
+      return matchesSearch && matchesStatus && matchesCategory;
     });
-  }, [data, globalFilter, categoryFilter]);
+  }, [data, globalFilter, statusFilter, categoryFilter]);
 
   // Total Summary for the filtered data
   const filteredTotalValue = useMemo(() => {
@@ -116,12 +116,14 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   }, [filteredData]);
 
   // Reset to first page when filters change
-  const prevFilterRef = useState({ globalFilter, categoryFilter })[0];
+  const prevFilterRef = useState({ globalFilter, statusFilter, categoryFilter })[0];
   if (
     prevFilterRef.globalFilter !== globalFilter ||
+    prevFilterRef.statusFilter !== statusFilter ||
     JSON.stringify(prevFilterRef.categoryFilter) !== JSON.stringify(categoryFilter)
   ) {
     prevFilterRef.globalFilter = globalFilter;
+    prevFilterRef.statusFilter = statusFilter;
     prevFilterRef.categoryFilter = categoryFilter;
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }
@@ -154,27 +156,25 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     { id: "cancelled", label: "Cancelled", color: "text-red-500", border: "border-red-200", bg: "bg-red-50" },
   ], []);
 
-  // Calculate totals for each category (from the whole database)
-  const categoryTotals = useMemo(() => {
-    const totals: Record<string, number> = {};
+  // Calculate counts for each category (from the whole database)
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
     categories.forEach((cat) => {
       const target = cat.name === "Retail Sales" ? "retail" : cat.name.toLowerCase();
-      totals[cat.name] = data
-        .filter((item) => (item.categories || []).some((c) => c.toLowerCase() === target))
-        .reduce((sum, item) => sum + (item.total || 0), 0);
+      counts[cat.name] = data.filter((item) =>
+        (item.categories || []).some((c) => c.toLowerCase() === target)
+      ).length;
     });
-    return totals;
+    return counts;
   }, [data, categories]);
 
-  // Calculate totals for each status (from the whole database)
-  const statusTotals = useMemo(() => {
-    const totals: Record<string, number> = {};
+  // Calculate counts for each status (from the whole database)
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
     statuses.forEach((stat) => {
-      totals[stat.id] = data
-        .filter((item) => item.status === stat.id)
-        .reduce((sum, item) => sum + (item.total || 0), 0);
+      counts[stat.id] = data.filter((item) => item.status === stat.id).length;
     });
-    return totals;
+    return counts;
   }, [data, statuses]);
 
   return (
@@ -198,13 +198,10 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   : "bg-white"
                 }`}
             >
-              <div className={`text-xl font-bold ${cat.color} truncate`}>
-                ₱{categoryTotals[cat.name].toLocaleString(undefined, {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                })}
+              <div className={`text-2xl font-bold ${cat.color} truncate`}>
+                {categoryCounts[cat.name]}
               </div>
-              <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+              <div className="text-sm text-muted-foreground font-medium uppercase tracking-wider">
                 {cat.name}
               </div>
             </div>
@@ -225,13 +222,10 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   : "bg-white"
                 }`}
             >
-              <div className={`text-xl font-bold ${stat.color} truncate`}>
-                ₱{statusTotals[stat.id].toLocaleString(undefined, {
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                })}
+              <div className={`text-2xl font-bold ${stat.color} truncate`}>
+                {statusCounts[stat.id]}
               </div>
-              <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+              <div className="text-sm text-muted-foreground font-medium uppercase tracking-wider">
                 {stat.label}
               </div>
             </div>
@@ -246,17 +240,17 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             setGlobalFilter("");
           }}
           className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${categoryFilter.length === 0 && statusFilter === "__all" && globalFilter === ""
-              ? "ring-2 ring-primary ring-offset-2 bg-slate-50 border-slate-200"
-              : "bg-white"
+            ? "ring-2 ring-primary ring-offset-2 bg-slate-50 border-slate-200"
+            : "bg-white"
             }`}
         >
-          <div className="text-xl font-bold text-gray-700 truncate">
+          <div className="text-2xl font-bold text-gray-700 truncate">
             ₱{filteredTotalValue.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
           </div>
-          <div className="text-xs text-muted-foreground flex justify-between items-center font-medium uppercase tracking-wider">
+          <div className="text-sm text-muted-foreground flex justify-between items-center font-medium uppercase tracking-wider">
             <span>Filtered Total</span>
             {(categoryFilter.length > 0 || statusFilter !== "__all" || globalFilter !== "") && (
               <Badge variant="secondary" className="text-[10px] h-4 py-0 leading-none">
