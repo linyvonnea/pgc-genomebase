@@ -242,8 +242,8 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             setGlobalFilter("");
           }}
           className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${categoryFilter.length === 0 && statusFilter === "__all" && globalFilter === ""
-              ? "ring-2 ring-primary ring-offset-2 bg-slate-50 border-slate-200"
-              : "bg-white"
+            ? "ring-2 ring-primary ring-offset-2 bg-slate-50 border-slate-200"
+            : "bg-white"
             }`}
         >
           <div className="text-2xl font-bold text-gray-700 truncate">
