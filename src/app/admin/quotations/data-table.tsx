@@ -18,7 +18,8 @@ import { Input } from "@/components/ui/input";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -157,18 +158,13 @@ export function DataTable<TData, TValue>({
 
             {/* Total Card Small */}
             <div
-              key={cat.name}
-              onClick={() => {
-                if (isActive) {
-                  setCategoryFilter(categoryFilter.filter(c => c !== cat.name));
-                } else {
-                  setCategoryFilter([...categoryFilter, cat.name]);
-                }
-              }}
-              className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${isActive
-                ? `ring-2 ring-primary ring-offset-2 ${cat.bg} ${cat.border}`
-                : "bg-white"
-                }`}
+              onClick={() => setCategoryFilter([])}
+              className={`
+                  relative overflow-hidden rounded-xl border p-3 cursor-pointer transition-all hover:shadow-md select-none
+                  ${categoryFilter.length === 0
+                  ? "bg-slate-900 border-slate-700 text-slate-100"
+                  : "bg-card border-muted/60 hover:border-muted-foreground/40"}
+                `}
             >
               <div className="flex justify-between items-center">
                 <span className={`text-[10px] font-bold uppercase tracking-wider ${categoryFilter.length === 0 ? "text-slate-100" : "text-muted-foreground"}`}>
@@ -179,17 +175,7 @@ export function DataTable<TData, TValue>({
                 </Badge>
               </div>
             </div>
-          );
-        })}
-        <div
-          onClick={() => setCategoryFilter([])}
-          className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${categoryFilter.length === 0
-            ? "ring-2 ring-primary ring-offset-2 bg-slate-50 border-slate-200"
-            : "bg-white"
-            }`}
-        >
-          <div className="text-2xl font-bold text-gray-700">{data.length}</div>
-          <div className="text-sm text-muted-foreground">Total Quotations</div>
+          </div>
         </div>
       </div>
 
@@ -269,39 +255,35 @@ export function DataTable<TData, TValue>({
           </div>
         </div>
 
-      {/* Table */}
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((hg) => (
-              <TableRow key={hg.id}>
-                {hg.headers.map((header) => {
-                  const canSort = header.column.getCanSort?.();
-                  const sortDir = header.column.getIsSorted?.();
-                  return (
-                    <TableHead
-                      key={header.id}
-                      onClick={
-                        canSort ? header.column.getToggleSortingHandler() : undefined
-                      }
-                      className={canSort ? "cursor-pointer select-none" : ""}
-                    >
-                      <div className="flex items-center gap-1">
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                        {canSort && (
-                          <span className="ml-1 text-xs opacity-60">
-                            {sortDir === "asc" ? "▲" : sortDir === "desc" ? "▼" : ""}
-                          </span>
-                        )}
-                      </div>
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
+        {/* Table Content */}
+        <div className="rounded-xl border border-muted/60 bg-card shadow-sm overflow-hidden">
+          <Table>
+            <TableHeader className="bg-muted/30">
+              {table.getHeaderGroups().map((hg) => (
+                <TableRow key={hg.id} className="hover:bg-transparent border-b border-muted/60">
+                  {hg.headers.map((header) => {
+                    const canSort = header.column.getCanSort?.();
+                    const sortDir = header.column.getIsSorted?.();
+                    return (
+                      <TableHead
+                        key={header.id}
+                        onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                        className={`h-11 text-[10px] font-bold tracking-wider text-muted-foreground uppercase py-3 whitespace-nowrap ${canSort ? "cursor-pointer select-none" : ""}`}
+                      >
+                        <div className="flex items-center gap-1">
+                          {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                          {canSort && (
+                            <span className="opacity-60">
+                              {sortDir === "asc" ? "▲" : sortDir === "desc" ? "▼" : <Filter className="h-3 w-3 opacity-20" />}
+                            </span>
+                          )}
+                        </div>
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
 
             <TableBody>
               {table.getRowModel().rows.length ? (
@@ -327,25 +309,15 @@ export function DataTable<TData, TValue>({
                       </div>
                       <div className="space-y-1">
                         <p className="text-base font-bold text-foreground">No matches found</p>
-                        <p className="text-sm">We couldn't find any quotations matching your search.</p>
+                        <p className="text-sm">We couldn&apos;t find any quotations matching your search.</p>
                       </div>
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="text-center h-24 text-muted-foreground">
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <div className="text-xs text-muted-foreground px-1">
-        Showing {filteredData.length > 0 ? (pagination.pageIndex * pagination.pageSize) + 1 : 0} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)} of {filteredData.length} records
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );
