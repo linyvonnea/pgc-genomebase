@@ -208,30 +208,76 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="rounded-lg border p-4 text-center">
+        <div
+          className={`rounded-lg border p-4 text-center cursor-pointer transition-all hover:shadow-md hover:scale-105 ${statusFilter === "processing" ? "ring-2 ring-blue-600 bg-blue-50" : "hover:bg-blue-50/50"
+            }`}
+          onClick={() => setStatusFilter(statusFilter === "processing" ? "__all" : "processing")}
+        >
           <div className="text-2xl font-bold text-blue-600">
             {countByStatus("processing")}
           </div>
           <div className="text-sm text-muted-foreground">Processing</div>
         </div>
-        <div className="rounded-lg border p-4 text-center">
+        <div
+          className={`rounded-lg border p-4 text-center cursor-pointer transition-all hover:shadow-md hover:scale-105 ${statusFilter === "paid" ? "ring-2 ring-green-600 bg-green-50" : "hover:bg-green-50/50"
+            }`}
+          onClick={() => setStatusFilter(statusFilter === "paid" ? "__all" : "paid")}
+        >
           <div className="text-2xl font-bold text-green-600">
             {countByStatus("paid")}
           </div>
           <div className="text-sm text-muted-foreground">Paid</div>
         </div>
-        <div className="rounded-lg border p-4 text-center">
+        <div
+          className={`rounded-lg border p-4 text-center cursor-pointer transition-all hover:shadow-md hover:scale-105 ${statusFilter === "cancelled" ? "ring-2 ring-red-600 bg-red-50" : "hover:bg-red-50/50"
+            }`}
+          onClick={() => setStatusFilter(statusFilter === "cancelled" ? "__all" : "cancelled")}
+        >
           <div className="text-2xl font-bold text-red-600">
             {countByStatus("cancelled")}
           </div>
           <div className="text-sm text-muted-foreground">Cancelled</div>
         </div>
-        <div className="rounded-lg border p-4 text-center">
+        <div className="rounded-lg border p-4 text-center bg-gray-50">
           <div className="text-2xl font-bold text-gray-700">
             ₱{totalAmount.toLocaleString()}
           </div>
-          <div className="text-sm text-muted-foreground">Total Amount</div>
+          <div className="text-sm text-muted-foreground">Total Amount (Paid)</div>
         </div>
+      </div>
+
+      {/* Service Category Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {VALID_CATEGORIES.map((cat) => {
+          const isActive = categoryFilter.includes(cat);
+          const categoryColors = {
+            laboratory: { text: "text-purple-600", ring: "ring-purple-600", bg: "bg-purple-50", hover: "hover:bg-purple-50/50" },
+            equipment: { text: "text-orange-600", ring: "ring-orange-600", bg: "bg-orange-50", hover: "hover:bg-orange-50/50" },
+            bioinformatics: { text: "text-cyan-600", ring: "ring-cyan-600", bg: "bg-cyan-50", hover: "hover:bg-cyan-50/50" },
+            retail: { text: "text-pink-600", ring: "ring-pink-600", bg: "bg-pink-50", hover: "hover:bg-pink-50/50" },
+            training: { text: "text-indigo-600", ring: "ring-indigo-600", bg: "bg-indigo-50", hover: "hover:bg-indigo-50/50" },
+          };
+          const colors = categoryColors[cat as keyof typeof categoryColors];
+
+          return (
+            <div
+              key={cat}
+              className={`rounded-lg border p-3 text-center cursor-pointer transition-all hover:shadow-md hover:scale-105 ${isActive ? `ring-2 ${colors.ring} ${colors.bg}` : colors.hover
+                }`}
+              onClick={() => {
+                if (isActive) {
+                  setCategoryFilter((prev) => prev.filter((c) => c !== cat));
+                } else {
+                  setCategoryFilter((prev) => [...prev, cat]);
+                }
+              }}
+            >
+              <div className={`text-sm font-semibold capitalize ${colors.text}`}>
+                {cat}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Table */}
