@@ -318,6 +318,24 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                 <ChevronsRight className="h-4 w-4" />
               </Button>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+            >
+              {"»"}
+            </Button>
           </div>
         </div>
 
