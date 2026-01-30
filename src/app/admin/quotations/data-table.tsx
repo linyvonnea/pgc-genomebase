@@ -103,6 +103,44 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
+      {/* Stats/Category Buttons */}
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+        {categories.map((cat) => {
+          const isActive = categoryFilter.includes(cat.name);
+          return (
+            <div
+              key={cat.name}
+              onClick={() => {
+                if (isActive) {
+                  setCategoryFilter(categoryFilter.filter(c => c !== cat.name));
+                } else {
+                  setCategoryFilter([...categoryFilter, cat.name]);
+                }
+              }}
+              className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 ${isActive
+                ? `ring-2 ring-primary ring-offset-2 ${cat.bg} ${cat.border}`
+                : "bg-white"
+                }`}
+            >
+              <div className={`text-2xl font-bold ${cat.color}`}>
+                {countByCategory(cat.name)}
+              </div>
+              <div className="text-sm text-muted-foreground">{cat.name === "Retail" ? "Retail Sales" : cat.name}</div>
+            </div>
+          );
+        })}
+        <div
+          onClick={() => setCategoryFilter([])}
+          className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 ${categoryFilter.length === 0
+            ? "ring-2 ring-primary ring-offset-2 bg-slate-50 border-slate-200"
+            : "bg-white"
+            }`}
+        >
+          <div className="text-2xl font-bold text-gray-700">{data.length}</div>
+          <div className="text-sm text-muted-foreground">Total Quotations</div>
+        </div>
+      </div>
+
       {/* Header with Search and Pagination */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-2">
@@ -180,44 +218,6 @@ export function DataTable<TData, TValue>({
           <div className="text-xs text-muted-foreground">
             Showing {filteredData.length > 0 ? (pagination.pageIndex * pagination.pageSize) + 1 : 0} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)} of {filteredData.length} records
           </div>
-        </div>
-      </div>
-
-      {/* Stats/Category Buttons */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-        {categories.map((cat) => {
-          const isActive = categoryFilter.includes(cat.name);
-          return (
-            <div
-              key={cat.name}
-              onClick={() => {
-                if (isActive) {
-                  setCategoryFilter(categoryFilter.filter(c => c !== cat.name));
-                } else {
-                  setCategoryFilter([...categoryFilter, cat.name]);
-                }
-              }}
-              className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 ${isActive
-                  ? `ring-2 ring-primary ring-offset-2 ${cat.bg} ${cat.border}`
-                  : "bg-white"
-                }`}
-            >
-              <div className={`text-2xl font-bold ${cat.color}`}>
-                {countByCategory(cat.name)}
-              </div>
-              <div className="text-sm text-muted-foreground">{cat.name === "Retail" ? "Retail Sales" : cat.name}</div>
-            </div>
-          );
-        })}
-        <div
-          onClick={() => setCategoryFilter([])}
-          className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md hover:scale-105 ${categoryFilter.length === 0
-              ? "ring-2 ring-primary ring-offset-2 bg-slate-50 border-slate-200"
-              : "bg-white"
-            }`}
-        >
-          <div className="text-2xl font-bold text-gray-700">{data.length}</div>
-          <div className="text-sm text-muted-foreground">Total Quotations</div>
         </div>
       </div>
 
