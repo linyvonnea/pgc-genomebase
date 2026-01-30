@@ -135,9 +135,53 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     manualPagination: false,
   });
 
-
   const countByStatus = (status: string) =>
     data.filter((item) => item.status === status).length;
+
+  // Calculate totals by status
+  const totalsByStatus = useMemo(() => {
+    const totals = {
+      processing: 0,
+      paid: 0,
+      cancelled: 0,
+    };
+
+    data.forEach((item) => {
+      const amount = item.total || 0;
+      if (item.status === "processing") totals.processing += amount;
+      else if (item.status === "paid") totals.paid += amount;
+      else if (item.status === "cancelled") totals.cancelled += amount;
+    });
+
+    return totals;
+  }, [data]);
+
+  // Calculate totals by category
+  const totalsByCategory = useMemo(() => {
+    const totals: Record<ValidCategory, number> = {
+      laboratory: 0,
+      equipment: 0,
+      bioinformatics: 0,
+      retail: 0,
+      training: 0,
+    };
+
+    data.forEach((item) => {
+      const amount = item.total || 0;
+      const categories = item.categories || [];
+
+      // Distribute amount evenly across categories if multiple
+      const amountPerCategory = categories.length > 0 ? amount / categories.length : 0;
+
+      categories.forEach((cat) => {
+        if (cat in totals) {
+          totals[cat] += amountPerCategory;
+        }
+      });
+    });
+
+    return totals;
+  }, [data]);
 
   return (
     <div className="space-y-4">
