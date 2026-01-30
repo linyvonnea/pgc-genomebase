@@ -161,6 +161,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     const counts: Record<string, number> = {};
     categories.forEach((cat) => {
       const target = cat.name === "Retail Sales" ? "retail" : cat.name.toLowerCase();
+      // "Database" count = unfiltered data
       counts[cat.name] = data.filter((item) =>
         (item.categories || []).some((c) => c.toLowerCase() === target)
       ).length;
@@ -172,6 +173,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     statuses.forEach((stat) => {
+      // "Database" count = unfiltered data
       counts[stat.id] = data.filter((item) => item.status === stat.id).length;
     });
     return counts;
@@ -210,7 +212,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       </div>
 
       {/* Status Cards Row + Total Card */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statuses.map((stat) => {
           const isActive = statusFilter === stat.id;
           return (
@@ -232,7 +234,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
           );
         })}
 
-        {/* Total card - Displays combined total of filtered records */}
+        {/* Filtered Total Card (Currency) */}
         <div
           onClick={() => {
             setCategoryFilter([]);
