@@ -139,10 +139,74 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   const countByStatus = (status: string) =>
     data.filter((item) => item.status === status).length;
 
-  const totalAmount = useMemo(() => {
-    return data.reduce((sum, item) =>
-      item.status === "paid" ? sum + (item.total || 0) : sum,
-      0);
+  // Calculate totals by status
+  const totalsByStatus = useMemo(() => {
+    const totals = {
+      processing: 0,
+      paid: 0,
+      cancelled: 0,
+    };
+
+    data.forEach((item) => {
+      const amount = item.total || 0;
+      if (item.status === "processing") totals.processing += amount;
+      else if (item.status === "paid") totals.paid += amount;
+      else if (item.status === "cancelled") totals.cancelled += amount;
+    });
+
+    return totals;
+  }, [data]);
+
+  // Calculate totals by category
+  const totalsByCategory = useMemo(() => {
+    const totals: Record<ValidCategory, number> = {
+      laboratory: 0,
+      equipment: 0,
+      bioinformatics: 0,
+      retail: 0,
+      training: 0,
+    };
+
+    data.forEach((item) => {
+      const amount = item.total || 0;
+      const categories = item.categories || [];
+
+      // Distribute amount evenly across categories if multiple
+      const amountPerCategory = categories.length > 0 ? amount / categories.length : 0;
+
+      categories.forEach((cat) => {
+        if (cat in totals) {
+          totals[cat] += amountPerCategory;
+        }
+      });
+    });
+
+    return totals;
+  }, [data]);
+
+  // Calculate totals by status AND category
+  const totalsByStatusAndCategory = useMemo(() => {
+    const totals: Record<string, Record<ValidCategory, number>> = {
+      processing: { laboratory: 0, equipment: 0, bioinformatics: 0, retail: 0, training: 0 },
+      paid: { laboratory: 0, equipment: 0, bioinformatics: 0, retail: 0, training: 0 },
+      cancelled: { laboratory: 0, equipment: 0, bioinformatics: 0, retail: 0, training: 0 },
+    };
+
+    data.forEach((item) => {
+      const amount = item.total || 0;
+      const status = item.status || "processing";
+      const categories = item.categories || [];
+
+      const amountPerCategory = categories.length > 0 ? amount / categories.length : 0;
+
+      categories.forEach((cat) => {
+        if (cat in totals[status]) {
+          totals[status][cat] += amountPerCategory;
+        }
+      });
+    });
+
+    return totals;
   }, [data]);
 
   return (
@@ -234,6 +298,9 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             {countByStatus("processing")}
           </div>
           <div className="text-sm text-muted-foreground">Processing</div>
+          <div className="text-xs font-semibold text-blue-600 mt-1">
+            ₱{totalsByStatus.processing.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
         </div>
         <div
           className={`rounded-lg border p-4 text-center cursor-pointer transition-all hover:shadow-md hover:scale-105 ${statusFilter === "paid" ? "ring-2 ring-green-600 bg-green-50" : "hover:bg-green-50/50"
@@ -244,6 +311,9 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             {countByStatus("paid")}
           </div>
           <div className="text-sm text-muted-foreground">Paid</div>
+          <div className="text-xs font-semibold text-green-600 mt-1">
+            ₱{totalsByStatus.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
         </div>
         <div
           className={`rounded-lg border p-4 text-center cursor-pointer transition-all hover:shadow-md hover:scale-105 ${statusFilter === "cancelled" ? "ring-2 ring-red-600 bg-red-50" : "hover:bg-red-50/50"
@@ -254,12 +324,16 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             {countByStatus("cancelled")}
           </div>
           <div className="text-sm text-muted-foreground">Cancelled</div>
+          <div className="text-xs font-semibold text-red-600 mt-1">
+            ₱{totalsByStatus.cancelled.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
         </div>
         <div className="rounded-lg border p-4 text-center bg-gray-50">
           <div className="text-2xl font-bold text-gray-700">
-            ₱{totalAmount.toLocaleString()}
+            ₱{(totalsByStatus.processing + totalsByStatus.paid + totalsByStatus.cancelled).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
-          <div className="text-sm text-muted-foreground">Total Amount (Paid)</div>
+          <div className="text-sm text-muted-foreground">Grand Total</div>
+          <div className="text-xs text-muted-foreground mt-1">All Statuses</div>
         </div>
       </div>
 
@@ -291,6 +365,9 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             >
               <div className={`text-sm font-semibold capitalize ${colors.text}`}>
                 {cat}
+              </div>
+              <div className={`text-xs font-medium ${colors.text} mt-1`}>
+                ₱{totalsByCategory[cat].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
           );
