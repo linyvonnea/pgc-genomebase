@@ -194,8 +194,8 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                 }
               }}
               className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${isActive
-                ? `ring-2 ring-primary ring-offset-2 ${cat.bg} ${cat.border}`
-                : "bg-white"
+                  ? `ring-2 ring-primary ring-offset-2 ${cat.bg} ${cat.border}`
+                  : "bg-white"
                 }`}
             >
               <div className={`text-2xl font-bold ${cat.color} truncate`}>
@@ -218,8 +218,8 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
               key={stat.id}
               onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
               className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${isActive
-                ? `ring-2 ring-primary ring-offset-2 ${stat.bg} ${stat.border}`
-                : "bg-white"
+                  ? `ring-2 ring-primary ring-offset-2 ${stat.bg} ${stat.border}`
+                  : "bg-white"
                 }`}
             >
               <div className={`text-2xl font-bold ${stat.color} truncate`}>
