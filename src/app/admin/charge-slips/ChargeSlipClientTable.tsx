@@ -28,10 +28,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { ChevronsLeft, ChevronsRight } from "lucide-react";
 import { columns as defaultColumns } from "./columns";
-import { VALID_CATEGORIES } from "@/types/ChargeSlipRecord";
 
 import type { ValidCategory } from "@/types/ChargeSlipRecord";
 
@@ -81,41 +79,34 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("__all");
-  const [categoryFilter, setCategoryFilter] = useState<ValidCategory[]>([]);
+  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
 
   // Filter data manually before passing to table
   const filteredData = useMemo(() => {
     return data.filter((item) => {
-      const matchesSearch =
-        item.chargeSlipNumber?.toLowerCase().includes(globalFilter.toLowerCase()) ||
-        item.clientInfo?.name?.toLowerCase().includes(globalFilter.toLowerCase()) ||
-        item.client?.name?.toLowerCase().includes(globalFilter.toLowerCase()) ||
-        item.project?.title?.toLowerCase().includes(globalFilter.toLowerCase()) ||
-        item.cid?.toLowerCase().includes(globalFilter.toLowerCase()) ||
-        item.projectId?.toLowerCase().includes(globalFilter.toLowerCase());
+      const q = globalFilter.trim().toLowerCase();
+      const haystack =
+        `${item.chargeSlipNumber || ""} ${item.clientInfo?.name || ""} ${item.client?.name || ""} ${item.project?.title || ""} ${item.cid || ""} ${item.projectId || ""}`
+          .toLowerCase();
+      const matchesSearch = q === "" || haystack.includes(q);
 
-      const matchesStatus = statusFilter === "__all" || item.status === statusFilter;
-
-      const recordCategories = item.categories || [];
+      const recordCats = item.categories || [];
       const matchesCategory =
         categoryFilter.length === 0 ||
-        categoryFilter.some((cat) => recordCategories.includes(cat));
+        categoryFilter.some((cat) => recordCats.some(c => c?.toLowerCase() === cat.toLowerCase()));
 
-      return matchesSearch && matchesStatus && matchesCategory;
+      return matchesSearch && matchesCategory;
     });
-  }, [data, globalFilter, statusFilter, categoryFilter]);
+  }, [data, globalFilter, categoryFilter]);
 
   // Reset to first page when filters change
-  const prevFilterRef = useState({ globalFilter, statusFilter, categoryFilter })[0];
+  const prevFilterRef = useState({ globalFilter, categoryFilter })[0];
   if (
     prevFilterRef.globalFilter !== globalFilter ||
-    prevFilterRef.statusFilter !== statusFilter ||
     JSON.stringify(prevFilterRef.categoryFilter) !== JSON.stringify(categoryFilter)
   ) {
     prevFilterRef.globalFilter = globalFilter;
-    prevFilterRef.statusFilter = statusFilter;
     prevFilterRef.categoryFilter = categoryFilter;
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }
@@ -132,100 +123,68 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     manualPagination: false,
   });
 
-  const countByStatus = (status: string) =>
-    data.filter((item) => item.status === status).length;
+  // Static categories for filtering
+  const categories = [
+    { name: "Laboratory", color: "text-green-600", border: "border-green-200", bg: "bg-green-50" },
+    { name: "Equipment", color: "text-blue-600", border: "border-blue-200", bg: "bg-blue-50" },
+    { name: "Bioinformatics", color: "text-purple-600", border: "border-purple-200", bg: "bg-purple-50" },
+    { name: "Retail Sales", color: "text-orange-600", border: "border-orange-200", bg: "bg-orange-50" },
+    { name: "Training", color: "text-indigo-600", border: "border-indigo-200", bg: "bg-indigo-50" },
+  ];
 
-  // Calculate totals by status
-  const totalsByStatus = useMemo(() => {
-    const totals = {
-      processing: 0,
-      paid: 0,
-      cancelled: 0,
-    };
-
-    data.forEach((item) => {
-      const amount = item.total || 0;
-      if (item.status === "processing") totals.processing += amount;
-      else if (item.status === "paid") totals.paid += amount;
-      else if (item.status === "cancelled") totals.cancelled += amount;
-    });
-
-    return totals;
-  }, [data]);
+  const countByCategory = (catName: string) =>
+    data.filter((item) =>
+      (item.categories || []).some((c) => {
+        const target = catName === "Retail Sales" ? "retail" : catName.toLowerCase();
+        return c.toLowerCase() === target;
+      })
+    ).length;
 
   return (
     <div className="space-y-4">
-      {/* Category / Status Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {[
-          { id: "processing", label: "Processing", color: "text-blue-600", count: countByStatus("processing"), total: totalsByStatus.processing },
-          { id: "paid", label: "Paid", color: "text-green-600", count: countByStatus("paid"), total: totalsByStatus.paid },
-          { id: "cancelled", label: "Cancelled", color: "text-red-600", count: countByStatus("cancelled"), total: totalsByStatus.cancelled },
-        ].map((stat) => (
-          <div
-            key={stat.id}
-            onClick={() => setStatusFilter(statusFilter === stat.id ? "__all" : stat.id)}
-            className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${statusFilter === stat.id ? "ring-2 ring-primary ring-offset-2 bg-slate-50 border-slate-200" : "bg-white"}`}
-          >
-            <div className={`text-2xl font-bold ${stat.color}`}>
-              ₱{stat.total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-            </div>
-            <div className="text-sm text-muted-foreground flex justify-between">
-              <span>{stat.label}</span>
-              <span className="opacity-60">({stat.count})</span>
-            </div>
-          </div>
-        ))}
-
-        <div
-          onClick={() => { setStatusFilter("__all"); setCategoryFilter([]); }}
-          className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${statusFilter === "__all" && categoryFilter.length === 0 ? "ring-2 ring-primary ring-offset-2 bg-slate-50 border-slate-200" : "bg-white"}`}
-        >
-          <div className="text-2xl font-bold text-gray-700">
-            ₱{data.reduce((sum, item) => sum + (item.total || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-          </div>
-          <div className="text-sm text-muted-foreground flex justify-between">
-            <span>Total Records</span>
-            <span className="opacity-60">({data.length})</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Category Buttons Row */}
-      <div className="flex flex-wrap items-center gap-2 py-2">
-        <span className="text-sm text-muted-foreground">Filter Categories:</span>
-        {VALID_CATEGORIES.map((cat) => {
-          const isActive = categoryFilter.includes(cat);
+      {/* Category Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+        {categories.map((cat) => {
+          const isActive = categoryFilter.includes(cat.name);
           return (
-            <Button
-              key={cat}
-              variant={isActive ? "default" : "outline"}
-              size="sm"
+            <div
+              key={cat.name}
               onClick={() => {
                 if (isActive) {
-                  setCategoryFilter((prev) => prev.filter((c) => c !== cat));
+                  setCategoryFilter(categoryFilter.filter(c => c !== cat.name));
                 } else {
-                  setCategoryFilter((prev) => [...prev, cat]);
+                  setCategoryFilter([...categoryFilter, cat.name]);
                 }
               }}
-              className="h-8 capitalize"
+              className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${isActive
+                ? `ring-2 ring-primary ring-offset-2 ${cat.bg} ${cat.border}`
+                : "bg-white"
+                }`}
             >
-              {cat}
-            </Button>
+              <div className={`text-2xl font-bold ${cat.color}`}>
+                {countByCategory(cat.name)}
+              </div>
+              <div className="text-sm text-muted-foreground">{cat.name}</div>
+            </div>
           );
         })}
-        {categoryFilter.length > 0 && (
-          <Button variant="ghost" size="sm" onClick={() => setCategoryFilter([])} className="h-8 text-xs">
-            Clear
-          </Button>
-        )}
+        <div
+          onClick={() => setCategoryFilter([])}
+          className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${categoryFilter.length === 0
+            ? "ring-2 ring-primary ring-offset-2 bg-slate-50 border-slate-200"
+            : "bg-white"
+            }`}
+        >
+          <div className="text-2xl font-bold text-gray-700">{data.length}</div>
+          <div className="text-sm text-muted-foreground">Total Charge Slips</div>
+        </div>
       </div>
 
       {/* Header with Search and Pagination */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-2">
           <Input
-            placeholder="Search charge slips, clients..."
+            placeholder="Search client, institution, reference..."
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
             className="w-72"
@@ -244,10 +203,11 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
+                  {[10, 20, 50, 100].map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -303,13 +263,26 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  const canSort = header.column.getCanSort?.();
+                  const sortDir = header.column.getIsSorted?.();
+                  return (
+                    <TableHead
+                      key={header.id}
+                      onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                      className={canSort ? "cursor-pointer select-none" : ""}
+                    >
+                      <div className="flex items-center gap-1">
+                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                        {canSort && (
+                          <span className="ml-1 text-xs opacity-60">
+                            {sortDir === "asc" ? "▲" : sortDir === "desc" ? "▼" : ""}
+                          </span>
+                        )}
+                      </div>
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
