@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Filter, Info, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Filter, Info } from "lucide-react";
 import { columns as defaultColumns } from "./columns";
 import { VALID_CATEGORIES } from "@/types/ChargeSlipRecord";
 
@@ -185,88 +185,141 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
 
   return (
     <div className="space-y-6">
-      {/* Status Summary Cards - Compact & Professional */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { id: "processing", label: "Processing", color: "blue", count: countByStatus("processing"), total: totalsByStatus.processing },
-          { id: "paid", label: "Paid", color: "green", count: countByStatus("paid"), total: totalsByStatus.paid },
-          { id: "cancelled", label: "Cancelled", color: "red", count: countByStatus("cancelled"), total: totalsByStatus.cancelled },
-        ].map((stat) => (
-          <div
-            key={stat.id}
-            onClick={() => setStatusFilter(statusFilter === stat.id ? "__all" : stat.id)}
-            className={`
-              relative overflow-hidden rounded-xl border bg-card p-4 shadow-sm transition-all cursor-pointer hover:shadow-md
-              ${statusFilter === stat.id ? `ring-2 ring-${stat.color}-500/20 bg-${stat.color}-50/50` : "hover:bg-accent/50"}
-            `}
-          >
-            <div className="flex justify-between items-start mb-2">
-              <span className={`text-sm font-medium text-${stat.color}-600 capitalize`}>{stat.label}</span>
-              <Badge variant={statusFilter === stat.id ? "default" : "secondary"} className={`bg-${stat.color}-100 text-${stat.color}-700 hover:bg-${stat.color}-200`}>
-                {stat.count}
-              </Badge>
-            </div>
-            <div className="space-y-1">
-              <div className="text-2xl font-bold tracking-tight">
-                ₱{stat.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-            </div>
-            {statusFilter === stat.id && (
-              <div className={`absolute bottom-0 left-0 h-1 w-full bg-${stat.color}-500`} />
-            )}
-          </div>
-        ))}
+      {/* Search Bar - Top */}
+      <div className="flex items-center justify-between gap-4">
+        <Input
+          placeholder="Search client, CS number, etc."
+          value={globalFilter}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          className="w-full md:w-96"
+        />
+      </div>
 
-        {/* Total / Filtered Total Card */}
-        <div className="relative overflow-hidden rounded-xl border bg-slate-900 text-slate-50 p-4 shadow-md">
-          <div className="flex justify-between items-start mb-2">
-            <span className="text-sm font-medium text-slate-300">
-              {statusFilter === "__all" && categoryFilter.length === 0 ? "Grand Total" : "Filtered Total"}
-            </span>
-            <Filter className="h-4 w-4 text-slate-400" />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div
+          className={`rounded-lg border p-4 text-center cursor-pointer transition-all hover:shadow-md hover:scale-105 ${statusFilter === "processing" ? "ring-2 ring-blue-600 bg-blue-50" : "hover:bg-blue-50/50"
+            }`}
+          onClick={() => setStatusFilter(statusFilter === "processing" ? "__all" : "processing")}
+        >
+          <div className="text-2xl font-bold text-blue-600">
+            {countByStatus("processing")}
           </div>
-          <div className="text-2xl font-bold tracking-tight">
+          <div className="text-sm text-muted-foreground">Processing</div>
+        </div>
+        <div
+          className={`rounded-lg border p-4 text-center cursor-pointer transition-all hover:shadow-md hover:scale-105 ${statusFilter === "paid" ? "ring-2 ring-green-600 bg-green-50" : "hover:bg-green-50/50"
+            }`}
+          onClick={() => setStatusFilter(statusFilter === "paid" ? "__all" : "paid")}
+        >
+          <div className="text-2xl font-bold text-green-600">
+            {countByStatus("paid")}
+          </div>
+          <div className="text-sm text-muted-foreground">Paid</div>
+        </div>
+        <div
+          className={`rounded-lg border p-4 text-center cursor-pointer transition-all hover:shadow-md hover:scale-105 ${statusFilter === "cancelled" ? "ring-2 ring-red-600 bg-red-50" : "hover:bg-red-50/50"
+            }`}
+          onClick={() => setStatusFilter(statusFilter === "cancelled" ? "__all" : "cancelled")}
+        >
+          <div className="text-2xl font-bold text-red-600">
+            {countByStatus("cancelled")}
+          </div>
+          <div className="text-sm text-muted-foreground">Cancelled</div>
+        </div>
+        <div className="rounded-lg border p-4 text-center bg-gradient-to-br from-slate-50 to-slate-100">
+          <div className="text-2xl font-bold text-slate-700">
             ₱{(() => {
+              // Calculate total based on active filters
               let filtered = data;
-              if (statusFilter !== "__all") filtered = filtered.filter(item => item.status === statusFilter);
-              if (categoryFilter.length > 0) filtered = filtered.filter(item => {
-                const itemCategories = item.categories || [];
-                return categoryFilter.some(cat => itemCategories.includes(cat));
-              });
+
+              // Apply status filter
+              if (statusFilter !== "__all") {
+                filtered = filtered.filter(item => item.status === statusFilter);
+              }
+
+              // Apply category filter
+              if (categoryFilter.length > 0) {
+                filtered = filtered.filter(item => {
+                  const itemCategories = item.categories || [];
+                  return categoryFilter.some(cat => itemCategories.includes(cat));
+                });
+              }
+
+              // Sum the totals
               const total = filtered.reduce((sum, item) => sum + (item.total || 0), 0);
               return total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             })()}
           </div>
-          <div className="mt-1 text-xs text-slate-400 truncate">
+          <div className="text-sm text-muted-foreground font-medium">
             {statusFilter === "__all" && categoryFilter.length === 0
-              ? "All Records"
-              : `${statusFilter !== "__all" ? statusFilter : "All"} • ${categoryFilter.length ? categoryFilter.join(", ") : "All Categories"}`}
+              ? "Grand Total"
+              : "Filtered Total"}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            {statusFilter === "__all" && categoryFilter.length === 0
+              ? "All Statuses"
+              : (() => {
+                const parts = [];
+                if (statusFilter !== "__all") parts.push(statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1));
+                if (categoryFilter.length > 0) parts.push(categoryFilter.map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(", "));
+                return parts.join(" • ");
+              })()}
           </div>
         </div>
       </div>
 
-      {/* Control Toolbar: Search, Filters, Navigation */}
-      <div className="flex flex-col gap-4 rounded-lg border bg-card p-4 shadow-sm">
+      {/* Service Category Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {VALID_CATEGORIES.map((cat) => {
+          const isActive = categoryFilter.includes(cat);
+          const categoryColors = {
+            laboratory: { text: "text-purple-600", ring: "ring-purple-600", bg: "bg-purple-50", hover: "hover:bg-purple-50/50" },
+            equipment: { text: "text-orange-600", ring: "ring-orange-600", bg: "bg-orange-50", hover: "hover:bg-orange-50/50" },
+            bioinformatics: { text: "text-cyan-600", ring: "ring-cyan-600", bg: "bg-cyan-50", hover: "hover:bg-cyan-50/50" },
+            retail: { text: "text-pink-600", ring: "ring-pink-600", bg: "bg-pink-50", hover: "hover:bg-pink-50/50" },
+            training: { text: "text-indigo-600", ring: "ring-indigo-600", bg: "bg-indigo-50", hover: "hover:bg-indigo-50/50" },
+          };
+          const colors = categoryColors[cat as keyof typeof categoryColors];
 
-        {/* Top Row: Search & Pagination Controls */}
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search charge slips..."
-              value={globalFilter}
-              onChange={(e) => setGlobalFilter(e.target.value)}
-              className="pl-9 bg-background"
-            />
-          </div>
+          return (
+            <div
+              key={cat}
+              className={`rounded-lg border p-3 text-center cursor-pointer transition-all hover:shadow-md hover:scale-105 ${isActive ? `ring-2 ${colors.ring} ${colors.bg}` : colors.hover
+                }`}
+              onClick={() => {
+                if (isActive) {
+                  setCategoryFilter((prev) => prev.filter((c) => c !== cat));
+                } else {
+                  setCategoryFilter((prev) => [...prev, cat]);
+                }
+              }}
+            >
+              <div className={`text-sm font-semibold capitalize ${colors.text}`}>
+                {cat}
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
-          <div className="flex items-center gap-2 self-end md:self-auto">
-            <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline-block">Rows:</span>
+      {/* Pagination & Status - Top */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="text-sm text-muted-foreground order-2 md:order-1">
+          Showing <span className="font-medium text-foreground">{table.getRowModel().rows.length > 0 ? (pagination.pageIndex * pagination.pageSize + 1) : 0}</span> to{" "}
+          <span className="font-medium text-foreground">{Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)}</span> of{" "}
+          <span className="font-medium text-foreground">{filteredData.length}</span> filtered results
+          {filteredData.length !== data.length && <span className="text-xs ml-1">({data.length} total)</span>}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 order-1 md:order-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
             <Select
               value={String(pagination.pageSize)}
               onValueChange={(value) => setPagination({ pageIndex: 0, pageSize: Number(value) })}
             >
-              <SelectTrigger className="w-16 h-9">
+              <SelectTrigger className="w-20 h-8">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -276,47 +329,28 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                 <SelectItem value="100">100</SelectItem>
               </SelectContent>
             </Select>
-
-            <div className="flex items-center border rounded-md bg-background">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-none rounded-l-md border-r"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <ChevronsLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-none border-r"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center justify-center min-w-[3rem] px-2 text-sm font-medium">
-                {pagination.pageIndex + 1} / {table.getPageCount() || 1}
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-none border-l"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9 rounded-none rounded-r-md border-l"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-              >
-                <ChevronsRight className="h-4 w-4" />
-              </Button>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+            >
+              {"«"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Prev
+            </Button>
+            <div className="flex items-center justify-center min-w-[5rem] text-sm font-medium">
+              {pagination.pageIndex + 1} / {table.getPageCount() || 1}
             </div>
             <Button
               variant="outline"
@@ -338,62 +372,16 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             </Button>
           </div>
         </div>
-
-        {/* Bottom Row: Category Pills */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
-          <span className="text-xs font-semibold text-muted-foreground uppercase mr-2">Filters:</span>
-          {VALID_CATEGORIES.map((cat) => {
-            const isActive = categoryFilter.includes(cat);
-            const catTotal = totalsByCategory[cat] || 0;
-
-            // Define colors
-            const colors = {
-              laboratory: "purple",
-              equipment: "orange",
-              bioinformatics: "cyan",
-              retail: "pink",
-              training: "indigo",
-            }[cat] || "gray";
-
-            return (
-              <div
-                key={cat}
-                onClick={() => {
-                  isActive
-                    ? setCategoryFilter((prev) => prev.filter((c) => c !== cat))
-                    : setCategoryFilter((prev) => [...prev, cat]);
-                }}
-                className={`
-                  group flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-all cursor-pointer select-none
-                  ${isActive
-                    ? `bg-${colors}-50 border-${colors}-200 text-${colors}-700 ring-1 ring-${colors}-500/20`
-                    : "bg-background hover:bg-muted/50 text-muted-foreground hover:text-foreground"}
-                `}
-              >
-                <div className={`h-2 w-2 rounded-full bg-${colors}-500 ${!isActive && "opacity-50 group-hover:opacity-100"}`} />
-                <span className="capitalize">{cat}</span>
-                <span className={`text-xs ml-1 ${isActive ? `text-${colors}-600/80` : "text-muted-foreground"}`}>
-                  (₱{(catTotal / 1000).toFixed(0)}k)
-                </span>
-              </div>
-            );
-          })}
-          {categoryFilter.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={() => setCategoryFilter([])} className="text-xs h-7 ml-auto text-muted-foreground hover:text-foreground">
-              Clear Filters
-            </Button>
-          )}
-        </div>
       </div>
 
-      {/* Table Section */}
-      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+      {/* Table */}
+      <div className="rounded-md border shadow-sm overflow-hidden">
         <Table>
-          <TableHeader className="bg-muted/40">
+          <TableHeader className="bg-muted/50">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="hover:bg-transparent border-b">
+              <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="h-10 text-xs font-semibold tracking-wide text-muted-foreground uppercase py-3">
+                  <TableHead key={header.id} className="font-semibold text-foreground">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -411,10 +399,10 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   onClick={() =>
                     router.push(`/admin/charge-slips/${row.original.chargeSlipNumber}`)
                   }
-                  className="hover:bg-muted/30 cursor-pointer transition-colors border-b last:border-0"
+                  className="hover:bg-muted/40 cursor-pointer transition-colors"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="py-3 text-sm">
+                    <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -422,16 +410,8 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-48 text-center text-muted-foreground">
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <div className="rounded-full bg-muted/50 p-3">
-                      <Search className="h-6 w-6 text-muted-foreground/50" />
-                    </div>
-                    <p>No charge slips found matching your filters.</p>
-                    <Button variant="link" onClick={() => { setGlobalFilter(""); setStatusFilter("__all"); setCategoryFilter([]); }}>
-                      Clear all filters
-                    </Button>
-                  </div>
+                <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground">
+                  No results found. Try adjusting your filters or search.
                 </TableCell>
               </TableRow>
             )}
@@ -439,37 +419,56 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
         </Table>
       </div>
 
-      {/* Footer / Pagination */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground px-1">
-        <div>
+      {/* Pagination & Status - Bottom */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
+        <div className="text-sm text-muted-foreground order-2 md:order-1">
           Showing <span className="font-medium text-foreground">{table.getRowModel().rows.length > 0 ? (pagination.pageIndex * pagination.pageSize + 1) : 0}</span> to{" "}
           <span className="font-medium text-foreground">{Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)}</span> of{" "}
-          <span className="font-medium text-foreground">{filteredData.length}</span> results
+          <span className="font-medium text-foreground">{filteredData.length}</span> filtered results
         </div>
 
-        {/* Footer Pagination (Simple) */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <div className="text-xs font-medium">
-            Page {pagination.pageIndex + 1}
+        <div className="flex flex-wrap items-center gap-3 order-1 md:order-2">
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+            >
+              {"«"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Prev
+            </Button>
+            <div className="flex items-center justify-center min-w-[5rem] text-sm font-medium">
+              {pagination.pageIndex + 1} / {table.getPageCount() || 1}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+            >
+              {"»"}
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
         </div>
       </div>
     </div>
