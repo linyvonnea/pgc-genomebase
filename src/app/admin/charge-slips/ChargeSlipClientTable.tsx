@@ -138,51 +138,6 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   const countByStatus = (status: string) =>
     data.filter((item) => item.status === status).length;
 
-  // Calculate totals by status
-  const totalsByStatus = useMemo(() => {
-    const totals = {
-      processing: 0,
-      paid: 0,
-      cancelled: 0,
-    };
-
-    data.forEach((item) => {
-      const amount = item.total || 0;
-      if (item.status === "processing") totals.processing += amount;
-      else if (item.status === "paid") totals.paid += amount;
-      else if (item.status === "cancelled") totals.cancelled += amount;
-    });
-
-    return totals;
-  }, [data]);
-
-  // Calculate totals by category
-  const totalsByCategory = useMemo(() => {
-    const totals: Record<ValidCategory, number> = {
-      laboratory: 0,
-      equipment: 0,
-      bioinformatics: 0,
-      retail: 0,
-      training: 0,
-    };
-
-    data.forEach((item) => {
-      const amount = item.total || 0;
-      const categories = item.categories || [];
-
-      // Distribute amount evenly across categories if multiple
-      const amountPerCategory = categories.length > 0 ? amount / categories.length : 0;
-
-      categories.forEach((cat) => {
-        if (cat in totals) {
-          totals[cat] += amountPerCategory;
-        }
-      });
-    });
-
-    return totals;
-  }, [data]);
-
   return (
     <div className="space-y-4">
       {/* Filter Controls */}
@@ -206,9 +161,6 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             {countByStatus("processing")}
           </div>
           <div className="text-sm text-muted-foreground">Processing</div>
-          <div className="text-xs font-semibold text-blue-600 mt-1">
-            ₱{totalsByStatus.processing.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
         </div>
         <div
           className={`rounded-lg border p-4 text-center cursor-pointer transition-all hover:shadow-md hover:scale-105 ${statusFilter === "paid" ? "ring-2 ring-green-600 bg-green-50" : "hover:bg-green-50/50"
@@ -219,9 +171,6 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             {countByStatus("paid")}
           </div>
           <div className="text-sm text-muted-foreground">Paid</div>
-          <div className="text-xs font-semibold text-green-600 mt-1">
-            ₱{totalsByStatus.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
         </div>
         <div
           className={`rounded-lg border p-4 text-center cursor-pointer transition-all hover:shadow-md hover:scale-105 ${statusFilter === "cancelled" ? "ring-2 ring-red-600 bg-red-50" : "hover:bg-red-50/50"
@@ -232,9 +181,6 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             {countByStatus("cancelled")}
           </div>
           <div className="text-sm text-muted-foreground">Cancelled</div>
-          <div className="text-xs font-semibold text-red-600 mt-1">
-            ₱{totalsByStatus.cancelled.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
         </div>
         <div className="rounded-lg border p-4 text-center bg-gradient-to-br from-slate-50 to-slate-100">
           <div className="text-2xl font-bold text-slate-700">
@@ -306,9 +252,6 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             >
               <div className={`text-sm font-semibold capitalize ${colors.text}`}>
                 {cat}
-              </div>
-              <div className={`text-xs font-medium ${colors.text} mt-1`}>
-                ₱{totalsByCategory[cat].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
           );
