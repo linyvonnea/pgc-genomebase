@@ -73,6 +73,7 @@ export default function QuotationBuilder({
 }) {
   const [selectedServices, setSelectedServices] = useState<EditableSelectedService[]>([]);
   const [isInternal, setIsInternal] = useState(false);
+  const [useAffiliationAsClientName, setUseAffiliationAsClientName] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
   const [search, setSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
@@ -189,6 +190,7 @@ export default function QuotationBuilder({
         email: clientInfo.email,
         services: cleanedServices,
         isInternal,
+        useAffiliationAsClientName,
         dateIssued: new Date().toISOString(),
         year: currentYear,
         subtotal,
@@ -224,6 +226,7 @@ export default function QuotationBuilder({
           clientInfo={clientInfo}
           referenceNumber={referenceNumber}
           useInternalPrice={isInternal}
+          useAffiliationAsClientName={useAffiliationAsClientName}
           preparedBy={{
             name: adminInfo?.name || "—",
             position: adminInfo?.position || "—",
@@ -284,6 +287,13 @@ export default function QuotationBuilder({
                       </tr>
                     </tbody>
                   </table>
+                  <div className="flex items-center gap-2 pt-2">
+                    <Checkbox
+                      checked={useAffiliationAsClientName}
+                      onCheckedChange={val => setUseAffiliationAsClientName(!!val)}
+                    />
+                    <span className="text-sm">Display affiliation as client name in PDF</span>
+                  </div>
                   <div className="flex items-center gap-2 pt-2">
                     <Checkbox
                       checked={isInternal}
@@ -418,6 +428,7 @@ export default function QuotationBuilder({
                   clientInfo={clientInfo}
                   referenceNumber={referenceNumber}
                   useInternalPrice={isInternal}
+                  useAffiliationAsClientName={useAffiliationAsClientName}
                   preparedBy={{
                     name: adminInfo?.name || "—",
                     position: adminInfo?.position || "—",

@@ -71,6 +71,7 @@ export function QuotationPDF({
   preparedBy,
   totalsOverride, // <-- NEW (optional)
   dateOfIssue, // <-- Date when quotation was generated
+  useAffiliationAsClientName, // <-- NEW
 }: {
   services: SelectedService[];
   clientInfo: { name: string; institution: string; designation: string; email: string };
@@ -79,16 +80,17 @@ export function QuotationPDF({
   preparedBy: { name: string; position: string };
   totalsOverride?: TotalsOverride;
   dateOfIssue?: string; // ISO date string or formatted date
+  useAffiliationAsClientName?: boolean;
 }) {
   const safeServices: ServiceLike[] = (services ?? []).filter(
     (s): s is ServiceLike =>
       s != null && typeof (s as any).price === "number" && typeof (s as any).quantity === "number"
   );
   // Debug: Log services with descriptions
-  console.log('PDF Services:', safeServices.map(s => ({ 
-    name: s.name, 
+  console.log('PDF Services:', safeServices.map(s => ({
+    name: s.name,
     description: s.description,
-    hasDescription: !!(s as any).description 
+    hasDescription: !!(s as any).description
   })));
   // group by category (fallback to “Uncategorized”)
   const groupedByCategory = safeServices.reduce<Record<string, ServiceLike[]>>((acc, svc) => {
@@ -122,8 +124,10 @@ export function QuotationPDF({
           {dateOfIssue && (
             <Text><Text style={styles.label}>Date Issued:</Text> {dateOfIssue}</Text>
           )}
-          <Text><Text style={styles.label}>Client Name:</Text> {clientInfo.name}</Text>
-          <Text><Text style={styles.label}>Institution:</Text> {clientInfo.institution}</Text>
+          <Text><Text style={styles.label}>Client Name:</Text> {useAffiliationAsClientName ? clientInfo.institution : clientInfo.name}</Text>
+          {!useAffiliationAsClientName && (
+            <Text><Text style={styles.label}>Institution:</Text> {clientInfo.institution}</Text>
+          )}
           <Text><Text style={styles.label}>Designation:</Text> {clientInfo.designation}</Text>
           <Text><Text style={styles.label}>Email:</Text> {clientInfo.email}</Text>
           <Text><Text style={styles.label}>Applied 12% Discount:</Text> {useInternalPrice ? "Yes" : "No"}</Text>
@@ -161,14 +165,14 @@ export function QuotationPDF({
                     </View>
                     {description && (
                       <View style={styles.tableRow}>
-                        <Text style={[styles.serviceCell, { 
+                        <Text style={[styles.serviceCell, {
                           flex: 5.8,
-                          fontSize: 8, 
-                          fontStyle: "italic", 
-                          paddingLeft: 12, 
-                          color: "#666", 
-                          paddingTop: 2, 
-                          paddingBottom: 4 
+                          fontSize: 8,
+                          fontStyle: "italic",
+                          paddingLeft: 12,
+                          color: "#666",
+                          paddingTop: 2,
+                          paddingBottom: 4
                         }]}>
                           {description}
                         </Text>
