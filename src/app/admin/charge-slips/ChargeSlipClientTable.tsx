@@ -51,10 +51,12 @@ type UIChargeSlipRecord = {
   client: {
     createdAt?: Date;
     address: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
   };
   project: {
     title?: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
   };
   categories: ValidCategory[];
@@ -70,6 +72,7 @@ type UIChargeSlipRecord = {
 
 interface Props {
   data: UIChargeSlipRecord[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns?: ColumnDef<UIChargeSlipRecord, any>[];
 }
 
@@ -211,9 +214,11 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  isActive
-                    ? setCategoryFilter((prev) => prev.filter((c) => c !== cat))
-                    : setCategoryFilter((prev) => [...prev, cat]);
+                  if (isActive) {
+                    setCategoryFilter((prev) => prev.filter((c) => c !== cat));
+                  } else {
+                    setCategoryFilter((prev) => [...prev, cat]);
+                  }
                 }}
                 className={`
                   h-9 rounded-full px-4 text-xs font-semibold transition-all border-dashed
@@ -433,7 +438,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                       </div>
                       <div className="space-y-1">
                         <p className="text-base font-bold text-foreground">No matches found</p>
-                        <p className="text-sm">We couldn't find any charge slips matching your current filters.</p>
+                        <p className="text-sm">We couldn&apos;t find any charge slips matching your current filters.</p>
                       </div>
                       <Button
                         variant="outline"

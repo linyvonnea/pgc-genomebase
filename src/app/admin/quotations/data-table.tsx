@@ -19,7 +19,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, MoreHorizontal } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -43,6 +43,7 @@ export function DataTable<TData, TValue>({
   // 1) Apply your filters FIRST
   const filteredData = useMemo(() => {
     const q = globalFilter.trim().toLowerCase();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return data.filter((row: any) => {
       // text search across visible fields
       const haystack =
@@ -99,6 +100,7 @@ export function DataTable<TData, TValue>({
   ];
 
   const countByCategory = (catName: string) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data.filter((q: any) =>
       (q.categories || []).some((c: string) => c.toLowerCase() === catName.toLowerCase())
     ).length;
@@ -272,7 +274,7 @@ export function DataTable<TData, TValue>({
                           {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                           {canSort && (
                             <span className="opacity-60">
-                              {sortDir === "asc" ? "▲" : sortDir === "desc" ? "▼" : <MoreHorizontal className="h-3 w-3 opacity-20" />}
+                              {sortDir === "asc" ? "▲" : sortDir === "desc" ? "▼" : <Filter className="h-3 w-3 opacity-20" />}
                             </span>
                           )}
                         </div>
@@ -307,7 +309,7 @@ export function DataTable<TData, TValue>({
                       </div>
                       <div className="space-y-1">
                         <p className="text-base font-bold text-foreground">No matches found</p>
-                        <p className="text-sm">We couldn't find any quotations matching your search.</p>
+                        <p className="text-sm">We couldn&apos;t find any quotations matching your search.</p>
                       </div>
                     </div>
                   </TableCell>
