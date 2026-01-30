@@ -120,13 +120,13 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   }, [table, globalFilter, statusFilter, categoryFilter]);
 
   const countByStatus = (status: string) =>
-    filteredRows.filter((row) => row.original.status === status).length;
+    data.filter((item) => item.status === status).length;
 
   const totalAmount = useMemo(() => {
-    return filteredRows.reduce((sum, row) =>
-      row.original.status === "paid" ? sum + (row.original.total || 0) : sum,
+    return data.reduce((sum, item) =>
+      item.status === "paid" ? sum + (item.total || 0) : sum,
       0);
-  }, [filteredRows]);
+  }, [data]);
 
   return (
     <div className="space-y-4">
