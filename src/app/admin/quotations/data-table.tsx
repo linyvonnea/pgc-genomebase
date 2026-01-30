@@ -18,8 +18,7 @@ import { Input } from "@/components/ui/input";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -43,6 +42,7 @@ export function DataTable<TData, TValue>({
   // 1) Apply your filters FIRST
   const filteredData = useMemo(() => {
     const q = globalFilter.trim().toLowerCase();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return data.filter((row: any) => {
       // text search across visible fields
       const haystack =
@@ -99,6 +99,7 @@ export function DataTable<TData, TValue>({
   ];
 
   const countByCategory = (catName: string) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data.filter((q: any) =>
       (q.categories || []).some((c: string) => c.toLowerCase() === catName.toLowerCase())
     ).length;
