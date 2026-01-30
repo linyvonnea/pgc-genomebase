@@ -65,12 +65,12 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
   },
   {
     accessorKey: "total",
-    header: () => <div className="text-right">Amount</div>,
+    header: "Amount",
     size: 120,
     cell: ({ row }) => {
       const value = Number(row.getValue("total") ?? 0);
       return (
-        <div className="text-right font-medium">
+        <div className="text-right">
           ₱{value.toLocaleString("en-PH", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
@@ -86,7 +86,7 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     cell: ({ row }) => {
       const raw = String(row.getValue("status") ?? "processing").toLowerCase();
       const color = statusColors[raw] || "bg-gray-100 text-gray-800";
-      return <Badge className={`capitalize ${color} hover:${color} shadow-none`}>{raw}</Badge>;
+      return <Badge className={`capitalize ${color}`}>{raw}</Badge>;
     },
   },
   {
@@ -95,13 +95,13 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     size: 200,
     cell: ({ row }) => {
       const categories = (row.getValue("categories") as ValidCategory[] | undefined) ?? [];
-      if (!categories.length) return <span className="text-muted-foreground">—</span>;
+      if (!categories.length) return "—";
       return (
         <div className="flex flex-wrap gap-1">
           {categories.map((cat) => (
             <span
               key={cat}
-              className={`px-2 py-0.5 rounded-full text-[10px] font-medium border capitalize ${categoryColors[cat] ?? "bg-gray-50 border-gray-200 text-gray-700"}`}
+              className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${categoryColors[cat]}`}
             >
               {cat}
             </span>
@@ -131,20 +131,20 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     cell: ({ row }) => {
       const raw = row.getValue("datePaid") as Date | string | undefined | null;
       const date = raw instanceof Date ? raw : new Date(raw || "");
-      return <div className="text-muted-foreground">{isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-CA")}</div>;
+      return isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-CA");
     },
   },
   {
     accessorKey: "orNumber",
     header: "OR No.",
     size: 100,
-    cell: ({ row }) => <span className="font-mono text-xs">{row.getValue("orNumber") || "—"}</span>,
+    cell: ({ row }) => row.getValue("orNumber") || "—",
   },
   {
     accessorKey: "dvNumber",
     header: "DV No.",
     size: 100,
-    cell: ({ row }) => <span className="font-mono text-xs">{row.getValue("dvNumber") || "—"}</span>,
+    cell: ({ row }) => row.getValue("dvNumber") || "—",
   },
   // Hidden columns - Access via Detail View/Modal
   // {
