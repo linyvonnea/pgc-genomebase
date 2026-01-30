@@ -298,9 +298,6 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             {countByStatus("processing")}
           </div>
           <div className="text-sm text-muted-foreground">Processing</div>
-          <div className="text-xs font-semibold text-blue-600 mt-1">
-            ₱{totalsByStatus.processing.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
         </div>
         <div
           className={`rounded-lg border p-4 text-center cursor-pointer transition-all hover:shadow-md hover:scale-105 ${statusFilter === "paid" ? "ring-2 ring-green-600 bg-green-50" : "hover:bg-green-50/50"
@@ -311,9 +308,6 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             {countByStatus("paid")}
           </div>
           <div className="text-sm text-muted-foreground">Paid</div>
-          <div className="text-xs font-semibold text-green-600 mt-1">
-            ₱{totalsByStatus.paid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
         </div>
         <div
           className={`rounded-lg border p-4 text-center cursor-pointer transition-all hover:shadow-md hover:scale-105 ${statusFilter === "cancelled" ? "ring-2 ring-red-600 bg-red-50" : "hover:bg-red-50/50"
@@ -324,16 +318,46 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             {countByStatus("cancelled")}
           </div>
           <div className="text-sm text-muted-foreground">Cancelled</div>
-          <div className="text-xs font-semibold text-red-600 mt-1">
-            ₱{totalsByStatus.cancelled.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
         </div>
-        <div className="rounded-lg border p-4 text-center bg-gray-50">
-          <div className="text-2xl font-bold text-gray-700">
-            ₱{(totalsByStatus.processing + totalsByStatus.paid + totalsByStatus.cancelled).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        <div className="rounded-lg border p-4 text-center bg-gradient-to-br from-slate-50 to-slate-100">
+          <div className="text-2xl font-bold text-slate-700">
+            ₱{(() => {
+              // Calculate total based on active filters
+              let filtered = data;
+
+              // Apply status filter
+              if (statusFilter !== "__all") {
+                filtered = filtered.filter(item => item.status === statusFilter);
+              }
+
+              // Apply category filter
+              if (categoryFilter.length > 0) {
+                filtered = filtered.filter(item => {
+                  const itemCategories = item.categories || [];
+                  return categoryFilter.some(cat => itemCategories.includes(cat));
+                });
+              }
+
+              // Sum the totals
+              const total = filtered.reduce((sum, item) => sum + (item.total || 0), 0);
+              return total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            })()}
           </div>
-          <div className="text-sm text-muted-foreground">Grand Total</div>
-          <div className="text-xs text-muted-foreground mt-1">All Statuses</div>
+          <div className="text-sm text-muted-foreground font-medium">
+            {statusFilter === "__all" && categoryFilter.length === 0
+              ? "Grand Total"
+              : "Filtered Total"}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            {statusFilter === "__all" && categoryFilter.length === 0
+              ? "All Statuses"
+              : (() => {
+                const parts = [];
+                if (statusFilter !== "__all") parts.push(statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1));
+                if (categoryFilter.length > 0) parts.push(categoryFilter.map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(", "));
+                return parts.join(" • ");
+              })()}
+          </div>
         </div>
       </div>
 
@@ -365,9 +389,6 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             >
               <div className={`text-sm font-semibold capitalize ${colors.text}`}>
                 {cat}
-              </div>
-              <div className={`text-xs font-medium ${colors.text} mt-1`}>
-                ₱{totalsByCategory[cat].toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
           );
