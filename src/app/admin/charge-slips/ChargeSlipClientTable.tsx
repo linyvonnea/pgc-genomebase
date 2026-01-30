@@ -139,7 +139,17 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     data.filter((item) => item.status === status).length;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Search Bar - Top */}
+      <div className="flex items-center justify-between gap-4">
+        <Input
+          placeholder="Search client, CS number, etc."
+          value={globalFilter}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          className="w-full md:w-96"
+        />
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div
@@ -248,92 +258,85 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
         })}
       </div>
 
-      {/* Search and Pagination Controls */}
-      <div className="space-y-3">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <Input
-            placeholder="Search client, CS number, etc."
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="w-72"
-          />
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
-              <Select
-                value={String(pagination.pageSize)}
-                onValueChange={(value) => setPagination({ pageIndex: 0, pageSize: Number(value) })}
-              >
-                <SelectTrigger className="w-20 h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-              >
-                First
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                Prev
-              </Button>
-              <div className="text-sm font-medium px-1 whitespace-nowrap">
-                {pagination.pageIndex + 1} / {table.getPageCount() || 1}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                Next
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-              >
-                Last
-              </Button>
-            </div>
-          </div>
+      {/* Pagination & Status - Top */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="text-sm text-muted-foreground order-2 md:order-1">
+          Showing <span className="font-medium text-foreground">{table.getRowModel().rows.length > 0 ? (pagination.pageIndex * pagination.pageSize + 1) : 0}</span> to{" "}
+          <span className="font-medium text-foreground">{Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)}</span> of{" "}
+          <span className="font-medium text-foreground">{filteredData.length}</span> filtered results
+          {filteredData.length !== data.length && <span className="text-xs ml-1">({data.length} total)</span>}
         </div>
-        <div className="text-sm text-muted-foreground">
-          Showing {table.getRowModel().rows.length > 0 ? pagination.pageIndex * pagination.pageSize + 1 : 0} to{" "}
-          {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)} of{" "}
-          {filteredData.length} filtered results
-          {filteredData.length !== data.length && ` (${data.length} total)`}
+
+        <div className="flex flex-wrap items-center gap-3 order-1 md:order-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
+            <Select
+              value={String(pagination.pageSize)}
+              onValueChange={(value) => setPagination({ pageIndex: 0, pageSize: Number(value) })}
+            >
+              <SelectTrigger className="w-20 h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+            >
+              {"«"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Prev
+            </Button>
+            <div className="flex items-center justify-center min-w-[5rem] text-sm font-medium">
+              {pagination.pageIndex + 1} / {table.getPageCount() || 1}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+            >
+              {"»"}
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="rounded-md border shadow-sm overflow-hidden">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-muted/50">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="font-semibold text-foreground">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -351,7 +354,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   onClick={() =>
                     router.push(`/admin/charge-slips/${row.original.chargeSlipNumber}`)
                   }
-                  className="hover:bg-muted/40 cursor-pointer"
+                  className="hover:bg-muted/40 cursor-pointer transition-colors"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -362,13 +365,66 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="text-center">
-                  No results.
+                <TableCell colSpan={columns.length} className="h-32 text-center text-muted-foreground">
+                  No results found. Try adjusting your filters or search.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Pagination & Status - Bottom */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
+        <div className="text-sm text-muted-foreground order-2 md:order-1">
+          Showing <span className="font-medium text-foreground">{table.getRowModel().rows.length > 0 ? (pagination.pageIndex * pagination.pageSize + 1) : 0}</span> to{" "}
+          <span className="font-medium text-foreground">{Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)}</span> of{" "}
+          <span className="font-medium text-foreground">{filteredData.length}</span> filtered results
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3 order-1 md:order-2">
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+            >
+              {"«"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Prev
+            </Button>
+            <div className="flex items-center justify-center min-w-[5rem] text-sm font-medium">
+              {pagination.pageIndex + 1} / {table.getPageCount() || 1}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+            >
+              {"»"}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
