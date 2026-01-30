@@ -161,6 +161,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     const counts: Record<string, number> = {};
     categories.forEach((cat) => {
       const target = cat.name === "Retail Sales" ? "retail" : cat.name.toLowerCase();
+      // "Database" count = unfiltered data
       counts[cat.name] = data.filter((item) =>
         (item.categories || []).some((c) => c.toLowerCase() === target)
       ).length;
@@ -172,6 +173,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     statuses.forEach((stat) => {
+      // "Database" count = unfiltered data
       counts[stat.id] = data.filter((item) => item.status === stat.id).length;
     });
     return counts;
@@ -194,8 +196,8 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                 }
               }}
               className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${isActive
-                ? `ring-2 ring-primary ring-offset-2 ${cat.bg} ${cat.border}`
-                : "bg-white"
+                  ? `ring-2 ring-primary ring-offset-2 ${cat.bg} ${cat.border}`
+                  : "bg-white"
                 }`}
             >
               <div className={`text-2xl font-bold ${cat.color} truncate`}>
@@ -210,7 +212,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       </div>
 
       {/* Status Cards Row + Total Card */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statuses.map((stat) => {
           const isActive = statusFilter === stat.id;
           return (
@@ -218,8 +220,8 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
               key={stat.id}
               onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
               className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${isActive
-                ? `ring-2 ring-primary ring-offset-2 ${stat.bg} ${stat.border}`
-                : "bg-white"
+                  ? `ring-2 ring-primary ring-offset-2 ${stat.bg} ${stat.border}`
+                  : "bg-white"
                 }`}
             >
               <div className={`text-2xl font-bold ${stat.color} truncate`}>
@@ -232,7 +234,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
           );
         })}
 
-        {/* Total card - Displays combined total of filtered records */}
+        {/* Filtered Total Card (Currency) */}
         <div
           onClick={() => {
             setCategoryFilter([]);
@@ -240,8 +242,8 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             setGlobalFilter("");
           }}
           className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${categoryFilter.length === 0 && statusFilter === "__all" && globalFilter === ""
-            ? "ring-2 ring-primary ring-offset-2 bg-slate-50 border-slate-200"
-            : "bg-white"
+              ? "ring-2 ring-primary ring-offset-2 bg-slate-50 border-slate-200"
+              : "bg-white"
             }`}
         >
           <div className="text-2xl font-bold text-gray-700 truncate">
