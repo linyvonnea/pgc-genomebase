@@ -106,9 +106,9 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
           return recordCats.some(c => c?.toLowerCase() === target.toLowerCase());
         });
 
-      return matchesSearch && matchesStatus && matchesCategory;
+      return matchesSearch && matchesCategory;
     });
-  }, [data, globalFilter, statusFilter, categoryFilter]);
+  }, [data, globalFilter, categoryFilter]);
 
   // Total Summary for the filtered data
   const filteredTotalValue = useMemo(() => {
@@ -116,14 +116,12 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   }, [filteredData]);
 
   // Reset to first page when filters change
-  const prevFilterRef = useState({ globalFilter, statusFilter, categoryFilter })[0];
+  const prevFilterRef = useState({ globalFilter, categoryFilter })[0];
   if (
     prevFilterRef.globalFilter !== globalFilter ||
-    prevFilterRef.statusFilter !== statusFilter ||
     JSON.stringify(prevFilterRef.categoryFilter) !== JSON.stringify(categoryFilter)
   ) {
     prevFilterRef.globalFilter = globalFilter;
-    prevFilterRef.statusFilter = statusFilter;
     prevFilterRef.categoryFilter = categoryFilter;
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }
