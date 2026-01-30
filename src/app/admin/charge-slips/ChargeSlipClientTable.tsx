@@ -181,37 +181,24 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   }, [data]);
 
   return (
-    <div className="space-y-8">
-      {/* Top Section: Search Box (Top Left of Category Cards) */}
-      <div className="flex flex-col xl:flex-row gap-6 items-start xl:items-center justify-between">
-        <div className="relative w-full md:w-96 group">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground group-focus-within:text-foreground transition-colors" />
-          <Input
-            placeholder="Search charge slips, clients, or projects..."
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="pl-10 h-11 bg-card shadow-sm border-muted-foreground/20 focus-visible:ring-primary/20"
-          />
-        </div>
+    <div className="space-y-6">
+      {/* Search and Category Filters */}
+      <div className="flex flex-wrap items-end gap-4">
+        <Input
+          placeholder="Search charge slips, clients, or projects..."
+          value={globalFilter}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          className="w-72"
+        />
 
-        {/* Category Filters (Pills) */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mr-1">Filter by Category:</span>
+          <span className="text-sm text-muted-foreground">Category:</span>
           {VALID_CATEGORIES.map((cat) => {
             const isActive = categoryFilter.includes(cat);
-            const catTotal = totalsByCategory[cat] || 0;
-            const colors = {
-              laboratory: "purple",
-              equipment: "orange",
-              bioinformatics: "cyan",
-              retail: "pink",
-              training: "indigo",
-            }[cat] || "gray";
-
             return (
               <Button
                 key={cat}
-                variant="outline"
+                variant={isActive ? "default" : "outline"}
                 size="sm"
                 onClick={() => {
                   if (isActive) {
@@ -220,22 +207,20 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                     setCategoryFilter((prev) => [...prev, cat]);
                   }
                 }}
-                className={`
-                  h-9 rounded-full px-4 text-xs font-semibold transition-all border-dashed
-                  ${isActive
-                    ? `bg-${colors}-50 border-${colors}-400 text-${colors}-700 ring-4 ring-${colors}-500/10`
-                    : "bg-card hover:bg-muted/50 text-muted-foreground hover:text-foreground"}
-                `}
+                className="h-8"
               >
-                <div className={`h-1.5 w-1.5 rounded-full mr-2 bg-${colors}-500 ${!isActive && "opacity-50"}`} />
                 <span className="capitalize">{cat}</span>
-                <span className="ml-2 text-[10px] opacity-60">₱{(catTotal / 1000).toFixed(0)}k</span>
               </Button>
             );
           })}
           {categoryFilter.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={() => setCategoryFilter([])} className="h-9 px-3 text-xs text-destructive hover:text-destructive hover:bg-destructive/5">
-              Clear All
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCategoryFilter([])}
+              className="h-8 text-xs"
+            >
+              Clear
             </Button>
           )}
         </div>
@@ -251,37 +236,29 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
           <div
             key={stat.id}
             onClick={() => setStatusFilter(statusFilter === stat.id ? "__all" : stat.id)}
-            className={`
-              group relative overflow-hidden rounded-2xl border p-5 shadow-sm transition-all cursor-pointer hover:shadow-md
-              ${statusFilter === stat.id ? `border-${stat.color}-500 bg-${stat.color}-50/50 ring-1 ring-${stat.color}-500` : "bg-card border-muted/50 hover:border-muted-foreground/50"}
-            `}
+            className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${statusFilter === stat.id ? "ring-2 ring-primary ring-offset-2" : "bg-card"}`}
           >
-            <div className="flex justify-between items-start mb-3">
-              <div className={`p-2 rounded-lg bg-${stat.color}-100/50 text-${stat.color}-600`}>
-                <span className="text-[10px] font-bold uppercase tracking-wider">{stat.label}</span>
-              </div>
-              <Badge variant={statusFilter === stat.id ? "default" : "secondary"} className={`text-[10px] h-5 rounded-md`}>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-muted-foreground">{stat.label}</span>
+              <Badge variant="secondary" className="text-xs">
                 {stat.count}
               </Badge>
             </div>
-            <div className="text-2xl font-bold tracking-tight">
+            <div className="text-2xl font-bold">
               ₱{stat.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div className={`absolute bottom-0 left-0 h-1 transition-all duration-300 ${statusFilter === stat.id ? "w-full" : "w-0"} bg-${stat.color}-500`} />
           </div>
         ))}
 
         {/* Total Summary Card */}
-        <div className="relative overflow-hidden rounded-2xl border bg-slate-900 border-slate-800 text-slate-50 p-5 shadow-sm group">
-          <div className="flex justify-between items-start mb-3">
-            <div className="p-2 rounded-lg bg-slate-800 text-slate-300">
-              <span className="text-[10px] font-bold uppercase tracking-wider">
-                {statusFilter === "__all" && categoryFilter.length === 0 ? "Grand Total" : "Filtered Total"}
-              </span>
-            </div>
-            <Filter className={`h-4 w-4 transition-colors ${statusFilter !== "__all" || categoryFilter.length > 0 ? "text-primary" : "text-slate-500"}`} />
+        <div className="rounded-lg border bg-slate-50 p-4">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-muted-foreground">
+              {statusFilter === "__all" && categoryFilter.length === 0 ? "Grand Total" : "Filtered Total"}
+            </span>
+            <Filter className={`h-4 w-4 ${statusFilter !== "__all" || categoryFilter.length > 0 ? "text-primary" : "text-muted-foreground"}`} />
           </div>
-          <div className="text-2xl font-bold tracking-tight">
+          <div className="text-2xl font-bold">
             ₱{(() => {
               let filtered = data;
               if (statusFilter !== "__all") filtered = filtered.filter(item => item.status === statusFilter);
@@ -293,91 +270,62 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
               return total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             })()}
           </div>
-          <p className="text-[10px] text-slate-500 mt-2 truncate font-medium">
+          <p className="text-xs text-muted-foreground mt-1">
             {statusFilter === "__all" && categoryFilter.length === 0
-              ? "Total based on all recorded entries"
-              : `${statusFilter !== "__all" ? statusFilter.toUpperCase() : "ALL"} • ${categoryFilter.length ? categoryFilter.join(", ").toUpperCase() : "ALL CATEGORIES"}`}
+              ? "All recorded entries"
+              : `${statusFilter !== "__all" ? statusFilter : "ALL"} • ${categoryFilter.length ? categoryFilter.join(", ") : "ALL CATEGORIES"}`}
           </p>
         </div>
       </div>
 
-      {/* Main Table Context Container */}
+      {/* Main Table */}
       <div className="space-y-4">
-
-        {/* Table Header Toolbar: Showing Results (Left) and Navigation (Right) */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-1">
-          <div className="text-sm font-medium text-muted-foreground order-2 sm:order-1">
-            Showing <span className="text-foreground">{table.getRowModel().rows.length > 0 ? (pagination.pageIndex * pagination.pageSize + 1) : 0}</span> to{" "}
-            <span className="text-foreground">{Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)}</span> of{" "}
-            <span className="text-foreground font-bold">{filteredData.length}</span> results
+        {/* Pagination Controls Above Table */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Rows:</span>
+            <Select
+              value={String(pagination.pageSize)}
+              onValueChange={(value) => setPagination({ pageIndex: 0, pageSize: Number(value) })}
+            >
+              <SelectTrigger className="w-[70px] h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="flex items-center gap-4 order-1 sm:order-2">
-            {/* Rows Per Page */}
-            <div className="hidden lg:flex items-center gap-2">
-              <span className="text-[10px] font-bold uppercase text-muted-foreground tracking-tighter">Rows per page:</span>
-              <Select
-                value={String(pagination.pageSize)}
-                onValueChange={(value) => setPagination({ pageIndex: 0, pageSize: Number(value) })}
-              >
-                <SelectTrigger className="w-[70px] h-8 text-xs border-muted/50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Navigation Bar (Top Right of Table) */}
-            <div className="flex items-center bg-card border border-muted/50 rounded-lg shadow-sm overflow-hidden">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-none border-r border-muted/30 disabled:opacity-30"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <ChevronsLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-none border-r border-muted/30 disabled:opacity-30"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="px-4 text-[11px] font-bold text-muted-foreground bg-muted/5">
-                {pagination.pageIndex + 1} / {table.getPageCount() || 1}
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-none border-l border-muted/30 disabled:opacity-30"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-none border-l border-muted/30 disabled:opacity-30"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-              >
-                <ChevronsRight className="h-4 w-4" />
-              </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-2"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Prev
+            </Button>
+            <div className="flex items-center justify-center min-w-[80px] text-sm font-medium">
+              {pagination.pageIndex + 1} / {table.getPageCount() || 1}
             </div>
             <Button
               variant="outline"
               size="sm"
-              className="h-8"
+              className="h-8 px-2"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
@@ -385,18 +333,18 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             </Button>
             <Button
               variant="outline"
-              size="icon"
-              className="h-8 w-8"
+              size="sm"
+              className="h-8 w-8 p-0"
               onClick={() => table.setPageIndex(table.getPageCount() - 1)}
               disabled={!table.getCanNextPage()}
             >
-              {"»"}
+              <ChevronsRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
         {/* The Data Table */}
-        <div className="rounded-xl border border-muted/60 bg-card shadow-sm overflow-hidden relative">
+        <div className="rounded-md border overflow-hidden">
           <Table>
             <TableHeader className="bg-muted/30">
               {table.getHeaderGroups().map((headerGroup) => (
@@ -457,9 +405,8 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
         </div>
       </div>
 
-      {/* Mobile-only bottom results summary */}
-      <div className="flex sm:hidden justify-center text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-60">
-        End of results
+      <div className="text-xs text-muted-foreground px-1">
+        Showing {filteredData.length > 0 ? (pagination.pageIndex * pagination.pageSize) + 1 : 0} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)} of {filteredData.length} records
       </div>
     </div>
   );
