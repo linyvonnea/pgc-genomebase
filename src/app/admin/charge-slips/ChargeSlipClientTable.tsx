@@ -28,7 +28,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ChevronsLeft, ChevronsRight, Filter } from "lucide-react";
 import { columns as defaultColumns } from "./columns";
 
 import type { ValidCategory } from "@/types/ChargeSlipRecord";
@@ -79,26 +80,40 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
 
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("__all");
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
 
   // Filter data manually before passing to table
   const filteredData = useMemo(() => {
     return data.filter((item) => {
+      // 1. Global Filter
       const q = globalFilter.trim().toLowerCase();
       const haystack =
         `${item.chargeSlipNumber || ""} ${item.clientInfo?.name || ""} ${item.client?.name || ""} ${item.project?.title || ""} ${item.cid || ""} ${item.projectId || ""}`
           .toLowerCase();
       const matchesSearch = q === "" || haystack.includes(q);
 
+      // 2. Status Filter
+      const matchesStatus = statusFilter === "__all" || item.status === statusFilter;
+
+      // 3. Category Filter
       const recordCats = item.categories || [];
       const matchesCategory =
         categoryFilter.length === 0 ||
-        categoryFilter.some((cat) => recordCats.some(c => c?.toLowerCase() === cat.toLowerCase()));
+        categoryFilter.some((cat) => {
+          const target = cat === "Retail Sales" ? "retail" : cat.toLowerCase();
+          return recordCats.some(c => c?.toLowerCase() === target.toLowerCase());
+        });
 
       return matchesSearch && matchesCategory;
     });
   }, [data, globalFilter, categoryFilter]);
+
+  // Total Summary for the filtered data
+  const filteredTotalValue = useMemo(() => {
+    return filteredData.reduce((sum, item) => sum + (item.total || 0), 0);
+  }, [filteredData]);
 
   // Reset to first page when filters change
   const prevFilterRef = useState({ globalFilter, categoryFilter })[0];
@@ -123,7 +138,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     manualPagination: false,
   });
 
-  // Static categories for filtering
+  // Categories
   const categories = [
     { name: "Laboratory", color: "text-green-600", border: "border-green-200", bg: "bg-green-50" },
     { name: "Equipment", color: "text-blue-600", border: "border-blue-200", bg: "bg-blue-50" },
@@ -132,18 +147,26 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     { name: "Training", color: "text-indigo-600", border: "border-indigo-200", bg: "bg-indigo-50" },
   ];
 
+  // Statuses
+  const statuses = [
+    { id: "processing", label: "Processing", color: "text-blue-500", border: "border-blue-200", bg: "bg-blue-50" },
+    { id: "paid", label: "Paid", color: "text-green-600", border: "border-green-200", bg: "bg-green-50" },
+    { id: "cancelled", label: "Cancelled", color: "text-red-500", border: "border-red-200", bg: "bg-red-50" },
+  ];
+
   const countByCategory = (catName: string) =>
-    data.filter((item) =>
-      (item.categories || []).some((c) => {
-        const target = catName === "Retail Sales" ? "retail" : catName.toLowerCase();
-        return c.toLowerCase() === target;
-      })
-    ).length;
+    data.filter((item) => {
+      const target = catName === "Retail Sales" ? "retail" : catName.toLowerCase();
+      return (item.categories || []).some((c) => c.toLowerCase() === target);
+    }).length;
+
+  const countByStatus = (status: string) =>
+    data.filter((item) => item.status === status).length;
 
   return (
     <div className="space-y-4">
-      {/* Category Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+      {/* Category Cards Row */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {categories.map((cat) => {
           const isActive = categoryFilter.includes(cat.name);
           return (
@@ -168,23 +191,52 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             </div>
           );
         })}
+      </div>
+
+      {/* Status Cards Row + Total Card */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {statuses.map((stat) => {
+          const isActive = statusFilter === stat.id;
+          return (
+            <div
+              key={stat.id}
+              onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
+              className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${isActive
+                ? `ring-2 ring-primary ring-offset-2 ${stat.bg} ${stat.border}`
+                : "bg-white"
+                }`}
+            >
+              <div className={`text-2xl font-bold ${stat.color}`}>
+                {countByStatus(stat.id)}
+              </div>
+              <div className="text-sm text-muted-foreground">{stat.label}</div>
+            </div>
+          );
+        })}
+
+        {/* Total card - Displays combined total of filtered records */}
         <div
-          onClick={() => setCategoryFilter([])}
-          className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${categoryFilter.length === 0
+          onClick={() => { setCategoryFilter([]); setStatusFilter("__all"); }}
+          className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${categoryFilter.length === 0 && statusFilter === "__all"
             ? "ring-2 ring-primary ring-offset-2 bg-slate-50 border-slate-200"
             : "bg-white"
             }`}
         >
-          <div className="text-2xl font-bold text-gray-700">{data.length}</div>
-          <div className="text-sm text-muted-foreground">Total Charge Slips</div>
+          <div className="text-2xl font-bold text-gray-700 flex items-center gap-2">
+            ₱{filteredTotalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <div className="text-sm text-muted-foreground flex justify-between items-center">
+            <span>Total Amount</span>
+            {(categoryFilter.length > 0 || statusFilter !== "__all") && <Badge variant="secondary" className="text-[10px] h-4">Filtered</Badge>}
+          </div>
         </div>
       </div>
 
       {/* Header with Search and Pagination */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4 pt-2">
         <div className="space-y-2">
           <Input
-            placeholder="Search client, institution, reference..."
+            placeholder="Search client, charge slip, project..."
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
             className="w-72"
@@ -307,7 +359,11 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="text-center h-24 text-muted-foreground">
-                  No results.
+                  <div className="flex flex-col items-center justify-center gap-2 py-4">
+                    <Filter className="h-8 w-8 opacity-20" />
+                    <p>No results found for current filters.</p>
+                    <Button variant="link" onClick={() => { setCategoryFilter([]); setStatusFilter("__all"); setGlobalFilter(""); }}>Clear all filters</Button>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
