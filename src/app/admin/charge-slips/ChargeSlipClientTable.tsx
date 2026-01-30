@@ -328,12 +328,45 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             ₱{totalsByStatus.cancelled.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
         </div>
-        <div className="rounded-lg border p-4 text-center bg-gray-50">
-          <div className="text-2xl font-bold text-gray-700">
-            ₱{(totalsByStatus.processing + totalsByStatus.paid + totalsByStatus.cancelled).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        <div className="rounded-lg border p-4 text-center bg-gradient-to-br from-slate-50 to-slate-100">
+          <div className="text-2xl font-bold text-slate-700">
+            ₱{(() => {
+              // Calculate total based on active filters
+              let filtered = data;
+
+              // Apply status filter
+              if (statusFilter !== "__all") {
+                filtered = filtered.filter(item => item.status === statusFilter);
+              }
+
+              // Apply category filter
+              if (categoryFilter.length > 0) {
+                filtered = filtered.filter(item => {
+                  const itemCategories = item.categories || [];
+                  return categoryFilter.some(cat => itemCategories.includes(cat));
+                });
+              }
+
+              // Sum the totals
+              const total = filtered.reduce((sum, item) => sum + (item.total || 0), 0);
+              return total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            })()}
           </div>
-          <div className="text-sm text-muted-foreground">Grand Total</div>
-          <div className="text-xs text-muted-foreground mt-1">All Statuses</div>
+          <div className="text-sm text-muted-foreground font-medium">
+            {statusFilter === "__all" && categoryFilter.length === 0
+              ? "Grand Total"
+              : "Filtered Total"}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            {statusFilter === "__all" && categoryFilter.length === 0
+              ? "All Statuses"
+              : (() => {
+                const parts = [];
+                if (statusFilter !== "__all") parts.push(statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1));
+                if (categoryFilter.length > 0) parts.push(categoryFilter.map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(", "));
+                return parts.join(" • ");
+              })()}
+          </div>
         </div>
       </div>
 
