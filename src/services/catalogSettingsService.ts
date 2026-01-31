@@ -68,12 +68,12 @@ export async function addCatalogItem(
   try {
     const docRef = doc(db, "settings", CATALOG_DOC_ID);
     const settings = await getCatalogSettings();
-    
+
     const maxOrder = settings[type].reduce((max, item) => Math.max(max, item.order), 0);
-    
+
     const itemValue = typeof value === "string" ? value : value.value;
     const itemPosition = typeof value === "object" ? value.position : undefined;
-    
+
     const newItem: CatalogItem = {
       id: `${type}-${Date.now()}`,
       value: itemValue,
@@ -177,12 +177,12 @@ export async function getActiveCatalogItems(type: CatalogType): Promise<string[]
     const activeItems = items
       .filter((item) => item.isActive)
       .sort((a, b) => a.order - b.order);
-    
+
     // For personnelAssigned, return full items with position
     if (type === "personnelAssigned") {
       return activeItems;
     }
-    
+
     // For other catalogs, return just the values as strings
     return activeItems.map((item) => item.value);
   } catch (error) {
