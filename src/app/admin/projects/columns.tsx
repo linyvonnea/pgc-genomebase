@@ -16,14 +16,14 @@ export const columns: ColumnDef<Project>[] = [
   {
     accessorKey: "pid",
     header: "Project ID",
-    size: 120,
+    size: 90,
   },
   {
     accessorKey: "title",
     header: "Project Title",
-    size: 300,
+    size: 200,
     cell: ({ getValue }) => (
-      <div className="max-w-[300px] truncate" title={getValue() as string}>
+      <div className="max-w-[200px] truncate" title={getValue() as string}>
         {getValue() as string}
       </div>
     ),
@@ -31,13 +31,13 @@ export const columns: ColumnDef<Project>[] = [
   {
     accessorKey: "clientNames",
     header: "Client Names",
-    size: 200,
+    size: 130,
     cell: ({ row }) => {
       // Render client names as comma-separated string with truncation
       const names = row.original.clientNames;
       const displayText = names && names.length > 0 ? names.join(", ") : "";
       return (
-        <div className="max-w-[200px] truncate" title={displayText}>
+        <div className="max-w-[130px] truncate" title={displayText}>
           {displayText}
         </div>
       );
@@ -51,11 +51,11 @@ export const columns: ColumnDef<Project>[] = [
   {
     accessorKey: "lead",
     header: "Project Lead",
-    size: 150,
+    size: 110,
     cell: ({ getValue }) => {
       const lead = getValue() as string || "—";
       return (
-        <div className="max-w-[150px] truncate text-left" title={lead}>
+        <div className="max-w-[110px] truncate text-left" title={lead}>
           {lead}
         </div>
       );
@@ -63,12 +63,12 @@ export const columns: ColumnDef<Project>[] = [
   },
   {
     accessorKey: "personnelAssigned",
-    header: "Personnel Assigned",
-    size: 180,
+    header: "Personnel",
+    size: 130,
     cell: ({ getValue }) => {
       const personnel = getValue() as string || "—";
       return (
-        <div className="max-w-[180px] truncate text-left" title={personnel}>
+        <div className="max-w-[130px] truncate text-left" title={personnel}>
           {personnel}
         </div>
       );
@@ -77,7 +77,7 @@ export const columns: ColumnDef<Project>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 110,
+    size: 90,
     cell: ({ row }) => {
       // Render status with color-coded badge
       const status = row.original.status;
@@ -109,11 +109,11 @@ export const columns: ColumnDef<Project>[] = [
   },
   {
     accessorKey: "sendingInstitution",
-    header: "Sending Institution",
-    size: 160,
+    header: "Institution",
+    size: 120,
     cell: ({ row }) => {
       // Render sending institution with color-coded badge
-      const value = row.original.sendingInstitution;
+      const value = row.original.sendingInstitution || "—";
       let color = "bg-gray-100 text-gray-800";
       switch (value) {
         case "UP System": color = "bg-blue-100 text-blue-800"; break;
@@ -124,16 +124,18 @@ export const columns: ColumnDef<Project>[] = [
         case "N/A": color = "bg-gray-200 text-gray-600"; break;
       }
       return (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${color}`}>
-          {value}
-        </span>
+        <div className="max-w-[120px] truncate" title={value}>
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium whitespace-nowrap ${color}`}>
+            {value}
+          </span>
+        </div>
       );
     },
   },
   {
     accessorKey: "startDate",
     header: "Start Date",
-    size: 110,
+    size: 90,
   },
   // Hidden columns - Access via Edit Modal
   // {
@@ -164,7 +166,7 @@ export const columns: ColumnDef<Project>[] = [
   {
     id: "actions",
     header: "Actions",
-    size: 120,
+    size: 80,
     cell: (ctx: any) => {
       // Render edit modal for each project row
       const { row, meta } = ctx;
