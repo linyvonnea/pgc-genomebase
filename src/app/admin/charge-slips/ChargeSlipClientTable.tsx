@@ -83,6 +83,22 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   const [statusFilter, setStatusFilter] = useState("__all");
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [yearFilter, setYearFilter] = useState("all");
+  const [monthFilter, setMonthFilter] = useState("all");
+
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  // Derive available years from data
+  const availableYears = useMemo(() => {
+    const years = data.map(item => {
+      const d = item.dateIssued ? new Date(item.dateIssued) : null;
+      return d && !isNaN(d.getTime()) ? d.getFullYear() : null;
+    }).filter(Boolean) as number[];
+    return Array.from(new Set(years)).sort((a, b) => b - a);
+  }, [data]);
 
   // Filter data manually before passing to table
   const filteredData = useMemo(() => {
@@ -106,9 +122,14 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
           return recordCats.some(c => c?.toLowerCase() === target.toLowerCase());
         });
 
-      return matchesSearch && matchesStatus && matchesCategory;
+      // 4. Year and Month Filter
+      const date = item.dateIssued ? new Date(item.dateIssued) : null;
+      const matchesYear = yearFilter === "all" || (date && date.getFullYear().toString() === yearFilter);
+      const matchesMonth = monthFilter === "all" || (date && (date.getMonth() + 1).toString() === monthFilter);
+
+      return matchesSearch && matchesStatus && matchesCategory && matchesYear && matchesMonth;
     });
-  }, [data, globalFilter, statusFilter, categoryFilter]);
+  }, [data, globalFilter, statusFilter, categoryFilter, yearFilter, monthFilter]);
 
   // Total Summary for the filtered data
   const filteredTotalValue = useMemo(() => {
@@ -116,15 +137,19 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   }, [filteredData]);
 
   // Reset to first page when filters change
-  const prevFilterRef = useState({ globalFilter, statusFilter, categoryFilter })[0];
+  const prevFilterRef = useState({ globalFilter, statusFilter, categoryFilter, yearFilter, monthFilter })[0];
   if (
     prevFilterRef.globalFilter !== globalFilter ||
     prevFilterRef.statusFilter !== statusFilter ||
-    JSON.stringify(prevFilterRef.categoryFilter) !== JSON.stringify(categoryFilter)
+    JSON.stringify(prevFilterRef.categoryFilter) !== JSON.stringify(categoryFilter) ||
+    prevFilterRef.yearFilter !== yearFilter ||
+    prevFilterRef.monthFilter !== monthFilter
   ) {
     prevFilterRef.globalFilter = globalFilter;
     prevFilterRef.statusFilter = statusFilter;
     prevFilterRef.categoryFilter = categoryFilter;
+    prevFilterRef.yearFilter = yearFilter;
+    prevFilterRef.monthFilter = monthFilter;
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }
 
@@ -240,8 +265,10 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             setCategoryFilter([]);
             setStatusFilter("__all");
             setGlobalFilter("");
+            setYearFilter("all");
+            setMonthFilter("all");
           }}
-          className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${categoryFilter.length === 0 && statusFilter === "__all" && globalFilter === ""
+          className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${categoryFilter.length === 0 && statusFilter === "__all" && globalFilter === "" && yearFilter === "all" && monthFilter === "all"
             ? "ring-2 ring-primary ring-offset-2 bg-slate-50 border-slate-200"
             : "bg-white"
             }`}
@@ -254,7 +281,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
           </div>
           <div className="text-sm text-muted-foreground flex justify-between items-center font-medium">
             <span>Filtered Total</span>
-            {(categoryFilter.length > 0 || statusFilter !== "__all" || globalFilter !== "") && (
+            {(categoryFilter.length > 0 || statusFilter !== "__all" || globalFilter !== "" || yearFilter !== "all" || monthFilter !== "all") && (
               <Badge variant="secondary" className="text-[10px] h-4 py-0 leading-none">
                 Active
               </Badge>
@@ -263,15 +290,48 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
         </div>
       </div>
 
-      {/* Header with Search and Pagination */}
+      {/* Header with Search and Date Filters */}
       <div className="flex flex-wrap items-end justify-between gap-4 pt-2">
-        <div className="space-y-2">
-          <Input
-            placeholder="Search client, charge slip, project..."
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="w-72"
-          />
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Search</span>
+            <Input
+              placeholder="Search client, charge slip..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="w-72 h-9"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Year</span>
+            <Select value={yearFilter} onValueChange={setYearFilter}>
+              <SelectTrigger className="w-[110px] h-9">
+                <SelectValue placeholder="All Years" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Years</SelectItem>
+                {availableYears.map(y => (
+                  <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Month</span>
+            <Select value={monthFilter} onValueChange={setMonthFilter}>
+              <SelectTrigger className="w-[130px] h-9">
+                <SelectValue placeholder="All Months" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Months</SelectItem>
+                {monthNames.map((m, idx) => (
+                  <SelectItem key={m} value={(idx + 1).toString()}>{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="flex flex-col items-end gap-2">
@@ -393,7 +453,13 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   <div className="flex flex-col items-center justify-center gap-2 py-4">
                     <Filter className="h-8 w-8 opacity-20" />
                     <p>No results found for current filters.</p>
-                    <Button variant="link" onClick={() => { setCategoryFilter([]); setStatusFilter("__all"); setGlobalFilter(""); }}>Clear all filters</Button>
+                    <Button variant="link" onClick={() => {
+                      setCategoryFilter([]);
+                      setStatusFilter("__all");
+                      setGlobalFilter("");
+                      setYearFilter("all");
+                      setMonthFilter("all");
+                    }}>Clear all filters</Button>
                   </div>
                 </TableCell>
               </TableRow>
