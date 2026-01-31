@@ -91,13 +91,15 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     "July", "August", "September", "October", "November", "December"
   ];
 
-  // Derive available years from data
+  // Derive available years from data + 2020-2025 range
   const availableYears = useMemo(() => {
-    const years = data.map(item => {
+    const fixedRange = [2020, 2021, 2022, 2023, 2024, 2025];
+    const dataYears = data.map(item => {
       const d = item.dateIssued ? new Date(item.dateIssued) : null;
       return d && !isNaN(d.getTime()) ? d.getFullYear() : null;
     }).filter(Boolean) as number[];
-    return Array.from(new Set(years)).sort((a, b) => b - a);
+
+    return Array.from(new Set([...fixedRange, ...dataYears])).sort((a, b) => b - a);
   }, [data]);
 
   // Filter data manually before passing to table
