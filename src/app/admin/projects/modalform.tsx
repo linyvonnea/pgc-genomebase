@@ -16,7 +16,7 @@ import { FolderPlus, FileText, Building2, Banknote, Briefcase, Save } from "luci
 import { Project } from "@/types/Project";
 import { projectSchema as baseProjectSchema } from "@/schemas/projectSchema";
 import { collection, addDoc, serverTimestamp, Timestamp, FieldValue, doc, setDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase"; 
+import { db } from "@/lib/firebase";
 import { toast } from "sonner";
 import { getNextPid, checkPidExists } from "@/services/projectsService";
 import { getInquiries } from "@/services/inquiryService";
@@ -54,7 +54,7 @@ type ProjectFormState = Omit<ProjectFormData, 'clientNames'> & {
 export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => void }) {
   const { adminInfo } = useAuth();
   const pidInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Form state for all project fields
   const [formData, setFormData] = useState<ProjectFormState>({
     pid: "",
@@ -75,14 +75,14 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
   });
   // Error state for validation messages
   const [errors, setErrors] = useState<Partial<Record<keyof ProjectFormState, string>>>({});
-  
+
   // Inquiry dropdown state
   const [inquiryOptions, setInquiryOptions] = useState<Inquiry[]>([]);
   const [inquirySearch, setInquirySearch] = useState("");
-  
+
   // Personnel options from catalog settings
   const [personnelOptions, setPersonnelOptions] = useState<Array<{ id: string; value: string; position?: string }>>([]);
-  
+
   // PID validation state
   const [isPidChecking, setIsPidChecking] = useState(false);
   const [pidError, setPidError] = useState<string>("");
@@ -94,7 +94,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     }).catch((error) => {
       console.error("Error fetching inquiries:", error);
     });
-    
+
     getActiveCatalogItems("personnelAssigned").then((personnel) => {
       console.log("Fetched personnel:", personnel);
       // Cast to the proper type - should be CatalogItem[] for personnelAssigned
@@ -143,9 +143,9 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       };
       // Remove userInfo from projectData before saving
       delete (projectData as any).userInfo;
-      
+
       await setDoc(docRef, projectData);
-      
+
       // Log the activity
       await logActivity({
         userId: data.userInfo?.email || "system",
@@ -158,7 +158,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         description: `Created project: ${data.title || data.pid}`,
         changesAfter: projectData,
       });
-      
+
       return data;
     },
     onSuccess: (data) => {
@@ -174,18 +174,18 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
   // Handle form submission: validate, generate PID, and submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate PID
     if (!formData.pid) {
       setPidError("Project ID is required");
       return;
     }
-    
+
     // Check if PID already exists
     setIsPidChecking(true);
     const pidExists = await checkPidExists(formData.pid);
     setIsPidChecking(false);
-    
+
     if (pidExists) {
       setPidError("This Project ID already exists. Please choose a different ID.");
       // Scroll to the PID field and focus it
@@ -193,7 +193,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       pidInputRef.current?.focus();
       return;
     }
-    
+
     const result = projectSchema.safeParse(formData);
     if (!result.success) {
       // Collect and display validation errors
@@ -251,7 +251,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       ...prev,
       [name]: value,
     }));
-    
+
     // Clear PID error when user edits the PID
     if (name === "pid") {
       setPidError("");
@@ -300,7 +300,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         </div>
         <Separator className="mb-3" />
       </div>
-      
+
       {/* Year, Project ID, and Start Date in one row */}
       <div className="col-span-2 grid grid-cols-[100px_1fr_1fr] gap-4">
         {/* Year */}
@@ -312,12 +312,12 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         {/* Project ID - Editable */}
         <div>
           <Label className="text-xs">Project ID</Label>
-          <Input 
+          <Input
             ref={pidInputRef}
-            name="pid" 
-            value={formData.pid} 
-            onChange={handleChange} 
-            className="h-9 font-mono bg-blue-50" 
+            name="pid"
+            value={formData.pid}
+            onChange={handleChange}
+            className="h-9 font-mono bg-blue-50"
             placeholder="P-2026-001"
           />
           {pidError && <p className="text-red-500 text-xs mt-1">{pidError}</p>}
@@ -551,18 +551,18 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       {/* Submit button */}
       <div className="col-span-2 flex justify-end gap-3 mt-2 pt-3">
         <Separator className="mb-4" />
-        <Button 
-          type="button" 
-          variant="outline" 
+        <Button
+          type="button"
+          variant="outline"
           onClick={onSubmit ? () => window.location.reload() : undefined}
           disabled={mutation.isPending || isPidChecking}
           className="min-w-[100px]"
         >
           Cancel
         </Button>
-        <Button 
-          type="submit" 
-          disabled={mutation.isPending || isPidChecking} 
+        <Button
+          type="submit"
+          disabled={mutation.isPending || isPidChecking}
           className="px-6 min-w-[140px] bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md"
         >
           {isPidChecking ? (

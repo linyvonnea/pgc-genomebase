@@ -38,6 +38,8 @@ import { editProject } from "@/services/editProject";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { getActiveCatalogItems } from "@/services/catalogSettingsService";
+import { CatalogItem } from "@/types/CatalogSettings";
 
 interface EditProjectModalProps {
   project: Project;
@@ -55,6 +57,15 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       : project.serviceRequested || ""
   );
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [personnelOptions, setPersonnelOptions] = useState<CatalogItem[]>([]);
+
+  useEffect(() => {
+    getActiveCatalogItems("personnelAssigned").then((personnel) => {
+      setPersonnelOptions(personnel as CatalogItem[]);
+    }).catch((error) => {
+      console.error("Error fetching personnel options:", error);
+    });
+  }, []);
 
   const form = useForm<AdminProjectData>({
     resolver: zodResolver(adminProjectSchema),
@@ -71,7 +82,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       fundingInstitution: project.fundingInstitution || "",
       serviceRequested: Array.isArray(project.serviceRequested)
         ? project.serviceRequested.filter((s): s is "Laboratory Services" | "Retail Services" | "Equipment Use" | "Bioinformatics Analysis" | "Training" =>
-            ["Laboratory Services", "Retail Services", "Equipment Use", "Bioinformatics Analysis", "Training"].includes(s))
+          ["Laboratory Services", "Retail Services", "Equipment Use", "Bioinformatics Analysis", "Training"].includes(s))
         : [],
       notes: project.notes || "",
       personnelAssigned: project.personnelAssigned || "",
@@ -116,15 +127,15 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       serviceRequested = [];
     }
     const updatedData = { ...data, pid, serviceRequested };
-  
+
     try {
       // Get old project data for logging
       const projectRef = doc(db, "projects", pid);
       const projectDoc = await getDoc(projectRef);
       const oldData = projectDoc.data();
-      
+
       await editProject(updatedData);
-      
+
       // Log the activity
       const changedFields = Object.keys(updatedData).filter(
         (key) => {
@@ -150,7 +161,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
         changesAfter: { ...oldData, ...updatedData },
         changedFields,
       });
-      
+
       toast.success("Project updated successfully!");
       setIsOpen(false);
       // Call onSuccess after modal is closed
@@ -172,9 +183,9 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       const projectRef = doc(db, "projects", project.pid);
       const projectDoc = await getDoc(projectRef);
       const projectData = projectDoc.data();
-      
+
       await deleteDoc(projectRef);
-      
+
       // Log the activity
       await logActivity({
         userId: adminInfo?.email || "system",
@@ -187,7 +198,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
         description: `Deleted project: ${project.title || project.pid}`,
         changesBefore: projectData,
       });
-      
+
       toast.success("Project deleted successfully!");
       setShowDeleteConfirm(false);
       setIsOpen(false);
@@ -247,7 +258,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
               </div>
               <Separator />
             </div>
-            
+
             <div className="grid grid-cols-2 gap-3">
               <FormField
                 control={form.control}
@@ -489,9 +500,31 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-xs">Personnel Assigned</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter personnel assigned" className="h-9" {...field} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="w-full h-9">
+                        <SelectValue placeholder={personnelOptions.length > 0 ? "Select personnel" : "No personnel available"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {personnelOptions.length > 0 ? (
+                        personnelOptions.map((person) => (
+                          <SelectItem key={person.id} value={person.value} className="py-2">
+                            <div className="flex flex-col">
+                              <span className="font-medium text-sm">{person.value}</span>
+                              {person.position && (
+                                <span className="text-xs text-gray-500">{person.position}</span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="p-2 text-sm text-center text-gray-500">
+                          No personnel configured.
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -511,7 +544,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
               )}
             />
             <Separator className="my-4" />
-            
+
             <div className="flex justify-between items-center pt-2">
               {canDelete("projects") && (
                 <Button
@@ -526,18 +559,18 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                 </Button>
               )}
               <div className={`flex gap-3 ${!canDelete("projects") ? "w-full justify-end" : ""}`}>
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => setIsOpen(false)}
                   disabled={isLoading}
                   className="min-w-[100px]"
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isLoading || form.formState.isSubmitting} 
+                <Button
+                  type="submit"
+                  disabled={isLoading || form.formState.isSubmitting}
                   className="min-w-[120px] bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md"
                 >
                   {(isLoading || form.formState.isSubmitting) ? (

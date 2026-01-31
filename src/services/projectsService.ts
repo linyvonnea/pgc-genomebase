@@ -98,8 +98,8 @@ export async function getProjects(): Promise<Project[]> {
             raw.createdAt instanceof Date
               ? raw.createdAt
               : raw.createdAt
-              ? new Date(raw.createdAt)
-              : undefined,
+                ? new Date(raw.createdAt)
+                : undefined,
           fundingCategory:
             raw.fundingCategory === "External" || raw.fundingCategory === "In-House"
               ? raw.fundingCategory
@@ -112,14 +112,14 @@ export async function getProjects(): Promise<Project[]> {
             : undefined,
           status:
             raw.status === "Ongoing" ||
-            raw.status === "Cancelled" ||
-            raw.status === "Completed"
+              raw.status === "Cancelled" ||
+              raw.status === "Completed"
               ? raw.status
               : undefined,
           sendingInstitution:
             allowedInstitutions.includes(raw.sendingInstitution as typeof allowedInstitutions[number])
               ? (raw.sendingInstitution as typeof allowedInstitutions[number])
-            : undefined,
+              : undefined,
         };
         projects.push(project);
       } else {
