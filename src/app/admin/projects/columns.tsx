@@ -52,6 +52,27 @@ export const columns: ColumnDef<Project>[] = [
     accessorKey: "lead",
     header: "Project Lead",
     size: 150,
+    cell: ({ getValue }) => {
+      const lead = getValue() as string || "—";
+      return (
+        <div className="max-w-[150px] truncate text-left" title={lead}>
+          {lead}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "personnelAssigned",
+    header: "Personnel Assigned",
+    size: 180,
+    cell: ({ getValue }) => {
+      const personnel = getValue() as string || "—";
+      return (
+        <div className="max-w-[180px] truncate text-left" title={personnel}>
+          {personnel}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "status",
@@ -134,10 +155,6 @@ export const columns: ColumnDef<Project>[] = [
   // {
   //   accessorKey: "serviceRequested",
   //   header: "Service Requested",
-  // },
-  // {
-  //   accessorKey: "personnelAssigned",
-  //   header: "Personnel Assigned",
   // },
   // {
   //   accessorKey: "notes",
