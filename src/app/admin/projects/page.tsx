@@ -63,11 +63,6 @@ function ProjectPageContent() {
     await fetchData();
   };
 
-  // Count completed, ongoing, and total projects
-  const completedCount = data.filter(project => project.status === "Completed").length;
-  const ongoingCount = data.filter(project => project.status === "Ongoing").length;
-  const cancelledCount = data.filter(project => project.status === "Cancelled").length;
-  const totalCount = data.length;
 
   return (
     <div className="container mx-auto py-10">
@@ -108,25 +103,6 @@ function ProjectPageContent() {
               </DialogContent>
             </Dialog>
           )}
-        </div>
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="rounded-lg border p-4">
-            <div className="text-2xl font-bold text-green-600">{completedCount}</div>
-            <div className="text-sm text-muted-foreground">Completed Projects</div>
-          </div>
-          <div className="rounded-lg border p-4">
-            <div className="text-2xl font-bold text-yellow-600">{ongoingCount}</div>
-            <div className="text-sm text-muted-foreground">Ongoing Projects</div>
-          </div>
-          <div className="rounded-lg border p-4">
-            <div className="text-2xl font-bold text-red-600">{cancelledCount}</div>
-            <div className="text-sm text-muted-foreground">Cancelled Projects</div>
-          </div>
-          <div className="rounded-lg border p-4">
-            <div className="text-2xl font-bold text-blue-600">{totalCount}</div>
-            <div className="text-sm text-muted-foreground">Total Projects</div>
-          </div>
         </div>
         {/* Data Table with instant update on add/edit/delete */}
         <DataTable columns={columns} data={data} meta={{ onSuccess: fetchData }} />
