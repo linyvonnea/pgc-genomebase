@@ -50,6 +50,14 @@ export const columns: ColumnDef<QuotationRecord>[] = [
   {
     accessorKey: "institution",
     header: "Institution",
+    cell: ({ getValue }) => {
+      const institution = getValue() as string || "—";
+      return (
+        <div className="max-w-[200px] truncate text-left" title={institution}>
+          {institution}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "categories",
