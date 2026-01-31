@@ -269,7 +269,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
   // Dropdown options for serviceRequested
   const serviceOptions = [
     "Laboratory Services",
-    "Retail Services",
+    "Retail Sales",
     "Equipment Use",
     "Bioinformatics Analysis",
     "Training"
@@ -501,7 +501,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       <div className="col-span-2">
         <Label className="text-xs">Personnel Assigned</Label>
         <Select value={formData.personnelAssigned || ""} onValueChange={val => handleSelect("personnelAssigned", val)}>
-          <SelectTrigger className="h-9">
+          <SelectTrigger className="h-9 text-left">
             <SelectValue placeholder={personnelOptions.length > 0 ? "Select personnel" : "No personnel available"}>
               {formData.personnelAssigned && personnelOptions.length > 0 ? (
                 <div className="flex flex-col items-start">
