@@ -18,7 +18,8 @@ import { Input } from "@/components/ui/input";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -180,6 +181,77 @@ export function DataTable<TData, TValue>({
           </div>
         </div>
       </div>
+
+      {/* Active Filter Chips */}
+      {(yearFilter !== "all" || monthFilter !== "all" || categoryFilter.length > 0) && (
+        <div className="flex flex-wrap gap-2 items-center px-1">
+          <span className="text-xs font-semibold text-muted-foreground mr-1">Active Filters:</span>
+
+          {yearFilter !== "all" && (
+            <Badge variant="outline" className="flex items-center gap-1 pl-2 pr-1 py-1 bg-blue-50/50 border-blue-200 text-blue-700">
+              <span className="text-[10px] uppercase opacity-60 font-bold mr-1">Year</span>
+              {yearFilter}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-4 w-4 p-0 hover:bg-transparent hover:text-red-500"
+                onClick={() => setYearFilter("all")}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          )}
+
+          {monthFilter !== "all" && (
+            <Badge variant="outline" className="flex items-center gap-1 pl-2 pr-1 py-1 bg-green-50/50 border-green-200 text-green-700">
+              <span className="text-[10px] uppercase opacity-60 font-bold mr-1">Month</span>
+              {monthNames[parseInt(monthFilter) - 1]}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-4 w-4 p-0 hover:bg-transparent hover:text-red-500"
+                onClick={() => setMonthFilter("all")}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </Badge>
+          )}
+
+          {categoryFilter.map(cat => {
+            const catInfo = categories.find(c => c.name === cat);
+            return (
+              <Badge
+                key={cat}
+                variant="outline"
+                className={`flex items-center gap-1 pl-2 pr-1 py-1 ${catInfo?.bg || 'bg-slate-50'} ${catInfo?.border || 'border-slate-200'} ${catInfo?.color || 'text-slate-700'}`}
+              >
+                {cat === "Retail" ? "Retail Sales" : cat}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-4 w-4 p-0 hover:bg-transparent hover:text-red-500"
+                  onClick={() => setCategoryFilter(categoryFilter.filter(c => c !== cat))}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </Badge>
+            );
+          })}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors"
+            onClick={() => {
+              setYearFilter("all");
+              setMonthFilter("all");
+              setCategoryFilter([]);
+            }}
+          >
+            Clear all
+          </Button>
+        </div>
+      )}
 
       {/* Header with Search and Date Filters */}
       <div className="flex flex-wrap items-end justify-between gap-4 pt-2">
