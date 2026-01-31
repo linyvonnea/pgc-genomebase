@@ -165,18 +165,9 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
   //   accessorKey: "notes",
   //   header: "Notes",
   // },
-  {
-    accessorFn: (row) => row.preparedBy?.name,
-    id: "preparedBy.name",
-    header: "Prepared By",
-    size: 150,
-    cell: ({ getValue }) => {
-      const name = getValue() as string || "—";
-      return (
-        <div className="max-w-[150px] truncate text-left" title={name}>
-          {name}
-        </div>
-      );
-    },
-  },
+  // {
+  //   accessorFn: (row) => row.preparedBy?.name,
+  //   id: "preparedBy.name",
+  //   header: "Prepared By",
+  // },
 ];
