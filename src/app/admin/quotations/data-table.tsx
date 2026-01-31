@@ -171,7 +171,7 @@ export function DataTable<TData, TValue>({
             : "bg-white"
             }`}
         >
-          <div className="text-2xl font-bold text-gray-700">{data.length}</div>
+          <div className="text-2xl font-bold text-gray-700">{filteredData.length}</div>
           <div className="text-sm text-muted-foreground flex justify-between items-center">
             <span>Total Quotations</span>
             {(categoryFilter.length > 0 || yearFilter !== "all" || monthFilter !== "all" || globalFilter !== "") && (
