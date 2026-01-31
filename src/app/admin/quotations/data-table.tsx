@@ -38,6 +38,24 @@ export function DataTable<TData, TValue>({
   const [globalFilter, setGlobalFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [yearFilter, setYearFilter] = useState("all");
+  const [monthFilter, setMonthFilter] = useState("all");
+
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  // Derive available years from data + 2020-2025 range
+  const availableYears = useMemo(() => {
+    const fixedRange = [2020, 2021, 2022, 2023, 2024, 2025];
+    const dataYears = data.map((item: any) => {
+      const d = item.dateIssued ? new Date(item.dateIssued) : null;
+      return d && !isNaN(d.getTime()) ? d.getFullYear() : null;
+    }).filter(Boolean) as number[];
+
+    return Array.from(new Set([...fixedRange, ...dataYears])).sort((a, b) => b - a);
+  }, [data]);
 
   // 1) Apply your filters FIRST
   const filteredData = useMemo(() => {
@@ -58,18 +76,27 @@ export function DataTable<TData, TValue>({
           recordCats.some(c => c?.toLowerCase() === cat.toLowerCase())
         );
 
-      return matchesSearch && matchesCategory;
+      // year and month filter
+      const date = row.dateIssued ? new Date(row.dateIssued) : null;
+      const matchesYear = yearFilter === "all" || (date && date.getFullYear().toString() === yearFilter);
+      const matchesMonth = monthFilter === "all" || (date && (date.getMonth() + 1).toString() === monthFilter);
+
+      return matchesSearch && matchesCategory && matchesYear && matchesMonth;
     });
-  }, [data, globalFilter, categoryFilter]);
+  }, [data, globalFilter, categoryFilter, yearFilter, monthFilter]);
 
   // Reset to first page when filters change
-  const prevFilterRef = useState({ globalFilter, categoryFilter })[0];
+  const prevFilterRef = useState({ globalFilter, categoryFilter, yearFilter, monthFilter })[0];
   if (
     prevFilterRef.globalFilter !== globalFilter ||
-    JSON.stringify(prevFilterRef.categoryFilter) !== JSON.stringify(categoryFilter)
+    JSON.stringify(prevFilterRef.categoryFilter) !== JSON.stringify(categoryFilter) ||
+    prevFilterRef.yearFilter !== yearFilter ||
+    prevFilterRef.monthFilter !== monthFilter
   ) {
     prevFilterRef.globalFilter = globalFilter;
     prevFilterRef.categoryFilter = categoryFilter;
+    prevFilterRef.yearFilter = yearFilter;
+    prevFilterRef.monthFilter = monthFilter;
     setPagination(prev => ({ ...prev, pageIndex: 0 }));
   }
 
@@ -133,26 +160,69 @@ export function DataTable<TData, TValue>({
           );
         })}
         <div
-          onClick={() => setCategoryFilter([])}
-          className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${categoryFilter.length === 0
+          onClick={() => {
+            setCategoryFilter([]);
+            setYearFilter("all");
+            setMonthFilter("all");
+            setGlobalFilter("");
+          }}
+          className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${categoryFilter.length === 0 && yearFilter === "all" && monthFilter === "all" && globalFilter === ""
             ? "ring-2 ring-primary ring-offset-2 bg-slate-50 border-slate-200"
             : "bg-white"
             }`}
         >
           <div className="text-2xl font-bold text-gray-700">{data.length}</div>
-          <div className="text-sm text-muted-foreground">Total Quotations</div>
+          <div className="text-sm text-muted-foreground flex justify-between items-center">
+            <span>Total Quotations</span>
+            {(categoryFilter.length > 0 || yearFilter !== "all" || monthFilter !== "all" || globalFilter !== "") && (
+              <span className="text-[10px] bg-secondary text-secondary-foreground px-1.5 py-0.5 rounded-full font-medium">Active</span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Header with Search and Pagination */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="space-y-2">
-          <Input
-            placeholder="Search client, institution, reference..."
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="w-72"
-          />
+      {/* Header with Search and Date Filters */}
+      <div className="flex flex-wrap items-end justify-between gap-4 pt-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Search</span>
+            <Input
+              placeholder="Search client, institution..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="w-72 h-9"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Year</span>
+            <Select value={yearFilter} onValueChange={setYearFilter}>
+              <SelectTrigger className="w-[110px] h-9">
+                <SelectValue placeholder="All Years" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Years</SelectItem>
+                {availableYears.map(y => (
+                  <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Month</span>
+            <Select value={monthFilter} onValueChange={setMonthFilter}>
+              <SelectTrigger className="w-[130px] h-9">
+                <SelectValue placeholder="All Months" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Months</SelectItem>
+                {monthNames.map((m, idx) => (
+                  <SelectItem key={m} value={(idx + 1).toString()}>{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="flex flex-col items-end gap-2">
@@ -273,7 +343,15 @@ export function DataTable<TData, TValue>({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="text-center h-24 text-muted-foreground">
-                  No results.
+                  <div className="flex flex-col items-center justify-center gap-2 py-4">
+                    <p>No results found for current filters.</p>
+                    <Button variant="link" onClick={() => {
+                      setCategoryFilter([]);
+                      setYearFilter("all");
+                      setMonthFilter("all");
+                      setGlobalFilter("");
+                    }}>Clear all filters</Button>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
