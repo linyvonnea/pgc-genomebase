@@ -49,12 +49,13 @@ export async function getProjects(): Promise<Project[]> {
           bio: "Bioinformatics Analysis",
           info: "Bioinformatics Analysis",
           lab: "Laboratory Services",
-          retail: "Retail Services",
+          retail: "Retail Sales",
           equip: "Equipment Use",
           equipment: "Equipment Use",
           "Bioinformatics Analysis": "Bioinformatics Analysis",
           "Laboratory Services": "Laboratory Services",
-          "Retail Services": "Retail Services",
+          "Retail Services": "Retail Sales",
+          "Retail Sales": "Retail Sales",
           "Equipment Use": "Equipment Use",
         };
         data.serviceRequested = data.serviceRequested
@@ -64,9 +65,10 @@ export async function getProjects(): Promise<Project[]> {
             (val: string, idx: number, arr: string[]) =>
               [
                 "Laboratory Services",
-                "Retail Services",
+                "Retail Sales",
                 "Equipment Use",
                 "Bioinformatics Analysis",
+                "Training",
                 "N/A"
               ].includes(val) && arr.indexOf(val) === idx
           );

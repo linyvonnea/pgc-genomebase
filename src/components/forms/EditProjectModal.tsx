@@ -61,11 +61,22 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
 
   useEffect(() => {
     getActiveCatalogItems("personnelAssigned").then((personnel) => {
-      setPersonnelOptions(personnel as CatalogItem[]);
+      let options = personnel as CatalogItem[];
+      // If current assigned personnel isn't in the active options, add it
+      if (project.personnelAssigned && !options.some(opt => opt.value === project.personnelAssigned)) {
+        options = [{
+          id: "current-personnel",
+          value: project.personnelAssigned,
+          isActive: true,
+          order: -1,
+          position: "Currently Assigned"
+        }, ...options];
+      }
+      setPersonnelOptions(options);
     }).catch((error) => {
       console.error("Error fetching personnel options:", error);
     });
-  }, []);
+  }, [project.personnelAssigned]);
 
   const form = useForm<AdminProjectData>({
     resolver: zodResolver(adminProjectSchema),
@@ -81,8 +92,8 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       fundingCategory: project.fundingCategory || "In-House",
       fundingInstitution: project.fundingInstitution || "",
       serviceRequested: Array.isArray(project.serviceRequested)
-        ? project.serviceRequested.filter((s): s is "Laboratory Services" | "Retail Services" | "Equipment Use" | "Bioinformatics Analysis" | "Training" =>
-          ["Laboratory Services", "Retail Services", "Equipment Use", "Bioinformatics Analysis", "Training"].includes(s))
+        ? project.serviceRequested.filter((s): s is "Laboratory Services" | "Retail Sales" | "Equipment Use" | "Bioinformatics Analysis" | "Training" =>
+          ["Laboratory Services", "Retail Sales", "Equipment Use", "Bioinformatics Analysis", "Training"].includes(s))
         : [],
       notes: project.notes || "",
       personnelAssigned: project.personnelAssigned || "",
@@ -114,7 +125,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
     if (typeof serviceRequested === "string") {
       const validOptions = [
         "Laboratory Services",
-        "Retail Services",
+        "Retail Sales",
         "Equipment Use",
         "Bioinformatics Analysis",
         "Training",
@@ -469,7 +480,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                   <FormLabel className="text-xs">Service Requested</FormLabel>
                   <FormControl>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                      {(["Laboratory Services", "Retail Services", "Equipment Use", "Bioinformatics Analysis", "Training"] as const).map(option => (
+                      {(["Laboratory Services", "Retail Sales", "Equipment Use", "Bioinformatics Analysis", "Training"] as const).map(option => (
                         <label key={option} className="flex items-center gap-2 text-sm">
                           <input
                             type="checkbox"
@@ -502,7 +513,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                   <FormLabel className="text-xs">Personnel Assigned</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger className="w-full h-9">
+                      <SelectTrigger className="w-full h-9 text-left">
                         <SelectValue placeholder={personnelOptions.length > 0 ? "Select personnel" : "No personnel available"} />
                       </SelectTrigger>
                     </FormControl>

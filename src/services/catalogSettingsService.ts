@@ -213,7 +213,7 @@ function getDefaultFundingCategories(): CatalogItem[] {
 function getDefaultServiceRequested(): CatalogItem[] {
   return [
     { id: "sr-1", value: "Laboratory Services", order: 1, isActive: true },
-    { id: "sr-2", value: "Retail Services", order: 2, isActive: true },
+    { id: "sr-2", value: "Retail Sales", order: 2, isActive: true },
     { id: "sr-3", value: "Equipment Use", order: 3, isActive: true },
     { id: "sr-4", value: "Bioinformatics Analysis", order: 4, isActive: true },
     { id: "sr-5", value: "Training", order: 5, isActive: true },

@@ -13,7 +13,7 @@ export const adminProjectSchema = z.object({
   lead: z.string().optional(),
   serviceRequested: z.array(z.enum([
     "Laboratory Services",
-    "Retail Services",
+    "Retail Sales",
     "Equipment Use",
     "Bioinformatics Analysis",
     "Training"
