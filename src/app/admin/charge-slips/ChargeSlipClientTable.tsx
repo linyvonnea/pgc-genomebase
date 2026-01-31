@@ -196,14 +196,14 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                 }
               }}
               className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${isActive
-                  ? `ring-2 ring-primary ring-offset-2 ${cat.bg} ${cat.border}`
-                  : "bg-white"
+                ? `ring-2 ring-primary ring-offset-2 ${cat.bg} ${cat.border}`
+                : "bg-white"
                 }`}
             >
               <div className={`text-2xl font-bold ${cat.color} truncate`}>
                 {categoryCounts[cat.name]}
               </div>
-              <div className="text-sm text-muted-foreground font-medium uppercase tracking-wider">
+              <div className="text-sm text-muted-foreground font-medium">
                 {cat.name}
               </div>
             </div>
@@ -220,14 +220,14 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
               key={stat.id}
               onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
               className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${isActive
-                  ? `ring-2 ring-primary ring-offset-2 ${stat.bg} ${stat.border}`
-                  : "bg-white"
+                ? `ring-2 ring-primary ring-offset-2 ${stat.bg} ${stat.border}`
+                : "bg-white"
                 }`}
             >
               <div className={`text-2xl font-bold ${stat.color} truncate`}>
                 {statusCounts[stat.id]}
               </div>
-              <div className="text-sm text-muted-foreground font-medium uppercase tracking-wider">
+              <div className="text-sm text-muted-foreground font-medium">
                 {stat.label}
               </div>
             </div>
@@ -252,7 +252,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
               maximumFractionDigits: 2,
             })}
           </div>
-          <div className="text-sm text-muted-foreground flex justify-between items-center font-medium uppercase tracking-wider">
+          <div className="text-sm text-muted-foreground flex justify-between items-center font-medium">
             <span>Filtered Total</span>
             {(categoryFilter.length > 0 || statusFilter !== "__all" || globalFilter !== "") && (
               <Badge variant="secondary" className="text-[10px] h-4 py-0 leading-none">
