@@ -93,12 +93,7 @@ export const columns: ColumnDef<QuotationRecord>[] = [
       const preparedBy = row.getValue("preparedBy") as
         | { name?: string; position?: string }
         | undefined;
-      const name = preparedBy?.name || "—";
-      return (
-        <div className="max-w-[150px] truncate text-left" title={name}>
-          {name}
-        </div>
-      );
+      return preparedBy?.name || "—";
     },
   },
 ];
