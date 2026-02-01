@@ -297,17 +297,19 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       {/* Collapsible Filter Section */}
       <Card className="overflow-hidden">
         <div 
-          className="flex items-center justify-between p-3 border-b cursor-pointer hover:bg-gray-50 transition-colors"
+          className="flex items-center justify-between px-3 py-2 border-b cursor-pointer hover:bg-gray-50 transition-colors"
           onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
         >
-          <h3 className="text-base font-semibold">Filters & Overview</h3>
+          <h3 className="text-sm font-semibold text-gray-800">Filters & Overview</h3>
           <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? 'rotate-180' : ''}`} />
         </div>
         
         {!isFiltersCollapsed && (
-          <div className="p-4 space-y-4">
-            {/* Category Cards Row - Compact with better hover and selection */}
-            <div className="grid grid-cols-3 lg:grid-cols-5 gap-2">
+          <div className="p-2.5 space-y-2.5">
+            {/* Service Categories Section */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Service Categories</h4>
+              <div className="grid grid-cols-3 lg:grid-cols-5 gap-2">
               {categories.map((cat) => {
                 const isActive = categoryFilter.includes(cat.name);
                 return (
@@ -320,21 +322,21 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                         setCategoryFilter([...categoryFilter, cat.name]);
                       }
                     }}
-                    className={`rounded-md border p-2 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg ${
+                    className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
                       isActive
-                        ? `ring-2 ring-primary ring-offset-1 ${cat.bg} ${cat.border} shadow-md`
-                        : "bg-white hover:bg-gray-50"
+                        ? `ring-1 ring-primary ring-offset-1 ${cat.bg} ${cat.border} shadow-sm`
+                        : "bg-white hover:bg-gray-50 border-gray-200"
                     }`}
                   >
-                    <div className={`text-lg font-bold ${cat.color} truncate`}>
+                    <div className={`text-sm font-semibold ${cat.color} truncate leading-tight`}>
                       {categoryCounts[cat.name]}
                     </div>
-                    <div className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">
+                    <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
                       {cat.name}
                     </div>
                     {isActive && (
-                      <div className="mt-1">
-                        <Badge variant="default" className="text-[8px] h-3 px-1">
+                      <div className="mt-0.5">
+                        <Badge variant="default" className="text-[7px] h-2.5 px-1">
                           Active
                         </Badge>
                       </div>
@@ -343,30 +345,33 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                 );
               })}
             </div>
+            </div>
 
-            {/* Status Cards Row + Total Card - Compact (balanced sizes) */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+            {/* Processing Status & Summary Section */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Processing Status & Summary</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
               {statuses.map((stat) => {
                 const isActive = statusFilter === stat.id;
                 return (
                   <div
                     key={stat.id}
                     onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
-                    className={`rounded-md border p-1 cursor-pointer transition-all duration-150 hover:scale-105 hover:shadow-sm ${
+                    className={`rounded-lg border px-2 py-1 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
                       isActive
-                        ? `ring-2 ring-primary ring-offset-1 ${stat.bg} ${stat.border} shadow-sm`
-                        : "bg-white hover:bg-gray-50"
+                        ? `ring-1 ring-primary ring-offset-1 ${stat.bg} ${stat.border} shadow-sm`
+                        : "bg-white hover:bg-gray-50 border-gray-200"
                     }`}
                   >
-                    <div className={`text-xs font-semibold ${stat.color} truncate leading-none`}>
+                    <div className={`text-sm font-semibold ${stat.color} truncate leading-tight`}>
                       {statusCounts[stat.id]}
                     </div>
-                    <div className="text-[8px] text-muted-foreground font-medium uppercase tracking-wide">
+                    <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
                       {stat.label}
                     </div>
                     {isActive && (
                       <div className="mt-0.5">
-                        <Badge variant="default" className="text-[7px] h-2 px-1">
+                        <Badge variant="default" className="text-[7px] h-2.5 px-1">
                           Active
                         </Badge>
                       </div>
@@ -384,31 +389,31 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   setYearFilter("all");
                   setMonthFilter("all");
                 }}
-                className={`rounded-md border p-3 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg lg:col-span-2 ${
+                className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm lg:col-span-2 ${
                   categoryFilter.length === 0 && 
                   statusFilter === "__all" && 
                   globalFilter === "" && 
                   yearFilter === "all" && 
                   monthFilter === "all"
-                    ? "ring-2 ring-primary ring-offset-1 bg-slate-50 border-slate-200 shadow-md"
-                    : "bg-white hover:bg-gray-50"
+                    ? "ring-1 ring-primary ring-offset-1 bg-slate-50 border-slate-200 shadow-sm"
+                    : "bg-white hover:bg-gray-50 border-gray-200"
                 }`}
               >
-                <div className="space-y-1">
-                  <div className="text-lg font-bold text-gray-700">
+                <div className="space-y-0.5">
+                  <div className="text-sm font-bold text-gray-700 leading-tight">
                     ₱{filteredTotalValue.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
                   </div>
-                  <div className="text-sm font-medium text-gray-600 truncate">
+                  <div className="text-[10px] font-medium text-gray-600 truncate leading-tight">
                     {activeFiltersLabel}
                   </div>
-                  <div className="text-sm text-blue-600 font-semibold">
+                  <div className="text-[10px] text-blue-600 font-semibold leading-tight">
                     {filteredData.length} {filteredData.length === 1 ? 'result' : 'results'}
                   </div>
                 </div>
-                <div className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide mt-1">
+                <div className="text-[8px] text-muted-foreground font-semibold uppercase tracking-wide mt-1 leading-none">
                   Total & Results
                 </div>
                 {(categoryFilter.length > 0 || 
@@ -416,33 +421,35 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   globalFilter !== "" || 
                   yearFilter !== "all" || 
                   monthFilter !== "all") && (
-                  <div className="mt-1">
-                    <Badge variant="secondary" className="text-[8px] h-3 px-1">
-                      Click to Clear
+                  <div className="mt-0.5">
+                    <Badge variant="secondary" className="text-[7px] h-2 px-1">
+                      Clear
                     </Badge>
                   </div>
                 )}
               </div>
             </div>
+            </div>
 
-            {/* Header with Search and Date Filters */}
-            <div className="flex flex-wrap items-end justify-between gap-3 pt-2 pb-1 border-b">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="space-y-1">
-                  <span className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Search</span>
+            {/* Search & Date Filters Section */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Search & Date Filters</h4>
+              <div className="flex flex-wrap items-center gap-2 pb-1">
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Search</span>
                   <Input
                     placeholder="Search client, charge slip..."
                     value={globalFilter}
                     onChange={(e) => setGlobalFilter(e.target.value)}
-                    className="w-64 h-8 text-sm"
+                    className="w-56 h-7 text-sm"
                   />
                 </div>
 
-                <div className="space-y-1">
-                  <span className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Year</span>
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Year</span>
                   <Select value={yearFilter} onValueChange={setYearFilter}>
-                    <SelectTrigger className="w-[100px] h-8 text-sm">
-                      <SelectValue placeholder="All Years" />
+                    <SelectTrigger className="w-[90px] h-7 text-sm">
+                      <SelectValue placeholder="All" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Years</SelectItem>
@@ -453,11 +460,11 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   </Select>
                 </div>
 
-                <div className="space-y-1">
-                  <span className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Month</span>
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Month</span>
                   <Select value={monthFilter} onValueChange={setMonthFilter}>
-                    <SelectTrigger className="w-[120px] h-8 text-sm">
-                      <SelectValue placeholder="All Months" />
+                    <SelectTrigger className="w-[110px] h-7 text-sm">
+                      <SelectValue placeholder="All" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Months</SelectItem>
