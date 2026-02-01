@@ -88,10 +88,10 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   const [monthFilter, setMonthFilter] = useState("all");
   const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
 
-  const monthNames = [
+  const monthNames = useMemo(() => [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
-  ];
+  ], []);
 
   // Derive available years from data + 2020-2025 range
   const availableYears = useMemo(() => {
