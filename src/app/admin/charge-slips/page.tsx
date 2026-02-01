@@ -81,10 +81,10 @@ export default async function ChargeSlipPage() {
   });
 
   return (
-    <div className="container mx-auto py-10 space-y-6">
+    <div className="container mx-auto py-4 space-y-3">
       <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">Charge Slip Management</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-xl font-semibold tracking-tight">Charge Slip Management</h1>
+        <p className="text-sm text-muted-foreground">
           Review and manage all charge slips issued through GenomeBase.
         </p>
       </div>
