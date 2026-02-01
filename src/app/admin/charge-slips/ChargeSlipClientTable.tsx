@@ -352,21 +352,21 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   <div
                     key={stat.id}
                     onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
-                    className={`rounded-md border p-2 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg ${
+                    className={`rounded-md border p-1 cursor-pointer transition-all duration-150 hover:scale-105 hover:shadow-sm ${
                       isActive
-                        ? `ring-2 ring-primary ring-offset-1 ${stat.bg} ${stat.border} shadow-md`
+                        ? `ring-2 ring-primary ring-offset-1 ${stat.bg} ${stat.border} shadow-sm`
                         : "bg-white hover:bg-gray-50"
                     }`}
                   >
-                    <div className={`text-lg font-bold ${stat.color} truncate`}>
+                    <div className={`text-sm font-semibold ${stat.color} truncate leading-none`}>
                       {statusCounts[stat.id]}
                     </div>
-                    <div className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">
+                    <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide">
                       {stat.label}
                     </div>
                     {isActive && (
-                      <div className="mt-1">
-                        <Badge variant="default" className="text-[8px] h-3 px-1">
+                      <div className="mt-0.5">
+                        <Badge variant="default" className="text-[7px] h-2 px-1">
                           Active
                         </Badge>
                       </div>
