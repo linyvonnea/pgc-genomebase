@@ -395,7 +395,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                 }`}
               >
                 <div className="space-y-1">
-                  <div className="text-xl font-bold text-gray-700">
+                  <div className="text-lg font-bold text-gray-700">
                     ₱{filteredTotalValue.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
