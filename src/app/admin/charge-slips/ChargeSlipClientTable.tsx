@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ChevronsLeft, ChevronsRight, Filter } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, Filter, ChevronDown } from "lucide-react";
 import { columns as defaultColumns } from "./columns";
 
 import type { ValidCategory } from "@/types/ChargeSlipRecord";
@@ -85,6 +85,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [yearFilter, setYearFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
+  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
@@ -206,6 +207,22 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     return counts;
   }, [data, statuses]);
 
+  // Active filters label calculation
+  const activeFiltersLabel = useMemo(() => {
+    const filters = [];
+    if (categoryFilter.length > 0) filters.push(...categoryFilter);
+    if (statusFilter !== "__all") {
+      const s = statuses.find(st => st.id === statusFilter);
+      if (s) filters.push(s.label);
+    }
+    if (yearFilter !== "all") filters.push(yearFilter);
+    if (monthFilter !== "all") {
+      const mIndex = parseInt(monthFilter) - 1;
+      filters.push(monthNames[mIndex]);
+    }
+    return filters.length > 0 ? filters.join(" + ") : "None";
+  }, [categoryFilter, statusFilter, yearFilter, monthFilter, statuses, monthNames]);
+
   // Pagination Controls Component
   const PaginationControls = () => (
     <div className="flex items-center justify-between gap-2">
@@ -274,8 +291,24 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
 
   return (
     <div className="space-y-4">
-      {/* Category Cards Row - Enhanced with better hover and selection */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      {/* Collapsible Filters Section */}
+      <div className="border rounded-lg bg-white">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h3 className="text-lg font-semibold">Filters & Overview</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
+            className="h-8 w-8 p-0"
+          >
+            <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? 'rotate-180' : ''}`} />
+          </Button>
+        </div>
+        
+        {!isFiltersCollapsed && (
+          <div className="p-4 space-y-4">
+            {/* Category Cards Row - Enhanced with better hover and selection */}
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {categories.map((cat) => {
           const isActive = categoryFilter.includes(cat.name);
           return (
@@ -341,7 +374,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
           );
         })}
 
-        {/* Filtered Total Card (Currency) - Enhanced */}
+        {/* Active Filters Card */}
         <div
           onClick={() => {
             setCategoryFilter([]);
@@ -355,14 +388,11 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             : "bg-white hover:bg-gray-50"
             }`}
         >
-          <div className="text-2xl font-bold text-gray-700 truncate">
-            ₱{filteredTotalValue.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+          <div className="text-sm font-bold text-gray-700 truncate h-12 flex items-center">
+            {activeFiltersLabel}
           </div>
           <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
-            Filtered Total
+            Active Filters
           </div>
           {(categoryFilter.length > 0 || statusFilter !== "__all" || globalFilter !== "" || yearFilter !== "all" || monthFilter !== "all") && (
             <div className="mt-1">
@@ -425,9 +455,18 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
           </div>
         </div>
 
-        {/* Top Pagination Controls */}
-        <div className="flex flex-col items-end gap-2">
-          <PaginationControls />
+            {/* Top Pagination Controls */}
+            <div className="flex flex-col items-end gap-2">
+              <PaginationControls />
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Table Header with Record Count */}
+      <div className="flex items-center justify-between py-2">
+        <div className="text-sm text-muted-foreground">
+          Showing {filteredData.length > 0 ? (pagination.pageIndex * pagination.pageSize) + 1 : 0} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)} of {filteredData.length} records
         </div>
       </div>
 
@@ -501,13 +540,8 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
         </div>
       </div>
 
-      {/* Bottom Info and Pagination */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pt-1 border-t">
-        <div className="text-xs text-muted-foreground px-1">
-          Showing {filteredData.length > 0 ? (pagination.pageIndex * pagination.pageSize) + 1 : 0} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)} of {filteredData.length} records
-        </div>
-        
-        {/* Bottom Pagination Controls */}
+      {/* Bottom Pagination */}
+      <div className="flex justify-end pt-1 border-t">
         <PaginationControls />
       </div>
     </div>
