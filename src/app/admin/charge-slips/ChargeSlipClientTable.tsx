@@ -223,6 +223,11 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     return filters.length > 0 ? filters.join(" + ") : "None";
   }, [categoryFilter, statusFilter, yearFilter, monthFilter, statuses, monthNames]);
 
+  // Total Summary for the filtered data
+  const filteredTotalValue = useMemo(() => {
+    return filteredData.reduce((sum, item) => sum + (item.total || 0), 0);
+  }, [filteredData]);
+
   // Pagination Controls Component
   const PaginationControls = () => (
     <div className="flex items-center justify-between gap-2">
@@ -374,7 +379,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
           );
         })}
 
-        {/* Active Filters Card */}
+        {/* Active Filters Card with Total */}
         <div
           onClick={() => {
             setCategoryFilter([]);
@@ -388,11 +393,19 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             : "bg-white hover:bg-gray-50"
             }`}
         >
-          <div className="text-sm font-bold text-gray-700 truncate h-12 flex items-center">
-            {activeFiltersLabel}
+          <div className="space-y-1">
+            <div className="text-xl font-bold text-gray-700">
+              ₱{filteredTotalValue.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </div>
+            <div className="text-xs font-medium text-gray-600 truncate">
+              {activeFiltersLabel}
+            </div>
           </div>
-          <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
-            Active Filters
+          <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mt-1">
+            Total & Active Filters
           </div>
           {(categoryFilter.length > 0 || statusFilter !== "__all" || globalFilter !== "" || yearFilter !== "all" || monthFilter !== "all") && (
             <div className="mt-1">
@@ -540,8 +553,11 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
         </div>
       </div>
 
-      {/* Bottom Pagination */}
-      <div className="flex justify-end pt-1 border-t">
+      {/* Bottom Record Count and Pagination */}
+      <div className="flex items-center justify-between pt-1 border-t">
+        <div className="text-xs text-muted-foreground">
+          Showing {filteredData.length > 0 ? (pagination.pageIndex * pagination.pageSize) + 1 : 0} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)} of {filteredData.length} records
+        </div>
         <PaginationControls />
       </div>
     </div>
