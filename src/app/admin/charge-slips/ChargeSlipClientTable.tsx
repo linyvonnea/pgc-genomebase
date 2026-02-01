@@ -206,10 +206,76 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     return counts;
   }, [data, statuses]);
 
+  // Pagination Controls Component
+  const PaginationControls = () => (
+    <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
+        <Select
+          value={String(pagination.pageSize)}
+          onValueChange={(value) => setPagination({ pageIndex: 0, pageSize: Number(value) })}
+        >
+          <SelectTrigger className="w-[70px] h-8">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {[10, 20, 50, 100].map((n) => (
+              <SelectItem key={n} value={String(n)}>
+                {n}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex items-center gap-1">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 w-8 p-0"
+          onClick={() => table.setPageIndex(0)}
+          disabled={!table.getCanPreviousPage()}
+        >
+          <ChevronsLeft className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 px-2"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          Prev
+        </Button>
+        <div className="flex items-center justify-center min-w-[80px] text-sm font-medium">
+          {pagination.pageIndex + 1} / {table.getPageCount() || 1}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 px-2"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          Next
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 w-8 p-0"
+          onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+          disabled={!table.getCanNextPage()}
+        >
+          <ChevronsRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-4">
-      {/* Category Cards Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* Category Cards Row - Enhanced with better hover and selection */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {categories.map((cat) => {
           const isActive = categoryFilter.includes(cat.name);
           return (
@@ -222,46 +288,60 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   setCategoryFilter([...categoryFilter, cat.name]);
                 }
               }}
-              className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${isActive
-                ? `ring-2 ring-primary ring-offset-2 ${cat.bg} ${cat.border}`
-                : "bg-white"
+              className={`rounded-lg border p-3 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg ${isActive
+                ? `ring-2 ring-primary ring-offset-1 ${cat.bg} ${cat.border} shadow-md`
+                : "bg-white hover:bg-gray-50"
                 }`}
             >
               <div className={`text-2xl font-bold ${cat.color} truncate`}>
                 {categoryCounts[cat.name]}
               </div>
-              <div className="text-sm text-muted-foreground font-medium">
+              <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
                 {cat.name}
               </div>
+              {isActive && (
+                <div className="mt-1">
+                  <Badge variant="default" className="text-[9px] h-4 px-1">
+                    Active
+                  </Badge>
+                </div>
+              )}
             </div>
           );
         })}
       </div>
 
-      {/* Status Cards Row + Total Card */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Status Cards Row + Total Card - Enhanced */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {statuses.map((stat) => {
           const isActive = statusFilter === stat.id;
           return (
             <div
               key={stat.id}
               onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
-              className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${isActive
-                ? `ring-2 ring-primary ring-offset-2 ${stat.bg} ${stat.border}`
-                : "bg-white"
+              className={`rounded-lg border p-3 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg ${isActive
+                ? `ring-2 ring-primary ring-offset-1 ${stat.bg} ${stat.border} shadow-md`
+                : "bg-white hover:bg-gray-50"
                 }`}
             >
               <div className={`text-2xl font-bold ${stat.color} truncate`}>
                 {statusCounts[stat.id]}
               </div>
-              <div className="text-sm text-muted-foreground font-medium">
+              <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
                 {stat.label}
               </div>
+              {isActive && (
+                <div className="mt-1">
+                  <Badge variant="default" className="text-[9px] h-4 px-1">
+                    Active
+                  </Badge>
+                </div>
+              )}
             </div>
           );
         })}
 
-        {/* Filtered Total Card (Currency) */}
+        {/* Filtered Total Card (Currency) - Enhanced */}
         <div
           onClick={() => {
             setCategoryFilter([]);
@@ -270,9 +350,9 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             setYearFilter("all");
             setMonthFilter("all");
           }}
-          className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${categoryFilter.length === 0 && statusFilter === "__all" && globalFilter === "" && yearFilter === "all" && monthFilter === "all"
-            ? "ring-2 ring-primary ring-offset-2 bg-slate-50 border-slate-200"
-            : "bg-white"
+          className={`rounded-lg border p-3 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg ${categoryFilter.length === 0 && statusFilter === "__all" && globalFilter === "" && yearFilter === "all" && monthFilter === "all"
+            ? "ring-2 ring-primary ring-offset-1 bg-slate-50 border-slate-200 shadow-md"
+            : "bg-white hover:bg-gray-50"
             }`}
         >
           <div className="text-2xl font-bold text-gray-700 truncate">
@@ -281,19 +361,21 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
               maximumFractionDigits: 2,
             })}
           </div>
-          <div className="text-sm text-muted-foreground flex justify-between items-center font-medium">
-            <span>Filtered Total</span>
-            {(categoryFilter.length > 0 || statusFilter !== "__all" || globalFilter !== "" || yearFilter !== "all" || monthFilter !== "all") && (
-              <Badge variant="secondary" className="text-[10px] h-4 py-0 leading-none">
-                Active
-              </Badge>
-            )}
+          <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
+            Filtered Total
           </div>
+          {(categoryFilter.length > 0 || statusFilter !== "__all" || globalFilter !== "" || yearFilter !== "all" || monthFilter !== "all") && (
+            <div className="mt-1">
+              <Badge variant="secondary" className="text-[9px] h-4 px-1">
+                Click to Clear
+              </Badge>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Header with Search and Date Filters */}
-      <div className="flex flex-wrap items-end justify-between gap-4 pt-2">
+      {/* Header with Search, Date Filters, and Result Count */}
+      <div className="flex flex-wrap items-end justify-between gap-4 pt-2 pb-1 border-b">
         <div className="flex flex-wrap items-center gap-3">
           <div className="space-y-1">
             <span className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Search</span>
@@ -334,144 +416,99 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
               </SelectContent>
             </Select>
           </div>
-        </div>
 
-        <div className="flex flex-col items-end gap-2">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
-              <Select
-                value={String(pagination.pageSize)}
-                onValueChange={(value) => setPagination({ pageIndex: 0, pageSize: Number(value) })}
-              >
-                <SelectTrigger className="w-[70px] h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[10, 20, 50, 100].map((n) => (
-                    <SelectItem key={n} value={String(n)}>
-                      {n}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={() => table.setPageIndex(0)}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <ChevronsLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 px-2"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                Prev
-              </Button>
-              <div className="flex items-center justify-center min-w-[80px] text-sm font-medium">
-                {pagination.pageIndex + 1} / {table.getPageCount() || 1}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 px-2"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                Next
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-                disabled={!table.getCanNextPage()}
-              >
-                <ChevronsRight className="h-4 w-4" />
-              </Button>
-            </div>
+          {/* Result Count Badge */}
+          <div className="flex items-center gap-2 ml-2">
+            <Badge variant="outline" className="text-sm h-9 px-3">
+              {filteredData.length} {filteredData.length === 1 ? 'result' : 'results'}
+            </Badge>
           </div>
         </div>
+
+        {/* Top Pagination Controls */}
+        <div className="flex flex-col items-end gap-2">
+          <PaginationControls />
+        </div>
       </div>
 
-      {/* Table */}
+      {/* Compact Table with Sticky Header */}
       <div className="rounded-md border overflow-hidden">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  const canSort = header.column.getCanSort?.();
-                  const sortDir = header.column.getIsSorted?.();
-                  return (
-                    <TableHead
-                      key={header.id}
-                      onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                      className={canSort ? "cursor-pointer select-none" : ""}
-                    >
-                      <div className="flex items-center gap-1">
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                        {canSort && (
-                          <span className="ml-1 text-xs opacity-60">
-                            {sortDir === "asc" ? "▲" : sortDir === "desc" ? "▼" : ""}
-                          </span>
-                        )}
-                      </div>
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-
-          <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  onClick={() =>
-                    router.push(`/admin/charge-slips/${row.original.chargeSlipNumber}`)
-                  }
-                  className="cursor-pointer hover:bg-muted transition"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
+        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+          <Table>
+            <TableHeader className="sticky top-0 bg-muted/95 backdrop-blur-sm z-10">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    const canSort = header.column.getCanSort?.();
+                    const sortDir = header.column.getIsSorted?.();
+                    return (
+                      <TableHead
+                        key={header.id}
+                        onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                        className={`${canSort ? "cursor-pointer select-none" : ""} h-10 text-xs font-semibold`}
+                      >
+                        <div className="flex items-center gap-1">
+                          {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                          {canSort && (
+                            <span className="ml-1 text-xs opacity-60">
+                              {sortDir === "asc" ? "▲" : sortDir === "desc" ? "▼" : ""}
+                            </span>
+                          )}
+                        </div>
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="text-center h-24 text-muted-foreground">
-                  <div className="flex flex-col items-center justify-center gap-2 py-4">
-                    <Filter className="h-8 w-8 opacity-20" />
-                    <p>No results found for current filters.</p>
-                    <Button variant="link" onClick={() => {
-                      setCategoryFilter([]);
-                      setStatusFilter("__all");
-                      setGlobalFilter("");
-                      setYearFilter("all");
-                      setMonthFilter("all");
-                    }}>Clear all filters</Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+
+            <TableBody>
+              {table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    onClick={() =>
+                      router.push(`/admin/charge-slips/${row.original.chargeSlipNumber}`)
+                    }
+                    className="cursor-pointer hover:bg-muted/50 transition-colors h-12"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="py-2 px-3 text-sm">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="text-center h-24 text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center gap-2 py-4">
+                      <Filter className="h-8 w-8 opacity-20" />
+                      <p>No results found for current filters.</p>
+                      <Button variant="link" onClick={() => {
+                        setCategoryFilter([]);
+                        setStatusFilter("__all");
+                        setGlobalFilter("");
+                        setYearFilter("all");
+                        setMonthFilter("all");
+                      }}>Clear all filters</Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
-      <div className="text-xs text-muted-foreground px-1">
-        Showing {filteredData.length > 0 ? (pagination.pageIndex * pagination.pageSize) + 1 : 0} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)} of {filteredData.length} records
+      {/* Bottom Info and Pagination */}
+      <div className="flex flex-wrap items-center justify-between gap-4 pt-1 border-t">
+        <div className="text-xs text-muted-foreground px-1">
+          Showing {filteredData.length > 0 ? (pagination.pageIndex * pagination.pageSize) + 1 : 0} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)} of {filteredData.length} records
+        </div>
+        
+        {/* Bottom Pagination Controls */}
+        <PaginationControls />
       </div>
     </div>
   );
