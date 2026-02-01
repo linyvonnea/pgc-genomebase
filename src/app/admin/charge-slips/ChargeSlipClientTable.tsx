@@ -344,29 +344,29 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
               })}
             </div>
 
-            {/* Status Cards Row + Total Card - Compact */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+            {/* Status Cards Row + Total Card - Compact (balanced sizes) */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
               {statuses.map((stat) => {
                 const isActive = statusFilter === stat.id;
                 return (
                   <div
                     key={stat.id}
                     onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
-                    className={`rounded-md border p-2 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg ${
+                    className={`rounded-md border p-1 cursor-pointer transition-all duration-150 hover:scale-105 hover:shadow-sm ${
                       isActive
-                        ? `ring-2 ring-primary ring-offset-1 ${stat.bg} ${stat.border} shadow-md`
+                        ? `ring-2 ring-primary ring-offset-1 ${stat.bg} ${stat.border} shadow-sm`
                         : "bg-white hover:bg-gray-50"
                     }`}
                   >
-                    <div className={`text-lg font-bold ${stat.color} truncate`}>
+                    <div className={`text-xs font-semibold ${stat.color} truncate leading-none`}>
                       {statusCounts[stat.id]}
                     </div>
-                    <div className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">
+                    <div className="text-[8px] text-muted-foreground font-medium uppercase tracking-wide">
                       {stat.label}
                     </div>
                     {isActive && (
-                      <div className="mt-1">
-                        <Badge variant="default" className="text-[8px] h-3 px-1">
+                      <div className="mt-0.5">
+                        <Badge variant="default" className="text-[7px] h-2 px-1">
                           Active
                         </Badge>
                       </div>
@@ -375,7 +375,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                 );
               })}
 
-              {/* Active Filters Card with Total and Results Count */}
+              {/* Active Filters Card with Total and Results Count (wider) */}
               <div
                 onClick={() => {
                   setCategoryFilter([]);
@@ -384,7 +384,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   setYearFilter("all");
                   setMonthFilter("all");
                 }}
-                className={`rounded-md border p-2 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg ${
+                className={`rounded-md border p-3 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg lg:col-span-2 ${
                   categoryFilter.length === 0 && 
                   statusFilter === "__all" && 
                   globalFilter === "" && 
@@ -401,10 +401,10 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                       maximumFractionDigits: 2,
                     })}
                   </div>
-                  <div className="text-[10px] font-medium text-gray-600 truncate">
+                  <div className="text-sm font-medium text-gray-600 truncate">
                     {activeFiltersLabel}
                   </div>
-                  <div className="text-[9px] text-blue-600 font-semibold">
+                  <div className="text-sm text-blue-600 font-semibold">
                     {filteredData.length} {filteredData.length === 1 ? 'result' : 'results'}
                   </div>
                 </div>
