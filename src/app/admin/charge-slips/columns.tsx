@@ -37,27 +37,28 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     id: "dateIssued",
     header: "Date",
     accessorFn: (row) => toMillis((row as any).dateIssued),
-    size: 100,
+    size: 90,
     cell: ({ getValue }) => {
       const ms = getValue<number>();
-      return isNaN(ms) ? "—" : new Date(ms).toLocaleDateString("en-CA");
+      return <div className="text-xs">{isNaN(ms) ? "—" : new Date(ms).toLocaleDateString("en-CA")}</div>;
     },
     sortDescFirst: true,
   },
   {
     accessorKey: "chargeSlipNumber",
     header: "Charge Slip No.",
-    size: 140,
+    size: 130,
+    cell: ({ getValue }) => <div className="font-mono text-xs font-semibold">{getValue()}</div>,
   },
   {
     accessorFn: (row) => row.clientInfo?.name,
     id: "clientInfo.name",
     header: "Client Name",
-    size: 200,
+    size: 180,
     cell: ({ getValue }) => {
       const name = getValue() as string || "—";
       return (
-        <div className="max-w-[200px] truncate" title={name}>
+        <div className="max-w-[180px] truncate text-xs font-medium" title={name}>
           {name}
         </div>
       );
@@ -66,11 +67,11 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
   {
     accessorKey: "total",
     header: () => <div className="text-right">Amount</div>,
-    size: 120,
+    size: 110,
     cell: ({ row }) => {
       const value = Number(row.getValue("total") ?? 0);
       return (
-        <div className="text-right font-medium">
+        <div className="text-right font-semibold text-xs">
           ₱{value.toLocaleString("en-PH", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
@@ -82,30 +83,33 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 110,
+    size: 100,
     cell: ({ row }) => {
       const raw = String(row.getValue("status") ?? "processing").toLowerCase();
       const color = statusColors[raw] || "bg-gray-100 text-gray-800";
-      return <Badge className={`capitalize ${color} hover:${color} shadow-none`}>{raw}</Badge>;
+      return <Badge className={`capitalize text-[10px] h-5 px-2 ${color} hover:${color} shadow-none`}>{raw}</Badge>;
     },
   },
   {
     accessorKey: "categories",
     header: "Service Requested",
-    size: 200,
+    size: 180,
     cell: ({ row }) => {
       const categories = (row.getValue("categories") as ValidCategory[] | undefined) ?? [];
-      if (!categories.length) return <span className="text-muted-foreground">—</span>;
+      if (!categories.length) return <span className="text-muted-foreground text-xs">—</span>;
       return (
-        <div className="flex flex-wrap gap-1">
-          {categories.map((cat) => (
+        <div className="flex flex-wrap gap-1 max-w-[180px]">
+          {categories.slice(0, 2).map((cat) => (
             <span
               key={cat}
-              className={`px-2 py-0.5 rounded-full text-[10px] font-medium border capitalize ${categoryColors[cat] ?? "bg-gray-50 border-gray-200 text-gray-700"}`}
+              className={`px-1.5 py-0.5 rounded text-[9px] font-medium border capitalize ${categoryColors[cat] ?? "bg-gray-50 border-gray-200 text-gray-700"}`}
             >
               {cat}
             </span>
           ))}
+          {categories.length > 2 && (
+            <span className="text-[9px] text-muted-foreground">+{categories.length - 2}</span>
+          )}
         </div>
       );
     },
@@ -114,11 +118,11 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     accessorFn: (row) => row.project?.title,
     id: "project.title",
     header: "Payment For",
-    size: 220,
+    size: 200,
     cell: ({ getValue }) => {
       const title = getValue() as string || "—";
       return (
-        <div className="max-w-[220px] truncate" title={title}>
+        <div className="max-w-[200px] truncate text-xs" title={title}>
           {title}
         </div>
       );
@@ -127,24 +131,24 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
   {
     accessorKey: "datePaid",
     header: "Date Paid",
-    size: 100,
+    size: 90,
     cell: ({ row }) => {
       const raw = row.getValue("datePaid") as Date | string | undefined | null;
       const date = raw instanceof Date ? raw : new Date(raw || "");
-      return <div className="text-muted-foreground">{isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-CA")}</div>;
+      return <div className="text-muted-foreground text-xs">{isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-CA")}</div>;
     },
   },
   {
     accessorKey: "orNumber",
     header: "OR No.",
-    size: 100,
-    cell: ({ row }) => <span className="font-mono text-xs">{row.getValue("orNumber") || "—"}</span>,
+    size: 90,
+    cell: ({ row }) => <span className="font-mono text-[10px]">{row.getValue("orNumber") || "—"}</span>,
   },
   {
     accessorKey: "dvNumber",
     header: "DV No.",
-    size: 100,
-    cell: ({ row }) => <span className="font-mono text-xs">{row.getValue("dvNumber") || "—"}</span>,
+    size: 90,
+    cell: ({ row }) => <span className="font-mono text-[10px]">{row.getValue("dvNumber") || "—"}</span>,
   },
   // Hidden columns - Access via Detail View/Modal
   // {
@@ -169,11 +173,11 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     accessorFn: (row) => row.preparedBy?.name,
     id: "preparedBy.name",
     header: "Prepared By",
-    size: 150,
+    size: 140,
     cell: ({ getValue }) => {
       const name = getValue() as string || "—";
       return (
-        <div className="max-w-[150px] truncate text-left" title={name}>
+        <div className="max-w-[140px] truncate text-left text-xs" title={name}>
           {name}
         </div>
       );
