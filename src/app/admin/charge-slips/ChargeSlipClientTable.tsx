@@ -296,22 +296,18 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     <div className="space-y-4">
       {/* Collapsible Filter Section */}
       <Card className="overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="text-lg font-semibold">Filters & Overview</h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
-            className="h-8 w-8 p-0"
-          >
-            <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? 'rotate-180' : ''}`} />
-          </Button>
+        <div 
+          className="flex items-center justify-between p-3 border-b cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
+        >
+          <h3 className="text-base font-semibold">Filters & Overview</h3>
+          <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? 'rotate-180' : ''}`} />
         </div>
         
         {!isFiltersCollapsed && (
           <div className="p-4 space-y-4">
-            {/* Category Cards Row - Enhanced with better hover and selection */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            {/* Category Cards Row - Compact with better hover and selection */}
+            <div className="grid grid-cols-3 lg:grid-cols-5 gap-2">
               {categories.map((cat) => {
                 const isActive = categoryFilter.includes(cat.name);
                 return (
@@ -324,21 +320,21 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                         setCategoryFilter([...categoryFilter, cat.name]);
                       }
                     }}
-                    className={`rounded-lg border p-3 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg ${
+                    className={`rounded-md border p-2 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg ${
                       isActive
                         ? `ring-2 ring-primary ring-offset-1 ${cat.bg} ${cat.border} shadow-md`
                         : "bg-white hover:bg-gray-50"
                     }`}
                   >
-                    <div className={`text-2xl font-bold ${cat.color} truncate`}>
+                    <div className={`text-lg font-bold ${cat.color} truncate`}>
                       {categoryCounts[cat.name]}
                     </div>
-                    <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
+                    <div className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">
                       {cat.name}
                     </div>
                     {isActive && (
                       <div className="mt-1">
-                        <Badge variant="default" className="text-[9px] h-4 px-1">
+                        <Badge variant="default" className="text-[8px] h-3 px-1">
                           Active
                         </Badge>
                       </div>
@@ -348,29 +344,29 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
               })}
             </div>
 
-            {/* Status Cards Row + Total Card - Enhanced */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Status Cards Row + Total Card - Compact */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
               {statuses.map((stat) => {
                 const isActive = statusFilter === stat.id;
                 return (
                   <div
                     key={stat.id}
                     onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
-                    className={`rounded-lg border p-3 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg ${
+                    className={`rounded-md border p-2 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg ${
                       isActive
                         ? `ring-2 ring-primary ring-offset-1 ${stat.bg} ${stat.border} shadow-md`
                         : "bg-white hover:bg-gray-50"
                     }`}
                   >
-                    <div className={`text-2xl font-bold ${stat.color} truncate`}>
+                    <div className={`text-lg font-bold ${stat.color} truncate`}>
                       {statusCounts[stat.id]}
                     </div>
-                    <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
+                    <div className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide">
                       {stat.label}
                     </div>
                     {isActive && (
                       <div className="mt-1">
-                        <Badge variant="default" className="text-[9px] h-4 px-1">
+                        <Badge variant="default" className="text-[8px] h-3 px-1">
                           Active
                         </Badge>
                       </div>
@@ -379,7 +375,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                 );
               })}
 
-              {/* Active Filters Card with Total */}
+              {/* Active Filters Card with Total and Results Count */}
               <div
                 onClick={() => {
                   setCategoryFilter([]);
@@ -388,7 +384,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   setYearFilter("all");
                   setMonthFilter("all");
                 }}
-                className={`rounded-lg border p-3 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg ${
+                className={`rounded-md border p-2 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-lg ${
                   categoryFilter.length === 0 && 
                   statusFilter === "__all" && 
                   globalFilter === "" && 
@@ -399,18 +395,21 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                 }`}
               >
                 <div className="space-y-1">
-                  <div className="text-xl font-bold text-gray-700">
+                  <div className="text-lg font-bold text-gray-700">
                     ₱{filteredTotalValue.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
                   </div>
-                  <div className="text-xs font-medium text-gray-600 truncate">
+                  <div className="text-[10px] font-medium text-gray-600 truncate">
                     {activeFiltersLabel}
                   </div>
+                  <div className="text-[9px] text-blue-600 font-semibold">
+                    {filteredData.length} {filteredData.length === 1 ? 'result' : 'results'}
+                  </div>
                 </div>
-                <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide mt-1">
-                  Total & Active Filters
+                <div className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wide mt-1">
+                  Total & Results
                 </div>
                 {(categoryFilter.length > 0 || 
                   statusFilter !== "__all" || 
@@ -418,7 +417,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   yearFilter !== "all" || 
                   monthFilter !== "all") && (
                   <div className="mt-1">
-                    <Badge variant="secondary" className="text-[9px] h-4 px-1">
+                    <Badge variant="secondary" className="text-[8px] h-3 px-1">
                       Click to Clear
                     </Badge>
                   </div>
@@ -426,23 +425,23 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
               </div>
             </div>
 
-            {/* Header with Search, Date Filters, and Result Count */}
-            <div className="flex flex-wrap items-end justify-between gap-4 pt-2 pb-1 border-b">
-              <div className="flex flex-wrap items-center gap-3">
+            {/* Header with Search and Date Filters */}
+            <div className="flex flex-wrap items-end justify-between gap-3 pt-2 pb-1 border-b">
+              <div className="flex flex-wrap items-center gap-2">
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Search</span>
+                  <span className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Search</span>
                   <Input
                     placeholder="Search client, charge slip..."
                     value={globalFilter}
                     onChange={(e) => setGlobalFilter(e.target.value)}
-                    className="w-72 h-9"
+                    className="w-64 h-8 text-sm"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Year</span>
+                  <span className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Year</span>
                   <Select value={yearFilter} onValueChange={setYearFilter}>
-                    <SelectTrigger className="w-[110px] h-9">
+                    <SelectTrigger className="w-[100px] h-8 text-sm">
                       <SelectValue placeholder="All Years" />
                     </SelectTrigger>
                     <SelectContent>
@@ -455,9 +454,9 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Month</span>
+                  <span className="text-[9px] font-bold uppercase text-muted-foreground ml-1">Month</span>
                   <Select value={monthFilter} onValueChange={setMonthFilter}>
-                    <SelectTrigger className="w-[130px] h-9">
+                    <SelectTrigger className="w-[120px] h-8 text-sm">
                       <SelectValue placeholder="All Months" />
                     </SelectTrigger>
                     <SelectContent>
@@ -468,29 +467,18 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                     </SelectContent>
                   </Select>
                 </div>
-
-                {/* Result Count Badge */}
-                <div className="flex items-center gap-2 ml-2">
-                  <Badge variant="outline" className="text-sm h-9 px-3">
-                    {filteredData.length} {filteredData.length === 1 ? 'result' : 'results'}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Top Pagination Controls */}
-              <div className="flex flex-col items-end gap-2">
-                <PaginationControls />
               </div>
             </div>
           </div>
         )}
       </Card>
       
-      {/* Table Header with Record Count */}
-      <div className="flex items-center justify-between py-2">
+      {/* Table Header with Record Count and Navigation */}
+      <div className="flex items-center justify-between py-1">
         <div className="text-sm text-muted-foreground">
           Showing {filteredData.length > 0 ? (pagination.pageIndex * pagination.pageSize) + 1 : 0} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)} of {filteredData.length} records
         </div>
+        <PaginationControls />
       </div>
 
       {/* Compact Table with Sticky Header */}
@@ -563,12 +551,11 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
         </div>
       </div>
 
-      {/* Bottom Record Count and Pagination */}
-      <div className="flex items-center justify-between pt-1 border-t">
+      {/* Bottom Record Summary */}
+      <div className="flex items-center justify-center pt-1 border-t">
         <div className="text-xs text-muted-foreground">
-          Showing {filteredData.length > 0 ? (pagination.pageIndex * pagination.pageSize) + 1 : 0} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)} of {filteredData.length} records
+          {filteredData.length} total record{filteredData.length !== 1 ? 's' : ''}
         </div>
-        <PaginationControls />
       </div>
     </div>
   );
