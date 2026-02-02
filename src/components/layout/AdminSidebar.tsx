@@ -42,7 +42,7 @@ const ROUTE_MODULE_MAP: Record<string, keyof RolePermissions> = {
   "/admin/roles": "roleManagement",
   "/admin/admins": "usersPermissions",
   "/admin/activity-logs": "activityLogs",
-  "/admin/backup": "databaseBackup",
+  "/admin/backup": "usersPermissions", // Backup uses same permissions as user management
 };
 
 export function AdminSidebar() {
