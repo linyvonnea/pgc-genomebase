@@ -56,6 +56,7 @@ function BackupPageContent() {
   const { adminInfo } = useAuth();
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [backupProgress, setBackupProgress] = useState(0);
   const [restoreProgress, setRestoreProgress] = useState(0);
   const [backups, setBackups] = useState<BackupItem[]>([]);
@@ -271,6 +272,119 @@ function BackupPageContent() {
     return `${minutes}m ${remainingSeconds}s`;
   };
 
+  const handleDownloadBackup = async () => {
+    setIsDownloading(true);
+    setBackupProgress(0);
+
+    try {
+      // Start progress simulation
+      const progressInterval = setInterval(() => {
+        setBackupProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + Math.random() * 10;
+        });
+      }, 500);
+
+      // Fetch backup data from API
+      const response = await fetch('/api/admin/backup/download', {
+        method: 'POST',
+      });
+
+      clearInterval(progressInterval);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.details || 'Backup download failed');
+      }
+
+      const result = await response.json();
+      setBackupProgress(100);
+
+      // Convert backup data to JSON string
+      const backupJson = JSON.stringify(result.backup, null, 2);
+      const blob = new Blob([backupJson], { type: 'application/json' });
+      
+      // Create filename with timestamp
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `firestore-backup-${timestamp}.json`;
+
+      // Try to use File System Access API for directory selection (Chrome/Edge)
+      if ('showSaveFilePicker' in window) {
+        try {
+          // @ts-ignore
+          const fileHandle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [{
+              description: 'JSON Files',
+              accept: { 'application/json': ['.json'] }
+            }]
+          });
+
+          const writable = await fileHandle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+
+          toast({
+            title: "Success",
+            description: `Backup saved successfully (${result.backup.metadata.totalDocuments} documents)`,
+            variant: "default",
+          });
+        } catch (error) {
+          if ((error as Error).name === 'AbortError') {
+            throw new Error('Save cancelled');
+          }
+          // Fallback to regular download
+          downloadFile(blob, filename);
+          
+          toast({
+            title: "Success",
+            description: `Backup downloaded successfully (${result.backup.metadata.totalDocuments} documents)`,
+            variant: "default",
+          });
+        }
+      } else {
+        // Fallback for browsers that don't support File System Access API
+        downloadFile(blob, filename);
+        
+        toast({
+          title: "Success",
+          description: `Backup downloaded successfully (${result.backup.metadata.totalDocuments} documents)`,
+          variant: "default",
+        });
+      }
+
+      // Reset progress after a delay
+      setTimeout(() => {
+        setBackupProgress(0);
+      }, 1000);
+
+    } catch (error) {
+      console.error('Backup download failed:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to download backup",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  // Helper function to trigger file download
+  const downloadFile = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Page Header */}
@@ -326,8 +440,85 @@ function BackupPageContent() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Download className="w-5 h-5 text-[#166FB5]" />
-            Create New Backup
+            Download Backup to Your Computer
           </CardTitle>
+          <CardDescription>
+            Choose where to save your database backup on your local computer
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex gap-3">
+                <FolderOpen className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-blue-900 mb-1">Save Anywhere on Your Computer</h4>
+                  <p className="text-sm text-blue-800">
+                    Click the button below to download the database backup. You'll be able to choose where 
+                    to save it on your computer (works on any browser and device).
+                  </p>
+                  <p className="text-sm text-blue-800 mt-2">
+                    <strong>Chrome/Edge users:</strong> You can select the exact folder where to save the backup.<br />
+                    <strong>Other browsers:</strong> The backup will download to your default Downloads folder.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {isDownloading && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Preparing backup for download...</span>
+                  <span>{Math.round(backupProgress)}%</span>
+                </div>
+                <div className="w-full bg-slate-200 rounded-full h-2.5">
+                  <div 
+                    className="bg-[#166FB5] h-2.5 rounded-full transition-all duration-300" 
+                    style={{ width: `${backupProgress}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+
+            <Button 
+              onClick={handleDownloadBackup}
+              disabled={isDownloading}
+              className="gap-2 bg-[#166FB5] hover:bg-[#145ca3]"
+            >
+              <Download className="w-4 h-4" />
+              {isDownloading ? 'Preparing Download...' : 'Download Backup to My Computer'}
+            </Button>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+                <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                <div>
+                  <p className="font-medium text-green-900 text-sm">Works on Any Device</p>
+                  <p className="text-xs text-green-800">Desktop, laptop, or mobile</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
+                <HardDrive className="w-5 h-5 text-purple-600 mt-0.5" />
+                <div>
+                  <p className="font-medium text-purple-900 text-sm">Save Anywhere</p>
+                  <p className="text-xs text-purple-800">Choose your preferred location</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Server Backup Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Database className="w-5 h-5 text-[#166FB5]" />
+            Server Backup (Advanced)
+          </CardTitle>
+          <CardDescription>
+            Create backup on the server for automated processes
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">

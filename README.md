@@ -1,6 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PGC GenomeBase
+
+A Next.js application for managing genomics projects, quotations, and client relationships with integrated Firestore database backup features.
+
+## Features
+
+- 🔐 Role-based access control (Superadmin, Admin, User)
+- 📊 Dashboard with real-time analytics
+- 💼 Client and project management
+- 📝 Quotation generation and tracking
+- 📈 Charge slip management
+- 💾 **Three Backup Methods:**
+  - **Download Backup** - Save to any device/browser with directory selection
+  - **Server Backup** - Create backups on Vercel server
+  - **Google Drive Auto Backup** - Scheduled incremental backups every Friday
 
 ## Getting Started
+
+### Prerequisites
+
+- Node.js 18+ installed
+- Firebase project with Firestore
+- (Optional) Google Drive API credentials for auto-backups
+
+### Environment Setup
+
+1. Copy the example environment file:
+```bash
+cp .env.example .env.local
+```
+
+2. Add your Firebase configuration to `.env.local`:
+   - Client SDK credentials (already configured)
+   - **Firebase Admin SDK credentials** (required for backup download feature)
+   
+   See [FIREBASE_ADMIN_SETUP.md](./FIREBASE_ADMIN_SETUP.md) for detailed instructions.
+
+### Development Server
 
 First, run the development server:
 
@@ -19,6 +54,45 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Database Backup Features
+
+This application includes three comprehensive backup methods:
+
+### 1. Download Backup to Your Computer ⬇️
+- **Best for:** Individual users wanting local backups
+- **Works on:** Any browser, any device (desktop, laptop, mobile)
+- **Directory Selection:** 
+  - Chrome/Edge: Choose exact folder location
+  - Other browsers: Downloads to default Downloads folder
+- **Setup Required:** Firebase Admin SDK credentials ([Setup Guide](./FIREBASE_ADMIN_SETUP.md))
+
+### 2. Server Backup (Advanced) 🖥️
+- **Best for:** Automated server-side backups
+- **Storage:** Vercel server filesystem
+- **Access:** Superadmin only
+- **Use Case:** Quick backups accessible from server
+
+### 3. Google Drive Automatic Backup 📅
+- **Best for:** Scheduled incremental backups
+- **Schedule:** Every Friday at 6:00 PM
+- **Features:** 
+  - Incremental backup (saves ~73% storage)
+  - Automatic change tracking
+  - Cloud storage integration
+- **Setup Required:** Google Drive API credentials ([Setup Guide](./GOOGLE_DRIVE_BACKUP_GUIDE.md))
+
+### Security & Permissions
+
+All backup features are **restricted to Superadmin role only** through the `databaseBackup` permission module.
+
+## Documentation
+
+- [Firebase Admin Setup](./FIREBASE_ADMIN_SETUP.md) - Configure Firebase Admin SDK for backup downloads
+- [Google Drive Backup Guide](./GOOGLE_DRIVE_BACKUP_GUIDE.md) - Set up automatic Drive backups
+- [Activity Logging Guide](./ACTIVITY_LOGGING_GUIDE.md) - Configure activity tracking
+- [Catalog Management Guide](./CATALOG_MANAGEMENT_GUIDE.md) - Manage service catalog
+- [Migration Guide](./MIGRATION_GUIDE.md) - Database migration information
 
 ## Learn More
 
