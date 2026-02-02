@@ -9,21 +9,11 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🚀 Starting Firestore backup...');
     
-    // Get directory from request body if provided
-    const body = await request.json().catch(() => ({}));
-    const customDirectory = body.directory;
-    
     // Path to backup script
     const scriptPath = path.join(process.cwd(), 'scripts', 'firestore-backup.js');
     
-    // Execute backup script with optional directory parameter
-    let command = `node "${scriptPath}"`;
-    if (customDirectory) {
-      // Pass directory as environment variable or command line argument
-      command = `node "${scriptPath}" "${customDirectory}"`;
-    }
-    
-    const { stdout, stderr } = await execAsync(command);
+    // Execute backup script
+    const { stdout, stderr } = await execAsync(`node "${scriptPath}"`);
     
     if (stderr) {
       console.error('Backup stderr:', stderr);
@@ -34,8 +24,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Backup completed successfully',
-      output: stdout,
-      directory: customDirectory || 'default'
+      output: stdout
     });
     
   } catch (error) {

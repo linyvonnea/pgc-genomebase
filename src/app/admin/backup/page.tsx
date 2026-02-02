@@ -61,8 +61,6 @@ function BackupPageContent() {
   const [backups, setBackups] = useState<BackupItem[]>([]);
   const [dbStats, setDbStats] = useState<DatabaseStats | null>(null);
   const [restoringBackupId, setRestoringBackupId] = useState<string | null>(null);
-  const [backupDirectory, setBackupDirectory] = useState("");
-  const [showDirectoryDialog, setShowDirectoryDialog] = useState(false);
   const [googleDriveStatus, setGoogleDriveStatus] = useState<any>(null);
   const { toast } = useToast();
 
@@ -115,16 +113,6 @@ function BackupPageContent() {
   };
 
   const handleCreateBackup = async () => {
-    if (!backupDirectory.trim()) {
-      toast({
-        title: "Directory Required",
-        description: "Please select a backup directory first",
-        variant: "destructive",
-      });
-      setShowDirectoryDialog(true);
-      return;
-    }
-
     setIsBackingUp(true);
     setBackupProgress(0);
 
@@ -145,13 +133,13 @@ function BackupPageContent() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ directory: backupDirectory }),
       });
 
       clearInterval(progressInterval);
 
       if (!response.ok) {
-        throw new Error('Backup failed');
+        const errorData = await response.json();
+        throw new Error(errorData.details || 'Backup failed');
       }
 
       const result = await response.json();
@@ -159,7 +147,7 @@ function BackupPageContent() {
 
       toast({
         title: "Success",
-        description: "Database backup created successfully",
+        description: `Database backup created successfully in the server backups folder`,
         variant: "default",
       });
 
@@ -173,7 +161,7 @@ function BackupPageContent() {
       console.error('Backup failed:', error);
       toast({
         title: "Error",
-        description: "Failed to create backup",
+        description: error instanceof Error ? error.message : "Failed to create backup",
         variant: "destructive",
       });
     } finally {
@@ -283,62 +271,6 @@ function BackupPageContent() {
     return `${minutes}m ${remainingSeconds}s`;
   };
 
-  const handleSelectDirectory = async () => {
-    // Check if the browser supports the File System Access API
-    if ('showDirectoryPicker' in window) {
-      try {
-        // @ts-ignore - showDirectoryPicker is not in TypeScript types yet
-        const dirHandle = await window.showDirectoryPicker({
-          mode: 'readwrite',
-        });
-        
-        // Get the directory path (name)
-        setBackupDirectory(dirHandle.name);
-        
-        toast({
-          title: "Directory Selected",
-          description: `Selected directory: ${dirHandle.name}`,
-        });
-      } catch (error) {
-        // User cancelled or error occurred
-        if ((error as Error).name !== 'AbortError') {
-          console.error('Error selecting directory:', error);
-          toast({
-            title: "Error",
-            description: "Failed to select directory. Please enter path manually.",
-            variant: "destructive",
-          });
-        }
-        // Fall back to manual input
-        setShowDirectoryDialog(true);
-      }
-    } else {
-      // Fallback to manual text input for unsupported browsers
-      toast({
-        title: "Browser Not Supported",
-        description: "Your browser doesn't support directory picker. Please enter the path manually.",
-        variant: "default",
-      });
-      setShowDirectoryDialog(true);
-    }
-  };
-
-  const handleDirectoryConfirm = () => {
-    if (backupDirectory.trim()) {
-      setShowDirectoryDialog(false);
-      toast({
-        title: "Directory Set",
-        description: `Backups will be saved to: ${backupDirectory}`,
-      });
-    } else {
-      toast({
-        title: "Error",
-        description: "Please enter a valid directory path",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <div className="p-6 space-y-6">
       {/* Page Header */}
@@ -399,37 +331,20 @@ function BackupPageContent() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <p className="text-slate-600">
-              Create a complete backup of your Firestore database including all collections and documents.
-            </p>
-            
-            {/* Directory Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="backup-directory">Backup Directory</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="backup-directory"
-                  type="text"
-                  placeholder="e.g., C:\Backups\Database or /home/user/backups"
-                  value={backupDirectory}
-                  onChange={(e) => setBackupDirectory(e.target.value)}
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleSelectDirectory}
-                  className="gap-2"
-                >
-                  <FolderOpen className="w-4 h-4" />
-                  Browse
-                </Button>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex gap-3">
+                <Database className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-medium text-blue-900 mb-1">Server-Side Backup</h4>
+                  <p className="text-sm text-blue-800">
+                    This creates a backup on the server (Vercel) in the project's backups folder. 
+                    The backup is stored in the server filesystem and is included in the list below.
+                  </p>
+                  <p className="text-sm text-blue-800 mt-2">
+                    💡 <strong>Tip:</strong> For local backups on your computer, use the CLI command: <code className="bg-blue-100 px-2 py-0.5 rounded">npm run backup</code>
+                  </p>
+                </div>
               </div>
-              {backupDirectory && (
-                <p className="text-xs text-slate-500">
-                  Backup will be saved to: {backupDirectory}
-                </p>
-              )}
             </div>
             
             {isBackingUp && (
@@ -450,19 +365,20 @@ function BackupPageContent() {
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button 
-                  disabled={isBackingUp || !backupDirectory.trim()}
+                  disabled={isBackingUp}
                   className="gap-2 bg-[#166FB5] hover:bg-[#145ca3]"
                 >
                   <Download className="w-4 h-4" />
-                  Create Backup
+                  Create Server Backup
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Create Database Backup</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will create a complete backup of your Firestore database to the selected directory. 
+                    This will create a complete backup of your Firestore database on the server. 
                     The process may take several minutes depending on your data size.
+                    The backup will be stored in the server's backups folder.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -473,6 +389,55 @@ function BackupPageContent() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Local Backup Instructions */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <HardDrive className="w-5 h-5 text-[#166FB5]" />
+            Local Computer Backup
+          </CardTitle>
+          <CardDescription>
+            Create backups directly on your local computer
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p className="text-slate-600">
+              To create backups on your local computer with a custom directory, use the command line:
+            </p>
+            
+            <div className="bg-slate-900 text-slate-100 p-4 rounded-lg font-mono text-sm">
+              <div className="space-y-2">
+                <div>
+                  <span className="text-slate-500"># Default location (project/backups folder)</span>
+                  <div className="text-green-400">npm run backup</div>
+                </div>
+                <div className="mt-4">
+                  <span className="text-slate-500"># Custom directory</span>
+                  <div className="text-green-400">node scripts/firestore-backup.js "C:\YourPath\Backups"</div>
+                </div>
+                <div className="mt-4">
+                  <span className="text-slate-500"># Mac/Linux custom directory</span>
+                  <div className="text-green-400">node scripts/firestore-backup.js "/home/user/backups"</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-amber-900 mb-1">Note:</p>
+                <p className="text-amber-800">
+                  Local backups require Node.js and Firebase Admin SDK credentials on your computer. 
+                  Ensure you have the <code className="bg-amber-100 px-1 rounded">serviceAccountKey.json</code> file 
+                  in the scripts folder.
+                </p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -601,38 +566,6 @@ function BackupPageContent() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Directory Selection Dialog */}
-      <AlertDialog open={showDirectoryDialog} onOpenChange={setShowDirectoryDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Select Backup Directory</AlertDialogTitle>
-            <AlertDialogDescription>
-              Enter the full path where you want to save the database backup.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="py-4">
-            <Label htmlFor="directory-input">Directory Path</Label>
-            <Input
-              id="directory-input"
-              type="text"
-              placeholder="e.g., C:\Backups\Database or /home/user/backups"
-              value={backupDirectory}
-              onChange={(e) => setBackupDirectory(e.target.value)}
-              className="mt-2"
-            />
-            <p className="text-xs text-slate-500 mt-2">
-              Examples: <code>C:\Users\YourName\Documents\Backups</code> (Windows) or <code>/home/user/backups</code> (Mac/Linux)
-            </p>
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDirectoryConfirm}>
-              Set Directory
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Existing Backups Section */}
       <Card>
