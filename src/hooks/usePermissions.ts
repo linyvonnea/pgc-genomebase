@@ -73,6 +73,8 @@ export function usePermissions(userRole: UserRole | undefined) {
     action: keyof RolePermissions[keyof RolePermissions]
   ): boolean => {
     if (!permissions) return false;
+    // Safeguard: check if module exists in permissions
+    if (!permissions[module]) return false;
     return permissions[module][action];
   };
 
