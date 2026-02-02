@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, lazy, ComponentType } from "react";
+import React, { Suspense, ComponentType, useMemo } from "react";
 import { useTabContext } from "@/contexts/TabContext";
 import { cn } from "@/lib/utils";
 
@@ -16,8 +16,19 @@ function ModuleLoading() {
   );
 }
 
-// Module component cache - keeps components mounted
-const moduleCache = new Map<string, React.ReactNode>();
+// Create a wrapper component that preserves state
+function PreservedComponent({ Component, isVisible }: { Component: ComponentType; isVisible: boolean }) {
+  return (
+    <div className={cn(
+      "absolute inset-0 overflow-auto",
+      isVisible ? "visible z-10" : "invisible z-0 pointer-events-none"
+    )}>
+      <Suspense fallback={<ModuleLoading />}>
+        <Component />
+      </Suspense>
+    </div>
+  );
+}
 
 interface TabContentProps {
   moduleComponents: Record<string, ComponentType>;
@@ -38,26 +49,25 @@ export function TabContent({ moduleComponents, className }: TabContentProps) {
     );
   }
 
+  // Memoize components to preserve their state
+  const preservedComponents = useMemo(() => {
+    return tabs.map((tab) => {
+      const Component = moduleComponents[tab.id];
+      if (!Component) return null;
+      
+      return (
+        <PreservedComponent
+          key={tab.id}
+          Component={Component}
+          isVisible={activeTab === tab.id}
+        />
+      );
+    });
+  }, [tabs.map(t => t.id).join(','), moduleComponents, activeTab]);
+
   return (
     <div className={cn("relative h-full", className)}>
-      {tabs.map((tab) => {
-        const Component = moduleComponents[tab.id];
-        if (!Component) return null;
-
-        return (
-          <div
-            key={tab.id}
-            className={cn(
-              "absolute inset-0 overflow-auto",
-              activeTab === tab.id ? "visible z-10" : "invisible z-0"
-            )}
-          >
-            <Suspense fallback={<ModuleLoading />}>
-              <Component />
-            </Suspense>
-          </div>
-        );
-      })}
+      {preservedComponents}
     </div>
   );
 }
