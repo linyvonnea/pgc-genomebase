@@ -346,7 +346,7 @@ export function DataTable<TData, TValue>({
                     }`}
                   >
                     <div className="space-y-1">
-                      <div className="text-sm text-primary font-bold uppercase tracking-wide">
+                      <div className="text-[13px] text-primary font-medium uppercase tracking-wide">
                         Summary
                       </div>
                       <div className="text-lg font-bold text-gray-800">
