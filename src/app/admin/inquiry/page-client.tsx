@@ -17,19 +17,18 @@ export function InquiryPageClient({ data }: InquiryPageClientProps) {
 
   return (
     <div className="container mx-auto py-4 space-y-3">
-      <div className="space-y-3">
+      <div className="space-y-1">
         {/* Page Header */}
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Inquiry Management</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl font-semibold tracking-tight">Inquiry Management</h1>
+            <p className="text-sm text-muted-foreground">
               Manage and review research inquiries with advanced filtering and overview.
             </p>
           </div>
           {/* Add new inquiry button - only show if user has create permission */}
           {canCreate("inquiries") && <AddInquiryModal />}
         </div>
-        
         {/* Enhanced Data Table with Filters & Overview */}
         <DataTable columns={columns} data={data} />
       </div>

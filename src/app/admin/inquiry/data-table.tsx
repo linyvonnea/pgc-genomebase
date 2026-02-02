@@ -172,6 +172,18 @@ export function DataTable<TData, TValue>({
     table.getColumn("status")?.setFilterValue(undefined)
   }
 
+  // Filter summary label (Laboratory+2026+January style)
+  const filterSummaryLabel = useMemo(() => {
+    const filters = [];
+    if (activeStatusFilter) filters.push(activeStatusFilter);
+    if (selectedYear) filters.push(selectedYear);
+    if (selectedMonth) {
+      const m = monthOptions.find(m => m.value === selectedMonth);
+      if (m) filters.push(m.label);
+    }
+    return filters.length > 0 ? filters.join("+") : "All";
+  }, [activeStatusFilter, selectedYear, selectedMonth, monthOptions]);
+
   const activeFiltersCount = [
     activeStatusFilter,
     selectedYear,
@@ -347,11 +359,8 @@ export function DataTable<TData, TValue>({
                         {filteredRows.length} {filteredRows.length === 1 ? 'inquiry' : 'inquiries'}
                       </div>
                       <div className="flex items-center justify-between gap-2 pt-0.5">
-                        <div className="text-xs text-blue-600 font-semibold">
-                          {filteredRows.length} {filteredRows.length === 1 ? 'result' : 'results'}
-                        </div>
                         <div className="text-[10px] font-medium text-gray-500 truncate">
-                          {activeFiltersCount > 0 ? `${activeFiltersCount} filter${activeFiltersCount > 1 ? 's' : ''}` : 'All'}
+                          {filterSummaryLabel}
                         </div>
                       </div>
                     </div>
@@ -369,47 +378,60 @@ export function DataTable<TData, TValue>({
           Showing {filteredRows.length > 0 ? (table.getState().pagination.pageIndex * table.getState().pagination.pageSize) + 1 : 0} - {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, filteredRows.length)} of {filteredRows.length} records
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
-            <Select
-              value={table.getState().pagination.pageSize.toString()}
-              onValueChange={(value) => table.setPageSize(Number(value))}
-            >
-              <SelectTrigger className="w-[70px] h-8">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="10">10</SelectItem>
-                <SelectItem value="20">20</SelectItem>
-                <SelectItem value="50">50</SelectItem>
-                <SelectItem value="100">100</SelectItem>
-              </SelectContent>
-            </Select>
+          <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
+          <Select
+            value={table.getState().pagination.pageSize.toString()}
+            onValueChange={(value) => table.setPageSize(Number(value))}
+          >
+            <SelectTrigger className="w-[70px] h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => table.setPageIndex(0)}
+            disabled={!table.getCanPreviousPage()}
+          >
+            &laquo;
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 px-2"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Prev
+          </Button>
+          <div className="flex items-center justify-center min-w-[80px] text-sm font-medium">
+            {table.getState().pagination.pageIndex + 1} / {table.getPageCount() || 1}
           </div>
-
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 px-2"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              Prev
-            </Button>
-            <div className="flex items-center justify-center min-w-[80px] text-sm font-medium">
-              {table.getState().pagination.pageIndex + 1} / {table.getPageCount() || 1}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 px-2"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              Next
-            </Button>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 px-2"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+            disabled={!table.getCanNextPage()}
+          >
+            &raquo;
+          </Button>
         </div>
       </div>
 
