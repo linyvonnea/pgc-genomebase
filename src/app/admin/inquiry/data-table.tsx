@@ -207,7 +207,7 @@ export function DataTable<TData, TValue>({
           <div className="p-2.5 space-y-2.5">
             {/* Status Cards Section */}
             <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Status Categories</h4>
+              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">PROCESSING STATUS</h4>
               <div className="grid grid-cols-3 gap-2">
                 <div
                   onClick={() =>
@@ -359,8 +359,9 @@ export function DataTable<TData, TValue>({
                         {filteredRows.length} {filteredRows.length === 1 ? 'inquiry' : 'inquiries'}
                       </div>
                       <div className="flex items-center justify-between gap-2 pt-0.5">
-                        <div className="text-[10px] font-medium text-gray-500 truncate">
-                          {filterSummaryLabel}
+                        <div />
+                        <div className="text-[10px] font-medium text-gray-500 truncate text-right w-full">
+                          {filterSummaryLabel !== 'All' ? filterSummaryLabel : 'none'}
                         </div>
                       </div>
                     </div>
