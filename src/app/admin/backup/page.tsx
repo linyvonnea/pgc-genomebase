@@ -102,9 +102,6 @@ export default function BackupPage() {
 
       const response = await fetch('/api/admin/backup', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
       });
 
       clearInterval(progressInterval);
