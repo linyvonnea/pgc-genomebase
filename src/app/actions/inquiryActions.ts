@@ -99,7 +99,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     // Create email document for Firebase Trigger Email extension
     // This document in the 'mail' collection triggers the email sending
     const emailData = {
-      to: ["dbduran@up.edu.ph"], // Admin email address that receives all inquiries
+      to: ["madayon1@up.edu.ph"], // Admin email address that receives all inquiries
       template: {
         name: templateId,       // Template name for service-specific formatting
         data: templateData      // All the inquiry data for email content
