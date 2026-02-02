@@ -4,8 +4,6 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { 
   Download, 
@@ -220,6 +218,7 @@ export default function BackupPage() {
         description: "Failed to delete backup",
         variant: "destructive",
       });
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -236,44 +235,6 @@ export default function BackupPage() {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.round(seconds % 60);
     return `${minutes}m ${remainingSeconds}s`;
-  };
-      }, 300);
-
-      // TODO: Call actual restore API
-      // const response = await fetch('/api/admin/restore', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ backupId }),
-      // });
-      
-    } catch (error) {
-      console.error('Restore failed:', error);
-      setIsRestoring(false);
-    }
-  };
-
-  const handleDeleteBackup = async (backupId: string) => {
-    setBackups(prev => prev.filter(backup => backup.id !== backupId));
-    // TODO: Call actual delete API
-  };
-
-  const formatDate = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString();
-  };
-
-  const getTimeAgo = (timestamp: string) => {
-    const now = new Date();
-    const date = new Date(timestamp);
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffDays > 0) {
-      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-    } else if (diffHours > 0) {
-      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    } else {
-      return 'Just now';
-    }
   };
 
   return (
@@ -346,7 +307,12 @@ export default function BackupPage() {
                   <span>Creating backup...</span>
                   <span>{Math.round(backupProgress)}%</span>
                 </div>
-                <Progress value={backupProgress} className="w-full" />
+                <div className="w-full bg-slate-200 rounded-full h-2.5">
+                  <div 
+                    className="bg-[#166FB5] h-2.5 rounded-full transition-all duration-300" 
+                    style={{ width: `${backupProgress}%` }}
+                  ></div>
+                </div>
               </div>
             )}
 
@@ -531,13 +497,18 @@ export default function BackupPage() {
                 <span>Progress</span>
                 <span className="text-slate-500">{restoreProgress}%</span>
               </div>
-              <Progress value={restoreProgress} className="h-2" />
-              <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
+              <div className="w-full bg-slate-200 rounded-full h-2">
+                <div 
+                  className="bg-[#166FB5] h-2 rounded-full transition-all duration-300" 
+                  style={{ width: `${restoreProgress}%` }}
+                ></div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-yellow-800">
                   Please do not close this page or navigate away during the restore process.
-                </AlertDescription>
-              </Alert>
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
