@@ -2,6 +2,8 @@
 "use client";
 
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
+import { TabBar } from "@/components/layout/TabBar";
+import { TabProvider } from "@/contexts/TabContext";
 import { Toaster } from "@/components/ui/sonner";
 import useAuth from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
@@ -42,14 +44,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="flex h-screen">
-      <AdminSidebar />
-      <main className="flex-1 overflow-auto bg-gradient-to-br from-slate-50/30 via-blue-50/20 to-indigo-50/30">
-        <div className="p-6 lg:p-8">
-          {children}
+    <TabProvider>
+      <div className="flex h-screen">
+        <AdminSidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Tab Bar */}
+          <TabBar />
+          {/* Main Content Area */}
+          <main className="flex-1 overflow-auto bg-gradient-to-br from-slate-50/30 via-blue-50/20 to-indigo-50/30">
+            <div className="p-6 lg:p-8">
+              {children}
+            </div>
+          </main>
         </div>
-      </main>
-      <Toaster />
-    </div>
+        <Toaster />
+      </div>
+    </TabProvider>
   );
 }
