@@ -446,7 +446,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                     }`}
                   >
                     <div className="space-y-1">
-                      <div className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wide">
+                      <div className="text-sm text-primary font-bold uppercase tracking-wide">
                         Summary
                       </div>
                       <div className="text-lg font-bold text-gray-800">
