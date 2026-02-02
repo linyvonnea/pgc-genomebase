@@ -19,7 +19,9 @@ import {
   Clock,
   HardDrive,
   RefreshCw,
-  FolderOpen
+  FolderOpen,
+  Cloud,
+  Settings
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from '@/hooks/use-toast';
@@ -61,12 +63,14 @@ function BackupPageContent() {
   const [restoringBackupId, setRestoringBackupId] = useState<string | null>(null);
   const [backupDirectory, setBackupDirectory] = useState("");
   const [showDirectoryDialog, setShowDirectoryDialog] = useState(false);
+  const [googleDriveStatus, setGoogleDriveStatus] = useState<any>(null);
   const { toast } = useToast();
 
   // Load existing backups and database stats on component mount
   useEffect(() => {
     loadBackups();
     loadDatabaseStats();
+    loadGoogleDriveStatus();
   }, []);
 
   const loadBackups = async () => {
@@ -95,6 +99,18 @@ function BackupPageContent() {
       }
     } catch (error) {
       console.error('Failed to load database stats:', error);
+    }
+  };
+
+  const loadGoogleDriveStatus = async () => {
+    try {
+      const response = await fetch('/api/admin/backup/scheduled');
+      if (response.ok) {
+        const data = await response.json();
+        setGoogleDriveStatus(data);
+      }
+    } catch (error) {
+      console.error('Failed to load Google Drive status:', error);
     }
   };
 
@@ -267,10 +283,44 @@ function BackupPageContent() {
     return `${minutes}m ${remainingSeconds}s`;
   };
 
-  const handleSelectDirectory = () => {
-    // For now, we'll use a simple text input
-    // In a real implementation, you might want to use a file picker dialog
-    setShowDirectoryDialog(true);
+  const handleSelectDirectory = async () => {
+    // Check if the browser supports the File System Access API
+    if ('showDirectoryPicker' in window) {
+      try {
+        // @ts-ignore - showDirectoryPicker is not in TypeScript types yet
+        const dirHandle = await window.showDirectoryPicker({
+          mode: 'readwrite',
+        });
+        
+        // Get the directory path (name)
+        setBackupDirectory(dirHandle.name);
+        
+        toast({
+          title: "Directory Selected",
+          description: `Selected directory: ${dirHandle.name}`,
+        });
+      } catch (error) {
+        // User cancelled or error occurred
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Error selecting directory:', error);
+          toast({
+            title: "Error",
+            description: "Failed to select directory. Please enter path manually.",
+            variant: "destructive",
+          });
+        }
+        // Fall back to manual input
+        setShowDirectoryDialog(true);
+      }
+    } else {
+      // Fallback to manual text input for unsupported browsers
+      toast({
+        title: "Browser Not Supported",
+        description: "Your browser doesn't support directory picker. Please enter the path manually.",
+        variant: "default",
+      });
+      setShowDirectoryDialog(true);
+    }
   };
 
   const handleDirectoryConfirm = () => {
@@ -423,6 +473,131 @@ function BackupPageContent() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Google Drive Automatic Backup Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Cloud className="w-5 h-5 text-[#166FB5]" />
+            Google Drive Automatic Backup
+          </CardTitle>
+          <CardDescription>
+            Automatic incremental backups to Google Drive every Friday
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Status */}
+            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Settings className="w-5 h-5 text-slate-600" />
+                <div>
+                  <p className="font-medium text-slate-900">Backup Schedule</p>
+                  <p className="text-sm text-slate-600">Every Friday at 6:00 PM (Server Time)</p>
+                </div>
+              </div>
+              <Badge variant={googleDriveStatus?.configured ? "default" : "secondary"}>
+                {googleDriveStatus?.configured ? "Configured" : "Not Configured"}
+              </Badge>
+            </div>
+
+            {/* Last Backup Info */}
+            {googleDriveStatus?.lastBackup && (
+              <div className="p-4 border border-slate-200 rounded-lg">
+                <h4 className="font-medium text-slate-900 mb-2">Last Backup</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-slate-600">Date:</span>
+                    <p className="font-medium">{new Date(googleDriveStatus.lastBackup.timestamp).toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <span className="text-slate-600">Documents Changed:</span>
+                    <p className="font-medium">{googleDriveStatus.lastBackup.changedDocuments}</p>
+                  </div>
+                  <div>
+                    <span className="text-slate-600">Type:</span>
+                    <p className="font-medium">{googleDriveStatus.lastBackup.isIncremental ? "Incremental" : "Full"}</p>
+                  </div>
+                  <div>
+                    <span className="text-slate-600">Collections:</span>
+                    <p className="font-medium">{googleDriveStatus.lastBackup.collections?.length || 0}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Configuration Status */}
+            {!googleDriveStatus?.configured && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex gap-3">
+                  <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium text-yellow-900 mb-1">Setup Required</h4>
+                    <p className="text-sm text-yellow-800 mb-3">
+                      To enable automatic backups to Google Drive, you need to configure the following environment variables:
+                    </p>
+                    <ul className="text-sm text-yellow-800 space-y-1 list-disc list-inside">
+                      <li><code className="bg-yellow-100 px-1 rounded">GOOGLE_SERVICE_ACCOUNT_EMAIL</code></li>
+                      <li><code className="bg-yellow-100 px-1 rounded">GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY</code></li>
+                      <li><code className="bg-yellow-100 px-1 rounded">GOOGLE_DRIVE_BACKUP_FOLDER_ID</code> (optional)</li>
+                      <li><code className="bg-yellow-100 px-1 rounded">CRON_SECRET</code> (optional, for security)</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Features */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg">
+                <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+                <div>
+                  <p className="font-medium text-blue-900">Incremental Backups</p>
+                  <p className="text-sm text-blue-800">Only backs up changed documents to save space</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
+                <Calendar className="w-5 h-5 text-green-600 mt-0.5" />
+                <div>
+                  <p className="font-medium text-green-900">Weekly Schedule</p>
+                  <p className="text-sm text-green-800">Automatically runs every Friday</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
+                <Cloud className="w-5 h-5 text-purple-600 mt-0.5" />
+                <div>
+                  <p className="font-medium text-purple-900">Cloud Storage</p>
+                  <p className="text-sm text-purple-800">Secure backups stored in Google Drive</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 p-3 bg-orange-50 rounded-lg">
+                <Clock className="w-5 h-5 text-orange-600 mt-0.5" />
+                <div>
+                  <p className="font-medium text-orange-900">Automated</p>
+                  <p className="text-sm text-orange-800">No manual intervention required</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Test Backup Button */}
+            {googleDriveStatus?.configured && (
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  toast({
+                    title: "Test Backup",
+                    description: "This feature will be available in the admin panel. Check the setup guide for manual testing.",
+                  });
+                }}
+                className="gap-2"
+              >
+                <Cloud className="w-4 h-4" />
+                Test Backup Now
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
