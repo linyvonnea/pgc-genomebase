@@ -290,30 +290,47 @@ function BackupPageContent() {
       }, 300);
 
       // Fetch backup data from API
+      console.log('📡 Fetching backup data from server...');
       const response = await fetch('/api/admin/backup/download', {
         method: 'POST',
       });
 
       clearInterval(progressInterval);
 
+      console.log('📡 Response status:', response.status);
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.details || errorData.error || 'Backup download failed');
+        console.error('❌ Backup failed:', errorData);
+        const errorMessage = errorData.details || errorData.error || 'Backup download failed';
+        
+        // Show setup instructions if credentials are missing
+        if (errorMessage.includes('credentials') || errorMessage.includes('not configured')) {
+          throw new Error('Firebase Admin not configured. Please add FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY to your environment variables. See FIREBASE_ADMIN_SETUP.md for instructions.');
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
+      console.log('✅ Backup data received:', result.backup?.metadata);
       setDownloadProgress(100);
 
       // Convert backup data to JSON string
+      console.log('📦 Creating backup file...');
       const backupJson = JSON.stringify(result.backup, null, 2);
       const blob = new Blob([backupJson], { type: 'application/json' });
+      const fileSizeMB = (blob.size / (1024 * 1024)).toFixed(2);
+      console.log(`📦 Backup size: ${fileSizeMB} MB`);
       
       // Create filename with timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const filename = `firestore-backup-${timestamp}.json`;
 
       // Try to use File System Access API for directory selection (Chrome/Edge)
+      console.log('💾 Opening save dialog...');
       if ('showSaveFilePicker' in window) {
+        console.log('✅ Browser supports File System Access API');
         try {
           // @ts-ignore
           const fileHandle = await window.showSaveFilePicker({
@@ -324,35 +341,41 @@ function BackupPageContent() {
             }]
           });
 
+          console.log('💾 User selected location, writing file...');
           const writable = await fileHandle.createWritable();
           await writable.write(blob);
           await writable.close();
+          console.log('✅ File saved successfully!');
 
           toast({
             title: "Success",
-            description: `Backup saved successfully (${result.backup.metadata.totalDocuments} documents)`,
+            description: `Backup saved successfully (${result.backup.metadata.totalDocuments} documents, ${fileSizeMB} MB)`,
             variant: "default",
           });
         } catch (error) {
           if ((error as Error).name === 'AbortError') {
+            console.log('⚠️ User cancelled save dialog');
             throw new Error('Save cancelled');
           }
+          console.error('❌ File picker error:', error);
           // Fallback to regular download
+          console.log('⚠️ Falling back to standard download');
           downloadFile(blob, filename);
           
           toast({
             title: "Success",
-            description: `Backup downloaded successfully (${result.backup.metadata.totalDocuments} documents)`,
+            description: `Backup downloaded successfully (${result.backup.metadata.totalDocuments} documents, ${fileSizeMB} MB)`,
             variant: "default",
           });
         }
       } else {
         // Fallback for browsers that don't support File System Access API
+        console.log('⚠️ Browser does not support File System Access API, using standard download');
         downloadFile(blob, filename);
         
         toast({
           title: "Success",
-          description: `Backup downloaded successfully (${result.backup.metadata.totalDocuments} documents)`,
+          description: `Backup downloaded to Downloads folder (${result.backup.metadata.totalDocuments} documents, ${fileSizeMB} MB)`,
           variant: "default",
         });
       }
@@ -450,6 +473,30 @@ function BackupPageContent() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            {/* Setup Instructions Banner */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="font-medium text-amber-900 mb-1">Setup Required</h4>
+                  <p className="text-sm text-amber-800 mb-2">
+                    To use this feature, you need to configure Firebase Admin SDK credentials first.
+                  </p>
+                  <div className="text-sm text-amber-800 bg-amber-100 rounded p-2 font-mono">
+                    <strong>Quick Setup:</strong><br />
+                    1. Get credentials from Firebase Console<br />
+                    2. Add to .env.local file:<br />
+                    &nbsp;&nbsp;• FIREBASE_CLIENT_EMAIL<br />
+                    &nbsp;&nbsp;• FIREBASE_PRIVATE_KEY<br />
+                    3. Restart server: npm run dev
+                  </div>
+                  <p className="text-xs text-amber-700 mt-2">
+                    📖 See <strong>QUICK_START.md</strong> or <strong>FIREBASE_ADMIN_SETUP.md</strong> for detailed instructions.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex gap-3">
                 <FolderOpen className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
