@@ -13,9 +13,18 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-// Create backup directory with timestamp
+// Get custom directory from command line arguments or use default
+const customDir = process.argv[2];
 const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-const backupDir = path.join(__dirname, '..', 'backups', `firestore-backup-${timestamp}`);
+
+let backupDir;
+if (customDir) {
+  // Use custom directory if provided
+  backupDir = path.join(customDir, `firestore-backup-${timestamp}`);
+} else {
+  // Default to project backups folder
+  backupDir = path.join(__dirname, '..', 'backups', `firestore-backup-${timestamp}`);
+}
 
 if (!fs.existsSync(backupDir)) {
   fs.mkdirSync(backupDir, { recursive: true });

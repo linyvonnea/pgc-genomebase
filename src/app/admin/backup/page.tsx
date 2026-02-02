@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { 
   Download, 
@@ -16,10 +18,13 @@ import {
   CheckCircle,
   Clock,
   HardDrive,
-  RefreshCw
+  RefreshCw,
+  FolderOpen
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from '@/hooks/use-toast';
+import { PermissionGuard } from "@/components/PermissionGuard";
+import useAuth from "@/hooks/useAuth";
 
 interface BackupItem {
   id: string;
@@ -38,6 +43,15 @@ interface DatabaseStats {
 }
 
 export default function BackupPage() {
+  return (
+    <PermissionGuard module="databaseBackup" action="view">
+      <BackupPageContent />
+    </PermissionGuard>
+  );
+}
+
+function BackupPageContent() {
+  const { adminInfo } = useAuth();
   const [isBackingUp, setIsBackingUp] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [backupProgress, setBackupProgress] = useState(0);
@@ -45,6 +59,8 @@ export default function BackupPage() {
   const [backups, setBackups] = useState<BackupItem[]>([]);
   const [dbStats, setDbStats] = useState<DatabaseStats | null>(null);
   const [restoringBackupId, setRestoringBackupId] = useState<string | null>(null);
+  const [backupDirectory, setBackupDirectory] = useState("");
+  const [showDirectoryDialog, setShowDirectoryDialog] = useState(false);
   const { toast } = useToast();
 
   // Load existing backups and database stats on component mount
@@ -83,6 +99,16 @@ export default function BackupPage() {
   };
 
   const handleCreateBackup = async () => {
+    if (!backupDirectory.trim()) {
+      toast({
+        title: "Directory Required",
+        description: "Please select a backup directory first",
+        variant: "destructive",
+      });
+      setShowDirectoryDialog(true);
+      return;
+    }
+
     setIsBackingUp(true);
     setBackupProgress(0);
 
@@ -100,6 +126,10 @@ export default function BackupPage() {
 
       const response = await fetch('/api/admin/backup', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ directory: backupDirectory }),
       });
 
       clearInterval(progressInterval);
@@ -237,6 +267,28 @@ export default function BackupPage() {
     return `${minutes}m ${remainingSeconds}s`;
   };
 
+  const handleSelectDirectory = () => {
+    // For now, we'll use a simple text input
+    // In a real implementation, you might want to use a file picker dialog
+    setShowDirectoryDialog(true);
+  };
+
+  const handleDirectoryConfirm = () => {
+    if (backupDirectory.trim()) {
+      setShowDirectoryDialog(false);
+      toast({
+        title: "Directory Set",
+        description: `Backups will be saved to: ${backupDirectory}`,
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Please enter a valid directory path",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Page Header */}
@@ -301,6 +353,35 @@ export default function BackupPage() {
               Create a complete backup of your Firestore database including all collections and documents.
             </p>
             
+            {/* Directory Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="backup-directory">Backup Directory</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="backup-directory"
+                  type="text"
+                  placeholder="e.g., C:\Backups\Database or /home/user/backups"
+                  value={backupDirectory}
+                  onChange={(e) => setBackupDirectory(e.target.value)}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleSelectDirectory}
+                  className="gap-2"
+                >
+                  <FolderOpen className="w-4 h-4" />
+                  Browse
+                </Button>
+              </div>
+              {backupDirectory && (
+                <p className="text-xs text-slate-500">
+                  Backup will be saved to: {backupDirectory}
+                </p>
+              )}
+            </div>
+            
             {isBackingUp && (
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
@@ -319,7 +400,7 @@ export default function BackupPage() {
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button 
-                  disabled={isBackingUp}
+                  disabled={isBackingUp || !backupDirectory.trim()}
                   className="gap-2 bg-[#166FB5] hover:bg-[#145ca3]"
                 >
                   <Download className="w-4 h-4" />
@@ -330,7 +411,7 @@ export default function BackupPage() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Create Database Backup</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will create a complete backup of your Firestore database. 
+                    This will create a complete backup of your Firestore database to the selected directory. 
                     The process may take several minutes depending on your data size.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -345,6 +426,38 @@ export default function BackupPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Directory Selection Dialog */}
+      <AlertDialog open={showDirectoryDialog} onOpenChange={setShowDirectoryDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Select Backup Directory</AlertDialogTitle>
+            <AlertDialogDescription>
+              Enter the full path where you want to save the database backup.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Label htmlFor="directory-input">Directory Path</Label>
+            <Input
+              id="directory-input"
+              type="text"
+              placeholder="e.g., C:\Backups\Database or /home/user/backups"
+              value={backupDirectory}
+              onChange={(e) => setBackupDirectory(e.target.value)}
+              className="mt-2"
+            />
+            <p className="text-xs text-slate-500 mt-2">
+              Examples: <code>C:\Users\YourName\Documents\Backups</code> (Windows) or <code>/home/user/backups</code> (Mac/Linux)
+            </p>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDirectoryConfirm}>
+              Set Directory
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Existing Backups Section */}
       <Card>
