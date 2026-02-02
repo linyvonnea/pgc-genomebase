@@ -1,8 +1,8 @@
 // AdminSidebar.tsx
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import React from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import {
   LayoutDashboard,
@@ -24,6 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useTabContext } from "@/contexts/TabContext";
 import type { RolePermissions } from "@/types/Permissions";
 
 // Map routes to permission modules
@@ -44,10 +45,27 @@ const ROUTE_MODULE_MAP: Record<string, keyof RolePermissions> = {
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, signOut, adminInfo } = useAuth();
   const { canView, loading: permissionsLoading } = usePermissions(adminInfo?.role);
+  const { openTab, activeTab, isTabOpen } = useTabContext();
 
-  const isActive = (href: string) => pathname === href;
+  const handleNavClick = (href: string, label: string, icon: React.ElementType) => {
+    const tabId = href.replace("/admin/", "");
+    openTab({
+      id: tabId,
+      label,
+      path: href,
+      icon,
+      closable: true,
+    });
+    router.push(href);
+  };
+
+  const isActive = (href: string) => {
+    const tabId = href.replace("/admin/", "");
+    return activeTab === tabId;
+  };
 
   // Navigation sections with grouped items
   const navigationSections = [
@@ -173,19 +191,24 @@ export function AdminSidebar() {
               {/* Section Items */}
               <div className="space-y-1">
                 {section.items.map(({ href, label, icon: Icon }) => (
-                  <Link key={href} href={href}>
-                    <div
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
-                        isActive(href)
-                          ? "bg-[#166FB5] text-white"
-                          : "text-slate-700 hover:bg-slate-50"
-                      )}
-                    >
-                      <Icon className="w-4 h-4" />
-                      <span className="text-sm font-medium flex-1">{label}</span>
-                    </div>
-                  </Link>
+                  <div
+                    key={href}
+                    onClick={() => handleNavClick(href, label, Icon)}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer",
+                      isActive(href)
+                        ? "bg-[#166FB5] text-white"
+                        : isTabOpen(href.replace("/admin/", ""))
+                        ? "bg-slate-100 text-slate-800 border-l-2 border-[#166FB5]"
+                        : "text-slate-700 hover:bg-slate-50"
+                    )}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="text-sm font-medium flex-1">{label}</span>
+                    {isTabOpen(href.replace("/admin/", "")) && !isActive(href) && (
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#166FB5]" />
+                    )}
+                  </div>
                 ))}
               </div>
               
