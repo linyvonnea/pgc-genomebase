@@ -32,6 +32,7 @@ export interface RolePermissions {
   usersPermissions: ModulePermission;
   roleManagement: ModulePermission;
   activityLogs: ModulePermission;
+  databaseBackup: ModulePermission;
 }
 
 export const MODULE_LABELS: Record<keyof RolePermissions, string> = {
@@ -47,6 +48,7 @@ export const MODULE_LABELS: Record<keyof RolePermissions, string> = {
   usersPermissions: "Users & Permissions",
   roleManagement: "Role Management",
   activityLogs: "Activity Logs",
+  databaseBackup: "Database Backup",
 };
 
 export const MODULE_SECTIONS = {
@@ -60,7 +62,7 @@ export const MODULE_SECTIONS = {
     "manualQuotation",
   ],
   configuration: ["serviceCatalog", "catalogSettings"],
-  administration: ["usersPermissions", "roleManagement", "activityLogs"],
+  administration: ["usersPermissions", "roleManagement", "activityLogs", "databaseBackup"],
 } as const;
 
 // Default permissions for each role
@@ -78,6 +80,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     usersPermissions: { view: false, create: false, edit: false, delete: false },
     roleManagement: { view: false, create: false, edit: false, delete: false },
     activityLogs: { view: false, create: false, edit: false, delete: false },
+    databaseBackup: { view: false, create: false, edit: false, delete: false },
   },
   moderator: {
     dashboard: { view: true, create: false, edit: false, delete: false },
@@ -92,6 +95,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     usersPermissions: { view: false, create: false, edit: false, delete: false },
     roleManagement: { view: false, create: false, edit: false, delete: false },
     activityLogs: { view: false, create: false, edit: false, delete: false },
+    databaseBackup: { view: false, create: false, edit: false, delete: false },
   },
   admin: {
     dashboard: { view: true, create: false, edit: false, delete: false },
@@ -106,6 +110,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     usersPermissions: { view: false, create: false, edit: false, delete: false },
     roleManagement: { view: false, create: false, edit: false, delete: false },
     activityLogs: { view: true, create: false, edit: false, delete: false },
+    databaseBackup: { view: false, create: false, edit: false, delete: false },
   },
   superadmin: {
     dashboard: { view: true, create: false, edit: false, delete: false },
@@ -120,6 +125,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     usersPermissions: { view: true, create: true, edit: true, delete: true },
     roleManagement: { view: true, create: false, edit: true, delete: false },
     activityLogs: { view: true, create: false, edit: false, delete: true },
+    databaseBackup: { view: true, create: true, edit: true, delete: true },
   },
 };
 
