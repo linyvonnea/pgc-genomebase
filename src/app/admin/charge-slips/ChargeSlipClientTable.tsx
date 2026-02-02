@@ -384,7 +384,6 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
 
             {/* Search & Date Filters Section */}
             <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Search & Date Filters</h4>
               <div className="flex flex-wrap items-end gap-2 pb-1">
                 <div className="space-y-0.5">
                   <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Search</span>
