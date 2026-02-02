@@ -357,7 +357,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   <div
                     key={stat.id}
                     onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
-                    className={`rounded-lg border px-2 py-1 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                    className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
                       isActive
                         ? `ring-1 ring-primary ring-offset-1 ${stat.bg} ${stat.border} shadow-sm`
                         : "bg-white hover:bg-gray-50 border-gray-200"
@@ -401,7 +401,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
               >
                 <div className="space-y-1">
                   <div className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wide">
-                    Total Amount
+                    Summary
                   </div>
                   <div className="text-lg font-bold text-gray-800">
                     ₱{filteredTotalValue.toLocaleString(undefined, {

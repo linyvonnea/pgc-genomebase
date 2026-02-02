@@ -284,11 +284,11 @@ export function DataTable<TData, TValue>({
             </div>
             </div>
 
-            {/* Total Amount & Summary Section */}
+            {/* Summary Section */}
             <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Total Amount & Summary</h4>
-              <div className="grid grid-cols-1 gap-2">
-                {/* Total Amount Card */}
+              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Summary</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+                {/* Summary Card (wider) */}
                 <div
                   onClick={() => {
                     setCategoryFilter([]);
@@ -296,7 +296,7 @@ export function DataTable<TData, TValue>({
                     setYearFilter("all");
                     setMonthFilter("all");
                   }}
-                  className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm ${
+                  className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm lg:col-span-2 ${
                     categoryFilter.length === 0 && 
                     globalFilter === "" && 
                     yearFilter === "all" && 
@@ -307,7 +307,7 @@ export function DataTable<TData, TValue>({
                 >
                   <div className="space-y-1">
                     <div className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wide">
-                      Total Amount
+                      Summary
                     </div>
                     <div className="text-lg font-bold text-gray-800">
                       ₱{filteredTotalValue.toLocaleString(undefined, {
