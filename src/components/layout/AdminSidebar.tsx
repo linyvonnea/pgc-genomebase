@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Sliders,
   Shield,
+  Database,
 } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -41,6 +42,7 @@ const ROUTE_MODULE_MAP: Record<string, keyof RolePermissions> = {
   "/admin/roles": "roleManagement",
   "/admin/admins": "usersPermissions",
   "/admin/activity-logs": "activityLogs",
+  "/admin/backup": "usersPermissions", // Backup uses same permissions as user management
 };
 
 export function AdminSidebar() {
@@ -141,6 +143,11 @@ export function AdminSidebar() {
           href: "/admin/activity-logs", 
           label: "Activity Logs", 
           icon: ScrollText,
+        },
+        { 
+          href: "/admin/backup", 
+          label: "Database Backup", 
+          icon: Database,
         },
       ]
     },
