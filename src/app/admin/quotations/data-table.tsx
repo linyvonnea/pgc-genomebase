@@ -288,7 +288,10 @@ export function DataTable<TData, TValue>({
             <div className="space-y-2">
               <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Summary</h4>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-                {/* Summary Card (wider) */}
+                {/* Empty spacer to push Summary to the right */}
+                <div className="lg:col-span-3"></div>
+                
+                {/* Summary Card (wider, positioned on the right) */}
                 <div
                   onClick={() => {
                     setCategoryFilter([]);
