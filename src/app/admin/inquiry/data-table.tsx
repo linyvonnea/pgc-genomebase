@@ -49,7 +49,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -75,7 +75,6 @@ export function DataTable<TData, TValue>({
       approvedClient: inquiries.filter(i => i.status === "Approved Client").length,
       quotationOnly: inquiries.filter(i => i.status === "Quotation Only").length,
       pending: inquiries.filter(i => i.status === "Pending").length,
-      total: inquiries.length,
     }
   }, [data])
 
@@ -183,236 +182,264 @@ export function DataTable<TData, TValue>({
   return (
     <div className="space-y-4">
       {/* Filters & Overview Section */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold">Filters & Overview</h3>
-              {activeFiltersCount > 0 && (
-                <Badge variant="secondary">{activeFiltersCount} active</Badge>
-              )}
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
-            >
-              {isFiltersCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-            </Button>
-          </div>
-
-          {!isFiltersCollapsed && (
-            <div className="space-y-4">
-              {/* Status Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card
-                  className={`cursor-pointer transition-all ${
-                    activeStatusFilter === "Approved Client"
-                      ? "ring-2 ring-green-500 bg-green-50"
-                      : "hover:bg-gray-50"
-                  }`}
+      <Card className="overflow-hidden">
+        <div 
+          className="flex items-center justify-between px-3 py-2 border-b cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
+        >
+          <h3 className="text-base font-bold text-gray-800">Filters & Overview</h3>
+          <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? 'rotate-180' : ''}`} />
+        </div>
+        
+        {!isFiltersCollapsed && (
+          <div className="p-2.5 space-y-2.5">
+            {/* Status Cards Section */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Status Categories</h4>
+              <div className="grid grid-cols-3 gap-2">
+                <div
                   onClick={() =>
                     handleStatusFilter(
                       activeStatusFilter === "Approved Client" ? undefined : "Approved Client"
                     )
                   }
-                >
-                  <CardContent className="pt-6">
-                    <div className="text-2xl font-bold text-green-600">
-                      {statusCounts.approvedClient}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Approved Client</div>
-                  </CardContent>
-                </Card>
-
-                <Card
-                  className={`cursor-pointer transition-all ${
-                    activeStatusFilter === "Quotation Only"
-                      ? "ring-2 ring-blue-500 bg-blue-50"
-                      : "hover:bg-gray-50"
+                  className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                    activeStatusFilter === "Approved Client"
+                      ? "ring-1 ring-primary ring-offset-1 bg-green-50 border-green-200 shadow-sm"
+                      : "bg-white hover:bg-gray-50 border-gray-200"
                   }`}
+                >
+                  <div className="text-sm font-semibold text-green-600 truncate leading-tight">
+                    {statusCounts.approvedClient}
+                  </div>
+                  <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
+                    Approved Client
+                  </div>
+                  {activeStatusFilter === "Approved Client" && (
+                    <div className="mt-0.5">
+                      <Badge variant="default" className="text-[7px] h-2.5 px-1">
+                        Active
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+
+                <div
                   onClick={() =>
                     handleStatusFilter(
                       activeStatusFilter === "Quotation Only" ? undefined : "Quotation Only"
                     )
                   }
-                >
-                  <CardContent className="pt-6">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {statusCounts.quotationOnly}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Quotation Only</div>
-                  </CardContent>
-                </Card>
-
-                <Card
-                  className={`cursor-pointer transition-all ${
-                    activeStatusFilter === "Pending"
-                      ? "ring-2 ring-yellow-500 bg-yellow-50"
-                      : "hover:bg-gray-50"
+                  className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                    activeStatusFilter === "Quotation Only"
+                      ? "ring-1 ring-primary ring-offset-1 bg-blue-50 border-blue-200 shadow-sm"
+                      : "bg-white hover:bg-gray-50 border-gray-200"
                   }`}
+                >
+                  <div className="text-sm font-semibold text-blue-600 truncate leading-tight">
+                    {statusCounts.quotationOnly}
+                  </div>
+                  <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
+                    Quotation Only
+                  </div>
+                  {activeStatusFilter === "Quotation Only" && (
+                    <div className="mt-0.5">
+                      <Badge variant="default" className="text-[7px] h-2.5 px-1">
+                        Active
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+
+                <div
                   onClick={() =>
                     handleStatusFilter(activeStatusFilter === "Pending" ? undefined : "Pending")
                   }
-                >
-                  <CardContent className="pt-6">
-                    <div className="text-2xl font-bold text-yellow-600">
-                      {statusCounts.pending}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Pending</div>
-                  </CardContent>
-                </Card>
-
-                <Card
-                  className={`cursor-pointer transition-all ${
-                    !activeStatusFilter ? "ring-2 ring-primary bg-primary/5" : "hover:bg-gray-50"
+                  className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                    activeStatusFilter === "Pending"
+                      ? "ring-1 ring-primary ring-offset-1 bg-yellow-50 border-yellow-200 shadow-sm"
+                      : "bg-white hover:bg-gray-50 border-gray-200"
                   }`}
-                  onClick={() => handleStatusFilter(undefined)}
                 >
-                  <CardContent className="pt-6">
-                    <div className="text-2xl font-bold">{statusCounts.total}</div>
-                    <div className="text-sm text-muted-foreground">Total Inquiries</div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Search and Date Filters */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Input
-                  placeholder="Search by name, email, or affiliation..."
-                  value={globalFilter ?? ""}
-                  onChange={(event) => setGlobalFilter(event.target.value)}
-                  className="md:col-span-1"
-                />
-
-                <Select value={selectedYear || "all"} onValueChange={handleYearChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Years</SelectItem>
-                    {availableYears.map((year) => (
-                      <SelectItem key={year} value={year}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select
-                  value={selectedMonth || "all"}
-                  onValueChange={handleMonthChange}
-                  disabled={!selectedYear}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Month" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Months</SelectItem>
-                    {monthOptions.map((month) => (
-                      <SelectItem key={month.value} value={month.value}>
-                        {month.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Summary and Clear Button */}
-              <div className="flex items-center justify-between">
-                <Card className="flex-1 mr-4">
-                  <CardContent className="py-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-sm text-muted-foreground">Showing Results</div>
-                        <div className="text-2xl font-bold">{filteredRows.length}</div>
-                      </div>
+                  <div className="text-sm font-semibold text-yellow-600 truncate leading-tight">
+                    {statusCounts.pending}
+                  </div>
+                  <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
+                    Pending
+                  </div>
+                  {activeStatusFilter === "Pending" && (
+                    <div className="mt-0.5">
+                      <Badge variant="default" className="text-[7px] h-2.5 px-1">
+                        Active
+                      </Badge>
                     </div>
-                  </CardContent>
-                </Card>
-
-                {activeFiltersCount > 0 && (
-                  <Button variant="outline" onClick={clearAllFilters}>
-                    Clear All Filters
-                  </Button>
-                )}
+                  )}
+                </div>
               </div>
             </div>
-          )}
-        </CardContent>
+
+            {/* Search & Date Filters with Summary Card */}
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-end gap-2 pb-1">
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Search</span>
+                  <Input
+                    placeholder="Search by name, email..."
+                    value={globalFilter ?? ""}
+                    onChange={(event) => setGlobalFilter(event.target.value)}
+                    className="w-56 h-7 text-sm"
+                  />
+                </div>
+
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Year</span>
+                  <Select value={selectedYear || "all"} onValueChange={handleYearChange}>
+                    <SelectTrigger className="w-[120px] h-7 text-sm">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Years</SelectItem>
+                      {availableYears.map((year) => (
+                        <SelectItem key={year} value={year}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Month</span>
+                  <Select
+                    value={selectedMonth || "all"}
+                    onValueChange={handleMonthChange}
+                    disabled={!selectedYear}
+                  >
+                    <SelectTrigger className="w-[140px] h-7 text-sm">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Months</SelectItem>
+                      {monthOptions.map((month) => (
+                        <SelectItem key={month.value} value={month.value}>
+                          {month.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Summary Card aligned with filters */}
+                <div className="ml-auto">
+                  <div
+                    onClick={clearAllFilters}
+                    className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm w-[300px] ${
+                      activeFiltersCount === 0
+                        ? "ring-1 ring-primary ring-offset-1 bg-slate-50 border-slate-200 shadow-sm"
+                        : "bg-white hover:bg-gray-50 border-gray-200"
+                    }`}
+                  >
+                    <div className="space-y-1">
+                      <div className="text-[13px] text-primary font-medium uppercase tracking-wide">
+                        Summary
+                      </div>
+                      <div className="text-lg font-bold text-gray-800">
+                        {filteredRows.length} {filteredRows.length === 1 ? 'inquiry' : 'inquiries'}
+                      </div>
+                      <div className="flex items-center justify-between gap-2 pt-0.5">
+                        <div className="text-xs text-blue-600 font-semibold">
+                          {filteredRows.length} {filteredRows.length === 1 ? 'result' : 'results'}
+                        </div>
+                        <div className="text-[10px] font-medium text-gray-500 truncate">
+                          {activeFiltersCount > 0 ? `${activeFiltersCount} filter${activeFiltersCount > 1 ? 's' : ''}` : 'All'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </Card>
-
-      {/* Pagination Controls - Top */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Rows per page:</span>
-          <Select
-            value={table.getState().pagination.pageSize.toString()}
-            onValueChange={(value) => table.setPageSize(Number(value))}
-          >
-            <SelectTrigger className="w-[70px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="20">20</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
-            </SelectContent>
-          </Select>
-          <span className="text-sm text-muted-foreground">
-            Showing {filteredRows.length > 0 ? table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1 : 0}-
-            {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, filteredRows.length)} of{" "}
-            {filteredRows.length} results
-          </span>
+      
+      {/* Table Header with Record Count and Navigation */}
+      <div className="flex items-center justify-between py-1">
+        <div className="text-sm text-muted-foreground">
+          Showing {filteredRows.length > 0 ? (table.getState().pagination.pageIndex * table.getState().pagination.pageSize) + 1 : 0} - {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, filteredRows.length)} of {filteredRows.length} records
         </div>
-
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <span className="text-sm">
-            Page {table.getPageCount() > 0 ? table.getState().pagination.pageIndex + 1 : 0} of {table.getPageCount()}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
+            <Select
+              value={table.getState().pagination.pageSize.toString()}
+              onValueChange={(value) => table.setPageSize(Number(value))}
+            >
+              <SelectTrigger className="w-[70px] h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-2"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Prev
+            </Button>
+            <div className="flex items-center justify-center min-w-[80px] text-sm font-medium">
+              {table.getState().pagination.pageIndex + 1} / {table.getPageCount() || 1}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-2"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Table with Sticky Header */}
-      <div className="rounded-md border">
-        <div className="relative overflow-auto max-h-[600px]">
+      {/* Compact Table with Sticky Header */}
+      <div className="rounded-md border overflow-hidden">
+        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
           <Table>
-            <TableHeader className="sticky top-0 bg-background z-10">
+            <TableHeader className="sticky top-0 bg-muted/95 backdrop-blur-sm z-10">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead
-                      key={header.id}
-                      className="bg-background"
-                      onClick={header.column.getToggleSortingHandler()}
-                      style={{ cursor: header.column.getCanSort() ? "pointer" : "default" }}
-                    >
-                      <div className="flex items-center gap-2">
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.getIsSorted() === "asc" && <span>↑</span>}
-                        {header.column.getIsSorted() === "desc" && <span>↓</span>}
-                      </div>
-                    </TableHead>
-                  ))}
+                  {headerGroup.headers.map((header) => {
+                    const canSort = header.column.getCanSort?.()
+                    const sortDir = header.column.getIsSorted?.()
+                    return (
+                      <TableHead
+                        key={header.id}
+                        onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                        className={`${canSort ? "cursor-pointer select-none" : ""} h-10 text-xs font-semibold`}
+                      >
+                        <div className="flex items-center gap-1">
+                          {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                          {canSort && (
+                            <span className="ml-1 text-xs opacity-60">
+                              {sortDir === "asc" ? "▲" : sortDir === "desc" ? "▼" : ""}
+                            </span>
+                          )}
+                        </div>
+                      </TableHead>
+                    )
+                  })}
                 </TableRow>
               ))}
             </TableHeader>
@@ -425,9 +452,13 @@ export function DataTable<TData, TValue>({
                     (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize
                   )
                   .map((row) => (
-                    <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                    <TableRow
+                      key={row.id}
+                      className="hover:bg-muted/50 transition-colors"
+                      data-state={row.getIsSelected() && "selected"}
+                    >
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
+                        <TableCell key={cell.id} className="py-2">
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       ))}
@@ -435,8 +466,11 @@ export function DataTable<TData, TValue>({
                   ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
-                    No results found.
+                  <TableCell colSpan={columns.length} className="text-center h-24 text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center gap-2 py-4">
+                      <p>No results found for current filters.</p>
+                      <Button variant="link" onClick={clearAllFilters}>Clear all filters</Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               )}
@@ -445,34 +479,50 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
 
-      {/* Pagination Controls - Bottom */}
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">
-          Showing {filteredRows.length > 0 ? table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1 : 0}-
-          {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, filteredRows.length)} of{" "}
-          {filteredRows.length} results
-        </div>
-
+      {/* Bottom Pagination */}
+      <div className="flex items-center justify-end">
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <span className="text-sm">
-            Page {table.getPageCount() > 0 ? table.getState().pagination.pageIndex + 1 : 0} of {table.getPageCount()}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
+            <Select
+              value={table.getState().pagination.pageSize.toString()}
+              onValueChange={(value) => table.setPageSize(Number(value))}
+            >
+              <SelectTrigger className="w-[70px] h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="20">20</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-2"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Prev
+            </Button>
+            <div className="flex items-center justify-center min-w-[80px] text-sm font-medium">
+              {table.getState().pagination.pageIndex + 1} / {table.getPageCount() || 1}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-2"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </div>
     </div>

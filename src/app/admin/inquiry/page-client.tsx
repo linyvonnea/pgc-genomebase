@@ -16,8 +16,8 @@ export function InquiryPageClient({ data }: InquiryPageClientProps) {
   const { canCreate } = usePermissions(adminInfo?.role);
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="space-y-6">
+    <div className="container mx-auto py-4 space-y-3">
+      <div className="space-y-3">
         {/* Page Header */}
         <div className="flex justify-between items-start">
           <div>
