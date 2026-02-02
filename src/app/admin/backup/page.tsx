@@ -58,6 +58,7 @@ function BackupPageContent() {
   const [isRestoring, setIsRestoring] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [backupProgress, setBackupProgress] = useState(0);
+  const [downloadProgress, setDownloadProgress] = useState(0);
   const [restoreProgress, setRestoreProgress] = useState(0);
   const [backups, setBackups] = useState<BackupItem[]>([]);
   const [dbStats, setDbStats] = useState<DatabaseStats | null>(null);
@@ -274,19 +275,19 @@ function BackupPageContent() {
 
   const handleDownloadBackup = async () => {
     setIsDownloading(true);
-    setBackupProgress(0);
+    setDownloadProgress(0);
 
     try {
       // Start progress simulation
       const progressInterval = setInterval(() => {
-        setBackupProgress((prev) => {
+        setDownloadProgress((prev) => {
           if (prev >= 90) {
             clearInterval(progressInterval);
             return 90;
           }
           return prev + Math.random() * 10;
         });
-      }, 500);
+      }, 300);
 
       // Fetch backup data from API
       const response = await fetch('/api/admin/backup/download', {
@@ -297,11 +298,11 @@ function BackupPageContent() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.details || 'Backup download failed');
+        throw new Error(errorData.details || errorData.error || 'Backup download failed');
       }
 
       const result = await response.json();
-      setBackupProgress(100);
+      setDownloadProgress(100);
 
       // Convert backup data to JSON string
       const backupJson = JSON.stringify(result.backup, null, 2);
@@ -358,11 +359,12 @@ function BackupPageContent() {
 
       // Reset progress after a delay
       setTimeout(() => {
-        setBackupProgress(0);
+        setDownloadProgress(0);
       }, 1000);
 
     } catch (error) {
       console.error('Backup download failed:', error);
+      setDownloadProgress(0);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to download backup",
@@ -469,12 +471,12 @@ function BackupPageContent() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Preparing backup for download...</span>
-                  <span>{Math.round(backupProgress)}%</span>
+                  <span>{Math.round(downloadProgress)}%</span>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2.5">
                   <div 
                     className="bg-[#166FB5] h-2.5 rounded-full transition-all duration-300" 
-                    style={{ width: `${backupProgress}%` }}
+                    style={{ width: `${downloadProgress}%` }}
                   ></div>
                 </div>
               </div>
