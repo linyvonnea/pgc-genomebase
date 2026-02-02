@@ -347,96 +347,45 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             </div>
             </div>
 
-            {/* Processing Status & Summary Section */}
+            {/* Processing Status Section */}
             <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Processing Status & Summary</h4>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-              {statuses.map((stat) => {
-                const isActive = statusFilter === stat.id;
-                return (
-                  <div
-                    key={stat.id}
-                    onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
-                    className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
-                      isActive
-                        ? `ring-1 ring-primary ring-offset-1 ${stat.bg} ${stat.border} shadow-sm`
-                        : "bg-white hover:bg-gray-50 border-gray-200"
-                    }`}
-                  >
-                    <div className={`text-sm font-semibold ${stat.color} truncate leading-tight`}>
-                      {statusCounts[stat.id]}
-                    </div>
-                    <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
-                      {stat.label}
-                    </div>
-                    {isActive && (
-                      <div className="mt-0.5">
-                        <Badge variant="default" className="text-[7px] h-2.5 px-1">
-                          Active
-                        </Badge>
+              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Processing Status</h4>
+              <div className="grid grid-cols-3 lg:grid-cols-5 gap-2">
+                {statuses.map((stat) => {
+                  const isActive = statusFilter === stat.id;
+                  return (
+                    <div
+                      key={stat.id}
+                      onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
+                      className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                        isActive
+                          ? `ring-1 ring-primary ring-offset-1 ${stat.bg} ${stat.border} shadow-sm`
+                          : "bg-white hover:bg-gray-50 border-gray-200"
+                      }`}
+                    >
+                      <div className={`text-sm font-semibold ${stat.color} truncate leading-tight`}>
+                        {statusCounts[stat.id]}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-
-              {/* Active Filters Card with Total and Results Count (wider) */}
-              <div
-                onClick={() => {
-                  setCategoryFilter([]);
-                  setStatusFilter("__all");
-                  setGlobalFilter("");
-                  setYearFilter("all");
-                  setMonthFilter("all");
-                }}
-                className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm lg:col-span-2 ${
-                  categoryFilter.length === 0 && 
-                  statusFilter === "__all" && 
-                  globalFilter === "" && 
-                  yearFilter === "all" && 
-                  monthFilter === "all"
-                    ? "ring-1 ring-primary ring-offset-1 bg-slate-50 border-slate-200 shadow-sm"
-                    : "bg-white hover:bg-gray-50 border-gray-200"
-                }`}
-              >
-                <div className="space-y-1">
-                  <div className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wide">
-                    Summary
-                  </div>
-                  <div className="text-lg font-bold text-gray-800">
-                    ₱{filteredTotalValue.toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </div>
-                  <div className="flex items-center justify-between gap-2 pt-0.5">
-                    <div className="text-xs text-blue-600 font-semibold">
-                      {filteredData.length} {filteredData.length === 1 ? 'result' : 'results'}
+                      <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
+                        {stat.label}
+                      </div>
+                      {isActive && (
+                        <div className="mt-0.5">
+                          <Badge variant="default" className="text-[7px] h-2.5 px-1">
+                            Active
+                          </Badge>
+                        </div>
+                      )}
                     </div>
-                    <div className="text-[10px] font-medium text-gray-500 truncate">
-                      {activeFiltersLabel}
-                    </div>
-                  </div>
-                </div>
-                {(categoryFilter.length > 0 || 
-                  statusFilter !== "__all" || 
-                  globalFilter !== "" || 
-                  yearFilter !== "all" || 
-                  monthFilter !== "all") && (
-                  <div className="mt-0.5">
-                    <Badge variant="secondary" className="text-[7px] h-2 px-1">
-                      Clear
-                    </Badge>
-                  </div>
-                )}
+                  );
+                })}
               </div>
-            </div>
             </div>
 
             {/* Search & Date Filters Section */}
             <div className="space-y-2">
               <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Search & Date Filters</h4>
-              <div className="flex flex-wrap items-center gap-2 pb-1">
+              <div className="flex flex-wrap items-end gap-2 pb-1">
                 <div className="space-y-0.5">
                   <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Search</span>
                   <Input
@@ -475,6 +424,48 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Summary Card aligned with filters */}
+                <div className="ml-auto">
+                  <div
+                    onClick={() => {
+                      setCategoryFilter([]);
+                      setStatusFilter("__all");
+                      setGlobalFilter("");
+                      setYearFilter("all");
+                      setMonthFilter("all");
+                    }}
+                    className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm w-[240px] ${
+                      categoryFilter.length === 0 && 
+                      statusFilter === "__all" && 
+                      globalFilter === "" && 
+                      yearFilter === "all" && 
+                      monthFilter === "all"
+                        ? "ring-1 ring-primary ring-offset-1 bg-slate-50 border-slate-200 shadow-sm"
+                        : "bg-white hover:bg-gray-50 border-gray-200"
+                    }`}
+                  >
+                    <div className="space-y-1">
+                      <div className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wide">
+                        Summary
+                      </div>
+                      <div className="text-lg font-bold text-gray-800">
+                        ₱{filteredTotalValue.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </div>
+                      <div className="flex items-center justify-between gap-2 pt-0.5">
+                        <div className="text-xs text-blue-600 font-semibold">
+                          {filteredData.length} {filteredData.length === 1 ? 'result' : 'results'}
+                        </div>
+                        <div className="text-[10px] font-medium text-gray-500 truncate">
+                          {activeFiltersLabel}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

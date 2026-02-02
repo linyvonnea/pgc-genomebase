@@ -247,103 +247,47 @@ export function DataTable<TData, TValue>({
             <div className="space-y-2">
               <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Service Categories</h4>
               <div className="grid grid-cols-3 lg:grid-cols-5 gap-2">
-              {categories.map((cat) => {
-                const isActive = categoryFilter.includes(cat.name);
-                return (
-                  <div
-                    key={cat.name}
-                    onClick={() => {
-                      if (isActive) {
-                        setCategoryFilter(categoryFilter.filter((c) => c !== cat.name));
-                      } else {
-                        setCategoryFilter([...categoryFilter, cat.name]);
-                      }
-                    }}
-                    className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
-                      isActive
-                        ? `ring-1 ring-primary ring-offset-1 ${cat.bg} ${cat.border} shadow-sm`
-                        : "bg-white hover:bg-gray-50 border-gray-200"
-                    }`}
-                  >
-                    <div className={`text-sm font-semibold ${cat.color} truncate leading-tight`}>
-                      {categoryCounts[cat.name]}
-                    </div>
-                    <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
-                      {cat.name}
-                    </div>
-                    {isActive && (
-                      <div className="mt-0.5">
-                        <Badge variant="default" className="text-[7px] h-2.5 px-1">
-                          Active
-                        </Badge>
+                {categories.map((cat) => {
+                  const isActive = categoryFilter.includes(cat.name);
+                  return (
+                    <div
+                      key={cat.name}
+                      onClick={() => {
+                        if (isActive) {
+                          setCategoryFilter(categoryFilter.filter((c) => c !== cat.name));
+                        } else {
+                          setCategoryFilter([...categoryFilter, cat.name]);
+                        }
+                      }}
+                      className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                        isActive
+                          ? `ring-1 ring-primary ring-offset-1 ${cat.bg} ${cat.border} shadow-sm`
+                          : "bg-white hover:bg-gray-50 border-gray-200"
+                      }`}
+                    >
+                      <div className={`text-sm font-semibold ${cat.color} truncate leading-tight`}>
+                        {categoryCounts[cat.name]}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            </div>
-
-            {/* Summary Section */}
-              <div className="space-y-2">
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-                {/* Empty spacer to push Summary to the right */}
-                <div className="lg:col-span-3"></div>
-                
-                {/* Summary Card (wider, positioned on the right) */}
-                <div
-                  onClick={() => {
-                    setCategoryFilter([]);
-                    setGlobalFilter("");
-                    setYearFilter("all");
-                    setMonthFilter("all");
-                  }}
-                  className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm lg:col-span-2 ${
-                    categoryFilter.length === 0 && 
-                    globalFilter === "" && 
-                    yearFilter === "all" && 
-                    monthFilter === "all"
-                      ? "ring-1 ring-primary ring-offset-1 bg-slate-50 border-slate-200 shadow-sm"
-                      : "bg-white hover:bg-gray-50 border-gray-200"
-                  }`}
-                >
-                  <div className="space-y-1">
-                    <div className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wide">
-                      Summary
-                    </div>
-                    <div className="text-lg font-bold text-gray-800">
-                      ₱{filteredTotalValue.toLocaleString(undefined, {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}
-                    </div>
-                    <div className="flex items-center justify-between gap-2 pt-0.5">
-                      <div className="text-xs text-blue-600 font-semibold">
-                        {filteredData.length} {filteredData.length === 1 ? 'result' : 'results'}
+                      <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
+                        {cat.name}
                       </div>
-                      <div className="text-[10px] font-medium text-gray-500 truncate">
-                        {activeFiltersLabel}
-                      </div>
+                      {isActive && (
+                        <div className="mt-0.5">
+                          <Badge variant="default" className="text-[7px] h-2.5 px-1">
+                            Active
+                          </Badge>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                  {(categoryFilter.length > 0 || 
-                    globalFilter !== "" || 
-                    yearFilter !== "all" || 
-                    monthFilter !== "all") && (
-                    <div className="mt-0.5">
-                      <Badge variant="secondary" className="text-[7px] h-2 px-1">
-                        Clear
-                      </Badge>
-                    </div>
-                  )}
-                </div>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Search & Date Filters Section */}
+            {/* Search & Date Filters with Summary Card */}
             <div className="space-y-2">
               <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Search & Date Filters</h4>
-              <div className="flex flex-wrap items-center gap-2 pb-1">
+              <div className="flex flex-wrap items-end gap-2 pb-1">
                 <div className="space-y-0.5">
                   <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Search</span>
                   <Input
@@ -382,6 +326,46 @@ export function DataTable<TData, TValue>({
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Summary Card aligned with filters */}
+                <div className="ml-auto">
+                  <div
+                    onClick={() => {
+                      setCategoryFilter([]);
+                      setGlobalFilter("");
+                      setYearFilter("all");
+                      setMonthFilter("all");
+                    }}
+                    className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm w-[240px] ${
+                      categoryFilter.length === 0 && 
+                      globalFilter === "" && 
+                      yearFilter === "all" && 
+                      monthFilter === "all"
+                        ? "ring-1 ring-primary ring-offset-1 bg-slate-50 border-slate-200 shadow-sm"
+                        : "bg-white hover:bg-gray-50 border-gray-200"
+                    }`}
+                  >
+                    <div className="space-y-1">
+                      <div className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wide">
+                        Summary
+                      </div>
+                      <div className="text-lg font-bold text-gray-800">
+                        ₱{filteredTotalValue.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </div>
+                      <div className="flex items-center justify-between gap-2 pt-0.5">
+                        <div className="text-xs text-blue-600 font-semibold">
+                          {filteredData.length} {filteredData.length === 1 ? 'result' : 'results'}
+                        </div>
+                        <div className="text-[10px] font-medium text-gray-500 truncate">
+                          {activeFiltersLabel}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
