@@ -8,22 +8,38 @@ import * as admin from 'firebase-admin';
 // Initialize Firebase Admin SDK
 if (!admin.apps.length) {
   try {
-    // Check if we're in a server environment
+    // Check if we're in a server environment and credentials are available
     if (typeof window === 'undefined') {
-      admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-        }),
-      });
-      console.log('✅ Firebase Admin initialized');
+      const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+      const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+      const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+      // Only initialize if all required credentials are present
+      if (projectId && clientEmail && privateKey) {
+        admin.initializeApp({
+          credential: admin.credential.cert({
+            projectId,
+            clientEmail,
+            privateKey: privateKey.replace(/\\n/g, '\n'),
+          }),
+        });
+        console.log('✅ Firebase Admin initialized');
+      } else {
+        console.warn('⚠️ Firebase Admin credentials not found - skipping initialization');
+        console.warn('   Set FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY environment variables');
+      }
     }
   } catch (error) {
     console.error('❌ Firebase Admin initialization error:', error);
   }
 }
 
-export const db = admin.firestore();
-export const auth = admin.auth();
+// Export helper functions that check if Firebase is initialized
+const isInitialized = () => admin.apps.length > 0;
+
+export const db = isInitialized() ? admin.firestore() : null as any;
+export const auth = isInitialized() ? admin.auth() : null as any;
+
+// Helper to check if Firebase Admin is ready
+export const isFirebaseAdminReady = () => isInitialized();
 export default admin;

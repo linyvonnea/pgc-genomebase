@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db as adminDb } from '@/lib/firebaseAdmin';
+import { db as adminDb, isFirebaseAdminReady } from '@/lib/firebaseAdmin';
 import type { DocumentData, QueryDocumentSnapshot } from 'firebase-admin/firestore';
 
 // Collections to backup
@@ -22,6 +22,18 @@ const COLLECTIONS = [
  */
 export async function POST(request: NextRequest) {
   try {
+    // Check if Firebase Admin is initialized
+    if (!isFirebaseAdminReady() || !adminDb) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Firebase Admin not configured',
+          details: 'Firebase Admin SDK credentials are not set. Please configure FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY environment variables.'
+        },
+        { status: 500 }
+      );
+    }
+
     console.log('🚀 Starting Firestore backup for download...');
     
     const backupData: any = {
