@@ -116,7 +116,7 @@ export default function BackupPage() {
       console.log('Backup response:', result);
 
       if (!response.ok || !result.success) {
-        const errorMsg = result.details || result.error || result.stderr || 'Backup failed';
+        const errorMsg = result.details || result.error || result.message || 'Backup failed';
         console.error('Backup error details:', {
           status: response.status,
           statusText: response.statusText,
@@ -127,11 +127,33 @@ export default function BackupPage() {
 
       setBackupProgress(100);
 
-      toast({
-        title: "Success",
-        description: `Database backup created successfully. ${result.output || ''}`,
-        variant: "default",
-      });
+      // If backup data is available for download (Vercel environment)
+      if (result.downloadReady && result.data) {
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `firestore-backup-${timestamp}.json`;
+        
+        // Create download link
+        const dataStr = JSON.stringify(result.data, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
+        
+        toast({
+          title: "Success",
+          description: `Backup created and downloaded as ${filename}`,
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: `Database backup created successfully. ${result.output || ''}`,
+          variant: "default",
+        });
+      }
 
       // Reload backups list
       setTimeout(() => {
