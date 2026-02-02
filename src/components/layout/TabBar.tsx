@@ -4,6 +4,7 @@ import React from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTabContext, Tab } from "@/contexts/TabContext";
+import { useRouter } from "next/navigation";
 
 interface TabBarProps {
   className?: string;
@@ -11,6 +12,12 @@ interface TabBarProps {
 
 export function TabBar({ className }: TabBarProps) {
   const { tabs, activeTab, setActiveTab, closeTab } = useTabContext();
+  const router = useRouter();
+
+  const handleTabActivate = (tab: Tab) => {
+    setActiveTab(tab.id);
+    router.push(tab.path);
+  };
 
   if (tabs.length === 0) {
     return null;
@@ -24,7 +31,7 @@ export function TabBar({ className }: TabBarProps) {
             key={tab.id}
             tab={tab}
             isActive={activeTab === tab.id}
-            onActivate={() => setActiveTab(tab.id)}
+            onActivate={() => handleTabActivate(tab)}
             onClose={() => closeTab(tab.id)}
           />
         ))}

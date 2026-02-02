@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 export interface Tab {
   id: string;
@@ -24,6 +25,17 @@ const TabContext = createContext<TabContextType | undefined>(undefined);
 export function TabProvider({ children }: { children: ReactNode }) {
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTab, setActiveTabState] = useState<string | null>(null);
+  const pathname = usePathname();
+
+  // Sync active tab with current pathname
+  useEffect(() => {
+    if (pathname.startsWith('/admin/')) {
+      const pathSegment = pathname.replace('/admin/', '').split('/')[0];
+      if (pathSegment && tabs.some(tab => tab.id === pathSegment)) {
+        setActiveTabState(pathSegment);
+      }
+    }
+  }, [pathname, tabs]);
 
   const openTab = useCallback((tab: Tab) => {
     setTabs((prevTabs) => {
