@@ -7,14 +7,24 @@ import fs from 'fs';
 function initializeFirebaseAdmin() {
   if (!admin.apps.length) {
     try {
-      const serviceAccountPath = path.join(process.cwd(), 'scripts', 'serviceAccountKey.json');
-      const serviceAccountContent = fs.readFileSync(serviceAccountPath, 'utf8');
-      const serviceAccount = JSON.parse(serviceAccountContent);
-      
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-      });
-      console.log('✅ Firebase Admin initialized');
+      // Try to use environment variables first (for Vercel)
+      if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount)
+        });
+        console.log('✅ Firebase Admin initialized from environment variable');
+      } else {
+        // Fall back to service account file (for local)
+        const serviceAccountPath = path.join(process.cwd(), 'scripts', 'serviceAccountKey.json');
+        const serviceAccountContent = fs.readFileSync(serviceAccountPath, 'utf8');
+        const serviceAccount = JSON.parse(serviceAccountContent);
+        
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount)
+        });
+        console.log('✅ Firebase Admin initialized from file');
+      }
     } catch (error) {
       console.error('❌ Failed to initialize Firebase Admin:', error);
       throw new Error('Firebase Admin initialization failed');
