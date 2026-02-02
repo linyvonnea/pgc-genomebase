@@ -87,6 +87,8 @@ export default function BackupPage() {
     setBackupProgress(0);
 
     try {
+      console.log('🚀 Starting backup request...');
+      
       // Start progress simulation
       const progressInterval = setInterval(() => {
         setBackupProgress((prev) => {
@@ -100,20 +102,26 @@ export default function BackupPage() {
 
       const response = await fetch('/api/admin/backup', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       clearInterval(progressInterval);
 
-      if (!response.ok) {
-        throw new Error('Backup failed');
+      const result = await response.json();
+      
+      console.log('Backup response:', result);
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.details || result.error || 'Backup failed');
       }
 
-      const result = await response.json();
       setBackupProgress(100);
 
       toast({
         title: "Success",
-        description: "Database backup created successfully",
+        description: `Database backup created successfully. ${result.output || ''}`,
         variant: "default",
       });
 
@@ -124,12 +132,14 @@ export default function BackupPage() {
       }, 1000);
 
     } catch (error) {
-      console.error('Backup failed:', error);
+      console.error('❌ Backup failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create backup';
       toast({
-        title: "Error",
-        description: "Failed to create backup",
+        title: "Backup Error",
+        description: errorMessage,
         variant: "destructive",
       });
+      setBackupProgress(0);
     } finally {
       setIsBackingUp(false);
     }
