@@ -39,15 +39,15 @@ async function restoreCollection(collectionName, backupPath) {
     const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
     let restored = 0;
     
-    const batch = db.batch();
     const batchSize = 500; // Firestore batch limit
     
     for (let i = 0; i < data.length; i += batchSize) {
+      const batch = db.batch(); // Create new batch for each iteration
       const batchData = data.slice(i, i + batchSize);
       
       for (const doc of batchData) {
         const docRef = db.collection(collectionName).doc(doc.id);
-        batch.set(docRef, doc.data);
+        batch.set(docRef, doc.data, { merge: true }); // Use merge to avoid overwriting
       }
       
       await batch.commit();
@@ -189,15 +189,21 @@ async function fullRestore() {
   
   // Read backup metadata to get collection list
   const metadataPath = path.join(selectedBackup.path, 'backup-metadata.json');
-  let collections = [
-    'admins', 'chargeSlips', 'clients', 'inquiries', 'projects', 
-    'quotations', 'roles', 'services', 'catalogSettings', 'activityLogs'
-  ];
+  let collections = [];
   
   if (fs.existsSync(metadataPath)) {
     const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
-    collections = metadata.collections || collections;
+    collections = metadata.collections || [];
   }
+  
+  // If no metadata, scan directory for JSON files
+  if (collections.length === 0) {
+    collections = fs.readdirSync(selectedBackup.path)
+      .filter(file => file.endsWith('.json') && file !== 'backup-metadata.json')
+      .map(file => file.replace('.json', ''));
+  }
+  
+  console.log(`📚 Restoring ${collections.length} collections: ${collections.join(', ')}`);
   
   // Restore main collections
   for (const collection of collections) {

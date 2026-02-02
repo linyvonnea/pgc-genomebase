@@ -21,19 +21,28 @@ if (!fs.existsSync(backupDir)) {
   fs.mkdirSync(backupDir, { recursive: true });
 }
 
-// Collections to backup (add your collection names here)
-const collections = [
-  'admins',
-  'chargeSlips',
-  'clients',
-  'inquiries',
-  'projects', 
-  'quotations',
-  'roles',
-  'services',
-  'catalogSettings',
-  'activityLogs'
-];
+// Function to get all collections dynamically
+async function getAllCollections() {
+  try {
+    const collections = await db.listCollections();
+    return collections.map(col => col.id);
+  } catch (error) {
+    console.error('❌ Error listing collections:', error.message);
+    // Fallback to known collections if listing fails
+    return [
+      'admins',
+      'chargeSlips',
+      'clients',
+      'inquiries',
+      'projects', 
+      'quotations',
+      'roles',
+      'services',
+      'catalogSettings',
+      'activityLogs'
+    ];
+  }
+}
 
 async function backupCollection(collectionName) {
   try {
@@ -102,6 +111,10 @@ async function fullBackup() {
   
   let totalDocs = 0;
   const startTime = Date.now();
+  
+  // Get all collections dynamically
+  const collections = await getAllCollections();
+  console.log(`📚 Found ${collections.length} collections to backup: ${collections.join(', ')}`);
   
   // Backup main collections
   for (const collection of collections) {
