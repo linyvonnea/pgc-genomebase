@@ -336,7 +336,7 @@ export function DataTable<TData, TValue>({
                       setYearFilter("all");
                       setMonthFilter("all");
                     }}
-                    className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm w-[240px] ${
+                    className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm w-[300px] ${
                       categoryFilter.length === 0 && 
                       globalFilter === "" && 
                       yearFilter === "all" && 
