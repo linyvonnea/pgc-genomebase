@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-02-02T07:16:16.611Z",
+  "totalDocuments": 1697,
+  "collections": [
+    "admins",
+    "chargeSlips",
+    "clients",
+    "inquiries",
+    "projects",
+    "quotations",
+    "roles",
+    "services",
+    "catalogSettings",
+    "activityLogs"
+  ],
+  "backupDuration": 103363,
+  "version": "1.0.0"
+}
