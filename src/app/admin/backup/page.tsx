@@ -102,16 +102,27 @@ export default function BackupPage() {
 
       const response = await fetch('/api/admin/backup', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
 
       clearInterval(progressInterval);
 
+      console.log('Response status:', response.status, response.statusText);
+      
       const result = await response.json();
       
       console.log('Backup response:', result);
 
       if (!response.ok || !result.success) {
-        throw new Error(result.details || result.error || 'Backup failed');
+        const errorMsg = result.details || result.error || result.stderr || 'Backup failed';
+        console.error('Backup error details:', {
+          status: response.status,
+          statusText: response.statusText,
+          result
+        });
+        throw new Error(errorMsg);
       }
 
       setBackupProgress(100);
