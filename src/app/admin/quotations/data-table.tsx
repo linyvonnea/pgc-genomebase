@@ -158,7 +158,7 @@ export function DataTable<TData, TValue>({
       const mIndex = parseInt(monthFilter) - 1;
       filters.push(monthNames[mIndex]);
     }
-    return filters.length > 0 ? filters.join(" + ") : "None";
+    return filters.length > 0 ? filters.join(" + ") : "All Records";
   }, [categoryFilter, yearFilter, monthFilter, monthNames]);
 
   // Pagination Controls Component

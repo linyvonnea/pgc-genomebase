@@ -361,7 +361,7 @@ export function DataTable<TData, TValue>({
                       <div className="flex items-center justify-between gap-2 pt-0.5">
                         <div />
                         <div className="text-[10px] font-medium text-gray-500 truncate text-right w-full">
-                          {filterSummaryLabel !== 'All' ? filterSummaryLabel : 'none'}
+                          {filterSummaryLabel !== 'All' ? filterSummaryLabel : 'All Records'}
                         </div>
                       </div>
                     </div>
