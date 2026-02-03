@@ -64,16 +64,16 @@ export function DataTable<TData, TValue>({
     "July", "August", "September", "October", "November", "December"
   ];
   
-  // Derive available years from data with useMemo to prevent recalculation
+  // Derive available years from data and always include 2019-2026
   const availableYears = useMemo(() => {
-    return Array.from(new Set(
-      data
-        .map((item: any) => {
-          const d = item.createdAt ? new Date(item.createdAt) : null;
-          return d && !isNaN(d.getTime()) ? d.getFullYear() : null;
-        })
-        .filter((y) => y !== null)
-    )).sort((a, b) => (b as number) - (a as number));
+    const fixedYears = [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026];
+    const dataYears = data
+      .map((item: any) => {
+        const d = item.createdAt ? new Date(item.createdAt) : null;
+        return d && !isNaN(d.getTime()) ? d.getFullYear() : null;
+      })
+      .filter((y) => y !== null);
+    return Array.from(new Set([...fixedYears, ...dataYears])).sort((a, b) => (b as number) - (a as number));
   }, [data]);
 
   // Filter data by search, year, and month with useMemo for performance
