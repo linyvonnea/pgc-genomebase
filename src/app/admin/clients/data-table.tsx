@@ -20,9 +20,16 @@ import { useState, useMemo } from "react"
 function parseClientDate(dateVal: any): Date | null {
   if (!dateVal) return null;
   if (dateVal instanceof Date && !isNaN(dateVal.getTime())) return dateVal;
+  
+  // Handle Firestore Timestamp object
+  if (dateVal && typeof dateVal === 'object' && dateVal.seconds) {
+    return new Date(dateVal.seconds * 1000);
+  }
+  
   // Try ISO first
   const iso = new Date(dateVal);
   if (!isNaN(iso.getTime())) return iso;
+  
   // Try Firestore string: "January 12, 2026 at 2:30:19 PM UTC+8"
   const match = String(dateVal).match(/([A-Za-z]+ \d{1,2}, \d{4}) at (\d{1,2}:\d{2}:\d{2}) ?([AP]M)?/);
   if (match) {
@@ -32,6 +39,8 @@ function parseClientDate(dateVal: any): Date | null {
     const parsed = new Date(dateStr);
     if (!isNaN(parsed.getTime())) return parsed;
   }
+  
+  console.log('Failed to parse date:', dateVal, typeof dateVal);
   return null;
 }
 import { Client } from "@/types/Client"
