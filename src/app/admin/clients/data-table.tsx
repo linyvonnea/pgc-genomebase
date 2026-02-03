@@ -16,6 +16,24 @@ import {
   getPaginationRowModel,
 } from "@tanstack/react-table"
 import { useState, useMemo } from "react"
+// Helper to robustly parse Firestore and ISO date strings
+function parseClientDate(dateVal: any): Date | null {
+  if (!dateVal) return null;
+  if (dateVal instanceof Date && !isNaN(dateVal.getTime())) return dateVal;
+  // Try ISO first
+  const iso = new Date(dateVal);
+  if (!isNaN(iso.getTime())) return iso;
+  // Try Firestore string: "January 12, 2026 at 2:30:19 PM UTC+8"
+  const match = String(dateVal).match(/([A-Za-z]+ \d{1,2}, \d{4}) at (\d{1,2}:\d{2}:\d{2}) ?([AP]M)?/);
+  if (match) {
+    // e.g. "January 12, 2026 14:30:19" or with AM/PM
+    let dateStr = match[1] + ' ' + match[2];
+    if (match[3]) dateStr += ' ' + match[3];
+    const parsed = new Date(dateStr);
+    if (!isNaN(parsed.getTime())) return parsed;
+  }
+  return null;
+}
 import { Client } from "@/types/Client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -69,7 +87,7 @@ export function DataTable<TData, TValue>({
     const fixedYears = [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026];
     const dataYears = data
       .map((item: any) => {
-        const d = item.createdAt ? new Date(item.createdAt) : null;
+        const d = parseClientDate(item.createdAt);
         return d && !isNaN(d.getTime()) ? d.getFullYear() : null;
       })
       .filter((y) => y !== null);
@@ -84,12 +102,10 @@ export function DataTable<TData, TValue>({
       const matchesSearch = searchQuery === "" || 
         `${row.name || ""} ${row.email || ""} ${row.institution || ""} ${row.designation || ""}`
           .toLowerCase().includes(searchQuery);
-      
       // Date filters
-      const date = row.createdAt ? new Date(row.createdAt) : null;
+      const date = parseClientDate(row.createdAt);
       const matchesYear = yearFilter === "all" || (date && date.getFullYear().toString() === yearFilter);
       const matchesMonth = monthFilter === "all" || (date && (date.getMonth() + 1).toString() === monthFilter);
-      
       return matchesSearch && matchesYear && matchesMonth;
     });
   }, [data, globalFilter, yearFilter, monthFilter]);
