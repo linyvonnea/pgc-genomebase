@@ -61,13 +61,15 @@ function ClientPageContent() {
 
   return (
     <div className="container mx-auto py-10">
-      <div className="space-y-6">
-        {/* Header and Add New Client Button */}
-        <div className="space-y-1">
-          <h1 className="text-xl font-semibold tracking-tight">PGC Clients</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage and review PGC clients submitted to the database.
-          </p>
+      <div className="space-y-3">
+        {/* Header with Add New Client Button */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h1 className="text-xl font-semibold tracking-tight">PGC Clients</h1>
+            <p className="text-sm text-muted-foreground">
+              Manage and review PGC clients submitted to the database.
+            </p>
+          </div>
           {/* Add New Client Modal */}
           {canCreate("clients") && (
             <Dialog open={openDialog} onOpenChange={setOpenDialog}>
