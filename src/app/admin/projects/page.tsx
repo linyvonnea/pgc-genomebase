@@ -65,13 +65,13 @@ function ProjectPageContent() {
 
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="space-y-6">
+    <div className="container mx-auto py-4 space-y-3">
+      <div className="space-y-1">
         {/* Header and Add New Project Button */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl font-semibold tracking-tight">Projects</h1>
+            <p className="text-sm text-muted-foreground">
               Manage and review the projects submitted to the database.
             </p>
           </div>

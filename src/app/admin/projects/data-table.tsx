@@ -30,7 +30,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ChevronsLeft, ChevronsRight, Filter, X } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, Filter, X, ChevronDown } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 // Props for the generic DataTable component
 interface DataTableProps<TData, TValue> {
@@ -60,11 +61,25 @@ export function DataTable<TData extends Project, TValue>({
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [yearFilter, setYearFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
+  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ];
+
+  // Filter summary label (Laboratory+2026+January style)
+  const filterSummaryLabel = useMemo(() => {
+    const filters = [];
+    if (statusFilter !== "__all") filters.push(statusFilter);
+    if (yearFilter !== "all") filters.push(yearFilter);
+    if (monthFilter !== "all") {
+      const m = monthNames[parseInt(monthFilter) - 1];
+      if (m) filters.push(m);
+    }
+    if (institutionFilter.length > 0) filters.push(...institutionFilter);
+    return filters.length > 0 ? filters.join("+") : "All";
+  }, [statusFilter, yearFilter, monthFilter, institutionFilter, monthNames]);
 
   // Derive available years
   const availableYears = useMemo(() => {
@@ -147,257 +162,368 @@ export function DataTable<TData extends Project, TValue>({
 
   return (
     <div className="space-y-4">
-      {/* Cards Section */}
-      <div className="flex flex-col space-y-4">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {statuses.map((stat) => {
-            const isActive = statusFilter === stat.id;
-            return (
-              <div
-                key={stat.id}
-                onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
-                className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${isActive
-                  ? `ring-2 ring-primary ring-offset-2 ${stat.bg} ${stat.border}`
-                  : "bg-white"
-                  }`}
-              >
-                <div className={`text-2xl font-bold ${stat.color}`}>
-                  {data.filter(i => i.status === stat.id).length}
-                </div>
-                <div className="text-sm text-muted-foreground font-medium">{stat.label}</div>
-              </div>
-            );
-          })}
-
-          <div
-            onClick={() => {
-              setGlobalFilter("");
-              setStatusFilter("__all");
-              setInstitutionFilter([]);
-              setYearFilter("all");
-              setMonthFilter("all");
-            }}
-            className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${statusFilter === "__all" && institutionFilter.length === 0 && globalFilter === "" && yearFilter === "all" && monthFilter === "all"
-              ? "ring-2 ring-primary ring-offset-2 bg-slate-50 border-slate-200"
-              : "bg-white"
-              }`}
-          >
-            <div className="text-2xl font-bold text-gray-700">{filteredData.length}</div>
-            <div className="text-sm text-muted-foreground flex justify-between items-center font-medium">
-              <span>Total Projects</span>
-              {(statusFilter !== "__all" || institutionFilter.length > 0 || globalFilter !== "" || yearFilter !== "all" || monthFilter !== "all") && (
-                <Badge variant="secondary" className="text-[10px] h-4 py-0 leading-none">Active</Badge>
-              )}
-            </div>
-          </div>
+      {/* Filters & Overview Section */}
+      <Card className="overflow-hidden">
+        <div 
+          className="flex items-center justify-between px-3 py-2 border-b cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
+        >
+          <h3 className="text-base font-bold text-gray-800">Filters & Overview</h3>
+          <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? 'rotate-180' : ''}`} />
         </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {institutions.map((inst) => {
-            const isActive = institutionFilter.includes(inst.id);
-            return (
-              <div
-                key={inst.id}
-                onClick={() => {
-                  if (isActive) {
-                    setInstitutionFilter(institutionFilter.filter(i => i !== inst.id));
-                  } else {
-                    setInstitutionFilter([...institutionFilter, inst.id]);
-                  }
-                }}
-                className={`rounded-lg border p-4 cursor-pointer transition-all hover:shadow-md ${isActive
-                  ? `ring-2 ring-primary ring-offset-2 ${inst.bg} ${inst.border}`
-                  : "bg-white"
-                  }`}
-              >
-                <div className={`text-2xl font-bold ${inst.color}`}>
-                  {data.filter(i => i.sendingInstitution === inst.id).length}
-                </div>
-                <div className="text-sm text-muted-foreground font-medium">{inst.label}</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Active Filter Chips */}
-      {(statusFilter !== "__all" || institutionFilter.length > 0 || yearFilter !== "all" || monthFilter !== "all") && (
-        <div className="flex flex-wrap gap-2 items-center px-1">
-          <span className="text-xs font-semibold text-muted-foreground mr-1">Active Filters:</span>
-          {statusFilter !== "__all" && (
-            <Badge variant="outline" className="flex items-center gap-1 pl-2 pr-1 py-1 bg-amber-50/50 border-amber-200 text-amber-700">
-              <span className="text-[10px] uppercase opacity-60 font-bold mr-1">Status</span>
-              {statusFilter}
-              <Button variant="ghost" size="sm" className="h-4 w-4 p-0 hover:bg-transparent hover:text-red-500" onClick={() => setStatusFilter("__all")}><X className="h-3 w-3" /></Button>
-            </Badge>
-          )}
-          {yearFilter !== "all" && (
-            <Badge variant="outline" className="flex items-center gap-1 pl-2 pr-1 py-1 bg-blue-50/50 border-blue-200 text-blue-700">
-              <span className="text-[10px] uppercase opacity-60 font-bold mr-1">Year</span>
-              {yearFilter}
-              <Button variant="ghost" size="sm" className="h-4 w-4 p-0 hover:bg-transparent hover:text-red-500" onClick={() => setYearFilter("all")}><X className="h-3 w-3" /></Button>
-            </Badge>
-          )}
-          {monthFilter !== "all" && (
-            <Badge variant="outline" className="flex items-center gap-1 pl-2 pr-1 py-1 bg-green-50/50 border-green-200 text-green-700">
-              <span className="text-[10px] uppercase opacity-60 font-bold mr-1">Month</span>
-              {monthNames[parseInt(monthFilter) - 1]}
-              <Button variant="ghost" size="sm" className="h-4 w-4 p-0 hover:bg-transparent hover:text-red-500" onClick={() => setMonthFilter("all")}><X className="h-3 w-3" /></Button>
-            </Badge>
-          )}
-          {institutionFilter.map(inst => (
-            <Badge key={inst} variant="outline" className="flex items-center gap-1 pl-2 pr-1 py-1 bg-purple-50/50 border-purple-200 text-purple-700">
-              {inst}
-              <Button variant="ghost" size="sm" className="h-4 w-4 p-0 hover:bg-transparent hover:text-red-500" onClick={() => setInstitutionFilter(institutionFilter.filter(i => i !== inst))}><X className="h-3 w-3" /></Button>
-            </Badge>
-          ))}
-          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors" onClick={() => {
-            setStatusFilter("__all");
-            setInstitutionFilter([]);
-            setYearFilter("all");
-            setMonthFilter("all");
-          }}>Clear all</Button>
-        </div>
-      )}
-
-      {/* Navigation Controls Row */}
-      <div className="flex flex-wrap items-end justify-between gap-4 pt-2">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Search</span>
-            <Input
-              placeholder="Search projects..."
-              value={globalFilter}
-              onChange={(e) => setGlobalFilter(e.target.value)}
-              className="w-72 h-9"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Year</span>
-            <Select value={yearFilter} onValueChange={setYearFilter}>
-              <SelectTrigger className="w-[110px] h-9">
-                <SelectValue placeholder="All Years" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Years</SelectItem>
-                {availableYears.map(y => (
-                  <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase text-muted-foreground ml-1">Month</span>
-            <Select value={monthFilter} onValueChange={setMonthFilter}>
-              <SelectTrigger className="w-[130px] h-9">
-                <SelectValue placeholder="All Months" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Months</SelectItem>
-                {monthNames.map((m, idx) => (
-                  <SelectItem key={m} value={(idx + 1).toString()}>{m}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-end gap-2">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
-              <Select
-                value={String(pagination.pageSize)}
-                onValueChange={(v) => table.setPageSize(Number(v))}
-              >
-                <SelectTrigger className="w-[70px] h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[10, 20, 50, 100].map((n) => (
-                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}><ChevronsLeft className="h-4 w-4" /></Button>
-              <Button variant="outline" size="sm" className="h-8 px-2" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>Prev</Button>
-              <div className="flex items-center justify-center min-w-[80px] text-sm font-medium"> {pagination.pageIndex + 1} / {table.getPageCount() || 1} </div>
-              <Button variant="outline" size="sm" className="h-8 px-2" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Next</Button>
-              <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}><ChevronsRight className="h-4 w-4" /></Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="rounded-md border overflow-hidden bg-white">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((hg) => (
-              <TableRow key={hg.id}>
-                {hg.headers.map((header) => {
-                  const canSort = header.column.getCanSort?.();
-                  const sortDir = header.column.getIsSorted?.();
+        
+        {!isFiltersCollapsed && (
+          <div className="p-2.5 space-y-2.5">
+            {/* Status Cards Section */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">PROJECT STATUS</h4>
+              <div className="grid grid-cols-3 gap-2">
+                {statuses.map((stat) => {
+                  const isActive = statusFilter === stat.id;
                   return (
-                    <TableHead
-                      key={header.id}
-                      style={{ width: header.getSize(), minWidth: header.getSize() }}
-                      onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                      className={canSort ? "cursor-pointer select-none" : ""}
+                    <div
+                      key={stat.id}
+                      onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
+                      className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                        isActive
+                          ? `ring-1 ring-primary ring-offset-1 ${stat.bg} ${stat.border} shadow-sm`
+                          : "bg-white hover:bg-gray-50 border-gray-200"
+                      }`}
                     >
-                      <div className="flex items-center gap-1">
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                        {canSort && (
-                          <span className="ml-1 text-xs opacity-60">
-                            {sortDir === "asc" ? "▲" : sortDir === "desc" ? "▼" : ""}
-                          </span>
-                        )}
+                      <div className={`text-sm font-semibold ${stat.color} truncate leading-tight`}>
+                        {data.filter(i => i.status === stat.id).length}
                       </div>
-                    </TableHead>
-                  )
+                      <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
+                        {stat.label}
+                      </div>
+                      {isActive && (
+                        <div className="mt-0.5">
+                          <Badge variant="default" className="text-[7px] h-2.5 px-1">
+                            Active
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  );
                 })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} style={{ width: cell.column.getSize(), minWidth: cell.column.getSize() }}>
-                      {flexRender(cell.column.columnDef.cell, { ...cell.getContext(), meta })}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="text-center h-24 text-muted-foreground">
-                  <div className="flex flex-col items-center justify-center gap-2 py-4">
-                    <Filter className="h-8 w-8 opacity-20" />
-                    <p>No results found for current filters.</p>
-                    <Button variant="link" onClick={() => {
+              </div>
+            </div>
+
+            {/* Institution Cards Section */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">INSTITUTION TYPE</h4>
+              <div className="grid grid-cols-4 gap-2">
+                {institutions.map((inst) => {
+                  const isActive = institutionFilter.includes(inst.id);
+                  return (
+                    <div
+                      key={inst.id}
+                      onClick={() => {
+                        if (isActive) {
+                          setInstitutionFilter(institutionFilter.filter(i => i !== inst.id));
+                        } else {
+                          setInstitutionFilter([...institutionFilter, inst.id]);
+                        }
+                      }}
+                      className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                        isActive
+                          ? `ring-1 ring-primary ring-offset-1 ${inst.bg} ${inst.border} shadow-sm`
+                          : "bg-white hover:bg-gray-50 border-gray-200"
+                      }`}
+                    >
+                      <div className={`text-sm font-semibold ${inst.color} truncate leading-tight`}>
+                        {data.filter(i => i.sendingInstitution === inst.id).length}
+                      </div>
+                      <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
+                        {inst.label}
+                      </div>
+                      {isActive && (
+                        <div className="mt-0.5">
+                          <Badge variant="default" className="text-[7px] h-2.5 px-1">
+                            Active
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Search & Date Filters with Summary Card */}
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-end gap-2 pb-1">
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Search</span>
+                  <Input
+                    placeholder="Search projects..."
+                    value={globalFilter}
+                    onChange={(e) => setGlobalFilter(e.target.value)}
+                    className="w-56 h-7 text-sm"
+                  />
+                </div>
+
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Year</span>
+                  <Select value={yearFilter} onValueChange={setYearFilter}>
+                    <SelectTrigger className="w-[120px] h-7 text-sm">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Years</SelectItem>
+                      {availableYears.map(y => (
+                        <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Month</span>
+                  <Select value={monthFilter} onValueChange={setMonthFilter}>
+                    <SelectTrigger className="w-[140px] h-7 text-sm">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Months</SelectItem>
+                      {monthNames.map((m, idx) => (
+                        <SelectItem key={m} value={(idx + 1).toString()}>{m}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Summary Card aligned with filters */}
+                <div className="ml-auto">
+                  <div
+                    onClick={() => {
+                      setGlobalFilter("");
                       setStatusFilter("__all");
                       setInstitutionFilter([]);
-                      setGlobalFilter("");
                       setYearFilter("all");
                       setMonthFilter("all");
-                    }}>Clear all filters</Button>
+                    }}
+                    className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm w-[300px] ${
+                      statusFilter === "__all" && 
+                      institutionFilter.length === 0 && 
+                      globalFilter === "" && 
+                      yearFilter === "all" && 
+                      monthFilter === "all"
+                        ? "ring-1 ring-primary ring-offset-1 bg-slate-50 border-slate-200 shadow-sm"
+                        : "bg-white hover:bg-gray-50 border-gray-200"
+                    }`}
+                  >
+                    <div className="space-y-1">
+                      <div className="text-[13px] text-primary font-medium uppercase tracking-wide">
+                        Summary
+                      </div>
+                      <div className="text-lg font-bold text-gray-800">
+                        {filteredData.length} {filteredData.length === 1 ? 'project' : 'projects'}
+                      </div>
+                      <div className="flex items-center justify-between gap-2 pt-0.5">
+                        <div />
+                        <div className="text-[10px] font-medium text-gray-500 truncate text-right w-full">
+                          {filterSummaryLabel !== 'All' ? filterSummaryLabel : 'none'}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
+      
+      {/* Table Header with Record Count and Navigation */}
+      <div className="flex items-center justify-between py-1">
+        <div className="text-sm text-muted-foreground">
+          Showing {filteredData.length > 0 ? (pagination.pageIndex * pagination.pageSize) + 1 : 0} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)} of {filteredData.length} records
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
+          <Select
+            value={String(pagination.pageSize)}
+            onValueChange={(v) => table.setPageSize(Number(v))}
+          >
+            <SelectTrigger className="w-[70px] h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[10, 20, 50, 100].map((n) => (
+                <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => table.setPageIndex(0)}
+            disabled={!table.getCanPreviousPage()}
+          >
+            &laquo;
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 px-2"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Prev
+          </Button>
+          <div className="flex items-center justify-center min-w-[80px] text-sm font-medium">
+            {pagination.pageIndex + 1} / {table.getPageCount() || 1}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 px-2"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+            disabled={!table.getCanNextPage()}
+          >
+            &raquo;
+          </Button>
+        </div>
       </div>
 
-      <div className="text-xs text-muted-foreground px-1">
-        Showing {filteredData.length > 0 ? (pagination.pageIndex * pagination.pageSize) + 1 : 0} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)} of {filteredData.length} records
+      {/* Compact Table with Sticky Header */}
+      <div className="rounded-md border overflow-hidden">
+        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+          <Table>
+            <TableHeader className="sticky top-0 bg-muted/95 backdrop-blur-sm z-10">
+              {table.getHeaderGroups().map((hg) => (
+                <TableRow key={hg.id}>
+                  {hg.headers.map((header) => {
+                    const canSort = header.column.getCanSort?.();
+                    const sortDir = header.column.getIsSorted?.();
+                    return (
+                      <TableHead
+                        key={header.id}
+                        style={{ width: header.getSize(), minWidth: header.getSize() }}
+                        onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                        className={`${canSort ? "cursor-pointer select-none" : ""} h-10 text-xs font-semibold`}
+                      >
+                        <div className="flex items-center gap-1">
+                          {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                          {canSort && (
+                            <span className="ml-1 text-xs opacity-60">
+                              {sortDir === "asc" ? "▲" : sortDir === "desc" ? "▼" : ""}
+                            </span>
+                          )}
+                        </div>
+                      </TableHead>
+                    )
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className="hover:bg-muted/50 transition-colors"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        style={{ width: cell.column.getSize(), minWidth: cell.column.getSize() }}
+                        className="py-2"
+                      >
+                        {flexRender(cell.column.columnDef.cell, { ...cell.getContext(), meta })}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="text-center h-24 text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center gap-2 py-4">
+                      <p>No results found for current filters.</p>
+                      <Button variant="link" onClick={() => {
+                        setStatusFilter("__all");
+                        setInstitutionFilter([]);
+                        setGlobalFilter("");
+                        setYearFilter("all");
+                        setMonthFilter("all");
+                      }}>Clear all filters</Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      {/* Bottom Pagination */}
+      <div className="flex items-center justify-end">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
+          <Select
+            value={String(pagination.pageSize)}
+            onValueChange={(v) => table.setPageSize(Number(v))}
+          >
+            <SelectTrigger className="w-[70px] h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[10, 20, 50, 100].map((n) => (
+                <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => table.setPageIndex(0)}
+            disabled={!table.getCanPreviousPage()}
+          >
+            &laquo;
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 px-2"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Prev
+          </Button>
+          <div className="flex items-center justify-center min-w-[80px] text-sm font-medium">
+            {pagination.pageIndex + 1} / {table.getPageCount() || 1}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 px-2"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+            disabled={!table.getCanNextPage()}
+          >
+            &raquo;
+          </Button>
+        </div>
       </div>
     </div>
   );
