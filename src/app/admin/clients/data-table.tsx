@@ -15,7 +15,7 @@ import {
   ColumnFiltersState,
   getPaginationRowModel,
 } from "@tanstack/react-table"
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Client } from "@/types/Client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -64,31 +64,35 @@ export function DataTable<TData, TValue>({
     "July", "August", "September", "October", "November", "December"
   ];
   
-  // Derive available years from data
-  const availableYears = Array.from(new Set(
-    data
-      .map((item: any) => {
-        const d = item.createdAt ? new Date(item.createdAt) : null;
-        return d && !isNaN(d.getTime()) ? d.getFullYear() : null;
-      })
-      .filter((y) => y !== null)
-  )).sort((a, b) => (b as number) - (a as number));
+  // Derive available years from data with useMemo to prevent recalculation
+  const availableYears = useMemo(() => {
+    return Array.from(new Set(
+      data
+        .map((item: any) => {
+          const d = item.createdAt ? new Date(item.createdAt) : null;
+          return d && !isNaN(d.getTime()) ? d.getFullYear() : null;
+        })
+        .filter((y) => y !== null)
+    )).sort((a, b) => (b as number) - (a as number));
+  }, [data]);
 
-  // Filter data by search, year, and month
-  const filteredData = data.filter((row: any) => {
-    // Search filter
-    const searchQuery = globalFilter.trim().toLowerCase();
-    const matchesSearch = searchQuery === "" || 
-      `${row.name || ""} ${row.email || ""} ${row.institution || ""} ${row.designation || ""}`
-        .toLowerCase().includes(searchQuery);
-    
-    // Date filters
-    const date = row.createdAt ? new Date(row.createdAt) : null;
-    const matchesYear = yearFilter === "all" || (date && date.getFullYear().toString() === yearFilter);
-    const matchesMonth = monthFilter === "all" || (date && (date.getMonth() + 1).toString() === monthFilter);
-    
-    return matchesSearch && matchesYear && matchesMonth;
-  });
+  // Filter data by search, year, and month with useMemo for performance
+  const filteredData = useMemo(() => {
+    return data.filter((row: any) => {
+      // Search filter
+      const searchQuery = globalFilter.trim().toLowerCase();
+      const matchesSearch = searchQuery === "" || 
+        `${row.name || ""} ${row.email || ""} ${row.institution || ""} ${row.designation || ""}`
+          .toLowerCase().includes(searchQuery);
+      
+      // Date filters
+      const date = row.createdAt ? new Date(row.createdAt) : null;
+      const matchesYear = yearFilter === "all" || (date && date.getFullYear().toString() === yearFilter);
+      const matchesMonth = monthFilter === "all" || (date && (date.getMonth() + 1).toString() === monthFilter);
+      
+      return matchesSearch && matchesYear && matchesMonth;
+    });
+  }, [data, globalFilter, yearFilter, monthFilter]);
 
   // Initialize TanStack Table instance
   const table = useReactTable({
@@ -102,7 +106,7 @@ export function DataTable<TData, TValue>({
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
     onPaginationChange: setPagination,
-    getRowId: (row: any) => row.cid || String(Math.random()),
+    getRowId: (row: any, index: number) => row.cid || `row-${index}`,
     state: {
       sorting,
       columnFilters,
@@ -258,10 +262,7 @@ export function DataTable<TData, TValue>({
                       <div className="text-lg font-bold text-gray-800">
                         {totalRecords} Clients
                       </div>
-                      <div className="flex items-center justify-between gap-2 pt-0.5">
-                        <div className="text-xs text-blue-600 font-semibold">
-                          {totalRecords} {totalRecords === 1 ? 'result' : 'results'}
-                        </div>
+                      <div className="flex items-center justify-end gap-2 pt-0.5">
                         <div className="text-[10px] font-medium text-gray-500 truncate">
                           {globalFilter || yearFilter !== 'all' || monthFilter !== 'all' 
                             ? [globalFilter, yearFilter !== 'all' && yearFilter, monthFilter !== 'all' && monthNames[parseInt(monthFilter) - 1]].filter(Boolean).join(' + ') || 'Filtered'
