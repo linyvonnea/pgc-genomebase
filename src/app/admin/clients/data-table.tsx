@@ -50,28 +50,6 @@ export function DataTable<TData, TValue>({
     pageIndex: 0,
     pageSize: 10, 
   })
-
-  // Initialize TanStack Table instance
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: setGlobalFilter,
-    onPaginationChange: setPagination,
-    getRowId: (row: any) => row.cid || String(Math.random()),
-    state: {
-      sorting,
-      columnFilters,
-      globalFilter,
-      pagination,
-    },
-  })
-
   // Year and Month filter state
   const [yearFilter, setYearFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
@@ -79,6 +57,7 @@ export function DataTable<TData, TValue>({
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ];
+  
   // Derive available years from data
   const availableYears = Array.from(new Set(
     data
@@ -97,8 +76,29 @@ export function DataTable<TData, TValue>({
     return matchesYear && matchesMonth;
   });
 
+  // Initialize TanStack Table instance
+  const table = useReactTable({
+    data: filteredData,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    onPaginationChange: setPagination,
+    getRowId: (row: any) => row.cid || String(Math.random()),
+    state: {
+      sorting,
+      columnFilters,
+      globalFilter,
+      pagination,
+    },
+  })
+
   // Calculate record range for display
-  const totalRecords = filteredData.length;
+  const totalRecords = table.getFilteredRowModel().rows.length;
   const pageIndex = table.getState().pagination.pageIndex;
   const pageSize = table.getState().pagination.pageSize;
   const startRecord = totalRecords > 0 ? pageIndex * pageSize + 1 : 0;
@@ -202,16 +202,16 @@ export function DataTable<TData, TValue>({
             </TableHeader>
             <TableBody>
               {/* Render rows or show 'No results' if empty */}
-              {filteredData.length ? (
-                filteredData.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize).map((row: any) => (
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
                   <TableRow
-                    key={row.cid}
+                    key={row.id}
                     data-state={row.getIsSelected && row.getIsSelected() && "selected"}
                     className="hover:bg-muted/50 transition-colors cursor-pointer"
                   >
-                    {table.getVisibleFlatColumns().map((col, colIdx) => (
-                      <TableCell key={colIdx} className="py-2 text-sm">
-                        {flexRender(col.columnDef.cell, { ...row, meta })}
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="py-2 text-sm">
+                        {flexRender(cell.column.columnDef.cell, { ...cell.getContext(), meta })}
                       </TableCell>
                     ))}
                   </TableRow>
