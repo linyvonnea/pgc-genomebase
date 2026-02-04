@@ -2,7 +2,7 @@
 "use client";
 
 /**
- * Bar chart that displays statistics for projects, clients, and trainings.
+ * Bar chart that displays statistics for projects and clients.
  */
 
 import * as React from "react";
@@ -28,14 +28,12 @@ import { StatisticsBarChartProps } from "@/types/StatBarChart";
 // Colors for each category in the bar chart
 const CATEGORY_COLORS = {
   CLIENTS: "#F06292",  
-  PROJECTS: "#81C784",   
-  TRAININGS: "#64B5F6"   
+  PROJECTS: "#81C784"   
 } as const;
 
 export function StatBarChart({ 
   projectsData, 
   clientsData,
-  trainingsData,
   timeRange,
   customRange
 }: StatisticsBarChartProps) {
@@ -59,7 +57,6 @@ export function StatBarChart({
   const data = generateChartData({
     projectsData,
     clientsData,
-    trainingsData,
     timeRange,
     customRange
   });
@@ -117,8 +114,7 @@ export function StatBarChart({
                       className="font-semibold"
                       style={{ 
                         color: name === 'Clients' ? CATEGORY_COLORS.CLIENTS :
-                               name === 'Projects' ? CATEGORY_COLORS.PROJECTS :
-                               CATEGORY_COLORS.TRAININGS
+                               CATEGORY_COLORS.PROJECTS
                       }}
                     >
                       {value}
@@ -180,12 +176,6 @@ export function StatBarChart({
                 dataKey="projects" 
                 fill={CATEGORY_COLORS.PROJECTS} 
                 name="Projects" 
-                radius={[4, 4, 0, 0]}
-              />
-              <Bar 
-                dataKey="trainings" 
-                fill={CATEGORY_COLORS.TRAININGS} 
-                name="Trainings" 
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>

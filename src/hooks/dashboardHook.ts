@@ -17,7 +17,6 @@ export function useDashboardData() {
   const [userName, setUserName] = useState("User");
   const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
   const [filteredClients, setFilteredClients] = useState<any[]>([]);
-  const [filteredTrainings, setFilteredTrainings] = useState<any[]>([]);
   const [filteredChargeSlips, setFilteredChargeSlips] = useState<any[]>([]);
   const [totalIncome, setTotalIncome] = useState(0);
 
@@ -40,7 +39,6 @@ export function useDashboardData() {
       setFilteredProjects,
       setFilteredClients,
       setFilteredChargeSlips,
-      setFilteredTrainings,
       setTotalIncome
     });
   };
@@ -86,7 +84,7 @@ export function useDashboardData() {
       const startTS = Timestamp.fromDate(start);
       const endTS = Timestamp.fromDate(new Date());
 
-      await fetchFilteredData(startTS, endTS, { setFilteredProjects, setFilteredClients, setFilteredChargeSlips, setFilteredTrainings, setTotalIncome });
+      await fetchFilteredData(startTS, endTS, { setFilteredProjects, setFilteredClients, setFilteredChargeSlips, setTotalIncome });
       setLoading(false);
       return;
     }
@@ -99,7 +97,7 @@ export function useDashboardData() {
     const startTS = Timestamp.fromDate(startDate);
     const endTS = Timestamp.fromDate(endDate);
 
-    await fetchFilteredData(startTS, endTS, { setFilteredProjects, setFilteredClients, setFilteredChargeSlips, setFilteredTrainings, setTotalIncome });
+      await fetchFilteredData(startTS, endTS, { setFilteredProjects, setFilteredClients, setFilteredChargeSlips, setTotalIncome });
     setLoading(false);
   };
 
@@ -125,7 +123,6 @@ export function useDashboardData() {
     isExporting,
     filteredProjects,
     filteredClients,
-    filteredTrainings,
     timeRange,
     customRange,
     totalIncome,
