@@ -15,7 +15,7 @@ import {
   ColumnFiltersState,
   getPaginationRowModel,
 } from "@tanstack/react-table"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 // Helper to robustly parse Firestore and ISO date strings
 function parseClientDate(dateVal: any): Date | null {
   if (!dateVal) return null;
@@ -119,6 +119,11 @@ export function DataTable<TData, TValue>({
     });
   }, [data, globalFilter, yearFilter, monthFilter]);
 
+  // Reset pagination when filters change
+  useEffect(() => {
+    setPagination(prev => ({ ...prev, pageIndex: 0 }));
+  }, [globalFilter, yearFilter, monthFilter]);
+
   // Initialize TanStack Table instance
   const table = useReactTable({
     data: filteredData,
@@ -141,7 +146,7 @@ export function DataTable<TData, TValue>({
   })
 
   // Calculate record range for display
-  const totalRecords = table.getFilteredRowModel().rows.length;
+  const totalRecords = filteredData.length;
   const pageIndex = table.getState().pagination.pageIndex;
   const pageSize = table.getState().pagination.pageSize;
   const startRecord = totalRecords > 0 ? pageIndex * pageSize + 1 : 0;
