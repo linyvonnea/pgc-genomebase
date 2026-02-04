@@ -1,7 +1,6 @@
 export interface DashboardContentProps {
   filteredProjects: any[];
   filteredClients: any[];
-  filteredTrainings: any[];
   totalIncome: number;
   timeRange: string;
   customRange?: any;

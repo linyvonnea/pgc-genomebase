@@ -28,7 +28,6 @@ function DashboardPage() {
     isExporting,          
     filteredProjects,   
     filteredClients,    
-    filteredTrainings,    
     totalIncome,      
     timeRange,       
     customRange,    
@@ -73,7 +72,6 @@ function DashboardPage() {
           <DashboardContent
             filteredProjects={filteredProjects}
             filteredClients={filteredClients}
-            filteredTrainings={filteredTrainings}
             totalIncome={totalIncome}
             timeRange={timeRange}
             customRange={customRange}

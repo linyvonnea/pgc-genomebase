@@ -14,7 +14,6 @@ import { DashboardContentProps } from "@/types/DashboardContent";
 export function DashboardContent({
   filteredProjects,
   filteredClients,
-  filteredTrainings,
   totalIncome,
   timeRange,
   customRange
@@ -24,10 +23,9 @@ export function DashboardContent({
       {/* Stat Cards Section */}
       <div className="gap-4 mb-4">
         <div className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
             <StatCard title="Total Clients" value={filteredClients.length} colorIndex={0} />
             <StatCard title="Total Projects" value={filteredProjects.length} colorIndex={1} />
-            <StatCard title="Total Trainings" value={filteredTrainings.length} colorIndex={2} />
             <StatCard
               title="Total Income"
               value={totalIncome.toLocaleString("en-PH", {
@@ -43,7 +41,6 @@ export function DashboardContent({
           <StatBarChart
             projectsData={filteredProjects}
             clientsData={filteredClients}
-            trainingsData={filteredTrainings}
             timeRange={timeRange}
             customRange={customRange}
           />

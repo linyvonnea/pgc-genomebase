@@ -16,14 +16,12 @@ export async function fetchAllData(setters: {
   setFilteredProjects: (v: any[]) => void,
   setFilteredClients: (v: any[]) => void,
   setFilteredChargeSlips: (v: any[]) => void,
-  setFilteredTrainings: (v: any[]) => void,
   setTotalIncome: (v: number) => void,
 }) {
-  const [pr, cl, cs, tr] = await Promise.all([
+  const [pr, cl, cs] = await Promise.all([
     getDocs(collection(db, "projects")),
     getDocs(collection(db, "clients")),
-    getDocs(collection(db, "chargeSlips")),
-    getDocs(collection(db, "trainings"))
+    getDocs(collection(db, "chargeSlips"))
   ]);
   const mapDocs = (snap: any) => snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
   
@@ -33,7 +31,6 @@ export async function fetchAllData(setters: {
   setters.setFilteredProjects(mapDocs(pr));
   setters.setFilteredClients(mapDocs(cl));
   setters.setFilteredChargeSlips(chargeSlips);
-  setters.setFilteredTrainings(mapDocs(tr));
   setters.setTotalIncome(totalIncome);
 }
 
@@ -44,15 +41,13 @@ export async function fetchFilteredData(
     setFilteredProjects: (v: any[]) => void,
     setFilteredClients: (v: any[]) => void,
     setFilteredChargeSlips: (v: any[]) => void,
-    setFilteredTrainings: (v: any[]) => void,
     setTotalIncome: (v: number) => void,
   }
 ) {
-  const [pr, cl, cs, tr] = await Promise.all([
+  const [pr, cl, cs] = await Promise.all([
     getDocs(query(collection(db, "projects"), where("startDate", ">=", startTS), where("startDate", "<=", endTS))),
     getDocs(query(collection(db, "clients"), where("createdAt", ">=", startTS), where("createdAt", "<=", endTS))),
-    getDocs(collection(db, "chargeSlips")),
-    getDocs(query(collection(db, "trainings"), where("dateConducted", ">=", startTS), where("dateConducted", "<=", endTS)))
+    getDocs(collection(db, "chargeSlips"))
   ]);
   const mapDocs = (snap: any) => snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
   
@@ -79,6 +74,5 @@ export async function fetchFilteredData(
   setters.setFilteredProjects(mapDocs(pr));
   setters.setFilteredClients(mapDocs(cl));
   setters.setFilteredChargeSlips(chargeSlips); 
-  setters.setFilteredTrainings(mapDocs(tr));
   setters.setTotalIncome(totalIncome);
 }
