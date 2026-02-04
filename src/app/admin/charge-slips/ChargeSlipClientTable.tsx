@@ -221,7 +221,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       const mIndex = parseInt(monthFilter) - 1;
       filters.push(monthNames[mIndex]);
     }
-    return filters.length > 0 ? filters.join(" + ") : "None";
+    return filters.length > 0 ? filters.join(" + ") : "All Records";
   }, [categoryFilter, statusFilter, yearFilter, monthFilter, statuses, monthNames]);
 
   // Pagination Controls Component

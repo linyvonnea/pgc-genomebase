@@ -60,7 +60,7 @@ function ClientPageContent() {
   }, []);
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-4 space-y-3">
       <div className="space-y-3">
         {/* Header with Add New Client Button */}
         <div className="flex items-center justify-between">
