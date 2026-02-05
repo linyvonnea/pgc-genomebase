@@ -72,31 +72,48 @@ export async function getClients(): Promise<Client[]> {
         type: typeof data?.createdAt,
       });
 
-      // Convert Firestore Timestamps to JS Dates if present
-      if (data?.createdAt && typeof data.createdAt.toDate === "function") {
-        try {
-          const jsDate = data.createdAt.toDate();
-          console.log(`✅ ${clientId}: Converted Firestore Timestamp to JS Date:`, jsDate.toISOString());
-          data.createdAt = jsDate;
-        } catch (err) {
-          // Handle invalid timestamps (e.g., epoch 0)
-          console.warn(`❌ Invalid createdAt for ${clientId}:`, data.createdAt, err);
-          data.createdAt = new Date(0); // Use epoch as fallback
+      // Convert Firestore Timestamps to ISO strings (serializable format)
+      // This is critical because Firestore Timestamp objects can't be transferred to client as-is
+      if (data?.createdAt) {
+        if (typeof data.createdAt.toDate === "function") {
+          try {
+            const jsDate = data.createdAt.toDate();
+            const isoString = jsDate.toISOString();
+            console.log(`✅ ${clientId}: Converted Firestore Timestamp to ISO string:`, isoString);
+            data.createdAt = isoString;
+          } catch (err) {
+            console.warn(`❌ Invalid createdAt for ${clientId}:`, data.createdAt, err);
+            data.createdAt = new Date(0).toISOString();
+          }
+        } else if (typeof data.createdAt === 'string') {
+          // Already a string, keep it
+          console.log(`📝 ${clientId}: createdAt is already string:`, data.createdAt);
+        } else if (typeof data.createdAt === 'object' && data.createdAt?._seconds !== undefined) {
+          // Handle Firestore Timestamp with _seconds property
+          try {
+            const jsDate = new Date(data.createdAt._seconds * 1000 + (data.createdAt._nanoseconds || 0) / 1000000);
+            const isoString = jsDate.toISOString();
+            console.log(`✅ ${clientId}: Converted _seconds Timestamp to ISO string:`, isoString);
+            data.createdAt = isoString;
+          } catch (err) {
+            console.warn(`❌ Failed to parse _seconds for ${clientId}`, err);
+            data.createdAt = new Date().toISOString();
+          }
+        } else {
+          console.warn(`⚠️  Unknown createdAt format for ${clientId}:`, typeof data.createdAt, data.createdAt);
+          data.createdAt = new Date().toISOString();
         }
-      } else if (data?.createdAt?._seconds === 0 && data?.createdAt?._nanoseconds === 0) {
-        // Handle malformed Firestore timestamp objects
-        console.warn(`⚠️  Malformed createdAt for ${clientId}, using current date`);
-        data.createdAt = new Date();
-      } else if (typeof data?.createdAt === 'string') {
-        // Handle string timestamps (e.g., "November 13, 2025 at 9:22:19 AM UTC+8")
-        console.log(`📝 ${clientId}: createdAt is string format:`, data.createdAt);
-        // The sanitizeObject will keep it as-is for now
-      } else if (!data?.createdAt) {
-        console.warn(`⚠️  Missing createdAt for ${clientId}, will not appear in date filters`);
+      } else {
+        console.warn(`⚠️  Missing createdAt for ${clientId}, using current date`);
+        data.createdAt = new Date().toISOString();
       }
 
       if (data?.startDate && typeof data.startDate.toDate === "function") {
-        data.startDate = data.startDate.toDate();
+        try {
+          data.startDate = data.startDate.toDate().toISOString();
+        } catch (err) {
+          console.warn(`Error converting startDate for ${clientId}:`, err);
+        }
       }
 
       // Normalize nulls -> undefined for better compatibility with TS types
@@ -122,7 +139,11 @@ export async function getClients(): Promise<Client[]> {
     // DEBUG: Summary log
     console.group('🔍 getClients DEBUG INFO');
     console.log(`Total clients fetched: ${clients.length}`);
-    console.log('CreatedAt formats in Firestore:', debugLog);
+    console.log('CreatedAt formats after conversion:', debugLog.map(log => ({
+      cid: log.cid,
+      originalType: log.type,
+      originalValue: log.originalCreatedAt
+    })));
     console.groupEnd();
 
     // ✅ Sort in memory by client ID in descending order (newest 2026 on top)
