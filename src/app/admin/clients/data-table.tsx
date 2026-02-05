@@ -123,21 +123,29 @@ export function DataTable<TData, TValue>({
         const d = parseClientDate(item.createdAt);
         if (d && !isNaN(d.getTime())) {
           const year = d.getFullYear();
-          console.log('Processing client year:', item.name, d, year);
-          return year;
+          // Only include reasonable years (1970-2100)
+          if (year >= 1970 && year <= 2100) {
+            return year;
+          }
         }
-        console.warn('Invalid date for client:', item.name, item.createdAt);
         return null;
       })
-      .filter((y) => y !== null);
+      .filter((y): y is number => y !== null);
     
-    const allYears = Array.from(new Set([...fixedYears, ...dataYears])).sort((a, b) => (b as number) - (a as number));
-    console.log('Available years:', allYears);
+    const allYears = Array.from(new Set([...fixedYears, ...dataYears])).sort((a, b) => b - a);
+    console.log('📅 Available years for filter:', allYears, `(from ${dataYears.length} valid dates)`);
     return allYears;
   }, [data]);
 
   // Filter data by search, year, and month with useMemo for performance
   const filteredData = useMemo(() => {
+    console.log('Starting filter with:', { 
+      totalRecords: data.length, 
+      yearFilter, 
+      monthFilter, 
+      globalFilter 
+    });
+    
     const result = data.filter((row: any) => {
       // Search filter
       const searchQuery = globalFilter.trim().toLowerCase();
@@ -145,34 +153,53 @@ export function DataTable<TData, TValue>({
         `${row.name || ""} ${row.email || ""} ${row.institution || ""} ${row.designation || ""}`
           .toLowerCase().includes(searchQuery);
       
-      // Date filters
+      // Date filters - handle invalid dates gracefully
       const date = parseClientDate(row.createdAt);
-      const matchesYear = yearFilter === "all" || (date && date.getFullYear().toString() === yearFilter);
-      const matchesMonth = monthFilter === "all" || (date && (date.getMonth() + 1).toString() === monthFilter);
       
-      // Debug logging for first few items when filters change
-      if (data.indexOf(row) < 3 && (yearFilter !== "all" || monthFilter !== "all")) {
-        console.log('Filter Debug:', {
+      // If filters are "all", include all records regardless of date validity
+      if (yearFilter === "all" && monthFilter === "all") {
+        return matchesSearch;
+      }
+      
+      // If filters are active but date is invalid, exclude the record
+      if (!date) {
+        console.warn('Excluding client with invalid date:', row.name, row.createdAt);
+        return false;
+      }
+      
+      // Apply year and month filters
+      const recordYear = date.getFullYear().toString();
+      const recordMonth = (date.getMonth() + 1).toString();
+      
+      const matchesYear = yearFilter === "all" || recordYear === yearFilter;
+      const matchesMonth = monthFilter === "all" || recordMonth === monthFilter;
+      
+      // Debug logging
+      if (data.indexOf(row) < 5) {
+        console.log('Filter check:', {
           name: row.name,
-          rawCreatedAt: row.createdAt,
-          parsedDate: date,
-          yearFilter,
-          monthFilter,
+          date: date.toISOString(),
+          recordYear,
+          recordMonth,
+          filterYear: yearFilter,
+          filterMonth: monthFilter,
           matchesYear,
           matchesMonth,
-          finalMatch: matchesSearch && matchesYear && matchesMonth
+          matchesSearch,
+          included: matchesSearch && matchesYear && matchesMonth
         });
       }
       
       return matchesSearch && matchesYear && matchesMonth;
     });
     
-    console.log(`Filtered ${result.length} clients from ${data.length} total (Year: ${yearFilter}, Month: ${monthFilter})`);
+    console.log(`✅ Filtered result: ${result.length} clients (from ${data.length} total) [Year: ${yearFilter}, Month: ${monthFilter}]`);
     return result;
   }, [data, globalFilter, yearFilter, monthFilter]);
 
   // Reset pagination when filters change
   useEffect(() => {
+    console.log('🔄 Filters changed, resetting to page 1');
     setPagination(prev => ({ ...prev, pageIndex: 0 }));
   }, [globalFilter, yearFilter, monthFilter]);
 
@@ -180,6 +207,7 @@ export function DataTable<TData, TValue>({
   const table = useReactTable({
     data: filteredData,
     columns,
+    meta,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -337,6 +365,7 @@ export function DataTable<TData, TValue>({
                 <div className="ml-auto">
                   <div
                     onClick={() => {
+                      console.log('Clearing all filters');
                       setGlobalFilter("");
                       setYearFilter("all");
                       setMonthFilter("all");
@@ -345,18 +374,29 @@ export function DataTable<TData, TValue>({
                   >
                     <div className="space-y-1">
                       <div className="text-[13px] text-primary font-medium uppercase tracking-wide">
-                        Summary
+                        {globalFilter || yearFilter !== 'all' || monthFilter !== 'all' ? 'Filtered Summary' : 'Total Summary'}
                       </div>
                       <div className="text-lg font-bold text-gray-800">
-                        {totalRecords} Clients
+                        {totalRecords} {totalRecords === 1 ? 'Client' : 'Clients'}
                       </div>
-                      <div className="flex items-center justify-end gap-2 pt-0.5">
+                      <div className="flex items-center justify-between gap-2 pt-0.5">
                         <div className="text-[10px] font-medium text-gray-500 truncate">
                           {globalFilter || yearFilter !== 'all' || monthFilter !== 'all' 
-                            ? [globalFilter, yearFilter !== 'all' && yearFilter, monthFilter !== 'all' && monthNames[parseInt(monthFilter) - 1]].filter(Boolean).join(' + ') || 'Filtered'
-                            : 'All Records'
+                            ? (() => {
+                                const filters = [];
+                                if (yearFilter !== 'all') filters.push(yearFilter);
+                                if (monthFilter !== 'all') filters.push(monthNames[parseInt(monthFilter) - 1]);
+                                if (globalFilter) filters.push(`"${globalFilter}"`);
+                                return filters.join(' • ') || 'Active Filters';
+                              })()
+                            : 'All Records • No Filters'
                           }
                         </div>
+                        {(globalFilter || yearFilter !== 'all' || monthFilter !== 'all') && (
+                          <div className="text-[9px] text-blue-600 font-semibold uppercase">
+                            Click to clear
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -369,8 +409,17 @@ export function DataTable<TData, TValue>({
       
       {/* Table Header with Record Count and Navigation */}
       <div className="flex items-center justify-between py-1">
-        <div className="text-sm text-muted-foreground">
-          Showing {startRecord} - {endRecord} of {totalRecords} records
+        <div className="flex items-center gap-2">
+          <div className="text-sm text-muted-foreground">
+            Showing {startRecord} - {endRecord} of {totalRecords} records
+          </div>
+          {(globalFilter || yearFilter !== 'all' || monthFilter !== 'all') && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                Filtered from {data.length} total
+              </span>
+            </div>
+          )}
         </div>
         <PaginationControls />
       </div>
