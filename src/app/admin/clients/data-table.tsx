@@ -21,50 +21,95 @@ function parseClientDate(dateVal: any): Date | null {
   if (!dateVal) return null;
   
   // If already a valid Date object
-  if (dateVal instanceof Date && !isNaN(dateVal.getTime())) return dateVal;
+  if (dateVal instanceof Date && !isNaN(dateVal.getTime())) {
+    return dateVal;
+  }
   
   // Handle Firestore Timestamp object (various formats)
   if (dateVal && typeof dateVal === 'object') {
     // Standard Firestore Timestamp with seconds and nanoseconds
     if (dateVal.seconds !== undefined) {
-      return new Date(dateVal.seconds * 1000 + (dateVal.nanoseconds || 0) / 1000000);
+      const d = new Date(dateVal.seconds * 1000 + (dateVal.nanoseconds || 0) / 1000000);
+      console.log('📅 Parsed Firestore Timestamp (seconds):', dateVal, '->', d.toISOString());
+      return d;
     }
     
     // Firestore Timestamp with _seconds property 
     if (dateVal._seconds !== undefined) {
-      return new Date(dateVal._seconds * 1000 + (dateVal._nanoseconds || 0) / 1000000);
+      const d = new Date(dateVal._seconds * 1000 + (dateVal._nanoseconds || 0) / 1000000);
+      console.log('📅 Parsed Firestore Timestamp (_seconds):', dateVal, '->', d.toISOString());
+      return d;
     }
     
     // Handle toDate() method if available (Firestore Timestamp)
     if (typeof dateVal.toDate === 'function') {
       try {
-        return dateVal.toDate();
+        const d = dateVal.toDate();
+        console.log('📅 Parsed Firestore Timestamp (toDate):', '->', d.toISOString());
+        return d;
       } catch (e) {
         console.warn('Failed to call toDate():', e);
       }
     }
   }
   
+  // Try Firestore string format: "January 12, 2026 at 2:30:19 PM UTC+8"
+  // This format is what Firestore console displays
+  const firestoreMatch = String(dateVal).match(/([A-Za-z]+)\s+(\d{1,2}),\s+(\d{4})\s+at\s+(\d{1,2}):(\d{2}):(\d{2})\s+([AP]M)/i);
+  if (firestoreMatch) {
+    const [, monthName, day, year, hour, minute, second, ampm] = firestoreMatch;
+    
+    try {
+      // Month names for conversion
+      const monthMap: Record<string, number> = {
+        'january': 0, 'february': 1, 'march': 2, 'april': 3, 'may': 4, 'june': 5,
+        'july': 6, 'august': 7, 'september': 8, 'october': 9, 'november': 10, 'december': 11
+      };
+      
+      const month = monthMap[monthName.toLowerCase()];
+      let hours = parseInt(hour, 10);
+      
+      // Convert to 24-hour format
+      if (ampm.toUpperCase() === 'PM' && hours !== 12) {
+        hours += 12;
+      } else if (ampm.toUpperCase() === 'AM' && hours === 12) {
+        hours = 0;
+      }
+      
+      const d = new Date(
+        parseInt(year, 10),
+        month,
+        parseInt(day, 10),
+        hours,
+        parseInt(minute, 10),
+        parseInt(second, 10)
+      );
+      
+      if (!isNaN(d.getTime())) {
+        console.log(`📅 Parsed Firestore string: "${dateVal}" -> ${d.toISOString()}`);
+        return d;
+      }
+    } catch (e) {
+      console.warn('Error parsing Firestore string format:', e);
+    }
+  }
+  
   // Try parsing as ISO date string
   const iso = new Date(dateVal);
-  if (!isNaN(iso.getTime())) return iso;
-  
-  // Try Firestore string format: "January 12, 2026 at 2:30:19 PM UTC+8"
-  const firestoreMatch = String(dateVal).match(/([A-Za-z]+ \d{1,2}, \d{4}) at (\d{1,2}:\d{2}:\d{2}) ?([AP]M)?/);
-  if (firestoreMatch) {
-    let dateStr = firestoreMatch[1] + ' ' + firestoreMatch[2];
-    if (firestoreMatch[3]) dateStr += ' ' + firestoreMatch[3];
-    const parsed = new Date(dateStr);
-    if (!isNaN(parsed.getTime())) return parsed;
+  if (!isNaN(iso.getTime())) {
+    console.log('📅 Parsed as ISO date string:', dateVal, '->', iso.toISOString());
+    return iso;
   }
   
   // Try parsing timestamp in milliseconds
   const timestamp = Number(dateVal);
   if (!isNaN(timestamp) && timestamp > 0) {
-    return new Date(timestamp);
+    const d = new Date(timestamp);
+    console.log('📅 Parsed as timestamp:', timestamp, '->', d.toISOString());
+    return d;
   }
   
-  console.log('Failed to parse date:', dateVal, typeof dateVal, 'Value:', JSON.stringify(dateVal));
+  console.warn('❌ Failed to parse date. Raw value:', dateVal, 'Type:', typeof dateVal, 'Stringified:', JSON.stringify(dateVal));
   return null;
 }
 import { Client } from "@/types/Client"
@@ -139,14 +184,10 @@ export function DataTable<TData, TValue>({
 
   // Filter data by search, year, and month with useMemo for performance
   const filteredData = useMemo(() => {
-    console.log('Starting filter with:', { 
-      totalRecords: data.length, 
-      yearFilter, 
-      monthFilter, 
-      globalFilter 
-    });
+    console.group(`🔍 FILTER OPERATION - Year: ${yearFilter}, Month: ${monthFilter}`);
+    console.log(`Total records to filter: ${data.length}`);
     
-    const result = data.filter((row: any) => {
+    const result = data.filter((row: any, idx: number) => {
       // Search filter
       const searchQuery = globalFilter.trim().toLowerCase();
       const matchesSearch = searchQuery === "" || 
@@ -156,6 +197,17 @@ export function DataTable<TData, TValue>({
       // Date filters - handle invalid dates gracefully
       const date = parseClientDate(row.createdAt);
       
+      // Debug for first 10 records and any that have issues
+      const isFirstTenOrFailed = idx < 10 || !date;
+      if (isFirstTenOrFailed) {
+        console.log(`Record ${idx}: ${row.cid || row.name}`, {
+          rawCreatedAt: row.createdAt,
+          parsedDate: date ? date.toISOString() : 'PARSE FAILED',
+          parsedYear: date ? date.getFullYear() : 'N/A',
+          yearMatches: date ? (date.getFullYear().toString() === yearFilter) : false,
+        });
+      }
+      
       // If filters are "all", include all records regardless of date validity
       if (yearFilter === "all" && monthFilter === "all") {
         return matchesSearch;
@@ -163,7 +215,7 @@ export function DataTable<TData, TValue>({
       
       // If filters are active but date is invalid, exclude the record
       if (!date) {
-        console.warn('Excluding client with invalid date:', row.name, row.createdAt);
+        console.warn(`❌ Record ${row.cid} has unparseable date: ${row.createdAt}`);
         return false;
       }
       
@@ -174,26 +226,12 @@ export function DataTable<TData, TValue>({
       const matchesYear = yearFilter === "all" || recordYear === yearFilter;
       const matchesMonth = monthFilter === "all" || recordMonth === monthFilter;
       
-      // Debug logging
-      if (data.indexOf(row) < 5) {
-        console.log('Filter check:', {
-          name: row.name,
-          date: date.toISOString(),
-          recordYear,
-          recordMonth,
-          filterYear: yearFilter,
-          filterMonth: monthFilter,
-          matchesYear,
-          matchesMonth,
-          matchesSearch,
-          included: matchesSearch && matchesYear && matchesMonth
-        });
-      }
-      
       return matchesSearch && matchesYear && matchesMonth;
     });
     
-    console.log(`✅ Filtered result: ${result.length} clients (from ${data.length} total) [Year: ${yearFilter}, Month: ${monthFilter}]`);
+    console.log(`✅ Filtered: ${result.length} records match Year:${yearFilter} Month:${monthFilter}`);
+    console.groupEnd();
+    
     return result;
   }, [data, globalFilter, yearFilter, monthFilter]);
 

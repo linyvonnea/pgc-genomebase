@@ -59,23 +59,40 @@ export async function getClients(): Promise<Client[]> {
     const querySnapshot = await getDocs(clientsQuery);
 
     const clients: Client[] = [];
+    let debugLog: any = [];
 
     querySnapshot.forEach((doc) => {
       const data = doc.data();
+      const clientId = data?.cid || doc.id;
+
+      // DEBUG: Log original createdAt
+      debugLog.push({
+        cid: clientId,
+        originalCreatedAt: data?.createdAt,
+        type: typeof data?.createdAt,
+      });
 
       // Convert Firestore Timestamps to JS Dates if present
       if (data?.createdAt && typeof data.createdAt.toDate === "function") {
         try {
-          data.createdAt = data.createdAt.toDate();
+          const jsDate = data.createdAt.toDate();
+          console.log(`✅ ${clientId}: Converted Firestore Timestamp to JS Date:`, jsDate.toISOString());
+          data.createdAt = jsDate;
         } catch (err) {
           // Handle invalid timestamps (e.g., epoch 0)
-          console.warn(`Invalid createdAt for ${doc.id}:`, data.createdAt, err);
+          console.warn(`❌ Invalid createdAt for ${clientId}:`, data.createdAt, err);
           data.createdAt = new Date(0); // Use epoch as fallback
         }
       } else if (data?.createdAt?._seconds === 0 && data?.createdAt?._nanoseconds === 0) {
         // Handle malformed Firestore timestamp objects
-        console.warn(`Malformed createdAt for ${doc.id}, using current date`);
+        console.warn(`⚠️  Malformed createdAt for ${clientId}, using current date`);
         data.createdAt = new Date();
+      } else if (typeof data?.createdAt === 'string') {
+        // Handle string timestamps (e.g., "November 13, 2025 at 9:22:19 AM UTC+8")
+        console.log(`📝 ${clientId}: createdAt is string format:`, data.createdAt);
+        // The sanitizeObject will keep it as-is for now
+      } else if (!data?.createdAt) {
+        console.warn(`⚠️  Missing createdAt for ${clientId}, will not appear in date filters`);
       }
 
       if (data?.startDate && typeof data.startDate.toDate === "function") {
@@ -97,10 +114,16 @@ export async function getClients(): Promise<Client[]> {
         clients.push(nullsToUndefined(raw));
       } else {
         // Log details for debugging but still include the record (cleaned)
-        console.warn("Client validation failed (including raw candidate):", doc.id, result.error);
+        console.warn("Client validation failed (including raw candidate):", clientId, result.error);
         clients.push(nullsToUndefined(candidate));
       }
     });
+
+    // DEBUG: Summary log
+    console.group('🔍 getClients DEBUG INFO');
+    console.log(`Total clients fetched: ${clients.length}`);
+    console.log('CreatedAt formats in Firestore:', debugLog);
+    console.groupEnd();
 
     // ✅ Sort in memory by client ID in descending order (newest 2026 on top)
     // Client ID format: CL-YYYY-NNN, so string comparison works correctly
