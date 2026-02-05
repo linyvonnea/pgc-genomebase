@@ -139,7 +139,7 @@ export async function getClients(): Promise<Client[]> {
     // DEBUG: Summary log
     console.group('🔍 getClients DEBUG INFO');
     console.log(`Total clients fetched: ${clients.length}`);
-    console.log('CreatedAt formats after conversion:', debugLog.map(log => ({
+    console.log('CreatedAt formats after conversion:', debugLog.map((log: any) => ({
       cid: log.cid,
       originalType: log.type,
       originalValue: log.originalCreatedAt
