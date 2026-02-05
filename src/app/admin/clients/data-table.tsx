@@ -19,28 +19,52 @@ import { useState, useMemo, useEffect } from "react"
 // Helper to robustly parse Firestore and ISO date strings
 function parseClientDate(dateVal: any): Date | null {
   if (!dateVal) return null;
+  
+  // If already a valid Date object
   if (dateVal instanceof Date && !isNaN(dateVal.getTime())) return dateVal;
   
-  // Handle Firestore Timestamp object
-  if (dateVal && typeof dateVal === 'object' && dateVal.seconds) {
-    return new Date(dateVal.seconds * 1000);
+  // Handle Firestore Timestamp object (various formats)
+  if (dateVal && typeof dateVal === 'object') {
+    // Standard Firestore Timestamp with seconds and nanoseconds
+    if (dateVal.seconds !== undefined) {
+      return new Date(dateVal.seconds * 1000 + (dateVal.nanoseconds || 0) / 1000000);
+    }
+    
+    // Firestore Timestamp with _seconds property 
+    if (dateVal._seconds !== undefined) {
+      return new Date(dateVal._seconds * 1000 + (dateVal._nanoseconds || 0) / 1000000);
+    }
+    
+    // Handle toDate() method if available (Firestore Timestamp)
+    if (typeof dateVal.toDate === 'function') {
+      try {
+        return dateVal.toDate();
+      } catch (e) {
+        console.warn('Failed to call toDate():', e);
+      }
+    }
   }
   
-  // Try ISO first
+  // Try parsing as ISO date string
   const iso = new Date(dateVal);
   if (!isNaN(iso.getTime())) return iso;
   
-  // Try Firestore string: "January 12, 2026 at 2:30:19 PM UTC+8"
-  const match = String(dateVal).match(/([A-Za-z]+ \d{1,2}, \d{4}) at (\d{1,2}:\d{2}:\d{2}) ?([AP]M)?/);
-  if (match) {
-    // e.g. "January 12, 2026 14:30:19" or with AM/PM
-    let dateStr = match[1] + ' ' + match[2];
-    if (match[3]) dateStr += ' ' + match[3];
+  // Try Firestore string format: "January 12, 2026 at 2:30:19 PM UTC+8"
+  const firestoreMatch = String(dateVal).match(/([A-Za-z]+ \d{1,2}, \d{4}) at (\d{1,2}:\d{2}:\d{2}) ?([AP]M)?/);
+  if (firestoreMatch) {
+    let dateStr = firestoreMatch[1] + ' ' + firestoreMatch[2];
+    if (firestoreMatch[3]) dateStr += ' ' + firestoreMatch[3];
     const parsed = new Date(dateStr);
     if (!isNaN(parsed.getTime())) return parsed;
   }
   
-  console.log('Failed to parse date:', dateVal, typeof dateVal);
+  // Try parsing timestamp in milliseconds
+  const timestamp = Number(dateVal);
+  if (!isNaN(timestamp) && timestamp > 0) {
+    return new Date(timestamp);
+  }
+  
+  console.log('Failed to parse date:', dateVal, typeof dateVal, 'Value:', JSON.stringify(dateVal));
   return null;
 }
 import { Client } from "@/types/Client"
@@ -97,26 +121,54 @@ export function DataTable<TData, TValue>({
     const dataYears = data
       .map((item: any) => {
         const d = parseClientDate(item.createdAt);
-        return d && !isNaN(d.getTime()) ? d.getFullYear() : null;
+        if (d && !isNaN(d.getTime())) {
+          const year = d.getFullYear();
+          console.log('Processing client year:', item.name, d, year);
+          return year;
+        }
+        console.warn('Invalid date for client:', item.name, item.createdAt);
+        return null;
       })
       .filter((y) => y !== null);
-    return Array.from(new Set([...fixedYears, ...dataYears])).sort((a, b) => (b as number) - (a as number));
+    
+    const allYears = Array.from(new Set([...fixedYears, ...dataYears])).sort((a, b) => (b as number) - (a as number));
+    console.log('Available years:', allYears);
+    return allYears;
   }, [data]);
 
   // Filter data by search, year, and month with useMemo for performance
   const filteredData = useMemo(() => {
-    return data.filter((row: any) => {
+    const result = data.filter((row: any) => {
       // Search filter
       const searchQuery = globalFilter.trim().toLowerCase();
       const matchesSearch = searchQuery === "" || 
         `${row.name || ""} ${row.email || ""} ${row.institution || ""} ${row.designation || ""}`
           .toLowerCase().includes(searchQuery);
+      
       // Date filters
       const date = parseClientDate(row.createdAt);
       const matchesYear = yearFilter === "all" || (date && date.getFullYear().toString() === yearFilter);
       const matchesMonth = monthFilter === "all" || (date && (date.getMonth() + 1).toString() === monthFilter);
+      
+      // Debug logging for first few items when filters change
+      if (data.indexOf(row) < 3 && (yearFilter !== "all" || monthFilter !== "all")) {
+        console.log('Filter Debug:', {
+          name: row.name,
+          rawCreatedAt: row.createdAt,
+          parsedDate: date,
+          yearFilter,
+          monthFilter,
+          matchesYear,
+          matchesMonth,
+          finalMatch: matchesSearch && matchesYear && matchesMonth
+        });
+      }
+      
       return matchesSearch && matchesYear && matchesMonth;
     });
+    
+    console.log(`Filtered ${result.length} clients from ${data.length} total (Year: ${yearFilter}, Month: ${monthFilter})`);
+    return result;
   }, [data, globalFilter, yearFilter, monthFilter]);
 
   // Reset pagination when filters change
@@ -247,7 +299,10 @@ export function DataTable<TData, TValue>({
 
                 <div className="space-y-0.5">
                   <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Year</span>
-                  <Select value={yearFilter} onValueChange={setYearFilter}>
+                  <Select value={yearFilter} onValueChange={(value) => {
+                    console.log('Year filter changed to:', value);
+                    setYearFilter(value);
+                  }}>
                     <SelectTrigger className="w-[120px] h-7 text-sm">
                       <SelectValue placeholder="All" />
                     </SelectTrigger>
@@ -262,7 +317,10 @@ export function DataTable<TData, TValue>({
 
                 <div className="space-y-0.5">
                   <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Month</span>
-                  <Select value={monthFilter} onValueChange={setMonthFilter}>
+                  <Select value={monthFilter} onValueChange={(value) => {
+                    console.log('Month filter changed to:', value);
+                    setMonthFilter(value);
+                  }}>
                     <SelectTrigger className="w-[140px] h-7 text-sm">
                       <SelectValue placeholder="All" />
                     </SelectTrigger>
