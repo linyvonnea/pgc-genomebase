@@ -147,10 +147,16 @@ export function DataTable<TData extends Project, TValue>({
   });
 
   // Card Definitions
+  // Dynamic counts from Firestore data
+  const statusCounts = {
+    Ongoing: data.filter(i => i.status === "Ongoing").length,
+    Completed: data.filter(i => i.status === "Completed").length,
+    Cancelled: data.filter(i => i.status === "Cancelled").length,
+  };
   const statuses = [
-    { id: "Ongoing", label: "Ongoing", color: "text-yellow-600", border: "border-yellow-200", bg: "bg-yellow-50" },
-    { id: "Completed", label: "Completed", color: "text-green-600", border: "border-green-200", bg: "bg-green-50" },
-    { id: "Cancelled", label: "Cancelled", color: "text-red-600", border: "border-red-200", bg: "bg-red-50" },
+    { id: "Ongoing", label: "Ongoing", color: "text-yellow-600", border: "border-yellow-200", bg: "bg-yellow-50", count: statusCounts.Ongoing },
+    { id: "Completed", label: "Completed", color: "text-green-600", border: "border-green-200", bg: "bg-green-50", count: statusCounts.Completed },
+    { id: "Cancelled", label: "Cancelled", color: "text-red-600", border: "border-red-200", bg: "bg-red-50", count: statusCounts.Cancelled },
   ];
 
   const institutions = [
@@ -191,7 +197,7 @@ export function DataTable<TData extends Project, TValue>({
                       }`}
                     >
                       <div className={`text-sm font-semibold ${stat.color} truncate leading-tight`}>
-                        {data.filter(i => i.status === stat.id).length}
+                        {stat.count}
                       </div>
                       <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
                         {stat.label}
