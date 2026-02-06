@@ -74,7 +74,7 @@ export async function getProjects(): Promise<Project[]> {
           );
       }
 
-      const candidate = {
+      const candidate: any = {
         id: doc.id,
         ...data,
       };
@@ -120,26 +120,26 @@ export async function getProjects(): Promise<Project[]> {
           "n/a": "N/A",
         };
 
-        const mappedInstitution = institutionMap[normalizedInstitution] || raw.sendingInstitution;
+        const mappedInstitution = institutionMap[normalizedInstitution] || raw.sendingInstitution as any;
 
         // Normalize status (case-insensitive)
         let normalizedStatus = (raw.status || "").toString().trim().toLowerCase();
-        const statusMap: Record<string, string> = {
+        const statusMap: Record<string, "Ongoing" | "Completed" | "Cancelled"> = {
           "ongoing": "Ongoing",
           "completed": "Completed",
           "cancelled": "Cancelled",
           "canceled": "Cancelled"
         };
-        const finalStatus = statusMap[normalizedStatus] || raw.status;
+        const finalStatus: "Ongoing" | "Completed" | "Cancelled" | undefined = statusMap[normalizedStatus] || (raw.status as any);
 
         // Normalize funding category
         let normalizedFunding = (raw.fundingCategory || "").toString().trim().toLowerCase();
-        const fundingMap: Record<string, string> = {
+        const fundingMap: Record<string, "External" | "In-House"> = {
           "external": "External",
           "in-house": "In-House",
           "inhouse": "In-House"
         };
-        const finalFunding = fundingMap[normalizedFunding] || raw.fundingCategory;
+        const finalFunding: "External" | "In-House" | undefined = fundingMap[normalizedFunding] || (raw.fundingCategory as any);
 
         const project: Project = {
           ...raw,
@@ -162,20 +162,19 @@ export async function getProjects(): Promise<Project[]> {
         projects.push(project);
       } else {
         // Include the record even if schema validation fails, with fallback values
-        console.warn('Project schema validation failed, including with fallbacks:', candidate.id || candidate.pid, result.error.issues);
+        console.warn('Project schema validation failed, including with fallbacks:', candidate.pid || doc.id, result.error.issues);
         
         // Create a fallback project with available data
         const fallbackProject: Project = {
-          id: candidate.id || candidate.pid || 'unknown',
-          pid: candidate.pid || '',
+          pid: candidate.pid || doc.id || '',
           title: candidate.title || '',
           lead: candidate.lead || '',
-          status: candidate.status || undefined,
-          sendingInstitution: candidate.sendingInstitution || undefined,
+          status: candidate.status as any,
+          sendingInstitution: candidate.sendingInstitution as any,
           createdAt: candidate.createdAt ? new Date(candidate.createdAt) : undefined,
           startDate: candidate.startDate ? formatDateToMMDDYYYY(new Date(candidate.startDate)) : undefined,
           clientNames: Array.isArray(candidate.clientNames) ? candidate.clientNames : candidate.clientNames ? [candidate.clientNames] : undefined,
-          fundingCategory: candidate.fundingCategory || undefined,
+          fundingCategory: candidate.fundingCategory as any,
           serviceRequested: Array.isArray(candidate.serviceRequested) ? candidate.serviceRequested : candidate.serviceRequested ? [candidate.serviceRequested] : undefined,
           personnelAssigned: candidate.personnelAssigned || undefined,
           notes: candidate.notes || undefined,
