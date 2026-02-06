@@ -27,8 +27,7 @@ function formatDateToMMDDYYYY(date: Date): string {
 export async function getProjects(): Promise<Project[]> {
   try {
     const projectsRef = collection(db, "projects");
-    const projectsQuery = query(projectsRef, orderBy("createdAt", "desc"));
-    const querySnapshot = await getDocs(projectsQuery);
+    const querySnapshot = await getDocs(projectsRef);
 
     const projects: Project[] = [];
 
@@ -149,6 +148,8 @@ export async function getProjects(): Promise<Project[]> {
       }
     });
 
+    // Sort by pid descending (fall back to empty string)
+    projects.sort((a, b) => (b.pid || "").localeCompare(a.pid || ""));
     return projects;
   } catch (error) {
     throw new Error("Failed to fetch projects from database");
