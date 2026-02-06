@@ -75,7 +75,8 @@ function parseClientDate(dateVal: any): Date | null {
       }
     }
   }
-  
+
+
   // Handle Firestore Timestamp object (various formats)
   if (dateVal && typeof dateVal === 'object') {
     // Standard Firestore Timestamp with seconds and nanoseconds
