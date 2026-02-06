@@ -79,107 +79,73 @@ export async function getProjects(): Promise<Project[]> {
         ...data,
       };
 
-      // Validate with Zod schema - use more lenient validation
-      const result = projectSchema.strip().safeParse(candidate);
+      // Helper function to normalize sendingInstitution
+      const normalizeSendingInstitution = (value: any): "UP System" | "SUC/HEI" | "Government" | "Private/Local" | "International" | "N/A" | undefined => {
+        if (!value) return undefined;
+        const normalized = value.toString().trim().toLowerCase();
+        if (["government", "gov", "govt", "govenment"].includes(normalized)) return "Government";
+        if (["up system", "upsystem", "u.p. system"].includes(normalized)) return "UP System";
+        if (["suc/hei", "suc", "hei", "suc hei"].includes(normalized)) return "SUC/HEI";
+        if (["private/local", "private", "local", "private local"].includes(normalized)) return "Private/Local";
+        if (["international", "intl", "int'l"].includes(normalized)) return "International";
+        if (["n/a", "na", "none", "not applicable"].includes(normalized)) return "N/A";
+        // Return as-is if it matches exactly, otherwise undefined
+        const exact = ["UP System", "SUC/HEI", "Government", "Private/Local", "International", "N/A"];
+        return exact.includes(value) ? value : undefined;
+      };
 
-      if (result.success) {
-        const raw = result.data;
-        // Normalize and format project fields
-        const allowedInstitutions = [
-          "UP System",
-          "SUC/HEI",
-          "Government",
-          "Private/Local",
-          "International",
-          "N/A",
-        ] as const;
+      // Helper function to normalize status
+      const normalizeStatus = (value: any): "Ongoing" | "Completed" | "Cancelled" | undefined => {
+        if (!value) return undefined;
+        const normalized = value.toString().trim().toLowerCase();
+        if (normalized === "ongoing") return "Ongoing";
+        if (normalized === "completed") return "Completed";
+        if (["cancelled", "canceled"].includes(normalized)) return "Cancelled";
+        // Return as-is if it matches exactly, otherwise undefined
+        return ["Ongoing", "Completed", "Cancelled"].includes(value) ? value : undefined;
+      };
 
-        // Normalize sendingInstitution (case, spaces, common variants)
-        let normalizedInstitution = (raw.sendingInstitution || "").toString().trim().toLowerCase();
-        if (["government", "gov", "govt", "govenment"].includes(normalizedInstitution)) {
-          normalizedInstitution = "government";
-        } else if (["up system", "upsystem", "u.p. system"].includes(normalizedInstitution)) {
-          normalizedInstitution = "up system";
-        } else if (["suc/hei", "suc", "hei", "suc hei"].includes(normalizedInstitution)) {
-          normalizedInstitution = "suc/hei";
-        } else if (["private/local", "private", "local", "private local"].includes(normalizedInstitution)) {
-          normalizedInstitution = "private/local";
-        } else if (["international", "intl", "int'l"].includes(normalizedInstitution)) {
-          normalizedInstitution = "international";
-        } else if (["n/a", "na", "none", "not applicable"].includes(normalizedInstitution)) {
-          normalizedInstitution = "n/a";
-        }
+      // Helper function to normalize funding category
+      const normalizeFunding = (value: any): "External" | "In-House" | undefined => {
+        if (!value) return undefined;
+        const normalized = value.toString().trim().toLowerCase();
+        if (normalized === "external") return "External";
+        if (["in-house", "inhouse"].includes(normalized)) return "In-House";
+        // Return as-is if it matches exactly, otherwise undefined
+        return ["External", "In-House"].includes(value) ? value : undefined;
+      };
 
-        // Map back to allowedInstitutions case, or keep original if not matched
-        const institutionMap: Record<string, typeof allowedInstitutions[number]> = {
-          "up system": "UP System",
-          "suc/hei": "SUC/HEI",
-          "government": "Government",
-          "private/local": "Private/Local",
-          "international": "International",
-          "n/a": "N/A",
-        };
-
-        const mappedInstitution = institutionMap[normalizedInstitution] || raw.sendingInstitution as any;
-
-        // Normalize status (case-insensitive)
-        let normalizedStatus = (raw.status || "").toString().trim().toLowerCase();
-        const statusMap: Record<string, "Ongoing" | "Completed" | "Cancelled"> = {
-          "ongoing": "Ongoing",
-          "completed": "Completed",
-          "cancelled": "Cancelled",
-          "canceled": "Cancelled"
-        };
-        const finalStatus: "Ongoing" | "Completed" | "Cancelled" | undefined = statusMap[normalizedStatus] || (raw.status as any);
-
-        // Normalize funding category
-        let normalizedFunding = (raw.fundingCategory || "").toString().trim().toLowerCase();
-        const fundingMap: Record<string, "External" | "In-House"> = {
-          "external": "External",
-          "in-house": "In-House",
-          "inhouse": "In-House"
-        };
-        const finalFunding: "External" | "In-House" | undefined = fundingMap[normalizedFunding] || (raw.fundingCategory as any);
-
+      // Always include the record, with or without schema validation
+      try {
         const project: Project = {
-          ...raw,
-          createdAt:
-            raw.createdAt instanceof Date
-              ? raw.createdAt
-              : raw.createdAt
-                ? new Date(raw.createdAt)
-                : undefined,
-          fundingCategory: finalFunding || undefined,
-          startDate: raw.startDate
-            ? formatDateToMMDDYYYY(new Date(raw.startDate))
-            : undefined,
-          clientNames: raw.clientNames
-            ? raw.clientNames.map((s) => s.trim())
-            : undefined,
-          status: finalStatus || undefined,
-          sendingInstitution: mappedInstitution,
-        };
-        projects.push(project);
-      } else {
-        // Include the record even if schema validation fails, with fallback values
-        console.warn('Project schema validation failed, including with fallbacks:', candidate.pid || doc.id, result.error.issues);
-        
-        // Create a fallback project with available data
-        const fallbackProject: Project = {
-          pid: candidate.pid || doc.id || '',
+          pid: candidate.pid || '',
+          iid: candidate.iid || '',
+          year: candidate.year || undefined,
           title: candidate.title || '',
           lead: candidate.lead || '',
-          status: candidate.status as any,
-          sendingInstitution: candidate.sendingInstitution as any,
-          createdAt: candidate.createdAt ? new Date(candidate.createdAt) : undefined,
-          startDate: candidate.startDate ? formatDateToMMDDYYYY(new Date(candidate.startDate)) : undefined,
-          clientNames: Array.isArray(candidate.clientNames) ? candidate.clientNames : candidate.clientNames ? [candidate.clientNames] : undefined,
-          fundingCategory: candidate.fundingCategory as any,
-          serviceRequested: Array.isArray(candidate.serviceRequested) ? candidate.serviceRequested : candidate.serviceRequested ? [candidate.serviceRequested] : undefined,
-          personnelAssigned: candidate.personnelAssigned || undefined,
-          notes: candidate.notes || undefined,
+          projectTag: candidate.projectTag || '',
+          notes: candidate.notes || '',
+          personnelAssigned: candidate.personnelAssigned || '',
+          fundingInstitution: candidate.fundingInstitution || '',
+          createdAt: candidate.createdAt instanceof Date 
+            ? candidate.createdAt 
+            : candidate.createdAt ? new Date(candidate.createdAt) : undefined,
+          startDate: candidate.startDate 
+            ? formatDateToMMDDYYYY(candidate.startDate instanceof Date ? candidate.startDate : new Date(candidate.startDate))
+            : undefined,
+          clientNames: Array.isArray(candidate.clientNames) 
+            ? candidate.clientNames.map((s: any) => s.toString().trim())
+            : candidate.clientNames ? [candidate.clientNames.toString().trim()] : undefined,
+          serviceRequested: Array.isArray(candidate.serviceRequested) 
+            ? candidate.serviceRequested 
+            : candidate.serviceRequested ? [candidate.serviceRequested] : undefined,
+          sendingInstitution: normalizeSendingInstitution(candidate.sendingInstitution),
+          status: normalizeStatus(candidate.status),
+          fundingCategory: normalizeFunding(candidate.fundingCategory),
         };
-        projects.push(fallbackProject);
+        projects.push(project);
+      } catch (error) {
+        console.error('Failed to process project:', candidate.pid || doc.id, error);
       }
     });
 
