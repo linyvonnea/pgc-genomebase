@@ -115,8 +115,14 @@ export function DataTable<TData extends Project, TValue>({
 
       // 4. Date Filters
       const date = parseDate(item.startDate);
-      const matchesYear = yearFilter === "all" || (date && date.getFullYear().toString() === yearFilter);
-      const matchesMonth = monthFilter === "all" || (date && (date.getMonth() + 1).toString() === monthFilter);
+      const matchesYear =
+        yearFilter === "all" ||
+        (date && date.getFullYear().toString() === yearFilter) ||
+        (!item.startDate && yearFilter === "all");
+      const matchesMonth =
+        monthFilter === "all" ||
+        (date && (date.getMonth() + 1).toString() === monthFilter) ||
+        (!item.startDate && monthFilter === "all");
 
       return matchesSearch && matchesStatus && matchesInstitution && matchesYear && matchesMonth;
     });
