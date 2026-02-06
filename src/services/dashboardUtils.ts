@@ -12,6 +12,13 @@ function calculateTotalIncome(slips: any[]) {
   }, 0);
 }
 
+function filterProjectsByStatus(projects: any[]) {
+  return projects.filter((project: any) => {
+    const status = project.status ? project.status.toString().trim() : '';
+    return status === "Completed" || status === "Ongoing";
+  });
+}
+
 export async function fetchAllData(setters: {
   setTotalProjects: (v: number) => void,
   setFilteredProjects: (v: any[]) => void,
@@ -27,10 +34,11 @@ export async function fetchAllData(setters: {
   const mapDocs = (snap: any) => snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
   
   const projects = mapDocs(pr);
+  const activeProjects = filterProjectsByStatus(projects);
   const chargeSlips = mapDocs(cs);
   const totalIncome = calculateTotalIncome(chargeSlips);
   
-  setters.setTotalProjects(projects.length);
+  setters.setTotalProjects(activeProjects.length);
   setters.setFilteredProjects(projects);
   setters.setFilteredClients(mapDocs(cl));
   setters.setFilteredChargeSlips(chargeSlips);
@@ -57,6 +65,7 @@ export async function fetchFilteredData(
   const mapDocs = (snap: any) => snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
   
   const allProjects = mapDocs(pr);
+  const activeProjects = filterProjectsByStatus(allProjects);
   const filteredProjects = mapDocs(filteredPr);
   const allChargeSlips = mapDocs(cs);
   
@@ -78,7 +87,7 @@ export async function fetchFilteredData(
   
   const totalIncome = calculateTotalIncome(chargeSlips);
   
-  setters.setTotalProjects(allProjects.length);
+  setters.setTotalProjects(activeProjects.length);
   setters.setFilteredProjects(filteredProjects);
   setters.setFilteredClients(mapDocs(cl));
   setters.setFilteredChargeSlips(chargeSlips); 
