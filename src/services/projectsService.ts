@@ -94,6 +94,34 @@ export async function getProjects(): Promise<Project[]> {
           "N/A",
         ] as const;
 
+        // Normalize sendingInstitution (case, spaces, common variants)
+        let normalizedInstitution = (raw.sendingInstitution || "").toString().trim().toLowerCase();
+        if (["government", "gov", "govt", "govenment"].includes(normalizedInstitution)) {
+          normalizedInstitution = "government";
+        } else if (["up system", "upsystem", "u.p. system"].includes(normalizedInstitution)) {
+          normalizedInstitution = "up system";
+        } else if (["suc/hei", "suc", "hei", "suc hei"].includes(normalizedInstitution)) {
+          normalizedInstitution = "suc/hei";
+        } else if (["private/local", "private", "local", "private local"].includes(normalizedInstitution)) {
+          normalizedInstitution = "private/local";
+        } else if (["international", "intl", "int'l"].includes(normalizedInstitution)) {
+          normalizedInstitution = "international";
+        } else if (["n/a", "na", "none", "not applicable"].includes(normalizedInstitution)) {
+          normalizedInstitution = "n/a";
+        }
+
+        // Map back to allowedInstitutions case
+        const institutionMap: Record<string, typeof allowedInstitutions[number]> = {
+          "up system": "UP System",
+          "suc/hei": "SUC/HEI",
+          "government": "Government",
+          "private/local": "Private/Local",
+          "international": "International",
+          "n/a": "N/A",
+        };
+
+        const mappedInstitution = institutionMap[normalizedInstitution] || undefined;
+
         const project: Project = {
           ...raw,
           createdAt:
@@ -118,10 +146,7 @@ export async function getProjects(): Promise<Project[]> {
               raw.status === "Completed"
               ? raw.status
               : undefined,
-          sendingInstitution:
-            allowedInstitutions.includes(raw.sendingInstitution as typeof allowedInstitutions[number])
-              ? (raw.sendingInstitution as typeof allowedInstitutions[number])
-              : undefined,
+          sendingInstitution: mappedInstitution,
         };
         projects.push(project);
       } else {
