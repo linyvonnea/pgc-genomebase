@@ -22,7 +22,6 @@ function parseClientDate(dateVal: any): Date | null {
   
   // If already a valid Date object
   if (dateVal instanceof Date && !isNaN(dateVal.getTime())) {
-<<<<<<< merlito2/populate
     console.log('📅 Already a Date object:', dateVal.toISOString());
     return dateVal;
   }
@@ -76,10 +75,6 @@ function parseClientDate(dateVal: any): Date | null {
       }
     }
   }
-=======
-    return dateVal;
-  }
->>>>>>> main
   
   // Handle Firestore Timestamp object (various formats)
   if (dateVal && typeof dateVal === 'object') {
@@ -109,49 +104,6 @@ function parseClientDate(dateVal: any): Date | null {
     }
   }
   
-<<<<<<< merlito2/populate
-=======
-  // Try Firestore string format: "January 12, 2026 at 2:30:19 PM UTC+8"
-  // This format is what Firestore console displays
-  const firestoreMatch = String(dateVal).match(/([A-Za-z]+)\s+(\d{1,2}),\s+(\d{4})\s+at\s+(\d{1,2}):(\d{2}):(\d{2})\s+([AP]M)/i);
-  if (firestoreMatch) {
-    const [, monthName, day, year, hour, minute, second, ampm] = firestoreMatch;
-    
-    try {
-      // Month names for conversion
-      const monthMap: Record<string, number> = {
-        'january': 0, 'february': 1, 'march': 2, 'april': 3, 'may': 4, 'june': 5,
-        'july': 6, 'august': 7, 'september': 8, 'october': 9, 'november': 10, 'december': 11
-      };
-      
-      const month = monthMap[monthName.toLowerCase()];
-      let hours = parseInt(hour, 10);
-      
-      // Convert to 24-hour format
-      if (ampm.toUpperCase() === 'PM' && hours !== 12) {
-        hours += 12;
-      } else if (ampm.toUpperCase() === 'AM' && hours === 12) {
-        hours = 0;
-      }
-      
-      const d = new Date(
-        parseInt(year, 10),
-        month,
-        parseInt(day, 10),
-        hours,
-        parseInt(minute, 10),
-        parseInt(second, 10)
-      );
-      
-      if (!isNaN(d.getTime())) {
-        console.log(`📅 Parsed Firestore string: "${dateVal}" -> ${d.toISOString()}`);
-        return d;
-      }
-    } catch (e) {
-      console.warn('Error parsing Firestore string format:', e);
-    }
-  }
-  
   // Try parsing as ISO date string
   const iso = new Date(dateVal);
   if (!isNaN(iso.getTime())) {
@@ -159,7 +111,6 @@ function parseClientDate(dateVal: any): Date | null {
     return iso;
   }
   
->>>>>>> main
   // Try parsing timestamp in milliseconds
   const timestamp = Number(dateVal);
   if (!isNaN(timestamp) && timestamp > 0) {
@@ -171,6 +122,7 @@ function parseClientDate(dateVal: any): Date | null {
   console.warn('❌ Failed to parse date. Raw value:', dateVal, 'Type:', typeof dateVal, 'Stringified:', JSON.stringify(dateVal));
   return null;
 }
+
 import { Client } from "@/types/Client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
