@@ -177,7 +177,7 @@ export function DataTable<TData extends Project, TValue>({
     { id: "Private/Local", label: "Private/Local", color: "text-purple-600", border: "border-purple-200", bg: "bg-purple-50" },
     { id: "International", label: "International", color: "text-orange-600", border: "border-orange-200", bg: "bg-orange-50" },
     { id: "N/A", label: "N/A", color: "text-gray-600", border: "border-gray-200", bg: "bg-gray-50" },
-    { id: "__blank__", label: "Blanks", color: "text-pink-600", border: "border-pink-200", bg: "bg-pink-50" },
+      // ...existing code...
   ];
 
   return (
