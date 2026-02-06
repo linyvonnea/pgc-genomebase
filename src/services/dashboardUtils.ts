@@ -12,7 +12,15 @@ function calculateTotalIncome(slips: any[]) {
   }, 0);
 }
 
+function filterProjectsByStatus(projects: any[]) {
+  return projects.filter((project: any) => {
+    const status = project.status ? project.status.toString().trim() : '';
+    return status === "Completed" || status === "Ongoing";
+  });
+}
+
 export async function fetchAllData(setters: {
+  setTotalProjects: (v: number) => void,
   setFilteredProjects: (v: any[]) => void,
   setFilteredClients: (v: any[]) => void,
   setFilteredChargeSlips: (v: any[]) => void,
@@ -25,10 +33,13 @@ export async function fetchAllData(setters: {
   ]);
   const mapDocs = (snap: any) => snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
   
+  const projects = mapDocs(pr);
+  const activeProjects = filterProjectsByStatus(projects);
   const chargeSlips = mapDocs(cs);
   const totalIncome = calculateTotalIncome(chargeSlips);
   
-  setters.setFilteredProjects(mapDocs(pr));
+  setters.setTotalProjects(activeProjects.length);
+  setters.setFilteredProjects(projects);
   setters.setFilteredClients(mapDocs(cl));
   setters.setFilteredChargeSlips(chargeSlips);
   setters.setTotalIncome(totalIncome);
@@ -38,19 +49,24 @@ export async function fetchFilteredData(
   startTS: Timestamp,
   endTS: Timestamp,
   setters: {
+    setTotalProjects: (v: number) => void,
     setFilteredProjects: (v: any[]) => void,
     setFilteredClients: (v: any[]) => void,
     setFilteredChargeSlips: (v: any[]) => void,
     setTotalIncome: (v: number) => void,
   }
 ) {
-  const [pr, cl, cs] = await Promise.all([
+  const [pr, filteredPr, cl, cs] = await Promise.all([
+    getDocs(collection(db, "projects")),
     getDocs(query(collection(db, "projects"), where("startDate", ">=", startTS), where("startDate", "<=", endTS))),
     getDocs(query(collection(db, "clients"), where("createdAt", ">=", startTS), where("createdAt", "<=", endTS))),
     getDocs(collection(db, "chargeSlips"))
   ]);
   const mapDocs = (snap: any) => snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
   
+  const allProjects = mapDocs(pr);
+  const activeProjects = filterProjectsByStatus(allProjects);
+  const filteredProjects = mapDocs(filteredPr);
   const allChargeSlips = mapDocs(cs);
   
   const chargeSlips = allChargeSlips.filter((slip: any) => {
@@ -71,7 +87,8 @@ export async function fetchFilteredData(
   
   const totalIncome = calculateTotalIncome(chargeSlips);
   
-  setters.setFilteredProjects(mapDocs(pr));
+  setters.setTotalProjects(activeProjects.length);
+  setters.setFilteredProjects(filteredProjects);
   setters.setFilteredClients(mapDocs(cl));
   setters.setFilteredChargeSlips(chargeSlips); 
   setters.setTotalIncome(totalIncome);

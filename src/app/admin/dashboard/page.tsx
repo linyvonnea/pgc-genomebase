@@ -26,6 +26,7 @@ function DashboardPage() {
     userName,              
     loading,              
     isExporting,          
+    totalProjects,
     filteredProjects,   
     filteredClients,    
     totalIncome,      
@@ -70,6 +71,7 @@ function DashboardPage() {
         ) : (
           // Main dashboard content
           <DashboardContent
+            totalProjects={totalProjects}
             filteredProjects={filteredProjects}
             filteredClients={filteredClients}
             totalIncome={totalIncome}
