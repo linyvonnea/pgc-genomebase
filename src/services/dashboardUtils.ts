@@ -66,8 +66,8 @@ export async function fetchFilteredData(
   const mapDocs = (snap: any) => snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
   
   const allProjects = mapDocs(pr);
-  const activeProjects = filterProjectsByStatus(allProjects);
   const filteredProjects = mapDocs(filteredPr);
+  const activeFilteredProjects = filterProjectsByStatus(filteredProjects);
   const allChargeSlips = mapDocs(cs);
   
   const chargeSlips = allChargeSlips.filter((slip: any) => {
@@ -88,7 +88,7 @@ export async function fetchFilteredData(
   
   const totalIncome = calculateTotalIncome(chargeSlips);
   
-  setters.setTotalProjects(activeProjects.length);
+  setters.setTotalProjects(activeFilteredProjects.length);
   setters.setFilteredProjects(filteredProjects);
   setters.setFilteredClients(mapDocs(cl));
   setters.setFilteredChargeSlips(chargeSlips); 
