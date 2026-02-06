@@ -26,15 +26,16 @@ export async function fetchAllData(setters: {
   setFilteredChargeSlips: (v: any[]) => void,
   setTotalIncome: (v: number) => void,
 }) {
-  const [pr, cl, cs] = await Promise.all([
+  const [activePr, pr, cl, cs] = await Promise.all([
+    getDocs(query(collection(db, "projects"), where("status", "in", ["Ongoing", "Completed"]))),
     getDocs(collection(db, "projects")),
     getDocs(collection(db, "clients")),
     getDocs(collection(db, "chargeSlips"))
   ]);
   const mapDocs = (snap: any) => snap.docs.map((d: any) => ({ id: d.id, ...d.data() }));
   
+  const activeProjects = mapDocs(activePr);
   const projects = mapDocs(pr);
-  const activeProjects = filterProjectsByStatus(projects);
   const chargeSlips = mapDocs(cs);
   const totalIncome = calculateTotalIncome(chargeSlips);
   
