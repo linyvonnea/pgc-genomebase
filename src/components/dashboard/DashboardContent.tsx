@@ -12,6 +12,7 @@ import { DashboardContentProps } from "@/types/DashboardContent";
  * Displays stat cards, bar chart, and pie charts using filtered data.
  */
 export function DashboardContent({
+  totalProjects,
   filteredProjects,
   filteredClients,
   totalIncome,
@@ -25,7 +26,7 @@ export function DashboardContent({
         <div className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
             <StatCard title="Total Clients" value={filteredClients.length} colorIndex={0} />
-            <StatCard title="Total Projects" value={filteredProjects.length} colorIndex={1} />
+            <StatCard title="Total Projects" value={totalProjects} colorIndex={1} />
             <StatCard
               title="Total Income"
               value={totalIncome.toLocaleString("en-PH", {

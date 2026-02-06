@@ -1,4 +1,5 @@
 export interface DashboardContentProps {
+  totalProjects: number;
   filteredProjects: any[];
   filteredClients: any[];
   totalIncome: number;
