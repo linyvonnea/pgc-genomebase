@@ -106,7 +106,12 @@ export function DataTable<TData extends Project, TValue>({
       // 3. Institution Filter
       const matchesInstitution =
         institutionFilter.length === 0 ||
-        (item.sendingInstitution && institutionFilter.includes(item.sendingInstitution));
+        institutionFilter.some(f => {
+          if (f === "__blank__") {
+            return !item.sendingInstitution || item.sendingInstitution.trim() === "";
+          }
+          return item.sendingInstitution === f;
+        });
 
       // 4. Date Filters
       const date = parseDate(item.startDate);
@@ -164,6 +169,9 @@ export function DataTable<TData extends Project, TValue>({
     { id: "SUC/HEI", label: "SUC/HEI", color: "text-green-600", border: "border-green-200", bg: "bg-green-50" },
     { id: "Government", label: "Government", color: "text-indigo-600", border: "border-indigo-200", bg: "bg-indigo-50" },
     { id: "Private/Local", label: "Private/Local", color: "text-purple-600", border: "border-purple-200", bg: "bg-purple-50" },
+    { id: "International", label: "International", color: "text-orange-600", border: "border-orange-200", bg: "bg-orange-50" },
+    { id: "N/A", label: "N/A", color: "text-gray-600", border: "border-gray-200", bg: "bg-gray-50" },
+    { id: "__blank__", label: "Blanks", color: "text-pink-600", border: "border-pink-200", bg: "bg-pink-50" },
   ];
 
   return (
@@ -218,9 +226,15 @@ export function DataTable<TData extends Project, TValue>({
             {/* Institution Cards Section */}
             <div className="space-y-2">
               <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">INSTITUTION TYPE</h4>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-7 gap-2">
                 {institutions.map((inst) => {
                   const isActive = institutionFilter.includes(inst.id);
+                  let count = 0;
+                  if (inst.id === "__blank__") {
+                    count = data.filter(i => !i.sendingInstitution || i.sendingInstitution.trim() === "").length;
+                  } else {
+                    count = data.filter(i => i.sendingInstitution === inst.id).length;
+                  }
                   return (
                     <div
                       key={inst.id}
@@ -238,7 +252,7 @@ export function DataTable<TData extends Project, TValue>({
                       }`}
                     >
                       <div className={`text-sm font-semibold ${inst.color} truncate leading-tight`}>
-                        {data.filter(i => i.sendingInstitution === inst.id).length}
+                        {count}
                       </div>
                       <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
                         {inst.label}
