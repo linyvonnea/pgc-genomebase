@@ -79,7 +79,7 @@ export async function getProjects(): Promise<Project[]> {
         ...data,
       };
 
-      // Validate with Zod schema
+      // Validate with Zod schema - use more lenient validation
       const result = projectSchema.strip().safeParse(candidate);
 
       if (result.success) {
@@ -110,7 +110,7 @@ export async function getProjects(): Promise<Project[]> {
           normalizedInstitution = "n/a";
         }
 
-        // Map back to allowedInstitutions case
+        // Map back to allowedInstitutions case, or keep original if not matched
         const institutionMap: Record<string, typeof allowedInstitutions[number]> = {
           "up system": "UP System",
           "suc/hei": "SUC/HEI",
@@ -120,7 +120,26 @@ export async function getProjects(): Promise<Project[]> {
           "n/a": "N/A",
         };
 
-        const mappedInstitution = institutionMap[normalizedInstitution] || undefined;
+        const mappedInstitution = institutionMap[normalizedInstitution] || raw.sendingInstitution;
+
+        // Normalize status (case-insensitive)
+        let normalizedStatus = (raw.status || "").toString().trim().toLowerCase();
+        const statusMap: Record<string, string> = {
+          "ongoing": "Ongoing",
+          "completed": "Completed",
+          "cancelled": "Cancelled",
+          "canceled": "Cancelled"
+        };
+        const finalStatus = statusMap[normalizedStatus] || raw.status;
+
+        // Normalize funding category
+        let normalizedFunding = (raw.fundingCategory || "").toString().trim().toLowerCase();
+        const fundingMap: Record<string, string> = {
+          "external": "External",
+          "in-house": "In-House",
+          "inhouse": "In-House"
+        };
+        const finalFunding = fundingMap[normalizedFunding] || raw.fundingCategory;
 
         const project: Project = {
           ...raw,
@@ -130,28 +149,38 @@ export async function getProjects(): Promise<Project[]> {
               : raw.createdAt
                 ? new Date(raw.createdAt)
                 : undefined,
-          fundingCategory:
-            raw.fundingCategory === "External" || raw.fundingCategory === "In-House"
-              ? raw.fundingCategory
-              : undefined,
+          fundingCategory: finalFunding || undefined,
           startDate: raw.startDate
             ? formatDateToMMDDYYYY(new Date(raw.startDate))
             : undefined,
           clientNames: raw.clientNames
             ? raw.clientNames.map((s) => s.trim())
             : undefined,
-          status:
-            raw.status === "Ongoing" ||
-              raw.status === "Cancelled" ||
-              raw.status === "Completed"
-              ? raw.status
-              : undefined,
+          status: finalStatus || undefined,
           sendingInstitution: mappedInstitution,
         };
         projects.push(project);
       } else {
-        // Debug: log validation errors and the candidate data
-        console.error('Project validation failed:', candidate, result.error);
+        // Include the record even if schema validation fails, with fallback values
+        console.warn('Project schema validation failed, including with fallbacks:', candidate.id || candidate.pid, result.error.issues);
+        
+        // Create a fallback project with available data
+        const fallbackProject: Project = {
+          id: candidate.id || candidate.pid || 'unknown',
+          pid: candidate.pid || '',
+          title: candidate.title || '',
+          lead: candidate.lead || '',
+          status: candidate.status || undefined,
+          sendingInstitution: candidate.sendingInstitution || undefined,
+          createdAt: candidate.createdAt ? new Date(candidate.createdAt) : undefined,
+          startDate: candidate.startDate ? formatDateToMMDDYYYY(new Date(candidate.startDate)) : undefined,
+          clientNames: Array.isArray(candidate.clientNames) ? candidate.clientNames : candidate.clientNames ? [candidate.clientNames] : undefined,
+          fundingCategory: candidate.fundingCategory || undefined,
+          serviceRequested: Array.isArray(candidate.serviceRequested) ? candidate.serviceRequested : candidate.serviceRequested ? [candidate.serviceRequested] : undefined,
+          personnelAssigned: candidate.personnelAssigned || undefined,
+          notes: candidate.notes || undefined,
+        };
+        projects.push(fallbackProject);
       }
     });
 
