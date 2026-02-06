@@ -442,11 +442,7 @@ export function DataTable<TData, TValue>({
                             : 'All Records • No Filters'
                           }
                         </div>
-                        {(globalFilter || yearFilter !== 'all' || monthFilter !== 'all') && (
-                          <div className="text-[9px] text-blue-600 font-semibold uppercase">
-                            Click to clear
-                          </div>
-                        )}
+                        {/* Removed 'Click to clear' */}
                       </div>
                     </div>
                   </div>
@@ -463,13 +459,7 @@ export function DataTable<TData, TValue>({
           <div className="text-sm text-muted-foreground">
             Showing {startRecord} - {endRecord} of {totalRecords} records
           </div>
-          {(globalFilter || yearFilter !== 'all' || monthFilter !== 'all') && (
-            <div className="flex items-center gap-1">
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
-                Filtered from {data.length} total
-              </span>
-            </div>
-          )}
+          {/* Removed 'Filtered from X total' */}
         </div>
         <PaginationControls />
       </div>
