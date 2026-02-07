@@ -225,10 +225,10 @@ export function DataTable<TData extends Project, TValue>({
         </div>
         
         {!isFiltersCollapsed && (
-          <div className="p-3 space-y-3">
+          <div className="space-y-2">
             {/* Institution Cards Section */}
-            <div className="space-y-1.5">
-              <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Institution Type</h4>
+            <div className="bg-gray-50 rounded-xl p-3 space-y-2 border border-gray-200">
+              <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Institution Type</h4>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                 {institutions.map((inst) => {
                   const isActive = institutionFilter.includes(inst.id);
@@ -258,8 +258,8 @@ export function DataTable<TData extends Project, TValue>({
             </div>
 
             {/* Service Requested Cards Section */}
-            <div className="space-y-1.5">
-              <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Service Requested</h4>
+            <div className="bg-gray-50 rounded-xl p-3 space-y-2 border border-gray-200">
+              <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Service Requested</h4>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {serviceRequestedOptions.map((service) => {
                   const isActive = serviceRequestedFilter.includes(service.id);
@@ -289,8 +289,8 @@ export function DataTable<TData extends Project, TValue>({
             </div>
 
             {/* Status Cards Section */}
-            <div className="space-y-1.5">
-              <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Project Status</h4>
+            <div className="bg-gray-50 rounded-xl p-3 space-y-2 border border-gray-200">
+              <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Project Status</h4>
               <div className="flex gap-2">
                 {statuses.map((stat) => {
                   const isActive = statusFilter === stat.id;
@@ -314,8 +314,8 @@ export function DataTable<TData extends Project, TValue>({
             </div>
 
             {/* Funding Category Cards Section */}
-            <div className="space-y-1.5">
-              <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Funding Category</h4>
+            <div className="bg-gray-50 rounded-xl p-3 space-y-2 border border-gray-200">
+              <h4 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Funding Category</h4>
               <div className="flex gap-2">
                 {fundingCategoryOptions.map((funding) => {
                   const isActive = fundingCategoryFilter.includes(funding.id);
@@ -345,20 +345,20 @@ export function DataTable<TData extends Project, TValue>({
             </div>
 
             {/* Search & Date Filters with Summary Card */}
-            <div className="space-y-2 pt-1 border-t">
-              <div className="flex flex-wrap items-end gap-2">
-                <div className="w-full md:basis-1/4 md:grow-0">
+            <div className="bg-gray-50 rounded-xl p-3 space-y-2 border border-gray-200">
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="flex-1 min-w-[180px]">
                   <Input
                     placeholder="Search projects..."
                     value={globalFilter}
                     onChange={(e) => setGlobalFilter(e.target.value)}
-                    className="h-8 text-sm w-full"
+                    className="h-9 text-sm w-full"
                   />
                 </div>
 
                 <div>
                   <Select value={yearFilter} onValueChange={setYearFilter}>
-                    <SelectTrigger className="w-[100px] h-8 text-xs">
+                    <SelectTrigger className="w-[90px] h-9 text-xs">
                       <SelectValue placeholder="Year" />
                     </SelectTrigger>
                     <SelectContent>
@@ -372,7 +372,7 @@ export function DataTable<TData extends Project, TValue>({
 
                 <div>
                   <Select value={monthFilter} onValueChange={setMonthFilter}>
-                    <SelectTrigger className="w-[110px] h-8 text-xs">
+                    <SelectTrigger className="w-[100px] h-9 text-xs">
                       <SelectValue placeholder="Month" />
                     </SelectTrigger>
                     <SelectContent>
@@ -396,7 +396,7 @@ export function DataTable<TData extends Project, TValue>({
                       setYearFilter("all");
                       setMonthFilter("all");
                     }}
-                    className={`rounded-md border px-3 py-2 cursor-pointer transition-all duration-200 w-[250px] ${
+                    className={`rounded-lg border-2 px-4 py-2.5 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 w-[280px] ${
                       statusFilter === "__all" && 
                       institutionFilter.length === 0 && 
                       serviceRequestedFilter.length === 0 && 
@@ -404,18 +404,18 @@ export function DataTable<TData extends Project, TValue>({
                       globalFilter === "" && 
                       yearFilter === "all" && 
                       monthFilter === "all"
-                        ? "bg-slate-50 border-slate-300 shadow-sm"
-                        : "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 shadow-md hover:shadow-lg"
+                        ? "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        : "bg-gradient-to-br from-blue-500 to-indigo-600 border-indigo-700 text-white font-semibold"
                     }`}
                   >
                     <div className="space-y-0.5">
-                      <div className="text-[10px] text-gray-600 font-semibold uppercase tracking-wide">
+                      <div className="text-[10px] font-semibold uppercase tracking-wide opacity-90">
                         Total Results
                       </div>
-                      <div className="text-2xl font-bold text-gray-800">
+                      <div className="text-2xl font-bold">
                         {filteredData.length}
                       </div>
-                      <div className="text-[9px] text-gray-500 font-medium truncate">
+                      <div className="text-[9px] font-medium truncate opacity-80">
                         {filterSummaryLabel !== 'All' ? filterSummaryLabel : 'All Projects'}
                       </div>
                     </div>
