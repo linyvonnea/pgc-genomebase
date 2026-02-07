@@ -264,12 +264,12 @@ export function DataTable<TData, TValue>({
                     placeholder="Search all fields..."
                     value={globalFilter ?? ""}
                     onChange={(event) => setGlobalFilter(event.target.value)}
-                    className="w-56 pl-3 pr-8 h-8 text-sm"
+                    className="h-8 w-48 text-xs pl-3"
                   />
                   {globalFilter && (
                     <button
                       onClick={() => setGlobalFilter("")}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
                       <X className="h-3 w-3" />
                     </button>
