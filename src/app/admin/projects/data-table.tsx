@@ -58,6 +58,8 @@ export function DataTable<TData extends Project, TValue>({
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("__all");
   const [institutionFilter, setInstitutionFilter] = useState<string[]>([]);
+  const [serviceRequestedFilter, setServiceRequestedFilter] = useState<string[]>([]);
+  const [fundingCategoryFilter, setFundingCategoryFilter] = useState<string[]>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [yearFilter, setYearFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
@@ -78,8 +80,10 @@ export function DataTable<TData extends Project, TValue>({
       if (m) filters.push(m);
     }
     if (institutionFilter.length > 0) filters.push(...institutionFilter);
+    if (serviceRequestedFilter.length > 0) filters.push(...serviceRequestedFilter);
+    if (fundingCategoryFilter.length > 0) filters.push(...fundingCategoryFilter);
     return filters.length > 0 ? filters.join("+") : "All";
-  }, [statusFilter, yearFilter, monthFilter, institutionFilter, monthNames]);
+  }, [statusFilter, yearFilter, monthFilter, institutionFilter, serviceRequestedFilter, fundingCategoryFilter, monthNames]);
 
   // Derive available years
   const availableYears = useMemo(() => {
@@ -113,7 +117,22 @@ export function DataTable<TData extends Project, TValue>({
           return item.sendingInstitution === f;
         });
 
-      // 4. Date Filters
+      // 4. Service Requested Filter
+      const matchesServiceRequested =
+        serviceRequestedFilter.length === 0 ||
+        serviceRequestedFilter.some(f => {
+          const services = Array.isArray(item.serviceRequested)
+            ? item.serviceRequested
+            : item.serviceRequested ? [item.serviceRequested] : [];
+          return services.includes(f);
+        });
+
+      // 5. Funding Category Filter
+      const matchesFundingCategory =
+        fundingCategoryFilter.length === 0 ||
+        fundingCategoryFilter.includes(item.fundingCategory || "");
+
+      // 6. Date Filters
       const date = parseDate(item.startDate);
       const matchesYear =
         yearFilter === "all" ||
@@ -124,9 +143,22 @@ export function DataTable<TData extends Project, TValue>({
         (date && (date.getMonth() + 1).toString() === monthFilter) ||
         (!item.startDate && monthFilter === "all");
 
-      return matchesSearch && matchesStatus && matchesInstitution && matchesYear && matchesMonth;
+      return matchesSearch && matchesStatus && matchesInstitution && matchesServiceRequested && matchesFundingCategory && matchesYear && matchesMonth;
     });
-  }, [data, globalFilter, statusFilter, institutionFilter, yearFilter, monthFilter]);
+  }, [data, globalFilter, statusFilter, institutionFilter, serviceRequestedFilter, fundingCategoryFilter, yearFilter, monthFilter]);
+  // Service Requested and Funding Category card definitions
+  const serviceRequestedOptions = [
+    { id: "Laboratory Services", label: "Laboratory Services", color: "text-blue-600", border: "border-blue-200", bg: "bg-blue-50" },
+    { id: "Retail Sales", label: "Retail Sales", color: "text-green-600", border: "border-green-200", bg: "bg-green-50" },
+    { id: "Equipment Use", label: "Equipment Use", color: "text-purple-600", border: "border-purple-200", bg: "bg-purple-50" },
+    { id: "Bioinformatics Analysis", label: "Bioinformatics Analysis", color: "text-indigo-600", border: "border-indigo-200", bg: "bg-indigo-50" },
+    { id: "Training", label: "Training", color: "text-orange-600", border: "border-orange-200", bg: "bg-orange-50" },
+  ];
+
+  const fundingCategoryOptions = [
+    { id: "In-House", label: "In-House", color: "text-cyan-600", border: "border-cyan-200", bg: "bg-cyan-50" },
+    { id: "External", label: "External", color: "text-emerald-600", border: "border-emerald-200", bg: "bg-emerald-50" },
+  ];
 
   // Reset to first page when filtering
   const prevFilterRef = useState({ globalFilter, statusFilter, institutionFilter, yearFilter, monthFilter })[0];
@@ -230,9 +262,9 @@ export function DataTable<TData extends Project, TValue>({
             </div>
 
             {/* Institution Cards Section */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">INSTITUTION TYPE</h4>
-              <div className="grid grid-cols-7 gap-2">
+            <div className="space-y-1.5">
+              <h4 className="text-[10px] font-semibold text-gray-700 uppercase tracking-wide mb-1.5">INSTITUTION TYPE</h4>
+              <div className="grid grid-cols-7 gap-1.5">
                 {institutions.map((inst) => {
                   const isActive = institutionFilter.includes(inst.id);
                   let count = 0;
@@ -251,7 +283,7 @@ export function DataTable<TData extends Project, TValue>({
                           setInstitutionFilter([...institutionFilter, inst.id]);
                         }
                       }}
-                      className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                      className={`rounded-lg border px-1.5 py-1 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
                         isActive
                           ? `ring-1 ring-primary ring-offset-1 ${inst.bg} ${inst.border} shadow-sm`
                           : "bg-white hover:bg-gray-50 border-gray-200"
@@ -260,8 +292,97 @@ export function DataTable<TData extends Project, TValue>({
                       <div className={`text-sm font-semibold ${inst.color} truncate leading-tight`}>
                         {count}
                       </div>
-                      <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
+                      <div className="text-[8px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
                         {inst.label}
+                      </div>
+                      {isActive && (
+                        <div className="mt-0.5">
+                          <Badge variant="default" className="text-[6px] h-2 px-1">
+                            Active
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Service Requested Cards Section */}
+            <div className="space-y-1.5">
+              <h4 className="text-[10px] font-semibold text-gray-700 uppercase tracking-wide mb-1.5">SERVICE REQUESTED</h4>
+              <div className="grid grid-cols-5 gap-1.5">
+                {serviceRequestedOptions.map((service) => {
+                  const isActive = serviceRequestedFilter.includes(service.id);
+                  const count = data.filter(i => {
+                    const services = Array.isArray(i.serviceRequested)
+                      ? i.serviceRequested
+                      : i.serviceRequested ? [i.serviceRequested] : [];
+                    return services.includes(service.id);
+                  }).length;
+                  return (
+                    <div
+                      key={service.id}
+                      onClick={() => {
+                        if (isActive) {
+                          setServiceRequestedFilter(serviceRequestedFilter.filter(s => s !== service.id));
+                        } else {
+                          setServiceRequestedFilter([...serviceRequestedFilter, service.id]);
+                        }
+                      }}
+                      className={`rounded-lg border px-1.5 py-1 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                        isActive
+                          ? `ring-1 ring-primary ring-offset-1 ${service.bg} ${service.border} shadow-sm`
+                          : "bg-white hover:bg-gray-50 border-gray-200"
+                      }`}
+                    >
+                      <div className={`text-sm font-semibold ${service.color} truncate leading-tight`}>
+                        {count}
+                      </div>
+                      <div className="text-[8px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
+                        {service.label}
+                      </div>
+                      {isActive && (
+                        <div className="mt-0.5">
+                          <Badge variant="default" className="text-[6px] h-2 px-1">
+                            Active
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Funding Category Cards Section */}
+            <div className="space-y-1.5">
+              <h4 className="text-[10px] font-semibold text-gray-700 uppercase tracking-wide mb-1.5">FUNDING CATEGORY</h4>
+              <div className="grid grid-cols-2 gap-2">
+                {fundingCategoryOptions.map((funding) => {
+                  const isActive = fundingCategoryFilter.includes(funding.id);
+                  const count = data.filter(i => i.fundingCategory === funding.id).length;
+                  return (
+                    <div
+                      key={funding.id}
+                      onClick={() => {
+                        if (isActive) {
+                          setFundingCategoryFilter(fundingCategoryFilter.filter(f => f !== funding.id));
+                        } else {
+                          setFundingCategoryFilter([...fundingCategoryFilter, funding.id]);
+                        }
+                      }}
+                      className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                        isActive
+                          ? `ring-1 ring-primary ring-offset-1 ${funding.bg} ${funding.border} shadow-sm`
+                          : "bg-white hover:bg-gray-50 border-gray-200"
+                      }`}
+                    >
+                      <div className={`text-sm font-semibold ${funding.color} truncate leading-tight`}>
+                        {count}
+                      </div>
+                      <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
+                        {funding.label}
                       </div>
                       {isActive && (
                         <div className="mt-0.5">
