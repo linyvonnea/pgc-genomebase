@@ -225,168 +225,193 @@ export function DataTable<TData extends Project, TValue>({
         </div>
         
         {!isFiltersCollapsed && (
-          <div className="space-y-0.5">
-            {/* Institution Cards Section */}
-            <div className="bg-gray-50 rounded p-1 space-y-0.5 border border-gray-200">
-              <h4 className="text-[10px] font-bold text-gray-800 uppercase tracking-wider">Institution Type</h4>
-              <div className="grid grid-cols-4 gap-1 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7">
-                {institutions.map((inst) => {
-                  const isActive = institutionFilter.includes(inst.id);
-                  return (
-                    <div
-                      key={inst.id}
-                      onClick={() => {
-                        if (isActive) {
-                          setInstitutionFilter(institutionFilter.filter(i => i !== inst.id));
-                        } else {
-                          setInstitutionFilter([...institutionFilter, inst.id]);
-                        }
-                      }}
-                      className={`rounded border px-3 py-4 cursor-pointer transition-all duration-200 w-full shadow-sm hover:shadow-md active:scale-95 ${
-                        isActive
-                          ? `${inst.bg} ${inst.border} font-semibold ${inst.color}`
-                          : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                      }`}
-                    >
-                      <div className="text-[10px] font-semibold text-center">
+          <div className="bg-white rounded-lg border border-gray-200 p-3 space-y-3">
+            {/* Primary Content Filters Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+              {/* Institution Type */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Institution Type</label>
+                <div className="grid grid-cols-2 gap-1">
+                  {institutions.map((inst) => {
+                    const isActive = institutionFilter.includes(inst.id);
+                    return (
+                      <button
+                        key={inst.id}
+                        onClick={() => {
+                          if (isActive) {
+                            setInstitutionFilter(institutionFilter.filter(i => i !== inst.id));
+                          } else {
+                            setInstitutionFilter([...institutionFilter, inst.id]);
+                          }
+                        }}
+                        className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                          isActive
+                            ? `${inst.bg} ${inst.border} font-semibold ${inst.color}`
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
                         {inst.label}
-                      </div>
-                    </div>
-                  );
-                })}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
 
-            {/* Service Requested Cards Section */}
-            <div className="bg-gray-50 rounded p-1 space-y-0.5 border border-gray-200">
-              <h4 className="text-[10px] font-bold text-gray-800 uppercase tracking-wider">Service Requested</h4>
-              <div className="grid grid-cols-4 gap-1 sm:grid-cols-5 md:grid-cols-6">
-                {serviceRequestedOptions.map((service) => {
-                  const isActive = serviceRequestedFilter.includes(service.id);
-                  return (
-                    <div
-                      key={service.id}
-                      onClick={() => {
-                        if (isActive) {
-                          setServiceRequestedFilter(serviceRequestedFilter.filter(s => s !== service.id));
-                        } else {
-                          setServiceRequestedFilter([...serviceRequestedFilter, service.id]);
-                        }
-                      }}
-                      className={`rounded border px-3 py-4 cursor-pointer transition-all duration-200 w-full shadow-sm hover:shadow-md active:scale-95 ${
-                        isActive
-                          ? `${service.bg} ${service.border} font-semibold ${service.color}`
-                          : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                      }`}
-                    >
-                      <div className="text-[10px] font-semibold text-center">
+              {/* Service Requested */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Service Requested</label>
+                <div className="grid grid-cols-1 gap-1">
+                  {serviceRequestedOptions.map((service) => {
+                    const isActive = serviceRequestedFilter.includes(service.id);
+                    return (
+                      <button
+                        key={service.id}
+                        onClick={() => {
+                          if (isActive) {
+                            setServiceRequestedFilter(serviceRequestedFilter.filter(s => s !== service.id));
+                          } else {
+                            setServiceRequestedFilter([...serviceRequestedFilter, service.id]);
+                          }
+                        }}
+                        className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-left ${
+                          isActive
+                            ? `${service.bg} ${service.border} font-semibold ${service.color}`
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
                         {service.label}
-                      </div>
-                    </div>
-                  );
-                })}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
 
-            {/* Status Cards Section */}
-            <div className="bg-gray-50 rounded p-1 space-y-0.5 border border-gray-200">
-              <h4 className="text-[10px] font-bold text-gray-800 uppercase tracking-wider">Project Status</h4>
-              <div className="flex gap-1">
-                {statuses.map((stat) => {
-                  const isActive = statusFilter === stat.id;
-                  return (
-                    <div
-                      key={stat.id}
-                      onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
-                      className={`rounded border px-2 py-1 flex-1 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 ${
-                        isActive
-                          ? `${stat.bg} ${stat.border} font-semibold ${stat.color}`
-                          : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                      }`}
-                    >
-                      <div className="text-[9px] font-semibold text-center">
+              {/* Project Status */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Project Status</label>
+                <div className="grid grid-cols-1 gap-1">
+                  {statuses.map((stat) => {
+                    const isActive = statusFilter === stat.id;
+                    return (
+                      <button
+                        key={stat.id}
+                        onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
+                        className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                          isActive
+                            ? `${stat.bg} ${stat.border} font-semibold ${stat.color}`
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
                         {stat.label}
-                      </div>
-                    </div>
-                  );
-                })}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
 
-            {/* Funding Category Cards Section */}
-            <div className="bg-gray-50 rounded p-1 space-y-0.5 border border-gray-200">
-              <h4 className="text-[10px] font-bold text-gray-800 uppercase tracking-wider">Funding Category</h4>
-              <div className="flex gap-1">
-                {fundingCategoryOptions.map((funding) => {
-                  const isActive = fundingCategoryFilter.includes(funding.id);
-                  return (
-                    <div
-                      key={funding.id}
-                      onClick={() => {
-                        if (isActive) {
-                          setFundingCategoryFilter(fundingCategoryFilter.filter(f => f !== funding.id));
-                        } else {
-                          setFundingCategoryFilter([...fundingCategoryFilter, funding.id]);
-                        }
-                      }}
-                      className={`rounded border px-2 py-1 flex-1 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 ${
-                        isActive
-                          ? `${funding.bg} ${funding.border} font-semibold ${funding.color}`
-                          : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                      }`}
-                    >
-                      <div className="text-[9px] font-semibold text-center">
+              {/* Funding Category */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Funding Category</label>
+                <div className="grid grid-cols-1 gap-1">
+                  {fundingCategoryOptions.map((funding) => {
+                    const isActive = fundingCategoryFilter.includes(funding.id);
+                    return (
+                      <button
+                        key={funding.id}
+                        onClick={() => {
+                          if (isActive) {
+                            setFundingCategoryFilter(fundingCategoryFilter.filter(f => f !== funding.id));
+                          } else {
+                            setFundingCategoryFilter([...fundingCategoryFilter, funding.id]);
+                          }
+                        }}
+                        className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                          isActive
+                            ? `${funding.bg} ${funding.border} font-semibold ${funding.color}`
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
                         {funding.label}
-                      </div>
-                    </div>
-                  );
-                })}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
-            {/* Search & Date Filters with Summary Card */}
-            <div className="bg-gray-50 rounded p-1 space-y-0.5 border border-gray-200">
-              <div className="flex flex-wrap items-end gap-1">
-                <div className="w-1/4 min-w-[80px]">
+            {/* Search Tools & Summary Row */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100">
+              {/* Search Tools */}
+              <div className="flex items-center gap-3">
+                <div className="relative">
                   <Input
-                    placeholder="Search"
+                    placeholder="Search all fields..."
                     value={globalFilter}
                     onChange={(e) => setGlobalFilter(e.target.value)}
-                    className="h-7 text-xs w-full"
+                    className="h-8 w-48 text-xs pl-3"
                   />
+                  {globalFilter && (
+                    <button
+                      onClick={() => setGlobalFilter("")}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
 
-                <div>
-                  <Select value={yearFilter} onValueChange={setYearFilter}>
-                    <SelectTrigger className="w-[110px] h-7 text-[10px]">
-                      <SelectValue placeholder="Year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Years</SelectItem>
-                      {availableYears.map(y => (
-                        <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select value={yearFilter} onValueChange={setYearFilter}>
+                  <SelectTrigger className="w-24 h-8 text-xs">
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Years</SelectItem>
+                    {availableYears.map(y => (
+                      <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-                <div>
-                  <Select value={monthFilter} onValueChange={setMonthFilter}>
-                    <SelectTrigger className="w-[120px] h-7 text-[10px]">
-                      <SelectValue placeholder="Month" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Months</SelectItem>
-                      {monthNames.map((m, idx) => (
-                        <SelectItem key={m} value={(idx + 1).toString()}>{m}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select value={monthFilter} onValueChange={setMonthFilter}>
+                  <SelectTrigger className="w-28 h-8 text-xs">
+                    <SelectValue placeholder="Month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Months</SelectItem>
+                    {monthNames.map((m, idx) => (
+                      <SelectItem key={m} value={(idx + 1).toString()}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                {/* Summary Card aligned with filters */}
-                <div className="ml-auto">
-                  <div
+              {/* Summary & Clear Filters */}
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <div className="text-xs text-gray-500">
+                    {(() => {
+                      const activeFilters = [];
+                      if (statusFilter !== "__all") activeFilters.push("Status");
+                      if (institutionFilter.length > 0) activeFilters.push(`${institutionFilter.length} Institution${institutionFilter.length > 1 ? 's' : ''}`);
+                      if (serviceRequestedFilter.length > 0) activeFilters.push(`${serviceRequestedFilter.length} Service${serviceRequestedFilter.length > 1 ? 's' : ''}`);
+                      if (fundingCategoryFilter.length > 0) activeFilters.push(`${fundingCategoryFilter.length} Funding`);
+                      if (yearFilter !== "all") activeFilters.push("Year");
+                      if (monthFilter !== "all") activeFilters.push("Month");
+                      if (globalFilter) activeFilters.push("Search");
+                      return activeFilters.length > 0 ? `${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''} applied` : "No filters applied";
+                    })()}
+                  </div>
+                  <div className="text-lg font-bold text-gray-800">{filteredData.length} records</div>
+                </div>
+                
+                {(statusFilter !== "__all" || 
+                  institutionFilter.length > 0 || 
+                  serviceRequestedFilter.length > 0 || 
+                  fundingCategoryFilter.length > 0 || 
+                  globalFilter || 
+                  yearFilter !== "all" || 
+                  monthFilter !== "all") && (
+                  <button
                     onClick={() => {
                       setGlobalFilter("");
                       setStatusFilter("__all");
@@ -396,31 +421,11 @@ export function DataTable<TData extends Project, TValue>({
                       setYearFilter("all");
                       setMonthFilter("all");
                     }}
-                    className={`rounded border px-4 py-4 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 w-[420px] text-xs ${
-                      statusFilter === "__all" && 
-                      institutionFilter.length === 0 && 
-                      serviceRequestedFilter.length === 0 && 
-                      fundingCategoryFilter.length === 0 && 
-                      globalFilter === "" && 
-                      yearFilter === "all" && 
-                      monthFilter === "all"
-                        ? "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                        : "bg-gradient-to-br from-blue-500 to-indigo-600 border-indigo-700 text-white font-semibold"
-                    }`}
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
                   >
-                    <div className="space-y-2">
-                      <div className="text-[9px] font-semibold uppercase tracking-wide opacity-90 leading-none">
-                        Results
-                      </div>
-                      <div className="text-xl font-bold leading-none">
-                        {filteredData.length}
-                      </div>
-                      <div className="text-[8px] font-medium truncate opacity-80 leading-none">
-                        {filterSummaryLabel !== 'All' ? filterSummaryLabel : 'All'}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                    Clear All
+                  </button>
+                )}
               </div>
             </div>
           </div>
