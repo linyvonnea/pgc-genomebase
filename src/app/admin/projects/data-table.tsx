@@ -255,6 +255,7 @@ export function DataTable<TData extends Project, TValue>({
                     );
                   })}
                 </div>
+                </div>
               </div>
 
               {/* Service Requested */}
@@ -284,6 +285,7 @@ export function DataTable<TData extends Project, TValue>({
                     );
                   })}
                 </div>
+                </div>
               </div>
 
               {/* Project Status */}
@@ -306,6 +308,7 @@ export function DataTable<TData extends Project, TValue>({
                       </button>
                     );
                   })}
+                </div>
                 </div>
               </div>
 
@@ -335,6 +338,7 @@ export function DataTable<TData extends Project, TValue>({
                       </button>
                     );
                   })}
+                </div>
                 </div>
               </div>
             </div>
