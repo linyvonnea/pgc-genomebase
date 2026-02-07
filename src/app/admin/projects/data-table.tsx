@@ -225,11 +225,11 @@ export function DataTable<TData extends Project, TValue>({
         </div>
         
         {!isFiltersCollapsed && (
-          <div className="space-y-1.5">
+          <div className="space-y-0.5">
             {/* Institution Cards Section */}
-            <div className="bg-gray-50 rounded-lg p-2 space-y-1 border border-gray-200">
-              <h4 className="text-[11px] font-bold text-gray-800 uppercase tracking-wider">Institution Type</h4>
-              <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+            <div className="bg-gray-50 rounded p-1 space-y-0.5 border border-gray-200">
+              <h4 className="text-[10px] font-bold text-gray-800 uppercase tracking-wider">Institution Type</h4>
+              <div className="grid grid-cols-4 gap-1 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7">
                 {institutions.map((inst) => {
                   const isActive = institutionFilter.includes(inst.id);
                   return (
@@ -242,13 +242,13 @@ export function DataTable<TData extends Project, TValue>({
                           setInstitutionFilter([...institutionFilter, inst.id]);
                         }
                       }}
-                      className={`rounded-md border px-2 py-1.5 cursor-pointer transition-all duration-200 w-full shadow-sm hover:shadow-md active:scale-95 ${
+                      className={`rounded border px-1.5 py-1 cursor-pointer transition-all duration-200 w-full shadow-sm hover:shadow-md active:scale-95 ${
                         isActive
                           ? `${inst.bg} ${inst.border} font-semibold ${inst.color}`
                           : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                       }`}
                     >
-                      <div className="text-[9px] font-semibold text-center">
+                      <div className="text-[8px] font-semibold text-center">
                         {inst.label}
                       </div>
                     </div>
@@ -258,9 +258,9 @@ export function DataTable<TData extends Project, TValue>({
             </div>
 
             {/* Service Requested Cards Section */}
-            <div className="bg-gray-50 rounded-lg p-2 space-y-1 border border-gray-200">
-              <h4 className="text-[11px] font-bold text-gray-800 uppercase tracking-wider">Service Requested</h4>
-              <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4 md:grid-cols-5">
+            <div className="bg-gray-50 rounded p-1 space-y-0.5 border border-gray-200">
+              <h4 className="text-[10px] font-bold text-gray-800 uppercase tracking-wider">Service Requested</h4>
+              <div className="grid grid-cols-4 gap-1 sm:grid-cols-5 md:grid-cols-6">
                 {serviceRequestedOptions.map((service) => {
                   const isActive = serviceRequestedFilter.includes(service.id);
                   return (
@@ -273,13 +273,13 @@ export function DataTable<TData extends Project, TValue>({
                           setServiceRequestedFilter([...serviceRequestedFilter, service.id]);
                         }
                       }}
-                      className={`rounded-md border px-2 py-1.5 cursor-pointer transition-all duration-200 w-full shadow-sm hover:shadow-md active:scale-95 ${
+                      className={`rounded border px-1.5 py-1 cursor-pointer transition-all duration-200 w-full shadow-sm hover:shadow-md active:scale-95 ${
                         isActive
                           ? `${service.bg} ${service.border} font-semibold ${service.color}`
                           : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                       }`}
                     >
-                      <div className="text-[9px] font-semibold text-center">
+                      <div className="text-[8px] font-semibold text-center">
                         {service.label}
                       </div>
                     </div>
@@ -289,22 +289,22 @@ export function DataTable<TData extends Project, TValue>({
             </div>
 
             {/* Status Cards Section */}
-            <div className="bg-gray-50 rounded-lg p-2 space-y-1 border border-gray-200">
-              <h4 className="text-[11px] font-bold text-gray-800 uppercase tracking-wider">Project Status</h4>
-              <div className="flex gap-1.5">
+            <div className="bg-gray-50 rounded p-1 space-y-0.5 border border-gray-200">
+              <h4 className="text-[10px] font-bold text-gray-800 uppercase tracking-wider">Project Status</h4>
+              <div className="flex gap-1">
                 {statuses.map((stat) => {
                   const isActive = statusFilter === stat.id;
                   return (
                     <div
                       key={stat.id}
                       onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
-                      className={`rounded-md border px-3 py-1.5 flex-1 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 ${
+                      className={`rounded border px-2 py-1 flex-1 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 ${
                         isActive
                           ? `${stat.bg} ${stat.border} font-semibold ${stat.color}`
                           : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                       }`}
                     >
-                      <div className="text-[10px] font-semibold text-center">
+                      <div className="text-[9px] font-semibold text-center">
                         {stat.label}
                       </div>
                     </div>
@@ -314,9 +314,9 @@ export function DataTable<TData extends Project, TValue>({
             </div>
 
             {/* Funding Category Cards Section */}
-            <div className="bg-gray-50 rounded-lg p-2 space-y-1 border border-gray-200">
-              <h4 className="text-[11px] font-bold text-gray-800 uppercase tracking-wider">Funding Category</h4>
-              <div className="flex gap-1.5">
+            <div className="bg-gray-50 rounded p-1 space-y-0.5 border border-gray-200">
+              <h4 className="text-[10px] font-bold text-gray-800 uppercase tracking-wider">Funding Category</h4>
+              <div className="flex gap-1">
                 {fundingCategoryOptions.map((funding) => {
                   const isActive = fundingCategoryFilter.includes(funding.id);
                   return (
@@ -329,13 +329,13 @@ export function DataTable<TData extends Project, TValue>({
                           setFundingCategoryFilter([...fundingCategoryFilter, funding.id]);
                         }
                       }}
-                      className={`rounded-md border px-3 py-1.5 flex-1 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 ${
+                      className={`rounded border px-2 py-1 flex-1 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 ${
                         isActive
                           ? `${funding.bg} ${funding.border} font-semibold ${funding.color}`
                           : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                       }`}
                     >
-                      <div className="text-[10px] font-semibold text-center">
+                      <div className="text-[9px] font-semibold text-center">
                         {funding.label}
                       </div>
                     </div>
@@ -345,20 +345,20 @@ export function DataTable<TData extends Project, TValue>({
             </div>
 
             {/* Search & Date Filters with Summary Card */}
-            <div className="bg-gray-50 rounded-lg p-2 space-y-1 border border-gray-200">
-              <div className="flex flex-wrap items-end gap-2">
+            <div className="bg-gray-50 rounded p-1 space-y-0.5 border border-gray-200">
+              <div className="flex flex-wrap items-end gap-1">
                 <div className="flex-1 min-w-[160px]">
                   <Input
-                    placeholder="Search..."
+                    placeholder="Search"
                     value={globalFilter}
                     onChange={(e) => setGlobalFilter(e.target.value)}
-                    className="h-8 text-xs w-full"
+                    className="h-7 text-xs w-full"
                   />
                 </div>
 
                 <div>
                   <Select value={yearFilter} onValueChange={setYearFilter}>
-                    <SelectTrigger className="w-[85px] h-8 text-xs">
+                    <SelectTrigger className="w-[75px] h-7 text-[10px]">
                       <SelectValue placeholder="Year" />
                     </SelectTrigger>
                     <SelectContent>
@@ -372,7 +372,7 @@ export function DataTable<TData extends Project, TValue>({
 
                 <div>
                   <Select value={monthFilter} onValueChange={setMonthFilter}>
-                    <SelectTrigger className="w-[95px] h-8 text-xs">
+                    <SelectTrigger className="w-[85px] h-7 text-[10px]">
                       <SelectValue placeholder="Month" />
                     </SelectTrigger>
                     <SelectContent>
@@ -396,7 +396,7 @@ export function DataTable<TData extends Project, TValue>({
                       setYearFilter("all");
                       setMonthFilter("all");
                     }}
-                    className={`rounded-md border px-3 py-1.5 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 w-[260px] text-sm ${
+                    className={`rounded border px-2 py-1 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 w-[230px] text-sm ${
                       statusFilter === "__all" && 
                       institutionFilter.length === 0 && 
                       serviceRequestedFilter.length === 0 && 
@@ -409,13 +409,13 @@ export function DataTable<TData extends Project, TValue>({
                     }`}
                   >
                     <div className="space-y-0.5">
-                      <div className="text-[9px] font-semibold uppercase tracking-wide opacity-90">
+                      <div className="text-[8px] font-semibold uppercase tracking-wide opacity-90">
                         Results
                       </div>
                       <div className="text-lg font-bold">
                         {filteredData.length}
                       </div>
-                      <div className="text-[8px] font-medium truncate opacity-80">
+                      <div className="text-[7px] font-medium truncate opacity-80">
                         {filterSummaryLabel !== 'All' ? filterSummaryLabel : 'All'}
                       </div>
                     </div>
