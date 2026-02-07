@@ -226,36 +226,9 @@ export function DataTable<TData extends Project, TValue>({
         
         {!isFiltersCollapsed && (
           <div className="p-3 space-y-3">
-            {/* Status Cards Section */}
-            <div className="space-y-1.5">
-              <h4 className="text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">Project Status</h4>
-              <div className="flex gap-2">
-                {statuses.map((stat) => {
-                  const isActive = statusFilter === stat.id;
-                  return (
-                    <div
-                      key={stat.id}
-                      onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
-                      className={`rounded-md border px-4 py-2 flex-1 cursor-pointer transition-all duration-200 ${
-                        isActive
-                          ? `${stat.bg} ${stat.border} shadow-sm ring-2 ring-primary/20`
-                          : "bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300"
-                      }`}
-                    >
-                      <div className={`text-xs font-semibold text-center ${
-                        isActive ? stat.color : "text-gray-700"
-                      }`}>
-                        {stat.label}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
             {/* Institution Cards Section */}
             <div className="space-y-1.5">
-              <h4 className="text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">Institution Type</h4>
+              <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Institution Type</h4>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                 {institutions.map((inst) => {
                   const isActive = institutionFilter.includes(inst.id);
@@ -288,7 +261,7 @@ export function DataTable<TData extends Project, TValue>({
 
             {/* Service Requested Cards Section */}
             <div className="space-y-1.5">
-              <h4 className="text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">Service Requested</h4>
+              <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Service Requested</h4>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {serviceRequestedOptions.map((service) => {
                   const isActive = serviceRequestedFilter.includes(service.id);
@@ -319,9 +292,36 @@ export function DataTable<TData extends Project, TValue>({
               </div>
             </div>
 
+            {/* Status Cards Section */}
+            <div className="space-y-1.5">
+              <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Project Status</h4>
+              <div className="flex gap-2">
+                {statuses.map((stat) => {
+                  const isActive = statusFilter === stat.id;
+                  return (
+                    <div
+                      key={stat.id}
+                      onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
+                      className={`rounded-md border px-4 py-2 flex-1 cursor-pointer transition-all duration-200 ${
+                        isActive
+                          ? `${stat.bg} ${stat.border} shadow-sm ring-2 ring-primary/20`
+                          : "bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className={`text-xs font-semibold text-center ${
+                        isActive ? stat.color : "text-gray-700"
+                      }`}>
+                        {stat.label}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Funding Category Cards Section */}
             <div className="space-y-1.5">
-              <h4 className="text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">Funding Category</h4>
+              <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Funding Category</h4>
               <div className="flex gap-2">
                 {fundingCategoryOptions.map((funding) => {
                   const isActive = fundingCategoryFilter.includes(funding.id);
