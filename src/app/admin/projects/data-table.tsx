@@ -242,13 +242,13 @@ export function DataTable<TData extends Project, TValue>({
                           setInstitutionFilter([...institutionFilter, inst.id]);
                         }
                       }}
-                      className={`rounded border px-1.5 py-1 cursor-pointer transition-all duration-200 w-full shadow-sm hover:shadow-md active:scale-95 ${
+                      className={`rounded border px-3 py-4 cursor-pointer transition-all duration-200 w-full shadow-sm hover:shadow-md active:scale-95 ${
                         isActive
                           ? `${inst.bg} ${inst.border} font-semibold ${inst.color}`
                           : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                       }`}
                     >
-                      <div className="text-[8px] font-semibold text-center">
+                      <div className="text-[10px] font-semibold text-center">
                         {inst.label}
                       </div>
                     </div>
@@ -273,13 +273,13 @@ export function DataTable<TData extends Project, TValue>({
                           setServiceRequestedFilter([...serviceRequestedFilter, service.id]);
                         }
                       }}
-                      className={`rounded border px-1.5 py-1 cursor-pointer transition-all duration-200 w-full shadow-sm hover:shadow-md active:scale-95 ${
+                      className={`rounded border px-3 py-4 cursor-pointer transition-all duration-200 w-full shadow-sm hover:shadow-md active:scale-95 ${
                         isActive
                           ? `${service.bg} ${service.border} font-semibold ${service.color}`
                           : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                       }`}
                     >
-                      <div className="text-[8px] font-semibold text-center">
+                      <div className="text-[10px] font-semibold text-center">
                         {service.label}
                       </div>
                     </div>
@@ -396,7 +396,7 @@ export function DataTable<TData extends Project, TValue>({
                       setYearFilter("all");
                       setMonthFilter("all");
                     }}
-                    className={`rounded border px-1 py-0.5 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 w-[230px] text-xs ${
+                    className={`rounded border px-4 py-4 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 w-[420px] text-xs ${
                       statusFilter === "__all" && 
                       institutionFilter.length === 0 && 
                       serviceRequestedFilter.length === 0 && 
@@ -408,14 +408,14 @@ export function DataTable<TData extends Project, TValue>({
                         : "bg-gradient-to-br from-blue-500 to-indigo-600 border-indigo-700 text-white font-semibold"
                     }`}
                   >
-                    <div className="space-y-0">
-                      <div className="text-[7px] font-semibold uppercase tracking-wide opacity-90 leading-none">
+                    <div className="space-y-2">
+                      <div className="text-[9px] font-semibold uppercase tracking-wide opacity-90 leading-none">
                         Results
                       </div>
-                      <div className="text-base font-bold leading-none">
+                      <div className="text-xl font-bold leading-none">
                         {filteredData.length}
                       </div>
-                      <div className="text-[6px] font-medium truncate opacity-80 leading-none">
+                      <div className="text-[8px] font-medium truncate opacity-80 leading-none">
                         {filterSummaryLabel !== 'All' ? filterSummaryLabel : 'All'}
                       </div>
                     </div>
