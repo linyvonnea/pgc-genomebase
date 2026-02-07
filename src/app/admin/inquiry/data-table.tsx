@@ -205,50 +205,53 @@ export function DataTable<TData, TValue>({
         
         {!isFiltersCollapsed && (
           <div className="bg-white rounded-lg border border-gray-200 p-3 space-y-3">
-            {/* Processing Status Section */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Processing Status</label>
-              <div className="grid grid-cols-1 gap-1">
-                <button
-                  onClick={() =>
-                    handleStatusFilter(
-                      activeStatusFilter === "Approved Client" ? undefined : "Approved Client"
-                    )
-                  }
-                  className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-left ${
-                    activeStatusFilter === "Approved Client"
-                      ? "bg-green-50 border-green-300 font-semibold text-green-700"
-                      : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                  }`}
-                >
-                  Approved Client
-                </button>
-                <button
-                  onClick={() =>
-                    handleStatusFilter(
-                      activeStatusFilter === "Quotation Only" ? undefined : "Quotation Only"
-                    )
-                  }
-                  className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-left ${
-                    activeStatusFilter === "Quotation Only"
-                      ? "bg-blue-50 border-blue-300 font-semibold text-blue-700"
-                      : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                  }`}
-                >
-                  Quotation Only
-                </button>
-                <button
-                  onClick={() =>
-                    handleStatusFilter(activeStatusFilter === "Pending" ? undefined : "Pending")
-                  }
-                  className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-left ${
-                    activeStatusFilter === "Pending"
-                      ? "bg-yellow-50 border-yellow-300 font-semibold text-yellow-700"
-                      : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                  }`}
-                >
-                  Pending
-                </button>
+            {/* Primary Content Filters Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+              {/* Processing Status */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Processing Status</label>
+                <div className="grid grid-cols-1 gap-1">
+                  <button
+                    onClick={() =>
+                      handleStatusFilter(
+                        activeStatusFilter === "Approved Client" ? undefined : "Approved Client"
+                      )
+                    }
+                    className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                      activeStatusFilter === "Approved Client"
+                        ? "bg-green-50 border-green-200 font-semibold text-green-600"
+                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                    }`}
+                  >
+                    Approved Client ({statusCounts.approvedClient})
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleStatusFilter(
+                        activeStatusFilter === "Quotation Only" ? undefined : "Quotation Only"
+                      )
+                    }
+                    className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                      activeStatusFilter === "Quotation Only"
+                        ? "bg-blue-50 border-blue-200 font-semibold text-blue-600"
+                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                    }`}
+                  >
+                    Quotation Only ({statusCounts.quotationOnly})
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleStatusFilter(activeStatusFilter === "Pending" ? undefined : "Pending")
+                    }
+                    className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                      activeStatusFilter === "Pending"
+                        ? "bg-yellow-50 border-yellow-200 font-semibold text-yellow-600"
+                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                    }`}
+                  >
+                    Pending ({statusCounts.pending})
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -261,12 +264,12 @@ export function DataTable<TData, TValue>({
                     placeholder="Search all fields..."
                     value={globalFilter ?? ""}
                     onChange={(event) => setGlobalFilter(event.target.value)}
-                    className="h-8 w-48 text-xs pl-3"
+                    className="w-56 pl-3 pr-8 h-8 text-sm"
                   />
                   {globalFilter && (
                     <button
                       onClick={() => setGlobalFilter("")}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -274,11 +277,11 @@ export function DataTable<TData, TValue>({
                 </div>
 
                 <Select value={selectedYear || "all"} onValueChange={handleYearChange}>
-                  <SelectTrigger className="w-24 h-8 text-xs">
+                  <SelectTrigger className="w-24 h-8">
                     <SelectValue placeholder="Year" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Years</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
                     {availableYears.map((year) => (
                       <SelectItem key={year} value={year}>{year}</SelectItem>
                     ))}
@@ -289,11 +292,11 @@ export function DataTable<TData, TValue>({
                   value={selectedMonth || "all"}
                   onValueChange={handleMonthChange}
                 >
-                  <SelectTrigger className="w-28 h-8 text-xs">
+                  <SelectTrigger className="w-28 h-8">
                     <SelectValue placeholder="Month" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Months</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
                     {monthOptions.map((month) => (
                       <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
                     ))}
@@ -301,27 +304,37 @@ export function DataTable<TData, TValue>({
                 </Select>
               </div>
 
-              {/* Summary & Clear Filters */}
+              {/* Summary */}
               <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <div className="text-xs text-gray-500">
+                <div className="text-xs text-gray-600">
+                  <span className="font-medium">{(() => {
+                    const filters = [];
+                    if (activeStatusFilter) filters.push(activeStatusFilter);
+                    if (selectedYear && selectedYear !== "all") filters.push(selectedYear);
+                    if (selectedMonth && selectedMonth !== "all") {
+                      const monthName = monthOptions.find(m => m.value === selectedMonth)?.label;
+                      if (monthName) filters.push(monthName);
+                    }
+                    return filters.length > 0 ? filters.join("+") : "All";
+                  })()}</span>
+                  <span className="mx-2 text-gray-400">|</span>
+                  <span>
                     {(() => {
                       const activeFilters = [];
                       if (activeStatusFilter) activeFilters.push("Status");
-                      if (selectedYear) activeFilters.push("Year");
-                      if (selectedMonth) activeFilters.push("Month");
+                      if (selectedYear && selectedYear !== "all") activeFilters.push("Year");
+                      if (selectedMonth && selectedMonth !== "all") activeFilters.push("Month");
                       if (globalFilter) activeFilters.push("Search");
                       return activeFilters.length > 0 ? `${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''} applied` : "No filters applied";
                     })()}
-                  </div>
-                  <div className="text-lg font-bold text-gray-800">{filteredRows.length} records</div>
+                  </span>
                 </div>
-                
                 {activeFiltersCount > 0 && (
                   <button
                     onClick={clearAllFilters}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                   >
+                    <X className="h-3 w-3" />
                     Clear All
                   </button>
                 )}
