@@ -277,11 +277,11 @@ export function DataTable<TData, TValue>({
                 </div>
 
                 <Select value={selectedYear || "all"} onValueChange={handleYearChange}>
-                  <SelectTrigger className="w-24 h-8">
+                  <SelectTrigger className="w-24 h-8 text-xs">
                     <SelectValue placeholder="Year" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="all">All Years</SelectItem>
                     {availableYears.map((year) => (
                       <SelectItem key={year} value={year}>{year}</SelectItem>
                     ))}
@@ -292,11 +292,11 @@ export function DataTable<TData, TValue>({
                   value={selectedMonth || "all"}
                   onValueChange={handleMonthChange}
                 >
-                  <SelectTrigger className="w-28 h-8">
+                  <SelectTrigger className="w-28 h-8 text-xs">
                     <SelectValue placeholder="Month" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="all">All Months</SelectItem>
                     {monthOptions.map((month) => (
                       <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
                     ))}
@@ -304,21 +304,10 @@ export function DataTable<TData, TValue>({
                 </Select>
               </div>
 
-              {/* Summary */}
+              {/* Summary & Clear Filters */}
               <div className="flex items-center gap-3">
-                <div className="text-xs text-gray-600">
-                  <span className="font-medium">{(() => {
-                    const filters = [];
-                    if (activeStatusFilter) filters.push(activeStatusFilter);
-                    if (selectedYear && selectedYear !== "all") filters.push(selectedYear);
-                    if (selectedMonth && selectedMonth !== "all") {
-                      const monthName = monthOptions.find(m => m.value === selectedMonth)?.label;
-                      if (monthName) filters.push(monthName);
-                    }
-                    return filters.length > 0 ? filters.join("+") : "All";
-                  })()}</span>
-                  <span className="mx-2 text-gray-400">|</span>
-                  <span>
+                <div className="text-right">
+                  <div className="text-xs text-gray-500">
                     {(() => {
                       const activeFilters = [];
                       if (activeStatusFilter) activeFilters.push("Status");
@@ -327,14 +316,15 @@ export function DataTable<TData, TValue>({
                       if (globalFilter) activeFilters.push("Search");
                       return activeFilters.length > 0 ? `${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''} applied` : "No filters applied";
                     })()}
-                  </span>
+                  </div>
+                  <div className="text-lg font-bold text-gray-800">{filteredRows.length} records</div>
                 </div>
+                
                 {activeFiltersCount > 0 && (
                   <button
                     onClick={clearAllFilters}
-                    className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
                   >
-                    <X className="h-3 w-3" />
                     Clear All
                   </button>
                 )}
