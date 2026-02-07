@@ -49,7 +49,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, X } from "lucide-react"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -204,169 +204,127 @@ export function DataTable<TData, TValue>({
         </div>
         
         {!isFiltersCollapsed && (
-          <div className="p-2.5 space-y-2.5">
-            {/* Status Cards Section */}
+          <div className="bg-white rounded-lg border border-gray-200 p-3 space-y-3">
+            {/* Processing Status Section */}
             <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">PROCESSING STATUS</h4>
-              <div className="grid grid-cols-3 gap-2">
-                <div
+              <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Processing Status</label>
+              <div className="grid grid-cols-1 gap-1">
+                <button
                   onClick={() =>
                     handleStatusFilter(
                       activeStatusFilter === "Approved Client" ? undefined : "Approved Client"
                     )
                   }
-                  className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                  className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-left ${
                     activeStatusFilter === "Approved Client"
-                      ? "ring-1 ring-primary ring-offset-1 bg-green-50 border-green-200 shadow-sm"
-                      : "bg-white hover:bg-gray-50 border-gray-200"
+                      ? "bg-green-50 border-green-300 font-semibold text-green-700"
+                      : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                   }`}
                 >
-                  <div className="text-sm font-semibold text-green-600 truncate leading-tight">
-                    {statusCounts.approvedClient}
-                  </div>
-                  <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
-                    Approved Client
-                  </div>
-                  {activeStatusFilter === "Approved Client" && (
-                    <div className="mt-0.5">
-                      <Badge variant="default" className="text-[7px] h-2.5 px-1">
-                        Active
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-
-                <div
+                  Approved Client
+                </button>
+                <button
                   onClick={() =>
                     handleStatusFilter(
                       activeStatusFilter === "Quotation Only" ? undefined : "Quotation Only"
                     )
                   }
-                  className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                  className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-left ${
                     activeStatusFilter === "Quotation Only"
-                      ? "ring-1 ring-primary ring-offset-1 bg-blue-50 border-blue-200 shadow-sm"
-                      : "bg-white hover:bg-gray-50 border-gray-200"
+                      ? "bg-blue-50 border-blue-300 font-semibold text-blue-700"
+                      : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                   }`}
                 >
-                  <div className="text-sm font-semibold text-blue-600 truncate leading-tight">
-                    {statusCounts.quotationOnly}
-                  </div>
-                  <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
-                    Quotation Only
-                  </div>
-                  {activeStatusFilter === "Quotation Only" && (
-                    <div className="mt-0.5">
-                      <Badge variant="default" className="text-[7px] h-2.5 px-1">
-                        Active
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-
-                <div
+                  Quotation Only
+                </button>
+                <button
                   onClick={() =>
                     handleStatusFilter(activeStatusFilter === "Pending" ? undefined : "Pending")
                   }
-                  className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                  className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-left ${
                     activeStatusFilter === "Pending"
-                      ? "ring-1 ring-primary ring-offset-1 bg-yellow-50 border-yellow-200 shadow-sm"
-                      : "bg-white hover:bg-gray-50 border-gray-200"
+                      ? "bg-yellow-50 border-yellow-300 font-semibold text-yellow-700"
+                      : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                   }`}
                 >
-                  <div className="text-sm font-semibold text-yellow-600 truncate leading-tight">
-                    {statusCounts.pending}
-                  </div>
-                  <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
-                    Pending
-                  </div>
-                  {activeStatusFilter === "Pending" && (
-                    <div className="mt-0.5">
-                      <Badge variant="default" className="text-[7px] h-2.5 px-1">
-                        Active
-                      </Badge>
-                    </div>
-                  )}
-                </div>
+                  Pending
+                </button>
               </div>
             </div>
 
-            {/* Search & Date Filters with Summary Card */}
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-end gap-2 pb-1">
-                <div className="space-y-0.5">
-                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Search</span>
+            {/* Search Tools & Summary Row */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100">
+              {/* Search Tools */}
+              <div className="flex items-center gap-3">
+                <div className="relative">
                   <Input
-                    placeholder="Search by name, email..."
+                    placeholder="Search all fields..."
                     value={globalFilter ?? ""}
                     onChange={(event) => setGlobalFilter(event.target.value)}
-                    className="w-56 h-7 text-sm"
+                    className="h-8 w-48 text-xs pl-3"
                   />
+                  {globalFilter && (
+                    <button
+                      onClick={() => setGlobalFilter("")}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
 
-                <div className="space-y-0.5">
-                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Year</span>
-                  <Select value={selectedYear || "all"} onValueChange={handleYearChange}>
-                    <SelectTrigger className="w-[120px] h-7 text-sm">
-                      <SelectValue placeholder="All" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Years</SelectItem>
-                      {availableYears.map((year) => (
-                        <SelectItem key={year} value={year}>
-                          {year}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select value={selectedYear || "all"} onValueChange={handleYearChange}>
+                  <SelectTrigger className="w-24 h-8 text-xs">
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Years</SelectItem>
+                    {availableYears.map((year) => (
+                      <SelectItem key={year} value={year}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-                <div className="space-y-0.5">
-                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Month</span>
-                  <Select
-                    value={selectedMonth || "all"}
-                    onValueChange={handleMonthChange}
-                    disabled={!selectedYear}
-                  >
-                    <SelectTrigger className="w-[140px] h-7 text-sm">
-                      <SelectValue placeholder="All" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Months</SelectItem>
-                      {monthOptions.map((month) => (
-                        <SelectItem key={month.value} value={month.value}>
-                          {month.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select
+                  value={selectedMonth || "all"}
+                  onValueChange={handleMonthChange}
+                >
+                  <SelectTrigger className="w-28 h-8 text-xs">
+                    <SelectValue placeholder="Month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Months</SelectItem>
+                    {monthOptions.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                {/* Summary Card aligned with filters */}
-                <div className="ml-auto">
-                  <div
-                    onClick={clearAllFilters}
-                    className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm w-[300px] ${
-                      activeFiltersCount === 0
-                        ? "ring-1 ring-primary ring-offset-1 bg-slate-50 border-slate-200 shadow-sm"
-                        : "bg-white hover:bg-gray-50 border-gray-200"
-                    }`}
-                  >
-                    <div className="space-y-1">
-                      <div className="text-[13px] text-primary font-medium uppercase tracking-wide">
-                        Summary
-                      </div>
-                      <div className="text-lg font-bold text-gray-800">
-                        {filteredRows.length} {filteredRows.length === 1 ? 'inquiry' : 'inquiries'}
-                      </div>
-                      <div className="flex items-center justify-between gap-2 pt-0.5">
-                        <div />
-                        <div className="text-[10px] font-medium text-gray-500 truncate text-right w-full">
-                          {filterSummaryLabel !== 'All' ? filterSummaryLabel : 'All Records'}
-                        </div>
-                      </div>
-                    </div>
+              {/* Summary & Clear Filters */}
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <div className="text-xs text-gray-500">
+                    {(() => {
+                      const activeFilters = [];
+                      if (activeStatusFilter) activeFilters.push("Status");
+                      if (selectedYear) activeFilters.push("Year");
+                      if (selectedMonth) activeFilters.push("Month");
+                      if (globalFilter) activeFilters.push("Search");
+                      return activeFilters.length > 0 ? `${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''} applied` : "No filters applied";
+                    })()}
                   </div>
+                  <div className="text-lg font-bold text-gray-800">{filteredRows.length} records</div>
                 </div>
+                
+                {activeFiltersCount > 0 && (
+                  <button
+                    onClick={clearAllFilters}
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                  >
+                    Clear All
+                  </button>
+                )}
               </div>
             </div>
           </div>
