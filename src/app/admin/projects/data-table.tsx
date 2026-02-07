@@ -236,16 +236,13 @@ export function DataTable<TData extends Project, TValue>({
                     <div
                       key={stat.id}
                       onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
-                      className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                      className={`rounded-lg border w-28 h-12 flex flex-col items-center justify-center cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
                         isActive
                           ? `ring-1 ring-primary ring-offset-1 ${stat.bg} ${stat.border} shadow-sm`
                           : "bg-white hover:bg-gray-50 border-gray-200"
                       }`}
                     >
-                      <div className={`text-sm font-semibold ${stat.color} truncate leading-tight`}>
-                        {stat.count}
-                      </div>
-                      <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
+                      <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide leading-tight text-center">
                         {stat.label}
                       </div>
                       {isActive && (
@@ -267,12 +264,6 @@ export function DataTable<TData extends Project, TValue>({
               <div className="grid grid-cols-7 gap-1.5">
                 {institutions.map((inst) => {
                   const isActive = institutionFilter.includes(inst.id);
-                  let count = 0;
-                  if (inst.id === "__blank__") {
-                    count = data.filter(i => !i.sendingInstitution || i.sendingInstitution.trim() === "").length;
-                  } else {
-                    count = data.filter(i => i.sendingInstitution === inst.id).length;
-                  }
                   return (
                     <div
                       key={inst.id}
@@ -283,16 +274,13 @@ export function DataTable<TData extends Project, TValue>({
                           setInstitutionFilter([...institutionFilter, inst.id]);
                         }
                       }}
-                      className={`rounded-lg border px-1.5 py-1 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                      className={`rounded-lg border w-28 h-12 flex flex-col items-center justify-center cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
                         isActive
                           ? `ring-1 ring-primary ring-offset-1 ${inst.bg} ${inst.border} shadow-sm`
                           : "bg-white hover:bg-gray-50 border-gray-200"
                       }`}
                     >
-                      <div className={`text-sm font-semibold ${inst.color} truncate leading-tight`}>
-                        {count}
-                      </div>
-                      <div className="text-[8px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
+                      <div className="text-[8px] text-muted-foreground font-medium uppercase tracking-wide leading-tight text-center">
                         {inst.label}
                       </div>
                       {isActive && (
@@ -314,12 +302,6 @@ export function DataTable<TData extends Project, TValue>({
               <div className="grid grid-cols-5 gap-1.5">
                 {serviceRequestedOptions.map((service) => {
                   const isActive = serviceRequestedFilter.includes(service.id);
-                  const count = data.filter(i => {
-                    const services = Array.isArray(i.serviceRequested)
-                      ? i.serviceRequested
-                      : i.serviceRequested ? [i.serviceRequested] : [];
-                    return services.includes(service.id);
-                  }).length;
                   return (
                     <div
                       key={service.id}
@@ -330,16 +312,13 @@ export function DataTable<TData extends Project, TValue>({
                           setServiceRequestedFilter([...serviceRequestedFilter, service.id]);
                         }
                       }}
-                      className={`rounded-lg border px-1.5 py-1 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                      className={`rounded-lg border w-28 h-12 flex flex-col items-center justify-center cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
                         isActive
                           ? `ring-1 ring-primary ring-offset-1 ${service.bg} ${service.border} shadow-sm`
                           : "bg-white hover:bg-gray-50 border-gray-200"
                       }`}
                     >
-                      <div className={`text-sm font-semibold ${service.color} truncate leading-tight`}>
-                        {count}
-                      </div>
-                      <div className="text-[8px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
+                      <div className="text-[8px] text-muted-foreground font-medium uppercase tracking-wide leading-tight text-center">
                         {service.label}
                       </div>
                       {isActive && (
@@ -361,7 +340,6 @@ export function DataTable<TData extends Project, TValue>({
               <div className="grid grid-cols-2 gap-2">
                 {fundingCategoryOptions.map((funding) => {
                   const isActive = fundingCategoryFilter.includes(funding.id);
-                  const count = data.filter(i => i.fundingCategory === funding.id).length;
                   return (
                     <div
                       key={funding.id}
@@ -372,16 +350,13 @@ export function DataTable<TData extends Project, TValue>({
                           setFundingCategoryFilter([...fundingCategoryFilter, funding.id]);
                         }
                       }}
-                      className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                      className={`rounded-lg border w-28 h-12 flex flex-col items-center justify-center cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
                         isActive
                           ? `ring-1 ring-primary ring-offset-1 ${funding.bg} ${funding.border} shadow-sm`
                           : "bg-white hover:bg-gray-50 border-gray-200"
                       }`}
                     >
-                      <div className={`text-sm font-semibold ${funding.color} truncate leading-tight`}>
-                        {count}
-                      </div>
-                      <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
+                      <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight text-center">
                         {funding.label}
                       </div>
                       {isActive && (
