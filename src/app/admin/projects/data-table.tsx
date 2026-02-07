@@ -242,15 +242,13 @@ export function DataTable<TData extends Project, TValue>({
                           setInstitutionFilter([...institutionFilter, inst.id]);
                         }
                       }}
-                      className={`rounded-md border px-3 py-2 cursor-pointer transition-all duration-200 w-full ${
+                      className={`rounded-lg border-2 px-3 py-2.5 cursor-pointer transition-all duration-200 w-full shadow-sm hover:shadow-md active:scale-95 ${
                         isActive
-                          ? `${inst.bg} ${inst.border} shadow-sm ring-2 ring-primary/20`
-                          : "bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300"
+                          ? `${inst.bg} ${inst.border} font-semibold ${inst.color}`
+                          : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                       }`}
                     >
-                      <div className={`text-[10px] font-semibold text-center ${
-                        isActive ? inst.color : "text-gray-700"
-                      }`}>
+                      <div className="text-[10px] font-semibold text-center">
                         {inst.label}
                       </div>
                     </div>
@@ -275,15 +273,13 @@ export function DataTable<TData extends Project, TValue>({
                           setServiceRequestedFilter([...serviceRequestedFilter, service.id]);
                         }
                       }}
-                      className={`rounded-md border px-3 py-2 cursor-pointer transition-all duration-200 w-full ${
+                      className={`rounded-lg border-2 px-3 py-2.5 cursor-pointer transition-all duration-200 w-full shadow-sm hover:shadow-md active:scale-95 ${
                         isActive
-                          ? `${service.bg} ${service.border} shadow-sm ring-2 ring-primary/20`
-                          : "bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300"
+                          ? `${service.bg} ${service.border} font-semibold ${service.color}`
+                          : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                       }`}
                     >
-                      <div className={`text-[10px] font-semibold text-center ${
-                        isActive ? service.color : "text-gray-700"
-                      }`}>
+                      <div className="text-[10px] font-semibold text-center">
                         {service.label}
                       </div>
                     </div>
@@ -302,15 +298,13 @@ export function DataTable<TData extends Project, TValue>({
                     <div
                       key={stat.id}
                       onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
-                      className={`rounded-md border px-4 py-2 flex-1 cursor-pointer transition-all duration-200 ${
+                      className={`rounded-lg border-2 px-4 py-2.5 flex-1 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 ${
                         isActive
-                          ? `${stat.bg} ${stat.border} shadow-sm ring-2 ring-primary/20`
-                          : "bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300"
+                          ? `${stat.bg} ${stat.border} font-semibold ${stat.color}`
+                          : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                       }`}
                     >
-                      <div className={`text-xs font-semibold text-center ${
-                        isActive ? stat.color : "text-gray-700"
-                      }`}>
+                      <div className="text-xs font-semibold text-center">
                         {stat.label}
                       </div>
                     </div>
@@ -335,15 +329,13 @@ export function DataTable<TData extends Project, TValue>({
                           setFundingCategoryFilter([...fundingCategoryFilter, funding.id]);
                         }
                       }}
-                      className={`rounded-md border px-4 py-2 flex-1 cursor-pointer transition-all duration-200 ${
+                      className={`rounded-lg border-2 px-4 py-2.5 flex-1 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 ${
                         isActive
-                          ? `${funding.bg} ${funding.border} shadow-sm ring-2 ring-primary/20`
-                          : "bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300"
+                          ? `${funding.bg} ${funding.border} font-semibold ${funding.color}`
+                          : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                       }`}
                     >
-                      <div className={`text-xs font-semibold text-center ${
-                        isActive ? funding.color : "text-gray-700"
-                      }`}>
+                      <div className="text-xs font-semibold text-center">
                         {funding.label}
                       </div>
                     </div>
