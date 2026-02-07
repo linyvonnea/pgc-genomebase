@@ -256,7 +256,7 @@ export function DataTable<TData extends Project, TValue>({
             {/* Institution Cards Section */}
             <div className="space-y-1.5">
               <h4 className="text-[10px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Institution Type</h4>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                 {institutions.map((inst) => {
                   const isActive = institutionFilter.includes(inst.id);
                   return (
@@ -269,7 +269,7 @@ export function DataTable<TData extends Project, TValue>({
                           setInstitutionFilter([...institutionFilter, inst.id]);
                         }
                       }}
-                      className={`rounded-md border px-3 py-1.5 cursor-pointer transition-all duration-200 ${
+                      className={`rounded-md border px-3 py-2 cursor-pointer transition-all duration-200 w-full ${
                         isActive
                           ? `${inst.bg} ${inst.border} shadow-sm ring-2 ring-primary/20`
                           : "bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300"
@@ -289,7 +289,7 @@ export function DataTable<TData extends Project, TValue>({
             {/* Service Requested Cards Section */}
             <div className="space-y-1.5">
               <h4 className="text-[10px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Service Requested</h4>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {serviceRequestedOptions.map((service) => {
                   const isActive = serviceRequestedFilter.includes(service.id);
                   return (
@@ -302,7 +302,7 @@ export function DataTable<TData extends Project, TValue>({
                           setServiceRequestedFilter([...serviceRequestedFilter, service.id]);
                         }
                       }}
-                      className={`rounded-md border px-3 py-1.5 cursor-pointer transition-all duration-200 ${
+                      className={`rounded-md border px-3 py-2 cursor-pointer transition-all duration-200 w-full ${
                         isActive
                           ? `${service.bg} ${service.border} shadow-sm ring-2 ring-primary/20`
                           : "bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300"
@@ -355,12 +355,12 @@ export function DataTable<TData extends Project, TValue>({
             {/* Search & Date Filters with Summary Card */}
             <div className="space-y-2 pt-1 border-t">
               <div className="flex flex-wrap items-end gap-2">
-                <div className="flex-1 min-w-[200px]">
+                <div className="w-full md:basis-1/2 md:grow-0">
                   <Input
                     placeholder="Search projects..."
                     value={globalFilter}
                     onChange={(e) => setGlobalFilter(e.target.value)}
-                    className="h-8 text-sm"
+                    className="h-8 text-sm w-full"
                   />
                 </div>
 
@@ -404,7 +404,7 @@ export function DataTable<TData extends Project, TValue>({
                       setYearFilter("all");
                       setMonthFilter("all");
                     }}
-                    className={`rounded-md border px-3 py-2 cursor-pointer transition-all duration-200 w-[200px] ${
+                    className={`rounded-md border px-3 py-2 cursor-pointer transition-all duration-200 w-[230px] ${
                       statusFilter === "__all" && 
                       institutionFilter.length === 0 && 
                       serviceRequestedFilter.length === 0 && 
