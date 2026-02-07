@@ -275,7 +275,7 @@ export function DataTable<TData extends Project, TValue>({
                           : "bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300"
                       }`}
                     >
-                      <div className={`text-[10px] font-medium text-center whitespace-nowrap ${
+                      <div className={`text-[10px] font-semibold text-center ${
                         isActive ? inst.color : "text-gray-700"
                       }`}>
                         {inst.label}
@@ -308,7 +308,7 @@ export function DataTable<TData extends Project, TValue>({
                           : "bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300"
                       }`}
                     >
-                      <div className={`text-[10px] font-medium text-center whitespace-nowrap ${
+                      <div className={`text-[10px] font-semibold text-center ${
                         isActive ? service.color : "text-gray-700"
                       }`}>
                         {service.label}
