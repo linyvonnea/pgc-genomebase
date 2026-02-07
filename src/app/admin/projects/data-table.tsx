@@ -347,7 +347,7 @@ export function DataTable<TData extends Project, TValue>({
             {/* Search & Date Filters with Summary Card */}
             <div className="bg-gray-50 rounded p-1 space-y-0.5 border border-gray-200">
               <div className="flex flex-wrap items-end gap-1">
-                <div className="flex-1 min-w-[160px]">
+                <div className="w-1/4 min-w-[80px]">
                   <Input
                     placeholder="Search"
                     value={globalFilter}
@@ -358,7 +358,7 @@ export function DataTable<TData extends Project, TValue>({
 
                 <div>
                   <Select value={yearFilter} onValueChange={setYearFilter}>
-                    <SelectTrigger className="w-[75px] h-7 text-[10px]">
+                    <SelectTrigger className="w-[110px] h-7 text-[10px]">
                       <SelectValue placeholder="Year" />
                     </SelectTrigger>
                     <SelectContent>
@@ -372,7 +372,7 @@ export function DataTable<TData extends Project, TValue>({
 
                 <div>
                   <Select value={monthFilter} onValueChange={setMonthFilter}>
-                    <SelectTrigger className="w-[85px] h-7 text-[10px]">
+                    <SelectTrigger className="w-[120px] h-7 text-[10px]">
                       <SelectValue placeholder="Month" />
                     </SelectTrigger>
                     <SelectContent>
@@ -396,7 +396,7 @@ export function DataTable<TData extends Project, TValue>({
                       setYearFilter("all");
                       setMonthFilter("all");
                     }}
-                    className={`rounded border px-2 py-1 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 w-[230px] text-sm ${
+                    className={`rounded border px-1 py-0.5 cursor-pointer transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 w-[230px] text-xs ${
                       statusFilter === "__all" && 
                       institutionFilter.length === 0 && 
                       serviceRequestedFilter.length === 0 && 
@@ -408,14 +408,14 @@ export function DataTable<TData extends Project, TValue>({
                         : "bg-gradient-to-br from-blue-500 to-indigo-600 border-indigo-700 text-white font-semibold"
                     }`}
                   >
-                    <div className="space-y-0.5">
-                      <div className="text-[8px] font-semibold uppercase tracking-wide opacity-90">
+                    <div className="space-y-0">
+                      <div className="text-[7px] font-semibold uppercase tracking-wide opacity-90 leading-none">
                         Results
                       </div>
-                      <div className="text-lg font-bold">
+                      <div className="text-base font-bold leading-none">
                         {filteredData.length}
                       </div>
-                      <div className="text-[7px] font-medium truncate opacity-80">
+                      <div className="text-[6px] font-medium truncate opacity-80 leading-none">
                         {filterSummaryLabel !== 'All' ? filterSummaryLabel : 'All'}
                       </div>
                     </div>
