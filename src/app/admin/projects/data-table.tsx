@@ -236,7 +236,7 @@ export function DataTable<TData extends Project, TValue>({
                     <div
                       key={stat.id}
                       onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
-                      className={`rounded-lg border w-28 h-12 flex flex-col items-center justify-center cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                      className={`rounded-lg border w-24 h-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
                         isActive
                           ? `ring-1 ring-primary ring-offset-1 ${stat.bg} ${stat.border} shadow-sm`
                           : "bg-white hover:bg-gray-50 border-gray-200"
@@ -274,7 +274,7 @@ export function DataTable<TData extends Project, TValue>({
                           setInstitutionFilter([...institutionFilter, inst.id]);
                         }
                       }}
-                      className={`rounded-lg border w-28 h-12 flex flex-col items-center justify-center cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                      className={`rounded-lg border w-24 h-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
                         isActive
                           ? `ring-1 ring-primary ring-offset-1 ${inst.bg} ${inst.border} shadow-sm`
                           : "bg-white hover:bg-gray-50 border-gray-200"
@@ -312,7 +312,7 @@ export function DataTable<TData extends Project, TValue>({
                           setServiceRequestedFilter([...serviceRequestedFilter, service.id]);
                         }
                       }}
-                      className={`rounded-lg border w-28 h-12 flex flex-col items-center justify-center cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                      className={`rounded-lg border w-24 h-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
                         isActive
                           ? `ring-1 ring-primary ring-offset-1 ${service.bg} ${service.border} shadow-sm`
                           : "bg-white hover:bg-gray-50 border-gray-200"
@@ -350,7 +350,7 @@ export function DataTable<TData extends Project, TValue>({
                           setFundingCategoryFilter([...fundingCategoryFilter, funding.id]);
                         }
                       }}
-                      className={`rounded-lg border w-28 h-12 flex flex-col items-center justify-center cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                      className={`rounded-lg border w-24 h-10 flex flex-col items-center justify-center cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
                         isActive
                           ? `ring-1 ring-primary ring-offset-1 ${funding.bg} ${funding.border} shadow-sm`
                           : "bg-white hover:bg-gray-50 border-gray-200"
