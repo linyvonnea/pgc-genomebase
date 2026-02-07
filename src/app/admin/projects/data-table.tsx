@@ -228,7 +228,7 @@ export function DataTable<TData extends Project, TValue>({
           <div className="p-3 space-y-3">
             {/* Status Cards Section */}
             <div className="space-y-1.5">
-              <h4 className="text-[10px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Project Status</h4>
+              <h4 className="text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">Project Status</h4>
               <div className="flex gap-2">
                 {statuses.map((stat) => {
                   const isActive = statusFilter === stat.id;
@@ -255,7 +255,7 @@ export function DataTable<TData extends Project, TValue>({
 
             {/* Institution Cards Section */}
             <div className="space-y-1.5">
-              <h4 className="text-[10px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Institution Type</h4>
+              <h4 className="text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">Institution Type</h4>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                 {institutions.map((inst) => {
                   const isActive = institutionFilter.includes(inst.id);
@@ -288,7 +288,7 @@ export function DataTable<TData extends Project, TValue>({
 
             {/* Service Requested Cards Section */}
             <div className="space-y-1.5">
-              <h4 className="text-[10px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Service Requested</h4>
+              <h4 className="text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">Service Requested</h4>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {serviceRequestedOptions.map((service) => {
                   const isActive = serviceRequestedFilter.includes(service.id);
@@ -321,7 +321,7 @@ export function DataTable<TData extends Project, TValue>({
 
             {/* Funding Category Cards Section */}
             <div className="space-y-1.5">
-              <h4 className="text-[10px] font-semibold text-gray-600 uppercase tracking-wider mb-1">Funding Category</h4>
+              <h4 className="text-[10px] font-bold text-gray-700 uppercase tracking-wider mb-1">Funding Category</h4>
               <div className="flex gap-2">
                 {fundingCategoryOptions.map((funding) => {
                   const isActive = fundingCategoryFilter.includes(funding.id);
@@ -355,7 +355,7 @@ export function DataTable<TData extends Project, TValue>({
             {/* Search & Date Filters with Summary Card */}
             <div className="space-y-2 pt-1 border-t">
               <div className="flex flex-wrap items-end gap-2">
-                <div className="w-full md:basis-1/2 md:grow-0">
+                <div className="w-full md:basis-1/4 md:grow-0">
                   <Input
                     placeholder="Search projects..."
                     value={globalFilter}
@@ -404,7 +404,7 @@ export function DataTable<TData extends Project, TValue>({
                       setYearFilter("all");
                       setMonthFilter("all");
                     }}
-                    className={`rounded-md border px-3 py-2 cursor-pointer transition-all duration-200 w-[230px] ${
+                    className={`rounded-md border px-3 py-2 cursor-pointer transition-all duration-200 w-[250px] ${
                       statusFilter === "__all" && 
                       institutionFilter.length === 0 && 
                       serviceRequestedFilter.length === 0 && 
