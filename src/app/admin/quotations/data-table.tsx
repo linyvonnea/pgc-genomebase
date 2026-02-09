@@ -242,8 +242,8 @@ export function DataTable<TData, TValue>({
         </div>
         
         {!isFiltersCollapsed && (
-          <div className="p-2.5 space-y-2.5">
-            {/* Service Categories Section */}
+          <div className="bg-white rounded-lg border border-gray-200 p-3 space-y-3">
+            {/* Service Categories Section - match Inquiries style */}
             <div className="space-y-2">
               <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Service Categories</label>
               <div className="grid grid-cols-1 gap-1">
@@ -259,7 +259,7 @@ export function DataTable<TData, TValue>({
                           setCategoryFilter([...categoryFilter, cat.name]);
                         }
                       }}
-                      className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                      className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm w-full ${
                         isActive
                           ? `${cat.bg} ${cat.border} font-semibold ${cat.color}`
                           : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
