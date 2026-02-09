@@ -24,8 +24,12 @@ export function useDashboardData() {
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
 
-  const [timeRange, setTimeRange] = useState<TimeRange>("all");
-  const [customRange, setCustomRange] = useState<CustomRange | undefined>();
+  const [timeRange, setTimeRange] = useState<TimeRange>("custom");
+  const [customRange, setCustomRange] = useState<CustomRange | undefined>({
+    year: new Date().getFullYear(),
+    startMonth: 0,
+    endMonth: 11
+  });
 
   useEffect(() => {
     const auth = getAuth();
@@ -44,10 +48,6 @@ export function useDashboardData() {
       setTotalIncome
     });
   };
-
-  useEffect(() => {
-    fetchAllDataHandler().then(() => setLoading(false));
-  }, []);
 
   const handleTimeFilterChange = useCallback(async (range: TimeRange | CustomRange) => {
     setLoading(true);
