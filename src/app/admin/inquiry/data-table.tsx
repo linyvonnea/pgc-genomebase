@@ -307,12 +307,12 @@ export function DataTable<TData, TValue>({
                     placeholder="Search all fields..."
                     value={globalFilter ?? ""}
                     onChange={(event) => setGlobalFilter(event.target.value)}
-                    className="h-8 w-48 text-xs pl-3"
+                    className="w-56 pl-3 pr-8 h-8 text-sm"
                   />
                   {globalFilter && (
                     <button
                       onClick={() => setGlobalFilter("")}
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -320,11 +320,11 @@ export function DataTable<TData, TValue>({
                 </div>
 
                 <Select value={selectedYear || "all"} onValueChange={handleYearChange}>
-                  <SelectTrigger className="w-24 h-8 text-xs">
+                  <SelectTrigger className="w-24 h-8">
                     <SelectValue placeholder="Year" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Years</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
                     {availableYears.map((year) => (
                       <SelectItem key={year} value={year}>{year}</SelectItem>
                     ))}
@@ -335,11 +335,11 @@ export function DataTable<TData, TValue>({
                   value={selectedMonth || "all"}
                   onValueChange={handleMonthChange}
                 >
-                  <SelectTrigger className="w-28 h-8 text-xs">
+                  <SelectTrigger className="w-28 h-8">
                     <SelectValue placeholder="Month" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Months</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
                     {monthOptions.map((month) => (
                       <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
                     ))}
