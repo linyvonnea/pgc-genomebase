@@ -1,7 +1,7 @@
 // src/hooks/useDashboardData.ts
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Timestamp } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { fetchAllData, fetchFilteredData } from "../services/dashboardUtils";
@@ -49,7 +49,7 @@ export function useDashboardData() {
     fetchAllDataHandler().then(() => setLoading(false));
   }, []);
 
-  const handleTimeFilterChange = async (range: TimeRange | CustomRange) => {
+  const handleTimeFilterChange = useCallback(async (range: TimeRange | CustomRange) => {
     setLoading(true);
 
     if (typeof range === "string") {
@@ -101,7 +101,7 @@ export function useDashboardData() {
 
       await fetchFilteredData(startTS, endTS, { setTotalProjects, setFilteredProjects, setFilteredClients, setFilteredChargeSlips, setTotalIncome });
     setLoading(false);
-  };
+  }, []);
 
   const exportToPDF = async () => {
     setIsExporting(true);
