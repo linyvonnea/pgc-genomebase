@@ -167,10 +167,41 @@ export function DataTable<TData, TValue>({
   const [yearFilter, setYearFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
   const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
+  const [filterOrder, setFilterOrder] = useState<Array<{type: string, value: string}>>([]);
+  
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ];
+  
+  // Filter summary label with click order tracking
+  const filterSummaryLabel = useMemo(() => {
+    const orderedFilters: string[] = [];
+    
+    // Add filters in the order they were selected
+    filterOrder.forEach(filter => {
+      if (filter.type === 'year' && yearFilter !== "all") {
+        orderedFilters.push(filter.value);
+      } else if (filter.type === 'month' && monthFilter !== "all") {
+        const monthName = monthNames[parseInt(filter.value) - 1];
+        if (monthName) orderedFilters.push(monthName);
+      }
+    });
+    
+    // Add Year and Month at the end if not already added via filterOrder
+    if (yearFilter !== "all" && !filterOrder.some(f => f.type === 'year')) {
+      orderedFilters.push(yearFilter);
+    }
+    if (monthFilter !== "all" && !filterOrder.some(f => f.type === 'month')) {
+      const monthName = monthNames[parseInt(monthFilter) - 1];
+      if (monthName) orderedFilters.push(monthName);
+    }
+    
+    // Add global filter if present
+    if (globalFilter) orderedFilters.push(`"${globalFilter}"`);
+    
+    return orderedFilters.length > 0 ? orderedFilters.join(" + ") : "No filters applied";
+  }, [yearFilter, monthFilter, globalFilter, filterOrder, monthNames]);
   
   // Derive available years from data and always include 2019-2026
   const availableYears = useMemo(() => {
@@ -380,6 +411,14 @@ export function DataTable<TData, TValue>({
                   <Select value={yearFilter} onValueChange={(value) => {
                     console.log('Year filter changed to:', value);
                     setYearFilter(value);
+                    if (value === "all") {
+                      setFilterOrder(prev => prev.filter(f => f.type !== 'year'));
+                    } else {
+                      setFilterOrder(prev => {
+                        const filtered = prev.filter(f => f.type !== 'year');
+                        return [...filtered, {type: 'year', value: value}];
+                      });
+                    }
                   }}>
                     <SelectTrigger className="w-[120px] h-7 text-sm">
                       <SelectValue placeholder="All" />
@@ -398,6 +437,14 @@ export function DataTable<TData, TValue>({
                   <Select value={monthFilter} onValueChange={(value) => {
                     console.log('Month filter changed to:', value);
                     setMonthFilter(value);
+                    if (value === "all") {
+                      setFilterOrder(prev => prev.filter(f => f.type !== 'month'));
+                    } else {
+                      setFilterOrder(prev => {
+                        const filtered = prev.filter(f => f.type !== 'month');
+                        return [...filtered, {type: 'month', value: value}];
+                      });
+                    }
                   }}>
                     <SelectTrigger className="w-[140px] h-7 text-sm">
                       <SelectValue placeholder="All" />
@@ -412,38 +459,33 @@ export function DataTable<TData, TValue>({
                 </div>
 
                 {/* Summary Card aligned with filters */}
-                <div className="ml-auto">
-                  <div
+                <div className="flex items-center gap-3">
+                  <div 
                     onClick={() => {
-                      console.log('Clearing all filters');
-                      setGlobalFilter("");
-                      setYearFilter("all");
-                      setMonthFilter("all");
+                      if (globalFilter || yearFilter !== 'all' || monthFilter !== 'all') {
+                        console.log('Clearing all filters');
+                        setGlobalFilter("");
+                        setYearFilter("all");
+                        setMonthFilter("all");
+                        setFilterOrder([]);
+                      }
                     }}
-                    className="rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm w-[300px] bg-white hover:bg-gray-50 border-gray-200"
+                    className={`p-3 rounded-lg border transition-all duration-200 ${
+                      (globalFilter || yearFilter !== 'all' || monthFilter !== 'all')
+                        ? "bg-blue-50 border-blue-200 cursor-pointer hover:bg-blue-100"
+                        : "bg-gray-50 border-gray-200"
+                    }`}
                   >
-                    <div className="space-y-1">
-                      <div className="text-[13px] text-primary font-medium uppercase tracking-wide">
-                        {globalFilter || yearFilter !== 'all' || monthFilter !== 'all' ? 'Filtered Summary' : 'Total Summary'}
+                    <div className="text-right">
+                      <div className="text-xs font-medium text-gray-600 mb-1">
+                        {filterSummaryLabel}
                       </div>
-                      <div className="text-lg font-bold text-gray-800">
-                        {totalRecords} {totalRecords === 1 ? 'Client' : 'Clients'}
-                      </div>
-                      <div className="flex items-center justify-between gap-2 pt-0.5">
-                        <div className="text-[10px] font-medium text-gray-500 truncate">
-                          {globalFilter || yearFilter !== 'all' || monthFilter !== 'all' 
-                            ? (() => {
-                                const filters = [];
-                                if (yearFilter !== 'all') filters.push(yearFilter);
-                                if (monthFilter !== 'all') filters.push(monthNames[parseInt(monthFilter) - 1]);
-                                if (globalFilter) filters.push(`"${globalFilter}"`);
-                                return filters.join(' • ') || 'Active Filters';
-                              })()
-                            : 'All Records • No Filters'
-                          }
+                      <div className="text-lg font-bold text-gray-800">{totalRecords} records</div>
+                      {(globalFilter || yearFilter !== 'all' || monthFilter !== 'all') && (
+                        <div className="text-xs text-blue-600 mt-1 font-medium">
+                          Click to clear all filters
                         </div>
-                        {/* Removed 'Click to clear' */}
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -507,6 +549,7 @@ export function DataTable<TData, TValue>({
                         setGlobalFilter("");
                         setYearFilter("all");
                         setMonthFilter("all");
+                        setFilterOrder([]);
                       }}>Clear all filters</Button>
                     </div>
                   </TableCell>

@@ -64,6 +64,7 @@ export function DataTable<TData extends Project, TValue>({
   const [yearFilter, setYearFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
   const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
+  const [filterOrder, setFilterOrder] = useState<Array<{type: string, value: string}>>([]);
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
@@ -72,18 +73,32 @@ export function DataTable<TData extends Project, TValue>({
 
   // Filter summary label (Laboratory+2026+January style)
   const filterSummaryLabel = useMemo(() => {
-    const filters = [];
-    if (statusFilter !== "__all") filters.push(statusFilter);
-    if (yearFilter !== "all") filters.push(yearFilter);
+    const orderedFilters = [];
+    
+    // Add filters in the order they were selected
+    filterOrder.forEach(filter => {
+      if (filter.type === 'status' && statusFilter !== "__all") {
+        orderedFilters.push(statusFilter);
+      } else if (filter.type === 'institution' && institutionFilter.includes(filter.value)) {
+        orderedFilters.push(filter.value);
+      } else if (filter.type === 'service' && serviceRequestedFilter.includes(filter.value)) {
+        orderedFilters.push(filter.value);
+      } else if (filter.type === 'funding' && fundingCategoryFilter.includes(filter.value)) {
+        orderedFilters.push(filter.value);
+      } else if (filter.type === 'search' && globalFilter) {
+        orderedFilters.push(`"${globalFilter}"`);
+      }
+    });
+    
+    // Add Year and Month at the end
+    if (yearFilter !== "all") orderedFilters.push(yearFilter);
     if (monthFilter !== "all") {
       const m = monthNames[parseInt(monthFilter) - 1];
-      if (m) filters.push(m);
+      if (m) orderedFilters.push(m);
     }
-    if (institutionFilter.length > 0) filters.push(...institutionFilter);
-    if (serviceRequestedFilter.length > 0) filters.push(...serviceRequestedFilter);
-    if (fundingCategoryFilter.length > 0) filters.push(...fundingCategoryFilter);
-    return filters.length > 0 ? filters.join("+") : "All";
-  }, [statusFilter, yearFilter, monthFilter, institutionFilter, serviceRequestedFilter, fundingCategoryFilter, monthNames]);
+    
+    return orderedFilters.length > 0 ? orderedFilters.join(" + ") : "No filters applied";
+  }, [statusFilter, institutionFilter, serviceRequestedFilter, fundingCategoryFilter, globalFilter, yearFilter, monthFilter, filterOrder, monthNames]);
 
   // Derive available years
   const availableYears = useMemo(() => {
@@ -240,8 +255,10 @@ export function DataTable<TData extends Project, TValue>({
                         onClick={() => {
                           if (isActive) {
                             setInstitutionFilter(institutionFilter.filter(i => i !== inst.id));
+                            setFilterOrder(prev => prev.filter(f => !(f.type === 'institution' && f.value === inst.id)));
                           } else {
                             setInstitutionFilter([...institutionFilter, inst.id]);
+                            setFilterOrder(prev => [...prev, {type: 'institution', value: inst.id}]);
                           }
                         }}
                         className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
@@ -269,8 +286,10 @@ export function DataTable<TData extends Project, TValue>({
                         onClick={() => {
                           if (isActive) {
                             setServiceRequestedFilter(serviceRequestedFilter.filter(s => s !== service.id));
+                            setFilterOrder(prev => prev.filter(f => !(f.type === 'service' && f.value === service.id)));
                           } else {
                             setServiceRequestedFilter([...serviceRequestedFilter, service.id]);
+                            setFilterOrder(prev => [...prev, {type: 'service', value: service.id}]);
                           }
                         }}
                         className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-left ${
@@ -295,7 +314,15 @@ export function DataTable<TData extends Project, TValue>({
                     return (
                       <button
                         key={stat.id}
-                        onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
+                        onClick={() => {
+                          if (isActive) {
+                            setStatusFilter("__all");
+                            setFilterOrder(prev => prev.filter(f => f.type !== 'status'));
+                          } else {
+                            setStatusFilter(stat.id);
+                            setFilterOrder(prev => [...prev.filter(f => f.type !== 'status'), {type: 'status', value: stat.id}]);
+                          }
+                        }}
                         className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
                           isActive
                             ? `${stat.bg} ${stat.border} font-semibold ${stat.color}`
@@ -321,8 +348,10 @@ export function DataTable<TData extends Project, TValue>({
                         onClick={() => {
                           if (isActive) {
                             setFundingCategoryFilter(fundingCategoryFilter.filter(f => f !== funding.id));
+                            setFilterOrder(prev => prev.filter(f => !(f.type === 'funding' && f.value === funding.id)));
                           } else {
                             setFundingCategoryFilter([...fundingCategoryFilter, funding.id]);
+                            setFilterOrder(prev => [...prev, {type: 'funding', value: funding.id}]);
                           }
                         }}
                         className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
@@ -360,7 +389,17 @@ export function DataTable<TData extends Project, TValue>({
                   )}
                 </div>
 
-                <Select value={yearFilter} onValueChange={setYearFilter}>
+                <Select value={yearFilter} onValueChange={(value) => {
+                  setYearFilter(value);
+                  if (value === "all") {
+                    setFilterOrder(prev => prev.filter(f => f.type !== 'year'));
+                  } else {
+                    setFilterOrder(prev => {
+                      const filtered = prev.filter(f => f.type !== 'year');
+                      return [...filtered, {type: 'year', value: value}];
+                    });
+                  }
+                }}>
                   <SelectTrigger className="w-24 h-8 text-xs">
                     <SelectValue placeholder="Year" />
                   </SelectTrigger>
@@ -372,7 +411,17 @@ export function DataTable<TData extends Project, TValue>({
                   </SelectContent>
                 </Select>
 
-                <Select value={monthFilter} onValueChange={setMonthFilter}>
+                <Select value={monthFilter} onValueChange={(value) => {
+                  setMonthFilter(value);
+                  if (value === "all") {
+                    setFilterOrder(prev => prev.filter(f => f.type !== 'month'));
+                  } else {
+                    setFilterOrder(prev => {
+                      const filtered = prev.filter(f => f.type !== 'month');
+                      return [...filtered, {type: 'month', value: value}];
+                    });
+                  }
+                }}>
                   <SelectTrigger className="w-28 h-8 text-xs">
                     <SelectValue placeholder="Month" />
                   </SelectTrigger>
@@ -409,6 +458,7 @@ export function DataTable<TData extends Project, TValue>({
                         setFundingCategoryFilter([]);
                         setYearFilter("all");
                         setMonthFilter("all");
+                        setFilterOrder([]);
                       }
                     }}
                     className={`p-3 rounded-lg border transition-all duration-200 ${
@@ -425,21 +475,7 @@ export function DataTable<TData extends Project, TValue>({
                   >
                     <div className="text-right">
                       <div className="text-xs font-medium text-gray-600 mb-1">
-                        {(() => {
-                          const filters = [];
-                          if (statusFilter !== "__all") filters.push(statusFilter);
-                          if (institutionFilter.length > 0) filters.push(...institutionFilter);
-                          if (serviceRequestedFilter.length > 0) filters.push(...serviceRequestedFilter);
-                          if (fundingCategoryFilter.length > 0) filters.push(...fundingCategoryFilter);
-                          if (yearFilter !== "all") filters.push(yearFilter);
-                          if (monthFilter !== "all") {
-                            const monthName = monthNames[parseInt(monthFilter) - 1];
-                            if (monthName) filters.push(monthName);
-                          }
-                          if (globalFilter) filters.push(`"${globalFilter}"`);
-                          
-                          return filters.length > 0 ? filters.join(" + ") : "No filters applied";
-                        })()}
+                        {filterSummaryLabel}
                       </div>
                       <div className="text-lg font-bold text-gray-800">{filteredData.length} records</div>
                       {(statusFilter !== "__all" || 

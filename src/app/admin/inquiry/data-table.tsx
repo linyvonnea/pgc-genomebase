@@ -67,6 +67,12 @@ export function DataTable<TData, TValue>({
   const [selectedYear, setSelectedYear] = useState<string>("")
   const [selectedMonth, setSelectedMonth] = useState<string>("")
   const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false)
+  const [filterOrder, setFilterOrder] = useState<Array<{type: string, value: string}>>([])
+
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
 
   // Calculate status counts
   const statusCounts = useMemo(() => {
@@ -77,6 +83,37 @@ export function DataTable<TData, TValue>({
       pending: inquiries.filter(i => i.status === "Pending").length,
     }
   }, [data])
+
+  // Filter summary label with click order tracking
+  const filterSummaryLabel = useMemo(() => {
+    const orderedFilters = [];
+    
+    // Add filters in the order they were selected
+    filterOrder.forEach(filter => {
+      if (filter.type === 'status' && activeStatusFilter) {
+        orderedFilters.push(activeStatusFilter);
+      } else if (filter.type === 'year' && selectedYear && selectedYear !== "all") {
+        orderedFilters.push(selectedYear);
+      } else if (filter.type === 'month' && selectedMonth && selectedMonth !== "all") {
+        const monthName = monthNames[parseInt(selectedMonth) - 1];
+        if (monthName) orderedFilters.push(monthName);
+      }
+    });
+    
+    // Add Year and Month at the end if not already added via filterOrder
+    if (selectedYear && selectedYear !== "all" && !filterOrder.some(f => f.type === 'year')) {
+      orderedFilters.push(selectedYear);
+    }
+    if (selectedMonth && selectedMonth !== "all" && !filterOrder.some(f => f.type === 'month')) {
+      const monthName = monthNames[parseInt(selectedMonth) - 1];
+      if (monthName) orderedFilters.push(monthName);
+    }
+    
+    // Add global filter if present
+    if (globalFilter) orderedFilters.push(`"${globalFilter}"`);
+    
+    return orderedFilters.length > 0 ? orderedFilters.join(" + ") : "No filters applied";
+  }, [activeStatusFilter, selectedYear, selectedMonth, globalFilter, filterOrder, monthNames]);
 
   // Get available years from data
   const availableYears = useMemo(() => {
@@ -153,15 +190,32 @@ export function DataTable<TData, TValue>({
   const handleStatusFilter = (status: string | undefined) => {
     setActiveStatusFilter(status)
     table.getColumn("status")?.setFilterValue(status)
+    if (status) {
+      setFilterOrder(prev => [...prev.filter(f => f.type !== 'status'), {type: 'status', value: status}])
+    } else {
+      setFilterOrder(prev => prev.filter(f => f.type !== 'status'))
+    }
   }
 
   const handleYearChange = (year: string) => {
     setSelectedYear(year === "all" ? "" : year)
     if (year === "all") setSelectedMonth("")
+    
+    if (year === "all") {
+      setFilterOrder(prev => prev.filter(f => f.type !== 'year'))
+    } else {
+      setFilterOrder(prev => [...prev.filter(f => f.type !== 'year'), {type: 'year', value: year}])
+    }
   }
 
   const handleMonthChange = (month: string) => {
     setSelectedMonth(month === "all" ? "" : month)
+    
+    if (month === "all") {
+      setFilterOrder(prev => prev.filter(f => f.type !== 'month'))
+    } else {
+      setFilterOrder(prev => [...prev.filter(f => f.type !== 'month'), {type: 'month', value: month}])
+    }
   }
 
   const clearAllFilters = () => {
@@ -169,20 +223,9 @@ export function DataTable<TData, TValue>({
     setSelectedYear("")
     setSelectedMonth("")
     setGlobalFilter("")
+    setFilterOrder([])
     table.getColumn("status")?.setFilterValue(undefined)
   }
-
-  // Filter summary label (Laboratory+2026+January style)
-  const filterSummaryLabel = useMemo(() => {
-    const filters = [];
-    if (activeStatusFilter) filters.push(activeStatusFilter);
-    if (selectedYear) filters.push(selectedYear);
-    if (selectedMonth) {
-      const m = monthOptions.find(m => m.value === selectedMonth);
-      if (m) filters.push(m.label);
-    }
-    return filters.length > 0 ? filters.join("+") : "All";
-  }, [activeStatusFilter, selectedYear, selectedMonth, monthOptions]);
 
   const activeFiltersCount = [
     activeStatusFilter,
@@ -304,40 +347,28 @@ export function DataTable<TData, TValue>({
                 </Select>
               </div>
 
-              {/* Summary */}
-              <div className="flex items-center gap-3">
-                <div className="text-xs text-gray-600">
-                  <span className="font-medium">{(() => {
-                    const filters = [];
-                    if (activeStatusFilter) filters.push(activeStatusFilter);
-                    if (selectedYear && selectedYear !== "all") filters.push(selectedYear);
-                    if (selectedMonth && selectedMonth !== "all") {
-                      const monthName = monthOptions.find(m => m.value === selectedMonth)?.label;
-                      if (monthName) filters.push(monthName);
-                    }
-                    return filters.length > 0 ? filters.join("+") : "All";
-                  })()}</span>
-                  <span className="mx-2 text-gray-400">|</span>
-                  <span>
-                    {(() => {
-                      const activeFilters = [];
-                      if (activeStatusFilter) activeFilters.push("Status");
-                      if (selectedYear && selectedYear !== "all") activeFilters.push("Year");
-                      if (selectedMonth && selectedMonth !== "all") activeFilters.push("Month");
-                      if (globalFilter) activeFilters.push("Search");
-                      return activeFilters.length > 0 ? `${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''} applied` : "No filters applied";
-                    })()}
-                  </span>
+              {/* Summary & Clear Filters */}
+              <div className="flex items-center justify-end gap-3">
+                <div 
+                  onClick={activeFiltersCount > 0 ? clearAllFilters : undefined}
+                  className={`p-3 rounded-lg border transition-all duration-200 ${
+                    activeFiltersCount > 0
+                      ? "bg-blue-50 border-blue-200 cursor-pointer hover:bg-blue-100"
+                      : "bg-gray-50 border-gray-200"
+                  }`}
+                >
+                  <div className="text-right">
+                    <div className="text-xs font-medium text-gray-600 mb-1">
+                      {filterSummaryLabel}
+                    </div>
+                    <div className="text-lg font-bold text-gray-800">{filteredRows.length} records</div>
+                    {activeFiltersCount > 0 && (
+                      <div className="text-xs text-blue-600 mt-1 font-medium">
+                        Click to clear all filters
+                      </div>
+                    )}
+                  </div>
                 </div>
-                {activeFiltersCount > 0 && (
-                  <button
-                    onClick={clearAllFilters}
-                    className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                  >
-                    <X className="h-3 w-3" />
-                    Clear All
-                  </button>
-                )}
               </div>
             </div>
           </div>
