@@ -25,8 +25,8 @@ export function DashboardContent({
       <div className="gap-4 mb-4">
         <div className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-            <StatCard title="Total Clients" value={filteredClients.length} colorIndex={0} />
-            <StatCard title="Total Projects" value={totalProjects} colorIndex={1} />
+            <StatCard title="Total Approved Clients" value={filteredClients.length} colorIndex={0} />
+            <StatCard title="Total Ongoing and Completed Projects" value={totalProjects} colorIndex={1} />
             <StatCard
               title="Total Income"
               value={totalIncome.toLocaleString("en-PH", {
