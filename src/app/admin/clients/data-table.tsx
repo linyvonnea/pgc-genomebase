@@ -473,11 +473,7 @@ export function DataTable<TData, TValue>({
                         {filterSummaryLabel}
                       </div>
                       <div className="text-lg font-bold text-gray-800">{totalRecords} records</div>
-                      {(globalFilter || yearFilter !== 'all' || monthFilter !== 'all') && (
-                        <div className="text-xs text-blue-600 mt-1 font-medium">
-                          Click to clear all filters
-                        </div>
-                      )}
+                      {/* Removed 'Click to clear all filters' label */}
                     </div>
                   </div>
                 </div>
