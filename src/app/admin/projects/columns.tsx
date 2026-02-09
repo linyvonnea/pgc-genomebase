@@ -59,13 +59,13 @@ export const columns: ColumnDef<Project>[] = [
         <TooltipProvider delayDuration={200}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-1 max-w-[130px] cursor-help">
-                <span className="truncate flex-1" title="">
+              <div className="flex items-center gap-0.5 max-w-[130px] cursor-help">
+                <span className="truncate" title="">
                   {displayText}
                 </span>
                 {count > 0 && (
-                  <span className="shrink-0 text-[10px] font-bold text-blue-600 bg-blue-50 px-1 rounded border border-blue-100">
-                    {count}
+                  <span className="shrink-0 text-xs font-bold text-blue-600">
+                    ({count})
                   </span>
                 )}
               </div>
