@@ -451,6 +451,36 @@ export function DataTable<TData, TValue>({
                     </SelectContent>
                   </Select>
                 </div>
+                {/* Summary Card moved here */}
+                <div className="flex flex-1 justify-end min-w-[220px]">
+                  <div 
+                    onClick={() => {
+                      if (globalFilter || yearFilter !== 'all' || monthFilter !== 'all') {
+                        setGlobalFilter("");
+                        setYearFilter("all");
+                        setMonthFilter("all");
+                        setFilterOrder([]);
+                      }
+                    }}
+                    className={`p-3 rounded-lg border transition-all duration-200 ${
+                      (globalFilter || yearFilter !== 'all' || monthFilter !== 'all')
+                        ? "bg-blue-50 border-blue-200 cursor-pointer hover:bg-blue-100"
+                        : "bg-gray-50 border-gray-200"
+                    }`}
+                  >
+                    <div className="text-right">
+                      <div className="text-xs font-medium text-gray-600 mb-1">
+                        {filterSummaryLabel}
+                      </div>
+                      <div className="text-lg font-bold text-gray-800">{totalRecords} records</div>
+                      {(globalFilter || yearFilter !== 'all' || monthFilter !== 'all') && (
+                        <div className="text-xs text-blue-600 mt-1 font-medium">
+                          Click to clear all filters
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -516,36 +546,6 @@ export function DataTable<TData, TValue>({
               )}
             </TableBody>
           </Table>
-        </div>
-      </div>
-      {/* Summary Card moved to bottom right */}
-      <div className="flex justify-end mt-2">
-        <div 
-          onClick={() => {
-            if (globalFilter || yearFilter !== 'all' || monthFilter !== 'all') {
-              setGlobalFilter("");
-              setYearFilter("all");
-              setMonthFilter("all");
-              setFilterOrder([]);
-            }
-          }}
-          className={`p-3 rounded-lg border transition-all duration-200 ${
-            (globalFilter || yearFilter !== 'all' || monthFilter !== 'all')
-              ? "bg-blue-50 border-blue-200 cursor-pointer hover:bg-blue-100"
-              : "bg-gray-50 border-gray-200"
-          }`}
-        >
-          <div className="text-right">
-            <div className="text-xs font-medium text-gray-600 mb-1">
-              {filterSummaryLabel}
-            </div>
-            <div className="text-lg font-bold text-gray-800">{totalRecords} records</div>
-            {(globalFilter || yearFilter !== 'all' || monthFilter !== 'all') && (
-              <div className="text-xs text-blue-600 mt-1 font-medium">
-                Click to clear all filters
-              </div>
-            )}
-          </div>
         </div>
       </div>
       {/* Bottom Pagination */}
