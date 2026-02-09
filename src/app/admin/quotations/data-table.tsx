@@ -242,113 +242,118 @@ export function DataTable<TData, TValue>({
         </div>
         
         {!isFiltersCollapsed && (
-          <div className="bg-white rounded-lg border border-gray-200 p-3 space-y-3">
-            {/* Service Categories Section - 4 columns on large screens */}
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Service Categories</label>
-              <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
-                {categories.map((cat) => {
-                  const isActive = categoryFilter.includes(cat.name);
-                  return (
-                    <button
-                      key={cat.name}
-                      onClick={() => {
-                        if (isActive) {
-                          setCategoryFilter(categoryFilter.filter((c) => c !== cat.name));
-                        } else {
-                          setCategoryFilter([...categoryFilter, cat.name]);
-                        }
-                      }}
-                      className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm w-full ${
-                        isActive
-                          ? `${cat.bg} ${cat.border} font-semibold ${cat.color}`
-                          : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                      }`}
-                    >
-                      {cat.name}
-                    </button>
-                  );
-                })}
+          <div className="bg-white rounded-lg border border-gray-200 p-3">
+            <div className="flex flex-row gap-4">
+              {/* Service Categories Section - vertical, leftmost */}
+              <div className="min-w-[140px] max-w-[180px]">
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 block">Service Categories</label>
+                <div className="flex flex-col gap-1">
+                  {categories.map((cat) => {
+                    const isActive = categoryFilter.includes(cat.name);
+                    return (
+                      <button
+                        key={cat.name}
+                        onClick={() => {
+                          if (isActive) {
+                            setCategoryFilter(categoryFilter.filter((c) => c !== cat.name));
+                          } else {
+                            setCategoryFilter([...categoryFilter, cat.name]);
+                          }
+                        }}
+                        className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm w-full ${
+                          isActive
+                            ? `${cat.bg} ${cat.border} font-semibold ${cat.color}`
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
+                        {cat.name}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
 
-            {/* Search & Date Filters with Summary Card */}
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-end gap-2 pb-1">
-                <div className="space-y-0.5">
-                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Search</span>
-                  <Input
-                    placeholder="Search client, institution..."
-                    value={globalFilter}
-                    onChange={(e) => setGlobalFilter(e.target.value)}
-                    className="w-56 h-7 text-sm"
-                  />
-                </div>
+              {/* Filters & Summary - right side */}
+              <div className="flex-1">
+                {/* Search & Date Filters with Summary Card */}
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-end gap-2 pb-1">
+                    <div className="space-y-0.5">
+                      <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Search</span>
+                      <Input
+                        placeholder="Search client, institution..."
+                        value={globalFilter}
+                        onChange={(e) => setGlobalFilter(e.target.value)}
+                        className="w-56 h-7 text-sm"
+                      />
+                    </div>
 
-                <div className="space-y-0.5">
-                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Year</span>
-                  <Select value={yearFilter} onValueChange={setYearFilter}>
-                    <SelectTrigger className="w-[120px] h-7 text-sm">
-                      <SelectValue placeholder="All" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Years</SelectItem>
-                      {availableYears.map(y => (
-                        <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div className="space-y-0.5">
+                      <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Year</span>
+                      <Select value={yearFilter} onValueChange={setYearFilter}>
+                        <SelectTrigger className="w-[120px] h-7 text-sm">
+                          <SelectValue placeholder="All" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Years</SelectItem>
+                          {availableYears.map(y => (
+                            <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div className="space-y-0.5">
-                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Month</span>
-                  <Select value={monthFilter} onValueChange={setMonthFilter}>
-                    <SelectTrigger className="w-[140px] h-7 text-sm">
-                      <SelectValue placeholder="All" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Months</SelectItem>
-                      {monthNames.map((m, idx) => (
-                        <SelectItem key={m} value={(idx + 1).toString()}>{m}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div className="space-y-0.5">
+                      <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Month</span>
+                      <Select value={monthFilter} onValueChange={setMonthFilter}>
+                        <SelectTrigger className="w-[140px] h-7 text-sm">
+                          <SelectValue placeholder="All" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Months</SelectItem>
+                          {monthNames.map((m, idx) => (
+                            <SelectItem key={m} value={(idx + 1).toString()}>{m}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                {/* Summary Card aligned with filters */}
-                <div className="ml-auto">
-                  <div
-                    onClick={() => {
-                      setCategoryFilter([]);
-                      setGlobalFilter("");
-                      setYearFilter("all");
-                      setMonthFilter("all");
-                    }}
-                    className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm w-[300px] ${
-                      categoryFilter.length === 0 && 
-                      globalFilter === "" && 
-                      yearFilter === "all" && 
-                      monthFilter === "all"
-                        ? "ring-1 ring-primary ring-offset-1 bg-slate-50 border-slate-200 shadow-sm"
-                        : "bg-white hover:bg-gray-50 border-gray-200"
-                    }`}
-                  >
-                    <div className="space-y-1">
-                      <div className="text-[13px] text-primary font-medium uppercase tracking-wide">
-                        Summary
-                      </div>
-                      <div className="text-lg font-bold text-gray-800">
-                        ₱{filteredTotalValue.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </div>
-                      <div className="flex items-center justify-between gap-2 pt-0.5">
-                        <div className="text-xs text-blue-600 font-semibold">
-                          {filteredData.length} {filteredData.length === 1 ? 'result' : 'results'}
-                        </div>
-                        <div className="text-[10px] font-medium text-gray-500 truncate">
-                          {activeFiltersLabel}
+                    {/* Summary Card aligned with filters */}
+                    <div className="ml-auto">
+                      <div
+                        onClick={() => {
+                          setCategoryFilter([]);
+                          setGlobalFilter("");
+                          setYearFilter("all");
+                          setMonthFilter("all");
+                        }}
+                        className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm w-[300px] ${
+                          categoryFilter.length === 0 && 
+                          globalFilter === "" && 
+                          yearFilter === "all" && 
+                          monthFilter === "all"
+                            ? "ring-1 ring-primary ring-offset-1 bg-slate-50 border-slate-200 shadow-sm"
+                            : "bg-white hover:bg-gray-50 border-gray-200"
+                        }`}
+                      >
+                        <div className="space-y-1">
+                          <div className="text-[13px] text-primary font-medium uppercase tracking-wide">
+                            Summary
+                          </div>
+                          <div className="text-lg font-bold text-gray-800">
+                            ₱{filteredTotalValue.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </div>
+                          <div className="flex items-center justify-between gap-2 pt-0.5">
+                            <div className="text-xs text-blue-600 font-semibold">
+                              {filteredData.length} {filteredData.length === 1 ? 'result' : 'results'}
+                            </div>
+                            <div className="text-[10px] font-medium text-gray-500 truncate">
+                              {activeFiltersLabel}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
