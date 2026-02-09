@@ -243,10 +243,10 @@ export function DataTable<TData, TValue>({
         
         {!isFiltersCollapsed && (
           <div className="bg-white rounded-lg border border-gray-200 p-3 space-y-3">
-            {/* Service Categories Section - match Inquiries style */}
+            {/* Service Categories Section - 4 columns on large screens */}
             <div className="space-y-2">
               <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Service Categories</label>
-              <div className="grid grid-cols-1 gap-1">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
                 {categories.map((cat) => {
                   const isActive = categoryFilter.includes(cat.name);
                   return (
