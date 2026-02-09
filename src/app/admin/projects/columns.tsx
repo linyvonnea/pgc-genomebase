@@ -10,6 +10,23 @@ import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import useAuth from "@/hooks/useAuth"
 import { usePermissions } from "@/hooks/usePermissions"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
+// Professional colors for client names in tooltip
+const CLIENT_COLORS = [
+  "text-blue-600",
+  "text-emerald-600",
+  "text-violet-600",
+  "text-amber-600",
+  "text-rose-600",
+  "text-indigo-600",
+  "text-cyan-600",
+];
 
 // Column definitions for the projects table
 export const columns: ColumnDef<Project>[] = [
@@ -33,13 +50,46 @@ export const columns: ColumnDef<Project>[] = [
     header: "Client Names",
     size: 130,
     cell: ({ row }) => {
-      // Render client names as comma-separated string with truncation
-      const names = row.original.clientNames;
-      const displayText = names && names.length > 0 ? names.join(", ") : "";
+      // Render client names as comma-separated string with truncation and count
+      const names = row.original.clientNames || [];
+      const displayText = names.length > 0 ? names.join(", ") : "—";
+      const count = names.length;
+      
       return (
-        <div className="max-w-[130px] truncate" title={displayText}>
-          {displayText}
-        </div>
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-0.5 max-w-[130px] cursor-help">
+                <span className="truncate" title="">
+                  {displayText}
+                </span>
+                {count > 0 && (
+                  <span className="shrink-0 text-xs font-bold text-blue-600">
+                    ({count})
+                  </span>
+                )}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="p-3 bg-white border shadow-xl max-w-xs">
+              <div className="space-y-1.5">
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 border-b pb-1">
+                  Project Members ({count})
+                </div>
+                <div className="flex flex-wrap gap-x-2 gap-y-1">
+                  {names.map((name, idx) => (
+                    <span 
+                      key={idx} 
+                      className={`text-sm font-semibold ${CLIENT_COLORS[idx % CLIENT_COLORS.length]}`}
+                    >
+                      {name}{idx < names.length - 1 ? "," : ""}
+                    </span>
+                  ))}
+                  {names.length === 0 && <span className="text-sm text-gray-500 italic">No clients assigned</span>}
+                </div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       );
     },
     // Enables global filtering by converting the array to a string
