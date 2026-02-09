@@ -475,36 +475,7 @@ export function DataTable<TData extends Project, TValue>({
                   >
                     <div className="text-right">
                       <div className="text-xs font-medium text-gray-600 mb-1">
-                        {(() => {
-                          const filters = [];
-                          const yearMonthFilters = [];
-                          
-                          // Process filters in the order they were clicked
-                          filterOrder.forEach(filterType => {
-                            if (filterType === "__all" && statusFilter !== "__all") {
-                              filters.push(statusFilter);
-                            } else if (institutionFilter.includes(filterType)) {
-                              filters.push(filterType);
-                            } else if (serviceRequestedFilter.includes(filterType)) {
-                              filters.push(filterType);
-                            } else if (fundingCategoryFilter.includes(filterType)) {
-                              filters.push(filterType);
-                            } else if (filterType === "year" && yearFilter !== "all") {
-                              yearMonthFilters.push(yearFilter);
-                            } else if (filterType === "month" && monthFilter !== "all") {
-                              const monthName = monthNames[parseInt(monthFilter) - 1];
-                              if (monthName) yearMonthFilters.push(monthName);
-                            }
-                          });
-                          
-                          // Add year/month filters at the end
-                          filters.push(...yearMonthFilters);
-                          
-                          // Add global filter if present
-                          if (globalFilter) filters.push(`"${globalFilter}"`);
-                          
-                          return filters.length > 0 ? filters.join(" + ") : "No filters applied";
-                        })()}
+                        {filterSummaryLabel}
                       </div>
                       <div className="text-lg font-bold text-gray-800">{filteredData.length} records</div>
                       {(statusFilter !== "__all" || 
