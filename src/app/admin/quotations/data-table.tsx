@@ -245,12 +245,12 @@ export function DataTable<TData, TValue>({
           <div className="p-2.5 space-y-2.5">
             {/* Service Categories Section */}
             <div className="space-y-2">
-              <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Service Categories</h4>
-              <div className="grid grid-cols-3 lg:grid-cols-5 gap-2">
+              <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Service Categories</label>
+              <div className="grid grid-cols-1 gap-1">
                 {categories.map((cat) => {
                   const isActive = categoryFilter.includes(cat.name);
                   return (
-                    <div
+                    <button
                       key={cat.name}
                       onClick={() => {
                         if (isActive) {
@@ -259,26 +259,14 @@ export function DataTable<TData, TValue>({
                           setCategoryFilter([...categoryFilter, cat.name]);
                         }
                       }}
-                      className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-150 hover:scale-[1.02] hover:shadow-sm ${
+                      className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
                         isActive
-                          ? `ring-1 ring-primary ring-offset-1 ${cat.bg} ${cat.border} shadow-sm`
-                          : "bg-white hover:bg-gray-50 border-gray-200"
+                          ? `${cat.bg} ${cat.border} font-semibold ${cat.color}`
+                          : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                       }`}
                     >
-                      <div className={`text-sm font-semibold ${cat.color} truncate leading-tight`}>
-                        {categoryCounts[cat.name]}
-                      </div>
-                      <div className="text-[9px] text-muted-foreground font-medium uppercase tracking-wide leading-tight">
-                        {cat.name}
-                      </div>
-                      {isActive && (
-                        <div className="mt-0.5">
-                          <Badge variant="default" className="text-[7px] h-2.5 px-1">
-                            Active
-                          </Badge>
-                        </div>
-                      )}
-                    </div>
+                      {cat.name}
+                    </button>
                   );
                 })}
               </div>
