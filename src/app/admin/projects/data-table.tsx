@@ -386,46 +386,76 @@ export function DataTable<TData extends Project, TValue>({
               </div>
 
               {/* Summary & Clear Filters */}
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <div className="text-xs text-gray-500">
-                    {(() => {
-                      const activeFilters = [];
-                      if (statusFilter !== "__all") activeFilters.push("Status");
-                      if (institutionFilter.length > 0) activeFilters.push(`${institutionFilter.length} Institution${institutionFilter.length > 1 ? 's' : ''}`);
-                      if (serviceRequestedFilter.length > 0) activeFilters.push(`${serviceRequestedFilter.length} Service${serviceRequestedFilter.length > 1 ? 's' : ''}`);
-                      if (fundingCategoryFilter.length > 0) activeFilters.push(`${fundingCategoryFilter.length} Funding`);
-                      if (yearFilter !== "all") activeFilters.push("Year");
-                      if (monthFilter !== "all") activeFilters.push("Month");
-                      if (globalFilter) activeFilters.push("Search");
-                      return activeFilters.length > 0 ? `${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''} applied` : "No filters applied";
-                    })()}
-                  </div>
-                  <div className="text-lg font-bold text-gray-800">{filteredData.length} records</div>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  {/* Search Tools already above */}
                 </div>
                 
-                {(statusFilter !== "__all" || 
-                  institutionFilter.length > 0 || 
-                  serviceRequestedFilter.length > 0 || 
-                  fundingCategoryFilter.length > 0 || 
-                  globalFilter || 
-                  yearFilter !== "all" || 
-                  monthFilter !== "all") && (
-                  <button
+                {/* Summary Card */}
+                <div className="flex items-center gap-3">
+                  <div 
                     onClick={() => {
-                      setGlobalFilter("");
-                      setStatusFilter("__all");
-                      setInstitutionFilter([]);
-                      setServiceRequestedFilter([]);
-                      setFundingCategoryFilter([]);
-                      setYearFilter("all");
-                      setMonthFilter("all");
+                      if (statusFilter !== "__all" || 
+                          institutionFilter.length > 0 || 
+                          serviceRequestedFilter.length > 0 || 
+                          fundingCategoryFilter.length > 0 || 
+                          globalFilter || 
+                          yearFilter !== "all" || 
+                          monthFilter !== "all") {
+                        setGlobalFilter("");
+                        setStatusFilter("__all");
+                        setInstitutionFilter([]);
+                        setServiceRequestedFilter([]);
+                        setFundingCategoryFilter([]);
+                        setYearFilter("all");
+                        setMonthFilter("all");
+                      }
                     }}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                    className={`p-3 rounded-lg border transition-all duration-200 ${
+                      (statusFilter !== "__all" || 
+                       institutionFilter.length > 0 || 
+                       serviceRequestedFilter.length > 0 || 
+                       fundingCategoryFilter.length > 0 || 
+                       globalFilter || 
+                       yearFilter !== "all" || 
+                       monthFilter !== "all")
+                        ? "bg-blue-50 border-blue-200 cursor-pointer hover:bg-blue-100"
+                        : "bg-gray-50 border-gray-200"
+                    }`}
                   >
-                    Clear All
-                  </button>
-                )}
+                    <div className="text-right">
+                      <div className="text-xs font-medium text-gray-600 mb-1">
+                        {(() => {
+                          const filters = [];
+                          if (statusFilter !== "__all") filters.push(statusFilter);
+                          if (institutionFilter.length > 0) filters.push(...institutionFilter);
+                          if (serviceRequestedFilter.length > 0) filters.push(...serviceRequestedFilter);
+                          if (fundingCategoryFilter.length > 0) filters.push(...fundingCategoryFilter);
+                          if (yearFilter !== "all") filters.push(yearFilter);
+                          if (monthFilter !== "all") {
+                            const monthName = monthNames[parseInt(monthFilter) - 1];
+                            if (monthName) filters.push(monthName);
+                          }
+                          if (globalFilter) filters.push(`"${globalFilter}"`);
+                          
+                          return filters.length > 0 ? filters.join(" + ") : "No filters applied";
+                        })()}
+                      </div>
+                      <div className="text-lg font-bold text-gray-800">{filteredData.length} records</div>
+                      {(statusFilter !== "__all" || 
+                        institutionFilter.length > 0 || 
+                        serviceRequestedFilter.length > 0 || 
+                        fundingCategoryFilter.length > 0 || 
+                        globalFilter || 
+                        yearFilter !== "all" || 
+                        monthFilter !== "all") && (
+                        <div className="text-xs text-blue-600 mt-1 font-medium">
+                          Click to clear all filters
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
