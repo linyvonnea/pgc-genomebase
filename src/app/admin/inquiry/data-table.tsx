@@ -266,7 +266,7 @@ export function DataTable<TData, TValue>({
                         : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                     }`}
                   >
-                    Approved Client ({statusCounts.approvedClient})
+                    Approved Client
                   </button>
                   <button
                     onClick={() =>
@@ -280,7 +280,7 @@ export function DataTable<TData, TValue>({
                         : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                     }`}
                   >
-                    Quotation Only ({statusCounts.quotationOnly})
+                    Quotation Only
                   </button>
                   <button
                     onClick={() =>
@@ -292,7 +292,7 @@ export function DataTable<TData, TValue>({
                         : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                     }`}
                   >
-                    Pending ({statusCounts.pending})
+                    Pending
                   </button>
                 </div>
               </div>

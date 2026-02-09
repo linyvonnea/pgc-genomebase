@@ -304,7 +304,7 @@ export function DataTable<TData, TValue>({
       globalFilter,
       pagination,
     },
-  })
+  });
 
   // Calculate record range for display
   const totalRecords = filteredData.length;
@@ -313,7 +313,6 @@ export function DataTable<TData, TValue>({
   const startRecord = totalRecords > 0 ? pageIndex * pageSize + 1 : 0;
   const endRecord = Math.min((pageIndex + 1) * pageSize, totalRecords);
 
-  // Pagination Controls (styled like Quotations)
   const PaginationControls = () => (
     <div className="flex items-center justify-between gap-2">
       <div className="flex items-center gap-2">
@@ -390,10 +389,9 @@ export function DataTable<TData, TValue>({
           <h3 className="text-base font-bold text-gray-800">Filters & Overview</h3>
           <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? 'rotate-180' : ''}`} />
         </div>
-        
         {!isFiltersCollapsed && (
           <div className="p-2.5 space-y-2.5">
-            {/* Search & Date Filters with Summary Card */}
+            {/* Search & Date Filters */}
             <div className="space-y-2">
               <div className="flex flex-wrap items-end gap-2 pb-1">
                 <div className="space-y-0.5">
@@ -405,11 +403,9 @@ export function DataTable<TData, TValue>({
                     className="w-56 h-7 text-sm"
                   />
                 </div>
-
                 <div className="space-y-0.5">
                   <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Year</span>
                   <Select value={yearFilter} onValueChange={(value) => {
-                    console.log('Year filter changed to:', value);
                     setYearFilter(value);
                     if (value === "all") {
                       setFilterOrder(prev => prev.filter(f => f.type !== 'year'));
@@ -431,11 +427,9 @@ export function DataTable<TData, TValue>({
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div className="space-y-0.5">
                   <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Month</span>
                   <Select value={monthFilter} onValueChange={(value) => {
-                    console.log('Month filter changed to:', value);
                     setMonthFilter(value);
                     if (value === "all") {
                       setFilterOrder(prev => prev.filter(f => f.type !== 'month'));
@@ -457,55 +451,20 @@ export function DataTable<TData, TValue>({
                     </SelectContent>
                   </Select>
                 </div>
-
-                {/* Summary Card aligned with filters */}
-                <div className="flex items-center gap-3">
-                  <div 
-                    onClick={() => {
-                      if (globalFilter || yearFilter !== 'all' || monthFilter !== 'all') {
-                        console.log('Clearing all filters');
-                        setGlobalFilter("");
-                        setYearFilter("all");
-                        setMonthFilter("all");
-                        setFilterOrder([]);
-                      }
-                    }}
-                    className={`p-3 rounded-lg border transition-all duration-200 ${
-                      (globalFilter || yearFilter !== 'all' || monthFilter !== 'all')
-                        ? "bg-blue-50 border-blue-200 cursor-pointer hover:bg-blue-100"
-                        : "bg-gray-50 border-gray-200"
-                    }`}
-                  >
-                    <div className="text-right">
-                      <div className="text-xs font-medium text-gray-600 mb-1">
-                        {filterSummaryLabel}
-                      </div>
-                      <div className="text-lg font-bold text-gray-800">{totalRecords} records</div>
-                      {(globalFilter || yearFilter !== 'all' || monthFilter !== 'all') && (
-                        <div className="text-xs text-blue-600 mt-1 font-medium">
-                          Click to clear all filters
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
         )}
       </Card>
-      
       {/* Table Header with Record Count and Navigation */}
       <div className="flex items-center justify-between py-1">
         <div className="flex items-center gap-2">
           <div className="text-sm text-muted-foreground">
             Showing {startRecord} - {endRecord} of {totalRecords} records
           </div>
-          {/* Removed 'Filtered from X total' */}
         </div>
         <PaginationControls />
       </div>
-
       {/* Compact Table with Sticky Header */}
       <div className="rounded-md border overflow-hidden">
         <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
@@ -559,7 +518,36 @@ export function DataTable<TData, TValue>({
           </Table>
         </div>
       </div>
-
+      {/* Summary Card moved to bottom right */}
+      <div className="flex justify-end mt-2">
+        <div 
+          onClick={() => {
+            if (globalFilter || yearFilter !== 'all' || monthFilter !== 'all') {
+              setGlobalFilter("");
+              setYearFilter("all");
+              setMonthFilter("all");
+              setFilterOrder([]);
+            }
+          }}
+          className={`p-3 rounded-lg border transition-all duration-200 ${
+            (globalFilter || yearFilter !== 'all' || monthFilter !== 'all')
+              ? "bg-blue-50 border-blue-200 cursor-pointer hover:bg-blue-100"
+              : "bg-gray-50 border-gray-200"
+          }`}
+        >
+          <div className="text-right">
+            <div className="text-xs font-medium text-gray-600 mb-1">
+              {filterSummaryLabel}
+            </div>
+            <div className="text-lg font-bold text-gray-800">{totalRecords} records</div>
+            {(globalFilter || yearFilter !== 'all' || monthFilter !== 'all') && (
+              <div className="text-xs text-blue-600 mt-1 font-medium">
+                Click to clear all filters
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
       {/* Bottom Pagination */}
       <div className="flex items-center justify-end">
         <PaginationControls />
