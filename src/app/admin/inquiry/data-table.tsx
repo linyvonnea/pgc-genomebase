@@ -299,52 +299,61 @@ export function DataTable<TData, TValue>({
             </div>
 
             {/* Search Tools & Summary Row */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100">
+            <div className="flex flex-wrap items-end justify-between gap-3 pt-2 border-t border-gray-100">
               {/* Search Tools */}
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Input
-                    placeholder="Search all fields..."
-                    value={globalFilter ?? ""}
-                    onChange={(event) => setGlobalFilter(event.target.value)}
-                    className="w-56 pl-3 pr-8 h-8 text-sm"
-                  />
-                  {globalFilter && (
-                    <button
-                      onClick={() => setGlobalFilter("")}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  )}
+              <div className="flex items-end gap-3">
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Search</span>
+                  <div className="relative">
+                    <Input
+                      placeholder="Search all fields..."
+                      value={globalFilter ?? ""}
+                      onChange={(event) => setGlobalFilter(event.target.value)}
+                      className="w-56 pl-3 pr-8 h-8 text-sm"
+                    />
+                    {globalFilter && (
+                      <button
+                        onClick={() => setGlobalFilter("")}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                <Select value={selectedYear || "all"} onValueChange={handleYearChange}>
-                  <SelectTrigger className="w-24 h-8">
-                    <SelectValue placeholder="Year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    {availableYears.map((year) => (
-                      <SelectItem key={year} value={year}>{year}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Year</span>
+                  <Select value={selectedYear || "all"} onValueChange={handleYearChange}>
+                    <SelectTrigger className="w-24 h-8 text-sm">
+                      <SelectValue placeholder="Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Years</SelectItem>
+                      {availableYears.map((year) => (
+                        <SelectItem key={year} value={year}>{year}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                <Select
-                  value={selectedMonth || "all"}
-                  onValueChange={handleMonthChange}
-                >
-                  <SelectTrigger className="w-28 h-8">
-                    <SelectValue placeholder="Month" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All</SelectItem>
-                    {monthOptions.map((month) => (
-                      <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Month</span>
+                  <Select
+                    value={selectedMonth || "all"}
+                    onValueChange={handleMonthChange}
+                  >
+                    <SelectTrigger className="w-28 h-8 text-sm">
+                      <SelectValue placeholder="Month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Months</SelectItem>
+                      {monthOptions.map((month) => (
+                        <SelectItem key={month.value} value={month.value}>{month.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {/* Summary & Clear Filters */}
