@@ -64,7 +64,7 @@ export const columns: ColumnDef<Project>[] = [
                   {displayText}
                 </span>
                 {count > 0 && (
-                  <span className="shrink-0 text-xs font-bold text-blue-600">
+                  <span className="shrink-0 text-xs font-normal text-blue-600">
                     ({count})
                   </span>
                 )}
@@ -72,14 +72,14 @@ export const columns: ColumnDef<Project>[] = [
             </TooltipTrigger>
             <TooltipContent side="right" className="p-3 bg-white border shadow-xl max-w-xs">
               <div className="space-y-1.5">
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 border-b pb-1">
+                <div className="text-sm font-normal text-gray-400 uppercase tracking-wider mb-2 border-b pb-1">
                   Project Members ({count})
                 </div>
                 <div className="flex flex-wrap gap-x-2 gap-y-1">
                   {names.map((name, idx) => (
                     <span 
                       key={idx} 
-                      className={`text-sm font-semibold ${CLIENT_COLORS[idx % CLIENT_COLORS.length]}`}
+                      className={`text-sm font-normal ${CLIENT_COLORS[idx % CLIENT_COLORS.length]}`}
                     >
                       {name}{idx < names.length - 1 ? "," : ""}
                     </span>
