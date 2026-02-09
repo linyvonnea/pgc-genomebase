@@ -249,7 +249,7 @@ export function DataTable<TData, TValue>({
                 {/* Service Categories Section - 1/4 width, vertical layout, occupy full length */}
                 <div className="w-1/4 h-full">
                   <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 block">Service Categories</label>
-                  <div className="space-y-2 flex flex-col">
+                  <div className="grid grid-cols-1 gap-1">
                     {/* Laboratory card - first below label */}
                     <button
                       onClick={() => {
@@ -260,7 +260,7 @@ export function DataTable<TData, TValue>({
                           setCategoryFilter([...categoryFilter, "Laboratory"]);
                         }
                       }}
-                      className={`w-full rounded-md border px-3 py-2.5 text-xs font-medium transition-all duration-200 hover:shadow-sm text-center ${
+                      className={`w-full rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-center ${
                         categoryFilter.includes("Laboratory")
                           ? "bg-green-50 border-green-200 font-semibold text-green-600"
                           : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
@@ -279,7 +279,7 @@ export function DataTable<TData, TValue>({
                           setCategoryFilter([...categoryFilter, "Equipment"]);
                         }
                       }}
-                      className={`w-full rounded-md border px-3 py-2.5 text-xs font-medium transition-all duration-200 hover:shadow-sm text-center ${
+                      className={`w-full rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-center ${
                         categoryFilter.includes("Equipment")
                           ? "bg-blue-50 border-blue-200 font-semibold text-blue-600"
                           : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
@@ -298,7 +298,7 @@ export function DataTable<TData, TValue>({
                           setCategoryFilter([...categoryFilter, "Bioinformatics"]);
                         }
                       }}
-                      className={`w-full rounded-md border px-3 py-2.5 text-xs font-medium transition-all duration-200 hover:shadow-sm text-center ${
+                      className={`w-full rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-center ${
                         categoryFilter.includes("Bioinformatics")
                           ? "bg-purple-50 border-purple-200 font-semibold text-purple-600"
                           : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
@@ -317,7 +317,7 @@ export function DataTable<TData, TValue>({
                           setCategoryFilter([...categoryFilter, "Retail Sales"]);
                         }
                       }}
-                      className={`w-full rounded-md border px-3 py-2.5 text-xs font-medium transition-all duration-200 hover:shadow-sm text-center ${
+                      className={`w-full rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-center ${
                         categoryFilter.includes("Retail Sales")
                           ? "bg-orange-50 border-orange-200 font-semibold text-orange-600"
                           : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
@@ -336,7 +336,7 @@ export function DataTable<TData, TValue>({
                           setCategoryFilter([...categoryFilter, "Training"]);
                         }
                       }}
-                      className={`w-full rounded-md border px-3 py-2.5 text-xs font-medium transition-all duration-200 hover:shadow-sm text-center ${
+                      className={`w-full rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-center ${
                         categoryFilter.includes("Training")
                           ? "bg-indigo-50 border-indigo-200 font-semibold text-indigo-600"
                           : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
