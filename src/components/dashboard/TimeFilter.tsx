@@ -39,17 +39,12 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
     custom: "Custom"
   };
 
-  // Effect: Initial load - apply current year filter
-  React.useEffect(() => {
-    onFilterChange({ year, startMonth, endMonth });
-  }, []);
-
-  // Effect: When custom range changes, notify parent
+  // Effect: Apply filter on mount and when custom range changes
   React.useEffect(() => {
     if (timeRange === "custom") {
       onFilterChange({ year, startMonth, endMonth });
     }
-  }, [year, startMonth, endMonth, timeRange]);
+  }, [year, startMonth, endMonth, timeRange, onFilterChange]);
 
   // Helper to trigger filter change for custom range
   const handleRangeChange = () => {
