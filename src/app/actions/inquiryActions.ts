@@ -28,17 +28,25 @@ import { logActivity } from "@/services/activityLogService";
  */
 export async function testEmailSystem() {
   try {
-    console.log("Testing email system...");
+    console.log("=== EMAIL TEST: Starting email system test ===");
     
-    // Create a simple test email
+    // Check Firebase connection
+    console.log("EMAIL TEST: Firebase DB:", db ? "Connected" : "Disconnected");
+    
+    // Create test email with both simple and template formats
     const testEmailData = {
       to: ["madayon1@up.edu.ph"],
+      message: {
+        subject: "PGC Email System Test",
+        text: "This is a test email from the PGC email system.",
+        html: "<p><strong>PGC Email System Test</strong></p><p>This is a test email to verify email functionality.</p>"
+      },
       template: {
         name: "inquiry-laboratory", // Using existing template
         data: {
           inquiryId: "TEST-" + Date.now(),
           name: "Test User",
-          affiliation: "Test Institution",
+          affiliation: "Test Institution", 
           designation: "Test Role",
           email: "test@example.com",
           service: "laboratory",
@@ -48,22 +56,44 @@ export async function testEmailSystem() {
       }
     };
 
-    console.log("Creating test email document...");
-    const emailDocRef = await addDoc(collection(db, "mail"), testEmailData);
-    console.log("Test email document created with ID:", emailDocRef.id);
+    console.log("EMAIL TEST: Test email structure:", {
+      recipient: testEmailData.to,
+      hasSubject: !!testEmailData.message.subject,
+      hasTemplate: !!testEmailData.template,
+      templateName: testEmailData.template.name,
+      dataKeys: Object.keys(testEmailData.template.data)
+    });
+
+    console.log("EMAIL TEST: Creating test email document...");
+    
+    const mailCollection = collection(db, "mail");
+    console.log("EMAIL TEST: Mail collection reference created");
+    
+    const emailDocRef = await addDoc(mailCollection, testEmailData);
+    
+    console.log("✅ EMAIL TEST SUCCESS: Test email document created!");
+    console.log("Test Email Document ID:", emailDocRef.id);
+    console.log("Test Email Document Path:", emailDocRef.path);
     
     return { 
       success: true, 
       emailDocId: emailDocRef.id,
-      message: "Test email queued. Check Firestore 'mail' collection for processing status." 
+      message: "Test email successfully created in Firestore 'mail' collection. Check Firebase Console for processing status." 
     };
     
   } catch (error) {
-    console.error("Email system test failed:", error);
+    console.error("❌ EMAIL TEST FAILED:", error);
+    console.error("Test error details:", {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    
     return { 
       success: false, 
       error: error instanceof Error ? error.message : "Unknown error",
-      message: "Email system test failed. Check Firebase configuration and extensions." 
+      message: "Email system test failed. Check Firebase configuration, extensions, and console logs for details." 
     };
   }
 }
@@ -148,47 +178,114 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       templateData.numberOfParticipants = inquiryData.numberOfParticipants?.toString() || '';
     }
 
+    // === EMAIL NOTIFICATION SYSTEM ===
     // Create email document for Firebase Trigger Email extension
-    // This document in the 'mail' collection triggers the email sending
+    // This document triggers Firebase extension to send email notifications
+    
+    console.log("=== EMAIL DEBUG: Starting email creation process ===");
+    console.log("Template ID:", templateId);
+    console.log("Template Data:", templateData);
+    console.log("Firebase DB instance:", db ? "Connected" : "Not Connected");
+    
+    // Validate that email recipient is configured
+    const emailRecipient = "madayon1@up.edu.ph";
+    if (!emailRecipient) {
+      console.error("EMAIL ERROR: No recipient configured");
+      throw new Error("Email recipient not configured");
+    }
+    
+    // Create email document with proper structure for Firebase Trigger Email
     const emailData = {
-      to: ["madayon1@up.edu.ph"], // Admin email address that receives all inquiries
+      to: [emailRecipient],
+      message: {
+        subject: `New ${inquiryData.service} Inquiry from ${inquiryData.name}`,
+        text: `New inquiry received from ${inquiryData.name} (${inquiryData.email}) for ${inquiryData.service} service.`,
+        html: `<p>New inquiry received from <strong>${inquiryData.name}</strong> (${inquiryData.email}) for ${inquiryData.service} service.</p>`
+      },
       template: {
-        name: templateId,       // Template name for service-specific formatting
-        data: templateData      // All the inquiry data for email content
+        name: templateId,
+        data: templateData
       }
     };
 
-    console.log("Attempting to send email with data:", {
-      templateId,
+
+    console.log("EMAIL DEBUG: Email document structure:", {
       recipient: emailData.to,
+      hasSubject: !!emailData.message.subject,
+      hasTemplate: !!emailData.template,
+      templateName: emailData.template.name,
+      templateDataKeys: Object.keys(templateData),
       inquiryId: docRef.id
     });
 
-    // Add email to the mail collection to trigger the Firebase extension
+    // Attempt to create email document with enhanced error handling
     try {
-      const emailDocRef = await addDoc(collection(db, "mail"), emailData);
-      console.log("Email document created successfully:", emailDocRef.id);
+      console.log("EMAIL DEBUG: Attempting to create email document...");
       
-      // Wait a moment and check if email was processed
+      // Check if Firestore connection is working
+      const mailCollection = collection(db, "mail");
+      console.log("EMAIL DEBUG: Mail collection reference created");
+      
+      // Create the email document
+      const emailDocRef = await addDoc(mailCollection, emailData);
+      
+      console.log("✅ EMAIL SUCCESS: Email document created!");
+      console.log("Email Document ID:", emailDocRef.id);
+      console.log("Email Document Path:", emailDocRef.path);
+      
+      // Enhanced status checking with better error handling
       setTimeout(async () => {
         try {
+          console.log("EMAIL DEBUG: Checking email document status...");
           const emailDoc = await getDoc(doc(db, "mail", emailDocRef.id));
+          
           if (emailDoc.exists()) {
             const emailStatus = emailDoc.data();
-            console.log("Email status:", emailStatus);
-            if (emailStatus.delivery && emailStatus.delivery.error) {
-              console.error("Email delivery failed:", emailStatus.delivery.error);
+            console.log("EMAIL STATUS:", emailStatus);
+            
+            // Check for delivery status
+            if (emailStatus.delivery) {
+              if (emailStatus.delivery.state === 'SUCCESS') {
+                console.log("✅ EMAIL DELIVERED: Email sent successfully!");
+              } else if (emailStatus.delivery.state === 'ERROR') {
+                console.error("❌ EMAIL DELIVERY FAILED:", emailStatus.delivery.error);
+              } else {
+                console.log("📧 EMAIL PENDING: Email state:", emailStatus.delivery.state);
+              }
+            } else {
+              console.log("⏳ EMAIL PENDING: No delivery status yet (still processing)");
             }
+          } else {
+            console.log("⚠️ EMAIL WARNING: Email document no longer exists (may have been processed)");
           }
         } catch (checkError) {
-          console.log("Could not check email status:", checkError);
+          console.error("EMAIL DEBUG ERROR: Could not check email status:", checkError);
         }
       }, 5000);
       
     } catch (emailError) {
-      console.error("Failed to create email document:", emailError);
-      // Continue execution even if email fails - don't block inquiry creation
+      console.error("❌ EMAIL CREATION FAILED:", emailError);
+      console.error("Error details:", {
+        name: emailError.name,
+        message: emailError.message,
+        code: emailError.code,
+        stack: emailError.stack
+      });
+      
+      // Log additional debugging information
+      console.log("EMAIL DEBUG: Failure context:", {
+        hasDB: !!db,
+        hasCollection: !!collection,
+        hasAddDoc: !!addDoc,
+        emailDataSize: JSON.stringify(emailData).length,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Don't throw error - allow inquiry creation to continue
+      console.log("EMAIL DEBUG: Continuing with inquiry creation despite email failure");
     }
+    
+    console.log("=== EMAIL DEBUG: Email process completed ===");
     
     // Revalidate the admin inquiry page cache to show new data immediately
     // This ensures the admin sees the new inquiry without page refresh
