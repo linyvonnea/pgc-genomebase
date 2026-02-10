@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, ReactNode } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
@@ -26,30 +26,69 @@ import { getActiveCatalogItems } from "@/services/catalogSettingsService";
 import useAuth from "@/hooks/useAuth";
 
 // Extend the base project schema for form validation
+// All fields are required except for notes.
 const projectSchema = baseProjectSchema.extend({
-  pid: z.string().optional(),
-  iid: z.string().optional(),
-  year: z.coerce.number().int().min(2000),
-  clientNames: z.string().optional().transform((val) => val && val.trim() ? val.split(",").map((v) => v.trim()) : []),
-  projectTag: z.string().optional(),
-  status: z.enum(["Ongoing", "Completed", "Cancelled"]).optional(),
-  fundingCategory: z.enum(["External", "In-House"]).optional(),
-  serviceRequested: z.array(z.string()).optional(),
-  personnelAssigned: z.string().optional(),
+  pid: z.string().min(1, "Project ID is required"),
+  iid: z.string().min(1, "Inquiry ID is required"),
+  year: z.coerce.number().int().min(2000, "Year is required"),
+  clientNames: z
+    .string()
+    .min(1, "Client name is required")
+    .transform((val) =>
+      val && val.trim()
+        ? val
+            .split(",")
+            .map((v) => v.trim())
+            .filter(Boolean)
+        : []
+    ),
+  projectTag: z.string().min(1, "Project tag is required"),
+  status: z.enum(["Ongoing", "Completed", "Cancelled"], {
+    required_error: "Status is required",
+  }),
+  fundingCategory: z.enum(["External", "In-House"], {
+    required_error: "Funding category is required",
+  }),
+  serviceRequested: z
+    .array(z.string())
+    .min(1, "Select at least one service"),
+  personnelAssigned: z
+    .string()
+    .min(1, "Personnel assigned is required"),
+  // Notes are optional by design
   notes: z.string().optional(),
-  startDate: z.string().optional(),
-  lead: z.string().optional(),
-  title: z.string().optional(),
-  sendingInstitution: z.string().optional(),
-  fundingInstitution: z.string().optional(),
+  startDate: z.string().min(1, "Start date is required"),
+  lead: z.string().min(1, "Project lead is required"),
+  title: z.string().min(1, "Project title is required"),
+  sendingInstitution: z.enum(
+    [
+      "UP System",
+      "SUC/HEI",
+      "Government",
+      "Private/Local",
+      "International",
+      "N/A",
+    ],
+    { required_error: "Sending institution is required" }
+  ),
+  fundingInstitution: z
+    .string()
+    .min(1, "Funding institution is required"),
 });
 
 type ProjectFormData = z.infer<typeof projectSchema>;
 
 // Form state type with string for clientNames (before transform)
-type ProjectFormState = Omit<ProjectFormData, 'clientNames'> & {
+type ProjectFormState = Omit<ProjectFormData, "clientNames"> & {
   clientNames: string;
 };
+
+const RequiredLabel = ({ children }: { children: ReactNode }) => (
+  <Label className="text-xs flex items-center gap-0.5">
+    {children}
+    <span className="text-red-500 ml-0.5">*</span>
+  </Label>
+);
 
 export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => void }) {
   const { adminInfo } = useAuth();
@@ -290,6 +329,12 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
   // Render the project form
   return (
     <form className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4" onSubmit={handleSubmit}>
+      <div className="col-span-2 -mt-1">
+        <p className="text-xs text-muted-foreground">
+          All fields marked with <span className="text-red-500">*</span> are required.
+          Use Notes for any additional optional details.
+        </p>
+      </div>
       {/* Basic Information Section */}
       <div className="col-span-2">
         <div className="flex items-center gap-2 mb-3">
@@ -305,13 +350,13 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       <div className="col-span-2 grid grid-cols-[100px_1fr_1fr] gap-4">
         {/* Year */}
         <div>
-          <Label className="text-xs">Year</Label>
+          <RequiredLabel>Year</RequiredLabel>
           <Input type="number" name="year" value={formData.year} onChange={handleChange} className="h-9" />
           {errors.year && <p className="text-red-500 text-xs mt-1">{errors.year}</p>}
         </div>
         {/* Project ID - Editable */}
         <div>
-          <Label className="text-xs">Project ID</Label>
+          <RequiredLabel>Project ID</RequiredLabel>
           <Input
             ref={pidInputRef}
             name="pid"
@@ -326,7 +371,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         </div>
         {/* Start Date */}
         <div>
-          <Label className="text-xs">Start Date</Label>
+          <RequiredLabel>Start Date</RequiredLabel>
           <Input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className="h-9" />
           {errors.startDate && <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>}
         </div>
@@ -334,20 +379,20 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
 
       {/* Project Title - Full Width */}
       <div className="col-span-2">
-        <Label className="text-xs">Project Title</Label>
+        <RequiredLabel>Project Title</RequiredLabel>
         <Input name="title" value={formData.title} onChange={handleChange} className="h-9" placeholder="Enter project title" />
         {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
       </div>
 
       {/* Project Lead */}
       <div>
-        <Label className="text-xs">Project Lead</Label>
+        <RequiredLabel>Project Lead</RequiredLabel>
         <Input name="lead" value={formData.lead} onChange={handleChange} className="h-9" placeholder="Juan dela Cruz" />
         {errors.lead && <p className="text-red-500 text-xs mt-1">{errors.lead}</p>}
       </div>
       {/* Inquiry ID */}
       <div>
-        <Label className="text-xs">Inquiry ID</Label>
+        <RequiredLabel>Inquiry ID</RequiredLabel>
         <Select value={formData.iid} onValueChange={(val) => handleSelect("iid", val)}>
           <SelectTrigger className="h-9">
             <SelectValue placeholder="Select inquiry">
@@ -402,13 +447,13 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
 
       {/* Project Tag */}
       <div>
-        <Label className="text-xs">Project Tag</Label>
+        <RequiredLabel>Project Tag</RequiredLabel>
         <Input name="projectTag" value={formData.projectTag} onChange={handleChange} className="h-9" placeholder="Enter project tag" />
         {errors.projectTag && <p className="text-red-500 text-xs mt-1">{errors.projectTag}</p>}
       </div>
       {/* Status dropdown */}
       <div>
-        <Label className="text-xs">Status</Label>
+        <RequiredLabel>Status</RequiredLabel>
         <Select value={formData.status || ""} onValueChange={val => handleSelect("status", val)}>
           <SelectTrigger className="h-9"><SelectValue placeholder="Select status" /></SelectTrigger>
           <SelectContent>
@@ -433,7 +478,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
 
       {/* Sending Institution */}
       <div>
-        <Label className="text-xs">Sending Institution</Label>
+        <RequiredLabel>Sending Institution</RequiredLabel>
         <Select value={formData.sendingInstitution || ""} onValueChange={val => handleSelect("sendingInstitution", val)}>
           <SelectTrigger className="h-9"><SelectValue placeholder="Select institution" /></SelectTrigger>
           <SelectContent>
@@ -449,7 +494,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       </div>
       {/* Funding Category dropdown */}
       <div>
-        <Label className="text-xs">Funding Category</Label>
+        <RequiredLabel>Funding Category</RequiredLabel>
         <Select value={formData.fundingCategory || ""} onValueChange={val => handleSelect("fundingCategory", val)}>
           <SelectTrigger className="h-9"><SelectValue placeholder="Select Funding Category" /></SelectTrigger>
           <SelectContent>
@@ -462,7 +507,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
 
       {/* Funding Institution - Full Width */}
       <div className="col-span-2">
-        <Label className="text-xs">Funding Institution</Label>
+        <RequiredLabel>Funding Institution</RequiredLabel>
         <Input name="fundingInstitution" value={formData.fundingInstitution || ""} onChange={handleChange} className="h-9" placeholder="Enter funding institution" />
         {errors.fundingInstitution && <p className="text-red-500 text-xs mt-1">{errors.fundingInstitution}</p>}
       </div>
@@ -480,7 +525,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
 
       {/* Service Requested checkboxes - Horizontal layout */}
       <div className="col-span-2">
-        <Label className="text-xs">Service Requested</Label>
+        <RequiredLabel>Service Requested</RequiredLabel>
         <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2">
           {serviceOptions.map((option) => (
             <label key={option} className="flex items-center gap-2 text-sm">
@@ -499,7 +544,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
 
       {/* Personnel Assigned - Full Width */}
       <div className="col-span-2">
-        <Label className="text-xs">Personnel Assigned</Label>
+        <RequiredLabel>Personnel Assigned</RequiredLabel>
         <Select value={formData.personnelAssigned || ""} onValueChange={val => handleSelect("personnelAssigned", val)}>
           <SelectTrigger className="h-9 text-left">
             <SelectValue placeholder={personnelOptions.length > 0 ? "Select personnel" : "No personnel available"}>

@@ -93,7 +93,8 @@ function ProjectPageContent() {
                     <div>
                       <DialogTitle className="text-2xl">Add New Project</DialogTitle>
                       <DialogDescription className="text-sm mt-1">
-                        Create a new project record with complete details
+                        Create a new project record. All fields marked with
+                        <span className="text-red-500"> *</span> are required; use Notes for any optional remarks.
                       </DialogDescription>
                     </div>
                   </div>
