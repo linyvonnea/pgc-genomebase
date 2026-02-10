@@ -208,6 +208,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       }
     };
 
+
     console.log("EMAIL DEBUG: Email document structure:", {
       recipient: emailData.to,
       hasSubject: !!emailData.message.subject,
