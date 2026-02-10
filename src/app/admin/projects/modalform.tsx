@@ -33,7 +33,7 @@ const projectSchema = baseProjectSchema.extend({
   year: z.coerce.number().int().min(2000, "Year is required"),
   clientNames: z
     .string()
-    .min(1, "Client name is required")
+    .optional()
     .transform((val) =>
       val && val.trim()
         ? val
