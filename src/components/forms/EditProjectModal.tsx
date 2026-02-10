@@ -75,8 +75,9 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       setPersonnelOptions(options);
     }).catch((error) => {
       console.error("Error fetching personnel options:", error);
+      setPersonnelOptions([]);
     });
-  }, [project.personnelAssigned]);
+  }, [project.personnelAssigned, project.pid]); // Added project.pid to trigger refresh when project changes
 
   const form = useForm<AdminProjectData>({
     resolver: zodResolver(adminProjectSchema),
@@ -100,6 +101,35 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
     },
   });
 
+  // Reset form with new project data when project changes
+  useEffect(() => {
+    form.reset({
+      pid: project.pid,
+      year: project.year || new Date().getFullYear(),
+      startDate: project.startDate ? new Date(project.startDate) : undefined,
+      lead: project.lead || "",
+      title: project.title || "",
+      projectTag: project.projectTag || "",
+      status: project.status || "Ongoing",
+      sendingInstitution: project.sendingInstitution || "Government",
+      fundingCategory: project.fundingCategory || "In-House",
+      fundingInstitution: project.fundingInstitution || "",
+      serviceRequested: Array.isArray(project.serviceRequested)
+        ? project.serviceRequested.filter((s): s is "Laboratory Services" | "Retail Sales" | "Equipment Use" | "Bioinformatics Analysis" | "Training" =>
+          ["Laboratory Services", "Retail Sales", "Equipment Use", "Bioinformatics Analysis", "Training"].includes(s))
+        : [],
+      notes: project.notes || "",
+      personnelAssigned: project.personnelAssigned || "",
+    });
+    
+    // Update serviceRequestedInput as well
+    setServiceRequestedInput(
+      Array.isArray(project.serviceRequested)
+        ? project.serviceRequested.join(", ")
+        : project.serviceRequested || ""
+    );
+  }, [project, form]);
+
   useEffect(() => {
     const val = form.getValues("serviceRequested");
     if (Array.isArray(val)) {
@@ -109,7 +139,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
     } else {
       setServiceRequestedInput("");
     }
-  }, [isOpen]);
+  }, [isOpen, project.pid, form]); // Added project.pid to update when project changes
 
   const onSubmit = async (data: AdminProjectData) => {
     setIsLoading(true);
