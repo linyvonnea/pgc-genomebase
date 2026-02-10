@@ -34,8 +34,10 @@ export async function testEmailSystem() {
     console.log("EMAIL TEST: Firebase DB:", db ? "Connected" : "Disconnected");
     
     // Create test email with both simple and template formats
+    const testInquiryId = "TEST-" + Date.now();
     const testEmailData = {
       to: ["madayon1@up.edu.ph"],
+      inquiryId: testInquiryId, // Add at root level for easy searching
       message: {
         subject: "PGC Email System Test",
         text: "This is a test email from the PGC email system.",
@@ -44,7 +46,7 @@ export async function testEmailSystem() {
       template: {
         name: "inquiry-laboratory", // Using existing template
         data: {
-          inquiryId: "TEST-" + Date.now(),
+          inquiryId: testInquiryId,
           name: "Test User",
           affiliation: "Test Institution", 
           designation: "Test Role",
@@ -58,6 +60,7 @@ export async function testEmailSystem() {
 
     console.log("EMAIL TEST: Test email structure:", {
       recipient: testEmailData.to,
+      inquiryId: testEmailData.inquiryId,
       hasSubject: !!testEmailData.message.subject,
       hasTemplate: !!testEmailData.template,
       templateName: testEmailData.template.name,
@@ -74,6 +77,22 @@ export async function testEmailSystem() {
     console.log("✅ EMAIL TEST SUCCESS: Test email document created!");
     console.log("Test Email Document ID:", emailDocRef.id);
     console.log("Test Email Document Path:", emailDocRef.path);
+    
+    // Immediately verify the document exists in Firestore
+    try {
+      const verifyDoc = await getDoc(emailDocRef);
+      if (verifyDoc.exists()) {
+        const docData = verifyDoc.data();
+        console.log("✅ VERIFICATION: Document confirmed in Firestore!");
+        console.log("Document data keys:", Object.keys(docData));
+        console.log("Document inquiryId:", docData.inquiryId);
+        console.log("Document to:", docData.to);
+      } else {
+        console.error("❌ VERIFICATION FAILED: Document not found in Firestore immediately after creation!");
+      }
+    } catch (verifyError) {
+      console.error("❌ VERIFICATION ERROR:", verifyError);
+    }
     
     return { 
       success: true, 
@@ -197,6 +216,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     // Create email document with proper structure for Firebase Trigger Email
     const emailData = {
       to: [emailRecipient],
+      inquiryId: docRef.id, // Add at root level for easy searching in Firestore
       message: {
         subject: `New ${inquiryData.service} Inquiry from ${inquiryData.name}`,
         text: `New inquiry received from ${inquiryData.name} (${inquiryData.email}) for ${inquiryData.service} service.`,
@@ -232,6 +252,21 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       console.log("✅ EMAIL SUCCESS: Email document created!");
       console.log("Email Document ID:", emailDocRef.id);
       console.log("Email Document Path:", emailDocRef.path);
+      
+      // Immediately verify the document exists in Firestore
+      try {
+        const verifyDoc = await getDoc(emailDocRef);
+        if (verifyDoc.exists()) {
+          const docData = verifyDoc.data();
+          console.log("✅ VERIFICATION: Email document confirmed in Firestore!");
+          console.log("Verified inquiryId:", docData.inquiryId);
+          console.log("Verified recipient:", docData.to);
+        } else {
+          console.error("❌ VERIFICATION FAILED: Email document not found immediately after creation!");
+        }
+      } catch (verifyError) {
+        console.error("❌ VERIFICATION ERROR:", verifyError);
+      }
       
       // Enhanced status checking with better error handling
       setTimeout(async () => {
