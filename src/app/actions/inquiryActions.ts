@@ -84,10 +84,10 @@ export async function testEmailSystem() {
   } catch (error) {
     console.error("❌ EMAIL TEST FAILED:", error);
     console.error("Test error details:", {
-      name: error.name,
-      message: error.message,
-      code: error.code,
-      stack: error.stack
+      name: error instanceof Error ? error.name : "Unknown",
+      message: error instanceof Error ? error.message : String(error),
+      code: (error as any)?.code || "No code",
+      stack: error instanceof Error ? error.stack : "No stack trace"
     });
     
     return { 
@@ -265,10 +265,10 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     } catch (emailError) {
       console.error("❌ EMAIL CREATION FAILED:", emailError);
       console.error("Error details:", {
-        name: emailError.name,
-        message: emailError.message,
-        code: emailError.code,
-        stack: emailError.stack
+        name: emailError instanceof Error ? emailError.name : "Unknown",
+        message: emailError instanceof Error ? emailError.message : String(emailError),
+        code: (emailError as any)?.code || "No code",
+        stack: emailError instanceof Error ? emailError.stack : "No stack trace"
       });
       
       // Log additional debugging information
