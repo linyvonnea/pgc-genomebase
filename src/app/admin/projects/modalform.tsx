@@ -81,6 +81,9 @@ type ProjectFormData = z.infer<typeof projectSchema>;
 // Form state type with string for clientNames (before transform)
 type ProjectFormState = Omit<ProjectFormData, "clientNames"> & {
   clientNames: string;
+  status: "Ongoing" | "Completed" | "Cancelled";
+  fundingCategory: "External" | "In-House";
+  sendingInstitution: "UP System" | "SUC/HEI" | "Government" | "Private/Local" | "International" | "N/A";
 };
 
 const RequiredLabel = ({ children }: { children: ReactNode }) => (
@@ -104,9 +107,9 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     clientNames: "", // Keep as string for the input field
     title: "",
     projectTag: "",
-    status: undefined,
-    sendingInstitution: "",
-    fundingCategory: undefined,
+    status: "Ongoing",
+    sendingInstitution: "Government",
+    fundingCategory: "External",
     fundingInstitution: "",
     serviceRequested: [],
     personnelAssigned: "",
