@@ -83,7 +83,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
     defaultValues: {
       pid: project.pid, // Ensure pid is present for validation
       year: project.year || new Date().getFullYear(),
-      startDate: project.startDate ? new Date(project.startDate) : new Date(),
+      startDate: project.startDate ? new Date(project.startDate) : undefined,
       lead: project.lead || "",
       title: project.title || "",
       projectTag: project.projectTag || "",
@@ -305,7 +305,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {field.value ?
                             new Date(field.value).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })
-                            : "Pick a date"}
+                            : ""}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
