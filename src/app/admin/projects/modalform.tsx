@@ -458,6 +458,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         </Select>
         {errors.iid && <p className="text-red-500 text-xs mt-1">{errors.iid}</p>}
       </div>
+      </div>
 
       {/* Project Tag */}
       <div>
