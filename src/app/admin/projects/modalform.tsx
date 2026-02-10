@@ -82,6 +82,14 @@ const RequiredLabel = ({ children }: { children: ReactNode }) => (
 export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => void }) {
   const { adminInfo } = useAuth();
   const pidInputRef = useRef<HTMLInputElement>(null);
+  const startDateInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus Start Date when modal opens
+  useEffect(() => {
+    if (startDateInputRef.current) {
+      startDateInputRef.current.focus();
+    }
+  }, []);
 
   // Form state for all project fields
   const [formData, setFormData] = useState<ProjectFormState>({
@@ -371,7 +379,14 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         {/* Start Date */}
         <div>
           <RequiredLabel>Start Date</RequiredLabel>
-          <Input type="date" name="startDate" value={formData.startDate} onChange={handleChange} className="h-9" />
+          <Input
+            type="date"
+            name="startDate"
+            value={formData.startDate}
+            onChange={handleChange}
+            className="h-9"
+            ref={startDateInputRef}
+          />
           {errors.startDate && <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>}
         </div>
       </div>
