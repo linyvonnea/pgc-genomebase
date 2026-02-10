@@ -398,46 +398,46 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
       </div>
 
-      {/* Project Lead */}
-      <div>
-        <RequiredLabel>Project Lead</RequiredLabel>
-        <Input name="lead" value={formData.lead} onChange={handleChange} className="h-9" placeholder="Juan dela Cruz" />
-        {errors.lead && <p className="text-red-500 text-xs mt-1">{errors.lead}</p>}
-      </div>
-      {/* Inquiry ID */}
-      <div>
-        <Label className="text-xs">Inquiry ID</Label>
-        <Select value={formData.iid} onValueChange={(val) => handleSelect("iid", val)}>
-          <SelectTrigger className="h-9">
-            <SelectValue placeholder="Select inquiry">
-              {formData.iid ? (
-                <div className="flex flex-col items-start" title={inquiryOptions.find(i => i.id === formData.iid)?.name}>
-                  <span className="font-medium text-sm">{formData.iid}</span>
-                  {inquiryOptions.find(i => i.id === formData.iid)?.name && (
-                    <span className="text-xs text-gray-500 truncate max-w-[200px]">
-                      {inquiryOptions.find(i => i.id === formData.iid)?.name}
-                    </span>
-                  )}
-                </div>
-              ) : (
-                "Select inquiry"
-              )}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent className="max-h-[300px] w-[400px]">
-            <div className="sticky top-0 bg-white z-10 p-2 border-b">
-              <Input
-                placeholder="Search by ID, Name, or Affiliation..."
-                value={inquirySearch}
-                onChange={e => setInquirySearch(e.target.value)}
-                className="h-9 text-sm"
-              />
-            </div>
-            <div className="max-h-[240px] overflow-y-auto">
-              {filteredInquiryOptions.length > 0 ? (
-                filteredInquiryOptions.map((inq) => (
-                  <SelectItem key={inq.id} value={inq.id || ""} className="text-sm">
-                    <div className="flex flex-col py-1">
+      {/* Project Lead & Inquiry ID aligned */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <RequiredLabel>Project Lead</RequiredLabel>
+          <Input name="lead" value={formData.lead} onChange={handleChange} className="h-9" placeholder="Juan dela Cruz" />
+          {errors.lead && <p className="text-red-500 text-xs mt-1">{errors.lead}</p>}
+        </div>
+        <div>
+          <Label className="text-xs">Inquiry ID</Label>
+          <Select value={formData.iid} onValueChange={(val) => handleSelect("iid", val)}>
+            <SelectTrigger className="h-9">
+              <SelectValue placeholder="Select inquiry">
+                {formData.iid ? (
+                  <div className="flex flex-col items-start" title={inquiryOptions.find(i => i.id === formData.iid)?.name}>
+                    <span className="font-medium text-sm">{formData.iid}</span>
+                    {inquiryOptions.find(i => i.id === formData.iid)?.name && (
+                      <span className="text-xs text-gray-500 truncate max-w-[200px]">
+                        {inquiryOptions.find(i => i.id === formData.iid)?.name}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  "Select inquiry"
+                )}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="max-h-[300px] w-[400px]">
+              <div className="sticky top-0 bg-white z-10 p-2 border-b">
+                <Input
+                  placeholder="Search by ID, Name, or Affiliation..."
+                  value={inquirySearch}
+                  onChange={e => setInquirySearch(e.target.value)}
+                  className="h-9 text-sm"
+                />
+              </div>
+              <div className="max-h-[240px] overflow-y-auto">
+                {filteredInquiryOptions.length > 0 ? (
+                  filteredInquiryOptions.map((inq) => (
+                    <SelectItem key={inq.id} value={inq.id || ""} className="text-sm">
+                      <div className="flex flex-col py-1">
                       <span className="font-medium text-gray-900">{inq.id}</span>
                       <span className="text-xs text-gray-600">{inq.name}</span>
                       {inq.affiliation && (
