@@ -29,7 +29,7 @@ import useAuth from "@/hooks/useAuth";
 // All fields are required except for notes.
 const projectSchema = baseProjectSchema.extend({
   pid: z.string().min(1, "Project ID is required"),
-  iid: z.string().min(1, "Inquiry ID is required"),
+  iid: z.string().optional(),
   year: z.coerce.number().int().min(2000, "Year is required"),
   clientNames: z
     .string()
@@ -43,12 +43,8 @@ const projectSchema = baseProjectSchema.extend({
         : []
     ),
   projectTag: z.string().min(1, "Project tag is required"),
-  status: z.enum(["Ongoing", "Completed", "Cancelled"], {
-    required_error: "Status is required",
-  }),
-  fundingCategory: z.enum(["External", "In-House"], {
-    required_error: "Funding category is required",
-  }),
+  status: z.string().min(1, "Status is required"),
+  fundingCategory: z.string().min(1, "Funding category is required"),
   serviceRequested: z
     .array(z.string())
     .min(1, "Select at least one service"),
@@ -60,17 +56,7 @@ const projectSchema = baseProjectSchema.extend({
   startDate: z.string().min(1, "Start date is required"),
   lead: z.string().min(1, "Project lead is required"),
   title: z.string().min(1, "Project title is required"),
-  sendingInstitution: z.enum(
-    [
-      "UP System",
-      "SUC/HEI",
-      "Government",
-      "Private/Local",
-      "International",
-      "N/A",
-    ],
-    { required_error: "Sending institution is required" }
-  ),
+  sendingInstitution: z.string().min(1, "Sending institution is required"),
   fundingInstitution: z
     .string()
     .min(1, "Funding institution is required"),
@@ -81,9 +67,9 @@ type ProjectFormData = z.infer<typeof projectSchema>;
 // Form state type with string for clientNames (before transform)
 type ProjectFormState = Omit<ProjectFormData, "clientNames"> & {
   clientNames: string;
-  status: "Ongoing" | "Completed" | "Cancelled";
-  fundingCategory: "External" | "In-House";
-  sendingInstitution: "UP System" | "SUC/HEI" | "Government" | "Private/Local" | "International" | "N/A";
+  status: string;
+  fundingCategory: string;
+  sendingInstitution: string;
 };
 
 const RequiredLabel = ({ children }: { children: ReactNode }) => (
@@ -107,9 +93,9 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
     clientNames: "", // Keep as string for the input field
     title: "",
     projectTag: "",
-    status: "Ongoing",
-    sendingInstitution: "Government",
-    fundingCategory: "External",
+    status: "",
+    sendingInstitution: "",
+    fundingCategory: "",
     fundingInstitution: "",
     serviceRequested: [],
     personnelAssigned: "",
@@ -260,6 +246,16 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
           serviceRequested: result.data.serviceRequested,
           lead: result.data.lead,
           notes: result.data.notes || "",
+          status: (
+            ["Ongoing", "Completed", "Cancelled"].includes(result.data.status as string)
+              ? result.data.status
+              : "Ongoing"
+          ) as Project["status"],
+          fundingCategory: (
+            ["External", "In-House"].includes(result.data.fundingCategory as string)
+              ? result.data.fundingCategory
+              : "External"
+          ) as Project["fundingCategory"],
           sendingInstitution: (
             [
               "UP System",
@@ -395,7 +391,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       </div>
       {/* Inquiry ID */}
       <div>
-        <RequiredLabel>Inquiry ID</RequiredLabel>
+        <Label className="text-xs">Inquiry ID</Label>
         <Select value={formData.iid} onValueChange={(val) => handleSelect("iid", val)}>
           <SelectTrigger className="h-9">
             <SelectValue placeholder="Select inquiry">
@@ -458,7 +454,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       <div>
         <RequiredLabel>Status</RequiredLabel>
         <Select value={formData.status || ""} onValueChange={val => handleSelect("status", val)}>
-          <SelectTrigger className="h-9"><SelectValue placeholder="Select status" /></SelectTrigger>
+          <SelectTrigger className="h-9"><SelectValue placeholder="Select Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="Ongoing">Ongoing</SelectItem>
             <SelectItem value="Completed">Completed</SelectItem>
@@ -483,7 +479,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       <div>
         <RequiredLabel>Sending Institution</RequiredLabel>
         <Select value={formData.sendingInstitution || ""} onValueChange={val => handleSelect("sendingInstitution", val)}>
-          <SelectTrigger className="h-9"><SelectValue placeholder="Select institution" /></SelectTrigger>
+          <SelectTrigger className="h-9"><SelectValue placeholder="Select Sending Institution" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="UP System">UP System</SelectItem>
             <SelectItem value="SUC/HEI">SUC/HEI</SelectItem>
