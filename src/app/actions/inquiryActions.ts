@@ -23,6 +23,52 @@ import { AdminInquiryData } from "@/schemas/adminInquirySchema";
 import { logActivity } from "@/services/activityLogService";
 
 /**
+ * Test function to validate email system configuration
+ * This function helps diagnose email delivery issues by creating a simple test email
+ */
+export async function testEmailSystem() {
+  try {
+    console.log("Testing email system...");
+    
+    // Create a simple test email
+    const testEmailData = {
+      to: ["madayon1@up.edu.ph"],
+      template: {
+        name: "inquiry-laboratory", // Using existing template
+        data: {
+          inquiryId: "TEST-" + Date.now(),
+          name: "Test User",
+          affiliation: "Test Institution",
+          designation: "Test Role",
+          email: "test@example.com",
+          service: "laboratory",
+          workflows: "DNA extraction",
+          additionalInfo: "This is a test email to verify email functionality"
+        }
+      }
+    };
+
+    console.log("Creating test email document...");
+    const emailDocRef = await addDoc(collection(db, "mail"), testEmailData);
+    console.log("Test email document created with ID:", emailDocRef.id);
+    
+    return { 
+      success: true, 
+      emailDocId: emailDocRef.id,
+      message: "Test email queued. Check Firestore 'mail' collection for processing status." 
+    };
+    
+  } catch (error) {
+    console.error("Email system test failed:", error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Unknown error",
+      message: "Email system test failed. Check Firebase configuration and extensions." 
+    };
+  }
+}
+
+/**
  * Creates a new inquiry from user form submission
  * 
  * This function processes form data, transforms it for database storage,
@@ -30,6 +76,12 @@ import { logActivity } from "@/services/activityLogService";
  */
 export async function createInquiryAction(inquiryData: InquiryFormData) {
   try {
+    // Check Firebase configuration first
+    if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
+      console.error("Firebase project ID not found in environment variables");
+      throw new Error("Firebase configuration error");
+    }
+
     // Transform the form data to match the expected database structure
     // This ensures all required fields are present with proper defaults
     const currentDate = new Date();
@@ -106,8 +158,37 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       }
     };
 
+    console.log("Attempting to send email with data:", {
+      templateId,
+      recipient: emailData.to,
+      inquiryId: docRef.id
+    });
+
     // Add email to the mail collection to trigger the Firebase extension
-    await addDoc(collection(db, "mail"), emailData);
+    try {
+      const emailDocRef = await addDoc(collection(db, "mail"), emailData);
+      console.log("Email document created successfully:", emailDocRef.id);
+      
+      // Wait a moment and check if email was processed
+      setTimeout(async () => {
+        try {
+          const emailDoc = await getDoc(doc(db, "mail", emailDocRef.id));
+          if (emailDoc.exists()) {
+            const emailStatus = emailDoc.data();
+            console.log("Email status:", emailStatus);
+            if (emailStatus.delivery && emailStatus.delivery.error) {
+              console.error("Email delivery failed:", emailStatus.delivery.error);
+            }
+          }
+        } catch (checkError) {
+          console.log("Could not check email status:", checkError);
+        }
+      }, 5000);
+      
+    } catch (emailError) {
+      console.error("Failed to create email document:", emailError);
+      // Continue execution even if email fails - don't block inquiry creation
+    }
     
     // Revalidate the admin inquiry page cache to show new data immediately
     // This ensures the admin sees the new inquiry without page refresh
