@@ -57,6 +57,12 @@ export async function getQuotationsByInquiryId(
 export async function getQuotationsByClientName(
   clientName: string
 ): Promise<QuotationRecord[]> {
+  // Return empty array if clientName is empty or invalid
+  if (!clientName || clientName.trim().length === 0) {
+    console.log("[Firestore] Empty client name provided, returning empty array");
+    return [];
+  }
+
   const quotationsRef = collection(db, "quotations");
   const q = query(
     quotationsRef,
