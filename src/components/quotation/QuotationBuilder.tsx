@@ -449,7 +449,7 @@ export default function QuotationBuilder({
         </Dialog>
 
         <Separator className="my-6" />
-        <QuotationHistoryPanel inquiryId={effectiveInquiryId} />
+        <QuotationHistoryPanel clientName={clientInfo.name} />
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getQuotationsByInquiryId } from "@/services/quotationService";
+import { getQuotationsByInquiryId, getQuotationsByClientName } from "@/services/quotationService";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
@@ -17,13 +17,18 @@ import {
 } from "@/components/ui/dialog";
 import { QuotationPDFViewer } from "./QuotationPDFViewer";
 
-export function QuotationHistoryPanel({ inquiryId }: { inquiryId: string }) {
+type QuotationHistoryPanelProps = {
+  inquiryId?: string;
+  clientName?: string;
+};
 
-
+export function QuotationHistoryPanel({ inquiryId, clientName }: QuotationHistoryPanelProps) {
+  const shouldFetch = (inquiryId && inquiryId.trim().length > 0) || (clientName && clientName.trim().length > 0);
+  
   const { data: history = [], isLoading, error, isFetched } = useQuery({
-    queryKey: ["quotationHistory", inquiryId],
-    queryFn: () => getQuotationsByInquiryId(inquiryId),
-    enabled: typeof inquiryId === "string" && inquiryId.trim().length > 0,
+    queryKey: clientName ? ["quotationHistory", "client", clientName] : ["quotationHistory", "inquiry", inquiryId],
+    queryFn: () => clientName ? getQuotationsByClientName(clientName) : getQuotationsByInquiryId(inquiryId!),
+    enabled: shouldFetch,
   });
 
   if (error) {
@@ -36,7 +41,7 @@ export function QuotationHistoryPanel({ inquiryId }: { inquiryId: string }) {
   if (history.length === 0) {
     return (
       <div className="text-sm text-muted-foreground">
-        No past quotations yet for <code>{inquiryId}</code>.
+        No past quotations yet for {clientName ? <code>{clientName}</code> : <code>{inquiryId}</code>}.
       </div>
     );
   }
