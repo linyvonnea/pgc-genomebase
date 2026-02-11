@@ -107,7 +107,7 @@ export function ChargeSlipTable({ data, columns }: Props) {
               {/* Service Categories */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Service Categories</label>
-                <div className="grid grid-cols-1 gap-1">
+                <div className="grid grid-cols-2 gap-1">
                   {allCategories.map((cat) => {
                     const isActive = categoryFilters.includes(cat);
                     return (
@@ -136,7 +136,7 @@ export function ChargeSlipTable({ data, columns }: Props) {
               {/* Processing Status */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Processing Status</label>
-                <div className="grid grid-cols-1 gap-1">
+                <div className="grid grid-cols-2 gap-1">
                   <button
                     onClick={() => setStatusFilter(statusFilter === "processing" ? "__all" : "processing")}
                     className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
