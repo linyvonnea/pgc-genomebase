@@ -23,7 +23,7 @@ type QuotationHistoryPanelProps = {
 };
 
 export function QuotationHistoryPanel({ inquiryId, clientName }: QuotationHistoryPanelProps) {
-  const shouldFetch = (inquiryId && inquiryId.trim().length > 0) || (clientName && clientName.trim().length > 0);
+  const shouldFetch = Boolean((inquiryId && inquiryId.trim().length > 0) || (clientName && clientName.trim().length > 0));
   
   const { data: history = [], isLoading, error, isFetched } = useQuery({
     queryKey: clientName ? ["quotationHistory", "client", clientName] : ["quotationHistory", "inquiry", inquiryId],
