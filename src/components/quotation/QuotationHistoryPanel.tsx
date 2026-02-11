@@ -27,13 +27,16 @@ export function QuotationHistoryPanel({ inquiryId, clientName }: QuotationHistor
   const hasClientName = clientName && clientName.trim().length > 0;
   const shouldFetch = Boolean(hasInquiryId || hasClientName);
   
+  // Prioritize inquiryId if available, otherwise use clientName
+  const useInquiryId = hasInquiryId;
+  
   const { data: history = [], isLoading, error, isFetched } = useQuery({
-    queryKey: hasClientName ? ["quotationHistory", "client", clientName] : ["quotationHistory", "inquiry", inquiryId],
+    queryKey: useInquiryId ? ["quotationHistory", "inquiry", inquiryId] : ["quotationHistory", "client", clientName],
     queryFn: () => {
-      if (hasClientName) {
-        return getQuotationsByClientName(clientName);
-      } else if (hasInquiryId) {
+      if (useInquiryId) {
         return getQuotationsByInquiryId(inquiryId!);
+      } else if (hasClientName) {
+        return getQuotationsByClientName(clientName);
       }
       return Promise.resolve([]);
     },
@@ -54,7 +57,7 @@ export function QuotationHistoryPanel({ inquiryId, clientName }: QuotationHistor
   if (history.length === 0) {
     return (
       <div className="text-sm text-muted-foreground">
-        No past quotations yet for {hasClientName ? <code>{clientName}</code> : <code>{inquiryId}</code>}.
+        No past quotations yet for {useInquiryId ? <code>{inquiryId}</code> : <code>{clientName}</code>}.
       </div>
     );
   }
