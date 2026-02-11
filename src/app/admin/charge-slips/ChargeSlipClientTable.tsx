@@ -376,8 +376,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   </div>
                 </div>
 
-                <div className="space-y-0.5">
-                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Year</span>
+                <div className="flex items-center gap-2">
                   <Select value={yearFilter} onValueChange={setYearFilter}>
                     <SelectTrigger className="w-[120px] h-7 text-sm">
                       <SelectValue placeholder="All Years" />
@@ -389,10 +388,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                       ))}
                     </SelectContent>
                   </Select>
-                </div>
 
-                <div className="space-y-0.5">
-                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Month</span>
                   <Select value={monthFilter} onValueChange={setMonthFilter}>
                     <SelectTrigger className="w-[140px] h-7 text-sm">
                       <SelectValue placeholder="All Months" />
