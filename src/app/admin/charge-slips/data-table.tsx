@@ -172,7 +172,7 @@ export function ChargeSlipTable({ data, columns }: Props) {
             </div>
             
             {/* Search Tools & Summary Row */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100">
+            <div className="flex items-end justify-between pt-2 border-t border-gray-100">
               <div className="flex items-center gap-3">
                 <div className="relative">
                   <Input
@@ -183,24 +183,50 @@ export function ChargeSlipTable({ data, columns }: Props) {
                   />
                 </div>
               </div>
+
+              {/* Summary Card - bottom right */}
+              <div>
+                <div
+                  onClick={() => {
+                    setCategoryFilters([]);
+                    setGlobalFilter("");
+                    setStatusFilter("__all");
+                  }}
+                  className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm w-[300px] ${
+                    categoryFilters.length === 0 && 
+                    globalFilter === "" && 
+                    statusFilter === "__all"
+                      ? "ring-1 ring-primary ring-offset-1 bg-slate-50 border-slate-200 shadow-sm"
+                      : "bg-white hover:bg-gray-50 border-gray-200"
+                  }`}
+                >
+                  <div className="space-y-1">
+                    <div className="text-[13px] text-primary font-medium uppercase tracking-wide">
+                      Summary
+                    </div>
+                    <div className="text-lg font-bold text-gray-800">
+                      ₱{totalAmount.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </div>
+                    <div className="flex items-center justify-between gap-2 pt-0.5">
+                      <div className="text-xs text-blue-600 font-semibold">
+                        {filteredRows.length} {filteredRows.length === 1 ? 'result' : 'results'}
+                      </div>
+                      <div className="text-[10px] font-medium text-gray-500 truncate">
+                        {categoryFilters.length === 0 && globalFilter === "" && statusFilter === "__all" 
+                          ? "All Records" 
+                          : [...categoryFilters.map(c => c.charAt(0).toUpperCase() + c.slice(1)), statusFilter !== "__all" ? statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1) : ""].filter(Boolean).join(" + ")}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
       </Card>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-muted p-4 rounded-lg text-center">
-          <p className="text-xs">Total Filtered (Paid)</p>
-          <p className="text-lg font-bold">
-            ₱{totalAmount.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
-        </div>
-        <div className="bg-muted p-4 rounded-lg text-center">
-          <p className="text-xs">Total Charge Slips</p>
-          <p className="text-lg font-bold">{filteredRows.length}</p>
-        </div>
-      </div>
 
       {/* Table */}
       <div className="rounded-md border">

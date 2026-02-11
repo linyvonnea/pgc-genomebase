@@ -246,104 +246,105 @@ export function DataTable<TData, TValue>({
             <div className="space-y-4">
               {/* Top section: Service Categories */}
               <div className="flex gap-4">
-                {/* Service Categories Section - 1/4 width, vertical layout, occupy full length */}
+                {/* Service Categories Section - 1/4 width, 2-column layout */}
                 <div className="w-1/4 h-full">
                   <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2 block">Service Categories</label>
-                  <div className="grid grid-cols-1 gap-1">
-                    {/* Laboratory card - first below label */}
-                    <button
-                      onClick={() => {
-                        const isActive = categoryFilter.includes("Laboratory");
-                        if (isActive) {
-                          setCategoryFilter(categoryFilter.filter((c) => c !== "Laboratory"));
-                        } else {
-                          setCategoryFilter([...categoryFilter, "Laboratory"]);
-                        }
-                      }}
-                      className={`w-full rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-center ${
-                        categoryFilter.includes("Laboratory")
-                          ? "bg-green-50 border-green-200 font-semibold text-green-600"
-                          : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                      }`}
-                    >
-                      Laboratory
-                    </button>
+                  <div className="grid grid-cols-2 gap-1">
+                    {/* First column: Laboratory, Equipment, Bioinformatics */}
+                    <div className="space-y-1">
+                      <button
+                        onClick={() => {
+                          const isActive = categoryFilter.includes("Laboratory");
+                          if (isActive) {
+                            setCategoryFilter(categoryFilter.filter((c) => c !== "Laboratory"));
+                          } else {
+                            setCategoryFilter([...categoryFilter, "Laboratory"]);
+                          }
+                        }}
+                        className={`w-full rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-center ${
+                          categoryFilter.includes("Laboratory")
+                            ? "bg-green-50 border-green-200 font-semibold text-green-600"
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
+                        Laboratory
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          const isActive = categoryFilter.includes("Equipment");
+                          if (isActive) {
+                            setCategoryFilter(categoryFilter.filter((c) => c !== "Equipment"));
+                          } else {
+                            setCategoryFilter([...categoryFilter, "Equipment"]);
+                          }
+                        }}
+                        className={`w-full rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-center ${
+                          categoryFilter.includes("Equipment")
+                            ? "bg-blue-50 border-blue-200 font-semibold text-blue-600"
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
+                        Equipment
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          const isActive = categoryFilter.includes("Bioinformatics");
+                          if (isActive) {
+                            setCategoryFilter(categoryFilter.filter((c) => c !== "Bioinformatics"));
+                          } else {
+                            setCategoryFilter([...categoryFilter, "Bioinformatics"]);
+                          }
+                        }}
+                        className={`w-full rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-center ${
+                          categoryFilter.includes("Bioinformatics")
+                            ? "bg-purple-50 border-purple-200 font-semibold text-purple-600"
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
+                        Bioinformatics
+                      </button>
+                    </div>
                     
-                    {/* Equipment card - below Laboratory */}
-                    <button
-                      onClick={() => {
-                        const isActive = categoryFilter.includes("Equipment");
-                        if (isActive) {
-                          setCategoryFilter(categoryFilter.filter((c) => c !== "Equipment"));
-                        } else {
-                          setCategoryFilter([...categoryFilter, "Equipment"]);
-                        }
-                      }}
-                      className={`w-full rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-center ${
-                        categoryFilter.includes("Equipment")
-                          ? "bg-blue-50 border-blue-200 font-semibold text-blue-600"
-                          : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                      }`}
-                    >
-                      Equipment
-                    </button>
-                    
-                    {/* Bioinformatics card - below Equipment */}
-                    <button
-                      onClick={() => {
-                        const isActive = categoryFilter.includes("Bioinformatics");
-                        if (isActive) {
-                          setCategoryFilter(categoryFilter.filter((c) => c !== "Bioinformatics"));
-                        } else {
-                          setCategoryFilter([...categoryFilter, "Bioinformatics"]);
-                        }
-                      }}
-                      className={`w-full rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-center ${
-                        categoryFilter.includes("Bioinformatics")
-                          ? "bg-purple-50 border-purple-200 font-semibold text-purple-600"
-                          : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                      }`}
-                    >
-                      Bioinformatics
-                    </button>
-                    
-                    {/* Retail Sales card - below Bioinformatics */}
-                    <button
-                      onClick={() => {
-                        const isActive = categoryFilter.includes("Retail Sales");
-                        if (isActive) {
-                          setCategoryFilter(categoryFilter.filter((c) => c !== "Retail Sales"));
-                        } else {
-                          setCategoryFilter([...categoryFilter, "Retail Sales"]);
-                        }
-                      }}
-                      className={`w-full rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-center ${
-                        categoryFilter.includes("Retail Sales")
-                          ? "bg-orange-50 border-orange-200 font-semibold text-orange-600"
-                          : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                      }`}
-                    >
-                      Retail Sales
-                    </button>
-                    
-                    {/* Training card - below Retail Sales */}
-                    <button
-                      onClick={() => {
-                        const isActive = categoryFilter.includes("Training");
-                        if (isActive) {
-                          setCategoryFilter(categoryFilter.filter((c) => c !== "Training"));
-                        } else {
-                          setCategoryFilter([...categoryFilter, "Training"]);
-                        }
-                      }}
-                      className={`w-full rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-center ${
-                        categoryFilter.includes("Training")
-                          ? "bg-indigo-50 border-indigo-200 font-semibold text-indigo-600"
-                          : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                      }`}
-                    >
-                      Training
-                    </button>
+                    {/* Second column: Retail Sales, Training */}
+                    <div className="space-y-1">
+                      <button
+                        onClick={() => {
+                          const isActive = categoryFilter.includes("Retail Sales");
+                          if (isActive) {
+                            setCategoryFilter(categoryFilter.filter((c) => c !== "Retail Sales"));
+                          } else {
+                            setCategoryFilter([...categoryFilter, "Retail Sales"]);
+                          }
+                        }}
+                        className={`w-full rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-center ${
+                          categoryFilter.includes("Retail Sales")
+                            ? "bg-orange-50 border-orange-200 font-semibold text-orange-600"
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
+                        Retail Sales
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          const isActive = categoryFilter.includes("Training");
+                          if (isActive) {
+                            setCategoryFilter(categoryFilter.filter((c) => c !== "Training"));
+                          } else {
+                            setCategoryFilter([...categoryFilter, "Training"]);
+                          }
+                        }}
+                        className={`w-full rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-center ${
+                          categoryFilter.includes("Training")
+                            ? "bg-indigo-50 border-indigo-200 font-semibold text-indigo-600"
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
+                        Training
+                      </button>
+                    </div>
                   </div>
                 </div>
                 
