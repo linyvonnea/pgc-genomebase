@@ -362,20 +362,23 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
             </div>
             
             {/* Search Tools & Summary Row */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Input
-                    placeholder="Search client, CS number, etc."
-                    value={globalFilter}
-                    onChange={(e) => setGlobalFilter(e.target.value)}
-                    className="w-56 pl-3 pr-8 h-8 text-sm"
-                  />
+            <div className="flex flex-wrap items-end justify-between gap-3 pt-2 border-t border-gray-100">
+              <div className="flex flex-wrap items-end gap-2">
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Search</span>
+                  <div className="relative">
+                    <Input
+                      placeholder="Search client, CS number, etc."
+                      value={globalFilter}
+                      onChange={(e) => setGlobalFilter(e.target.value)}
+                      className="w-56 pl-3 pr-8 h-7 text-sm"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Select value={yearFilter} onValueChange={setYearFilter}>
-                    <SelectTrigger className="w-[120px] h-8 text-sm">
+                    <SelectTrigger className="w-[120px] h-7 text-sm">
                       <SelectValue placeholder="All Years" />
                     </SelectTrigger>
                     <SelectContent>
@@ -387,7 +390,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   </Select>
 
                   <Select value={monthFilter} onValueChange={setMonthFilter}>
-                    <SelectTrigger className="w-[140px] h-8 text-sm">
+                    <SelectTrigger className="w-[140px] h-7 text-sm">
                       <SelectValue placeholder="All Months" />
                     </SelectTrigger>
                     <SelectContent>
@@ -400,15 +403,45 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="text-sm text-muted-foreground">
-                  <span className="font-semibold">{filteredData.length}</span> {filteredData.length === 1 ? 'result' : 'results'}
-                </div>
-                <div className="text-sm font-semibold">
-                  Total: ₱{filteredTotalValue.toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
+              {/* Summary Card - bottom right */}
+              <div>
+                <div
+                  onClick={() => {
+                    setCategoryFilter([]);
+                    setGlobalFilter("");
+                    setStatusFilter("__all");
+                    setYearFilter("all");
+                    setMonthFilter("all");
+                  }}
+                  className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm w-[300px] ${
+                    categoryFilter.length === 0 && 
+                    globalFilter === "" && 
+                    statusFilter === "__all" &&
+                    yearFilter === "all" &&
+                    monthFilter === "all"
+                      ? "ring-1 ring-primary ring-offset-1 bg-slate-50 border-slate-200 shadow-sm"
+                      : "bg-white hover:bg-gray-50 border-gray-200"
+                  }`}
+                >
+                  <div className="space-y-1">
+                    <div className="text-[13px] text-primary font-medium uppercase tracking-wide">
+                      Summary
+                    </div>
+                    <div className="text-lg font-bold text-gray-800">
+                      ₱{filteredTotalValue.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </div>
+                    <div className="flex items-center justify-between gap-2 pt-0.5">
+                      <div className="text-xs text-blue-600 font-semibold">
+                        {filteredData.length} {filteredData.length === 1 ? 'result' : 'results'}
+                      </div>
+                      <div className="text-[10px] font-medium text-gray-500 truncate">
+                        {activeFiltersLabel}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
