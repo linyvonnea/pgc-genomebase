@@ -202,6 +202,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     // This document triggers Firebase extension to send email notifications
     
     console.log("=== EMAIL DEBUG: Starting email creation process ===");
+    console.log("Inquiry ID:", docRef.id);
     console.log("Template ID:", templateId);
     console.log("Template Data:", templateData);
     console.log("Firebase DB instance:", db ? "Connected" : "Not Connected");
@@ -213,70 +214,151 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       throw new Error("Email recipient not configured");
     }
     
-    // Create email document with proper structure for Firebase Trigger Email
+    console.log("EMAIL DEBUG: Creating email for recipient:", emailRecipient);
+    
+    // Create a comprehensive HTML email body
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2563eb;">New ${inquiryData.service.charAt(0).toUpperCase() + inquiryData.service.slice(1)} Inquiry</h2>
+        
+        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0;">Contact Information</h3>
+          <p><strong>Name:</strong> ${inquiryData.name}</p>
+          <p><strong>Email:</strong> ${inquiryData.email}</p>
+          <p><strong>Affiliation:</strong> ${inquiryData.affiliation}</p>
+          <p><strong>Designation:</strong> ${inquiryData.designation}</p>
+        </div>
+        
+        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0;">Service Details</h3>
+          <p><strong>Service Type:</strong> ${inquiryData.service}</p>
+          ${inquiryData.workflows && inquiryData.workflows.length > 0 ? `<p><strong>Workflows:</strong> ${Array.isArray(inquiryData.workflows) ? inquiryData.workflows.join(', ') : inquiryData.workflows}</p>` : ''}
+          ${inquiryData.additionalInfo ? `<p><strong>Additional Info:</strong> ${inquiryData.additionalInfo}</p>` : ''}
+          ${inquiryData.projectBackground ? `<p><strong>Project Background:</strong> ${inquiryData.projectBackground}</p>` : ''}
+          ${inquiryData.projectBudget ? `<p><strong>Project Budget:</strong> ${inquiryData.projectBudget}</p>` : ''}
+          ${inquiryData.specificTrainingNeed ? `<p><strong>Training Need:</strong> ${inquiryData.specificTrainingNeed}</p>` : ''}
+          ${inquiryData.targetTrainingDate ? `<p><strong>Training Date:</strong> ${inquiryData.targetTrainingDate}</p>` : ''}
+          ${inquiryData.numberOfParticipants ? `<p><strong>Participants:</strong> ${inquiryData.numberOfParticipants}</p>` : ''}
+        </div>
+        
+        <p style="color: #6b7280; font-size: 12px;">Inquiry ID: ${docRef.id}</p>
+        <p style="color: #6b7280; font-size: 12px;">Submitted: ${new Date().toLocaleString()}</p>
+      </div>
+    `;
+    
+    // Create email text version
+    const emailText = `
+New ${inquiryData.service.charAt(0).toUpperCase() + inquiryData.service.slice(1)} Inquiry
+
+Contact Information:
+Name: ${inquiryData.name}
+Email: ${inquiryData.email}
+Affiliation: ${inquiryData.affiliation}
+Designation: ${inquiryData.designation}
+
+Service Type: ${inquiryData.service}
+${inquiryData.workflows && inquiryData.workflows.length > 0 ? `Workflows: ${Array.isArray(inquiryData.workflows) ? inquiryData.workflows.join(', ') : inquiryData.workflows}\n` : ''}
+${inquiryData.additionalInfo ? `Additional Info: ${inquiryData.additionalInfo}\n` : ''}
+${inquiryData.projectBackground ? `Project Background: ${inquiryData.projectBackground}\n` : ''}
+${inquiryData.projectBudget ? `Project Budget: ${inquiryData.projectBudget}\n` : ''}
+${inquiryData.specificTrainingNeed ? `Training Need: ${inquiryData.specificTrainingNeed}\n` : ''}
+${inquiryData.targetTrainingDate ? `Training Date: ${inquiryData.targetTrainingDate}\n` : ''}
+${inquiryData.numberOfParticipants ? `Participants: ${inquiryData.numberOfParticipants}\n` : ''}
+
+Inquiry ID: ${docRef.id}
+Submitted: ${new Date().toLocaleString()}
+    `.trim();
+    
+    // Create email document with simplified structure for better compatibility
     const emailData = {
       to: [emailRecipient],
-      inquiryId: docRef.id, // Add at root level for easy searching in Firestore
+      inquiryId: docRef.id, // Root level for easy searching
       message: {
-        subject: `New ${inquiryData.service} Inquiry from ${inquiryData.name}`,
-        text: `New inquiry received from ${inquiryData.name} (${inquiryData.email}) for ${inquiryData.service} service.`,
-        html: `<p>New inquiry received from <strong>${inquiryData.name}</strong> (${inquiryData.email}) for ${inquiryData.service} service.</p>`
-      },
-      template: {
-        name: templateId,
-        data: templateData
+        subject: `New ${inquiryData.service.charAt(0).toUpperCase() + inquiryData.service.slice(1)} Inquiry from ${inquiryData.name}`,
+        text: emailText,
+        html: emailHtml
       }
     };
 
-
     console.log("EMAIL DEBUG: Email document structure:", {
       recipient: emailData.to,
+      inquiryId: emailData.inquiryId,
       hasSubject: !!emailData.message.subject,
-      hasTemplate: !!emailData.template,
-      templateName: emailData.template.name,
-      templateDataKeys: Object.keys(templateData),
-      inquiryId: docRef.id
+      subjectLength: emailData.message.subject.length,
+      htmlLength: emailData.message.html.length,
+      textLength: emailData.message.text.length
     });
 
     // Attempt to create email document with enhanced error handling
+    let emailDocumentCreated = false;
+    let emailDocId = "";
+    
     try {
       console.log("EMAIL DEBUG: Attempting to create email document...");
+      console.log("EMAIL DEBUG: Firestore DB check:", {
+        isDbDefined: !!db,
+        dbType: typeof db,
+        hasCollection: typeof collection === 'function',
+        hasAddDoc: typeof addDoc === 'function'
+      });
       
       // Check if Firestore connection is working
       const mailCollection = collection(db, "mail");
-      console.log("EMAIL DEBUG: Mail collection reference created");
+      console.log("EMAIL DEBUG: Mail collection reference created successfully");
+      
+      // Log the exact data being sent
+      console.log("EMAIL DEBUG: Email data to be sent:", JSON.stringify({
+        to: emailData.to,
+        inquiryId: emailData.inquiryId,
+        hasMessage: !!emailData.message,
+        messageKeys: Object.keys(emailData.message)
+      }, null, 2));
       
       // Create the email document
+      console.log("EMAIL DEBUG: Calling addDoc...");
       const emailDocRef = await addDoc(mailCollection, emailData);
+      emailDocumentCreated = true;
+      emailDocId = emailDocRef.id;
       
       console.log("✅ EMAIL SUCCESS: Email document created!");
       console.log("Email Document ID:", emailDocRef.id);
       console.log("Email Document Path:", emailDocRef.path);
+      console.log("Email Document Full Path:", `mail/${emailDocRef.id}`);
       
       // Immediately verify the document exists in Firestore
+      console.log("EMAIL DEBUG: Starting immediate verification...");
       try {
         const verifyDoc = await getDoc(emailDocRef);
         if (verifyDoc.exists()) {
           const docData = verifyDoc.data();
-          console.log("✅ VERIFICATION: Email document confirmed in Firestore!");
-          console.log("Verified inquiryId:", docData.inquiryId);
-          console.log("Verified recipient:", docData.to);
+          console.log("✅ VERIFICATION SUCCESS: Email document confirmed in Firestore!");
+          console.log("Verified data:", {
+            inquiryId: docData.inquiryId,
+            recipient: docData.to,
+            hasMessage: !!docData.message,
+            subject: docData.message?.subject
+          });
         } else {
           console.error("❌ VERIFICATION FAILED: Email document not found immediately after creation!");
+          console.error("Expected document at:", `mail/${emailDocRef.id}`);
         }
       } catch (verifyError) {
         console.error("❌ VERIFICATION ERROR:", verifyError);
+        console.error("Verify error details:", {
+          name: verifyError instanceof Error ? verifyError.name : "Unknown",
+          message: verifyError instanceof Error ? verifyError.message : String(verifyError)
+        });
       }
       
       // Enhanced status checking with better error handling
       setTimeout(async () => {
         try {
-          console.log("EMAIL DEBUG: Checking email document status...");
+          console.log("EMAIL DEBUG: Checking email document status after 5 seconds...");
           const emailDoc = await getDoc(doc(db, "mail", emailDocRef.id));
           
           if (emailDoc.exists()) {
             const emailStatus = emailDoc.data();
-            console.log("EMAIL STATUS:", emailStatus);
+            console.log("EMAIL STATUS AFTER 5s:", JSON.stringify(emailStatus, null, 2));
             
             // Check for delivery status
             if (emailStatus.delivery) {
@@ -291,7 +373,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
               console.log("⏳ EMAIL PENDING: No delivery status yet (still processing)");
             }
           } else {
-            console.log("⚠️ EMAIL WARNING: Email document no longer exists (may have been processed)");
+            console.log("⚠️ EMAIL WARNING: Email document no longer exists (may have been processed and deleted by extension)");
           }
         } catch (checkError) {
           console.error("EMAIL DEBUG ERROR: Could not check email status:", checkError);
@@ -300,6 +382,9 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       
     } catch (emailError) {
       console.error("❌ EMAIL CREATION FAILED:", emailError);
+      console.error("Error type:", typeof emailError);
+      console.error("Error constructor:", emailError?.constructor?.name);
+      console.error("Full error object:", JSON.stringify(emailError, Object.getOwnPropertyNames(emailError)));
       console.error("Error details:", {
         name: emailError instanceof Error ? emailError.name : "Unknown",
         message: emailError instanceof Error ? emailError.message : String(emailError),
@@ -310,10 +395,13 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       // Log additional debugging information
       console.log("EMAIL DEBUG: Failure context:", {
         hasDB: !!db,
-        hasCollection: !!collection,
-        hasAddDoc: !!addDoc,
+        dbType: typeof db,
+        hasCollection: typeof collection === 'function',
+        hasAddDoc: typeof addDoc === 'function',
         emailDataSize: JSON.stringify(emailData).length,
-        timestamp: new Date().toISOString()
+        emailDataKeys: Object.keys(emailData),
+        timestamp: new Date().toISOString(),
+        inquiryIdExists: !!docRef.id
       });
       
       // Don't throw error - allow inquiry creation to continue
@@ -325,12 +413,14 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
         success: true, 
         inquiryId: docRef.id,
         emailSent: false,
-        message: "Inquiry submitted successfully, but email notification failed. Please contact admin.",
-        error: emailError instanceof Error ? emailError.message : "Email creation failed"
+        message: "Inquiry submitted successfully, but email notification failed. Admin will be notified manually.",
+        error: emailError instanceof Error ? emailError.message : String(emailError)
       };
     }
     
     console.log("=== EMAIL DEBUG: Email process completed ===");
+    console.log("Email document created:", emailDocumentCreated);
+    console.log("Email document ID:", emailDocId);
     
     // Revalidate the admin inquiry page cache to show new data immediately
     // This ensures the admin sees the new inquiry without page refresh
@@ -339,8 +429,11 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     return { 
       success: true, 
       inquiryId: docRef.id,
-      emailSent: true,
-      message: "Inquiry submitted successfully. Email notification sent to merlito.dayon@gmail.com"
+      emailSent: emailDocumentCreated,
+      emailDocId: emailDocId,
+      message: emailDocumentCreated 
+        ? `Inquiry submitted successfully! Email notification sent to ${emailRecipient}. Email ID: ${emailDocId}`
+        : "Inquiry submitted successfully, but email notification may not have been sent."
     };
   } catch (error) {
     console.error("Error creating inquiry:", error);
