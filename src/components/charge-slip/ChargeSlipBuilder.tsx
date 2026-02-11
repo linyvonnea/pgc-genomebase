@@ -158,6 +158,46 @@ function ChargeSlipBuilderInner({
     });
   };
 
+  const handleQuotationSelect = (quotation: any) => {
+    // Import services from selected quotation
+    if (!quotation.services || quotation.services.length === 0) {
+      toast.info("No services found in this quotation");
+      return;
+    }
+
+    // Convert quotation services to EditableSelectedService format
+    const quotationServices: EditableSelectedService[] = quotation.services.map((svc: any) => ({
+      ...svc,
+      quantity: svc.quantity || 1,
+      samples: (svc as any).samples || 0,
+      participants: (svc as any).participants || 0,
+    }));
+
+    // Merge with existing selected services (avoid duplicates)
+    setSelectedServices((prev) => {
+      const merged = [...prev];
+      let addedCount = 0;
+
+      quotationServices.forEach((newService) => {
+        const existingIndex = merged.findIndex((s) => s.id === newService.id);
+        if (existingIndex === -1) {
+          // Add new service
+          merged.push(newService);
+          addedCount++;
+        } else {
+          // Update quantity of existing service
+          merged[existingIndex] = {
+            ...merged[existingIndex],
+            quantity: (merged[existingIndex].quantity as number) + (newService.quantity as number),
+          };
+        }
+      });
+
+      toast.success(`Imported ${addedCount} service${addedCount !== 1 ? 's' : ''} from quotation ${quotation.referenceNumber}`);
+      return merged;
+    });
+  };
+
   const updateQuantity = (id: string, qty: number | "") => {
     setSelectedServices((prev) =>
       prev.map((svc) => (svc.id === id ? { ...svc, quantity: qty } : svc))
@@ -641,7 +681,11 @@ function ChargeSlipBuilderInner({
         {project?.iid && (
           <>
             <Separator className="my-6" />
-            <QuotationHistoryPanel inquiryId={project.iid} />
+            <QuotationHistoryPanel 
+              inquiryId={project.iid} 
+              onSelectQuotation={handleQuotationSelect}
+              showCheckboxes={true}
+            />
           </>
         )}
       </div>
