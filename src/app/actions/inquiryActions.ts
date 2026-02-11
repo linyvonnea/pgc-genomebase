@@ -36,7 +36,7 @@ export async function testEmailSystem() {
     // Create test email with both simple and template formats
     const testInquiryId = "TEST-" + Date.now();
     const testEmailData = {
-      to: ["madayon1@up.edu.ph"],
+      to: ["merlito.dayon@gmail.com"],
       inquiryId: testInquiryId, // Add at root level for easy searching
       message: {
         subject: "PGC Email System Test",
@@ -207,7 +207,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     console.log("Firebase DB instance:", db ? "Connected" : "Not Connected");
     
     // Validate that email recipient is configured
-    const emailRecipient = "madayon1@up.edu.ph";
+    const emailRecipient = "merlito.dayon@gmail.com";
     if (!emailRecipient) {
       console.error("EMAIL ERROR: No recipient configured");
       throw new Error("Email recipient not configured");
@@ -318,6 +318,16 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       
       // Don't throw error - allow inquiry creation to continue
       console.log("EMAIL DEBUG: Continuing with inquiry creation despite email failure");
+      
+      // Return inquiry success but note email failure
+      revalidatePath('/admin/inquiry');
+      return { 
+        success: true, 
+        inquiryId: docRef.id,
+        emailSent: false,
+        message: "Inquiry submitted successfully, but email notification failed. Please contact admin.",
+        error: emailError instanceof Error ? emailError.message : "Email creation failed"
+      };
     }
     
     console.log("=== EMAIL DEBUG: Email process completed ===");
@@ -326,7 +336,12 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     // This ensures the admin sees the new inquiry without page refresh
     revalidatePath('/admin/inquiry');
     
-    return { success: true, inquiryId: docRef.id };
+    return { 
+      success: true, 
+      inquiryId: docRef.id,
+      emailSent: true,
+      message: "Inquiry submitted successfully. Email notification sent to merlito.dayon@gmail.com"
+    };
   } catch (error) {
     console.error("Error creating inquiry:", error);
     throw new Error("Failed to create inquiry");

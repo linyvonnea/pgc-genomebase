@@ -176,10 +176,21 @@ export default function QuotationRequestForm() {
       if (result.success) {
         // Dismiss loading toast and show success
         toast.dismiss()
-        toast.success("Inquiry submitted successfully!", {
-          description: "Thank you for your submission. Redirecting to another page...",
-          duration: 4000,
-        })
+        
+        // Check if email was sent successfully
+        if (result.emailSent === false) {
+          // Inquiry saved but email failed
+          toast.warning("Inquiry submitted with email notification issue", {
+            description: result.message || "Your inquiry was saved successfully, but the email notification failed. An admin will be notified.",
+            duration: 6000,
+          })
+        } else {
+          // Full success - inquiry saved and email sent
+          toast.success("Inquiry submitted successfully!", {
+            description: result.message || "Thank you for your submission. Email notification has been sent. Redirecting...",
+            duration: 4000,
+          })
+        }
         
         // Reset form and redirect after brief delay to show success message
         setTimeout(() => {
