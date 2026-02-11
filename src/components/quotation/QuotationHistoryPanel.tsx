@@ -24,6 +24,7 @@ type QuotationHistoryPanelProps = {
   inquiryId?: string;
   clientName?: string;
   onSelectQuotation?: (quotation: QuotationRecord) => void;
+  onDeselectQuotation?: (quotation: QuotationRecord) => void;
   showCheckboxes?: boolean;
 };
 
@@ -31,6 +32,7 @@ export function QuotationHistoryPanel({
   inquiryId, 
   clientName, 
   onSelectQuotation,
+  onDeselectQuotation,
   showCheckboxes = false 
 }: QuotationHistoryPanelProps) {
   const [selectedQuotationId, setSelectedQuotationId] = useState<string | null>(null);
@@ -80,6 +82,7 @@ export function QuotationHistoryPanel({
       onSelectQuotation?.(quote);
     } else {
       setSelectedQuotationId(null);
+      onDeselectQuotation?.(quote);
     }
   };
 

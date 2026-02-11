@@ -61,6 +61,7 @@ export type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & 
   quantity: number | "";
   samples?: number | "";
   participants?: number | "";
+  sourceQuotation?: string; // Track which quotation this service came from
 };
 
 function ChargeSlipBuilderInner({
@@ -171,30 +172,37 @@ function ChargeSlipBuilderInner({
       quantity: svc.quantity || 1,
       samples: (svc as any).samples || 0,
       participants: (svc as any).participants || 0,
+      sourceQuotation: quotation.referenceNumber, // Mark source
     }));
 
-    // Merge with existing selected services (avoid duplicates)
+    // Add services from this quotation (replace any existing from same quotation)
     setSelectedServices((prev) => {
-      const merged = [...prev];
-      let addedCount = 0;
-
-      quotationServices.forEach((newService) => {
-        const existingIndex = merged.findIndex((s) => s.id === newService.id);
-        if (existingIndex === -1) {
-          // Add new service
-          merged.push(newService);
-          addedCount++;
-        } else {
-          // Update quantity of existing service
-          merged[existingIndex] = {
-            ...merged[existingIndex],
-            quantity: (merged[existingIndex].quantity as number) + (newService.quantity as number),
-          };
-        }
-      });
-
-      toast.success(`Imported ${addedCount} service${addedCount !== 1 ? 's' : ''} from quotation ${quotation.referenceNumber}`);
+      // Remove any services already from this quotation
+      const withoutThisQuotation = prev.filter(
+        (s) => s.sourceQuotation !== quotation.referenceNumber
+      );
+      
+      // Add all services from the quotation
+      const merged = [...withoutThisQuotation, ...quotationServices];
+      
+      toast.success(`Imported ${quotationServices.length} service${quotationServices.length !== 1 ? 's' : ''} from quotation ${quotation.referenceNumber}`);
       return merged;
+    });
+  };
+
+  const handleQuotationDeselect = (quotation: any) => {
+    // Remove all services from this quotation
+    setSelectedServices((prev) => {
+      const remaining = prev.filter(
+        (s) => s.sourceQuotation !== quotation.referenceNumber
+      );
+      const removedCount = prev.length - remaining.length;
+      
+      if (removedCount > 0) {
+        toast.info(`Removed ${removedCount} service${removedCount !== 1 ? 's' : ''} from quotation ${quotation.referenceNumber}`);
+      }
+      
+      return remaining;
     });
   };
 
@@ -684,6 +692,7 @@ function ChargeSlipBuilderInner({
             <QuotationHistoryPanel 
               inquiryId={project.iid} 
               onSelectQuotation={handleQuotationSelect}
+              onDeselectQuotation={handleQuotationDeselect}
               showCheckboxes={true}
             />
           </>
