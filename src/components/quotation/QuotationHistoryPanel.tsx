@@ -23,11 +23,20 @@ type QuotationHistoryPanelProps = {
 };
 
 export function QuotationHistoryPanel({ inquiryId, clientName }: QuotationHistoryPanelProps) {
-  const shouldFetch = Boolean((inquiryId && inquiryId.trim().length > 0) || (clientName && clientName.trim().length > 0));
+  const hasInquiryId = inquiryId && inquiryId.trim().length > 0;
+  const hasClientName = clientName && clientName.trim().length > 0;
+  const shouldFetch = Boolean(hasInquiryId || hasClientName);
   
   const { data: history = [], isLoading, error, isFetched } = useQuery({
-    queryKey: clientName ? ["quotationHistory", "client", clientName] : ["quotationHistory", "inquiry", inquiryId],
-    queryFn: () => clientName ? getQuotationsByClientName(clientName) : getQuotationsByInquiryId(inquiryId!),
+    queryKey: hasClientName ? ["quotationHistory", "client", clientName] : ["quotationHistory", "inquiry", inquiryId],
+    queryFn: () => {
+      if (hasClientName) {
+        return getQuotationsByClientName(clientName);
+      } else if (hasInquiryId) {
+        return getQuotationsByInquiryId(inquiryId!);
+      }
+      return Promise.resolve([]);
+    },
     enabled: shouldFetch,
   });
 
@@ -36,12 +45,16 @@ export function QuotationHistoryPanel({ inquiryId, clientName }: QuotationHistor
     return <div className="text-red-500 text-sm">Failed to load quotation history.</div>;
   }
 
+  if (!shouldFetch) {
+    return <div className="text-sm text-muted-foreground">No inquiry or client information available.</div>;
+  }
+
   if (isLoading) return <div className="text-sm text-muted-foreground">Loading history...</div>;
 
   if (history.length === 0) {
     return (
       <div className="text-sm text-muted-foreground">
-        No past quotations yet for {clientName ? <code>{clientName}</code> : <code>{inquiryId}</code>}.
+        No past quotations yet for {hasClientName ? <code>{clientName}</code> : <code>{inquiryId}</code>}.
       </div>
     );
   }
