@@ -398,99 +398,90 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
       </div>
 
-      {/* 2-Column Layout: (Project Lead, Inquiry ID) | (Project Tag, Status) */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Column 1: Project Lead & Inquiry ID */}
-        <div className="space-y-4">
-          {/* Project Lead */}
-          <div>
-            <RequiredLabel>Project Lead</RequiredLabel>
-            <Input name="lead" value={formData.lead} onChange={handleChange} className="h-9" placeholder="Juan dela Cruz" />
-            {errors.lead && <p className="text-red-500 text-xs mt-1">{errors.lead}</p>}
-          </div>
-          
-          {/* Inquiry ID */}
-          <div>
-            <Label className="text-xs flex items-center gap-0.5">
-              Inquiry ID
-              <span className="text-red-500 ml-0.5">*</span>
-            </Label>
-            <Select value={formData.iid} onValueChange={(val) => handleSelect("iid", val)}>
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder="Select inquiry">
-                  {formData.iid ? (
-                    <div className="flex flex-col items-start" title={inquiryOptions.find(i => i.id === formData.iid)?.name}>
-                      <span className="font-medium text-sm">{formData.iid}</span>
-                      {inquiryOptions.find(i => i.id === formData.iid)?.name && (
-                        <span className="text-xs text-gray-500 truncate max-w-[200px]">
-                          {inquiryOptions.find(i => i.id === formData.iid)?.name}
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    "Select inquiry"
-                  )}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="max-h-[300px] w-[400px]">
-                <div className="sticky top-0 bg-white z-10 p-2 border-b">
-                  <Input
-                    placeholder="Search by ID, Name, or Affiliation..."
-                    value={inquirySearch}
-                    onChange={e => setInquirySearch(e.target.value)}
-                    className="h-9 text-sm"
-                  />
-                </div>
-                <div className="max-h-[240px] overflow-y-auto">
-                  {filteredInquiryOptions.length > 0 ? (
-                    filteredInquiryOptions.map((inq) => (
-                      <SelectItem key={inq.id} value={inq.id || ""} className="text-sm">
-                        <div className="flex flex-col py-1">
-                        <span className="font-medium text-gray-900">{inq.id}</span>
-                        <span className="text-xs text-gray-600">{inq.name}</span>
-                        {inq.affiliation && (
-                          <span className="text-xs text-gray-500 truncate max-w-[350px]" title={inq.affiliation}>
-                            {inq.affiliation}
-                          </span>
-                        )}
-                      </div>
-                    </SelectItem>
-                  ))
-                ) : (
-                  <div className="p-3 text-sm text-center text-gray-500">
-                    No inquiries found
-                  </div>
-                )}
-              </div>
-            </SelectContent>
-          </Select>
-          {errors.iid && <p className="text-red-500 text-xs mt-1">{errors.iid}</p>}
-          </div>
-        </div>
+      {/* Column 1: Project Lead */}
+      <div>
+        <RequiredLabel>Project Lead</RequiredLabel>
+        <Input name="lead" value={formData.lead} onChange={handleChange} className="h-9" placeholder="Juan dela Cruz" />
+        {errors.lead && <p className="text-red-500 text-xs mt-1">{errors.lead}</p>}
+      </div>
 
-        {/* Column 2: Project Tag & Status */}
-        <div className="space-y-4">
-          {/* Project Tag */}
-          <div>
-            <RequiredLabel>Project Tag</RequiredLabel>
-            <Input name="projectTag" value={formData.projectTag} onChange={handleChange} className="h-9" placeholder="Enter project tag" />
-            {errors.projectTag && <p className="text-red-500 text-xs mt-1">{errors.projectTag}</p>}
+      {/* Column 2: Project Tag */}
+      <div>
+        <RequiredLabel>Project Tag</RequiredLabel>
+        <Input name="projectTag" value={formData.projectTag} onChange={handleChange} className="h-9" placeholder="Enter project tag" />
+        {errors.projectTag && <p className="text-red-500 text-xs mt-1">{errors.projectTag}</p>}
+      </div>
+
+      {/* Column 1: Inquiry ID */}
+      <div>
+        <Label className="text-xs flex items-center gap-0.5">
+          Inquiry ID
+          <span className="text-red-500 ml-0.5">*</span>
+        </Label>
+        <Select value={formData.iid} onValueChange={(val) => handleSelect("iid", val)}>
+          <SelectTrigger className="h-9">
+            <SelectValue placeholder="Select inquiry">
+              {formData.iid ? (
+                <div className="flex flex-col items-start" title={inquiryOptions.find(i => i.id === formData.iid)?.name}>
+                  <span className="font-medium text-sm">{formData.iid}</span>
+                  {inquiryOptions.find(i => i.id === formData.iid)?.name && (
+                    <span className="text-xs text-gray-500 truncate max-w-[200px]">
+                      {inquiryOptions.find(i => i.id === formData.iid)?.name}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                "Select inquiry"
+              )}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent className="max-h-[300px] w-[400px]">
+            <div className="sticky top-0 bg-white z-10 p-2 border-b">
+              <Input
+                placeholder="Search by ID, Name, or Affiliation..."
+                value={inquirySearch}
+                onChange={e => setInquirySearch(e.target.value)}
+                className="h-9 text-sm"
+              />
+            </div>
+            <div className="max-h-[240px] overflow-y-auto">
+              {filteredInquiryOptions.length > 0 ? (
+                filteredInquiryOptions.map((inq) => (
+                  <SelectItem key={inq.id} value={inq.id || ""} className="text-sm">
+                    <div className="flex flex-col py-1">
+                    <span className="font-medium text-gray-900">{inq.id}</span>
+                    <span className="text-xs text-gray-600">{inq.name}</span>
+                    {inq.affiliation && (
+                      <span className="text-xs text-gray-500 truncate max-w-[350px]" title={inq.affiliation}>
+                        {inq.affiliation}
+                      </span>
+                    )}
+                  </div>
+                </SelectItem>
+              ))
+            ) : (
+              <div className="p-3 text-sm text-center text-gray-500">
+                No inquiries found
+              </div>
+            )}
           </div>
-          
-          {/* Status */}
-          <div>
-            <RequiredLabel>Status</RequiredLabel>
-            <Select value={formData.status || ""} onValueChange={val => handleSelect("status", val)}>
-              <SelectTrigger className="h-9"><SelectValue placeholder="Select Status" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Ongoing">Ongoing</SelectItem>
-                <SelectItem value="Completed">Completed</SelectItem>
-                <SelectItem value="Cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.status && <p className="text-red-500 text-xs mt-1">{errors.status}</p>}
-          </div>
-        </div>
+        </SelectContent>
+      </Select>
+      {errors.iid && <p className="text-red-500 text-xs mt-1">{errors.iid}</p>}
+      </div>
+
+      {/* Column 2: Status */}
+      <div>
+        <RequiredLabel>Status</RequiredLabel>
+        <Select value={formData.status || ""} onValueChange={val => handleSelect("status", val)}>
+          <SelectTrigger className="h-9"><SelectValue placeholder="Select Status" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Ongoing">Ongoing</SelectItem>
+            <SelectItem value="Completed">Completed</SelectItem>
+            <SelectItem value="Cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+        {errors.status && <p className="text-red-500 text-xs mt-1">{errors.status}</p>}
       </div>
 
       {/* Funding Section */}
