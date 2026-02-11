@@ -208,7 +208,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     console.log("Firebase DB instance:", db ? "Connected" : "Not Connected");
     
     // Validate that email recipient is configured
-    const emailRecipient = "madayon1@up.edu.ph";
+    const emailRecipient = "merlito.dayon@gmail.com";
     if (!emailRecipient) {
       console.error("EMAIL ERROR: No recipient configured");
       throw new Error("Email recipient not configured");
