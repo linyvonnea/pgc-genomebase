@@ -3,6 +3,7 @@
 import React from "react";
 import { Label } from "@/components/ui/label";
 import { ChargeSlipHistoryPanel } from "./ChargeSlipHistoryPanel";
+import { QuotationHistoryPanel } from "@/components/quotation/QuotationHistoryPanel";
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -637,6 +638,12 @@ function ChargeSlipBuilderInner({
         </Dialog>
         <Separator className="my-6" />
         <ChargeSlipHistoryPanel projectId={effectiveProjectId} />
+        {project?.iid && (
+          <>
+            <Separator className="my-6" />
+            <QuotationHistoryPanel inquiryId={project.iid} />
+          </>
+        )}
       </div>
     </div>
   );
