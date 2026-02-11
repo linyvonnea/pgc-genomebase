@@ -3,6 +3,7 @@
 
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { TabBar } from "@/components/layout/TabBar";
+import { TabContent } from "@/components/layout/TabContent";
 import { TabProvider } from "@/contexts/TabContext";
 import { Toaster } from "@/components/ui/sonner";
 import useAuth from "@/hooks/useAuth";
@@ -52,9 +53,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <TabBar />
           {/* Main Content Area */}
           <main className="flex-1 overflow-auto bg-gradient-to-br from-slate-50/30 via-blue-50/20 to-indigo-50/30">
-            <div className="p-6 lg:p-8">
-              {children}
-            </div>
+            <TabContent>{children}</TabContent>
           </main>
         </div>
         <Toaster />
