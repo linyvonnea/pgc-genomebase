@@ -52,6 +52,44 @@ export async function getQuotationsByInquiryId(
 }
 
 /**
+ * Get all quotations related to a specific client name.
+ */
+export async function getQuotationsByClientName(
+  clientName: string
+): Promise<QuotationRecord[]> {
+  const quotationsRef = collection(db, "quotations");
+  const q = query(
+    quotationsRef,
+    where("name", "==", clientName),
+    orderBy("dateIssued", "desc")
+  );
+
+  const snapshot = await getDocs(q);
+
+  console.log(
+    `[Firestore] Found ${snapshot.size} quotations for client: ${clientName}`
+  );
+
+  const records: QuotationRecord[] = [];
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    const { clientInfo = {}, ...rest } = data;
+
+    records.push({
+      ...rest,
+      ...clientInfo, // flatten name, institution, etc
+      id: docSnap.id,
+      dateIssued:
+        typeof data.dateIssued === "string"
+          ? data.dateIssued
+          : data.dateIssued.toDate().toISOString(),
+    } as QuotationRecord);
+  });
+
+  return records;
+}
+
+/**
  * Save or overwrite a quotation using referenceNumber as the document ID.
  */
 export async function saveQuotationToFirestore(quotation: QuotationRecord) {
