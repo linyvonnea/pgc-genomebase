@@ -190,6 +190,10 @@ function ChargeSlipBuilderInner({
       toast.success(`Loaded ${quotationServices.length} service${quotationServices.length !== 1 ? 's' : ''} from ${quotation.referenceNumber}`);
       return merged;
     });
+
+    // Sync checkboxes with quotation settings
+    setIsInternal(quotation.isInternal || false);
+    setUseAffiliationAsClientName(quotation.useAffiliationAsClientName || false);
   };
 
   const handleQuotationDeselect = (quotation: any) => {
@@ -206,6 +210,10 @@ function ChargeSlipBuilderInner({
       
       return remaining;
     });
+
+    // Reset checkboxes to default state
+    setIsInternal(false);
+    setUseAffiliationAsClientName(false);
   };
 
   const updateQuantity = (id: string, qty: number | "") => {
