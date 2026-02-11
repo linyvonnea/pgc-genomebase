@@ -175,17 +175,19 @@ function ChargeSlipBuilderInner({
       sourceQuotation: quotation.referenceNumber, // Mark source
     }));
 
-    // Add services from this quotation (replace any existing from same quotation)
+    // Replace all quotation services with the new selection (keep only manually selected services)
     setSelectedServices((prev) => {
-      // Remove any services already from this quotation
-      const withoutThisQuotation = prev.filter(
-        (s) => s.sourceQuotation !== quotation.referenceNumber
-      );
+      // Keep only manually selected services (those without sourceQuotation)
+      const manuallySelected = prev.filter((s) => !s.sourceQuotation);
       
-      // Add all services from the quotation
-      const merged = [...withoutThisQuotation, ...quotationServices];
+      // Add the new quotation's services
+      const merged = [...manuallySelected, ...quotationServices];
       
-      toast.success(`Imported ${quotationServices.length} service${quotationServices.length !== 1 ? 's' : ''} from quotation ${quotation.referenceNumber}`);
+      const removedCount = prev.length - manuallySelected.length;
+      if (removedCount > 0) {
+        toast.info(`Replaced previous quotation services`);
+      }
+      toast.success(`Loaded ${quotationServices.length} service${quotationServices.length !== 1 ? 's' : ''} from ${quotation.referenceNumber}`);
       return merged;
     });
   };
