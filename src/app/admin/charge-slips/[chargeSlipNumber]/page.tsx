@@ -20,6 +20,7 @@ import { Timestamp } from "firebase/firestore";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 import { PermissionGuard } from "@/components/PermissionGuard";
+import ChargeSlipPreviewButton from "@/components/charge-slip/ChargeSlipPreviewButton";
 
 // Utility to normalize to string date
 const formatDate = (val: Date | string | Timestamp | null | undefined): string => {
@@ -325,6 +326,17 @@ function ChargeSlipDetailContent() {
               className="w-full min-h-[100px]"
             />
           </div>
+        </div>
+
+        {/* Preview Charge Slip Card */}
+        <div className="bg-gradient-to-r from-[#166FB5]/5 via-[#4038AF]/5 to-[#912ABD]/5 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+          <h2 className="text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
+            <div className="w-2 h-2 bg-gradient-to-r from-[#166FB5] to-[#4038AF] rounded-full"></div>
+            Preview Document
+          </h2>
+          <p className="text-sm text-slate-600 mb-4">Preview the charge slip PDF document</p>
+          
+          <ChargeSlipPreviewButton record={record} />
         </div>
 
         {/* Save Changes Card */}
