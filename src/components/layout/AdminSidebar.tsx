@@ -50,10 +50,12 @@ export function AdminSidebar() {
   const router = useRouter();
   const { user, signOut, adminInfo } = useAuth();
   const { canView, loading: permissionsLoading } = usePermissions(adminInfo?.role);
-  const { openTab, activeTab, isTabOpen } = useTabContext();
+  const { openTab, activeTab, isTabOpen, setActiveTab } = useTabContext();
 
   const handleNavClick = (href: string, label: string, icon: React.ElementType) => {
     const tabId = href.replace("/admin/", "");
+    
+    // Always open/ensure tab exists
     openTab({
       id: tabId,
       label,
@@ -61,6 +63,8 @@ export function AdminSidebar() {
       icon,
       closable: true,
     });
+    
+    // Navigate (React Query will handle data caching)
     router.push(href);
   };
 
