@@ -79,22 +79,25 @@ export default function ProjectForm() {
   // Permission check: Only allow access if user is contact person and client info is submitted
   useEffect(() => {
     async function checkPermission() {
-      if (!cid) {
-        toast.error("Missing client ID. Please verify first.");
-        router.replace("/verify");
-        return;
-      }
-      // Defensive: check both by cid and by contact person's email from inquiry
-      let clientDoc = await getDoc(doc(db, "clients", cid));
-      let clientData = clientDoc.exists() ? clientDoc.data() : null;
-      let inquiryDocSnap = null;
+      let clientData = null;
       let inquiry = null;
+      
+      // Get inquiry data
       if (inquiryId) {
-        inquiryDocSnap = await getDoc(doc(db, "inquiries", inquiryId));
+        const inquiryDocSnap = await getDoc(doc(db, "inquiries", inquiryId));
         if (inquiryDocSnap.exists()) {
           inquiry = inquiryDocSnap.data();
         }
       }
+      
+      // Get client data - try cid first, then fall back to inquiry email
+      if (cid) {
+        const clientDoc = await getDoc(doc(db, "clients", cid));
+        if (clientDoc.exists()) {
+          clientData = clientDoc.data();
+        }
+      }
+      
       if (!clientData && inquiry) {
         // Try to get by contact person's email from inquiry
         const contactDoc = await getDoc(doc(db, "clients", inquiry.email));
@@ -102,6 +105,7 @@ export default function ProjectForm() {
           clientData = contactDoc.data();
         }
       }
+      
       // Only allow access if isContactPerson is true AND inquiry.haveSubmitted is true
       if (!clientData || !clientData.isContactPerson || !inquiry?.haveSubmitted) {
         toast.error("Only the contact person can access the project information form after submitting client info.");
@@ -147,12 +151,25 @@ export default function ProjectForm() {
       const year = result.data.startDate.getFullYear();
       const docRef = doc(db, "projects", pid!);
       let clientName = "";
+      
+      // Get client name - try from cid first, then from inquiry email
       if (cid) {
         const clientDoc = await getDoc(doc(db, "clients", cid));
         if (clientDoc.exists()) {
           clientName = clientDoc.data().name || "";
         }
+      } else if (inquiryId) {
+        // Fall back to getting client from inquiry email
+        const inquiryDoc = await getDoc(doc(db, "inquiries", inquiryId));
+        if (inquiryDoc.exists()) {
+          const inquiry = inquiryDoc.data();
+          const clientDoc = await getDoc(doc(db, "clients", inquiry.email));
+          if (clientDoc.exists()) {
+            clientName = clientDoc.data().name || "";
+          }
+        }
       }
+      
       // Prepare project payload
       const snap = await getDoc(docRef);
       let createdAt = serverTimestamp();
