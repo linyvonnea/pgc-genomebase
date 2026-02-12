@@ -55,10 +55,12 @@ export default function MultiMemberClientForm() {
   useEffect(() => {
     async function initializePrimaryMember() {
       if (!emailParam || !inquiryIdParam) {
+        console.log("❌ Missing email or inquiryId, redirecting to /verify");
         router.replace('/verify');
         return;
       }
 
+      console.log("🚀 Initializing primary member for:", { emailParam, inquiryIdParam, pidParam });
       setLoading(true);
       try {
         // Check if primary member already exists
@@ -68,7 +70,9 @@ export default function MultiMemberClientForm() {
           where("email", "==", emailParam),
           where("inquiryId", "==", inquiryIdParam)
         );
+        console.log("📋 Querying for existing client...");
         const clientSnapshot = await getDocs(clientQuery);
+        console.log("📊 Query result:", { empty: clientSnapshot.empty, size: clientSnapshot.size });
 
         let primaryMember: ClientMember;
 
@@ -76,6 +80,7 @@ export default function MultiMemberClientForm() {
           // Load existing primary member
           const clientDoc = clientSnapshot.docs[0];
           const data = clientDoc.data();
+          console.log("✅ Found existing client:", clientDoc.id, data);
           primaryMember = {
             id: "primary",
             cid: clientDoc.id,
@@ -92,10 +97,14 @@ export default function MultiMemberClientForm() {
             isSubmitted: !!data.haveSubmitted,
             isPrimary: true,
           };
+          console.log("👤 Primary member loaded:", primaryMember);
         } else {
           // Create new primary member
+          console.log("🆕 No existing client found, creating new one...");
           const year = new Date().getFullYear();
+          console.log("📅 Generating CID for year:", year);
           const newCid = await getNextCid(year);
+          console.log("🎫 Generated new CID:", newCid);
           
           primaryMember = {
             id: "primary",
@@ -115,6 +124,7 @@ export default function MultiMemberClientForm() {
           };
 
           // Create initial record in Firestore
+          console.log("💾 Creating Firestore document for primary member...");
           await setDoc(doc(db, "clients", newCid), {
             cid: newCid,
             email: emailParam,
@@ -130,6 +140,8 @@ export default function MultiMemberClientForm() {
             phoneNumber: "",
             affiliationAddress: "",
           });
+          console.log("✅ Primary member Firestore document created:", newCid);
+          console.log("👤 Primary member state:", primaryMember);
         }
 
         // Load additional team members if they exist
@@ -160,11 +172,15 @@ export default function MultiMemberClientForm() {
           };
         });
 
-        setMembers([primaryMember, ...additionalMembers]);
+        const allMembers = [primaryMember, ...additionalMembers];
+        console.log("👥 Setting members array:", allMembers.length, "members");
+        console.log("📋 Members:", allMembers);
+        setMembers(allMembers);
         setActiveTab("primary");
+        console.log("✅ Initialization complete. Active tab set to: primary");
       } catch (error) {
-        console.error("Error initializing form:", error);
-        toast.error("Failed to load member data");
+        console.error("❌ Error initializing form:", error);
+        toast.error(`Failed to load member data: ${error instanceof Error ? error.message : 'Unknown error'}`);
       } finally {
         setLoading(false);
       }
@@ -174,10 +190,14 @@ export default function MultiMemberClientForm() {
   }, [emailParam, inquiryIdParam, pidParam, router]);
 
   const handleAddMember = async () => {
+    console.log("➕ Add Member button clicked");
     try {
       const year = new Date().getFullYear();
+      console.log("📅 Generating new CID for year:", year);
       const newCid = await getNextCid(year);
+      console.log("🎫 Generated new CID:", newCid);
       const newMemberId = `member-${Date.now()}`;
+      console.log("🆔 New member ID:", newMemberId);
 
       const newMember: ClientMember = {
         id: newMemberId,
@@ -197,6 +217,7 @@ export default function MultiMemberClientForm() {
       };
 
       // Create initial record in Firestore
+      console.log("💾 Creating Firestore document for new member...");
       await setDoc(doc(db, "clients", newCid), {
         cid: newCid,
         email: "",
@@ -212,13 +233,17 @@ export default function MultiMemberClientForm() {
         phoneNumber: "",
         affiliationAddress: "",
       });
+      console.log("✅ Firestore document created for new member:", newCid);
 
-      setMembers([...members, newMember]);
+      const updatedMembers = [...members, newMember];
+      console.log("👥 Updated members array:", updatedMembers.length, "members");
+      setMembers(updatedMembers);
       setActiveTab(newMemberId);
-      toast.success("New member tab created");
+      console.log("✅ New member added successfully. Active tab:", newMemberId);
+      toast.success(`New member tab created (${newCid})`);
     } catch (error) {
-      console.error("Error adding member:", error);
-      toast.error("Failed to add member");
+      console.error("❌ Error adding member:", error);
+      toast.error(`Failed to add member: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -407,17 +432,45 @@ export default function MultiMemberClientForm() {
     return null;
   }
 
+  // Safety check: If members array is empty after loading, show error
+  if (!loading && members.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50/50 to-blue-50/30 flex items-center justify-center p-6">
+        <div className="max-w-md bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8 text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-slate-800 mb-2">Unable to Load Form</h2>
+          <p className="text-slate-600 mb-4">
+            Failed to initialize the client information form. Please check the browser console for details.
+          </p>
+          <Button
+            onClick={() => router.push('/verify')}
+            className="bg-[#166FB5] hover:bg-[#166FB5]/90"
+          >
+            Return to Verification
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  console.log("🎨 Rendering form with members:", members);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50/50 to-blue-50/30 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-3 h-3 bg-gradient-to-r from-[#F69122] to-[#912ABD] rounded-full"></div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent">
-                Project Team Information
-              </h1>
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 bg-gradient-to-r from-[#F69122] to-[#912ABD] rounded-full"></div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent">
+                  Project Team Information
+                </h1>
+              </div>
+              <Badge variant="outline" className="text-sm">
+                {members.length} {members.length === 1 ? 'Member' : 'Members'}
+              </Badge>
             </div>
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
               <p className="text-slate-700 leading-relaxed">
@@ -509,11 +562,14 @@ export default function MultiMemberClientForm() {
                     <div className="md:col-span-2">
                       <Label className="text-sm font-semibold text-slate-700 mb-2 block">
                         Email Address <span className="text-[#B9273A]">*</span>
+                        {member.isPrimary && (
+                          <span className="ml-2 text-xs font-normal text-slate-500">(Verified - Locked)</span>
+                        )}
                       </Label>
                       <Input
                         value={member.formData.email}
                         onChange={(e) => handleChange(member.id, "email", e.target.value)}
-                        placeholder="Enter email address"
+                        placeholder={member.isPrimary ? "Your verified email" : "Enter team member email"}
                         disabled={member.isPrimary || member.isSubmitted}
                         className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:bg-slate-50 disabled:opacity-70"
                       />
