@@ -207,11 +207,13 @@ export function DataTable<TData extends Project, TValue>({
   // Card Definitions
   // Dynamic counts from Firestore data
   const statusCounts = {
+    Pending: data.filter(i => i.status === "Pending").length,
     Ongoing: data.filter(i => i.status === "Ongoing").length,
     Completed: data.filter(i => i.status === "Completed").length,
     Cancelled: data.filter(i => i.status === "Cancelled").length,
   };
   const statuses = [
+    { id: "Pending", label: "Pending", color: "text-blue-600", border: "border-blue-200", bg: "bg-blue-50", count: statusCounts.Pending },
     { id: "Ongoing", label: "Ongoing", color: "text-yellow-600", border: "border-yellow-200", bg: "bg-yellow-50", count: statusCounts.Ongoing },
     { id: "Completed", label: "Completed", color: "text-green-600", border: "border-green-200", bg: "bg-green-50", count: statusCounts.Completed },
     { id: "Cancelled", label: "Cancelled", color: "text-red-600", border: "border-red-200", bg: "bg-red-50", count: statusCounts.Cancelled },

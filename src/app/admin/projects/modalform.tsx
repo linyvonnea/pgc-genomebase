@@ -255,9 +255,9 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
           lead: result.data.lead,
           notes: result.data.notes || "",
           status: (
-            ["Ongoing", "Completed", "Cancelled"].includes(result.data.status as string)
+            ["Pending", "Ongoing", "Completed", "Cancelled"].includes(result.data.status as string)
               ? result.data.status
-              : "Ongoing"
+              : "Pending"
           ) as Project["status"],
           fundingCategory: (
             ["External", "In-House"].includes(result.data.fundingCategory as string)
@@ -476,6 +476,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         <Select value={formData.status || ""} onValueChange={val => handleSelect("status", val)}>
           <SelectTrigger className="h-9"><SelectValue placeholder="Select Status" /></SelectTrigger>
           <SelectContent>
+            <SelectItem value="Pending">Pending</SelectItem>
             <SelectItem value="Ongoing">Ongoing</SelectItem>
             <SelectItem value="Completed">Completed</SelectItem>
             <SelectItem value="Cancelled">Cancelled</SelectItem>
