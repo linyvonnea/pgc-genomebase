@@ -545,394 +545,476 @@ export default function ClientPortalPage() {
 
   console.log("🎨 Rendering portal with members:", members);
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50/50 to-blue-50/30 p-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-gradient-to-r from-[#F69122] to-[#912ABD] rounded-full"></div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent">
-                  Project Team Information
-                </h1>
-              </div>
-              <Badge variant="outline" className="text-sm">
-                {members.length} {members.length === 1 ? 'Member' : 'Members'}
-              </Badge>
+  // Render function for Project Overview section
+  const renderProjectOverview = () => {
+    if (!projectDetails) {
+      return (
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-slate-600">No project details available.</p>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        {/* Project Header */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-2xl font-bold text-slate-800 mb-2">{projectDetails.title}</h3>
+              <p className="text-sm text-slate-600">Project ID: <span className="font-mono font-semibold text-[#166FB5]">{projectDetails.pid}</span></p>
             </div>
+            <Badge className="bg-green-500 text-white">{projectDetails.status}</Badge>
+          </div>
+        </div>
+
+        {/* Project Details Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Project Lead */}
+          <div className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <User className="h-5 w-5 text-[#166FB5]" />
+              </div>
+              <Label className="text-sm font-semibold text-slate-600">Project Lead</Label>
+            </div>
+            <p className="text-lg font-medium text-slate-800 ml-11">{projectDetails.lead}</p>
+          </div>
+
+          {/* Start Date */}
+          <div className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Calendar className="h-5 w-5 text-purple-600" />
+              </div>
+              <Label className="text-sm font-semibold text-slate-600">Start Date</Label>
+            </div>
+            <p className="text-lg font-medium text-slate-800 ml-11">
+              {typeof projectDetails.startDate === 'string' 
+                ? new Date(projectDetails.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                : projectDetails.startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
+
+          {/* Sending Institution */}
+          <div className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Building2 className="h-5 w-5 text-orange-600" />
+              </div>
+              <Label className="text-sm font-semibold text-slate-600">Sending Institution</Label>
+            </div>
+            <p className="text-lg font-medium text-slate-800 ml-11">{projectDetails.sendingInstitution}</p>
+          </div>
+
+          {/* Funding Institution */}
+          <div className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <FileText className="h-5 w-5 text-green-600" />
+              </div>
+              <Label className="text-sm font-semibold text-slate-600">Funding Institution</Label>
+            </div>
+            <p className="text-lg font-medium text-slate-800 ml-11">{projectDetails.fundingInstitution}</p>
+          </div>
+        </div>
+
+        {/* Inquiry Reference */}
+        {projectDetails.inquiryId && (
+          <div className="bg-slate-50 rounded-lg border border-slate-200 p-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm font-semibold text-slate-600 block mb-1">Related Inquiry</Label>
+                <p className="text-sm text-slate-700">Inquiry ID: <span className="font-mono font-semibold">{projectDetails.inquiryId}</span></p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Navigation Hint */}
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-5">
+          <p className="text-sm text-amber-900">
+            ℹ️ <strong>Next Step:</strong> Switch to the <strong>Team Members</strong> section to complete your personal information, 
+            then add additional team members as needed.
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  // Render function for individual member form
+  const renderMemberForm = (member: typeof members[0]) => {
+    return (
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmitMember(member.id);
+      }} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Name Field */}
+          <div className="md:col-span-2">
+            <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+              Full Name <span className="text-[#B9273A]">*</span>
+            </Label>
+            <Input
+              value={member.formData.name}
+              onChange={(e) => handleChange(member.id, "name", e.target.value)}
+              placeholder="Enter full name"
+              disabled={member.isSubmitted}
+              className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:opacity-70"
+            />
+            {member.errors.name && (
+              <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                {member.errors.name}
+              </p>
+            )}
+          </div>
+
+          {/* Email Field */}
+          <div className="md:col-span-2">
+            <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+              Email Address <span className="text-[#B9273A]">*</span>
+              {member.isPrimary && (
+                <span className="ml-2 text-xs font-normal text-slate-500">(Verified - Locked)</span>
+              )}
+            </Label>
+            <Input
+              value={member.formData.email}
+              onChange={(e) => handleChange(member.id, "email", e.target.value)}
+              placeholder={member.isPrimary ? "Your verified email" : "Enter team member email"}
+              disabled={member.isPrimary || member.isSubmitted}
+              className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:bg-slate-50 disabled:opacity-70"
+            />
+            {member.errors.email && (
+              <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                {member.errors.email}
+              </p>
+            )}
+          </div>
+
+          {/* Affiliation Field */}
+          <div className="md:col-span-2">
+            <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+              Affiliation (Department & Institution) <span className="text-[#B9273A]">*</span>
+            </Label>
+            <Input
+              value={member.formData.affiliation}
+              onChange={(e) => handleChange(member.id, "affiliation", e.target.value)}
+              placeholder="e.g. Division of Biological Sciences - UPV CAS"
+              disabled={member.isSubmitted}
+              className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:opacity-70"
+            />
+            {member.errors.affiliation && (
+              <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                {member.errors.affiliation}
+              </p>
+            )}
+          </div>
+
+          {/* Designation Field */}
+          <div>
+            <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+              Designation <span className="text-[#B9273A]">*</span>
+            </Label>
+            <Input
+              value={member.formData.designation}
+              onChange={(e) => handleChange(member.id, "designation", e.target.value)}
+              placeholder="e.g. Research Assistant, Professor"
+              disabled={member.isSubmitted}
+              className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:opacity-70"
+            />
+            {member.errors.designation && (
+              <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                {member.errors.designation}
+              </p>
+            )}
+          </div>
+
+          {/* Sex Field */}
+          <div>
+            <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+              Assigned sex at birth <span className="text-[#B9273A]">*</span>
+            </Label>
+            <Select 
+              value={member.formData.sex} 
+              onValueChange={(val) => handleChange(member.id, "sex", val)}
+              disabled={member.isSubmitted}
+            >
+              <SelectTrigger className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:opacity-70">
+                <SelectValue placeholder="Select sex" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="M">Male</SelectItem>
+                <SelectItem value="F">Female</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Phone Number Field */}
+          <div className="md:col-span-2">
+            <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+              Mobile Number <span className="text-[#B9273A]">*</span>
+            </Label>
+            <Input
+              value={member.formData.phoneNumber}
+              onChange={(e) => handleChange(member.id, "phoneNumber", e.target.value)}
+              placeholder="e.g. 09091234567"
+              disabled={member.isSubmitted}
+              className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:opacity-70"
+            />
+            {member.errors.phoneNumber && (
+              <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                {member.errors.phoneNumber}
+              </p>
+            )}
+          </div>
+
+          {/* Affiliation Address Field */}
+          <div className="md:col-span-2">
+            <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+              Affiliation Address <span className="text-[#B9273A]">*</span>
+            </Label>
+            <Textarea
+              value={member.formData.affiliationAddress}
+              onChange={(e) => handleChange(member.id, "affiliationAddress", e.target.value)}
+              placeholder="Enter complete address of your institution/organization"
+              disabled={member.isSubmitted}
+              className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[100px] resize-none disabled:opacity-70"
+            />
+            {member.errors.affiliationAddress && (
+              <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                {member.errors.affiliationAddress}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Submit Button for Individual Member */}
+        <div className="flex justify-end pt-6 border-t border-slate-100">
+          <Button 
+            type="submit" 
+            disabled={member.isSubmitted || submitting}
+            className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
+          >
+            {member.isSubmitted ? (
+              <>
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Saved
+              </>
+            ) : submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              `Save ${member.isPrimary ? 'Your' : 'Member'} Information`
+            )}
+          </Button>
+        </div>
+      </form>
+    );
+  };
+
+  // Render function for Team Members section
+  const renderTeamMembers = () => {
+    return (
+      <div className="space-y-6">
+        {/* Instructions Card */}
+        <Card>
+          <CardContent className="p-6">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
               <p className="text-slate-700 leading-relaxed">
                 {projectDetails ? (
                   <>
-                    Review the <strong>Project Overview</strong> tab to see project details. 
-                    Then complete your information in the <strong>Primary Member</strong> tab. 
+                    Complete your information in the <strong>Primary Member</strong> section below. 
                     Use <strong>+ Add Member</strong> to include additional team members.
                   </>
                 ) : (
                   <>
                     Add all project team members below. Each member will have their own record in the system.
-                    The first tab is for you (the primary contact). Click the <strong>+ Add Member</strong> button
+                    The first section is for you (the primary contact). Click the <strong>+ Add Member</strong> button
                     to add additional team members.
                   </>
                 )}
               </p>
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Tabs */}
-          <Tabs value={expandedMember} onValueChange={setExpandedMember} className="w-full">
-            <div className="flex items-center gap-4 mb-6">
-              <TabsList className="flex-1 justify-start h-auto p-1 bg-slate-100/50">
-                {/* Project Overview Tab */}
-                {projectDetails && (
-                  <TabsTrigger
-                    value="project-overview"
-                    className="relative data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 py-2"
-                  >
-                    <div className="flex items-center gap-2">
-                      <FolderOpen className="h-4 w-4" />
-                      <span>Project Overview</span>
-                      <Badge variant="outline" className="bg-blue-500 text-white border-0 text-xs">
-                        Info
+        {/* Member Count and Add Button */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="text-sm px-4 py-2">
+              <Users className="h-4 w-4 mr-2" />
+              {members.length} {members.length === 1 ? 'Member' : 'Members'}
+            </Badge>
+            <span className="text-sm text-slate-600">
+              <strong>{members.filter(m => m.isSubmitted).length}</strong> of <strong>{members.length}</strong> saved
+            </span>
+          </div>
+          <Button
+            onClick={handleAddMember}
+            variant="outline"
+            size="sm"
+            className="border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add Member
+          </Button>
+        </div>
+
+        {/* Members Accordion */}
+        <Accordion 
+          type="single" 
+          collapsible 
+          value={expandedMember} 
+          onValueChange={setExpandedMember}
+          className="space-y-4"
+        >
+          {members.map((member) => {
+            const status = getMemberStatus(member);
+            return (
+              <AccordionItem 
+                key={member.id} 
+                value={member.id}
+                className="border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
+              >
+                <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-slate-50">
+                  <div className="flex items-center justify-between w-full pr-4">
+                    <div className="flex items-center gap-3">
+                      {member.isPrimary && <User className="h-5 w-5 text-[#166FB5]" />}
+                      <span className="font-semibold text-slate-800">
+                        {getTabLabel(member)}
+                      </span>
+                      <Badge 
+                        variant="outline" 
+                        className={`${status.color} text-white border-0 text-xs`}
+                      >
+                        {status.label}
                       </Badge>
                     </div>
-                  </TabsTrigger>
-                )}
-
-                {members.map((member) => {
-                  const status = getMemberStatus(member);
-                  return (
-                    <TabsTrigger
-                      key={member.id}
-                      value={member.id}
-                      className="relative data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 py-2"
-                    >
-                      <div className="flex items-center gap-2">
-                        {member.isPrimary && <User className="h-4 w-4 text-[#166FB5]" />}
-                        <span className="truncate max-w-[120px]">
-                          {getTabLabel(member)}
-                        </span>
-                        <Badge 
-                          variant="outline" 
-                          className={`${status.color} text-white border-0 text-xs`}
-                        >
-                          {status.label}
-                        </Badge>
-                        {!member.isPrimary && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveMember(member.id);
-                            }}
-                            className="ml-1 hover:bg-red-100 rounded-full p-0.5"
-                          >
-                            <X className="h-3 w-3 text-red-600" />
-                          </button>
-                        )}
-                      </div>
-                    </TabsTrigger>
-                  );
-                })}
-              </TabsList>
-              
-              <Button
-                onClick={handleAddMember}
-                variant="outline"
-                size="sm"
-                className="border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white"
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Add Member
-              </Button>
-            </div>
-
-            {/* Project Overview Tab Content */}
-            {projectDetails && (
-              <TabsContent value="project-overview" className="mt-0">
-                <div className="space-y-6">
-                  {/* Project Header */}
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-2xl font-bold text-slate-800 mb-2">{projectDetails.title}</h3>
-                        <p className="text-sm text-slate-600">Project ID: <span className="font-mono font-semibold text-[#166FB5]">{projectDetails.pid}</span></p>
-                      </div>
-                      <Badge className="bg-green-500 text-white">{projectDetails.status}</Badge>
-                    </div>
-                  </div>
-
-                  {/* Project Details Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Project Lead */}
-                    <div className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-md transition-shadow">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                          <User className="h-5 w-5 text-[#166FB5]" />
-                        </div>
-                        <Label className="text-sm font-semibold text-slate-600">Project Lead</Label>
-                      </div>
-                      <p className="text-lg font-medium text-slate-800 ml-11">{projectDetails.lead}</p>
-                    </div>
-
-                    {/* Start Date */}
-                    <div className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-md transition-shadow">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                          <Calendar className="h-5 w-5 text-purple-600" />
-                        </div>
-                        <Label className="text-sm font-semibold text-slate-600">Start Date</Label>
-                      </div>
-                      <p className="text-lg font-medium text-slate-800 ml-11">
-                        {typeof projectDetails.startDate === 'string' 
-                          ? new Date(projectDetails.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-                          : projectDetails.startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                      </p>
-                    </div>
-
-                    {/* Sending Institution */}
-                    <div className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-md transition-shadow">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-orange-100 rounded-lg">
-                          <Building2 className="h-5 w-5 text-orange-600" />
-                        </div>
-                        <Label className="text-sm font-semibold text-slate-600">Sending Institution</Label>
-                      </div>
-                      <p className="text-lg font-medium text-slate-800 ml-11">{projectDetails.sendingInstitution}</p>
-                    </div>
-
-                    {/* Funding Institution */}
-                    <div className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-md transition-shadow">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <FileText className="h-5 w-5 text-green-600" />
-                        </div>
-                        <Label className="text-sm font-semibold text-slate-600">Funding Institution</Label>
-                      </div>
-                      <p className="text-lg font-medium text-slate-800 ml-11">{projectDetails.fundingInstitution}</p>
-                    </div>
-                  </div>
-
-                  {/* Inquiry Reference */}
-                  {projectDetails.inquiryId && (
-                    <div className="bg-slate-50 rounded-lg border border-slate-200 p-5">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label className="text-sm font-semibold text-slate-600 block mb-1">Related Inquiry</Label>
-                          <p className="text-sm text-slate-700">Inquiry ID: <span className="font-mono font-semibold">{projectDetails.inquiryId}</span></p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Navigation Hint */}
-                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-5">
-                    <p className="text-sm text-amber-900">
-                      ℹ️ <strong>Next Step:</strong> Switch to the <strong>Primary Member</strong> tab to complete your personal information, 
-                      then add additional team members as needed.
-                    </p>
-                  </div>
-                </div>
-              </TabsContent>
-            )}
-
-            {members.map((member) => (
-              <TabsContent key={member.id} value={member.id} className="mt-0">
-                <form onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSubmitMember(member.id);
-                }} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Name Field */}
-                    <div className="md:col-span-2">
-                      <Label className="text-sm font-semibold text-slate-700 mb-2 block">
-                        Full Name <span className="text-[#B9273A]">*</span>
-                      </Label>
-                      <Input
-                        value={member.formData.name}
-                        onChange={(e) => handleChange(member.id, "name", e.target.value)}
-                        placeholder="Enter full name"
-                        disabled={member.isSubmitted}
-                        className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:opacity-70"
-                      />
-                      {member.errors.name && (
-                        <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
-                          <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                          {member.errors.name}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Email Field */}
-                    <div className="md:col-span-2">
-                      <Label className="text-sm font-semibold text-slate-700 mb-2 block">
-                        Email Address <span className="text-[#B9273A]">*</span>
-                        {member.isPrimary && (
-                          <span className="ml-2 text-xs font-normal text-slate-500">(Verified - Locked)</span>
-                        )}
-                      </Label>
-                      <Input
-                        value={member.formData.email}
-                        onChange={(e) => handleChange(member.id, "email", e.target.value)}
-                        placeholder={member.isPrimary ? "Your verified email" : "Enter team member email"}
-                        disabled={member.isPrimary || member.isSubmitted}
-                        className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:bg-slate-50 disabled:opacity-70"
-                      />
-                      {member.errors.email && (
-                        <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
-                          <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                          {member.errors.email}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Affiliation Field */}
-                    <div className="md:col-span-2">
-                      <Label className="text-sm font-semibold text-slate-700 mb-2 block">
-                        Affiliation (Department & Institution) <span className="text-[#B9273A]">*</span>
-                      </Label>
-                      <Input
-                        value={member.formData.affiliation}
-                        onChange={(e) => handleChange(member.id, "affiliation", e.target.value)}
-                        placeholder="e.g. Division of Biological Sciences - UPV CAS"
-                        disabled={member.isSubmitted}
-                        className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:opacity-70"
-                      />
-                      {member.errors.affiliation && (
-                        <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
-                          <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                          {member.errors.affiliation}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Designation Field */}
-                    <div>
-                      <Label className="text-sm font-semibold text-slate-700 mb-2 block">
-                        Designation <span className="text-[#B9273A]">*</span>
-                      </Label>
-                      <Input
-                        value={member.formData.designation}
-                        onChange={(e) => handleChange(member.id, "designation", e.target.value)}
-                        placeholder="e.g. Research Assistant, Professor"
-                        disabled={member.isSubmitted}
-                        className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:opacity-70"
-                      />
-                      {member.errors.designation && (
-                        <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
-                          <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                          {member.errors.designation}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Sex Field */}
-                    <div>
-                      <Label className="text-sm font-semibold text-slate-700 mb-2 block">
-                        Assigned sex at birth <span className="text-[#B9273A]">*</span>
-                      </Label>
-                      <Select 
-                        value={member.formData.sex} 
-                        onValueChange={(val) => handleChange(member.id, "sex", val)}
-                        disabled={member.isSubmitted}
+                    {!member.isPrimary && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveMember(member.id);
+                        }}
+                        className="ml-4 hover:bg-red-100 rounded-full p-2 transition-colors"
                       >
-                        <SelectTrigger className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:opacity-70">
-                          <SelectValue placeholder="Select sex" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="M">Male</SelectItem>
-                          <SelectItem value="F">Female</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Phone Number Field */}
-                    <div className="md:col-span-2">
-                      <Label className="text-sm font-semibold text-slate-700 mb-2 block">
-                        Mobile Number <span className="text-[#B9273A]">*</span>
-                      </Label>
-                      <Input
-                        value={member.formData.phoneNumber}
-                        onChange={(e) => handleChange(member.id, "phoneNumber", e.target.value)}
-                        placeholder="e.g. 09091234567"
-                        disabled={member.isSubmitted}
-                        className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:opacity-70"
-                      />
-                      {member.errors.phoneNumber && (
-                        <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
-                          <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                          {member.errors.phoneNumber}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Affiliation Address Field */}
-                    <div className="md:col-span-2">
-                      <Label className="text-sm font-semibold text-slate-700 mb-2 block">
-                        Affiliation Address <span className="text-[#B9273A]">*</span>
-                      </Label>
-                      <Textarea
-                        value={member.formData.affiliationAddress}
-                        onChange={(e) => handleChange(member.id, "affiliationAddress", e.target.value)}
-                        placeholder="Enter complete address of your institution/organization"
-                        disabled={member.isSubmitted}
-                        className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[100px] resize-none disabled:opacity-70"
-                      />
-                      {member.errors.affiliationAddress && (
-                        <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
-                          <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                          {member.errors.affiliationAddress}
-                        </p>
-                      )}
-                    </div>
+                        <Trash2 className="h-4 w-4 text-red-600" />
+                      </button>
+                    )}
                   </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-6 pt-2">
+                  <Card>
+                    <CardContent className="p-6">
+                      {renderMemberForm(member)}
+                    </CardContent>
+                  </Card>
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
+        </Accordion>
 
-                  {/* Submit Button for Individual Member */}
-                  <div className="flex justify-end pt-6 border-t border-slate-100">
-                    <Button 
-                      type="submit" 
-                      disabled={member.isSubmitted || submitting}
-                      className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
-                    >
-                      {member.isSubmitted ? (
-                        <>
-                          <CheckCircle2 className="h-4 w-4 mr-2" />
-                          Saved
-                        </>
-                      ) : submitting ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        `Save ${member.isPrimary ? 'Your' : 'Member'} Information`
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </TabsContent>
-            ))}
-          </Tabs>
-
-          {/* Final Submit Button */}
-          <div className="mt-8 pt-8 border-t-2 border-slate-200">
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-slate-600">
-                <strong>{members.filter(m => m.isSubmitted).length}</strong> of <strong>{members.length}</strong> members saved
-              </div>
-              <Button
-                onClick={handleFinalSubmit}
-                disabled={!members.every(m => m.isSubmitted)}
-                className="h-14 px-10 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Complete & Submit All Members
-              </Button>
+        {/* Final Submit Button */}
+        <div className="pt-6 border-t-2 border-slate-200">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-slate-600">
+              All members must be saved before final submission
             </div>
+            <Button
+              onClick={handleFinalSubmit}
+              disabled={!members.every(m => m.isSubmitted)}
+              className="h-14 px-10 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Save className="h-5 w-5 mr-2" />
+              Complete & Submit All Members
+            </Button>
           </div>
         </div>
       </div>
+    );
+  };
+
+  // Render function for Quotations section
+  const renderQuotations = () => {
+    return (
+      <Card>
+        <CardContent className="p-12 text-center">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="p-4 bg-slate-100 rounded-full">
+              <FileTextIcon className="h-12 w-12 text-slate-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-slate-700">Quotations</h3>
+            <p className="text-slate-500 max-w-md">
+              Quotation documents and pricing information will be available here once the project administrator generates them.
+            </p>
+            <Badge variant="outline" className="mt-4">
+              🔒 Coming Soon
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  // Render function for Charge Slips section
+  const renderChargeSlips = () => {
+    return (
+      <Card>
+        <CardContent className="p-12 text-center">
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="p-4 bg-slate-100 rounded-full">
+              <CreditCard className="h-12 w-12 text-slate-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-slate-700">Charge Slips</h3>
+            <p className="text-slate-500 max-w-md">
+              Payment records and charge slips will appear here as they are processed by the administrator.
+            </p>
+            <Badge variant="outline" className="mt-4">
+              🔒 Coming Soon
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  // Main section renderer
+  const renderActiveSection = () => {
+    switch (activeSection) {
+      case 'project-overview':
+        return renderProjectOverview();
+      case 'team-members':
+        return renderTeamMembers();
+      case 'quotations':
+        return renderQuotations();
+      case 'charge-slips':
+        return renderChargeSlips();
+      default:
+        return renderTeamMembers();
+    }
+  };
+
+  return (
+    <ClientPortalLayout
+      activeSection={activeSection}
+      sections={getSections()}
+      onSectionChange={setActiveSection}
+      projectTitle={projectDetails?.title || "Client Portal"}
+      projectId={projectDetails?.pid}
+    >
+      {renderActiveSection()}
 
       {/* Confirmation Modal */}
       <ConfirmationModalLayout
@@ -983,8 +1065,6 @@ export default function ClientPortalPage() {
           Note: This will only remove them from this form. If they were previously saved, their record will remain in the database.
         </p>
       </ConfirmationModalLayout>
-    </div>
+    </ClientPortalLayout>
   );
 }
-
-
