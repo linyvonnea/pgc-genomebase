@@ -273,7 +273,11 @@ export default function ProjectForm() {
       await setDoc(docRef, payload, { merge: true });
       toast.success("Project added successfully! Redirecting...");
       setTimeout(() => {
-        router.push("/client/project-info/submitted");
+        const params = new URLSearchParams();
+        if (email) params.set("email", email);
+        if (inquiryId) params.set("inquiryId", inquiryId);
+        if (pid) params.set("pid", pid);
+        router.push(`/client/client-info?${params.toString()}`);
       }, 1500);
     } catch (error) {
       console.error("Error updating project:", error);
