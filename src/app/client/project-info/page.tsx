@@ -26,10 +26,11 @@ import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout"
 export default function ProjectForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Get project, client, and inquiry IDs from URL
+  // Get project, client, inquiry IDs, and email from URL
   const pid = searchParams.get("pid");
   const cid = searchParams.get("cid");
   const inquiryId = searchParams.get("inquiryId");
+  const email = searchParams.get("email");
 
   // Form state
   const [formData, setFormData] = useState<ProjectFormData>({
@@ -76,45 +77,39 @@ export default function ProjectForm() {
     fetchProject();
   }, [pid]);
 
-  // Permission check: Only allow access if user is contact person and client info is submitted
+  // Permission check: Verify email and inquiryId exist and are valid
   useEffect(() => {
     async function checkPermission() {
-      let clientData = null;
-      let inquiry = null;
-      
-      // Get inquiry data
-      if (inquiryId) {
-        const inquiryDocSnap = await getDoc(doc(db, "inquiries", inquiryId));
-        if (inquiryDocSnap.exists()) {
-          inquiry = inquiryDocSnap.data();
-        }
+      // Require email and inquiryId
+      if (!email || !inquiryId) {
+        toast.error("Missing required parameters. Please verify first.");
+        router.replace("/verify");
+        return;
       }
       
-      // Get client data - try cid first, then fall back to inquiry email
-      if (cid) {
-        const clientDoc = await getDoc(doc(db, "clients", cid));
-        if (clientDoc.exists()) {
-          clientData = clientDoc.data();
-        }
+      // Verify inquiry exists
+      const inquiryDocSnap = await getDoc(doc(db, "inquiries", inquiryId));
+      if (!inquiryDocSnap.exists()) {
+        toast.error("Invalid inquiry ID.");
+        router.replace("/verify");
+        return;
       }
       
-      if (!clientData && inquiry) {
-        // Try to get by contact person's email from inquiry
-        const contactDoc = await getDoc(doc(db, "clients", inquiry.email));
-        if (contactDoc.exists()) {
-          clientData = contactDoc.data();
-        }
-      }
+      const inquiry = inquiryDocSnap.data();
       
-      // Only allow access if isContactPerson is true AND inquiry.haveSubmitted is true
-      if (!clientData || !clientData.isContactPerson || !inquiry?.haveSubmitted) {
-        toast.error("Only the contact person can access the project information form after submitting client info.");
-        router.replace("/client/client-info?email=" + encodeURIComponent(clientData?.email || "") + "&inquiryId=" + encodeURIComponent(inquiryId || ""));
+      // Verify email is associated with this inquiry (contact person or member)
+      const emailLower = email.toLowerCase();
+      const contactEmailLower = inquiry.email?.toLowerCase() || "";
+      const memberEmails = (inquiry.memberEmails || []).map((e: string) => e.toLowerCase());
+      
+      if (emailLower !== contactEmailLower && !memberEmails.includes(emailLower)) {
+        toast.error("You do not have access to this inquiry.");
+        router.replace("/verify");
         return;
       }
     }
     checkPermission();
-  }, [cid, inquiryId, router]);
+  }, [email, inquiryId, router]);
 
   // Handle form field changes
   const handleChange = (field: keyof ProjectFormData, value: any) => {
@@ -152,9 +147,15 @@ export default function ProjectForm() {
       const docRef = doc(db, "projects", pid!);
       let clientName = "";
       
-      // Get client name - try from cid first, then from inquiry email
+      // Get client name - try from cid first, then from email parameter, then from inquiry email
       if (cid) {
         const clientDoc = await getDoc(doc(db, "clients", cid));
+        if (clientDoc.exists()) {
+          clientName = clientDoc.data().name || "";
+        }
+      } else if (email) {
+        // Try using email parameter
+        const clientDoc = await getDoc(doc(db, "clients", email));
         if (clientDoc.exists()) {
           clientName = clientDoc.data().name || "";
         }
