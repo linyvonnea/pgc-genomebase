@@ -145,32 +145,41 @@ export default function MultiMemberClientForm() {
         }
 
         // Load additional team members if they exist
+        // Query all clients for this inquiry, then filter out primary user client-side
+        // This avoids needing a composite index for "inquiryId == X && email != Y"
         const allMembersQuery = query(
           clientsRef,
-          where("inquiryId", "==", inquiryIdParam),
-          where("email", "!=", emailParam)
+          where("inquiryId", "==", inquiryIdParam)
         );
         const allMembersSnapshot = await getDocs(allMembersQuery);
+        console.log("📊 All clients for inquiry:", allMembersSnapshot.size);
 
-        const additionalMembers: ClientMember[] = allMembersSnapshot.docs.map((doc, index) => {
-          const data = doc.data();
-          return {
-            id: `member-${index + 1}`,
-            cid: doc.id,
-            formData: {
-              name: data.name || "",
-              email: data.email || "",
-              affiliation: data.affiliation || "",
-              designation: data.designation || "",
-              sex: data.sex || "M",
-              phoneNumber: data.phoneNumber || "",
-              affiliationAddress: data.affiliationAddress || "",
-            },
-            errors: {},
-            isSubmitted: !!data.haveSubmitted,
-            isPrimary: false,
-          };
-        });
+        const additionalMembers: ClientMember[] = allMembersSnapshot.docs
+          .filter(doc => {
+            const email = doc.data().email;
+            // Exclude the primary user's email
+            return email && email.toLowerCase() !== emailParam.toLowerCase();
+          })
+          .map((doc, index) => {
+            const data = doc.data();
+            return {
+              id: `member-${index + 1}`,
+              cid: doc.id,
+              formData: {
+                name: data.name || "",
+                email: data.email || "",
+                affiliation: data.affiliation || "",
+                designation: data.designation || "",
+                sex: data.sex || "M",
+                phoneNumber: data.phoneNumber || "",
+                affiliationAddress: data.affiliationAddress || "",
+              },
+              errors: {},
+              isSubmitted: !!data.haveSubmitted,
+              isPrimary: false,
+            };
+          });
+        console.log("👥 Additional members found:", additionalMembers.length);
 
         const allMembers = [primaryMember, ...additionalMembers];
         console.log("👥 Setting members array:", allMembers.length, "members");
