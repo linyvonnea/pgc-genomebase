@@ -443,6 +443,33 @@ export default function ClientPortalPage() {
     }
   };
 
+  const handleSaveDraft = async (memberId: string) => {
+    const member = members.find(m => m.id === memberId);
+    if (!member) return;
+
+    setSubmitting(true);
+
+    try {
+      // Save draft without validation - just persist current form state
+      await setDoc(doc(db, "clients", member.cid), {
+        ...member.formData,
+        cid: member.cid,
+        pid: pidParam || "",
+        inquiryId: inquiryIdParam,
+        isContactPerson: member.isPrimary,
+        haveSubmitted: false, // Keep as draft
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+
+      toast.success(`Draft saved for ${member.isPrimary ? 'your information' : 'team member'}`);
+    } catch (error) {
+      console.error("Draft save error:", error);
+      toast.error("Failed to save draft");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleFinalSubmit = () => {
     const allSubmitted = members.every(m => m.isSubmitted);
     
@@ -802,7 +829,17 @@ export default function ClientPortalPage() {
         </div>
 
         {/* Submit Button for Individual Member */}
-        <div className="flex justify-end pt-6 border-t border-slate-100">
+        <div className="flex justify-between pt-6 border-t border-slate-100">
+          <Button 
+            type="button" 
+            onClick={() => handleSaveDraft(member.id)}
+            disabled={member.isSubmitted || submitting}
+            variant="outline"
+            className="h-12 px-8 border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold transition-all duration-300 disabled:opacity-50"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            Save Draft
+          </Button>
           <Button 
             type="submit" 
             disabled={member.isSubmitted || submitting}
