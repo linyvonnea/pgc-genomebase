@@ -300,6 +300,10 @@ export default function ClientPortalPage() {
   };
 
   const handleRemoveMember = (memberId: string) => {
+    if (projectDetails?.status === "Completed") {
+      toast.error("Cannot remove members from a completed project");
+      return;
+    }
     setMemberToDelete(memberId);
     setShowDeleteModal(true);
   };
@@ -693,7 +697,7 @@ export default function ClientPortalPage() {
               value={member.formData.name}
               onChange={(e) => handleChange(member.id, "name", e.target.value)}
               placeholder="Enter full name"
-              disabled={member.isSubmitted}
+              disabled={member.isSubmitted || projectDetails?.status === "Completed"}
               className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:opacity-70"
             />
             {member.errors.name && (
@@ -716,7 +720,7 @@ export default function ClientPortalPage() {
               value={member.formData.email}
               onChange={(e) => handleChange(member.id, "email", e.target.value)}
               placeholder={member.isPrimary ? "Your verified email" : "Enter team member email"}
-              disabled={member.isPrimary || member.isSubmitted}
+              disabled={member.isPrimary || member.isSubmitted || projectDetails?.status === "Completed"}
               className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:bg-slate-50 disabled:opacity-70"
             />
             {member.errors.email && (
@@ -736,7 +740,7 @@ export default function ClientPortalPage() {
               value={member.formData.affiliation}
               onChange={(e) => handleChange(member.id, "affiliation", e.target.value)}
               placeholder="e.g. Division of Biological Sciences - UPV CAS"
-              disabled={member.isSubmitted}
+              disabled={member.isSubmitted || projectDetails?.status === "Completed"}
               className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:opacity-70"
             />
             {member.errors.affiliation && (
@@ -756,7 +760,7 @@ export default function ClientPortalPage() {
               value={member.formData.designation}
               onChange={(e) => handleChange(member.id, "designation", e.target.value)}
               placeholder="e.g. Research Assistant, Professor"
-              disabled={member.isSubmitted}
+              disabled={member.isSubmitted || projectDetails?.status === "Completed"}
               className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:opacity-70"
             />
             {member.errors.designation && (
@@ -775,7 +779,7 @@ export default function ClientPortalPage() {
             <Select 
               value={member.formData.sex} 
               onValueChange={(val) => handleChange(member.id, "sex", val)}
-              disabled={member.isSubmitted}
+              disabled={member.isSubmitted || projectDetails?.status === "Completed"}
             >
               <SelectTrigger className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:opacity-70">
                 <SelectValue placeholder="Select sex" />
@@ -797,7 +801,7 @@ export default function ClientPortalPage() {
               value={member.formData.phoneNumber}
               onChange={(e) => handleChange(member.id, "phoneNumber", e.target.value)}
               placeholder="e.g. 09091234567"
-              disabled={member.isSubmitted}
+              disabled={member.isSubmitted || projectDetails?.status === "Completed"}
               className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12 disabled:opacity-70"
             />
             {member.errors.phoneNumber && (
@@ -817,7 +821,7 @@ export default function ClientPortalPage() {
               value={member.formData.affiliationAddress}
               onChange={(e) => handleChange(member.id, "affiliationAddress", e.target.value)}
               placeholder="Enter complete address of your institution/organization"
-              disabled={member.isSubmitted}
+              disabled={member.isSubmitted || projectDetails?.status === "Completed"}
               className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[100px] resize-none disabled:opacity-70"
             />
             {member.errors.affiliationAddress && (
@@ -834,7 +838,7 @@ export default function ClientPortalPage() {
           <Button 
             type="button" 
             onClick={() => handleSaveDraft(member.id)}
-            disabled={member.isSubmitted || submitting}
+            disabled={member.isSubmitted || submitting || projectDetails?.status === "Completed"}
             variant="outline"
             className="h-12 px-8 border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold transition-all duration-300 disabled:opacity-50"
           >
@@ -843,7 +847,7 @@ export default function ClientPortalPage() {
           </Button>
           <Button 
             type="submit" 
-            disabled={member.isSubmitted || submitting}
+            disabled={member.isSubmitted || submitting || projectDetails?.status === "Completed"}
             className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
           >
             {member.isSubmitted ? (
@@ -906,7 +910,8 @@ export default function ClientPortalPage() {
             onClick={handleAddMember}
             variant="outline"
             size="sm"
-            className="border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white"
+            disabled={projectDetails?.status === "Completed"}
+            className="border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="h-4 w-4 mr-1" />
             Add Member
@@ -943,7 +948,7 @@ export default function ClientPortalPage() {
                         {status.label}
                       </Badge>
                     </div>
-                    {!member.isPrimary && (
+                    {!member.isPrimary && projectDetails?.status !== "Completed" && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -969,21 +974,23 @@ export default function ClientPortalPage() {
         </Accordion>
 
         {/* Final Submit Button */}
-        <div className="pt-6 border-t-2 border-slate-200">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-slate-600">
-              All members must be saved before final submission
+        {projectDetails?.status !== "Completed" && (
+          <div className="pt-6 border-t-2 border-slate-200">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-slate-600">
+                All members must be saved before final submission
+              </div>
+              <Button
+                onClick={handleFinalSubmit}
+                disabled={!members.every(m => m.isSubmitted)}
+                className="h-14 px-10 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Save className="h-5 w-5 mr-2" />
+                Complete & Submit All Members
+              </Button>
             </div>
-            <Button
-              onClick={handleFinalSubmit}
-              disabled={!members.every(m => m.isSubmitted)}
-              className="h-14 px-10 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Save className="h-5 w-5 mr-2" />
-              Complete & Submit All Members
-            </Button>
           </div>
-        </div>
+        )}
       </div>
     );
   };
