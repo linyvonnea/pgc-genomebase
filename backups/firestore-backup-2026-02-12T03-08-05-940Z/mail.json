@@ -1,0 +1,1932 @@
+[
+  {
+    "id": "2hOEgjP5JZ5cVgBFFUW0",
+    "data": {
+      "to": [
+        "yalin@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "Bz0DnDoXF1XqhzNzXJji",
+          "name": "Andrea Enya Mecenas",
+          "affiliation": "Hehe",
+          "designation": "Student",
+          "email": "enyandrea.jm@gmail.com",
+          "service": "laboratory",
+          "workflows": "sequencing, dna-extraction, bioinformatics",
+          "additionalInfo": ""
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752650236,
+          "_nanoseconds": 702000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752650240,
+          "_nanoseconds": 158000000
+        },
+        "info": {
+          "messageId": "<4bbbdc19-e800-ac7d-2fb8-534f4bf6e484@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "yalin@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752650240 98e67ed59e1d1-31c9f1fb92csm783813a91.23 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "2rOK3gpFqketCEwLXPE2",
+    "data": {
+      "to": [
+        "merlito.dayon@gmail.com"
+      ],
+      "inquiryId": "CXoCa6Llokd1BRREcqCq",
+      "message": {
+        "subject": "New Laboratory Inquiry from Bad Bunny",
+        "text": "New Laboratory Inquiry\n\nContact Information:\nName: Bad Bunny\nEmail: carmjavier@gmail.com\nAffiliation: UPV CAS\nDesignation: Rapper\n\nService Type: laboratory\nWorkflows: complete-workflow\n\nAdditional Info: None\n\n\n\n\n\n\n\nInquiry ID: CXoCa6Llokd1BRREcqCq\nSubmitted: 2/12/2026, 2:34:58 AM",
+        "html": "\n      <div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;\">\n        <h2 style=\"color: #2563eb;\">New Laboratory Inquiry</h2>\n        \n        <div style=\"background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n          <h3 style=\"margin-top: 0;\">Contact Information</h3>\n          <p><strong>Name:</strong> Bad Bunny</p>\n          <p><strong>Email:</strong> carmjavier@gmail.com</p>\n          <p><strong>Affiliation:</strong> UPV CAS</p>\n          <p><strong>Designation:</strong> Rapper</p>\n        </div>\n        \n        <div style=\"background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n          <h3 style=\"margin-top: 0;\">Service Details</h3>\n          <p><strong>Service Type:</strong> laboratory</p>\n          <p><strong>Workflows:</strong> complete-workflow</p>\n          <p><strong>Additional Info:</strong> None</p>\n          \n          \n          \n          \n          \n        </div>\n        \n        <p style=\"color: #6b7280; font-size: 12px;\">Inquiry ID: CXoCa6Llokd1BRREcqCq</p>\n        <p style=\"color: #6b7280; font-size: 12px;\">Submitted: 2/12/2026, 2:34:58 AM</p>\n      </div>\n    "
+      }
+    }
+  },
+  {
+    "id": "74YpeQlf4I2aDijtcyTH",
+    "data": {
+      "to": [
+        "dlpailden@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "gsWPA6vTvx8QKuVofQwd",
+          "name": "Daniella Lab2",
+          "affiliation": "UPV CAS Test",
+          "designation": "Intern Testing",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction, sequencing, bioinformatics",
+          "additionalInfo": "This is an additional info for testing"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752619385,
+          "_nanoseconds": 613000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752619389,
+          "_nanoseconds": 525000000
+        },
+        "info": {
+          "messageId": "<707f88f7-dc16-5274-d2a3-e3325ac17944@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dlpailden@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752619389 d2e1a72fcca58-74eb9e07649sm12873257b3a.71 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "7OZX1GRPXwh2bq14oNZx",
+    "data": {
+      "to": [
+        "dbduran@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "xDb48Tj1ZeCTXoReGbEA",
+          "name": "Daniella Pailden",
+          "affiliation": "UPV CAS",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction, pcr-amplification",
+          "additionalInfo": ""
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752809138,
+          "_nanoseconds": 320000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752809141,
+          "_nanoseconds": 690000000
+        },
+        "info": {
+          "messageId": "<bfa24476-b80a-167a-ffae-b3cebfc73362@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dbduran@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752809141 d9443c01a7336-23e3b5e2fffsm3925065ad.35 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "7SJ8J1SEu9Stz4QQmc8I",
+    "data": {
+      "to": [
+        "yalin@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-training",
+        "data": {
+          "inquiryId": "OgLP0NSoN8ujkHx0aDi9",
+          "name": "Daniella Pailden",
+          "affiliation": "UPV CAS ",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "training",
+          "specificTrainingNeed": "test training",
+          "targetTrainingDate": "2025-08-02",
+          "numberOfParticipants": "1"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752652643,
+          "_nanoseconds": 870000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752652647,
+          "_nanoseconds": 917000000
+        },
+        "info": {
+          "messageId": "<792f2721-14bf-1c7a-d737-9c1b0bd011d7@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "yalin@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752652647 d2e1a72fcca58-74eb9dd603asm14051454b3a.12 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "8L7V8frhXeov78yOUsoi",
+    "data": {
+      "to": [
+        "dlpailden@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-research",
+        "data": {
+          "inquiryId": "phjpikWdz42xyu0b5H9n",
+          "name": "Daniella Research",
+          "affiliation": "UPV CAS ",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "research",
+          "projectBackground": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+          "projectBudget": "30,000"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752620661,
+          "_nanoseconds": 821000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752620665,
+          "_nanoseconds": 196000000
+        },
+        "info": {
+          "messageId": "<8a040b78-a1a8-0588-d8e8-0e960442ac4e@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dlpailden@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752620665 d9443c01a7336-23de4332e61sm114586075ad.141 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "Aq3V8KNvlDwJJkzaGTKB",
+    "data": {
+      "to": [
+        "yalin@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-training",
+        "data": {
+          "inquiryId": "xWDWWxhNaV3yKVqTZ8NF",
+          "name": "TEST DANIELLA EDIT PLZ WORK",
+          "affiliation": "UPV CAS ",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "training",
+          "specificTrainingNeed": "test training",
+          "targetTrainingDate": "2025-07-24",
+          "numberOfParticipants": "7"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752669658,
+          "_nanoseconds": 455000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752669661,
+          "_nanoseconds": 329000000
+        },
+        "info": {
+          "messageId": "<207ee82b-34d1-1bbb-aba1-88fe3a521d29@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "yalin@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752669661 d2e1a72fcca58-74eb9f21227sm14135436b3a.98 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "BDU7RHwM7Dayhrq4W7GN",
+    "data": {
+      "to": [
+        "yalin@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "name": "Daniella Testing Demo",
+          "affiliation": "UPV CAS",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction, pcr-amplification, quantification",
+          "additionalInfo": "something"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752561538,
+          "_nanoseconds": 205000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752561541,
+          "_nanoseconds": 570000000
+        },
+        "info": {
+          "messageId": "<0e182f7d-fb5d-711f-8907-af61c61b5c91@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "yalin@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752561541 d2e1a72fcca58-74eb9f220e4sm12164059b3a.106 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "D4qzoTMq7mnJvvk7bFmE",
+    "data": {
+      "to": [
+        "daniellalpailden@gmail.com"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "name": "test test email",
+          "affiliation": "Testing",
+          "designation": "Testing",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "pcr-amplification, sequencing",
+          "additionalInfo": "test"
+        }
+      },
+      "delivery": {
+        "leaseExpireTime": {
+          "_seconds": 1752480605,
+          "_nanoseconds": 647000000
+        },
+        "startTime": {
+          "_seconds": 1752480605,
+          "_nanoseconds": 647000000
+        }
+      }
+    }
+  },
+  {
+    "id": "EsKU1BrNfPkbkLOHBZrp",
+    "data": {
+      "to": [
+        "merlito.dayon@gmail.com"
+      ],
+      "inquiryId": "fofXv34Mbgl3V30qX66N",
+      "message": {
+        "subject": "New Laboratory Inquiry from Merlito Dayon Jr",
+        "text": "New Laboratory Inquiry\n\nContact Information:\nName: Merlito Dayon Jr\nEmail: merlito.dayon@gmail.com\nAffiliation: UP Visayas\nDesignation: System Ad\n\nService Type: laboratory\nWorkflows: bioinformatics, dna-extraction, pcr-amplification\n\nAdditional Info: Test Questions, Test Questions, Test Questions, Test Questions, Test Questions, Test Questions, Test Questions, Test Questions, Test Questions, Test Questions, Test Questions, \n\n\n\n\n\n\n\nInquiry ID: fofXv34Mbgl3V30qX66N\nSubmitted: 2/11/2026, 3:09:17 PM",
+        "html": "\n      <div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;\">\n        <h2 style=\"color: #2563eb;\">New Laboratory Inquiry</h2>\n        \n        <div style=\"background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n          <h3 style=\"margin-top: 0;\">Contact Information</h3>\n          <p><strong>Name:</strong> Merlito Dayon Jr</p>\n          <p><strong>Email:</strong> merlito.dayon@gmail.com</p>\n          <p><strong>Affiliation:</strong> UP Visayas</p>\n          <p><strong>Designation:</strong> System Ad</p>\n        </div>\n        \n        <div style=\"background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n          <h3 style=\"margin-top: 0;\">Service Details</h3>\n          <p><strong>Service Type:</strong> laboratory</p>\n          <p><strong>Workflows:</strong> bioinformatics, dna-extraction, pcr-amplification</p>\n          <p><strong>Additional Info:</strong> Test Questions, Test Questions, Test Questions, Test Questions, Test Questions, Test Questions, Test Questions, Test Questions, Test Questions, Test Questions, Test Questions, </p>\n          \n          \n          \n          \n          \n        </div>\n        \n        <p style=\"color: #6b7280; font-size: 12px;\">Inquiry ID: fofXv34Mbgl3V30qX66N</p>\n        <p style=\"color: #6b7280; font-size: 12px;\">Submitted: 2/11/2026, 3:09:17 PM</p>\n      </div>\n    "
+      }
+    }
+  },
+  {
+    "id": "JN1oJNZny78lvtpIzb9C",
+    "data": {
+      "to": [
+        "yalin@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "vGL5pzwr0VvAyOQJdSVa",
+          "name": "Daniella Pailden( test console log222)",
+          "affiliation": "UPV CAS ",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "sequencing, bioinformatics",
+          "additionalInfo": ""
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752642734,
+          "_nanoseconds": 870000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752642738,
+          "_nanoseconds": 170000000
+        },
+        "info": {
+          "messageId": "<5b612e79-bdd8-ce91-7dd2-762724bb5f93@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "yalin@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752642738 d9443c01a7336-23de4332b0csm116788725ad.149 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "MCZvRihEEdvog6lYw54P",
+    "data": {
+      "to": [
+        "dlpailden@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-training",
+        "data": {
+          "inquiryId": "mRSCsNEtoN5vZoZtcT31",
+          "name": "Last test sonner",
+          "affiliation": "UPV CAS ",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "training",
+          "specificTrainingNeed": "test training",
+          "targetTrainingDate": "2025-08-14",
+          "numberOfParticipants": "6"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752648289,
+          "_nanoseconds": 688000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752648292,
+          "_nanoseconds": 933000000
+        },
+        "info": {
+          "messageId": "<4a031671-5f7e-395c-d1aa-0b4ca2735e17@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dlpailden@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752648292 d9443c01a7336-23de43226c3sm124242905ad.117 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "Mjve83AHyQdVKjJIBlG9",
+    "data": {
+      "to": [
+        "dlpailden@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-training",
+        "data": {
+          "inquiryId": "Nf5psc3H4txUq1oQl5pb",
+          "name": "Testing Training",
+          "affiliation": "UPV CAS Test",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "training",
+          "specificTrainingNeed": "DNA Sequencing",
+          "targetTrainingDate": "2025-07-29",
+          "numberOfParticipants": "14"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752631720,
+          "_nanoseconds": 179000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752631723,
+          "_nanoseconds": 388000000
+        },
+        "info": {
+          "messageId": "<9cd982d6-6965-a26a-8ff6-c27b33ceaaaa@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dlpailden@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752631723 41be03b00d2f7-b3bbec94a82sm12476423a12.8 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "OcoznGTrN7zMU7QvmLWH",
+    "data": {
+      "to": [
+        "dlpailden@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-research",
+        "data": {
+          "inquiryId": "ZZsoftrYc3J3RAGPOoo7",
+          "name": "Final Research Request Email",
+          "affiliation": "UPV CAS ",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "research",
+          "projectBackground": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+          "projectBudget": "40,000"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752621386,
+          "_nanoseconds": 9000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752621389,
+          "_nanoseconds": 208000000
+        },
+        "info": {
+          "messageId": "<e8033ccf-ad7b-ceec-b3c9-2df09dae9718@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dlpailden@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752621389 98e67ed59e1d1-31c9f1e691bsm146955a91.14 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "PqA6a1CsAtZII4Nc9K1U",
+    "data": {
+      "to": [
+        "madayon1@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "N9SZiZ2tXgYma90jObcc",
+          "name": "Merlito Dayon Jr",
+          "affiliation": "UPV",
+          "designation": "SysAd",
+          "email": "merlito.dayon@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction, bioinformatics",
+          "additionalInfo": "Sample questions"
+        }
+      }
+    }
+  },
+  {
+    "id": "PqCbySolwSN0lKDCJhSn",
+    "data": {
+      "to": [
+        "daniellalpailden@gmail.com"
+      ],
+      "template": {
+        "name": "inquiry-training",
+        "data": {
+          "name": "final email test please iiyak na ako",
+          "affiliation": "Testing",
+          "designation": "Testing",
+          "email": "daniellalpailden@gmail.com",
+          "service": "training",
+          "specificTrainingNeed": "SERVICE",
+          "targetTrainingDate": "2025-07-16",
+          "numberOfParticipants": "5"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752480891,
+          "_nanoseconds": 210000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752480895,
+          "_nanoseconds": 368000000
+        },
+        "info": {
+          "messageId": "<b581c2f6-e16d-f336-a4a7-46fea359ead1@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "daniellalpailden@gmail.com"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752480895 d2e1a72fcca58-74eb9f1c8c0sm9854116b3a.81 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "QsEMYLlRMrcK1yfDg8yG",
+    "data": {
+      "to": [
+        "dbduran@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-training",
+        "data": {
+          "inquiryId": "rEyMZPWVHV2JkUulto4g",
+          "name": "Testing if nagana pa",
+          "affiliation": "test",
+          "designation": "test",
+          "email": "daniellalpailden@gmail.com",
+          "service": "training",
+          "specificTrainingNeed": "test training",
+          "targetTrainingDate": "2025-08-01",
+          "numberOfParticipants": "1"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752797190,
+          "_nanoseconds": 282000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752797193,
+          "_nanoseconds": 673000000
+        },
+        "info": {
+          "messageId": "<6db3c889-5936-3330-151e-351135be9bef@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dbduran@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752797193 98e67ed59e1d1-31cbc5002c9sm962421a91.20 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "RFd5HM84YpZKjemArS5U",
+    "data": {
+      "to": [
+        "merlito.dayon@gmail.com"
+      ],
+      "inquiryId": "aLhvIUkP6k1zc1EX8my9",
+      "message": {
+        "subject": "New laboratory Inquiry from Merlito Dayon Jr",
+        "text": "New inquiry received from Merlito Dayon Jr (merlito.dayon@gmail.com) for laboratory service.",
+        "html": "<p>New inquiry received from <strong>Merlito Dayon Jr</strong> (merlito.dayon@gmail.com) for laboratory service.</p>"
+      },
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "aLhvIUkP6k1zc1EX8my9",
+          "name": "Merlito Dayon Jr",
+          "affiliation": "UP Visayas",
+          "designation": "SysAd",
+          "email": "merlito.dayon@gmail.com",
+          "service": "laboratory",
+          "workflows": "pcr-amplification, bioinformatics",
+          "additionalInfo": "test"
+        }
+      }
+    }
+  },
+  {
+    "id": "UJPfioFhyFY4VkakWlfF",
+    "data": {
+      "to": [
+        "dlpailden@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "ICv5QMiOzRjtSSVS6JmM",
+          "name": "Pailden Test toast",
+          "affiliation": "UPV CAS ",
+          "designation": "test",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction",
+          "additionalInfo": ""
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752647493,
+          "_nanoseconds": 276000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752647497,
+          "_nanoseconds": 561000000
+        },
+        "info": {
+          "messageId": "<981a6cf0-4aca-eb78-0c81-21d613f61c28@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dlpailden@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752647497 d9443c01a7336-23de433e05asm119189235ad.178 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "UPtx5l2tAZbdEeNIxdnB",
+    "data": {
+      "to": [
+        "madayon1@up.edu.ph"
+      ],
+      "message": {
+        "subject": "New laboratory Inquiry from Merlito Dayon Jr",
+        "text": "New inquiry received from Merlito Dayon Jr (merlito.dayon@gmail.com) for laboratory service.",
+        "html": "<p>New inquiry received from <strong>Merlito Dayon Jr</strong> (merlito.dayon@gmail.com) for laboratory service.</p>"
+      },
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "tmiURzMPDkRSTesKwpqh",
+          "name": "Merlito Dayon Jr",
+          "affiliation": "UP Visayas",
+          "designation": "SysAd",
+          "email": "merlito.dayon@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction",
+          "additionalInfo": "test"
+        }
+      }
+    }
+  },
+  {
+    "id": "WO7TOccoMg3VqqVsCOFB",
+    "data": {
+      "to": [
+        "merlito.dayon@gmail.com"
+      ],
+      "inquiryId": "v5XmxUq9nd4QSMgvEZM4",
+      "message": {
+        "subject": "New Research Inquiry from Merlito Dayon Jr",
+        "text": "New Research Inquiry\n\nContact Information:\nName: Merlito Dayon Jr\nEmail: merlito.dayon@gmail.com\nAffiliation: UP Visayas\nDesignation: SysAd\n\nService Type: research\n\n\nProject Background: test\n\nProject Budget: 1000\n\n\n\n\n\nInquiry ID: v5XmxUq9nd4QSMgvEZM4\nSubmitted: 2/11/2026, 12:37:08 AM",
+        "html": "\n      <div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;\">\n        <h2 style=\"color: #2563eb;\">New Research Inquiry</h2>\n        \n        <div style=\"background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n          <h3 style=\"margin-top: 0;\">Contact Information</h3>\n          <p><strong>Name:</strong> Merlito Dayon Jr</p>\n          <p><strong>Email:</strong> merlito.dayon@gmail.com</p>\n          <p><strong>Affiliation:</strong> UP Visayas</p>\n          <p><strong>Designation:</strong> SysAd</p>\n        </div>\n        \n        <div style=\"background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n          <h3 style=\"margin-top: 0;\">Service Details</h3>\n          <p><strong>Service Type:</strong> research</p>\n          \n          \n          <p><strong>Project Background:</strong> test</p>\n          <p><strong>Project Budget:</strong> 1000</p>\n          \n          \n          \n        </div>\n        \n        <p style=\"color: #6b7280; font-size: 12px;\">Inquiry ID: v5XmxUq9nd4QSMgvEZM4</p>\n        <p style=\"color: #6b7280; font-size: 12px;\">Submitted: 2/11/2026, 12:37:08 AM</p>\n      </div>\n    "
+      }
+    }
+  },
+  {
+    "id": "WOVApxDpJc4AtTr2YI66",
+    "data": {
+      "to": [
+        "yalin@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "VFF5RKfnbG6KCdPUXksJ",
+          "name": "Daniella Pailde",
+          "affiliation": "UPV CAS ",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction, pcr-amplification",
+          "additionalInfo": "Additional Info"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752634552,
+          "_nanoseconds": 350000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752634554,
+          "_nanoseconds": 908000000
+        },
+        "info": {
+          "messageId": "<c6d52cc3-c06c-19aa-deac-a63de8f7c8fe@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "yalin@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752634554 d9443c01a7336-23de4285ee1sm116362375ad.38 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "Xn0rjCfs06r7tcKByL0z",
+    "data": {
+      "to": [
+        "madayon1@up.edu.ph"
+      ],
+      "message": {
+        "subject": "PGC Email System Test",
+        "text": "This is a test email from the PGC email system.",
+        "html": "<p><strong>PGC Email System Test</strong></p><p>This is a test email to verify email functionality.</p>"
+      },
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "TEST-1770767047904",
+          "name": "Test User",
+          "affiliation": "Test Institution",
+          "designation": "Test Role",
+          "email": "test@example.com",
+          "service": "laboratory",
+          "workflows": "DNA extraction",
+          "additionalInfo": "This is a test email to verify email functionality"
+        }
+      }
+    }
+  },
+  {
+    "id": "YBGho2MLcvSzD45c03WF",
+    "data": {
+      "to": [
+        "yalin@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "DVAcdKqF7N181ReYHAWf",
+          "name": "Daniella Pailden",
+          "affiliation": "Jsbsjsnksnd",
+          "designation": "Idneidn",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "bioinformatics, sequencing, pcr-amplification",
+          "additionalInfo": "Idncidnfiern"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752648829,
+          "_nanoseconds": 72000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752648832,
+          "_nanoseconds": 210000000
+        },
+        "info": {
+          "messageId": "<df59f677-0f13-50ef-0733-38d10050c821@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "yalin@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752648832 d9443c01a7336-23de4335306sm117710245ad.166 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "YapgnRtaevbX0VdhIW7h",
+    "data": {
+      "to": [
+        "yalin@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "DLM03RDYDGlFREnuxkMZ",
+          "name": "Final Duranne Test",
+          "affiliation": "fdsfdsf",
+          "designation": "fdsf",
+          "email": "duranduranne@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction",
+          "additionalInfo": ""
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752629322,
+          "_nanoseconds": 29000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752629325,
+          "_nanoseconds": 947000000
+        },
+        "info": {
+          "messageId": "<95de85aa-d9d8-2baf-8487-f806de469cc1@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "yalin@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752629325 98e67ed59e1d1-31c9f29dd63sm276531a91.33 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "Z22Vo2KFIuAfcgkprj0W",
+    "data": {
+      "to": [
+        "dlpailden@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "lH3VVK85hojJOq7sVimO",
+          "name": "Daniella Pailden",
+          "affiliation": "UPV CAS ",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction, pcr-amplification, quantification",
+          "additionalInfo": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752620093,
+          "_nanoseconds": 470000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752620096,
+          "_nanoseconds": 456000000
+        },
+        "info": {
+          "messageId": "<bc8a3811-81ac-b65d-71ce-2b42c6d7b05c@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dlpailden@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752620096 d9443c01a7336-23de433d557sm114222445ad.186 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "aC2fGHYYGXkcOvBQcpp6",
+    "data": {
+      "to": [
+        "merlito.dayon@gmail.com"
+      ],
+      "inquiryId": "2Sw606L2O3WbFNIqVynX",
+      "message": {
+        "subject": "New Laboratory Inquiry from Merlito Dayon Jr",
+        "text": "New Laboratory Inquiry\n\nContact Information:\nName: Merlito Dayon Jr\nEmail: merlito.dayon@gmail.com\nAffiliation: UP Visayas\nDesignation: SysAd\n\nService Type: laboratory\nWorkflows: dna-extraction, bioinformatics\n\nAdditional Info: test questions\n\n\n\n\n\n\n\nInquiry ID: 2Sw606L2O3WbFNIqVynX\nSubmitted: 2/11/2026, 5:22:09 AM",
+        "html": "\n      <div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;\">\n        <h2 style=\"color: #2563eb;\">New Laboratory Inquiry</h2>\n        \n        <div style=\"background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n          <h3 style=\"margin-top: 0;\">Contact Information</h3>\n          <p><strong>Name:</strong> Merlito Dayon Jr</p>\n          <p><strong>Email:</strong> merlito.dayon@gmail.com</p>\n          <p><strong>Affiliation:</strong> UP Visayas</p>\n          <p><strong>Designation:</strong> SysAd</p>\n        </div>\n        \n        <div style=\"background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n          <h3 style=\"margin-top: 0;\">Service Details</h3>\n          <p><strong>Service Type:</strong> laboratory</p>\n          <p><strong>Workflows:</strong> dna-extraction, bioinformatics</p>\n          <p><strong>Additional Info:</strong> test questions</p>\n          \n          \n          \n          \n          \n        </div>\n        \n        <p style=\"color: #6b7280; font-size: 12px;\">Inquiry ID: 2Sw606L2O3WbFNIqVynX</p>\n        <p style=\"color: #6b7280; font-size: 12px;\">Submitted: 2/11/2026, 5:22:09 AM</p>\n      </div>\n    "
+      }
+    }
+  },
+  {
+    "id": "b4KtbYMbjYl4TDp2C8Nw",
+    "data": {
+      "to": [
+        "yalin@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "GRH93zhWcvPmLbts3aBf",
+          "name": "Jasmine Velo",
+          "affiliation": "Philippine Genome Center Visayas",
+          "designation": "URA",
+          "email": "jcvelo@up.edu.ph",
+          "service": "laboratory",
+          "workflows": "dna-extraction, pcr-amplification, quantification",
+          "additionalInfo": ""
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752654701,
+          "_nanoseconds": 658000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752654704,
+          "_nanoseconds": 941000000
+        },
+        "info": {
+          "messageId": "<394fc004-2e99-c2ab-a94b-5eb136a75c2e@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "yalin@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752654704 41be03b00d2f7-b3bbe6fb10esm13307800a12.58 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "b5HaUyF0NDaVZSRhDJtk",
+    "data": {
+      "to": [
+        "dlpailden.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-training",
+        "data": {
+          "inquiryId": "CXk2uHVUsMEWBMQmaTUo",
+          "name": "Testing sonner",
+          "affiliation": "UPV CAS ",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "training",
+          "specificTrainingNeed": "test training",
+          "targetTrainingDate": "2025-08-01",
+          "numberOfParticipants": "6"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752647424,
+          "_nanoseconds": 676000000
+        },
+        "leaseExpireTime": null,
+        "state": "ERROR",
+        "endTime": {
+          "_seconds": 1752647426,
+          "_nanoseconds": 483000000
+        },
+        "error": "Error: No recipients defined",
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "bFHu0dOZ9y50aKaipwpH",
+    "data": {
+      "to": [
+        "dlpailden@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "ylIeqPGAr6HryuWabf1H",
+          "name": "Final Lab Request Email",
+          "affiliation": "UPV CAS ",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction, sequencing, bioinformatics, pcr-amplification",
+          "additionalInfo": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752621290,
+          "_nanoseconds": 953000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752621294,
+          "_nanoseconds": 687000000
+        },
+        "info": {
+          "messageId": "<f6594dd0-3ccb-5c11-8a63-d8dd2cca9ed8@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dlpailden@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752621294 98e67ed59e1d1-31c9f1e6fd4sm142704a91.18 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "bJ3i9cVVwMC2O0drA2y4",
+    "data": {
+      "to": [
+        "merlito.dayon@gmail.com"
+      ],
+      "inquiryId": "OgakouwA8xbC7QNnX4aL",
+      "message": {
+        "subject": "New Training Inquiry from Merlito Dayon Jr",
+        "text": "New Training Inquiry\n\nContact Information:\nName: Merlito Dayon Jr\nEmail: merlito.dayon@gmail.com\nAffiliation: UP Visayas\nDesignation: System Ad\n\nService Type: training\n\n\n\n\nTraining Need: Training needs\n\nTraining Date: 2026-02-14\n\nParticipants: 5\n\n\nInquiry ID: OgakouwA8xbC7QNnX4aL\nSubmitted: 2/11/2026, 3:54:06 AM",
+        "html": "\n      <div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;\">\n        <h2 style=\"color: #2563eb;\">New Training Inquiry</h2>\n        \n        <div style=\"background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n          <h3 style=\"margin-top: 0;\">Contact Information</h3>\n          <p><strong>Name:</strong> Merlito Dayon Jr</p>\n          <p><strong>Email:</strong> merlito.dayon@gmail.com</p>\n          <p><strong>Affiliation:</strong> UP Visayas</p>\n          <p><strong>Designation:</strong> System Ad</p>\n        </div>\n        \n        <div style=\"background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n          <h3 style=\"margin-top: 0;\">Service Details</h3>\n          <p><strong>Service Type:</strong> training</p>\n          \n          \n          \n          \n          <p><strong>Training Need:</strong> Training needs</p>\n          <p><strong>Training Date:</strong> 2026-02-14</p>\n          <p><strong>Participants:</strong> 5</p>\n        </div>\n        \n        <p style=\"color: #6b7280; font-size: 12px;\">Inquiry ID: OgakouwA8xbC7QNnX4aL</p>\n        <p style=\"color: #6b7280; font-size: 12px;\">Submitted: 2/11/2026, 3:54:06 AM</p>\n      </div>\n    "
+      }
+    }
+  },
+  {
+    "id": "c7JH8AXAJn5aBiBL5kFb",
+    "data": {
+      "to": [
+        "yalin@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "sWZzsSJKfyNmuVYJQSSl",
+          "name": "Daniella Pailden( test console log)",
+          "affiliation": "UPV CAS ",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction",
+          "additionalInfo": ""
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752642655,
+          "_nanoseconds": 223000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752642658,
+          "_nanoseconds": 396000000
+        },
+        "info": {
+          "messageId": "<75d8bcee-d2a6-761e-4870-65480537156d@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "yalin@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752642658 d9443c01a7336-23de434200csm116496175ad.175 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "d8mbg9VfHsJb5Azby9ZI",
+    "data": {
+      "to": [
+        "yalin@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-research",
+        "data": {
+          "inquiryId": "azfrhp7SrmOIoMxVYsef",
+          "name": "TEST IF NAGANA CLIENT FORM DEPLOYED",
+          "affiliation": "test",
+          "designation": "test",
+          "email": "daniellalpailden@gmail.com",
+          "service": "research",
+          "projectBackground": "test description",
+          "projectBudget": "30,000"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752671246,
+          "_nanoseconds": 69000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752671249,
+          "_nanoseconds": 527000000
+        },
+        "info": {
+          "messageId": "<f2d4ff8b-79ab-3242-6e57-69ac114706f5@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "yalin@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752671249 d2e1a72fcca58-74eb9e06c72sm14597763b3a.66 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "eLtctQ1Gxg3iXMHQ4sw2",
+    "data": {
+      "to": [
+        "dlpailden@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "name": "Daniella Lab Request",
+          "affiliation": "UPV CAS Test",
+          "designation": "Intern Testing",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction, pcr-amplification, sequencing, bioinformatics",
+          "additionalInfo": ""
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752618736,
+          "_nanoseconds": 592000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752618740,
+          "_nanoseconds": 673000000
+        },
+        "info": {
+          "messageId": "<eceffbd5-7a4b-c9ee-ee13-81e82a6ff529@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dlpailden@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752618740 d2e1a72fcca58-74ebfd2d26asm11064472b3a.76 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "embfjKxBHbgZUujDZEWG",
+    "data": {
+      "to": [
+        "dlpailden@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "dfc8Atv7V6Xdkcat7ypH",
+          "name": "Pailden Test toast",
+          "affiliation": "UPV CAS ",
+          "designation": "test",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "pcr-amplification, sequencing, bioinformatics",
+          "additionalInfo": ""
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752647813,
+          "_nanoseconds": 770000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752647816,
+          "_nanoseconds": 174000000
+        },
+        "info": {
+          "messageId": "<f020a54b-cedb-962c-72dd-4b8e28168ae5@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dlpailden@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752647816 d9443c01a7336-23de42845c7sm119669425ad.26 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "gMXOY9wZgdHRB5o48urW",
+    "data": {
+      "to": [
+        "madayon1@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-training",
+        "data": {
+          "inquiryId": "2AyRBWqZJJKYiWvDe9Nc",
+          "name": "Merlito Dayon Jr",
+          "affiliation": "UP Visayas",
+          "designation": "SysAd",
+          "email": "merlito.dayon@gmail.com",
+          "service": "training",
+          "specificTrainingNeed": "Training needs",
+          "targetTrainingDate": "2026-02-16",
+          "numberOfParticipants": "5"
+        }
+      }
+    }
+  },
+  {
+    "id": "iFBLQ8Apv2QMK9qiWG9h",
+    "data": {
+      "to": [
+        "madayon1@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "xmMDPyz194J4Wh6wmdQO",
+          "name": "Merlito Dayon Jr",
+          "affiliation": "UP Visayas",
+          "designation": "SysAd",
+          "email": "merlito.dayon@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction",
+          "additionalInfo": "test desc"
+        }
+      }
+    }
+  },
+  {
+    "id": "jV2jCtjlvTt6UdQ7o2hT",
+    "data": {
+      "to": [
+        "dbduran@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "W8yOTjoHOYr0cKjibxKo",
+          "name": "Daniella Pailden",
+          "affiliation": "UPV CAS",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction, pcr-amplification",
+          "additionalInfo": ""
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752722274,
+          "_nanoseconds": 728000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752722278,
+          "_nanoseconds": 96000000
+        },
+        "info": {
+          "messageId": "<2ad3f3ca-53c5-f65b-e22f-42ae6e0137f3@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dbduran@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752722277 d2e1a72fcca58-74ec3bd0bcesm12413422b3a.26 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "le0DUSR0cu27cqXzyb0J",
+    "data": {
+      "to": [
+        "merlito.dayon@gmail.com"
+      ],
+      "inquiryId": "2YB62soZ3kQusWEYU6WG",
+      "message": {
+        "subject": "New Laboratory Inquiry from test",
+        "text": "New Laboratory Inquiry\n\nContact Information:\nName: test\nEmail: merlito.dayon@gmail.com\nAffiliation: test\nDesignation: Student\n\nService Type: laboratory\nWorkflows: bioinformatics\n\nAdditional Info: test inquiry\n\n\n\n\n\n\n\nInquiry ID: 2YB62soZ3kQusWEYU6WG\nSubmitted: 2/12/2026, 1:56:30 AM",
+        "html": "\n      <div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;\">\n        <h2 style=\"color: #2563eb;\">New Laboratory Inquiry</h2>\n        \n        <div style=\"background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n          <h3 style=\"margin-top: 0;\">Contact Information</h3>\n          <p><strong>Name:</strong> test</p>\n          <p><strong>Email:</strong> merlito.dayon@gmail.com</p>\n          <p><strong>Affiliation:</strong> test</p>\n          <p><strong>Designation:</strong> Student</p>\n        </div>\n        \n        <div style=\"background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;\">\n          <h3 style=\"margin-top: 0;\">Service Details</h3>\n          <p><strong>Service Type:</strong> laboratory</p>\n          <p><strong>Workflows:</strong> bioinformatics</p>\n          <p><strong>Additional Info:</strong> test inquiry</p>\n          \n          \n          \n          \n          \n        </div>\n        \n        <p style=\"color: #6b7280; font-size: 12px;\">Inquiry ID: 2YB62soZ3kQusWEYU6WG</p>\n        <p style=\"color: #6b7280; font-size: 12px;\">Submitted: 2/12/2026, 1:56:30 AM</p>\n      </div>\n    "
+      }
+    }
+  },
+  {
+    "id": "lvBqISr75FXwCZEfhMnY",
+    "data": {
+      "to": [
+        "madayon1@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "TEST-1770734554144",
+          "name": "Test User",
+          "affiliation": "Test Institution",
+          "designation": "Test Role",
+          "email": "test@example.com",
+          "service": "laboratory",
+          "workflows": "DNA extraction",
+          "additionalInfo": "This is a test email to verify email functionality"
+        }
+      }
+    }
+  },
+  {
+    "id": "mWaMz6WYHzo1OopvvkZ7",
+    "data": {
+      "to": [
+        "yalin@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-training",
+        "data": {
+          "inquiryId": "lI17RjTNIu1r9QYLrfuT",
+          "name": "Daniella Pailden",
+          "affiliation": "Ishxiwndiwn",
+          "designation": "Ishisndiwndiwnd",
+          "email": "daniellalpailden@gmail.com",
+          "service": "training",
+          "specificTrainingNeed": "Jsbcisdniwdniw",
+          "targetTrainingDate": "2025-07-25",
+          "numberOfParticipants": "71"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752648989,
+          "_nanoseconds": 7000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752648992,
+          "_nanoseconds": 287000000
+        },
+        "info": {
+          "messageId": "<c51479ce-cab6-c631-f911-f70417fe5472@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "yalin@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752648992 98e67ed59e1d1-31ca786eac1sm144788a91.48 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "nA1GVAwRM0iPWiTVY06y",
+    "data": {
+      "to": [
+        "dlpailden@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-training",
+        "data": {
+          "inquiryId": "uzKPV7qq8sRgAHEdSsJD",
+          "name": "Final Training Request Email",
+          "affiliation": "UPV CAS ",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "training",
+          "specificTrainingNeed": "DNA Sequencing and Bioinformatics",
+          "targetTrainingDate": "2025-07-31",
+          "numberOfParticipants": "10"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752621524,
+          "_nanoseconds": 607000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752621528,
+          "_nanoseconds": 249000000
+        },
+        "info": {
+          "messageId": "<019b3b98-55ba-e003-2357-30df6edbc8f6@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dlpailden@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752621528 98e67ed59e1d1-31c9f21e970sm145841a91.39 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "nmdV6tCrrPgS1dxJwT8R",
+    "data": {
+      "to": [
+        "dbduran@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "Uamd7tWDVET8pi7BKcnt",
+          "name": "Daniella Pailden",
+          "affiliation": "UPV CAS",
+          "designation": "Intern",
+          "email": "duranduranne@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction, pcr-amplification",
+          "additionalInfo": ""
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752716725,
+          "_nanoseconds": 807000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752716729,
+          "_nanoseconds": 19000000
+        },
+        "info": {
+          "messageId": "<e1516656-ab08-a037-81c2-3f0dee109434@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dbduran@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752716728 d9443c01a7336-23de4283a81sm131180715ad.27 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "qcs5NSBOV7SMRVX50Lw2",
+    "data": {
+      "to": [
+        "dbduran@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "s7EjvUSE2Z3Bvp9dWjrQ",
+          "name": "Daniella Pailden",
+          "affiliation": "UPV CAS",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction, pcr-amplification",
+          "additionalInfo": ""
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752820740,
+          "_nanoseconds": 792000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752820746,
+          "_nanoseconds": 557000000
+        },
+        "info": {
+          "messageId": "<50d101bd-4316-6416-79cf-db66e76a1d87@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dbduran@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752820746 d2e1a72fcca58-759c84e22c8sm598190b3a.22 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "ql1U6By6mYuHGZ23Jac8",
+    "data": {
+      "to": [
+        "dbduran@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "ygbhDIfz1w9x2nhvcsuG",
+          "name": "Daniella Pailden",
+          "affiliation": "UPV CAS",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction, pcr-amplification",
+          "additionalInfo": ""
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752807910,
+          "_nanoseconds": 606000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752807913,
+          "_nanoseconds": 987000000
+        },
+        "info": {
+          "messageId": "<f1c75572-e148-22d0-b562-e87d921467ce@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dbduran@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752807913 d9443c01a7336-23e3b6cfdb1sm3644515ad.139 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "sGn3PPZm6ICmcGuOzP2H",
+    "data": {
+      "to": [
+        "dlpailden@up.edu.ph"
+      ],
+      "message": {
+        "subject": "this is a test email",
+        "text": "this is a test text body of the email"
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752465050,
+          "_nanoseconds": 120000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752465054,
+          "_nanoseconds": 224000000
+        },
+        "info": {
+          "messageId": "<bd28cc00-d88b-4ca8-417a-313482725fcc@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dlpailden@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752465054 41be03b00d2f7-b3bbe587070sm9198903a12.29 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "sHVq91aaZXdWoc2ZXEpm",
+    "data": {
+      "to": [
+        "dlpailden@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-research",
+        "data": {
+          "inquiryId": "EjEK2uFH80GSNdk9zFiH",
+          "name": "final test toast",
+          "affiliation": "UPV CAS ",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "research",
+          "projectBackground": "djfoajsdfae",
+          "projectBudget": "23446"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752647993,
+          "_nanoseconds": 570000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752647996,
+          "_nanoseconds": 66000000
+        },
+        "info": {
+          "messageId": "<a7533b07-d4d4-9819-357c-e84a9d0130b9@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dlpailden@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752647995 d9443c01a7336-23de4285c66sm119199475ad.12 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "urhEf5UmgCBoZ1GE7OEL",
+    "data": {
+      "to": [
+        "dlpailden@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "ejfRvaILr2VILPu83STL",
+          "name": "Daniella Lab3",
+          "affiliation": "UPV CAS Test",
+          "designation": "Intern Testing",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "sequencing, bioinformatics, quantification",
+          "additionalInfo": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752619687,
+          "_nanoseconds": 416000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752619690,
+          "_nanoseconds": 616000000
+        },
+        "info": {
+          "messageId": "<10049e92-d106-8401-29e3-7b38de678204@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dlpailden@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752619690 41be03b00d2f7-b3bbe579b0esm12512260a12.22 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "uvkXbxv4xh9Enkc08tYB",
+    "data": {
+      "to": [
+        "dlpailden@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "inquiryId": "aHkGnlE6bex8cR1TLNR4",
+          "name": "Pailden Test toast",
+          "affiliation": "UPV CAS ",
+          "designation": "test",
+          "email": "daniellalpailden@gmail.com",
+          "service": "laboratory",
+          "workflows": "dna-extraction, pcr-amplification",
+          "additionalInfo": "test"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752647639,
+          "_nanoseconds": 982000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752647642,
+          "_nanoseconds": 408000000
+        },
+        "info": {
+          "messageId": "<79856bb1-2e26-c0cd-f83a-ee2522509e7a@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "dlpailden@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752647642 d9443c01a7336-23de4333d6asm118515925ad.154 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "xxloDXrVd6bWYHKbpIwD",
+    "data": {
+      "to": [
+        "yalin@up.edu.ph"
+      ],
+      "template": {
+        "name": "inquiry-training",
+        "data": {
+          "inquiryId": "J9n3PrD9OoIr8VAOYp5p",
+          "name": "Testing Training Calendar",
+          "affiliation": "UPV CAS Test",
+          "designation": "Intern",
+          "email": "daniellalpailden@gmail.com",
+          "service": "training",
+          "specificTrainingNeed": "DNA Sequencing and Bioinformatics",
+          "targetTrainingDate": "2025-07-31",
+          "numberOfParticipants": "10"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752630272,
+          "_nanoseconds": 749000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752630276,
+          "_nanoseconds": 165000000
+        },
+        "info": {
+          "messageId": "<9d9db385-d066-6fb0-3ab4-b8a533906a0e@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "yalin@up.edu.ph"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752630276 d2e1a72fcca58-74eb9f1b56csm12625493b3a.77 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  },
+  {
+    "id": "ydXrARRupRbgKtERSqpD",
+    "data": {
+      "to": [
+        "daniellalpailden@gmail.com"
+      ],
+      "template": {
+        "name": "inquiry-laboratory",
+        "data": {
+          "name": "testing duranne email",
+          "affiliation": "affiliation",
+          "designation": "designation",
+          "email": "duranduranne@gmail.com",
+          "service": "laboratory",
+          "workflows": "pcr-amplification, quantification, complete-workflow",
+          "additionalInfo": "i have questions"
+        }
+      },
+      "delivery": {
+        "startTime": {
+          "_seconds": 1752542503,
+          "_nanoseconds": 834000000
+        },
+        "error": null,
+        "leaseExpireTime": null,
+        "state": "SUCCESS",
+        "endTime": {
+          "_seconds": 1752542507,
+          "_nanoseconds": 119000000
+        },
+        "info": {
+          "messageId": "<1f33e5f5-d46b-83ee-4dbc-8f053785d892@gmail.com>",
+          "sendgridQueueId": null,
+          "accepted": [
+            "daniellalpailden@gmail.com"
+          ],
+          "rejected": [],
+          "pending": [],
+          "response": "250 2.0.0 OK  1752542507 d9443c01a7336-23de4286da3sm105535845ad.34 - gsmtp"
+        },
+        "attempts": 1
+      }
+    }
+  }
+]
