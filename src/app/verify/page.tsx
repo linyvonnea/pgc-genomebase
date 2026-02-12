@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { signInWithPopup, GoogleAuthProvider, getAuth } from "firebase/auth";
 import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { 
   UserCheck, 
   Shield,
@@ -24,6 +24,7 @@ import {
   CheckCircle,
   Mail
 } from "lucide-react";
+import { getNextCid } from "@/services/clientService";
 
 export default function ClientVerifyPage() {
   // State for privacy agreement, inquiry ID, errors, loading, and Google user
@@ -93,13 +94,32 @@ export default function ClientVerifyPage() {
         setVerifying(false);
         return;
       }
+
+      // Check if project already exists for this inquiry
+      let projectPid = "";
+      const projectsRef = collection(db, "projects");
+      const projectQuery = query(projectsRef, where("iid", "==", inquiryId));
+      const projectSnapshot = await getDocs(projectQuery);
+      
+      if (!projectSnapshot.empty) {
+        projectPid = projectSnapshot.docs[0].data().pid;
+      }
+
+      // Generate next CID
+      const year = new Date().getFullYear();
+      const nextCid = await getNextCid(year);
+
       // Permission logic: contact person or after contact person submits
-      if (googleUser.email === inquiry.email) {
-        // Contact person can always proceed
-        router.push(`/client/project-info?email=${encodeURIComponent(googleUser.email)}&inquiryId=${encodeURIComponent(inquiryId)}`);
-      } else if (inquiry.haveSubmitted === true) {
-        // Any other email can proceed if contact person has submitted
-        router.push(`/client/project-info?email=${encodeURIComponent(googleUser.email)}&inquiryId=${encodeURIComponent(inquiryId)}`);
+      if (googleUser.email === inquiry.email || inquiry.haveSubmitted === true) {
+        const params = new URLSearchParams({
+          email: googleUser.email,
+          inquiryId: inquiryId,
+        });
+        
+        if (projectPid) params.set("pid", projectPid);
+        params.set("cid", nextCid);
+
+        router.push(`/client/project-info?${params.toString()}`);
       } else {
         toast.error("Only the contact person can proceed until they have submitted their client info.");
         setVerifying(false);
