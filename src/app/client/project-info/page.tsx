@@ -47,7 +47,7 @@ export default function ProjectForm() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingData, setPendingData] = useState<ProjectFormData | null>(null);
 
-  // Fetch project data if editing an existing project
+  // Fetch project data if editing an existing project, or create initial project if new
   useEffect(() => {
     async function fetchProject() {
       if (!pid) {
@@ -67,15 +67,39 @@ export default function ProjectForm() {
             sendingInstitution: data.sendingInstitution || "",
             fundingInstitution: data.fundingInstitution || "",
           });
+        } else {
+          // Create initial project document immediately when form loads
+          const year = new Date().getFullYear();
+          const initialPayload = {
+            pid,
+            iid: inquiryId || "",
+            year,
+            startDate: serverTimestamp(),
+            createdAt: serverTimestamp(),
+            lead: "",
+            clientNames: [],
+            title: "",
+            projectTag: "",
+            status: "",
+            sendingInstitution: "",
+            fundingCategory: "",
+            fundingInstitution: "",
+            serviceRequested: [],
+            personnelAssigned: "",
+            notes: "",
+          };
+          await setDoc(docRef, initialPayload);
+          console.log("Initial project created:", pid);
         }
-      } catch {
+      } catch (error) {
+        console.error("Failed to load/create project:", error);
         toast.error("Failed to load project data.");
       } finally {
         setLoading(false);
       }
     }
     fetchProject();
-  }, [pid]);
+  }, [pid, inquiryId]);
 
   // Permission check: Verify email and inquiryId exist and are valid
   useEffect(() => {
@@ -205,7 +229,14 @@ export default function ProjectForm() {
       setTimeout(() => {
         router.push("/client/project-info/submitted");
       }, 1500);
-    } catch {
+    } catch (error) {
+      console.error("Error updating project:", error);
+      console.error("Error details:", {
+        pid,
+        inquiryId,
+        email,
+        errorMessage: error instanceof Error ? error.message : String(error)
+      });
       toast.error("Error updating project. Please try again.");
     }
   };

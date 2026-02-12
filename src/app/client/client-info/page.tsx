@@ -188,7 +188,7 @@ export default function ClientFormEntry() {
       }, { merge: true });
       // Use updated client record for permission check
       if (updatedClient.isContactPerson && inquiryContactEmail && updatedClient.email === inquiryContactEmail) {
-        router.push(`/client/project-info?pid=${pid}&cid=${clientDocId}&inquiryId=${inquiryIdParam}`);
+        router.push(`/client/project-info?email=${encodeURIComponent(updatedClient.email)}&inquiryId=${inquiryIdParam}&pid=${pid}&cid=${clientDocId}`);
       } else {
         setSubmitting(false);
         toast.success("Client information submitted successfully! Only the contact person can fill out the project information form. Redirecting...");
