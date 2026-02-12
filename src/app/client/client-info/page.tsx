@@ -172,8 +172,9 @@ export default function ClientPortalPage() {
         const additionalMembers: ClientMember[] = allMembersSnapshot.docs
           .filter(doc => {
             const email = doc.data().email;
-            // Exclude the primary user's email
-            return email && email.toLowerCase() !== emailParam.toLowerCase();
+            // Exclude the primary user's email, but include empty emails (draft members)
+            if (!email) return true; // Include draft members with empty email
+            return email.toLowerCase() !== emailParam.toLowerCase();
           })
           .map((doc, index) => {
             const data = doc.data();
