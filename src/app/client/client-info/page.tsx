@@ -19,7 +19,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getNextCid } from "@/services/clientService";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
@@ -58,7 +58,7 @@ export default function ClientPortalPage() {
   const [activeSection, setActiveSection] = useState<string>("project-overview");
   const [members, setMembers] = useState<ClientMember[]>([]);
   const [projectDetails, setProjectDetails] = useState<ProjectDetails | null>(null);
-  const [expandedMember, setExpandedMember] = useState<string>("primary");
+  const [activeMemberTab, setActiveMemberTab] = useState<string>("primary");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -228,7 +228,7 @@ export default function ClientPortalPage() {
         // Set active section to project-overview if project exists, otherwise team-members
         const initialSection = fetchedProjectDetails ? "project-overview" : "team-members";
         setActiveSection(initialSection);
-        setExpandedMember("primary");
+        setActiveMemberTab("primary");
         console.log("✅ Initialization complete. Active section set to:", initialSection);
       } catch (error) {
         console.error("❌ Error initializing form:", error);
@@ -290,7 +290,7 @@ export default function ClientPortalPage() {
       const updatedMembers = [...members, newMember];
       console.log("👥 Updated members array:", updatedMembers.length, "members");
       setMembers(updatedMembers);
-      setExpandedMember(newMemberId);
+      setActiveMemberTab(newMemberId);
       console.log("✅ New member added successfully. Active tab:", newMemberId);
       toast.success(`New member tab created (${newCid})`);
     } catch (error) {
@@ -325,8 +325,8 @@ export default function ClientPortalPage() {
       setMembers(updatedMembers);
       
       // Switch to primary member if deleting active member
-      if (expandedMember === memberToDelete) {
-        setExpandedMember("primary");
+      if (activeMemberTab === memberToDelete) {
+        setActiveMemberTab("primary");
       }
 
       toast.success("Member removed and deleted from database");
@@ -880,14 +880,14 @@ export default function ClientPortalPage() {
               <p className="text-slate-700 leading-relaxed">
                 {projectDetails ? (
                   <>
-                    Complete your information in the <strong>Primary Member</strong> section below. 
-                    Use <strong>+ Add Member</strong> to include additional team members.
+                    Please provide the details for each member of your project team using the tabs below. 
+                    The <strong>Primary Member</strong> is the person authorized to manage this project. 
+                    Click <strong>+ Add Member</strong> to include additional personnel.
                   </>
                 ) : (
                   <>
-                    Add all project team members below. Each member will have their own record in the system.
-                    The first section is for you (the primary contact). Click the <strong>+ Add Member</strong> button
-                    to add additional team members.
+                    Manage your project team here. Use the tabs to switch between members and 
+                    the <strong>+ Add Member</strong> button to create new member profiles.
                   </>
                 )}
               </p>
@@ -916,62 +916,89 @@ export default function ClientPortalPage() {
             <Plus className="h-4 w-4 mr-1" />
             Add Member
           </Button>
+        {/* Member Count and Add Button */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Badge variant="outline" className="text-sm px-4 py-2">
+              <Users className="h-4 w-4 mr-2" />
+              {members.length} {members.length === 1 ? 'Member' : 'Members'}
+            </Badge>
+            <span className="text-sm text-slate-600">
+              <strong>{members.filter(m => m.isSubmitted).length}</strong> of <strong>{members.length}</strong> saved
+            </span>
+          </div>
+          <Button
+            onClick={handleAddMember}
+            variant="outline"
+            size="sm"
+            disabled={projectDetails?.status === "Completed"}
+            className="border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add Member
+          </Button>
         </div>
 
-        {/* Members Accordion */}
-        <Accordion 
-          type="single" 
-          collapsible 
-          value={expandedMember} 
-          onValueChange={setExpandedMember}
-          className="space-y-4"
+        {/* Member Tabs navigation */}
+        <Tabs 
+          value={activeMemberTab} 
+          onValueChange={setActiveMemberTab}
+          className="w-full space-y-4"
         >
-          {members.map((member) => {
-            const status = getMemberStatus(member);
-            return (
-              <AccordionItem 
-                key={member.id} 
-                value={member.id}
-                className="border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
-              >
-                <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-slate-50">
-                  <div className="flex items-center justify-between w-full pr-4">
-                    <div className="flex items-center gap-3">
-                      {member.isPrimary && <User className="h-5 w-5 text-[#166FB5]" />}
-                      <span className="font-semibold text-slate-800">
-                        {getTabLabel(member)}
-                      </span>
-                      <Badge 
-                        variant="outline" 
-                        className={`${status.color} text-white border-0 text-xs`}
-                      >
-                        {status.label}
-                      </Badge>
-                    </div>
-                    {!member.isPrimary && projectDetails?.status !== "Completed" && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveMember(member.id);
-                        }}
-                        className="ml-4 hover:bg-red-100 rounded-full p-2 transition-colors"
-                      >
-                        <Trash2 className="h-4 w-4 text-red-600" />
-                      </button>
-                    )}
+          <div className="flex bg-slate-100 p-1.5 rounded-lg overflow-x-auto custom-scrollbar no-scrollbar">
+            <TabsList className="justify-start bg-transparent h-auto p-0 flex gap-1">
+              {members.map((member) => {
+                const status = getMemberStatus(member);
+                return (
+                  <TabsTrigger 
+                    key={member.id} 
+                    value={member.id}
+                    className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 py-2 flex items-center gap-2 whitespace-nowrap rounded-md relative group"
+                  >
+                    {member.isPrimary && <User className="h-3.5 w-3.5 text-[#166FB5]" />}
+                    <span className="text-sm font-medium">{getTabLabel(member)}</span>
+                    <div className={`w-2 h-2 rounded-full ${status.color}`} title={status.label} />
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </div>
+
+          {members.map((member) => (
+            <TabsContent 
+              key={member.id} 
+              value={member.id}
+              className="mt-4 focus-visible:outline-none focus-visible:ring-0"
+            >
+              <Card className="border border-slate-200">
+                <CardHeader className="border-b border-slate-100 flex flex-row items-center justify-between py-4">
+                  <div className="flex items-center gap-3">
+                    <CardTitle className="text-lg font-bold text-slate-800">
+                      {member.isPrimary ? "Primary Member Information" : "Team Member Information"}
+                    </CardTitle>
+                    <Badge className={`${getMemberStatus(member).color} text-white border-0 text-[10px]`}>
+                      {getMemberStatus(member).label}
+                    </Badge>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-6 pb-6 pt-2">
-                  <Card>
-                    <CardContent className="p-6">
-                      {renderMemberForm(member)}
-                    </CardContent>
-                  </Card>
-                </AccordionContent>
-              </AccordionItem>
-            );
-          })}
-        </Accordion>
+                  {!member.isPrimary && projectDetails?.status !== "Completed" && (
+                    <Button
+                      onClick={() => handleRemoveMember(member.id)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 h-8 font-medium"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Remove Member
+                    </Button>
+                  )}
+                </CardHeader>
+                <CardContent className="p-6">
+                  {renderMemberForm(member)}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          ))}
+        </Tabs>
 
         {/* Final Submit Button */}
         {projectDetails?.status !== "Completed" && (
