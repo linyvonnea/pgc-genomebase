@@ -231,7 +231,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
         
         <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="margin-top: 0;">Service Details</h3>
-          <p><strong>Service Type:</strong> ${inquiryData.service}</p>
+          <p><strong>Serviace Type:</strong> ${inquiryData.service}</p>
           ${inquiryData.workflows && inquiryData.workflows.length > 0 ? `<p><strong>Workflows:</strong> ${Array.isArray(inquiryData.workflows) ? inquiryData.workflows.join(', ') : inquiryData.workflows}</p>` : ''}
           ${inquiryData.additionalInfo ? `<p><strong>Additional Info:</strong> ${inquiryData.additionalInfo}</p>` : ''}
           ${inquiryData.projectBackground ? `<p><strong>Project Background:</strong> ${inquiryData.projectBackground}</p>` : ''}

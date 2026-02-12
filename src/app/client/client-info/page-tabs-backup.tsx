@@ -1,6 +1,6 @@
 "use client";
 
-// Client Portal with Sidebar Navigation
+// Multi-member Client Information Form with Tabs
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -17,15 +17,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { getNextCid } from "@/services/clientService";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
-import ClientPortalLayout, { SidebarSection } from "@/components/layout/ClientPortalLayout";
-import { Plus, X, CheckCircle2, AlertCircle, Loader2, FolderOpen, Calendar, Building2, User, FileText, Users, FileText as FileTextIcon, CreditCard, Save, Trash2 } from "lucide-react";
+import { Plus, X, CheckCircle2, AlertCircle, Loader2, FolderOpen, Calendar, Building2, User, FileText } from "lucide-react";
 
 interface ClientMember {
   id: string; // Unique tab identifier
@@ -47,7 +45,7 @@ interface ProjectDetails {
   inquiryId: string;
 }
 
-export default function ClientPortalPage() {
+export default function MultiMemberClientForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -55,10 +53,9 @@ export default function ClientPortalPage() {
   const inquiryIdParam = searchParams.get('inquiryId');
   const pidParam = searchParams.get('pid');
 
-  const [activeSection, setActiveSection] = useState<string>("project-overview");
   const [members, setMembers] = useState<ClientMember[]>([]);
   const [projectDetails, setProjectDetails] = useState<ProjectDetails | null>(null);
-  const [expandedMember, setExpandedMember] = useState<string>("primary");
+  const [activeTab, setActiveTab] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -224,11 +221,10 @@ export default function ClientPortalPage() {
         console.log("👥 Setting members array:", allMembers.length, "members");
         console.log("📋 Members:", allMembers);
         setMembers(allMembers);
-        // Set active section to project-overview if project exists, otherwise team-members
-        const initialSection = fetchedProjectDetails ? "project-overview" : "team-members";
-        setActiveSection(initialSection);
-        setExpandedMember("primary");
-        console.log("✅ Initialization complete. Active section set to:", initialSection);
+        // Set active tab to project-overview if project exists, otherwise primary
+        const initialTab = fetchedProjectDetails ? "project-overview" : "primary";
+        setActiveTab(initialTab);
+        console.log("✅ Initialization complete. Active tab set to:", initialTab);
       } catch (error) {
         console.error("❌ Error initializing form:", error);
         toast.error(`Failed to load member data: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -289,7 +285,7 @@ export default function ClientPortalPage() {
       const updatedMembers = [...members, newMember];
       console.log("👥 Updated members array:", updatedMembers.length, "members");
       setMembers(updatedMembers);
-      setExpandedMember(newMemberId);
+      setActiveTab(newMemberId);
       console.log("✅ New member added successfully. Active tab:", newMemberId);
       toast.success(`New member tab created (${newCid})`);
     } catch (error) {
@@ -316,8 +312,8 @@ export default function ClientPortalPage() {
       setMembers(updatedMembers);
       
       // Switch to primary tab if deleting active tab
-      if (expandedMember === memberToDelete) {
-        setExpandedMember("primary");
+      if (activeTab === memberToDelete) {
+        setActiveTab("primary");
       }
 
       toast.success("Member removed from form");
@@ -451,45 +447,6 @@ export default function ClientPortalPage() {
     router.push("/client/client-info/submitted");
   };
 
-  // Calculate section statuses for sidebar
-  const getSections = (): SidebarSection[] => {
-    const teamComplete = members.every(m => m.isSubmitted);
-    const teamCount = members.filter(m => m.isSubmitted).length;
-    
-    return [
-      {
-        id: "project-overview",
-        label: "Project Overview",
-        icon: FolderOpen,
-        status: projectDetails ? "complete" : "active",
-        badge: projectDetails ? undefined : "Not available",
-      },
-      {
-        id: "team-members",
-        label: "Team Members",
-        icon: Users,
-        status: teamComplete ? "complete" : "incomplete",
-        badge: `${teamCount}/${members.length} saved`,
-      },
-      {
-        id: "quotations",
-        label: "Quotations",
-        icon: FileTextIcon,
-        status: "locked",
-        badge: "Coming soon",
-        locked: true,
-      },
-      {
-        id: "charge-slips",
-        label: "Charge Slips",
-        icon: CreditCard,
-        status: "locked",
-        badge: "Coming soon",
-        locked: true,
-      },
-    ];
-  };
-
   const getMemberStatus = (member: ClientMember) => {
     if (member.isSubmitted) {
       return { label: "Completed", color: "bg-green-500", icon: CheckCircle2 };
@@ -512,7 +469,7 @@ export default function ClientPortalPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50/50 to-blue-50/30 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-[#166FB5] mb-2" />
-          <p className="text-slate-600">Loading portal...</p>
+          <p className="text-slate-600">Loading form...</p>
         </div>
       </div>
     );
@@ -528,9 +485,9 @@ export default function ClientPortalPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50/50 to-blue-50/30 flex items-center justify-center p-6">
         <div className="max-w-md bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50 p-8 text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-slate-800 mb-2">Unable to Load Portal</h2>
+          <h2 className="text-xl font-bold text-slate-800 mb-2">Unable to Load Form</h2>
           <p className="text-slate-600 mb-4">
-            Failed to initialize. Please check browser console.
+            Failed to initialize the client information form. Please check the browser console for details.
           </p>
           <Button
             onClick={() => router.push('/verify')}
@@ -543,7 +500,7 @@ export default function ClientPortalPage() {
     );
   }
 
-  console.log("🎨 Rendering portal with members:", members);
+  console.log("🎨 Rendering form with members:", members);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50/50 to-blue-50/30 p-6">
@@ -582,7 +539,7 @@ export default function ClientPortalPage() {
           </div>
 
           {/* Tabs */}
-          <Tabs value={expandedMember} onValueChange={setExpandedMember} className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <div className="flex items-center gap-4 mb-6">
               <TabsList className="flex-1 justify-start h-auto p-1 bg-slate-100/50">
                 {/* Project Overview Tab */}
@@ -986,5 +943,3 @@ export default function ClientPortalPage() {
     </div>
   );
 }
-
-
