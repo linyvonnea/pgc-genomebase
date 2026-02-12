@@ -15,7 +15,7 @@ function calculateTotalIncome(slips: any[]) {
 function filterProjectsByStatus(projects: any[]) {
   return projects.filter((project: any) => {
     const status = project.status ? project.status.toString().trim() : '';
-    return status === "Completed" || status === "Ongoing";
+    return status === "Completed" || status === "Ongoing" || status === "Pending";
   });
 }
 
@@ -27,7 +27,7 @@ export async function fetchAllData(setters: {
   setTotalIncome: (v: number) => void,
 }) {
   const [activePr, pr, cl, cs] = await Promise.all([
-    getDocs(query(collection(db, "projects"), where("status", "in", ["Ongoing", "Completed"]))),
+    getDocs(query(collection(db, "projects"), where("status", "in", ["Pending", "Ongoing", "Completed"]))),
     getDocs(collection(db, "projects")),
     getDocs(collection(db, "clients")),
     getDocs(collection(db, "chargeSlips"))

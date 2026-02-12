@@ -18,7 +18,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp, Timestamp, collection, query, where, getDocs } from "firebase/firestore";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
@@ -48,98 +48,64 @@ export default function ProjectForm() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingData, setPendingData] = useState<ProjectFormData | null>(null);
 
-  // Fetch project data if editing an existing project, or create initial project if new
+  // Fetch project data if editing an existing project
   useEffect(() => {
     async function fetchOrCreateProject() {
       setLoading(true);
       try {
-        // If no pid in URL, generate a new one
-        if (!pid) {
-          const year = new Date().getFullYear();
-          const newPid = await getNextPid(year);
-          console.log("Generated new PID:", newPid);
+        // If pid exists in URL, fetch existing project
+        if (pid) {
+          const docRef = doc(db, "projects", pid);
+          const snap = await getDoc(docRef);
+          if (snap.exists()) {
+            const data = snap.data();
+            setFormData({
+              title: data.title || "",
+              projectLead: data.lead || "",
+              startDate: data.startDate?.toDate?.() || new Date(data.startDate),
+              sendingInstitution: data.sendingInstitution || "",
+              fundingInstitution: data.fundingInstitution || "",
+            });
+          }
+        } else if (inquiryId) {
+          // If no pid but has inquiryId, check if a project already exists for this inquiry
+          console.log("Checking for existing project for inquiry:", inquiryId);
+          const projectQuery = query(
+            collection(db, "projects"),
+            where("iid", "==", inquiryId)
+          );
+          const projectSnapshot = await getDocs(projectQuery);
           
-          // Update URL with the new pid
-          const params = new URLSearchParams();
-          if (email) params.set("email", email);
-          if (inquiryId) params.set("inquiryId", inquiryId);
-          if (cid) params.set("cid", cid);
-          params.set("pid", newPid);
-          
-          router.replace(`/client/project-info?${params.toString()}`);
-          setPid(newPid);
-          
-          // Create initial project document
-          const docRef = doc(db, "projects", newPid);
-          const initialPayload = {
-            pid: newPid,
-            iid: inquiryId || "",
-            year,
-            startDate: serverTimestamp(),
-            createdAt: serverTimestamp(),
-            lead: "",
-            clientNames: [],
-            title: "",
-            projectTag: "",
-            status: "",
-            sendingInstitution: "",
-            fundingCategory: "",
-            fundingInstitution: "",
-            serviceRequested: [],
-            personnelAssigned: "",
-            notes: "",
-          };
-          await setDoc(docRef, initialPayload);
-          console.log("Initial project created:", newPid);
-          setLoading(false);
-          return;
-        }
-        
-        // If pid exists, fetch existing project
-        const docRef = doc(db, "projects", pid);
-        const snap = await getDoc(docRef);
-        if (snap.exists()) {
-          const data = snap.data();
-          setFormData({
-            title: data.title || "",
-            projectLead: data.lead || "",
-            startDate: data.startDate?.toDate?.() || new Date(data.startDate),
-            sendingInstitution: data.sendingInstitution || "",
-            fundingInstitution: data.fundingInstitution || "",
-          });
-        } else {
-          // Create initial project document if it doesn't exist
-          const year = new Date().getFullYear();
-          const initialPayload = {
-            pid,
-            iid: inquiryId || "",
-            year,
-            startDate: serverTimestamp(),
-            createdAt: serverTimestamp(),
-            lead: "",
-            clientNames: [],
-            title: "",
-            projectTag: "",
-            status: "",
-            sendingInstitution: "",
-            fundingCategory: "",
-            fundingInstitution: "",
-            serviceRequested: [],
-            personnelAssigned: "",
-            notes: "",
-          };
-          await setDoc(docRef, initialPayload);
-          console.log("Initial project created:", pid);
+          if (!projectSnapshot.empty) {
+            const existingProject = projectSnapshot.docs[0];
+            const data = existingProject.data();
+            const existingPid = existingProject.id;
+            console.log("Found existing project:", existingPid);
+            
+            setPid(existingPid);
+            setFormData({
+              title: data.title || "",
+              projectLead: data.lead || "",
+              startDate: data.startDate?.toDate?.() || new Date(data.startDate),
+              sendingInstitution: data.sendingInstitution || "",
+              fundingInstitution: data.fundingInstitution || "",
+            });
+            
+            // Update URL with the existing pid
+            const params = new URLSearchParams(searchParams.toString());
+            params.set("pid", existingPid);
+            router.replace(`/client/project-info?${params.toString()}`);
+          }
         }
       } catch (error) {
-        console.error("Failed to load/create project:", error);
+        console.error("Failed to load project:", error);
         toast.error("Failed to load project data.");
       } finally {
         setLoading(false);
       }
     }
     fetchOrCreateProject();
-  }, [pid, inquiryId, email, cid, router]);
+  }, [pid, inquiryId, router, searchParams]);
 
   // Permission check: Verify email and inquiryId exist and are valid
   useEffect(() => {
@@ -202,19 +168,23 @@ export default function ProjectForm() {
   const handleConfirmSave = async () => {
     setShowConfirmModal(false);
     try {
-      // Validate pid exists
-      if (!pid) {
-        toast.error("Project ID is missing. Please refresh the page and try again.");
-        return;
-      }
-      
+      let currentPid = pid;
       const result = projectFormSchema.safeParse(pendingData);
+      
       if (!result.success) {
         toast.error("Invalid data. Please review your entries.");
         return;
       }
-      const year = result.data.startDate.getFullYear();
-      const docRef = doc(db, "projects", pid);
+
+      // If no pid in state, generate a new one now
+      if (!currentPid) {
+        const year = result.data.startDate.getFullYear();
+        currentPid = await getNextPid(year);
+        setPid(currentPid);
+        console.log("Generated new PID on submission:", currentPid);
+      }
+      
+      const docRef = doc(db, "projects", currentPid);
       let clientName = "";
       
       // Get client name - try from cid first, then from email parameter, then from inquiry email
@@ -225,18 +195,20 @@ export default function ProjectForm() {
         }
       } else if (email) {
         // Try using email parameter
-        const clientDoc = await getDoc(doc(db, "clients", email));
-        if (clientDoc.exists()) {
-          clientName = clientDoc.data().name || "";
+        const clientEmailQuery = query(collection(db, "clients"), where("email", "==", email));
+        const clientEmailSnap = await getDocs(clientEmailQuery);
+        if (!clientEmailSnap.empty) {
+          clientName = clientEmailSnap.docs[0].data().name || "";
         }
       } else if (inquiryId) {
         // Fall back to getting client from inquiry email
         const inquiryDoc = await getDoc(doc(db, "inquiries", inquiryId));
         if (inquiryDoc.exists()) {
           const inquiry = inquiryDoc.data();
-          const clientDoc = await getDoc(doc(db, "clients", inquiry.email));
-          if (clientDoc.exists()) {
-            clientName = clientDoc.data().name || "";
+          const clientEmailQuery = query(collection(db, "clients"), where("email", "==", inquiry.email));
+          const clientEmailSnap = await getDocs(clientEmailQuery);
+          if (!clientEmailSnap.empty) {
+            clientName = clientEmailSnap.docs[0].data().name || "";
           }
         }
       }
@@ -246,23 +218,26 @@ export default function ProjectForm() {
       let createdAt = serverTimestamp();
       let existingClientNames: string[] = [];
       if (snap.exists()) {
-        createdAt = snap.data().createdAt || createdAt;
-        existingClientNames = snap.data().clientNames || [];
+        const data = snap.data();
+        createdAt = data.createdAt || createdAt;
+        existingClientNames = data.clientNames || [];
       }
+      
       const updatedClientNames = clientName && !existingClientNames.includes(clientName) 
         ? [...existingClientNames, clientName]
         : existingClientNames;
+
       const payload = {
-        pid,
+        pid: currentPid,
         iid: inquiryId || "",
-        year,
+        year: result.data.startDate.getFullYear(),
         startDate: Timestamp.fromDate(result.data.startDate),
         createdAt,
         lead: result.data.projectLead,
         clientNames: updatedClientNames,
         title: result.data.title,
         projectTag: "",
-        status: "",
+        status: "Pending", // Default status to Pending on submission
         sendingInstitution: result.data.sendingInstitution,
         fundingCategory: "",
         fundingInstitution: result.data.fundingInstitution,
@@ -270,24 +245,20 @@ export default function ProjectForm() {
         personnelAssigned: "",
         notes: "",
       };
+
       await setDoc(docRef, payload, { merge: true });
-      toast.success("Project added successfully! Redirecting...");
+      toast.success("Project information saved successfully! Redirecting...");
+      
       setTimeout(() => {
         const params = new URLSearchParams();
         if (email) params.set("email", email);
         if (inquiryId) params.set("inquiryId", inquiryId);
-        if (pid) params.set("pid", pid);
+        if (currentPid) params.set("pid", currentPid);
         router.push(`/client/client-info?${params.toString()}`);
       }, 1500);
     } catch (error) {
-      console.error("Error updating project:", error);
-      console.error("Error details:", {
-        pid,
-        inquiryId,
-        email,
-        errorMessage: error instanceof Error ? error.message : String(error)
-      });
-      toast.error("Error updating project. Please try again.");
+      console.error("Error saving project:", error);
+      toast.error("Error saving project information. Please try again.");
     }
   };
 
