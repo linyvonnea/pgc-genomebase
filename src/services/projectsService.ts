@@ -94,14 +94,15 @@ export async function getProjects(): Promise<Project[]> {
       };
 
       // Helper function to normalize status
-      const normalizeStatus = (value: any): "Ongoing" | "Completed" | "Cancelled" | undefined => {
+      const normalizeStatus = (value: any): "Pending" | "Ongoing" | "Completed" | "Cancelled" | undefined => {
         if (!value) return undefined;
         const normalized = value.toString().trim().toLowerCase();
+        if (normalized === "pending") return "Pending";
         if (normalized === "ongoing") return "Ongoing";
         if (normalized === "completed") return "Completed";
         if (["cancelled", "canceled"].includes(normalized)) return "Cancelled";
         // Return as-is if it matches exactly, otherwise undefined
-        return ["Ongoing", "Completed", "Cancelled"].includes(value) ? value : undefined;
+        return ["Pending", "Ongoing", "Completed", "Cancelled"].includes(value) ? value : undefined;
       };
 
       // Helper function to normalize funding category

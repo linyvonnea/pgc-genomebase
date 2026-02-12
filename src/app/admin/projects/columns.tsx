@@ -134,6 +134,10 @@ export const columns: ColumnDef<Project>[] = [
       let color = "bg-gray-100 text-gray-800";
       let label: string = status || "";
       switch (status) {
+        case "Pending":
+          color = "bg-blue-100 text-blue-800";
+          label = "Pending";
+          break;
         case "Ongoing":
           color = "bg-yellow-100 text-yellow-800";
           label = "Ongoing";

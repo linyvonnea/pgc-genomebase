@@ -409,6 +409,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      <SelectItem value="Pending">Pending</SelectItem>
                       <SelectItem value="Ongoing">Ongoing</SelectItem>
                       <SelectItem value="Completed">Completed</SelectItem>
                       <SelectItem value="Cancelled">Cancelled</SelectItem>
