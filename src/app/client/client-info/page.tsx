@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
-import { doc, setDoc, serverTimestamp, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, getDoc, collection, query, where, getDocs, deleteDoc } from "firebase/firestore";
 import { clientFormSchema, ClientFormData } from "@/schemas/clientSchema";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -310,19 +310,23 @@ export default function ClientPortalPage() {
     if (!member) return;
 
     try {
-      // Note: We're not deleting from Firestore to maintain history
-      // Just remove from local state
+      // Delete the client document from Firestore
+      console.log("🗑️ Deleting client document:", member.cid);
+      await deleteDoc(doc(db, "clients", member.cid));
+      console.log("✅ Client document deleted successfully");
+      
+      // Remove from local state
       const updatedMembers = members.filter(m => m.id !== memberToDelete);
       setMembers(updatedMembers);
       
-      // Switch to primary tab if deleting active tab
+      // Switch to primary member if deleting active member
       if (expandedMember === memberToDelete) {
         setExpandedMember("primary");
       }
 
-      toast.success("Member removed from form");
+      toast.success("Member removed and deleted from database");
     } catch (error) {
-      console.error("Error removing member:", error);
+      console.error("❌ Error removing member:", error);
       toast.error("Failed to remove member");
     } finally {
       setShowDeleteModal(false);
