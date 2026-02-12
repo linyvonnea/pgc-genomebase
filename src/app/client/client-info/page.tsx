@@ -238,8 +238,9 @@ export default function ClientFormEntry() {
         }
       }
 
-      // 4. Update the client record (already created on load)
-      const isContactPersonValue = result.data.email.toLowerCase() === inquiryContactEmail?.toLowerCase();
+      // 4. Update the client record
+      // User requested: "everyone can be consider contact person"
+      const isContactPersonValue = true;
       
       await setDoc(doc(db, "clients", cid), {
         ...result.data,

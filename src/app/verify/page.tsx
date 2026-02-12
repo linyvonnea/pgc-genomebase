@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { signInWithPopup, GoogleAuthProvider, getAuth } from "firebase/auth";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs, setDoc, serverTimestamp } from "firebase/firestore";
 import { 
   UserCheck, 
   Shield,
@@ -105,16 +105,47 @@ export default function ClientVerifyPage() {
         projectPid = projectSnapshot.docs[0].data().pid;
       }
 
-      // Generate next CID
-      const year = new Date().getFullYear();
-      const nextCid = await getNextCid(year);
+      // Check if client record already exists for this email and inquiry
+      let finalCid = "";
+      const clientsRef = collection(db, "clients");
+      const clientQuery = query(
+        clientsRef, 
+        where("email", "==", googleUser.email),
+        where("inquiryId", "==", inquiryId)
+      );
+      const clientSnapshot = await getDocs(clientQuery);
+
+      if (!clientSnapshot.empty) {
+        finalCid = clientSnapshot.docs[0].id;
+      } else {
+        // Generate new CID and create initial record
+        const year = new Date().getFullYear();
+        finalCid = await getNextCid(year);
+        
+        await setDoc(doc(db, "clients", finalCid), {
+          cid: finalCid,
+          email: googleUser.email,
+          inquiryId: inquiryId,
+          pid: projectPid || "",
+          isContactPerson: googleUser.email === inquiry.email,
+          haveSubmitted: false,
+          createdAt: serverTimestamp(),
+          name: "",
+          affiliation: "",
+          designation: "",
+          sex: "M",
+          phoneNumber: "",
+          affiliationAddress: "",
+        });
+        console.log("Initial client record created via Verify:", finalCid);
+      }
 
       // Permission logic: contact person or after contact person submits
       if (googleUser.email === inquiry.email || inquiry.haveSubmitted === true) {
         const params = new URLSearchParams({
           email: googleUser.email,
           inquiryId: inquiryId,
-          cid: nextCid,
+          cid: finalCid,
         });
         
         if (projectPid) {
