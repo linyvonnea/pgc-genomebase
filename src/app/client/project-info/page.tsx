@@ -22,12 +22,13 @@ import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from "firebase/firest
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
+import { getNextPid } from "@/services/projectsService";
 
 export default function ProjectForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   // Get project, client, inquiry IDs, and email from URL
-  const pid = searchParams.get("pid");
+  const [pid, setPid] = useState<string | null>(searchParams.get("pid"));
   const cid = searchParams.get("cid");
   const inquiryId = searchParams.get("inquiryId");
   const email = searchParams.get("email");
@@ -49,13 +50,52 @@ export default function ProjectForm() {
 
   // Fetch project data if editing an existing project, or create initial project if new
   useEffect(() => {
-    async function fetchProject() {
-      if (!pid) {
-        setLoading(false);
-        return;
-      }
+    async function fetchOrCreateProject() {
       setLoading(true);
       try {
+        // If no pid in URL, generate a new one
+        if (!pid) {
+          const year = new Date().getFullYear();
+          const newPid = await getNextPid(year);
+          console.log("Generated new PID:", newPid);
+          
+          // Update URL with the new pid
+          const params = new URLSearchParams();
+          if (email) params.set("email", email);
+          if (inquiryId) params.set("inquiryId", inquiryId);
+          if (cid) params.set("cid", cid);
+          params.set("pid", newPid);
+          
+          router.replace(`/client/project-info?${params.toString()}`);
+          setPid(newPid);
+          
+          // Create initial project document
+          const docRef = doc(db, "projects", newPid);
+          const initialPayload = {
+            pid: newPid,
+            iid: inquiryId || "",
+            year,
+            startDate: serverTimestamp(),
+            createdAt: serverTimestamp(),
+            lead: "",
+            clientNames: [],
+            title: "",
+            projectTag: "",
+            status: "",
+            sendingInstitution: "",
+            fundingCategory: "",
+            fundingInstitution: "",
+            serviceRequested: [],
+            personnelAssigned: "",
+            notes: "",
+          };
+          await setDoc(docRef, initialPayload);
+          console.log("Initial project created:", newPid);
+          setLoading(false);
+          return;
+        }
+        
+        // If pid exists, fetch existing project
         const docRef = doc(db, "projects", pid);
         const snap = await getDoc(docRef);
         if (snap.exists()) {
@@ -68,7 +108,7 @@ export default function ProjectForm() {
             fundingInstitution: data.fundingInstitution || "",
           });
         } else {
-          // Create initial project document immediately when form loads
+          // Create initial project document if it doesn't exist
           const year = new Date().getFullYear();
           const initialPayload = {
             pid,
@@ -98,8 +138,8 @@ export default function ProjectForm() {
         setLoading(false);
       }
     }
-    fetchProject();
-  }, [pid, inquiryId]);
+    fetchOrCreateProject();
+  }, [pid, inquiryId, email, cid, router]);
 
   // Permission check: Verify email and inquiryId exist and are valid
   useEffect(() => {
@@ -162,13 +202,19 @@ export default function ProjectForm() {
   const handleConfirmSave = async () => {
     setShowConfirmModal(false);
     try {
+      // Validate pid exists
+      if (!pid) {
+        toast.error("Project ID is missing. Please refresh the page and try again.");
+        return;
+      }
+      
       const result = projectFormSchema.safeParse(pendingData);
       if (!result.success) {
         toast.error("Invalid data. Please review your entries.");
         return;
       }
       const year = result.data.startDate.getFullYear();
-      const docRef = doc(db, "projects", pid!);
+      const docRef = doc(db, "projects", pid);
       let clientName = "";
       
       // Get client name - try from cid first, then from email parameter, then from inquiry email
