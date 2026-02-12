@@ -37,9 +37,9 @@ export function QuotationHistoryPanel({
 }: QuotationHistoryPanelProps) {
   const [selectedQuotationId, setSelectedQuotationId] = useState<string | null>(null);
   
-  const hasInquiryId = inquiryId && inquiryId.trim().length > 0;
-  const hasClientName = clientName && clientName.trim().length > 0;
-  const shouldFetch = Boolean(hasInquiryId || hasClientName);
+  const hasInquiryId = !!(inquiryId && inquiryId.trim().length > 0);
+  const hasClientName = !!(clientName && clientName.trim().length > 0);
+  const shouldFetch = hasInquiryId || hasClientName;
   
   // Prioritize inquiryId if available, otherwise use clientName
   const useInquiryId = hasInquiryId;

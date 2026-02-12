@@ -916,27 +916,6 @@ export default function ClientPortalPage() {
             <Plus className="h-4 w-4 mr-1" />
             Add Member
           </Button>
-        {/* Member Count and Add Button */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Badge variant="outline" className="text-sm px-4 py-2">
-              <Users className="h-4 w-4 mr-2" />
-              {members.length} {members.length === 1 ? 'Member' : 'Members'}
-            </Badge>
-            <span className="text-sm text-slate-600">
-              <strong>{members.filter(m => m.isSubmitted).length}</strong> of <strong>{members.length}</strong> saved
-            </span>
-          </div>
-          <Button
-            onClick={handleAddMember}
-            variant="outline"
-            size="sm"
-            disabled={projectDetails?.status === "Completed"}
-            className="border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Add Member
-          </Button>
         </div>
 
         {/* Member Tabs navigation */}
