@@ -114,12 +114,17 @@ export default function ClientVerifyPage() {
         const params = new URLSearchParams({
           email: googleUser.email,
           inquiryId: inquiryId,
+          cid: nextCid,
         });
         
-        if (projectPid) params.set("pid", projectPid);
-        params.set("cid", nextCid);
-
-        router.push(`/client/project-info?${params.toString()}`);
+        if (projectPid) {
+          // Project exists - skip to Client Information Form
+          params.set("pid", projectPid);
+          router.push(`/client/client-info?${params.toString()}`);
+        } else {
+          // No project exists - go to Project Information Form
+          router.push(`/client/project-info?${params.toString()}`);
+        }
       } else {
         toast.error("Only the contact person can proceed until they have submitted their client info.");
         setVerifying(false);
