@@ -23,7 +23,7 @@ import { getNextCid } from "@/services/clientService";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
-import { Plus, X, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Plus, X, CheckCircle2, AlertCircle, Loader2, FolderOpen, Calendar, Building2, User, FileText } from "lucide-react";
 
 interface ClientMember {
   id: string; // Unique tab identifier
@@ -32,6 +32,17 @@ interface ClientMember {
   errors: Partial<Record<keyof ClientFormData, string>>;
   isSubmitted: boolean;
   isPrimary: boolean; // First member (logged-in user)
+}
+
+interface ProjectDetails {
+  pid: string;
+  title: string;
+  lead: string;
+  startDate: Date | string;
+  sendingInstitution: string;
+  fundingInstitution: string;
+  status: string;
+  inquiryId: string;
 }
 
 export default function MultiMemberClientForm() {
@@ -43,6 +54,7 @@ export default function MultiMemberClientForm() {
   const pidParam = searchParams.get('pid');
 
   const [members, setMembers] = useState<ClientMember[]>([]);
+  const [projectDetails, setProjectDetails] = useState<ProjectDetails | null>(null);
   const [activeTab, setActiveTab] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -181,12 +193,38 @@ export default function MultiMemberClientForm() {
           });
         console.log("👥 Additional members found:", additionalMembers.length);
 
+        // Fetch project details if pid is available
+        let fetchedProjectDetails: ProjectDetails | null = null;
+        if (pidParam) {
+          console.log("📁 Fetching project details for PID:", pidParam);
+          const projectDoc = await getDoc(doc(db, "projects", pidParam));
+          if (projectDoc.exists()) {
+            const projectData = projectDoc.data();
+            fetchedProjectDetails = {
+              pid: projectData.pid || pidParam,
+              title: projectData.title || "Untitled Project",
+              lead: projectData.lead || "Not specified",
+              startDate: projectData.startDate?.toDate?.() || projectData.startDate || new Date(),
+              sendingInstitution: projectData.sendingInstitution || "Not specified",
+              fundingInstitution: projectData.fundingInstitution || "Not specified",
+              status: projectData.status || "Active",
+              inquiryId: projectData.iid || inquiryIdParam || "",
+            };
+            setProjectDetails(fetchedProjectDetails);
+            console.log("✅ Project details loaded:", fetchedProjectDetails);
+          } else {
+            console.log("⚠️ Project document not found:", pidParam);
+          }
+        }
+
         const allMembers = [primaryMember, ...additionalMembers];
         console.log("👥 Setting members array:", allMembers.length, "members");
         console.log("📋 Members:", allMembers);
         setMembers(allMembers);
-        setActiveTab("primary");
-        console.log("✅ Initialization complete. Active tab set to: primary");
+        // Set active tab to project-overview if project exists, otherwise primary
+        const initialTab = fetchedProjectDetails ? "project-overview" : "primary";
+        setActiveTab(initialTab);
+        console.log("✅ Initialization complete. Active tab set to:", initialTab);
       } catch (error) {
         console.error("❌ Error initializing form:", error);
         toast.error(`Failed to load member data: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -421,9 +459,9 @@ export default function MultiMemberClientForm() {
 
   const getTabLabel = (member: ClientMember) => {
     if (member.isPrimary) {
-      return member.formData.name || "You (Primary)";
+      return member.formData.name || "Primary Member";
     }
-    return member.formData.name || `Member ${members.indexOf(member)}`;
+    return member.formData.name || `Team Member ${members.indexOf(member)}`;
   };
 
   if (loading) {
@@ -483,9 +521,19 @@ export default function MultiMemberClientForm() {
             </div>
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
               <p className="text-slate-700 leading-relaxed">
-                Add all project team members below. Each member will have their own record in the system.
-                The first tab is for you (the primary contact). Click the <strong>+ Add Member</strong> button
-                to add additional team members.
+                {projectDetails ? (
+                  <>
+                    Review the <strong>Project Overview</strong> tab to see project details. 
+                    Then complete your information in the <strong>Primary Member</strong> tab. 
+                    Use <strong>+ Add Member</strong> to include additional team members.
+                  </>
+                ) : (
+                  <>
+                    Add all project team members below. Each member will have their own record in the system.
+                    The first tab is for you (the primary contact). Click the <strong>+ Add Member</strong> button
+                    to add additional team members.
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -494,6 +542,22 @@ export default function MultiMemberClientForm() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <div className="flex items-center gap-4 mb-6">
               <TabsList className="flex-1 justify-start h-auto p-1 bg-slate-100/50">
+                {/* Project Overview Tab */}
+                {projectDetails && (
+                  <TabsTrigger
+                    value="project-overview"
+                    className="relative data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 py-2"
+                  >
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="h-4 w-4" />
+                      <span>Project Overview</span>
+                      <Badge variant="outline" className="bg-blue-500 text-white border-0 text-xs">
+                        Info
+                      </Badge>
+                    </div>
+                  </TabsTrigger>
+                )}
+
                 {members.map((member) => {
                   const status = getMemberStatus(member);
                   return (
@@ -503,6 +567,7 @@ export default function MultiMemberClientForm() {
                       className="relative data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 py-2"
                     >
                       <div className="flex items-center gap-2">
+                        {member.isPrimary && <User className="h-4 w-4 text-[#166FB5]" />}
                         <span className="truncate max-w-[120px]">
                           {getTabLabel(member)}
                         </span>
@@ -539,6 +604,95 @@ export default function MultiMemberClientForm() {
                 Add Member
               </Button>
             </div>
+
+            {/* Project Overview Tab Content */}
+            {projectDetails && (
+              <TabsContent value="project-overview" className="mt-0">
+                <div className="space-y-6">
+                  {/* Project Header */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="text-2xl font-bold text-slate-800 mb-2">{projectDetails.title}</h3>
+                        <p className="text-sm text-slate-600">Project ID: <span className="font-mono font-semibold text-[#166FB5]">{projectDetails.pid}</span></p>
+                      </div>
+                      <Badge className="bg-green-500 text-white">{projectDetails.status}</Badge>
+                    </div>
+                  </div>
+
+                  {/* Project Details Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Project Lead */}
+                    <div className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <User className="h-5 w-5 text-[#166FB5]" />
+                        </div>
+                        <Label className="text-sm font-semibold text-slate-600">Project Lead</Label>
+                      </div>
+                      <p className="text-lg font-medium text-slate-800 ml-11">{projectDetails.lead}</p>
+                    </div>
+
+                    {/* Start Date */}
+                    <div className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <Calendar className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <Label className="text-sm font-semibold text-slate-600">Start Date</Label>
+                      </div>
+                      <p className="text-lg font-medium text-slate-800 ml-11">
+                        {typeof projectDetails.startDate === 'string' 
+                          ? new Date(projectDetails.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                          : projectDetails.startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                      </p>
+                    </div>
+
+                    {/* Sending Institution */}
+                    <div className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-orange-100 rounded-lg">
+                          <Building2 className="h-5 w-5 text-orange-600" />
+                        </div>
+                        <Label className="text-sm font-semibold text-slate-600">Sending Institution</Label>
+                      </div>
+                      <p className="text-lg font-medium text-slate-800 ml-11">{projectDetails.sendingInstitution}</p>
+                    </div>
+
+                    {/* Funding Institution */}
+                    <div className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <FileText className="h-5 w-5 text-green-600" />
+                        </div>
+                        <Label className="text-sm font-semibold text-slate-600">Funding Institution</Label>
+                      </div>
+                      <p className="text-lg font-medium text-slate-800 ml-11">{projectDetails.fundingInstitution}</p>
+                    </div>
+                  </div>
+
+                  {/* Inquiry Reference */}
+                  {projectDetails.inquiryId && (
+                    <div className="bg-slate-50 rounded-lg border border-slate-200 p-5">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="text-sm font-semibold text-slate-600 block mb-1">Related Inquiry</Label>
+                          <p className="text-sm text-slate-700">Inquiry ID: <span className="font-mono font-semibold">{projectDetails.inquiryId}</span></p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Navigation Hint */}
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-5">
+                    <p className="text-sm text-amber-900">
+                      ℹ️ <strong>Next Step:</strong> Switch to the <strong>Primary Member</strong> tab to complete your personal information, 
+                      then add additional team members as needed.
+                    </p>
+                  </div>
+                </div>
+              </TabsContent>
+            )}
 
             {members.map((member) => (
               <TabsContent key={member.id} value={member.id} className="mt-0">
