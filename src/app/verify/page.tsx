@@ -96,10 +96,10 @@ export default function ClientVerifyPage() {
       // Permission logic: contact person or after contact person submits
       if (googleUser.email === inquiry.email) {
         // Contact person can always proceed
-        router.push(`/client/client-info?email=${encodeURIComponent(googleUser.email)}&inquiryId=${encodeURIComponent(inquiryId)}`);
+        router.push(`/client/project-info?email=${encodeURIComponent(googleUser.email)}&inquiryId=${encodeURIComponent(inquiryId)}`);
       } else if (inquiry.haveSubmitted === true) {
         // Any other email can proceed if contact person has submitted
-        router.push(`/client/client-info?email=${encodeURIComponent(googleUser.email)}&inquiryId=${encodeURIComponent(inquiryId)}`);
+        router.push(`/client/project-info?email=${encodeURIComponent(googleUser.email)}&inquiryId=${encodeURIComponent(inquiryId)}`);
       } else {
         toast.error("Only the contact person can proceed until they have submitted their client info.");
         setVerifying(false);
