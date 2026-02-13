@@ -907,8 +907,6 @@ export default function ClientPortalPage() {
         : [...additionalMembers, ...draftMembers];
       setMembers(projectMembers);
       setActiveMemberTab("primary");
-      setActiveSection("team-members");
-      toast.success(`Switched to project: ${project.title}`);
       console.log("✅ Loaded members for project:", project.pid, "Count:", projectMembers.length);
     } catch (error) {
       console.error("❌ Error loading project members:", error);
