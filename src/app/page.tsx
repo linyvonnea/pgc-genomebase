@@ -80,7 +80,7 @@ export default function Home() {
 
           {/* CTA Button */}
           <div className="space-y-4">
-            <Link href="/login">
+            <Link href="/inquire">
               <Button size="lg" className="h-14 px-8 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 text-base">
                 Submit an Inquiry
                 <ArrowRight className="w-5 h-5 ml-2" />
