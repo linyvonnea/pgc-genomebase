@@ -126,7 +126,7 @@ export default function ProjectForm() {
       // Require email and inquiryId
       if (!email || !inquiryId) {
         toast.error("Missing required parameters. Please verify first.");
-        router.replace("/verify");
+        router.replace("/portal");
         return;
       }
       
@@ -134,7 +134,7 @@ export default function ProjectForm() {
       const inquiryDocSnap = await getDoc(doc(db, "inquiries", inquiryId));
       if (!inquiryDocSnap.exists()) {
         toast.error("Invalid inquiry ID.");
-        router.replace("/verify");
+        router.replace("/portal");
         return;
       }
       
@@ -147,7 +147,7 @@ export default function ProjectForm() {
       
       if (emailLower !== contactEmailLower && !memberEmails.includes(emailLower)) {
         toast.error("You do not have access to this inquiry.");
-        router.replace("/verify");
+        router.replace("/portal");
         return;
       }
     }
