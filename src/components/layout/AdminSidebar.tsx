@@ -136,62 +136,12 @@ export function AdminSidebar() {
       ]
     },
     {
-      title: "NOTIFICATIONS",
-      items: [
-        {
-          href: "/admin/member-approvals",
-          label: "Member Approvals",
-          icon: UserCheck,
-        },
-      ]
-    },
-    {
-      title: "NOTIFICATIONS",
-      items: [
-        {
-          href: "/admin/member-approvals",
-          label: "Member Approvals",
-          icon: UserCheck,
-        },
-      ]
-    },
-    {
-      title: "NOTIFICATIONS",
-      items: [
-        {
-          href: "/admin/member-approvals",
-          label: "Member Approvals",
-          icon: UserCheck,
-        },
-      ]
-    },
-    {
-      title: "NOTIFICATIONS",
-      items: [
-        {
-          href: "/admin/member-approvals",
-          label: "Member Approvals",
-          icon: UserCheck,
-        },
-      ]
-    },
-    {
-      title: "NOTIFICATIONS",
-      items: [
-        {
-          href: "/admin/member-approvals",
-          label: "Member Approvals",
-          icon: UserCheck,
-        },
-      ]
-    },
-    {
       title: "CONFIGURATION",
       items: [
-        { 
-          href: "/admin/services", 
-          label: "Service Catalog", 
-          icon: Settings,
+        {
+          href: "/admin/member-approvals",
+          label: "Member Approvals",
+          icon: UserCheck,
         },
         { 
           href: "/admin/catalog-settings", 
