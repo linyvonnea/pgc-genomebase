@@ -87,7 +87,7 @@ export default function Home() {
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
-              <Link href="/portal">
+              <Link href="https://pgc-genomebase.vercel.app/portal">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 bg-white border-2 border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-base group">
                   Login to Client Portal
                   <UserCheck className="w-5 h-5 ml-2 transition-transform group-hover:scale-110" />
