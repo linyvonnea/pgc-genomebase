@@ -821,53 +821,43 @@ export default function ClientPortalPage() {
     // Load members for this project
     try {
       const clientsRef = collection(db, "clients");
-      // Load primary member
-      const primaryQuery = query(
-        clientsRef,
-        where("email", "==", emailParam),
-        where("inquiryId", "==", inquiryIdParam)
-      );
-      const primarySnapshot = await getDocs(primaryQuery);
       
-      let primaryMember: ClientMember | null = null;
-      if (!primarySnapshot.empty) {
-        const clientDoc = primarySnapshot.docs[0];
-        const data = clientDoc.data();
-        primaryMember = {
-          id: "primary",
-          cid: clientDoc.id,
-          formData: {
-            name: data.name || "",
-            email: data.email || emailParam,
-            affiliation: data.affiliation || "",
-            designation: data.designation || "",
-            sex: data.sex || "M",
-            phoneNumber: data.phoneNumber || "",
-            affiliationAddress: data.affiliationAddress || "",
-          },
-          errors: {},
-          isSubmitted: !!data.haveSubmitted,
-          isPrimary: true,
-        };
-      }
-      
-      // Load additional members for this project
-      const allMembersQuery = query(
+      // Load all members for this specific project (including primary)
+      const projectMembersQuery = query(
         clientsRef,
         where("inquiryId", "==", inquiryIdParam),
         where("pid", "==", project.pid)
       );
-      const allMembersSnapshot = await getDocs(allMembersQuery);
+      const projectMembersSnapshot = await getDocs(projectMembersQuery);
       
-      const additionalMembers: ClientMember[] = allMembersSnapshot.docs
-        .filter(doc => {
-          const email = doc.data().email;
-          if (!email) return true;
-          return email.toLowerCase() !== emailParam!.toLowerCase();
-        })
-        .map((doc, index) => {
-          const data = doc.data();
-          return {
+      let primaryMember: ClientMember | null = null;
+      const additionalMembers: ClientMember[] = [];
+      
+      projectMembersSnapshot.docs.forEach((doc, index) => {
+        const data = doc.data();
+        const email = data.email;
+        
+        // Check if this is the primary member (logged-in user)
+        if (email && email.toLowerCase() === emailParam!.toLowerCase()) {
+          primaryMember = {
+            id: "primary",
+            cid: doc.id,
+            formData: {
+              name: data.name || "",
+              email: data.email || emailParam,
+              affiliation: data.affiliation || "",
+              designation: data.designation || "",
+              sex: data.sex || "M",
+              phoneNumber: data.phoneNumber || "",
+              affiliationAddress: data.affiliationAddress || "",
+            },
+            errors: {},
+            isSubmitted: !!data.haveSubmitted,
+            isPrimary: true,
+          };
+        } else {
+          // Additional team member
+          additionalMembers.push({
             id: `member-${index + 1}`,
             cid: doc.id,
             formData: {
@@ -883,8 +873,9 @@ export default function ClientPortalPage() {
             isSubmitted: !!data.haveSubmitted,
             isPrimary: false,
             isDraft: false,
-          };
-        });
+          });
+        }
+      });
       
       // Load draft/pending members from memberApprovals
       let draftMembers: ClientMember[] = [];
