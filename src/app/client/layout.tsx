@@ -12,9 +12,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (!loading && !user) {
-      // If not logged in, but on /client/client-info, redirect to /verify instead of /login
+      // If not logged in, but on /client/client-info, redirect to /portal instead of /login
       if (typeof window !== 'undefined' && window.location.pathname === '/client/client-info') {
-        router.replace('/verify');
+        router.replace('/portal');
       } else {
         router.replace('/login');
       }

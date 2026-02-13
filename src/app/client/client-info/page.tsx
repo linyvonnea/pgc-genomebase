@@ -84,8 +84,8 @@ export default function ClientPortalPage() {
   useEffect(() => {
     async function initializePrimaryMember() {
       if (!emailParam || !inquiryIdParam) {
-        console.log("❌ Missing email or inquiryId, redirecting to /verify");
-        router.replace('/verify');
+        console.log("❌ Missing email or inquiryId, redirecting to /portal");
+        router.replace('/portal');
         return;
       }
 
@@ -960,7 +960,7 @@ export default function ClientPortalPage() {
             Failed to initialize. Please check browser console.
           </p>
           <Button
-            onClick={() => router.push('/verify')}
+            onClick={() => router.push('/portal')}
             className="bg-[#166FB5] hover:bg-[#166FB5]/90"
           >
             Return to Verification

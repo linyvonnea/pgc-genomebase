@@ -55,7 +55,7 @@ export default function MultiMemberClientForm() {
   useEffect(() => {
     async function initializePrimaryMember() {
       if (!emailParam || !inquiryIdParam) {
-        router.replace('/verify');
+        router.replace('/portal');
         return;
       }
 

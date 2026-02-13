@@ -52,9 +52,9 @@ export default function ClientFormEntry() {
   const [cid, setCid] = useState<string | null>(searchParams.get('cid'));
 
   useEffect(() => {
-    // Only redirect to /verify if query params are missing
+    // Only redirect to /portal if query params are missing
     if (!emailParam || !inquiryIdParam) {
-      router.replace('/verify');
+      router.replace('/portal');
     }
   }, [emailParam, inquiryIdParam, router]);
 

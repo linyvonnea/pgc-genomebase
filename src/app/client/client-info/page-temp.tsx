@@ -67,8 +67,8 @@ export default function MultiMemberClientForm() {
   useEffect(() => {
     async function initializePrimaryMember() {
       if (!emailParam || !inquiryIdParam) {
-        console.log("❌ Missing email or inquiryId, redirecting to /verify");
-        router.replace('/verify');
+        console.log("❌ Missing email or inquiryId, redirecting to /portal");
+        router.replace('/portal');
         return;
       }
 
@@ -490,7 +490,7 @@ export default function MultiMemberClientForm() {
             Failed to initialize the client information form. Please check the browser console for details.
           </p>
           <Button
-            onClick={() => router.push('/verify')}
+            onClick={() => router.push('/portal')}
             className="bg-[#166FB5] hover:bg-[#166FB5]/90"
           >
             Return to Verification

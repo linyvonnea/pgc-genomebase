@@ -157,7 +157,7 @@ export default function ClientPortalLayout({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => router.push("/verify")}
+          onClick={() => router.push("/portal")}
           className="w-full justify-start text-slate-600 hover:text-slate-800"
         >
           <LogOut className="h-4 w-4 mr-2" />
