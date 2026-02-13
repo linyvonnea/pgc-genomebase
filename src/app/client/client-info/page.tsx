@@ -1464,7 +1464,7 @@ export default function ClientPortalPage() {
                       {getMemberStatus(member).label}
                     </Badge>
                   </div>
-                  {!member.isPrimary && projectDetails?.status !== "Completed" && (
+                  {!member.isPrimary && projectDetails?.status !== "Completed" && !member.cid && (
                     <Button
                       onClick={() => handleRemoveMember(member.id)}
                       variant="ghost"

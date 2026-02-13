@@ -118,6 +118,11 @@ export function AdminSidebar() {
           label: "Manual Quotation", 
           icon: Calculator,
         },
+        {
+          href: "/admin/member-approvals",
+          label: "Member Approvals",
+          icon: UserCheck,
+        },
       ]
     },
     {
@@ -132,16 +137,6 @@ export function AdminSidebar() {
           href: "/admin/catalog-settings", 
           label: "Catalog Settings", 
           icon: Sliders,
-        },
-      ]
-    },
-    {
-      title: "APPROVALS",
-      items: [
-        {
-          href: "/admin/member-approvals",
-          label: "Member Approvals",
-          icon: UserCheck,
         },
       ]
     },
