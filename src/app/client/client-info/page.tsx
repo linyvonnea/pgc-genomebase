@@ -1425,10 +1425,17 @@ export default function ClientPortalPage() {
                       <TabsTrigger 
                         key={member.id} 
                         value={member.id}
-                        className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 py-2 flex items-center gap-2 whitespace-nowrap rounded-md relative group"
+                        className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 py-2.5 flex items-center gap-3 whitespace-nowrap rounded-md relative group"
                       >
-                        {member.isPrimary && <User className="h-3.5 w-3.5 text-[#166FB5]" />}
-                        <span className="text-sm font-medium">{getTabLabel(member)}</span>
+                        {member.isPrimary && <User className="h-4 w-4 text-[#166FB5]" />}
+                        <div className="flex flex-col items-start">
+                          <span className="text-sm font-medium">{getTabLabel(member)}</span>
+                          {member.cid && (
+                            <span className="text-[10px] font-mono text-slate-500 group-data-[state=active]:text-[#166FB5]/70 leading-none mt-0.5">
+                              {member.cid}
+                            </span>
+                          )}
+                        </div>
                         <div className={`w-2 h-2 rounded-full ${status.color}`} title={status.label} />
                       </TabsTrigger>
                     );
@@ -1444,10 +1451,15 @@ export default function ClientPortalPage() {
             >
               <Card className="border border-slate-200">
                 <CardHeader className="border-b border-slate-100 flex flex-row items-center justify-between py-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <CardTitle className="text-lg font-bold text-slate-800">
                       {member.isPrimary ? "Primary Member Information" : "Team Member Information"}
                     </CardTitle>
+                    {member.cid && (
+                      <Badge variant="outline" className="bg-blue-50 text-[#166FB5] border-blue-100 font-mono text-[11px] px-2 py-0 h-5">
+                        CID: {member.cid}
+                      </Badge>
+                    )}
                     <Badge className={`${getMemberStatus(member).color} text-white border-0 text-[10px]`}>
                       {getMemberStatus(member).label}
                     </Badge>
