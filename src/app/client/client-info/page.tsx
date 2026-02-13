@@ -131,7 +131,7 @@ export default function ClientPortalPage() {
           
           primaryMember = {
             id: "primary",
-            cid: newCid,
+            cid: "pending", // Use placeholder CID for new members
             formData: {
               name: "",
               email: emailParam,
@@ -146,37 +146,11 @@ export default function ClientPortalPage() {
             isPrimary: true,
           };
 
-          // Create initial record in Firestore
-          console.log("💾 Creating Firestore document for primary member...");
-          
-          // Get all project PIDs for this inquiry to associate with primary member
-          const projectsRef = collection(db, "projects");
-          const projectsQuery = query(projectsRef, where("iid", "==", inquiryIdParam));
-          const projectsSnapshot = await getDocs(projectsQuery);
-          const allPids = projectsSnapshot.docs.map(doc => doc.data().pid || doc.id);
-
-          await setDoc(doc(db, "clients", newCid), {
-            cid: newCid,
-            email: emailParam,
-            inquiryId: inquiryIdParam,
-            pid: allPids.length > 0 ? allPids : [pidParam || ""],
-            isContactPerson: true,
-            haveSubmitted: false,
-            createdAt: serverTimestamp(),
-            name: "",
-            affiliation: "",
-            designation: "",
-            sex: "M",
-            phoneNumber: "",
-            affiliationAddress: "",
-          });
-          console.log("✅ Primary member Firestore document created:", newCid);
-          console.log("👤 Primary member state:", primaryMember);
+          // Primary member stays in local state until saved
+          console.log("👤 Primary member initialized in state (not yet in Firestore)");
         }
 
-        // Load additional team members:
-        // 1. Approved members from clients collection
-        // 2. Draft/pending members from memberApprovals collection
+        // Load additional team members from clients collection (already approved members)
         const allMembersQuery = query(
           clientsRef,
           where("inquiryId", "==", inquiryIdParam)
@@ -188,7 +162,11 @@ export default function ClientPortalPage() {
           .filter(doc => {
             const email = doc.data().email;
             if (!email) return true;
-            return email.toLowerCase() !== emailParam.toLowerCase();
+            const isSelf = email.toLowerCase() === emailParam.toLowerCase();
+            const data = doc.data();
+            // If it's the primary member but they were previously saved, we already handled them above
+            // This filter is for additional (non-primary) members who are already approved
+            return !isSelf;
           })
           .map((doc, index) => {
             const data = doc.data();
@@ -212,6 +190,9 @@ export default function ClientPortalPage() {
           });
         console.log("👥 Approved additional members found:", additionalMembers.length);
 
+        // If we found the primary member in the query but didn't assign them earlier (unlikely due to first query)
+        // ensure state is correct.
+        
         // Fetch all projects for this inquiry
         console.log("📁 Fetching all projects for inquiry:", inquiryIdParam);
         const projectsRef = collection(db, "projects");
@@ -248,7 +229,7 @@ export default function ClientPortalPage() {
           fetchedProjectDetails = fetchedProjects[0];
         }
         
-        // Auto-update primary member's PID array if they're missing projects
+        // Auto-update primary member's PID array ONLY if they exist in clients collection
         if (!clientSnapshot.empty && allProjectPids.length > 0) {
           const clientDoc = clientSnapshot.docs[0];
           const clientData = clientDoc.data();
@@ -300,11 +281,10 @@ export default function ClientPortalPage() {
                 }));
               console.log("📝 Draft members loaded:", draftMembers.length);
             }
-            // If approved, members are already in clients collection (loaded above)
           }
         }
 
-        const allMembers = [primaryMember, ...additionalMembers, ...draftMembers];
+        const allMembers = [primaryMember!, ...additionalMembers, ...draftMembers];
         console.log("👥 Setting members array:", allMembers.length, "members");
         console.log("📋 Members:", allMembers);
         setMembers(allMembers);
@@ -492,9 +472,16 @@ export default function ClientPortalPage() {
         let pids: string[] = projects.map(p => p.pid);
         if (pids.length === 0 && pidParam) pids = [pidParam];
 
-        await setDoc(doc(db, "clients", member.cid), {
+        let cidToUse = member.cid;
+        if (cidToUse === "pending") {
+          const year = new Date().getFullYear();
+          cidToUse = await getNextCid(year);
+          console.log("🎫 Generated CID for first-time save:", cidToUse);
+        }
+
+        await setDoc(doc(db, "clients", cidToUse), {
           ...result.data,
-          cid: member.cid,
+          cid: cidToUse,
           pid: pids,
           inquiryId: inquiryIdParam,
           isContactPerson: true,
@@ -518,7 +505,7 @@ export default function ClientPortalPage() {
         }
 
         setMembers(members.map(m => 
-          m.id === pendingMemberId ? { ...m, isSubmitted: true } : m
+          m.id === pendingMemberId ? { ...m, cid: cidToUse, isSubmitted: true } : m
         ));
         toast.success("Your information saved successfully!");
       } else {
@@ -570,15 +557,26 @@ export default function ClientPortalPage() {
         let pids: string[] = projects.map(p => p.pid);
         if (pids.length === 0 && pidParam) pids = [pidParam];
 
-        await setDoc(doc(db, "clients", member.cid), {
+        let cidToUse = member.cid;
+        if (cidToUse === "pending") {
+          const year = new Date().getFullYear();
+          cidToUse = await getNextCid(year);
+          console.log("🎫 Generated CID for first-time draft save:", cidToUse);
+        }
+
+        await setDoc(doc(db, "clients", cidToUse), {
           ...member.formData,
-          cid: member.cid,
+          cid: cidToUse,
           pid: pids,
           inquiryId: inquiryIdParam,
           isContactPerson: true,
           haveSubmitted: false,
           updatedAt: serverTimestamp(),
         }, { merge: true });
+
+        setMembers(members.map(m => 
+          m.id === memberId ? { ...m, cid: cidToUse } : m
+        ));
 
         toast.success("Draft saved for your information");
       } else {
