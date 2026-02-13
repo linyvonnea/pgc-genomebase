@@ -96,17 +96,28 @@ export const columns: ColumnDef<Client>[] = [
       
       if (projects.length === 0) return <span className="text-gray-400 text-sm">-</span>;
       
+      if (projects.length === 1) {
+        return (
+          <div className="px-2 py-0.5 bg-blue-50 border border-blue-200 rounded text-[10px] font-mono font-bold text-[#166FB5] w-fit">
+            {projects[0]}
+          </div>
+        );
+      }
+
+      const firstPid = projects[0];
+      const otherPids = projects.slice(1).join(", ");
+      
       return (
-        <div className="flex flex-wrap gap-1 max-w-[180px]">
-          {projects.map((pid, idx) => (
-            <div 
-              key={`${pid}-${idx}`}
-              className="px-2 py-0.5 bg-blue-50 border border-blue-200 rounded text-[10px] font-mono font-bold text-[#166FB5]"
-              title={pid}
-            >
-              {pid}
-            </div>
-          ))}
+        <div className="flex items-center gap-1">
+          <div className="px-2 py-0.5 bg-blue-50 border border-blue-200 rounded text-[10px] font-mono font-bold text-[#166FB5]">
+            {firstPid}
+          </div>
+          <div 
+            className="px-1.5 py-0.5 bg-gray-100 border border-gray-300 rounded text-[10px] font-mono font-bold text-gray-600 cursor-help"
+            title={otherPids}
+          >
+            ...
+          </div>
         </div>
       );
     },
