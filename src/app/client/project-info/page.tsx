@@ -53,6 +53,8 @@ export default function ProjectForm() {
     async function fetchOrCreateProject() {
       setLoading(true);
       try {
+        const isNew = searchParams.get("new") === "true";
+        
         // If pid exists in URL, fetch existing project
         if (pid) {
           const docRef = doc(db, "projects", pid);
@@ -67,6 +69,17 @@ export default function ProjectForm() {
               fundingInstitution: data.fundingInstitution || "",
             });
           }
+        } else if (isNew) {
+          // If explicitly a new project, fetch the next available PID
+          console.log("🆕 New project mode: fetching next PID");
+          const year = new Date().getFullYear();
+          const nextPid = await getNextPid(year);
+          setPid(nextPid);
+          
+          // Update URL with the new pid
+          const params = new URLSearchParams(searchParams.toString());
+          params.set("pid", nextPid);
+          router.replace(`/client/project-info?${params.toString()}`);
         } else if (inquiryId) {
           // If no pid but has inquiryId, check if a project already exists for this inquiry
           console.log("Checking for existing project for inquiry:", inquiryId);
@@ -302,6 +315,11 @@ export default function ProjectForm() {
               <h1 className="text-3xl font-bold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent">
                 Project Information Form
               </h1>
+              {pid && (
+                <div className="px-3 py-1 bg-blue-50 border border-blue-200 rounded-full text-xs font-mono font-bold text-[#166FB5] ml-4">
+                  {pid}
+                </div>
+              )}
             </div>
             <div className="p-6 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50">
               <p className="text-slate-700 leading-relaxed">

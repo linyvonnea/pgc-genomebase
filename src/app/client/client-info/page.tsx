@@ -660,6 +660,7 @@ export default function ClientPortalPage() {
     const params = new URLSearchParams({
       email: emailParam!,
       inquiryId: inquiryIdParam!,
+      new: "true"
     });
     router.push(`/client/project-info?${params.toString()}`);
   };
