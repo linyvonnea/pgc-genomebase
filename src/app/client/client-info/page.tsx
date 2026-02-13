@@ -57,6 +57,8 @@ export default function ClientPortalPage() {
 
   const [activeSection, setActiveSection] = useState<string>("project-overview");
   const [members, setMembers] = useState<ClientMember[]>([]);
+  const [projects, setProjects] = useState<ProjectDetails[]>([]);
+  const [selectedProjectPid, setSelectedProjectPid] = useState<string | null>(null);
   const [projectDetails, setProjectDetails] = useState<ProjectDetails | null>(null);
   const [activeMemberTab, setActiveMemberTab] = useState<string>("primary");
   const [loading, setLoading] = useState(true);
@@ -197,28 +199,47 @@ export default function ClientPortalPage() {
           });
         console.log("👥 Additional members found:", additionalMembers.length);
 
-        // Fetch project details if pid is available
+        // Fetch all projects for this inquiry
+        console.log("📁 Fetching all projects for inquiry:", inquiryIdParam);
+        const projectsRef = collection(db, "projects");
+        const projectsQuery = query(projectsRef, where("iid", "==", inquiryIdParam));
+        const projectsSnapshot = await getDocs(projectsQuery);
+        
+        const fetchedProjects: ProjectDetails[] = [];
         let fetchedProjectDetails: ProjectDetails | null = null;
-        if (pidParam) {
-          console.log("📁 Fetching project details for PID:", pidParam);
-          const projectDoc = await getDoc(doc(db, "projects", pidParam));
-          if (projectDoc.exists()) {
-            const projectData = projectDoc.data();
-            fetchedProjectDetails = {
-              pid: projectData.pid || pidParam,
-              title: projectData.title || "Untitled Project",
-              lead: projectData.lead || "Not specified",
-              startDate: projectData.startDate?.toDate?.() || projectData.startDate || new Date(),
-              sendingInstitution: projectData.sendingInstitution || "Not specified",
-              fundingInstitution: projectData.fundingInstitution || "Not specified",
-              status: projectData.status || "Active",
-              inquiryId: projectData.iid || inquiryIdParam || "",
-            };
-            setProjectDetails(fetchedProjectDetails);
-            console.log("✅ Project details loaded:", fetchedProjectDetails);
-          } else {
-            console.log("⚠️ Project document not found:", pidParam);
+        
+        projectsSnapshot.forEach((projectDoc) => {
+          const projectData = projectDoc.data();
+          const project: ProjectDetails = {
+            pid: projectData.pid || projectDoc.id,
+            title: projectData.title || "Untitled Project",
+            lead: projectData.lead || "Not specified",
+            startDate: projectData.startDate?.toDate?.() || projectData.startDate || new Date(),
+            sendingInstitution: projectData.sendingInstitution || "Not specified",
+            fundingInstitution: projectData.fundingInstitution || "Not specified",
+            status: projectData.status || "Pending",
+            inquiryId: projectData.iid || inquiryIdParam || "",
+          };
+          fetchedProjects.push(project);
+          
+          // Set as current project if it matches pidParam or if it's the first one
+          if (pidParam && projectData.pid === pidParam) {
+            fetchedProjectDetails = project;
           }
+        });
+        
+        // If no pidParam but we have projects, select the first one
+        if (!fetchedProjectDetails && fetchedProjects.length > 0) {
+          fetchedProjectDetails = fetchedProjects[0];
+        }
+        
+        setProjects(fetchedProjects);
+        if (fetchedProjectDetails) {
+          setSelectedProjectPid(fetchedProjectDetails.pid);
+          setProjectDetails(fetchedProjectDetails);
+          console.log("✅ Projects loaded:", fetchedProjects.length, "Selected:", fetchedProjectDetails.pid);
+        } else {
+          console.log("ℹ️ No projects found for inquiry:", inquiryIdParam);
         }
 
         const allMembers = [primaryMember, ...additionalMembers];
@@ -243,6 +264,12 @@ export default function ClientPortalPage() {
 
   const handleAddMember = async () => {
     console.log("➕ Add Member button clicked");
+    
+    if (!selectedProjectPid) {
+      toast.error("Please select a project first");
+      return;
+    }
+    
     try {
       const year = new Date().getFullYear();
       console.log("📅 Generating new CID for year:", year);
@@ -268,13 +295,13 @@ export default function ClientPortalPage() {
         isPrimary: false,
       };
 
-      // Create initial record in Firestore
+      // Create initial record in Firestore linked to selected project
       console.log("💾 Creating Firestore document for new member...");
       await setDoc(doc(db, "clients", newCid), {
         cid: newCid,
         email: "",
         inquiryId: inquiryIdParam,
-        pid: pidParam || "",
+        pid: selectedProjectPid,
         isContactPerson: false,
         haveSubmitted: false,
         createdAt: serverTimestamp(),
@@ -285,7 +312,7 @@ export default function ClientPortalPage() {
         phoneNumber: "",
         affiliationAddress: "",
       });
-      console.log("✅ Firestore document created for new member:", newCid);
+      console.log("✅ Firestore document created for new member:", newCid, "Project:", selectedProjectPid);
 
       const updatedMembers = [...members, newMember];
       console.log("👥 Updated members array:", updatedMembers.length, "members");
@@ -543,6 +570,100 @@ export default function ClientPortalPage() {
     return member.formData.name || `Team Member ${members.indexOf(member)}`;
   };
 
+  // Handle project selection and load its members
+  const handleSelectProject = async (project: ProjectDetails) => {
+    console.log("🎯 Selecting project:", project.pid);
+    setSelectedProjectPid(project.pid);
+    setProjectDetails(project);
+    
+    // Load members for this project
+    try {
+      const clientsRef = collection(db, "clients");
+      // Load primary member
+      const primaryQuery = query(
+        clientsRef,
+        where("email", "==", emailParam),
+        where("inquiryId", "==", inquiryIdParam)
+      );
+      const primarySnapshot = await getDocs(primaryQuery);
+      
+      let primaryMember: ClientMember | null = null;
+      if (!primarySnapshot.empty) {
+        const clientDoc = primarySnapshot.docs[0];
+        const data = clientDoc.data();
+        primaryMember = {
+          id: "primary",
+          cid: clientDoc.id,
+          formData: {
+            name: data.name || "",
+            email: data.email || emailParam,
+            affiliation: data.affiliation || "",
+            designation: data.designation || "",
+            sex: data.sex || "M",
+            phoneNumber: data.phoneNumber || "",
+            affiliationAddress: data.affiliationAddress || "",
+          },
+          errors: {},
+          isSubmitted: !!data.haveSubmitted,
+          isPrimary: true,
+        };
+      }
+      
+      // Load additional members for this project
+      const allMembersQuery = query(
+        clientsRef,
+        where("inquiryId", "==", inquiryIdParam),
+        where("pid", "==", project.pid)
+      );
+      const allMembersSnapshot = await getDocs(allMembersQuery);
+      
+      const additionalMembers: ClientMember[] = allMembersSnapshot.docs
+        .filter(doc => {
+          const email = doc.data().email;
+          if (!email) return true;
+          return email.toLowerCase() !== emailParam!.toLowerCase();
+        })
+        .map((doc, index) => {
+          const data = doc.data();
+          return {
+            id: `member-${index + 1}`,
+            cid: doc.id,
+            formData: {
+              name: data.name || "",
+              email: data.email || "",
+              affiliation: data.affiliation || "",
+              designation: data.designation || "",
+              sex: data.sex || "M",
+              phoneNumber: data.phoneNumber || "",
+              affiliationAddress: data.affiliationAddress || "",
+            },
+            errors: {},
+            isSubmitted: !!data.haveSubmitted,
+            isPrimary: false,
+          };
+        });
+      
+      const projectMembers = primaryMember ? [primaryMember, ...additionalMembers] : additionalMembers;
+      setMembers(projectMembers);
+      setActiveMemberTab("primary");
+      setActiveSection("team-members");
+      toast.success(`Switched to project: ${project.title}`);
+      console.log("✅ Loaded members for project:", project.pid, "Count:", projectMembers.length);
+    } catch (error) {
+      console.error("❌ Error loading project members:", error);
+      toast.error("Failed to load project members");
+    }
+  };
+
+  // Navigate to create new project
+  const handleCreateNewProject = () => {
+    const params = new URLSearchParams({
+      email: emailParam!,
+      inquiryId: inquiryIdParam!,
+    });
+    router.push(`/client/project-info?${params.toString()}`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50/50 to-blue-50/30 flex items-center justify-center">
@@ -583,99 +704,176 @@ export default function ClientPortalPage() {
 
   // Render function for Project Overview section
   const renderProjectOverview = () => {
-    if (!projectDetails) {
-      return (
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-slate-600">No project details available.</p>
-          </CardContent>
-        </Card>
-      );
-    }
-
     return (
       <div className="space-y-6">
-        {/* Project Header */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-2xl font-bold text-slate-800 mb-2">{projectDetails.title}</h3>
-              <p className="text-sm text-slate-600">Project ID: <span className="font-mono font-semibold text-[#166FB5]">{projectDetails.pid}</span></p>
-            </div>
-            <Badge className="bg-green-500 text-white">{projectDetails.status}</Badge>
-          </div>
-        </div>
-
-        {/* Project Details Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Project Lead */}
-          <div className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <User className="h-5 w-5 text-[#166FB5]" />
-              </div>
-              <Label className="text-sm font-semibold text-slate-600">Project Lead</Label>
-            </div>
-            <p className="text-lg font-medium text-slate-800 ml-11">{projectDetails.lead}</p>
-          </div>
-
-          {/* Start Date */}
-          <div className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Calendar className="h-5 w-5 text-purple-600" />
-              </div>
-              <Label className="text-sm font-semibold text-slate-600">Start Date</Label>
-            </div>
-            <p className="text-lg font-medium text-slate-800 ml-11">
-              {typeof projectDetails.startDate === 'string' 
-                ? new Date(projectDetails.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-                : projectDetails.startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        {/* Header with Project Count */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-800">My Projects</h2>
+            <p className="text-sm text-slate-600 mt-1">
+              Manage your projects and team members
             </p>
           </div>
-
-          {/* Sending Institution */}
-          <div className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Building2 className="h-5 w-5 text-orange-600" />
-              </div>
-              <Label className="text-sm font-semibold text-slate-600">Sending Institution</Label>
-            </div>
-            <p className="text-lg font-medium text-slate-800 ml-11">{projectDetails.sendingInstitution}</p>
-          </div>
-
-          {/* Funding Institution */}
-          <div className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <FileText className="h-5 w-5 text-green-600" />
-              </div>
-              <Label className="text-sm font-semibold text-slate-600">Funding Institution</Label>
-            </div>
-            <p className="text-lg font-medium text-slate-800 ml-11">{projectDetails.fundingInstitution}</p>
-          </div>
+          <Button
+            onClick={handleCreateNewProject}
+            className="bg-gradient-to-r from-[#166FB5] to-blue-600 hover:from-[#166FB5]/90 hover:to-blue-600/90 text-white shadow-lg"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Project
+          </Button>
         </div>
 
-        {/* Inquiry Reference */}
-        {projectDetails.inquiryId && (
-          <div className="bg-slate-50 rounded-lg border border-slate-200 p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-sm font-semibold text-slate-600 block mb-1">Related Inquiry</Label>
-                <p className="text-sm text-slate-700">Inquiry ID: <span className="font-mono font-semibold">{projectDetails.inquiryId}</span></p>
+        {/* Projects Grid */}
+        {projects.length === 0 ? (
+          <Card className="border-2 border-dashed border-slate-300">
+            <CardContent className="p-12 text-center">
+              <div className="flex flex-col items-center justify-center space-y-4">
+                <div className="p-4 bg-slate-100 rounded-full">
+                  <FolderOpen className="h-12 w-12 text-slate-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-700 mb-2">No Projects Yet</h3>
+                  <p className="text-slate-500 max-w-md">
+                    Get started by creating your first project. Click the "New Project" button above.
+                  </p>
+                </div>
+                <Button
+                  onClick={handleCreateNewProject}
+                  className="mt-4 bg-[#166FB5] hover:bg-[#166FB5]/90"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Your First Project
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.map((project) => {
+              const isSelected = selectedProjectPid === project.pid;
+              const statusColors: Record<string, string> = {
+                "Pending": "bg-blue-100 text-blue-700 border-blue-200",
+                "Ongoing": "bg-green-100 text-green-700 border-green-200",
+                "Completed": "bg-gray-100 text-gray-700 border-gray-200",
+                "Cancelled": "bg-red-100 text-red-700 border-red-200",
+              };
+              const statusColor = statusColors[project.status] || "bg-slate-100 text-slate-700 border-slate-200";
+              
+              return (
+                <Card
+                  key={project.pid}
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-xl group relative overflow-hidden ${
+                    isSelected 
+                      ? 'ring-2 ring-[#166FB5] shadow-lg' 
+                      : 'hover:ring-1 hover:ring-slate-300'
+                  }`}
+                  onClick={() => handleSelectProject(project)}
+                >
+                  {/* Selected Indicator */}
+                  {isSelected && (
+                    <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden">
+                      <div className="absolute top-2 right-2 transform rotate-45 translate-x-6 -translate-y-6 w-20 h-20 bg-[#166FB5]"></div>
+                      <CheckCircle2 className="absolute top-2 right-2 h-4 w-4 text-white z-10" />
+                    </div>
+                  )}
+                  
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <CardTitle className="text-lg font-bold text-slate-800 line-clamp-2 group-hover:text-[#166FB5] transition-colors">
+                        {project.title}
+                      </CardTitle>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className={`${statusColor} border text-xs font-medium`}>
+                        {project.status}
+                      </Badge>
+                      <span className="text-xs text-slate-500 font-mono">
+                        {project.pid}
+                      </span>
+                    </div>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-3">
+                    {/* Project Lead */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="p-1.5 bg-blue-50 rounded">
+                        <User className="h-3.5 w-3.5 text-[#166FB5]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-slate-500">Lead</p>
+                        <p className="text-sm font-medium text-slate-700 truncate">
+                          {project.lead}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Start Date */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <div className="p-1.5 bg-purple-50 rounded">
+                        <Calendar className="h-3.5 w-3.5 text-purple-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-slate-500">Start Date</p>
+                        <p className="text-sm font-medium text-slate-700">
+                          {typeof project.startDate === 'string' 
+                            ? new Date(project.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                            : project.startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Institutions */}
+                    <div className="pt-2 border-t border-slate-100">
+                      <div className="flex items-start gap-2 text-xs">
+                        <Building2 className="h-3.5 w-3.5 text-orange-600 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-slate-500">Sending: <span className="text-slate-700 font-medium">{project.sendingInstitution}</span></p>
+                          <p className="text-slate-500 mt-1">Funding: <span className="text-slate-700 font-medium">{project.fundingInstitution}</span></p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* View Members CTA */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-3 border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSelectProject(project);
+                      }}
+                    >
+                      <Users className="h-3.5 w-3.5 mr-1.5" />
+                      View Team Members
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+        
+        {/* Information Banner */}
+        {projects.length > 0 && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <FolderOpen className="h-5 w-5 text-[#166FB5]" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-slate-800 mb-1">Managing Multiple Projects</h4>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  Click on any project card to view and manage its team members. Each project maintains its own separate team roster.
+                  {selectedProjectPid && (
+                    <span className="block mt-2 text-[#166FB5] font-medium">
+                      Currently viewing: {projects.find(p => p.pid === selectedProjectPid)?.title}
+                    </span>
+                  )}
+                </p>
               </div>
             </div>
           </div>
         )}
-
-        {/* Navigation Hint */}
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-5">
-          <p className="text-sm text-amber-900">
-            ℹ️ <strong>Next Step:</strong> Switch to the <strong>Team Members</strong> section to complete your personal information, 
-            then add additional team members as needed.
-          </p>
-        </div>
       </div>
     );
   };
@@ -873,6 +1071,28 @@ export default function ClientPortalPage() {
   const renderTeamMembers = () => {
     return (
       <div className="space-y-6">
+        {/* Project Context Header */}
+        {projectDetails && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-[#166FB5] rounded-lg">
+                  <FolderOpen className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800">{projectDetails.title}</h3>
+                  <p className="text-sm text-slate-600">
+                    Team Members • <span className="font-mono font-semibold text-[#166FB5]">{projectDetails.pid}</span>
+                  </p>
+                </div>
+              </div>
+              <Badge className="bg-white/80 text-slate-700 border border-slate-200 shadow-sm">
+                {projectDetails.status}
+              </Badge>
+            </div>
+          </div>
+        )}
+        
         {/* Instructions Card */}
         <Card>
           <CardContent className="p-6">
@@ -886,8 +1106,7 @@ export default function ClientPortalPage() {
                   </>
                 ) : (
                   <>
-                    Manage your project team here. Use the tabs to switch between members and 
-                    the <strong>+ Add Member</strong> button to create new member profiles.
+                    Select a project from the <strong>Project Overview</strong> section to manage its team members.
                   </>
                 )}
               </p>
@@ -896,54 +1115,58 @@ export default function ClientPortalPage() {
         </Card>
 
         {/* Member Count and Add Button */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Badge variant="outline" className="text-sm px-4 py-2">
-              <Users className="h-4 w-4 mr-2" />
-              {members.length} {members.length === 1 ? 'Member' : 'Members'}
-            </Badge>
-            <span className="text-sm text-slate-600">
-              <strong>{members.filter(m => m.isSubmitted).length}</strong> of <strong>{members.length}</strong> saved
-            </span>
+        {projectDetails && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className="text-sm px-4 py-2">
+                <Users className="h-4 w-4 mr-2" />
+                {members.length} {members.length === 1 ? 'Member' : 'Members'}
+              </Badge>
+              <span className="text-sm text-slate-600">
+                <strong>{members.filter(m => m.isSubmitted).length}</strong> of <strong>{members.length}</strong> saved
+              </span>
+            </div>
+            <Button
+              onClick={handleAddMember}
+              variant="outline"
+              size="sm"
+              disabled={projectDetails?.status === "Completed"}
+              className="border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Add Member
+            </Button>
           </div>
-          <Button
-            onClick={handleAddMember}
-            variant="outline"
-            size="sm"
-            disabled={projectDetails?.status === "Completed"}
-            className="border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Plus className="h-4 w-4 mr-1" />
-            Add Member
-          </Button>
-        </div>
+        )}
 
         {/* Member Tabs navigation */}
-        <Tabs 
-          value={activeMemberTab} 
-          onValueChange={setActiveMemberTab}
-          className="w-full space-y-4"
-        >
-          <div className="flex bg-slate-100 p-1.5 rounded-lg overflow-x-auto custom-scrollbar no-scrollbar">
-            <TabsList className="justify-start bg-transparent h-auto p-0 flex gap-1">
-              {members.map((member) => {
-                const status = getMemberStatus(member);
-                return (
-                  <TabsTrigger 
-                    key={member.id} 
-                    value={member.id}
-                    className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 py-2 flex items-center gap-2 whitespace-nowrap rounded-md relative group"
-                  >
-                    {member.isPrimary && <User className="h-3.5 w-3.5 text-[#166FB5]" />}
-                    <span className="text-sm font-medium">{getTabLabel(member)}</span>
-                    <div className={`w-2 h-2 rounded-full ${status.color}`} title={status.label} />
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
-          </div>
+        {projectDetails ? (
+          <>
+            <Tabs 
+              value={activeMemberTab} 
+              onValueChange={setActiveMemberTab}
+              className="w-full space-y-4"
+            >
+              <div className="flex bg-slate-100 p-1.5 rounded-lg overflow-x-auto custom-scrollbar no-scrollbar">
+                <TabsList className="justify-start bg-transparent h-auto p-0 flex gap-1">
+                  {members.map((member) => {
+                    const status = getMemberStatus(member);
+                    return (
+                      <TabsTrigger 
+                        key={member.id} 
+                        value={member.id}
+                        className="data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 py-2 flex items-center gap-2 whitespace-nowrap rounded-md relative group"
+                      >
+                        {member.isPrimary && <User className="h-3.5 w-3.5 text-[#166FB5]" />}
+                        <span className="text-sm font-medium">{getTabLabel(member)}</span>
+                        <div className={`w-2 h-2 rounded-full ${status.color}`} title={status.label} />
+                      </TabsTrigger>
+                    );
+                  })}
+                </TabsList>
+              </div>
 
-          {members.map((member) => (
+              {members.map((member) => (
             <TabsContent 
               key={member.id} 
               value={member.id}
@@ -996,6 +1219,31 @@ export default function ClientPortalPage() {
               </Button>
             </div>
           </div>
+        )}
+          </>
+        ) : (
+          <Card className="border-2 border-dashed border-slate-300">
+            <CardContent className="p-12 text-center">
+              <div className="flex flex-col items-center justify-center space-y-4">
+                <div className="p-4 bg-blue-100 rounded-full">
+                  <FolderOpen className="h-12 w-12 text-[#166FB5]" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-700 mb-2">No Project Selected</h3>
+                  <p className="text-slate-500 max-w-md">
+                    Please select a project from the <strong>Project Overview</strong> section to view and manage its team members.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => setActiveSection("project-overview")}
+                  className="mt-4 bg-[#166FB5] hover:bg-[#166FB5]/90"
+                >
+                  <FolderOpen className="h-4 w-4 mr-2" />
+                  Go to Project Overview
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
     );
