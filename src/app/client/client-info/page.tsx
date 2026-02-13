@@ -29,7 +29,8 @@ import { toast } from "sonner";
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
 import ClientPortalLayout, { SidebarSection } from "@/components/layout/ClientPortalLayout";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
-import { Plus, X, CheckCircle2, AlertCircle, Loader2, FolderOpen, Calendar, Building2, User, FileText, Users, FileText as FileTextIcon, CreditCard, Save, Trash2, Clock, ShieldCheck, XCircle, Send, PartyPopper, Sparkles } from "lucide-react";
+import { Plus, X, CheckCircle2, AlertCircle, Loader2, FolderOpen, Calendar, Building2, User, FileText, Users, FileText as FileTextIcon, CreditCard, Save, Trash2, Clock, ShieldCheck, XCircle, Send, PartyPopper, Sparkles, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ClientMember {
   id: string; // Unique tab identifier
@@ -972,7 +973,7 @@ export default function ClientPortalPage() {
           <div>
             <h2 className="text-2xl font-bold text-slate-800">My Projects</h2>
             <p className="text-sm text-slate-600 mt-1">
-              Manage your projects and team members
+              Select a project to view details and manage team members
             </p>
           </div>
           <Button
@@ -984,7 +985,7 @@ export default function ClientPortalPage() {
           </Button>
         </div>
 
-        {/* Projects Grid */}
+        {/* Projects List */}
         {projects.length === 0 ? (
           <Card className="border-2 border-dashed border-slate-300">
             <CardContent className="p-12 text-center">
@@ -1009,7 +1010,7 @@ export default function ClientPortalPage() {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-3">
             {projects.map((project) => {
               const isSelected = selectedProjectPid === project.pid;
               const statusColors: Record<string, string> = {
@@ -1021,118 +1022,127 @@ export default function ClientPortalPage() {
               const statusColor = statusColors[project.status] || "bg-slate-100 text-slate-700 border-slate-200";
               
               return (
-                <Card
-                  key={project.pid}
-                  className={`cursor-pointer transition-all duration-200 hover:shadow-xl group relative overflow-hidden ${
-                    isSelected 
-                      ? 'ring-2 ring-[#166FB5] shadow-lg' 
-                      : 'hover:ring-1 hover:ring-slate-300'
-                  }`}
-                  onClick={() => handleSelectProject(project)}
-                >
-                  {/* Selected Indicator */}
-                  {isSelected && (
-                    <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden">
-                      <div className="absolute top-2 right-2 transform rotate-45 translate-x-6 -translate-y-6 w-20 h-20 bg-[#166FB5]"></div>
-                      <CheckCircle2 className="absolute top-2 right-2 h-4 w-4 text-white z-10" />
-                    </div>
-                  )}
-                  
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <CardTitle className="text-lg font-bold text-slate-800 line-clamp-2 group-hover:text-[#166FB5] transition-colors">
-                        {project.title}
-                      </CardTitle>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className={`${statusColor} border text-xs font-medium`}>
-                        {project.status}
-                      </Badge>
-                      <span className="text-xs text-slate-500 font-mono">
-                        {project.pid}
-                      </span>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="space-y-3">
-                    {/* Project Lead */}
-                    <div className="flex items-center gap-2 text-sm">
-                      <div className="p-1.5 bg-blue-50 rounded">
-                        <User className="h-3.5 w-3.5 text-[#166FB5]" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-slate-500">Lead</p>
-                        <p className="text-sm font-medium text-slate-700 truncate">
-                          {project.lead}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {/* Start Date */}
-                    <div className="flex items-center gap-2 text-sm">
-                      <div className="p-1.5 bg-purple-50 rounded">
-                        <Calendar className="h-3.5 w-3.5 text-purple-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-slate-500">Start Date</p>
-                        <p className="text-sm font-medium text-slate-700">
-                          {typeof project.startDate === 'string' 
-                            ? new Date(project.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                            : project.startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {/* Institutions */}
-                    <div className="pt-2 border-t border-slate-100">
-                      <div className="flex items-start gap-2 text-xs">
-                        <Building2 className="h-3.5 w-3.5 text-orange-600 mt-0.5 flex-shrink-0" />
+                <div key={project.pid} className="space-y-0">
+                  {/* Project Row - Compact, clickable */}
+                  <Card
+                    className={cn(
+                      "cursor-pointer transition-all duration-200 hover:shadow-md group",
+                      isSelected
+                        ? "ring-2 ring-[#166FB5] shadow-md border-[#166FB5]/30"
+                        : "hover:border-slate-300"
+                    )}
+                    onClick={() => {
+                      if (isSelected) {
+                        setSelectedProjectPid(null);
+                        setProjectDetails(null);
+                      } else {
+                        handleSelectProject(project);
+                      }
+                    }}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-4">
+                        {/* Project Icon */}
+                        <div className={cn(
+                          "p-2.5 rounded-xl flex-shrink-0 transition-colors",
+                          isSelected
+                            ? "bg-[#166FB5] text-white"
+                            : "bg-slate-100 text-slate-500 group-hover:bg-blue-50 group-hover:text-[#166FB5]"
+                        )}>
+                          <FolderOpen className="h-5 w-5" />
+                        </div>
+
+                        {/* Project Info */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-slate-500">Sending: <span className="text-slate-700 font-medium">{project.sendingInstitution}</span></p>
-                          <p className="text-slate-500 mt-1">Funding: <span className="text-slate-700 font-medium">{project.fundingInstitution}</span></p>
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <h3 className={cn(
+                              "font-bold truncate transition-colors",
+                              isSelected ? "text-[#166FB5]" : "text-slate-800 group-hover:text-[#166FB5]"
+                            )}>
+                              {project.title}
+                            </h3>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-slate-500">
+                            <span className="font-mono">{project.pid}</span>
+                            <span>•</span>
+                            <span>{project.lead}</span>
+                          </div>
+                        </div>
+
+                        {/* Status + Chevron */}
+                        <div className="flex items-center gap-3 flex-shrink-0">
+                          <Badge className={`${statusColor} border text-xs font-medium`}>
+                            {project.status}
+                          </Badge>
+                          <ChevronRight className={cn(
+                            "h-4 w-4 text-slate-400 transition-transform duration-200",
+                            isSelected && "rotate-90 text-[#166FB5]"
+                          )} />
                         </div>
                       </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Expanded Detail Panel */}
+                  {isSelected && (
+                    <div className="ml-6 border-l-2 border-[#166FB5]/30 pl-6 py-4 space-y-4 animate-in slide-in-from-top-2 duration-300">
+                      {/* Project Details Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <User className="h-3.5 w-3.5 text-[#166FB5]" />
+                            <span className="text-xs text-slate-500 font-medium">Project Lead</span>
+                          </div>
+                          <p className="text-sm font-semibold text-slate-800 truncate">{project.lead}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <Calendar className="h-3.5 w-3.5 text-purple-600" />
+                            <span className="text-xs text-slate-500 font-medium">Start Date</span>
+                          </div>
+                          <p className="text-sm font-semibold text-slate-800">
+                            {typeof project.startDate === 'string'
+                              ? new Date(project.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                              : project.startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <Building2 className="h-3.5 w-3.5 text-orange-600" />
+                            <span className="text-xs text-slate-500 font-medium">Sending Institution</span>
+                          </div>
+                          <p className="text-sm font-semibold text-slate-800 truncate">{project.sendingInstitution}</p>
+                        </div>
+                        <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <Building2 className="h-3.5 w-3.5 text-green-600" />
+                            <span className="text-xs text-slate-500 font-medium">Funding Institution</span>
+                          </div>
+                          <p className="text-sm font-semibold text-slate-800 truncate">{project.fundingInstitution}</p>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-3">
+                        <Button
+                          className="bg-[#166FB5] hover:bg-[#166FB5]/90 text-white shadow-md"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveSection("team-members");
+                          }}
+                        >
+                          <Users className="h-4 w-4 mr-2" />
+                          Manage Team Members
+                          <span className="ml-2 bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">
+                            {members.length}
+                          </span>
+                        </Button>
+                      </div>
                     </div>
-                    
-                    {/* View Members CTA */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full mt-3 border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSelectProject(project);
-                      }}
-                    >
-                      <Users className="h-3.5 w-3.5 mr-1.5" />
-                      View Team Members
-                    </Button>
-                  </CardContent>
-                </Card>
+                  )}
+                </div>
               );
             })}
-          </div>
-        )}
-        
-        {/* Information Banner */}
-        {projects.length > 0 && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5">
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <FolderOpen className="h-5 w-5 text-[#166FB5]" />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-semibold text-slate-800 mb-1">Managing Multiple Projects</h4>
-                <p className="text-sm text-slate-600 leading-relaxed">
-                  Click on any project card to view and manage its team members. Each project maintains its own separate team roster.
-                  {selectedProjectPid && (
-                    <span className="block mt-2 text-[#166FB5] font-medium">
-                      Currently viewing: {projects.find(p => p.pid === selectedProjectPid)?.title}
-                    </span>
-                  )}
-                </p>
-              </div>
-            </div>
           </div>
         )}
       </div>
