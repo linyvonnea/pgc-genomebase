@@ -1,6 +1,7 @@
 "use client";
 
 // Client Portal with Sidebar Navigation
+// Implements draft-based member management with admin approval workflow.
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -21,19 +22,22 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getNextCid } from "@/services/clientService";
+import { saveMemberApproval, submitForApproval, getMemberApproval } from "@/services/memberApprovalService";
+import { DraftMember, ApprovalStatus } from "@/types/MemberApproval";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
 import ClientPortalLayout, { SidebarSection } from "@/components/layout/ClientPortalLayout";
-import { Plus, X, CheckCircle2, AlertCircle, Loader2, FolderOpen, Calendar, Building2, User, FileText, Users, FileText as FileTextIcon, CreditCard, Save, Trash2 } from "lucide-react";
+import { Plus, X, CheckCircle2, AlertCircle, Loader2, FolderOpen, Calendar, Building2, User, FileText, Users, FileText as FileTextIcon, CreditCard, Save, Trash2, Clock, ShieldCheck, XCircle, Send } from "lucide-react";
 
 interface ClientMember {
   id: string; // Unique tab identifier
-  cid: string; // Firestore client ID
+  cid: string; // Firestore client ID (empty for draft members)
   formData: ClientFormData;
   errors: Partial<Record<keyof ClientFormData, string>>;
   isSubmitted: boolean;
   isPrimary: boolean; // First member (logged-in user)
+  isDraft?: boolean; // True for members not yet in clients collection
 }
 
 interface ProjectDetails {
@@ -67,6 +71,8 @@ export default function ClientPortalPage() {
   const [pendingMemberId, setPendingMemberId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
+  const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus | null>(null);
+  const [showSubmitForApprovalModal, setShowSubmitForApprovalModal] = useState(false);
 
   // Initialize with primary member on mount
   useEffect(() => {
@@ -168,9 +174,9 @@ export default function ClientPortalPage() {
           console.log("👤 Primary member state:", primaryMember);
         }
 
-        // Load additional team members if they exist
-        // Query all clients for this inquiry, then filter out primary user client-side
-        // This avoids needing a composite index for "inquiryId == X && email != Y"
+        // Load additional team members:
+        // 1. Approved members from clients collection
+        // 2. Draft/pending members from memberApprovals collection
         const allMembersQuery = query(
           clientsRef,
           where("inquiryId", "==", inquiryIdParam)
@@ -181,8 +187,7 @@ export default function ClientPortalPage() {
         const additionalMembers: ClientMember[] = allMembersSnapshot.docs
           .filter(doc => {
             const email = doc.data().email;
-            // Exclude the primary user's email, but include empty emails (draft members)
-            if (!email) return true; // Include draft members with empty email
+            if (!email) return true;
             return email.toLowerCase() !== emailParam.toLowerCase();
           })
           .map((doc, index) => {
@@ -202,9 +207,10 @@ export default function ClientPortalPage() {
               errors: {},
               isSubmitted: !!data.haveSubmitted,
               isPrimary: false,
+              isDraft: false,
             };
           });
-        console.log("👥 Additional members found:", additionalMembers.length);
+        console.log("👥 Approved additional members found:", additionalMembers.length);
 
         // Fetch all projects for this inquiry
         console.log("📁 Fetching all projects for inquiry:", inquiryIdParam);
@@ -270,7 +276,35 @@ export default function ClientPortalPage() {
           console.log("ℹ️ No projects found for inquiry:", inquiryIdParam);
         }
 
-        const allMembers = [primaryMember, ...additionalMembers];
+        // Load draft/pending members from memberApprovals collection
+        let draftMembers: ClientMember[] = [];
+        const selectedPid = fetchedProjectDetails?.pid || pidParam || "";
+        if (selectedPid && inquiryIdParam) {
+          const approval = await getMemberApproval(inquiryIdParam, selectedPid);
+          if (approval) {
+            setApprovalStatus(approval.status);
+            console.log("📋 Approval status for project:", approval.status);
+            
+            // If approval is draft or pending or rejected, load members from approval
+            if (approval.status === "draft" || approval.status === "pending" || approval.status === "rejected") {
+              draftMembers = approval.members
+                .filter(m => !m.isPrimary)
+                .map((m, index) => ({
+                  id: m.tempId || `draft-${index + 1}`,
+                  cid: "", // No CID yet
+                  formData: m.formData,
+                  errors: {},
+                  isSubmitted: m.isValidated,
+                  isPrimary: false,
+                  isDraft: true,
+                }));
+              console.log("📝 Draft members loaded:", draftMembers.length);
+            }
+            // If approved, members are already in clients collection (loaded above)
+          }
+        }
+
+        const allMembers = [primaryMember, ...additionalMembers, ...draftMembers];
         console.log("👥 Setting members array:", allMembers.length, "members");
         console.log("📋 Members:", allMembers);
         setMembers(allMembers);
@@ -290,68 +324,47 @@ export default function ClientPortalPage() {
     initializePrimaryMember();
   }, [emailParam, inquiryIdParam, pidParam, router]);
 
-  const handleAddMember = async () => {
+  const handleAddMember = () => {
     console.log("➕ Add Member button clicked");
     
     if (!selectedProjectPid) {
       toast.error("Please select a project first");
       return;
     }
+
+    // Don't allow adding members if approval is pending
+    if (approvalStatus === "pending") {
+      toast.error("Cannot add members while approval is pending");
+      return;
+    }
     
-    try {
-      const year = new Date().getFullYear();
-      console.log("📅 Generating new CID for year:", year);
-      const newCid = await getNextCid(year);
-      console.log("🎫 Generated new CID:", newCid);
-      const newMemberId = `member-${Date.now()}`;
-      console.log("🆔 New member ID:", newMemberId);
+    const newMemberId = `draft-${Date.now()}`;
+    console.log("🆔 New draft member ID:", newMemberId);
 
-      const newMember: ClientMember = {
-        id: newMemberId,
-        cid: newCid,
-        formData: {
-          name: "",
-          email: "",
-          affiliation: "",
-          designation: "",
-          sex: "M",
-          phoneNumber: "",
-          affiliationAddress: "",
-        },
-        errors: {},
-        isSubmitted: false,
-        isPrimary: false,
-      };
-
-      // Create initial record in Firestore linked to selected project
-      console.log("💾 Creating Firestore document for new member...");
-      await setDoc(doc(db, "clients", newCid), {
-        cid: newCid,
-        email: "",
-        inquiryId: inquiryIdParam,
-        pid: [selectedProjectPid],
-        isContactPerson: false,
-        haveSubmitted: false,
-        createdAt: serverTimestamp(),
+    const newMember: ClientMember = {
+      id: newMemberId,
+      cid: "", // No CID yet — assigned on admin approval
+      formData: {
         name: "",
+        email: "",
         affiliation: "",
         designation: "",
         sex: "M",
         phoneNumber: "",
         affiliationAddress: "",
-      });
-      console.log("✅ Firestore document created for new member:", newCid, "Project:", selectedProjectPid);
+      },
+      errors: {},
+      isSubmitted: false,
+      isPrimary: false,
+      isDraft: true,
+    };
 
-      const updatedMembers = [...members, newMember];
-      console.log("👥 Updated members array:", updatedMembers.length, "members");
-      setMembers(updatedMembers);
-      setActiveMemberTab(newMemberId);
-      console.log("✅ New member added successfully. Active tab:", newMemberId);
-      toast.success(`New member tab created (${newCid})`);
-    } catch (error) {
-      console.error("❌ Error adding member:", error);
-      toast.error(`Failed to add member: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    const updatedMembers = [...members, newMember];
+    console.log("👥 Updated members array:", updatedMembers.length, "members");
+    setMembers(updatedMembers);
+    setActiveMemberTab(newMemberId);
+    console.log("✅ New draft member added locally. Active tab:", newMemberId);
+    toast.success("New member added as draft");
   };
 
   const handleRemoveMember = (memberId: string) => {
@@ -370,21 +383,47 @@ export default function ClientPortalPage() {
     if (!member) return;
 
     try {
-      // Delete the client document from Firestore
-      console.log("🗑️ Deleting client document:", member.cid);
-      await deleteDoc(doc(db, "clients", member.cid));
-      console.log("✅ Client document deleted successfully");
+      if (member.isDraft) {
+        // Draft member — just remove from local state, no Firestore delete
+        console.log("🗑️ Removing draft member locally:", member.id);
+      } else if (member.cid) {
+        // Approved member with CID — delete from Firestore
+        console.log("🗑️ Deleting client document:", member.cid);
+        await deleteDoc(doc(db, "clients", member.cid));
+        console.log("✅ Client document deleted successfully");
+      }
       
       // Remove from local state
       const updatedMembers = members.filter(m => m.id !== memberToDelete);
       setMembers(updatedMembers);
+      
+      // If draft member was removed, also update the memberApprovals doc
+      if (member.isDraft && selectedProjectPid && inquiryIdParam) {
+        const remainingDrafts = updatedMembers.filter(m => m.isDraft && !m.isPrimary);
+        if (remainingDrafts.length > 0) {
+          await saveMemberApproval({
+            inquiryId: inquiryIdParam,
+            projectPid: selectedProjectPid,
+            projectTitle: projectDetails?.title || "",
+            submittedBy: emailParam || "",
+            submittedByName: members.find(m => m.isPrimary)?.formData.name || "",
+            status: approvalStatus === "rejected" ? "draft" : (approvalStatus || "draft"),
+            members: remainingDrafts.map(m => ({
+              tempId: m.id,
+              isPrimary: false,
+              isValidated: m.isSubmitted,
+              formData: m.formData,
+            })),
+          });
+        }
+      }
       
       // Switch to primary member if deleting active member
       if (activeMemberTab === memberToDelete) {
         setActiveMemberTab("primary");
       }
 
-      toast.success("Member removed and deleted from database");
+      toast.success(member.isDraft ? "Draft member removed" : "Member removed and deleted from database");
     } catch (error) {
       console.error("❌ Error removing member:", error);
       toast.error("Failed to remove member");
@@ -448,50 +487,68 @@ export default function ClientPortalPage() {
         return;
       }
 
-      // Determine project context
-      let pids: string[] = [];
       if (member.isPrimary) {
-        // Primary members are linked to ALL projects in the inquiry
-        pids = projects.map(p => p.pid);
+        // Primary member saves directly to clients collection
+        let pids: string[] = projects.map(p => p.pid);
         if (pids.length === 0 && pidParam) pids = [pidParam];
-      } else {
-        // Additional members are linked to the selected project
-        if (selectedProjectPid) pids = [selectedProjectPid];
-        else if (pidParam) pids = [pidParam];
-      }
 
-      // Update client record
-      await setDoc(doc(db, "clients", member.cid), {
-        ...result.data,
-        cid: member.cid,
-        pid: pids,
-        inquiryId: inquiryIdParam,
-        isContactPerson: member.isPrimary,
-        haveSubmitted: true,
-        updatedAt: serverTimestamp(),
-      }, { merge: true });
+        await setDoc(doc(db, "clients", member.cid), {
+          ...result.data,
+          cid: member.cid,
+          pid: pids,
+          inquiryId: inquiryIdParam,
+          isContactPerson: true,
+          haveSubmitted: true,
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
 
-      // Update project's clientNames array
-      const currentPid = selectedProjectPid || pidParam;
-      if (currentPid) {
-        const projectDocRef = doc(db, "projects", currentPid);
-        const projectSnap = await getDoc(projectDocRef);
-        if (projectSnap.exists()) {
-          const clientNames = projectSnap.data().clientNames || [];
-          if (!clientNames.includes(result.data.name)) {
-            await setDoc(projectDocRef, { 
-              clientNames: [...clientNames, result.data.name] 
-            }, { merge: true });
+        // Update project's clientNames array
+        const currentPid = selectedProjectPid || pidParam;
+        if (currentPid) {
+          const projectDocRef = doc(db, "projects", currentPid);
+          const projectSnap = await getDoc(projectDocRef);
+          if (projectSnap.exists()) {
+            const clientNames = projectSnap.data().clientNames || [];
+            if (!clientNames.includes(result.data.name)) {
+              await setDoc(projectDocRef, { 
+                clientNames: [...clientNames, result.data.name] 
+              }, { merge: true });
+            }
           }
         }
+
+        setMembers(members.map(m => 
+          m.id === pendingMemberId ? { ...m, isSubmitted: true } : m
+        ));
+        toast.success("Your information saved successfully!");
+      } else {
+        // Non-primary (draft) member — save to memberApprovals, NOT clients
+        const updatedMembers = members.map(m => 
+          m.id === pendingMemberId ? { ...m, isSubmitted: true, errors: {} } : m
+        );
+        setMembers(updatedMembers);
+
+        // Persist all draft members to memberApprovals
+        if (selectedProjectPid && inquiryIdParam) {
+          const draftMembers = updatedMembers.filter(m => m.isDraft && !m.isPrimary);
+          await saveMemberApproval({
+            inquiryId: inquiryIdParam,
+            projectPid: selectedProjectPid,
+            projectTitle: projectDetails?.title || "",
+            submittedBy: emailParam || "",
+            submittedByName: members.find(m => m.isPrimary)?.formData.name || "",
+            status: approvalStatus === "rejected" ? "draft" : (approvalStatus || "draft"),
+            members: draftMembers.map(m => ({
+              tempId: m.id,
+              isPrimary: false,
+              isValidated: m.isSubmitted,
+              formData: m.formData,
+            })),
+          });
+        }
+
+        toast.success("Member information validated and saved as draft!");
       }
-
-      // Update member state to submitted
-      setMembers(members.map(m => 
-        m.id === pendingMemberId ? { ...m, isSubmitted: true } : m
-      ));
-
-      toast.success(`${member.isPrimary ? 'Your' : 'Member'} information saved successfully!`);
     } catch (error) {
       console.error("Submission error:", error);
       toast.error("Failed to save information");
@@ -508,28 +565,43 @@ export default function ClientPortalPage() {
     setSubmitting(true);
 
     try {
-      // Determine project context for draft
-      let pids: string[] = [];
       if (member.isPrimary) {
-        pids = projects.map(p => p.pid);
+        // Primary member saves draft directly to clients collection
+        let pids: string[] = projects.map(p => p.pid);
         if (pids.length === 0 && pidParam) pids = [pidParam];
+
+        await setDoc(doc(db, "clients", member.cid), {
+          ...member.formData,
+          cid: member.cid,
+          pid: pids,
+          inquiryId: inquiryIdParam,
+          isContactPerson: true,
+          haveSubmitted: false,
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+
+        toast.success("Draft saved for your information");
       } else {
-        if (selectedProjectPid) pids = [selectedProjectPid];
-        else if (pidParam) pids = [pidParam];
+        // Non-primary (draft) member — save to memberApprovals
+        if (selectedProjectPid && inquiryIdParam) {
+          const draftMembers = members.filter(m => m.isDraft && !m.isPrimary);
+          await saveMemberApproval({
+            inquiryId: inquiryIdParam,
+            projectPid: selectedProjectPid,
+            projectTitle: projectDetails?.title || "",
+            submittedBy: emailParam || "",
+            submittedByName: members.find(m => m.isPrimary)?.formData.name || "",
+            status: approvalStatus === "rejected" ? "draft" : (approvalStatus || "draft"),
+            members: draftMembers.map(m => ({
+              tempId: m.id,
+              isPrimary: false,
+              isValidated: m.isSubmitted,
+              formData: m.formData,
+            })),
+          });
+          toast.success("Draft saved for team member");
+        }
       }
-
-      // Save draft without validation - just persist current form state
-      await setDoc(doc(db, "clients", member.cid), {
-        ...member.formData,
-        cid: member.cid,
-        pid: pids,
-        inquiryId: inquiryIdParam,
-        isContactPerson: member.isPrimary,
-        haveSubmitted: false, // Keep as draft
-        updatedAt: serverTimestamp(),
-      }, { merge: true });
-
-      toast.success(`Draft saved for ${member.isPrimary ? 'your information' : 'team member'}`);
     } catch (error) {
       console.error("Draft save error:", error);
       toast.error("Failed to save draft");
@@ -539,15 +611,64 @@ export default function ClientPortalPage() {
   };
 
   const handleFinalSubmit = () => {
-    const allSubmitted = members.every(m => m.isSubmitted);
-    
-    if (!allSubmitted) {
-      toast.error("Please save all member information before proceeding");
+    // Primary must be saved
+    const primary = members.find(m => m.isPrimary);
+    if (primary && !primary.isSubmitted) {
+      toast.error("Please save your (primary member) information first");
       return;
     }
 
-    toast.success("All members submitted successfully! Redirecting...");
-    router.push("/client/client-info/submitted");
+    // All draft members must be validated
+    const draftMembers = members.filter(m => m.isDraft && !m.isPrimary);
+    if (draftMembers.length === 0) {
+      toast.error("Please add at least one team member");
+      return;
+    }
+
+    const allDraftsValidated = draftMembers.every(m => m.isSubmitted);
+    if (!allDraftsValidated) {
+      toast.error("Please save all member information before submitting for approval");
+      return;
+    }
+
+    // Show the submit for approval confirmation modal
+    setShowSubmitForApprovalModal(true);
+  };
+
+  const handleConfirmSubmitForApproval = async () => {
+    setShowSubmitForApprovalModal(false);
+    setSubmitting(true);
+
+    try {
+      if (!selectedProjectPid || !inquiryIdParam) {
+        toast.error("Missing project context");
+        return;
+      }
+
+      const draftMembers = members.filter(m => m.isDraft && !m.isPrimary);
+      
+      await submitForApproval(
+        inquiryIdParam,
+        selectedProjectPid,
+        projectDetails?.title || "",
+        emailParam || "",
+        members.find(m => m.isPrimary)?.formData.name || "",
+        draftMembers.map(m => ({
+          tempId: m.id,
+          isPrimary: false,
+          isValidated: true,
+          formData: m.formData,
+        }))
+      );
+
+      setApprovalStatus("pending");
+      toast.success("Team members submitted for admin approval! You will be notified once reviewed.");
+    } catch (error) {
+      console.error("Submit for approval error:", error);
+      toast.error("Failed to submit for approval");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // Calculate section statuses for sidebar
@@ -590,8 +711,14 @@ export default function ClientPortalPage() {
   };
 
   const getMemberStatus = (member: ClientMember) => {
+    if (member.isDraft && approvalStatus === "pending") {
+      return { label: "Pending Approval", color: "bg-orange-500", icon: Clock };
+    }
+    if (member.isDraft && approvalStatus === "rejected") {
+      return { label: "Rejected", color: "bg-red-500", icon: XCircle };
+    }
     if (member.isSubmitted) {
-      return { label: "Completed", color: "bg-green-500", icon: CheckCircle2 };
+      return { label: member.isDraft ? "Validated" : "Completed", color: member.isDraft ? "bg-blue-500" : "bg-green-500", icon: CheckCircle2 };
     }
     if (Object.keys(member.errors).length > 0) {
       return { label: "Error", color: "bg-red-500", icon: AlertCircle };
@@ -676,10 +803,37 @@ export default function ClientPortalPage() {
             errors: {},
             isSubmitted: !!data.haveSubmitted,
             isPrimary: false,
+            isDraft: false,
           };
         });
       
-      const projectMembers = primaryMember ? [primaryMember, ...additionalMembers] : additionalMembers;
+      // Load draft/pending members from memberApprovals
+      let draftMembers: ClientMember[] = [];
+      if (inquiryIdParam) {
+        const approval = await getMemberApproval(inquiryIdParam, project.pid);
+        if (approval) {
+          setApprovalStatus(approval.status);
+          if (approval.status === "draft" || approval.status === "pending" || approval.status === "rejected") {
+            draftMembers = approval.members
+              .filter(m => !m.isPrimary)
+              .map((m, index) => ({
+                id: m.tempId || `draft-${index + 1}`,
+                cid: "",
+                formData: m.formData,
+                errors: {},
+                isSubmitted: m.isValidated,
+                isPrimary: false,
+                isDraft: true,
+              }));
+          }
+        } else {
+          setApprovalStatus(null);
+        }
+      }
+
+      const projectMembers = primaryMember 
+        ? [primaryMember, ...additionalMembers, ...draftMembers] 
+        : [...additionalMembers, ...draftMembers];
       setMembers(projectMembers);
       setActiveMemberTab("primary");
       setActiveSection("team-members");
@@ -1239,20 +1393,72 @@ export default function ClientPortalPage() {
           ))}
         </Tabs>
 
-        {/* Final Submit Button */}
-        {projectDetails?.status !== "Completed" && (
+        {/* Approval Status Banner */}
+        {approvalStatus === "pending" && (
+          <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Clock className="h-5 w-5 text-orange-600" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-orange-800">Pending Admin Approval</h4>
+                <p className="text-sm text-orange-700 mt-1">
+                  Your team members have been submitted for review. An administrator will review and approve or reject the members. You will be notified once a decision is made.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {approvalStatus === "rejected" && (
+          <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <XCircle className="h-5 w-5 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-red-800">Submission Rejected</h4>
+                <p className="text-sm text-red-700 mt-1">
+                  Your team member submission was rejected by an administrator. Please review and update the member information, then resubmit.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {approvalStatus === "approved" && members.some(m => m.isDraft) === false && members.filter(m => !m.isPrimary).length > 0 && (
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <ShieldCheck className="h-5 w-5 text-green-600" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-green-800">Approved</h4>
+                <p className="text-sm text-green-700 mt-1">
+                  All team members have been approved and registered in the system with their Client IDs.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Final Submit / Submit for Approval Button */}
+        {projectDetails?.status !== "Completed" && approvalStatus !== "pending" && approvalStatus !== "approved" && (
           <div className="pt-6 border-t-2 border-slate-200">
             <div className="flex items-center justify-between">
               <div className="text-sm text-slate-600">
-                All members must be saved before final submission
+                {members.filter(m => m.isDraft).length > 0
+                  ? "All draft members must be validated before submitting for approval"
+                  : "All members must be saved before final submission"
+                }
               </div>
               <Button
                 onClick={handleFinalSubmit}
-                disabled={!members.every(m => m.isSubmitted)}
-                className="h-14 px-10 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={submitting}
+                className="h-14 px-10 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Save className="h-5 w-5 mr-2" />
-                Complete & Submit All Members
+                <Send className="h-5 w-5 mr-2" />
+                Submit Members for Approval
               </Button>
             </div>
           </div>
@@ -1404,6 +1610,37 @@ export default function ClientPortalPage() {
         <p className="text-sm text-slate-600">
           Note: This will only remove them from this form. If they were previously saved, their record will remain in the database.
         </p>
+      </ConfirmationModalLayout>
+
+      {/* Submit for Approval Confirmation Modal */}
+      <ConfirmationModalLayout
+        open={showSubmitForApprovalModal}
+        onConfirm={handleConfirmSubmitForApproval}
+        onCancel={() => setShowSubmitForApprovalModal(false)}
+        loading={submitting}
+        title="Submit Members for Approval"
+        description="Once submitted, an administrator will review and approve the team members before they are officially registered in the system."
+        confirmLabel="Submit for Approval"
+        cancelLabel="Go Back"
+      >
+        <div className="space-y-3">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <p className="text-sm text-blue-800 font-medium mb-2">
+              {members.filter(m => m.isDraft && !m.isPrimary).length} member(s) will be submitted for review:
+            </p>
+            <ul className="space-y-1">
+              {members.filter(m => m.isDraft && !m.isPrimary).map(m => (
+                <li key={m.id} className="text-sm text-blue-700 flex items-center gap-2">
+                  <User className="h-3 w-3" />
+                  {m.formData.name || "Unnamed"} — {m.formData.email}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <p className="text-xs text-slate-500">
+            You will be notified once the administrator has reviewed your submission. No CIDs will be generated until approval.
+          </p>
+        </div>
       </ConfirmationModalLayout>
     </ClientPortalLayout>
   );

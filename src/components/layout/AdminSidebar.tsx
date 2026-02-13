@@ -18,9 +18,12 @@ import {
   Sliders,
   Shield,
   Database,
+  Bell,
+  UserCheck,
 } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { usePendingApprovals } from "@/hooks/usePendingApprovals";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +42,7 @@ const ROUTE_MODULE_MAP: Record<string, keyof RolePermissions> = {
   "/admin/manual-quotation": "manualQuotation",
   "/admin/services": "serviceCatalog",
   "/admin/catalog-settings": "catalogSettings",
+  "/admin/member-approvals": "memberApprovals",
   "/admin/roles": "roleManagement",
   "/admin/admins": "usersPermissions",
   "/admin/activity-logs": "activityLogs",
@@ -51,6 +55,7 @@ export function AdminSidebar() {
   const { user, signOut, adminInfo } = useAuth();
   const { canView, loading: permissionsLoading } = usePermissions(adminInfo?.role);
   const { openTab, activeTab, isTabOpen, setActiveTab } = useTabContext();
+  const { pendingCount } = usePendingApprovals();
 
   const handleNavClick = (href: string, label: string, icon: React.ElementType) => {
     const tabId = href.replace("/admin/", "");
@@ -127,6 +132,16 @@ export function AdminSidebar() {
           href: "/admin/catalog-settings", 
           label: "Catalog Settings", 
           icon: Sliders,
+        },
+      ]
+    },
+    {
+      title: "APPROVALS",
+      items: [
+        {
+          href: "/admin/member-approvals",
+          label: "Member Approvals",
+          icon: UserCheck,
         },
       ]
     },
@@ -216,7 +231,18 @@ export function AdminSidebar() {
                   >
                     <Icon className="w-4 h-4" />
                     <span className="text-sm font-medium flex-1">{label}</span>
-                    {isTabOpen(href.replace("/admin/", "")) && !isActive(href) && (
+                    {/* Notification badge for Member Approvals */}
+                    {href === "/admin/member-approvals" && pendingCount > 0 && (
+                      <span className={cn(
+                        "min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-bold px-1.5",
+                        isActive(href)
+                          ? "bg-white text-[#166FB5]"
+                          : "bg-red-500 text-white animate-pulse"
+                      )}>
+                        {pendingCount}
+                      </span>
+                    )}
+                    {isTabOpen(href.replace("/admin/", "")) && !isActive(href) && href !== "/admin/member-approvals" && (
                       <div className="w-1.5 h-1.5 rounded-full bg-[#166FB5]" />
                     )}
                   </div>

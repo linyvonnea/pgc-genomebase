@@ -28,6 +28,9 @@ export interface RolePermissions {
   serviceCatalog: ModulePermission;
   catalogSettings: ModulePermission;
   
+  // Approvals
+  memberApprovals: ModulePermission;
+
   // Administration
   usersPermissions: ModulePermission;
   roleManagement: ModulePermission;
@@ -45,6 +48,7 @@ export const MODULE_LABELS: Record<keyof RolePermissions, string> = {
   manualQuotation: "Manual Quotation",
   serviceCatalog: "Service Catalog",
   catalogSettings: "Catalog Settings",
+  memberApprovals: "Member Approvals",
   usersPermissions: "Users & Permissions",
   roleManagement: "Role Management",
   activityLogs: "Activity Logs",
@@ -62,6 +66,7 @@ export const MODULE_SECTIONS = {
     "manualQuotation",
   ],
   configuration: ["serviceCatalog", "catalogSettings"],
+  approvals: ["memberApprovals"],
   administration: ["usersPermissions", "roleManagement", "activityLogs", "databaseBackup"],
 } as const;
 
@@ -77,6 +82,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     manualQuotation: { view: false, create: false, edit: false, delete: false },
     serviceCatalog: { view: true, create: false, edit: false, delete: false },
     catalogSettings: { view: false, create: false, edit: false, delete: false },
+    memberApprovals: { view: false, create: false, edit: false, delete: false },
     usersPermissions: { view: false, create: false, edit: false, delete: false },
     roleManagement: { view: false, create: false, edit: false, delete: false },
     activityLogs: { view: false, create: false, edit: false, delete: false },
@@ -92,6 +98,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     manualQuotation: { view: true, create: true, edit: false, delete: false },
     serviceCatalog: { view: true, create: false, edit: false, delete: false },
     catalogSettings: { view: false, create: false, edit: false, delete: false },
+    memberApprovals: { view: false, create: false, edit: false, delete: false },
     usersPermissions: { view: false, create: false, edit: false, delete: false },
     roleManagement: { view: false, create: false, edit: false, delete: false },
     activityLogs: { view: false, create: false, edit: false, delete: false },
@@ -107,6 +114,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     manualQuotation: { view: true, create: true, edit: true, delete: false },
     serviceCatalog: { view: true, create: true, edit: true, delete: true },
     catalogSettings: { view: true, create: true, edit: true, delete: true },
+    memberApprovals: { view: true, create: false, edit: true, delete: false },
     usersPermissions: { view: false, create: false, edit: false, delete: false },
     roleManagement: { view: false, create: false, edit: false, delete: false },
     activityLogs: { view: true, create: false, edit: false, delete: false },
@@ -122,6 +130,7 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     manualQuotation: { view: true, create: true, edit: true, delete: true },
     serviceCatalog: { view: true, create: true, edit: true, delete: true },
     catalogSettings: { view: true, create: true, edit: true, delete: true },
+    memberApprovals: { view: true, create: false, edit: true, delete: true },
     usersPermissions: { view: true, create: true, edit: true, delete: true },
     roleManagement: { view: true, create: false, edit: true, delete: false },
     activityLogs: { view: true, create: false, edit: false, delete: true },
