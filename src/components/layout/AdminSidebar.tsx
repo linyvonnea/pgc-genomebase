@@ -118,6 +118,11 @@ export function AdminSidebar() {
           label: "Manual Quotation", 
           icon: Calculator,
         },
+      ]
+    },
+    {
+      title: "NOTIFICATIONS",
+      items: [
         {
           href: "/admin/member-approvals",
           label: "Member Approvals",
