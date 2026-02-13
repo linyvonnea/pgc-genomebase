@@ -1,5 +1,5 @@
-// Client Verification Page
-// Allows users to sign in with Google, agree to privacy, and verify their Inquiry ID to access project/client forms.
+// Client Login Page
+// Allows users to sign in with Google, agree to privacy, and verify their password to access project/client forms.
 
 "use client";
 
@@ -76,14 +76,14 @@ export default function ClientVerifyPage() {
         return;
       }
       if (!inquiryId) {
-        toast.error("Please enter your Inquiry ID.");
+        toast.error("Please enter your password.");
         setVerifying(false);
         return;
       }
       // Fetch inquiry document from Firestore
       const inquiryDoc = await getDoc(doc(db, "inquiries", inquiryId));
       if (!inquiryDoc.exists()) {
-        toast.error("Inquiry ID not found.");
+        toast.error("Password not found.");
         setVerifying(false);
         return;
       }
@@ -127,7 +127,7 @@ export default function ClientVerifyPage() {
         return;
       }
     } catch (err) {
-      toast.error("Verification failed. Please check your Inquiry ID and Google account.");
+      toast.error("Login failed. Please check your password and Google account.");
     } finally {
       setVerifying(false);
     }
@@ -153,9 +153,9 @@ export default function ClientVerifyPage() {
                 className="h-auto"
               />
             </div>
-            <CardTitle className="text-xl lg:text-2xl font-bold text-gray-800">Client Verification</CardTitle>
+            <CardTitle className="text-xl lg:text-2xl font-bold text-gray-800">Client Login</CardTitle>
             <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-              Sign in with <strong>Google</strong> and enter your <strong>Inquiry ID</strong> to access your project information.
+              Sign in with <strong>Google</strong> and enter your <strong>Password</strong> to access your project information.
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -215,13 +215,13 @@ export default function ClientVerifyPage() {
                 <form onSubmit={handleVerify} className="space-y-5">
                   <div className="space-y-3">
                     <Label htmlFor="inquiry-id" className="text-sm font-medium text-gray-700">
-                      Inquiry ID <span className="text-red-500">*</span>
+                      Password <span className="text-red-500">*</span>
                     </Label>
                     <Input
                       id="inquiry-id"
                       value={inquiryId}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInquiryId(e.target.value)}
-                      placeholder="Enter your inquiry ID"
+                      placeholder="Enter your password"
                       required
                       className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 h-11"
                     />
@@ -234,7 +234,7 @@ export default function ClientVerifyPage() {
                     disabled={verifying || !inquiryId.trim()}
                     className="w-full h-12 px-8 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                   >
-                    {verifying ? "Verifying..." : "Verify"}
+                    {verifying ? "Logging in..." : "Login"}
                   </Button>
                 </form>
               </>
