@@ -142,11 +142,18 @@ export default function ClientPortalPage() {
 
           // Create initial record in Firestore
           console.log("💾 Creating Firestore document for primary member...");
+          
+          // Get all project PIDs for this inquiry to associate with primary member
+          const projectsRef = collection(db, "projects");
+          const projectsQuery = query(projectsRef, where("iid", "==", inquiryIdParam));
+          const projectsSnapshot = await getDocs(projectsQuery);
+          const allPids = projectsSnapshot.docs.map(doc => doc.data().pid || doc.id);
+
           await setDoc(doc(db, "clients", newCid), {
             cid: newCid,
             email: emailParam,
             inquiryId: inquiryIdParam,
-            pid: pidParam || "",
+            pid: allPids.length > 0 ? allPids : [pidParam || ""],
             isContactPerson: true,
             haveSubmitted: false,
             createdAt: serverTimestamp(),
@@ -206,6 +213,7 @@ export default function ClientPortalPage() {
         const projectsSnapshot = await getDocs(projectsQuery);
         
         const fetchedProjects: ProjectDetails[] = [];
+        const allProjectPids: string[] = [];
         let fetchedProjectDetails: ProjectDetails | null = null;
         
         projectsSnapshot.forEach((projectDoc) => {
@@ -221,6 +229,7 @@ export default function ClientPortalPage() {
             inquiryId: projectData.iid || inquiryIdParam || "",
           };
           fetchedProjects.push(project);
+          allProjectPids.push(project.pid);
           
           // Set as current project if it matches pidParam or if it's the first one
           if (pidParam && projectData.pid === pidParam) {
@@ -231,6 +240,25 @@ export default function ClientPortalPage() {
         // If no pidParam but we have projects, select the first one
         if (!fetchedProjectDetails && fetchedProjects.length > 0) {
           fetchedProjectDetails = fetchedProjects[0];
+        }
+        
+        // Auto-update primary member's PID array if they're missing projects
+        if (!clientSnapshot.empty && allProjectPids.length > 0) {
+          const clientDoc = clientSnapshot.docs[0];
+          const clientData = clientDoc.data();
+          const currentPids = Array.isArray(clientData.pid) ? clientData.pid : (clientData.pid ? [clientData.pid] : []);
+          
+          // Check if any projects are missing from the client's PID array
+          const missingPids = allProjectPids.filter(pid => !currentPids.includes(pid));
+          
+          if (missingPids.length > 0) {
+            const updatedPids = [...new Set([...currentPids, ...missingPids])]; // Remove duplicates
+            await setDoc(doc(db, "clients", clientDoc.id), {
+              pid: updatedPids
+            }, { merge: true });
+            console.log("🔄 Auto-updated primary member PIDs:", updatedPids);
+            toast.info(`Linked ${missingPids.length} additional project(s) to your profile`);
+          }
         }
         
         setProjects(fetchedProjects);
@@ -301,7 +329,7 @@ export default function ClientPortalPage() {
         cid: newCid,
         email: "",
         inquiryId: inquiryIdParam,
-        pid: selectedProjectPid,
+        pid: [selectedProjectPid],
         isContactPerson: false,
         haveSubmitted: false,
         createdAt: serverTimestamp(),
@@ -421,25 +449,22 @@ export default function ClientPortalPage() {
       }
 
       // Determine project context
-      const inquiryDoc = await getDoc(doc(db, "inquiries", inquiryIdParam!));
-      let pid = pidParam;
-      
-      if (inquiryDoc.exists() && !pid) {
-        const projectQuery = query(
-          collection(db, "projects"), 
-          where("inquiryId", "==", inquiryIdParam)
-        );
-        const projectSnapshot = await getDocs(projectQuery);
-        if (!projectSnapshot.empty) {
-          pid = projectSnapshot.docs[0].id;
-        }
+      let pids: string[] = [];
+      if (member.isPrimary) {
+        // Primary members are linked to ALL projects in the inquiry
+        pids = projects.map(p => p.pid);
+        if (pids.length === 0 && pidParam) pids = [pidParam];
+      } else {
+        // Additional members are linked to the selected project
+        if (selectedProjectPid) pids = [selectedProjectPid];
+        else if (pidParam) pids = [pidParam];
       }
 
       // Update client record
       await setDoc(doc(db, "clients", member.cid), {
         ...result.data,
         cid: member.cid,
-        pid: pid || "",
+        pid: pids,
         inquiryId: inquiryIdParam,
         isContactPerson: member.isPrimary,
         haveSubmitted: true,
@@ -447,8 +472,9 @@ export default function ClientPortalPage() {
       }, { merge: true });
 
       // Update project's clientNames array
-      if (pid) {
-        const projectDocRef = doc(db, "projects", pid);
+      const currentPid = selectedProjectPid || pidParam;
+      if (currentPid) {
+        const projectDocRef = doc(db, "projects", currentPid);
         const projectSnap = await getDoc(projectDocRef);
         if (projectSnap.exists()) {
           const clientNames = projectSnap.data().clientNames || [];
@@ -482,11 +508,21 @@ export default function ClientPortalPage() {
     setSubmitting(true);
 
     try {
+      // Determine project context for draft
+      let pids: string[] = [];
+      if (member.isPrimary) {
+        pids = projects.map(p => p.pid);
+        if (pids.length === 0 && pidParam) pids = [pidParam];
+      } else {
+        if (selectedProjectPid) pids = [selectedProjectPid];
+        else if (pidParam) pids = [pidParam];
+      }
+
       // Save draft without validation - just persist current form state
       await setDoc(doc(db, "clients", member.cid), {
         ...member.formData,
         cid: member.cid,
-        pid: pidParam || "",
+        pid: pids,
         inquiryId: inquiryIdParam,
         isContactPerson: member.isPrimary,
         haveSubmitted: false, // Keep as draft

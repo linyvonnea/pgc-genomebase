@@ -260,6 +260,41 @@ export default function ProjectForm() {
       };
 
       await setDoc(docRef, payload, { merge: true });
+      
+      // Automatically link this new project to the client record
+      try {
+        let targetCid = cid;
+        // If no cid in URL, find the client record by email and inquiryId
+        if (!targetCid && email && inquiryId) {
+          const clientQuery = query(
+            collection(db, "clients"), 
+            where("email", "==", email),
+            where("inquiryId", "==", inquiryId)
+          );
+          const clientSnap = await getDocs(clientQuery);
+          if (!clientSnap.empty) {
+            targetCid = clientSnap.docs[0].id;
+          }
+        }
+
+        if (targetCid) {
+          const clientRef = doc(db, "clients", targetCid);
+          const clientSnap = await getDoc(clientRef);
+          if (clientSnap.exists()) {
+            const clientData = clientSnap.data();
+            const existingPids = Array.isArray(clientData.pid) ? clientData.pid : (clientData.pid ? [clientData.pid] : []);
+            if (!existingPids.includes(currentPid)) {
+              await setDoc(clientRef, { 
+                pid: [...existingPids, currentPid] 
+              }, { merge: true });
+              console.log("🔗 Automatically linked project", currentPid, "to client", targetCid);
+            }
+          }
+        }
+      } catch (linkError) {
+        console.warn("Failed to automatically link project to client:", linkError);
+      }
+
       toast.success("Project information saved successfully! Redirecting...");
       
       setTimeout(() => {

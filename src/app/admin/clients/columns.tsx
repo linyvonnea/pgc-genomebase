@@ -89,22 +89,24 @@ export const columns: ColumnDef<Client>[] = [
     },
     size: 180,
     cell: ({ row }) => {
-      // pid is now an array, first element is primary
+      // pid is now an array
       const projects = Array.isArray(row.original.pid) 
         ? row.original.pid 
         : (row.original.pid ? [row.original.pid] : []);
       
       if (projects.length === 0) return <span className="text-gray-400 text-sm">-</span>;
       
-      // Create comma-separated string
-      const projectsText = projects.join(", ");
-      
       return (
-        <div 
-          className="max-w-[180px] truncate text-sm" 
-          title={projectsText}
-        >
-          {projectsText}
+        <div className="flex flex-wrap gap-1 max-w-[180px]">
+          {projects.map((pid, idx) => (
+            <div 
+              key={`${pid}-${idx}`}
+              className="px-2 py-0.5 bg-blue-50 border border-blue-200 rounded text-[10px] font-mono font-bold text-[#166FB5]"
+              title={pid}
+            >
+              {pid}
+            </div>
+          ))}
         </div>
       );
     },
