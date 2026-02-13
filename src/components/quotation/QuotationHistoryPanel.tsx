@@ -39,7 +39,7 @@ export function QuotationHistoryPanel({
   
   const hasInquiryId = !!(inquiryId && inquiryId.trim().length > 0);
   const hasClientName = !!(clientName && clientName.trim().length > 0);
-  const shouldFetch = hasInquiryId || hasClientName;
+  const shouldFetch: boolean = hasInquiryId || hasClientName;
   
   // Prioritize inquiryId if available, otherwise use clientName
   const useInquiryId = hasInquiryId;

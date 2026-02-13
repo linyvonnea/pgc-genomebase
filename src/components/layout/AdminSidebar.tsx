@@ -198,7 +198,6 @@ export function AdminSidebar() {
             alt="PGC Logo"
             className="h-8 w-auto object-contain"
           />
-          </div>
         </div>
       </div>
 
