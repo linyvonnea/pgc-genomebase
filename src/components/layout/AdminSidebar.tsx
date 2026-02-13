@@ -126,6 +126,16 @@ export function AdminSidebar() {
       ]
     },
     {
+      title: "NOTIFICATIONS",
+      items: [
+        {
+          href: "/admin/member-approvals",
+          label: "Member Approvals",
+          icon: UserCheck,
+        },
+      ]
+    },
+    {
       title: "CONFIGURATION",
       items: [
         { 
