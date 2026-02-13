@@ -153,7 +153,7 @@ export default function ClientVerifyPage() {
                 className="h-auto"
               />
             </div>
-            <CardTitle className="text-xl lg:text-2xl font-bold text-gray-800">Client Login</CardTitle>
+            <CardTitle className="text-xl lg:text-2xl font-bold text-gray-800">Client Portal Login</CardTitle>
             <p className="text-sm text-gray-600 mt-2 leading-relaxed">
               Sign in with <strong>Google</strong> and enter your <strong>Password</strong> to access your project information.
             </p>
@@ -226,7 +226,7 @@ export default function ClientVerifyPage() {
                       className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 h-11"
                     />
                     <p className="text-xs text-gray-500 leading-relaxed">
-                      This ID was provided on the email sent by PGC Visayas.
+                      This password was provided on the email sent by PGC Visayas.
                     </p>
                   </div>
                   <Button 
