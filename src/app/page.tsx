@@ -78,14 +78,22 @@ export default function Home() {
             </div>
           </div>
 
-          {/* CTA Button */}
+          {/* CTA Buttons */}
           <div className="space-y-4">
-            <Link href="/inquire">
-              <Button size="lg" className="h-14 px-8 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 text-base">
-                Submit an Inquiry
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <Link href="/inquire">
+                <Button size="lg" className="w-full sm:w-auto h-14 px-8 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 text-base">
+                  Submit an Inquiry
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
+              <Link href="/verify">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 bg-white border-2 border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-base group">
+                  Login to Client Portal
+                  <UserCheck className="w-5 h-5 ml-2 transition-transform group-hover:scale-110" />
+                </Button>
+              </Link>
+            </div>
             <Link href="/login">
               <p className="text-sm text-slate-500 hover:text-[#166FB5] transition-colors cursor-pointer mt-3">
                 Sign in as Admin
