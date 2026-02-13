@@ -205,6 +205,32 @@ export async function approveMemberApproval(
     { merge: true }
   );
 
+  // Update project status from "Pending" to "Ongoing" if applicable
+  try {
+    const projectRef = doc(db, "projects", approval.projectPid);
+    const projectSnap = await getDoc(projectRef);
+    
+    if (projectSnap.exists()) {
+      const projectData = projectSnap.data();
+      if (projectData.status === "Pending") {
+        await setDoc(
+          projectRef,
+          {
+            status: "Ongoing",
+            statusUpdatedAt: serverTimestamp(),
+            statusUpdatedBy: reviewedBy,
+            statusUpdateReason: "Team members approved",
+          },
+          { merge: true }
+        );
+        console.log(`✅ Project ${approval.projectPid} status updated to Ongoing`);
+      }
+    }
+  } catch (error) {
+    console.error("Error updating project status:", error);
+    // Don't throw - approval was successful, this is a secondary action
+  }
+
   return generatedCids;
 }
 

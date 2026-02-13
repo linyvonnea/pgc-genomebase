@@ -28,7 +28,8 @@ import { db } from "@/lib/firebase";
 import { toast } from "sonner";
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
 import ClientPortalLayout, { SidebarSection } from "@/components/layout/ClientPortalLayout";
-import { Plus, X, CheckCircle2, AlertCircle, Loader2, FolderOpen, Calendar, Building2, User, FileText, Users, FileText as FileTextIcon, CreditCard, Save, Trash2, Clock, ShieldCheck, XCircle, Send } from "lucide-react";
+import { useApprovalStatus } from "@/hooks/useApprovalStatus";
+import { Plus, X, CheckCircle2, AlertCircle, Loader2, FolderOpen, Calendar, Building2, User, FileText, Users, FileText as FileTextIcon, CreditCard, Save, Trash2, Clock, ShieldCheck, XCircle, Send, PartyPopper, Sparkles } from "lucide-react";
 
 interface ClientMember {
   id: string; // Unique tab identifier
@@ -73,6 +74,11 @@ export default function ClientPortalPage() {
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
   const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus | null>(null);
   const [showSubmitForApprovalModal, setShowSubmitForApprovalModal] = useState(false);
+  const [showApprovalCelebration, setShowApprovalCelebration] = useState(false);
+  const [previousApprovalStatus, setPreviousApprovalStatus] = useState<ApprovalStatus | null>(null);
+
+  // Real-time listener for approval status changes
+  const approvalStatusData = useApprovalStatus(inquiryIdParam, selectedProjectPid);
 
   // Initialize with primary member on mount
   useEffect(() => {
@@ -303,6 +309,81 @@ export default function ClientPortalPage() {
 
     initializePrimaryMember();
   }, [emailParam, inquiryIdParam, pidParam, router]);
+
+  // Watch for approval status changes and trigger celebration
+  useEffect(() => {
+    if (!approvalStatusData.status) return;
+
+    // Update local approval status
+    setApprovalStatus(approvalStatusData.status);
+
+    // Detect transition to "approved" status
+    if (
+      approvalStatusData.status === "approved" &&
+      previousApprovalStatus !== "approved" &&
+      previousApprovalStatus !== null
+    ) {
+      // Show celebration notification
+      setShowApprovalCelebration(true);
+      
+      // Show toast notification
+      toast.success(
+        `🎉 Congratulations! Your team members have been approved and registered!`,
+        { duration: 5000 }
+      );
+
+      // Reload members to get the newly assigned CIDs
+      if (selectedProjectPid && inquiryIdParam && emailParam) {
+        const reloadMembers = async () => {
+          try {
+            const clientsRef = collection(db, "clients");
+            const allMembersQuery = query(
+              clientsRef,
+              where("inquiryId", "==", inquiryIdParam),
+              where("pid", "array-contains", selectedProjectPid)
+            );
+            const allMembersSnapshot = await getDocs(allMembersQuery);
+            
+            const reloadedMembers: ClientMember[] = allMembersSnapshot.docs.map((doc, index) => {
+              const data = doc.data();
+              const isPrimary = data.email?.toLowerCase() === emailParam.toLowerCase();
+              return {
+                id: isPrimary ? "primary" : `member-${index + 1}`,
+                cid: doc.id,
+                formData: {
+                  name: data.name || "",
+                  email: data.email || "",
+                  affiliation: data.affiliation || "",
+                  designation: data.designation || "",
+                  sex: data.sex || "M",
+                  phoneNumber: data.phoneNumber || "",
+                  affiliationAddress: data.affiliationAddress || "",
+                },
+                errors: {},
+                isSubmitted: !!data.haveSubmitted,
+                isPrimary,
+                isDraft: false,
+              };
+            });
+            
+            setMembers(reloadedMembers);
+            console.log("✅ Members reloaded after approval:", reloadedMembers.length);
+          } catch (error) {
+            console.error("Error reloading members:", error);
+          }
+        };
+        reloadMembers();
+      }
+
+      // Auto-hide celebration banner after 10 seconds
+      setTimeout(() => {
+        setShowApprovalCelebration(false);
+      }, 10000);
+    }
+
+    // Update previous status for next comparison
+    setPreviousApprovalStatus(approvalStatusData.status);
+  }, [approvalStatusData, previousApprovalStatus, selectedProjectPid, inquiryIdParam, emailParam]);
 
   const handleAddMember = () => {
     console.log("➕ Add Member button clicked");
@@ -1392,6 +1473,49 @@ export default function ClientPortalPage() {
         </Tabs>
 
         {/* Approval Status Banner */}
+        {showApprovalCelebration && approvalStatus === "approved" && (
+          <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 border-2 border-green-300 rounded-xl p-6 shadow-xl animate-in slide-in-from-top duration-500">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg animate-bounce">
+                <PartyPopper className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <h4 className="font-bold text-xl text-green-800">🎉 Team Members Approved!</h4>
+                  <Sparkles className="h-5 w-5 text-yellow-500 animate-pulse" />
+                </div>
+                <p className="text-green-700 mb-3 leading-relaxed">
+                  Great news! Your team members have been reviewed and approved by <strong>{approvalStatusData.reviewedByName || 'the administrator'}</strong>.
+                  All members have been registered in the system with their unique Client IDs and your project status has been updated.
+                </p>
+                {approvalStatusData.reviewNotes && (
+                  <div className="bg-white/70 rounded-lg p-3 mt-2 border border-green-200">
+                    <p className="text-sm font-semibold text-green-800 mb-1">Admin Notes:</p>
+                    <p className="text-sm text-green-700 italic">{approvalStatusData.reviewNotes}</p>
+                  </div>
+                )}
+                <div className="mt-4 flex items-center gap-3">
+                  <Badge className="bg-green-600 text-white border-0 text-xs px-3 py-1">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    All Members Registered
+                  </Badge>
+                  <Badge className="bg-blue-600 text-white border-0 text-xs px-3 py-1">
+                    Project Status: Ongoing
+                  </Badge>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowApprovalCelebration(false)}
+                className="text-green-600 hover:text-green-800 hover:bg-green-100"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
         {approvalStatus === "pending" && (
           <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-5">
             <div className="flex items-center gap-3">
@@ -1419,19 +1543,25 @@ export default function ClientPortalPage() {
                 <p className="text-sm text-red-700 mt-1">
                   Your team member submission was rejected by an administrator. Please review and update the member information, then resubmit.
                 </p>
+                {approvalStatusData.reviewNotes && (
+                  <div className="bg-white/70 rounded-lg p-3 mt-2 border border-red-200">
+                    <p className="text-sm font-semibold text-red-800 mb-1">Reason for Rejection:</p>
+                    <p className="text-sm text-red-700">{approvalStatusData.reviewNotes}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         )}
 
-        {approvalStatus === "approved" && members.some(m => m.isDraft) === false && members.filter(m => !m.isPrimary).length > 0 && (
+        {approvalStatus === "approved" && !showApprovalCelebration && members.some(m => m.isDraft) === false && members.filter(m => !m.isPrimary).length > 0 && (
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-100 rounded-lg">
                 <ShieldCheck className="h-5 w-5 text-green-600" />
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold text-green-800">Approved</h4>
+                <h4 className="font-semibold text-green-800">Team Approved</h4>
                 <p className="text-sm text-green-700 mt-1">
                   All team members have been approved and registered in the system with their Client IDs.
                 </p>
