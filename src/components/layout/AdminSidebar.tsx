@@ -141,11 +141,6 @@ export function AdminSidebar() {
         { 
           href: "/admin/catalog-settings", 
           label: "Catalog Settings", 
-          icon: Sliders,
-        },
-      ]
-    },
-    {
       title: "ADMINISTRATION",
       items: [
         { 
