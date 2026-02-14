@@ -134,6 +134,11 @@ export function AdminSidebar() {
       title: "CONFIGURATION",
       items: [
         { 
+          href: "/admin/services", 
+          label: "Services Catalog", 
+          icon: Settings,
+        },
+        { 
           href: "/admin/catalog-settings", 
           label: "Catalog Settings", 
           icon: Sliders,
