@@ -833,7 +833,7 @@ export default function ClientPortalPage() {
       const projectMembersQuery = query(
         clientsRef,
         where("inquiryId", "==", inquiryIdParam),
-        where("pid", "==", project.pid)
+        where("pid", "array-contains", project.pid)
       );
       const projectMembersSnapshot = await getDocs(projectMembersQuery);
 
