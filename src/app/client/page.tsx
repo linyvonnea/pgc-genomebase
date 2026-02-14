@@ -6,7 +6,7 @@ export default function ClientLandingPage() {
   const { user } = useAuth();
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-6">
       <h1 className="text-2xl font-bold">Welcome to the Client Portal</h1>
       <p className="text-muted-foreground">
         Hello {user?.displayName || user?.email}! You're signed in and ready to get started.
