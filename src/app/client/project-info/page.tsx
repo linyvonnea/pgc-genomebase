@@ -23,15 +23,15 @@ import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
 import { getNextPid } from "@/services/projectsService";
+import { saveProjectRequest, getProjectRequest } from "@/services/projectRequestService";
 
 export default function ProjectForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Get project, client, inquiry IDs, and email from URL
-  const [pid, setPid] = useState<string | null>(searchParams.get("pid"));
-  const cid = searchParams.get("cid");
+  // Get inquiry ID and email from URL
   const inquiryId = searchParams.get("inquiryId");
   const email = searchParams.get("email");
+  const [isDraft, setIsDraft] = useState(true); // New projects start as drafts
 
   // Form state
   const [formData, setFormData] = useState<ProjectFormData>({
@@ -48,77 +48,51 @@ export default function ProjectForm() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingData, setPendingData] = useState<ProjectFormData | null>(null);
 
-  // Fetch project data if editing an existing project
+  // Fetch existing project request draft if it exists
   useEffect(() => {
-    async function fetchOrCreateProject() {
+    async function fetchProjectRequest() {
       setLoading(true);
       try {
-        const isNew = searchParams.get("new") === "true";
+        if (!inquiryId) {
+          setLoading(false);
+          return;
+        }
+
+        // Check if a draft project request exists
+        const existingRequest = await getProjectRequest(inquiryId);
         
-        // If pid exists in URL, fetch existing project
-        if (pid) {
-          const docRef = doc(db, "projects", pid);
-          const snap = await getDoc(docRef);
-          if (snap.exists()) {
-            const data = snap.data();
-            setFormData({
-              title: data.title || "",
-              projectLead: data.lead || "",
-              startDate: data.startDate?.toDate?.() || new Date(data.startDate),
-              sendingInstitution: data.sendingInstitution || "",
-              fundingInstitution: data.fundingInstitution || "",
-            });
-          }
-        } else if (isNew) {
-          // If explicitly a new project, fetch the next available PID
-          console.log("🆕 New project mode: fetching next PID");
-          const year = new Date().getFullYear();
-          const nextPid = await getNextPid(year);
-          setPid(nextPid);
-          
-          // Update URL with the new pid
-          const params = new URLSearchParams(searchParams.toString());
-          params.set("pid", nextPid);
-          router.replace(`/client/project-info?${params.toString()}`);
-        } else if (inquiryId) {
-          // If no pid but has inquiryId, check if a project already exists for this inquiry
-          console.log("Checking for existing project for inquiry:", inquiryId);
-          const projectQuery = query(
-            collection(db, "projects"),
-            where("iid", "==", inquiryId)
-          );
-          const projectSnapshot = await getDocs(projectQuery);
-          
-          if (!projectSnapshot.empty) {
-            const existingProject = projectSnapshot.docs[0];
-            const data = existingProject.data();
-            const existingPid = existingProject.id;
-            console.log("Found existing project:", existingPid);
-            
-            setPid(existingPid);
-            setFormData({
-              title: data.title || "",
-              projectLead: data.lead || "",
-              startDate: data.startDate?.toDate?.() || new Date(data.startDate),
-              sendingInstitution: data.sendingInstitution || "",
-              fundingInstitution: data.fundingInstitution || "",
-            });
-            
-            // Update URL with the existing pid
-            const params = new URLSearchParams(searchParams.toString());
-            params.set("pid", existingPid);
-            router.replace(`/client/project-info?${params.toString()}`);
-          }
+        if (existingRequest && existingRequest.status === "draft") {
+          console.log("📝 Loading existing draft project request");
+          setFormData({
+            title: existingRequest.title || "",
+            projectLead: existingRequest.projectLead || "",
+            startDate: existingRequest.startDate?.toDate?.() || new Date(),
+            sendingInstitution: (existingRequest.sendingInstitution || "Government") as "UP System" | "SUC/HEI" | "Government" | "Private/Local" | "International" | "N/A",
+            fundingInstitution: existingRequest.fundingInstitution || "",
+          });
+          setIsDraft(true);
+        } else if (existingRequest && existingRequest.status === "approved" && existingRequest.pid) {
+          // If already approved, redirect to client-info with the assigned PID
+          console.log("✅ Project already approved, redirecting to client-info");
+          const params = new URLSearchParams();
+          if (email) params.set("email", email);
+          if (inquiryId) params.set("inquiryId", inquiryId);
+          if (existingRequest.pid) params.set("pid", existingRequest.pid);
+          router.push(`/client/client-info?${params.toString()}`);
+          return;
+        } else {
+          console.log("🆕 New project request");
+          setIsDraft(true);
         }
       } catch (error) {
-        console.error("Failed to load project:", error);
+        console.error("Failed to load project request:", error);
         toast.error("Failed to load project data.");
       } finally {
         setLoading(false);
       }
     }
-    fetchOrCreateProject();
-  }, [pid, inquiryId, router, searchParams]);
+    fetchProjectRequest();
+  }, [inquiryId, email, router]);
 
   // Permission check: Verify email and inquiryId exist and are valid
   useEffect(() => {
@@ -177,11 +151,10 @@ export default function ProjectForm() {
     setShowConfirmModal(true); // Show confirmation modal
   };
 
-  // On confirm in modal, save project to Firestore
+  // On confirm in modal, save project request as draft
   const handleConfirmSave = async () => {
     setShowConfirmModal(false);
     try {
-      let currentPid = pid;
       const result = projectFormSchema.safeParse(pendingData);
       
       if (!result.success) {
@@ -189,123 +162,45 @@ export default function ProjectForm() {
         return;
       }
 
-      // If no pid in state, generate a new one now
-      if (!currentPid) {
-        const year = result.data.startDate.getFullYear();
-        currentPid = await getNextPid(year);
-        setPid(currentPid);
-        console.log("Generated new PID on submission:", currentPid);
+      if (!inquiryId || !email) {
+        toast.error("Missing required parameters.");
+        return;
       }
-      
-      const docRef = doc(db, "projects", currentPid);
-      let clientName = "";
-      
-      // Get client name - try from cid first, then from email parameter, then from inquiry email
-      if (cid) {
-        const clientDoc = await getDoc(doc(db, "clients", cid));
-        if (clientDoc.exists()) {
-          clientName = clientDoc.data().name || "";
-        }
-      } else if (email) {
-        // Try using email parameter
-        const clientEmailQuery = query(collection(db, "clients"), where("email", "==", email));
-        const clientEmailSnap = await getDocs(clientEmailQuery);
-        if (!clientEmailSnap.empty) {
-          clientName = clientEmailSnap.docs[0].data().name || "";
-        }
-      } else if (inquiryId) {
-        // Fall back to getting client from inquiry email
+
+      // Get requester name from inquiry
+      let requesterName = email;
+      try {
         const inquiryDoc = await getDoc(doc(db, "inquiries", inquiryId));
         if (inquiryDoc.exists()) {
-          const inquiry = inquiryDoc.data();
-          const clientEmailQuery = query(collection(db, "clients"), where("email", "==", inquiry.email));
-          const clientEmailSnap = await getDocs(clientEmailQuery);
-          if (!clientEmailSnap.empty) {
-            clientName = clientEmailSnap.docs[0].data().name || "";
-          }
+          requesterName = inquiryDoc.data().name || email;
         }
+      } catch (error) {
+        console.warn("Could not fetch requester name:", error);
       }
-      
-      // Prepare project payload
-      const snap = await getDoc(docRef);
-      let createdAt = serverTimestamp();
-      let existingClientNames: string[] = [];
-      if (snap.exists()) {
-        const data = snap.data();
-        createdAt = data.createdAt || createdAt;
-        existingClientNames = data.clientNames || [];
-      }
-      
-      const updatedClientNames = clientName && !existingClientNames.includes(clientName) 
-        ? [...existingClientNames, clientName]
-        : existingClientNames;
 
-      const payload = {
-        pid: currentPid,
-        iid: inquiryId || "",
-        year: result.data.startDate.getFullYear(),
-        startDate: Timestamp.fromDate(result.data.startDate),
-        createdAt,
-        lead: result.data.projectLead,
-        clientNames: updatedClientNames,
+      // Save as draft project request (NO PID yet)
+      await saveProjectRequest({
+        inquiryId,
+        requestedBy: email,
+        requestedByName: requesterName,
         title: result.data.title,
-        projectTag: "",
-        status: "Pending", // Default status to Pending on submission
+        projectLead: result.data.projectLead,
+        startDate: Timestamp.fromDate(result.data.startDate),
         sendingInstitution: result.data.sendingInstitution,
-        fundingCategory: "",
         fundingInstitution: result.data.fundingInstitution,
-        serviceRequested: [],
-        personnelAssigned: "",
-        notes: "",
-      };
+        status: "draft",
+      });
 
-      await setDoc(docRef, payload, { merge: true });
-      
-      // Automatically link this new project to the client record
-      try {
-        let targetCid = cid;
-        // If no cid in URL, find the client record by email and inquiryId
-        if (!targetCid && email && inquiryId) {
-          const clientQuery = query(
-            collection(db, "clients"), 
-            where("email", "==", email),
-            where("inquiryId", "==", inquiryId)
-          );
-          const clientSnap = await getDocs(clientQuery);
-          if (!clientSnap.empty) {
-            targetCid = clientSnap.docs[0].id;
-          }
-        }
-
-        if (targetCid) {
-          const clientRef = doc(db, "clients", targetCid);
-          const clientSnap = await getDoc(clientRef);
-          if (clientSnap.exists()) {
-            const clientData = clientSnap.data();
-            const existingPids = Array.isArray(clientData.pid) ? clientData.pid : (clientData.pid ? [clientData.pid] : []);
-            if (!existingPids.includes(currentPid)) {
-              await setDoc(clientRef, { 
-                pid: [...existingPids, currentPid] 
-              }, { merge: true });
-              console.log("🔗 Automatically linked project", currentPid, "to client", targetCid);
-            }
-          }
-        }
-      } catch (linkError) {
-        console.warn("Failed to automatically link project to client:", linkError);
-      }
-
-      toast.success("Project information saved successfully! Redirecting...");
+      toast.success("Project draft saved! Now add your information as Primary Member.");
       
       setTimeout(() => {
         const params = new URLSearchParams();
         if (email) params.set("email", email);
         if (inquiryId) params.set("inquiryId", inquiryId);
-        if (currentPid) params.set("pid", currentPid);
         router.push(`/client/client-info?${params.toString()}`);
       }, 1500);
     } catch (error) {
-      console.error("Error saving project:", error);
+      console.error("Error saving project draft:", error);
       toast.error("Error saving project information. Please try again.");
     }
   };
@@ -350,15 +245,18 @@ export default function ProjectForm() {
               <h1 className="text-3xl font-bold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent">
                 Project Information Form
               </h1>
-              {pid && (
-                <div className="px-3 py-1 bg-blue-50 border border-blue-200 rounded-full text-xs font-mono font-bold text-[#166FB5] ml-4">
-                  {pid}
+              {isDraft && (
+                <div className="px-3 py-1 bg-orange-50 border border-orange-200 rounded-full text-xs font-semibold text-orange-600 ml-4">
+                  Draft
                 </div>
               )}
             </div>
             <div className="p-6 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-              <p className="text-slate-700 leading-relaxed">
+              <p className="text-slate-700 leading-relaxed mb-2">
                 Thank you for partnering with Philippine Genome Center Visayas. To better understand and support your project, please fill out this form.
+              </p>
+              <p className="text-sm text-slate-600 italic">
+                <strong>Note:</strong> This form creates a draft. After saving, you'll add yourself as the Primary Member, then submit for admin approval.
               </p>
             </div>
           </div>
@@ -463,9 +361,8 @@ export default function ProjectForm() {
               <Button
                 type="submit"
                 className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-
               >
-                Submit
+                Save Project Draft
               </Button>
             </div>
           </form>
@@ -477,9 +374,9 @@ export default function ProjectForm() {
         onConfirm={handleConfirmSave}
         onCancel={handleCancelModal}
         loading={false}
-        title="Please double check before saving"
-        description="Review your project information below before confirming. This action cannot be undone."
-        confirmLabel="Confirm & Submit"
+        title="Save Project Draft?"
+        description="Review your project information below. You can edit this later before submitting for approval."
+        confirmLabel="Save Draft"
         cancelLabel="Go Back"
       >
         {pendingData && (
