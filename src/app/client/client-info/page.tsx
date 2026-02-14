@@ -468,9 +468,10 @@ export default function ClientPortalPage() {
       isDraft: true,
     };
 
-    setMembers((prev) => [...prev, newMember]);
+    setMembers((prev) => [newMember, ...prev]);
     setExpandedMembers((prev) => new Set([...prev, newMemberId]));
     toast.success("New member added as draft");
+    console.log("✅ Member added at top:", newMemberId, "Total members:", members.length + 1);
   };
 
   const handleRemoveMember = (memberId: string) => {
@@ -1036,12 +1037,12 @@ export default function ClientPortalPage() {
         e.preventDefault();
         handleSubmitMember(member.id);
       }}
-      className="space-y-5 pt-4"
+      className="space-y-4 pt-3"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Name */}
         <div className="md:col-span-2">
-          <Label className="text-sm font-semibold text-slate-700 mb-1.5 block">
+          <Label className="text-sm font-semibold text-slate-700 mb-1 block">
             Full Name <span className="text-[#B9273A]">*</span>
           </Label>
           <Input
@@ -1051,7 +1052,7 @@ export default function ClientPortalPage() {
             disabled={
               member.isSubmitted || projectDetails?.status === "Completed"
             }
-            className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-11 disabled:opacity-70"
+            className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-10 disabled:opacity-70"
           />
           {member.errors.name && (
             <p className="text-[#B9273A] text-xs mt-1">{member.errors.name}</p>
@@ -1060,11 +1061,11 @@ export default function ClientPortalPage() {
 
         {/* Email */}
         <div className="md:col-span-2">
-          <Label className="text-sm font-semibold text-slate-700 mb-1.5 block">
+          <Label className="text-sm font-semibold text-slate-700 mb-1 block">
             Email Address <span className="text-[#B9273A]">*</span>
             {member.isPrimary && (
               <span className="ml-2 text-xs font-normal text-slate-400">
-                (Verified — Locked)
+                (Verified)
               </span>
             )}
           </Label>
@@ -1081,7 +1082,7 @@ export default function ClientPortalPage() {
               member.isSubmitted ||
               projectDetails?.status === "Completed"
             }
-            className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-11 disabled:bg-slate-50 disabled:opacity-70"
+            className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-10 disabled:bg-slate-50 disabled:opacity-70"
           />
           {member.errors.email && (
             <p className="text-[#B9273A] text-xs mt-1">
@@ -1092,7 +1093,7 @@ export default function ClientPortalPage() {
 
         {/* Affiliation */}
         <div className="md:col-span-2">
-          <Label className="text-sm font-semibold text-slate-700 mb-1.5 block">
+          <Label className="text-sm font-semibold text-slate-700 mb-1 block">
             Affiliation (Department & Institution){" "}
             <span className="text-[#B9273A]">*</span>
           </Label>
@@ -1105,7 +1106,7 @@ export default function ClientPortalPage() {
             disabled={
               member.isSubmitted || projectDetails?.status === "Completed"
             }
-            className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-11 disabled:opacity-70"
+            className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-10 disabled:opacity-70"
           />
           {member.errors.affiliation && (
             <p className="text-[#B9273A] text-xs mt-1">
@@ -1116,7 +1117,7 @@ export default function ClientPortalPage() {
 
         {/* Designation */}
         <div>
-          <Label className="text-sm font-semibold text-slate-700 mb-1.5 block">
+          <Label className="text-sm font-semibold text-slate-700 mb-1 block">
             Designation <span className="text-[#B9273A]">*</span>
           </Label>
           <Input
@@ -1128,7 +1129,7 @@ export default function ClientPortalPage() {
             disabled={
               member.isSubmitted || projectDetails?.status === "Completed"
             }
-            className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-11 disabled:opacity-70"
+            className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-10 disabled:opacity-70"
           />
           {member.errors.designation && (
             <p className="text-[#B9273A] text-xs mt-1">
@@ -1139,7 +1140,7 @@ export default function ClientPortalPage() {
 
         {/* Sex */}
         <div>
-          <Label className="text-sm font-semibold text-slate-700 mb-1.5 block">
+          <Label className="text-sm font-semibold text-slate-700 mb-1 block">
             Assigned sex at birth <span className="text-[#B9273A]">*</span>
           </Label>
           <Select
@@ -1149,7 +1150,7 @@ export default function ClientPortalPage() {
               member.isSubmitted || projectDetails?.status === "Completed"
             }
           >
-            <SelectTrigger className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-11 disabled:opacity-70">
+            <SelectTrigger className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-10 disabled:opacity-70">
               <SelectValue placeholder="Select sex" />
             </SelectTrigger>
             <SelectContent>
@@ -1162,7 +1163,7 @@ export default function ClientPortalPage() {
 
         {/* Phone Number */}
         <div className="md:col-span-2">
-          <Label className="text-sm font-semibold text-slate-700 mb-1.5 block">
+          <Label className="text-sm font-semibold text-slate-700 mb-1 block">
             Mobile Number <span className="text-[#B9273A]">*</span>
           </Label>
           <Input
@@ -1174,7 +1175,7 @@ export default function ClientPortalPage() {
             disabled={
               member.isSubmitted || projectDetails?.status === "Completed"
             }
-            className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-11 disabled:opacity-70"
+            className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-10 disabled:opacity-70"
           />
           {member.errors.phoneNumber && (
             <p className="text-[#B9273A] text-xs mt-1">
@@ -1185,7 +1186,7 @@ export default function ClientPortalPage() {
 
         {/* Affiliation Address */}
         <div className="md:col-span-2">
-          <Label className="text-sm font-semibold text-slate-700 mb-1.5 block">
+          <Label className="text-sm font-semibold text-slate-700 mb-1 block">
             Affiliation Address <span className="text-[#B9273A]">*</span>
           </Label>
           <Textarea
@@ -1197,7 +1198,7 @@ export default function ClientPortalPage() {
             disabled={
               member.isSubmitted || projectDetails?.status === "Completed"
             }
-            className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[90px] resize-none disabled:opacity-70"
+            className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[80px] resize-none disabled:opacity-70"
           />
           {member.errors.affiliationAddress && (
             <p className="text-[#B9273A] text-xs mt-1">
@@ -1208,7 +1209,7 @@ export default function ClientPortalPage() {
       </div>
 
       {/* Actions */}
-      <div className="flex justify-between pt-4 border-t border-slate-100">
+      <div className="flex justify-between pt-3 border-t border-slate-100">
         <Button
           type="button"
           onClick={() => handleSaveDraft(member.id)}
@@ -1268,12 +1269,12 @@ export default function ClientPortalPage() {
         <button
           type="button"
           onClick={() => toggleMemberExpand(member.id)}
-          className="w-full flex items-center justify-between p-4 text-left"
+          className="w-full flex items-center justify-between p-3 text-left"
         >
-          <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <div
               className={cn(
-                "p-2 rounded-lg flex-shrink-0",
+                "p-1.5 rounded-lg flex-shrink-0",
                 member.isPrimary
                   ? "bg-[#166FB5]/10"
                   : "bg-slate-100"
@@ -1281,7 +1282,7 @@ export default function ClientPortalPage() {
             >
               <User
                 className={cn(
-                  "h-4 w-4",
+                  "h-3.5 w-3.5",
                   member.isPrimary ? "text-[#166FB5]" : "text-slate-500"
                 )}
               />
@@ -1333,12 +1334,12 @@ export default function ClientPortalPage() {
 
         {/* Card Body – expanded form */}
         {isExpanded && (
-          <CardContent className="px-4 pb-4 pt-0 border-t border-slate-100">
+          <CardContent className="px-3 pb-3 pt-0 border-t border-slate-100">
             {/* Remove button for non-primary draft members */}
             {!member.isPrimary &&
               projectDetails?.status !== "Completed" &&
               !member.cid && (
-                <div className="flex justify-end mb-2">
+                <div className="flex justify-end mb-1.5">
                   <Button
                     onClick={() => handleRemoveMember(member.id)}
                     variant="ghost"
@@ -1545,7 +1546,7 @@ export default function ClientPortalPage() {
         {/* ═════ RIGHT CONTENT ═════ */}
         <main className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50/50 to-blue-50/30">
           {projectDetails ? (
-            <div className="p-6 lg:p-8 max-w-5xl mx-auto space-y-8">
+            <div className="p-4 lg:p-6 max-w-5xl mx-auto space-y-6">
               {/* ── Project Header ────────────────────────── */}
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div className="min-w-0">
@@ -1575,10 +1576,10 @@ export default function ClientPortalPage() {
               </div>
 
               {/* ── Project Details Grid ──────────────────── */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <Card className="border border-slate-100 shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-1.5">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-2 mb-1">
                       <User className="h-3.5 w-3.5 text-[#166FB5]" />
                       <span className="text-xs text-slate-500 font-medium">
                         Project Lead
@@ -1590,8 +1591,8 @@ export default function ClientPortalPage() {
                   </CardContent>
                 </Card>
                 <Card className="border border-slate-100 shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-1.5">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-2 mb-1">
                       <Calendar className="h-3.5 w-3.5 text-purple-600" />
                       <span className="text-xs text-slate-500 font-medium">
                         Start Date
@@ -1603,8 +1604,8 @@ export default function ClientPortalPage() {
                   </CardContent>
                 </Card>
                 <Card className="border border-slate-100 shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-1.5">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-2 mb-1">
                       <Building2 className="h-3.5 w-3.5 text-orange-600" />
                       <span className="text-xs text-slate-500 font-medium">
                         Sending Institution
@@ -1616,8 +1617,8 @@ export default function ClientPortalPage() {
                   </CardContent>
                 </Card>
                 <Card className="border border-slate-100 shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-1.5">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-2 mb-1">
                       <Building2 className="h-3.5 w-3.5 text-green-600" />
                       <span className="text-xs text-slate-500 font-medium">
                         Funding Institution
@@ -1631,22 +1632,22 @@ export default function ClientPortalPage() {
               </div>
 
               {/* ── Team Members Section ──────────────────── */}
-              <div className="space-y-5">
+              <div className="space-y-4">
                 {/* Section header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-[#166FB5]/10 rounded-lg">
-                      <Users className="h-5 w-5 text-[#166FB5]" />
+                    <div className="p-1.5 bg-[#166FB5]/10 rounded-lg">
+                      <Users className="h-4 w-4 text-[#166FB5]" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-bold text-slate-800">
+                      <h2 className="text-base font-bold text-slate-800 leading-tight">
                         Team Members
                       </h2>
-                      <p className="text-xs text-slate-500">
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
                         <strong>
                           {members.filter((m) => m.isSubmitted).length}
                         </strong>{" "}
-                        of <strong>{members.length}</strong> saved
+                        / <strong>{members.length}</strong> Saved
                       </p>
                     </div>
                   </div>
@@ -1664,8 +1665,8 @@ export default function ClientPortalPage() {
 
                 {/* Primary member */}
                 {primaryMember && (
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">
+                  <div className="space-y-1.5">
+                    <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-1">
                       Primary Member
                     </h3>
                     {renderMemberCard(primaryMember)}
@@ -1674,11 +1675,11 @@ export default function ClientPortalPage() {
 
                 {/* Other members */}
                 {otherMembers.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">
+                  <div className="space-y-1.5">
+                    <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-1">
                       Other Members ({otherMembers.length})
                     </h3>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       {otherMembers.map((member) =>
                         renderMemberCard(member)
                       )}
