@@ -734,12 +734,9 @@ export default function ClientPortalPage() {
           cidToUse = await getNextCid(year);
         }
 
-        await setDoc(
-          doc(db, "clients", cidToUse),
-          {
-            ...result.data,
-            cid: cidToUse,
-            pid: pids,
+        if (isDraftProject && inquiryIdParam) {
+          // For draft projects, save primary member to projectRequest
+          await saveProjectRequest({
             inquiryId: inquiryIdParam,
             isContactPerson: member.isPrimary,
             haveSubmitted: true,
@@ -763,7 +760,6 @@ export default function ClientPortalPage() {
               );
             }
           }
-        }
 
         setMembers((prev) =>
           prev.map((m) =>
