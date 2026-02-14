@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { signInWithPopup, GoogleAuthProvider, getAuth } from "firebase/auth";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { getProjectRequest } from "@/services/projectRequestService";
 import { 
   UserCheck, 
   Shield,
@@ -111,14 +112,18 @@ export default function ClientVerifyPage() {
           inquiryId: inquiryId,
         });
         
-        if (projectPid) {
-          // Project exists - skip to Client Information Form
-          // Client record will be created by client-info page if needed
-          params.set("pid", projectPid);
+        // Check for draft project first
+        const draftProject = await getProjectRequest(inquiryId);
+        const hasDraft = draftProject && draftProject.status === "draft";
+        
+        if (projectPid || hasDraft) {
+          // Project exists (real or draft) - go to Client Portal
+          if (projectPid) {
+            params.set("pid", projectPid);
+          }
           router.push(`/client/client-info?${params.toString()}`);
         } else {
           // No project exists - go to Project Information Form
-          // Client record will be created later when they reach client-info page
           router.push(`/client/project-info?${params.toString()}`);
         }
       } else {
