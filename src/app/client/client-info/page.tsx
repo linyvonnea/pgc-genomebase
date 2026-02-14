@@ -1269,12 +1269,12 @@ export default function ClientPortalPage() {
         <button
           type="button"
           onClick={() => toggleMemberExpand(member.id)}
-          className="w-full flex items-center justify-between p-4 text-left"
+          className="w-full flex items-center justify-between p-3 text-left"
         >
-          <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <div
               className={cn(
-                "p-2 rounded-lg flex-shrink-0",
+                "p-1.5 rounded-lg flex-shrink-0",
                 member.isPrimary
                   ? "bg-[#166FB5]/10"
                   : "bg-slate-100"
@@ -1282,7 +1282,7 @@ export default function ClientPortalPage() {
             >
               <User
                 className={cn(
-                  "h-4 w-4",
+                  "h-3.5 w-3.5",
                   member.isPrimary ? "text-[#166FB5]" : "text-slate-500"
                 )}
               />
@@ -1334,12 +1334,12 @@ export default function ClientPortalPage() {
 
         {/* Card Body – expanded form */}
         {isExpanded && (
-          <CardContent className="px-4 pb-4 pt-0 border-t border-slate-100">
+          <CardContent className="px-3 pb-3 pt-0 border-t border-slate-100">
             {/* Remove button for non-primary draft members */}
             {!member.isPrimary &&
               projectDetails?.status !== "Completed" &&
               !member.cid && (
-                <div className="flex justify-end mb-2">
+                <div className="flex justify-end mb-1.5">
                   <Button
                     onClick={() => handleRemoveMember(member.id)}
                     variant="ghost"
@@ -1665,8 +1665,8 @@ export default function ClientPortalPage() {
 
                 {/* Primary member */}
                 {primaryMember && (
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">
+                  <div className="space-y-1.5">
+                    <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-1">
                       Primary Member
                     </h3>
                     {renderMemberCard(primaryMember)}
@@ -1675,11 +1675,11 @@ export default function ClientPortalPage() {
 
                 {/* Other members */}
                 {otherMembers.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">
+                  <div className="space-y-1.5">
+                    <h3 className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-1">
                       Other Members ({otherMembers.length})
                     </h3>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       {otherMembers.map((member) =>
                         renderMemberCard(member)
                       )}
