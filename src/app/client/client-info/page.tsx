@@ -37,6 +37,12 @@ import {
   submitForApproval,
   getMemberApproval,
 } from "@/services/memberApprovalService";
+import {
+  getProjectRequest,
+  submitProjectForApproval,
+  subscribeToProjectRequest,
+  ProjectRequest,
+} from "@/services/projectRequestService";
 import { ApprovalStatus } from "@/types/MemberApproval";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
@@ -91,6 +97,7 @@ interface ProjectDetails {
   fundingInstitution: string;
   status: string;
   inquiryId: string;
+  isDraft?: boolean; // Flag for draft project requests
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -121,6 +128,9 @@ export default function ClientPortalPage() {
   const [projectDetails, setProjectDetails] = useState<ProjectDetails | null>(
     null
   );
+  const [projectRequest, setProjectRequest] = useState<ProjectRequest | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -131,6 +141,7 @@ export default function ClientPortalPage() {
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
   const [showSubmitForApprovalModal, setShowSubmitForApprovalModal] =
     useState(false);
+  const [showSubmitProjectModal, setShowSubmitProjectModal] = useState(false);
 
   // ── Approval state ────────────────────────────────────────────
   const [approvalStatus, setApprovalStatus] =
@@ -252,6 +263,28 @@ export default function ClientPortalPage() {
         const allProjectPids: string[] = [];
         let fetchedProjectDetails: ProjectDetails | null = null;
 
+        // Check for draft project request first
+        const draftProjectRequest = await getProjectRequest(inquiryIdParam);
+        if (draftProjectRequest && draftProjectRequest.status === "draft") {
+          console.log("\ud83d\udcdd Found draft project request");
+          setProjectRequest(draftProjectRequest);
+          const draftProject: ProjectDetails = {
+            pid: "DRAFT",
+            title: draftProjectRequest.title || "Draft Project",
+            lead: draftProjectRequest.projectLead || "Not specified",
+            startDate: draftProjectRequest.startDate?.toDate?.() || new Date(),
+            sendingInstitution:
+              draftProjectRequest.sendingInstitution || "Not specified",
+            fundingInstitution:
+              draftProjectRequest.fundingInstitution || "Not specified",
+            status: "Draft",
+            inquiryId: inquiryIdParam,
+            isDraft: true,
+          };
+          fetchedProjects.push(draftProject);
+          fetchedProjectDetails = draftProject;
+        }
+
         projectsSnapshot.forEach((projectDoc) => {
           const projectData = projectDoc.data();
           const project: ProjectDetails = {
@@ -317,7 +350,9 @@ export default function ClientPortalPage() {
         let draftMembers: ClientMember[] = [];
         const selectedPid =
           fetchedProjectDetails?.pid || pidParam || "";
-        if (selectedPid && inquiryIdParam) {
+        
+        // Only load member approvals for non-draft projects
+        if (selectedPid && selectedPid !== "DRAFT" && inquiryIdParam) {
           const approval = await getMemberApproval(
             inquiryIdParam,
             selectedPid
@@ -820,6 +855,90 @@ export default function ClientPortalPage() {
     } catch (error) {
       console.error("Submit for approval error:", error);
       toast.error("Failed to submit for approval");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ────────────────────────────────────────────────────────────────
+  // Project Submission (Project + Primary Member)
+  // ────────────────────────────────────────────────────────────────
+
+  const handleSubmitProjectForApproval = () => {
+    // Validate primary member data
+    const primaryMember = members.find((m) => m.isPrimary);
+    if (!primaryMember) {
+      toast.error("Primary member not found");
+      return;
+    }
+
+    const result = clientFormSchema.safeParse(primaryMember.formData);
+    if (!result.success) {
+      toast.error("Please complete all required fields for the primary member");
+      const fieldErrors: Partial<Record<keyof ClientFormData, string>> = {};
+      result.error.errors.forEach((err) => {
+        const field = err.path[0] as keyof ClientFormData;
+        fieldErrors[field] = err.message;
+      });
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.isPrimary ? { ...m, errors: fieldErrors } : m
+        )
+      );
+      return;
+    }
+
+    if (!projectRequest) {
+      toast.error("No draft project found");
+      return;
+    }
+
+    setShowSubmitProjectModal(true);
+  };
+
+  const handleConfirmSubmitProject = async () => {
+    setShowSubmitProjectModal(false);
+    setSubmitting(true);
+
+    try {
+      if (!inquiryIdParam || !emailParam || !projectRequest) {
+        toast.error("Missing required information");
+        return;
+      }
+
+      const primaryMember = members.find((m) => m.isPrimary);
+      if (!primaryMember) {
+        toast.error("Primary member not found");
+        return;
+      }
+
+      // Submit project + primary member for approval
+      await submitProjectForApproval(
+        inquiryIdParam,
+        emailParam,
+        primaryMember.formData.name || emailParam,
+        {
+          title: projectRequest.title,
+          projectLead: projectRequest.projectLead,
+          startDate: projectRequest.startDate.toDate(),
+          sendingInstitution: projectRequest.sendingInstitution,
+          fundingInstitution: projectRequest.fundingInstitution,
+        },
+        primaryMember.formData
+      );
+
+      toast.success(
+        "Project and primary member submitted for approval! You will be notified when reviewed.",
+        { duration: 5000 }
+      );
+
+      // Update local state to reflect pending status
+      setProjectDetails((prev) =>
+        prev ? { ...prev, status: "Pending Approval" } : prev
+      );
+    } catch (error) {
+      console.error("Submit project error:", error);
+      toast.error("Failed to submit project for approval");
     } finally {
       setSubmitting(false);
     }
@@ -1634,7 +1753,7 @@ export default function ClientPortalPage() {
               {/* ── Team Members Section ──────────────────── */}
               <div className="space-y-4">
                 {/* Section header */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-3">
                     <div className="p-1.5 bg-[#166FB5]/10 rounded-lg">
                       <Users className="h-4 w-4 text-[#166FB5]" />
@@ -1651,17 +1770,51 @@ export default function ClientPortalPage() {
                       </p>
                     </div>
                   </div>
-                  <Button
-                    onClick={handleAddMember}
-                    variant="outline"
-                    size="sm"
-                    disabled={projectDetails?.status === "Completed"}
-                    className="border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white disabled:opacity-50"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add Member
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {/* Submit Project for Approval (only for draft projects) */}
+                    {projectDetails?.isDraft && primaryMember && (
+                      <Button
+                        onClick={handleSubmitProjectForApproval}
+                        size="sm"
+                        disabled={submitting}
+                        className="bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white shadow-md disabled:opacity-50"
+                      >
+                        <Send className="h-4 w-4 mr-1" />
+                        Submit for Approval
+                      </Button>
+                    )}
+                    {/* Add Member (only for non-draft projects) */}
+                    {!projectDetails?.isDraft && (
+                      <Button
+                        onClick={handleAddMember}
+                        variant="outline"
+                        size="sm"
+                        disabled={projectDetails?.status === "Completed"}
+                        className="border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white disabled:opacity-50"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add Member
+                      </Button>
+                    )}
+                  </div>
                 </div>
+
+                {/* Draft project info banner */}
+                {projectDetails?.isDraft && (
+                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1 space-y-2">
+                        <p className="text-sm font-semibold text-orange-900">
+                          Draft Project — Pending Submission
+                        </p>
+                        <p className="text-xs text-orange-700 leading-relaxed">
+                          Please fill out your information as the <strong>Primary Member</strong>, then click "<strong>Submit for Approval</strong>" to send this project to the admin for review. Once approved, you'll receive a PID and CID.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Primary member */}
                 {primaryMember && (
@@ -1977,6 +2130,49 @@ export default function ClientPortalPage() {
           <p className="text-xs text-slate-500">
             You will be notified once the administrator has reviewed your
             submission. No CIDs will be generated until approval.
+          </p>
+        </div>
+      </ConfirmationModalLayout>
+
+      {/* Submit project for approval confirmation modal */}
+      <ConfirmationModalLayout
+        open={showSubmitProjectModal}
+        onConfirm={handleConfirmSubmitProject}
+        onCancel={() => setShowSubmitProjectModal(false)}
+        loading={submitting}
+        title="Submit Project for Approval"
+        description="Submit your project and primary member information for administrator review. Once approved, you'll receive your official PID and CID."
+        confirmLabel="Submit to Admin"
+        cancelLabel="Go Back"
+      >
+        <div className="space-y-3">
+          {projectRequest && (
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 space-y-2">
+              <p className="text-sm font-semibold text-blue-900 mb-2">
+                Project Details:
+              </p>
+              <div className="space-y-1 text-xs text-blue-800">
+                <div><strong>Title:</strong> {projectRequest.title}</div>
+                <div><strong>Lead:</strong> {projectRequest.projectLead}</div>
+                <div><strong>Sending Institution:</strong> {projectRequest.sendingInstitution}</div>
+                <div><strong>Funding Institution:</strong> {projectRequest.fundingInstitution}</div>
+              </div>
+            </div>
+          )}
+          {primaryMember && (
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 space-y-2">
+              <p className="text-sm font-semibold text-green-900 mb-2">
+                Primary Member:
+              </p>
+              <div className="space-y-1 text-xs text-green-800">
+                <div><strong>Name:</strong> {primaryMember.formData.name}</div>
+                <div><strong>Email:</strong> {primaryMember.formData.email}</div>
+                <div><strong>Affiliation:</strong> {primaryMember.formData.affiliation}</div>
+              </div>
+            </div>
+          )}
+          <p className="text-xs text-slate-500 italic">
+            You can add additional team members after your project is approved.
           </p>
         </div>
       </ConfirmationModalLayout>
