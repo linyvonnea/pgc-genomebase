@@ -45,6 +45,12 @@ import {
   subscribeToProjectRequest,
   ProjectRequest,
 } from "@/services/projectRequestService";
+import {
+  saveClientRequest,
+  getClientRequestsByInquiry,
+  submitClientRequestsForApproval,
+  ClientRequest,
+} from "@/services/clientRequestService";
 import { ApprovalStatus } from "@/types/MemberApproval";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
@@ -177,14 +183,26 @@ export default function ClientPortalPage() {
         let primaryClientSnapshot: any = null; // Store for later PID linking
         const clientsRef = collection(db, "clients");
         
-        if (draftProjectRequest && draftProjectRequest.status === "draft" && draftProjectRequest.primaryMember) {
-          // Load primary member from draft project request
+        // Load all draft client requests for this inquiry
+        const draftClientRequests = await getClientRequestsByInquiry(inquiryIdParam, "draft");
+        const primaryDraftRequest = draftClientRequests.find(r => r.email.toLowerCase() === emailParam.toLowerCase());
+        
+        if (primaryDraftRequest) {
+          // Load primary member from draft client request
           primaryMember = {
             id: "primary",
             cid: "draft",
-            formData: draftProjectRequest.primaryMember,
+            formData: {
+              name: primaryDraftRequest.name,
+              email: primaryDraftRequest.email,
+              affiliation: primaryDraftRequest.affiliation,
+              designation: primaryDraftRequest.designation,
+              sex: primaryDraftRequest.sex,
+              phoneNumber: primaryDraftRequest.phoneNumber,
+              affiliationAddress: primaryDraftRequest.affiliationAddress,
+            },
             errors: {},
-            isSubmitted: false, // Draft, not submitted to clients collection yet
+            isSubmitted: false, // Draft, not yet approved
             isPrimary: true,
             isDraft: true,
           };
@@ -237,14 +255,34 @@ export default function ClientPortalPage() {
           }
         }
 
-        // Load additional (non-primary) team members already in clients collection
+        // Load additional team members from both clientRequests (drafts) and clients (approved)
+        const additionalDraftMembers: ClientMember[] = draftClientRequests
+          .filter(r => r.email.toLowerCase() !== emailParam.toLowerCase())
+          .map((r, index) => ({
+            id: `draft-member-${index + 1}`,
+            cid: "draft",
+            formData: {
+              name: r.name,
+              email: r.email,
+              affiliation: r.affiliation,
+              designation: r.designation,
+              sex: r.sex,
+              phoneNumber: r.phoneNumber,
+              affiliationAddress: r.affiliationAddress,
+            },
+            errors: {},
+            isSubmitted: false,
+            isPrimary: false,
+            isDraft: true,
+          }));
+
         const allMembersQuery = query(
           clientsRef,
           where("inquiryId", "==", inquiryIdParam)
         );
         const allMembersSnapshot = await getDocs(allMembersQuery);
 
-        const additionalMembers: ClientMember[] = allMembersSnapshot.docs
+        const approvedMembers: ClientMember[] = allMembersSnapshot.docs
           .filter((d) => {
             const email = d.data().email;
             if (!email) return true;
@@ -270,6 +308,9 @@ export default function ClientPortalPage() {
               isDraft: false,
             };
           });
+
+        // Combine draft and approved members
+        const additionalMembers = [...additionalDraftMembers, ...approvedMembers];
 
         // Fetch all projects for this inquiry
         const projectsRef = collection(db, "projects");
@@ -654,118 +695,80 @@ export default function ClientPortalPage() {
         return;
       }
 
-      if (member.isPrimary) {
-        // Check if this is a draft project
-        const isDraftProject = projectDetails?.isDraft || projectDetails?.pid === "DRAFT";
+      // Check if this is a draft project
+      const isDraftProject = projectDetails?.isDraft || projectDetails?.pid === "DRAFT";
+
+      if (isDraftProject && inquiryIdParam) {
+        // For draft projects, save ALL members to clientRequests collection
+        await saveClientRequest({
+          inquiryId: inquiryIdParam,
+          requestedBy: emailParam || "",
+          requestedByName: members.find((m) => m.isPrimary)?.formData.name || result.data.name,
+          name: result.data.name,
+          email: result.data.email,
+          affiliation: result.data.affiliation,
+          designation: result.data.designation,
+          sex: result.data.sex,
+          phoneNumber: result.data.phoneNumber,
+          affiliationAddress: result.data.affiliationAddress,
+          isPrimary: member.isPrimary,
+          status: "draft",
+        });
+
+        setMembers((prev) =>
+          prev.map((m) =>
+            m.id === pendingMemberId
+              ? { ...m, isSubmitted: true, isDraft: true, cid: "draft" }
+              : m
+          )
+        );
+        toast.success(`${member.isPrimary ? "Primary member" : "Team member"} information saved to draft!`);
+      } else {
+        // For approved projects, save to clients collection
+        let pids: string[] = projects.map((p) => p.pid).filter(pid => pid !== "DRAFT");
+        if (pids.length === 0 && pidParam) pids = [pidParam];
+
+        let cidToUse = member.cid;
+        if (cidToUse === "pending" || cidToUse === "draft") {
+          const year = new Date().getFullYear();
+          cidToUse = await getNextCid(year);
+        }
 
         if (isDraftProject && inquiryIdParam) {
           // For draft projects, save primary member to projectRequest
           await saveProjectRequest({
             inquiryId: inquiryIdParam,
-            requestedBy: emailParam || "",
-            requestedByName: result.data.name,
-            title: projectRequest?.title || projectDetails?.title || "",
-            projectLead: projectRequest?.projectLead || projectDetails?.lead || "",
-            startDate: projectRequest?.startDate || Timestamp.fromDate(new Date()),
-            sendingInstitution: projectRequest?.sendingInstitution || projectDetails?.sendingInstitution || "Government",
-            fundingInstitution: projectRequest?.fundingInstitution || projectDetails?.fundingInstitution || "",
-            primaryMember: result.data,
-            status: "draft",
-          });
+            isContactPerson: member.isPrimary,
+            haveSubmitted: true,
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
 
-          setMembers((prev) =>
-            prev.map((m) =>
-              m.id === pendingMemberId
-                ? { ...m, isSubmitted: true, isDraft: true }
-                : m
-            )
-          );
-          toast.success("Primary member information saved to draft!");
-        } else {
-          // For approved projects, save to clients collection
-          let pids: string[] = projects.map((p) => p.pid).filter(pid => pid !== "DRAFT");
-          if (pids.length === 0 && pidParam) pids = [pidParam];
-
-          let cidToUse = member.cid;
-          if (cidToUse === "pending" || cidToUse === "draft") {
-            const year = new Date().getFullYear();
-            cidToUse = await getNextCid(year);
-          }
-
-          await setDoc(
-            doc(db, "clients", cidToUse),
-            {
-              ...result.data,
-              cid: cidToUse,
-              pid: pids,
-              inquiryId: inquiryIdParam,
-              isContactPerson: true,
-              haveSubmitted: true,
-              updatedAt: serverTimestamp(),
-            },
-            { merge: true }
-          );
-
-          // Update project's clientNames array
-          const currentPid = selectedProjectPid || pidParam;
-          if (currentPid && currentPid !== "DRAFT") {
-            const projectDocRef = doc(db, "projects", currentPid);
-            const projectSnap = await getDoc(projectDocRef);
-            if (projectSnap.exists()) {
-              const clientNames = projectSnap.data().clientNames || [];
-              if (!clientNames.includes(result.data.name)) {
-                await setDoc(
-                  projectDocRef,
-                  { clientNames: [...clientNames, result.data.name] },
-                  { merge: true }
-                );
-              }
+        // Update project's clientNames array
+        const currentPid = selectedProjectPid || pidParam;
+        if (currentPid && currentPid !== "DRAFT") {
+          const projectDocRef = doc(db, "projects", currentPid);
+          const projectSnap = await getDoc(projectDocRef);
+          if (projectSnap.exists()) {
+            const clientNames = projectSnap.data().clientNames || [];
+            if (!clientNames.includes(result.data.name)) {
+              await setDoc(
+                projectDocRef,
+                { clientNames: [...clientNames, result.data.name] },
+                { merge: true }
+              );
             }
           }
 
-          setMembers((prev) =>
-            prev.map((m) =>
-              m.id === pendingMemberId
-                ? { ...m, cid: cidToUse, isSubmitted: true }
-                : m
-            )
-          );
-          toast.success("Your information saved successfully!");
-        }
-      } else {
-        // Non-primary (draft) → save to memberApprovals
-        const updatedMembers = members.map((m) =>
-          m.id === pendingMemberId
-            ? { ...m, isSubmitted: true, errors: {} }
-            : m
+        setMembers((prev) =>
+          prev.map((m) =>
+            m.id === pendingMemberId
+              ? { ...m, cid: cidToUse, isSubmitted: true }
+              : m
+          )
         );
-        setMembers(updatedMembers);
-
-        if (selectedProjectPid && inquiryIdParam) {
-          const draftMembers = updatedMembers.filter(
-            (m) => m.isDraft && !m.isPrimary
-          );
-          await saveMemberApproval({
-            inquiryId: inquiryIdParam,
-            projectPid: selectedProjectPid,
-            projectTitle: projectDetails?.title || "",
-            submittedBy: emailParam || "",
-            submittedByName:
-              members.find((m) => m.isPrimary)?.formData.name || "",
-            status:
-              approvalStatus === "rejected"
-                ? "draft"
-                : approvalStatus || "draft",
-            members: draftMembers.map((m) => ({
-              tempId: m.id,
-              isPrimary: false,
-              isValidated: m.isSubmitted,
-              formData: m.formData,
-            })),
-          });
-        }
-
-        toast.success("Member information validated and saved as draft!");
+        toast.success("Your information saved successfully!");
       }
     } catch (error) {
       console.error("Submission error:", error);
@@ -782,60 +785,89 @@ export default function ClientPortalPage() {
 
     setSubmitting(true);
     try {
-      if (member.isPrimary) {
-        let pids: string[] = projects.map((p) => p.pid);
-        if (pids.length === 0 && pidParam) pids = [pidParam];
+      // Check if this is a draft project
+      const isDraftProject = projectDetails?.isDraft || projectDetails?.pid === "DRAFT";
 
-        let cidToUse = member.cid;
-        if (cidToUse === "pending") {
-          const year = new Date().getFullYear();
-          cidToUse = await getNextCid(year);
-        }
-
-        await setDoc(
-          doc(db, "clients", cidToUse),
-          {
-            ...member.formData,
-            cid: cidToUse,
-            pid: pids,
-            inquiryId: inquiryIdParam,
-            isContactPerson: true,
-            haveSubmitted: false,
-            updatedAt: serverTimestamp(),
-          },
-          { merge: true }
-        );
+      if (isDraftProject && inquiryIdParam) {
+        // For draft projects, save to clientRequests collection (without validation)
+        await saveClientRequest({
+          inquiryId: inquiryIdParam,
+          requestedBy: emailParam || "",
+          requestedByName: members.find((m) => m.isPrimary)?.formData.name || member.formData.name || "",
+          name: member.formData.name,
+          email: member.formData.email,
+          affiliation: member.formData.affiliation,
+          designation: member.formData.designation,
+          sex: member.formData.sex,
+          phoneNumber: member.formData.phoneNumber,
+          affiliationAddress: member.formData.affiliationAddress,
+          isPrimary: member.isPrimary,
+          status: "draft",
+        });
 
         setMembers((prev) =>
           prev.map((m) =>
-            m.id === memberId ? { ...m, cid: cidToUse } : m
+            m.id === memberId ? { ...m, isDraft: true, cid: "draft" } : m
           )
         );
-        toast.success("Draft saved for your information");
+        toast.success("Draft saved for member");
       } else {
-        if (selectedProjectPid && inquiryIdParam) {
-          const draftMembers = members.filter(
-            (m) => m.isDraft && !m.isPrimary
+        // For approved projects, save to clients collection
+        if (member.isPrimary) {
+          let pids: string[] = projects.map((p) => p.pid).filter(pid => pid !== "DRAFT");
+          if (pids.length === 0 && pidParam) pids = [pidParam];
+
+          let cidToUse = member.cid;
+          if (cidToUse === "pending" || cidToUse === "draft") {
+            const year = new Date().getFullYear();
+            cidToUse = await getNextCid(year);
+          }
+
+          await setDoc(
+            doc(db, "clients", cidToUse),
+            {
+              ...member.formData,
+              cid: cidToUse,
+              pid: pids,
+              inquiryId: inquiryIdParam,
+              isContactPerson: true,
+              haveSubmitted: false,
+              updatedAt: serverTimestamp(),
+            },
+            { merge: true }
           );
-          await saveMemberApproval({
-            inquiryId: inquiryIdParam,
-            projectPid: selectedProjectPid,
-            projectTitle: projectDetails?.title || "",
-            submittedBy: emailParam || "",
-            submittedByName:
-              members.find((m) => m.isPrimary)?.formData.name || "",
-            status:
-              approvalStatus === "rejected"
-                ? "draft"
-                : approvalStatus || "draft",
-            members: draftMembers.map((m) => ({
-              tempId: m.id,
-              isPrimary: false,
-              isValidated: m.isSubmitted,
-              formData: m.formData,
-            })),
-          });
-          toast.success("Draft saved for team member");
+
+          setMembers((prev) =>
+            prev.map((m) =>
+              m.id === memberId ? { ...m, cid: cidToUse } : m
+            )
+          );
+          toast.success("Draft saved for your information");
+        } else {
+          if (selectedProjectPid && inquiryIdParam) {
+            const draftMembers = members.filter(
+              (m) => m.isDraft && !m.isPrimary
+            );
+            await saveMemberApproval({
+              inquiryId: inquiryIdParam,
+              projectPid: selectedProjectPid,
+              projectTitle: projectDetails?.title || "",
+              submittedBy: emailParam || "",
+              submittedByName:
+                members.find((m) => m.isPrimary)?.formData.name || "",
+              status:
+                approvalStatus === "rejected"
+                  ? "draft"
+                  : approvalStatus || "draft",
+              members: draftMembers.map((m) => ({
+                tempId: m.id,
+                isPrimary: false,
+                isValidated: m.isSubmitted,
+                formData: m.formData,
+              })),
+            });
+            toast.success("Draft saved for team member");
+          }
         }
       }
     } catch (error) {
@@ -960,7 +992,10 @@ export default function ClientPortalPage() {
         return;
       }
 
-      // Submit project + primary member for approval
+      // Submit all client requests for approval (both primary and team members)
+      await submitClientRequestsForApproval(inquiryIdParam);
+
+      // Submit project for approval (without primary member in project data since it's now in clientRequests)
       await submitProjectForApproval(
         inquiryIdParam,
         emailParam,
@@ -976,7 +1011,7 @@ export default function ClientPortalPage() {
       );
 
       toast.success(
-        "Project and primary member submitted for approval! You will be notified when reviewed.",
+        "Project and all team members submitted for approval! You will be notified when reviewed.",
         { duration: 5000 }
       );
 
