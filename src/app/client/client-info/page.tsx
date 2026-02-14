@@ -468,9 +468,10 @@ export default function ClientPortalPage() {
       isDraft: true,
     };
 
-    setMembers((prev) => [...prev, newMember]);
+    setMembers((prev) => [newMember, ...prev]);
     setExpandedMembers((prev) => new Set([...prev, newMemberId]));
     toast.success("New member added as draft");
+    console.log("✅ Member added at top:", newMemberId, "Total members:", members.length + 1);
   };
 
   const handleRemoveMember = (memberId: string) => {
