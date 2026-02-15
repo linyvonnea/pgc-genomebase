@@ -1131,6 +1131,11 @@ export default function ClientPortalPage() {
   };
 
   const handleSelectProject = async (project: ProjectDetails) => {
+    if (!emailParam || !inquiryIdParam) {
+      toast.error("Missing required parameters.");
+      return;
+    }
+    
     setSelectedProjectPid(project.pid);
     setProjectDetails(project);
 
@@ -1150,7 +1155,7 @@ export default function ClientPortalPage() {
         const data = d.data();
         const email = data.email;
 
-        if (email && email.toLowerCase() === emailParam!.toLowerCase()) {
+        if (email && emailParam && email.toLowerCase() === emailParam.toLowerCase()) {
           primaryM = {
             id: "primary",
             cid: d.id,
@@ -1228,9 +1233,14 @@ export default function ClientPortalPage() {
   };
 
   const handleCreateNewProject = () => {
+    if (!emailParam || !inquiryIdParam) {
+      toast.error("Missing required parameters to create a new project.");
+      return;
+    }
+    
     const params = new URLSearchParams({
-      email: emailParam!,
-      inquiryId: inquiryIdParam!,
+      email: emailParam,
+      inquiryId: inquiryIdParam,
       new: "true",
     });
     router.push(`/client/project-info?${params.toString()}`);
