@@ -183,8 +183,9 @@ export default function ClientPortalPage() {
         let primaryClientSnapshot: any = null; // Store for later PID linking
         const clientsRef = collection(db, "clients");
         
-        // Load all draft client requests for this inquiry
-        const draftClientRequests = await getClientRequestsByInquiry(inquiryIdParam, "draft");
+        // Load all draft and pending client requests for this inquiry (new workflow)
+        const allClientRequests = await getClientRequestsByInquiry(inquiryIdParam);
+        const draftClientRequests = allClientRequests.filter(r => r.status === "draft" || r.status === "pending");
         const primaryDraftRequest = draftClientRequests.find(r => r.email.toLowerCase() === emailParam.toLowerCase());
         
         if (primaryDraftRequest) {
@@ -324,12 +325,15 @@ export default function ClientPortalPage() {
         const allProjectPids: string[] = [];
         let fetchedProjectDetails: ProjectDetails | null = null;
 
-        // Use the draft project request already fetched above
-        if (draftProjectRequest && draftProjectRequest.status === "draft") {
-          console.log("\ud83d\udcdd Found draft project request");
+        // Show draft/pending/rejected project requests (not yet approved)
+        if (draftProjectRequest && ["draft", "pending", "rejected"].includes(draftProjectRequest.status)) {
+          console.log(`Found ${draftProjectRequest.status} project request`);
           setProjectRequest(draftProjectRequest);
+          const statusLabel = draftProjectRequest.status === "draft" ? "Draft" : 
+                            draftProjectRequest.status === "pending" ? "Pending Approval" :
+                            "Rejected";
           const draftProject: ProjectDetails = {
-            pid: "DRAFT",
+            pid: draftProjectRequest.status === "draft" ? "DRAFT" : `PENDING-${inquiryIdParam.slice(-6)}`,
             title: draftProjectRequest.title || "Draft Project",
             lead: draftProjectRequest.projectLead || "Not specified",
             startDate: draftProjectRequest.startDate?.toDate?.() || new Date(),
@@ -337,7 +341,7 @@ export default function ClientPortalPage() {
               draftProjectRequest.sendingInstitution || "Not specified",
             fundingInstitution:
               draftProjectRequest.fundingInstitution || "Not specified",
-            status: "Draft",
+            status: statusLabel,
             inquiryId: inquiryIdParam,
             isDraft: true,
           };
@@ -406,13 +410,16 @@ export default function ClientPortalPage() {
           setProjectDetails(fetchedProjectDetails);
         }
 
-        // Load draft / pending members from memberApprovals
+        // Load draft / pending members from memberApprovals (old workflow only)
+        // Don't load if we already have clientRequests (new workflow)
         let draftMembers: ClientMember[] = [];
         const selectedPid =
           fetchedProjectDetails?.pid || pidParam || "";
         
-        // Only load member approvals for non-draft projects
-        if (selectedPid && selectedPid !== "DRAFT" && inquiryIdParam) {
+        // Only load member approvals for non-draft, approved projects that use old workflow
+        // Skip if we have clientRequests (new workflow handles this)
+        const hasClientRequests = draftClientRequests.length > 0;
+        if (selectedPid && !selectedPid.startsWith("DRAFT") && !selectedPid.startsWith("PENDING") && inquiryIdParam && !hasClientRequests) {
           const approval = await getMemberApproval(
             inquiryIdParam,
             selectedPid
@@ -427,7 +434,7 @@ export default function ClientPortalPage() {
               draftMembers = approval.members
                 .filter((m) => !m.isPrimary)
                 .map((m, index) => ({
-                  id: m.tempId || `draft-${index + 1}`,
+                  id: m.tempId || `memberApproval-${index + 1}`,
                   cid: "",
                   formData: m.formData,
                   errors: {},
@@ -1237,6 +1244,9 @@ export default function ClientPortalPage() {
   };
 
   const statusColors: Record<string, string> = {
+    Draft: "bg-slate-100 text-slate-700 border-slate-200",
+    "Pending Approval": "bg-orange-100 text-orange-700 border-orange-200",
+    Rejected: "bg-red-100 text-red-700 border-red-200",
     Pending: "bg-blue-100 text-blue-700 border-blue-200",
     Ongoing: "bg-green-100 text-green-700 border-green-200",
     Completed: "bg-gray-100 text-gray-700 border-gray-200",
@@ -1925,18 +1935,52 @@ export default function ClientPortalPage() {
                   </div>
                 </div>
 
-                {/* Draft project info banner */}
+                {/* Draft/Pending project info banner */}
                 {projectDetails?.isDraft && (
-                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-4">
+                  <div className={`rounded-lg p-4 border ${
+                    projectDetails.status === "Draft" 
+                      ? "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
+                      : projectDetails.status === "Pending Approval"
+                      ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200"
+                      : "bg-gradient-to-r from-red-50 to-pink-50 border-red-200"
+                  }`}>
                     <div className="flex items-start gap-3">
-                      <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                      {projectDetails.status === "Pending Approval" ? (
+                        <Clock className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      ) : projectDetails.status === "Rejected" ? (
+                        <XCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                      ) : (
+                        <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                      )}
                       <div className="flex-1 space-y-2">
-                        <p className="text-sm font-semibold text-orange-900">
-                          Draft Project — Pending Submission
-                        </p>
-                        <p className="text-xs text-orange-700 leading-relaxed">
-                          Please fill out your information as the <strong>Primary Member</strong>, then scroll down and click "<strong>Submit Project and Member/s for Approval</strong>" to send this project to the admin for review. Once approved, you'll receive a PID and CID.
-                        </p>
+                        {projectDetails.status === "Draft" ? (
+                          <>
+                            <p className="text-sm font-semibold text-orange-900">
+                              Draft Project — Pending Submission
+                            </p>
+                            <p className="text-xs text-orange-700 leading-relaxed">
+                              Please fill out your information as the <strong>Primary Member</strong>, then scroll down and click "<strong>Submit Project and Member/s for Approval</strong>" to send this project to the admin for review. Once approved, you'll receive a PID and CID.
+                            </p>
+                          </>
+                        ) : projectDetails.status === "Pending Approval" ? (
+                          <>
+                            <p className="text-sm font-semibold text-blue-900">
+                              Pending Admin Approval
+                            </p>
+                            <p className="text-xs text-blue-700 leading-relaxed">
+                              Your project and team members have been submitted and are currently under review by the administrator. You'll receive a notification once approved. <strong>No further action needed at this time.</strong>
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-sm font-semibold text-red-900">
+                              Project Rejected
+                            </p>
+                            <p className="text-xs text-red-700 leading-relaxed">
+                              Your project submission was not approved. Please review the admin's feedback and make necessary corrections before resubmitting.
+                            </p>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
