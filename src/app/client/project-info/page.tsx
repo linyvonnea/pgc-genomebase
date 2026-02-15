@@ -31,6 +31,7 @@ export default function ProjectForm() {
   // Get inquiry ID and email from URL
   const inquiryId = searchParams.get("inquiryId");
   const email = searchParams.get("email");
+  const isNewProject = searchParams.get("new") === "true";
   const [isDraft, setIsDraft] = useState(true); // New projects start as drafts
 
   // Form state
@@ -62,6 +63,17 @@ export default function ProjectForm() {
         const existingRequest = await getProjectRequest(inquiryId);
         
         if (existingRequest && existingRequest.status === "draft") {
+          // If user is trying to create a new project but a draft already exists
+          if (isNewProject) {
+            console.log("⚠️ Cannot create new project - draft already exists");
+            toast.warning("You already have a draft project. Please complete or submit it before creating a new one.");
+            const params = new URLSearchParams();
+            if (email) params.set("email", email);
+            if (inquiryId) params.set("inquiryId", inquiryId);
+            router.push(`/client/client-info?${params.toString()}`);
+            return;
+          }
+          
           console.log("📝 Loading existing draft project request");
           setFormData({
             title: existingRequest.title || "",
@@ -71,6 +83,25 @@ export default function ProjectForm() {
             fundingInstitution: existingRequest.fundingInstitution || "",
           });
           setIsDraft(true);
+        } else if (existingRequest && existingRequest.status === "pending") {
+          // If project is pending approval
+          if (isNewProject) {
+            console.log("⚠️ Cannot create new project - project pending approval");
+            toast.warning("Your project is pending approval. Please wait for approval before creating a new project.");
+            const params = new URLSearchParams();
+            if (email) params.set("email", email);
+            if (inquiryId) params.set("inquiryId", inquiryId);
+            router.push(`/client/client-info?${params.toString()}`);
+            return;
+          }
+          
+          console.log("⏳ Project is pending approval, redirecting to client-info");
+          toast.info("Your project is currently pending approval.");
+          const params = new URLSearchParams();
+          if (email) params.set("email", email);
+          if (inquiryId) params.set("inquiryId", inquiryId);
+          router.push(`/client/client-info?${params.toString()}`);
+          return;
         } else if (existingRequest && existingRequest.status === "approved" && existingRequest.pid) {
           // If already approved, redirect to client-info with the assigned PID
           console.log("✅ Project already approved, redirecting to client-info");
@@ -92,7 +123,7 @@ export default function ProjectForm() {
       }
     }
     fetchProjectRequest();
-  }, [inquiryId, email, router]);
+  }, [inquiryId, email, router, isNewProject]);
 
   // Permission check: Verify email and inquiryId exist and are valid
   useEffect(() => {
