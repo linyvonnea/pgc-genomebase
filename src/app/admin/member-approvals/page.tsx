@@ -2,6 +2,7 @@
 
 // Admin Member Approvals Page
 // Allows admins to review, approve, or reject team member submissions from clients.
+// Also handles project + member approval requests from the new draft workflow.
 
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,14 @@ import {
   approveMemberApproval,
   rejectMemberApproval,
 } from "@/services/memberApprovalService";
+import {
+  getPendingProjectRequests,
+  ProjectRequest,
+} from "@/services/projectRequestService";
+import {
+  getClientRequestsByInquiry,
+  ClientRequest,
+} from "@/services/clientRequestService";
 import { MemberApproval, ApprovalStatus } from "@/types/MemberApproval";
 import useAuth from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -42,16 +51,45 @@ import {
   Briefcase,
   MapPin,
   Filter,
+  FileText,
+  Calendar,
 } from "lucide-react";
 
 type FilterStatus = "all" | ApprovalStatus;
 
+// Combined approval type for both member approvals and project requests
+interface CombinedApproval {
+  id: string;
+  type: "member" | "project";
+  inquiryId: string;
+  projectTitle: string;
+  projectPid?: string;
+  submittedBy: string;
+  submittedByName?: string;
+  status: ApprovalStatus;
+  submittedAt?: any;
+  reviewedAt?: any;
+  reviewedBy?: string;
+  reviewedByName?: string;
+  reviewNotes?: string;
+  members?: any[];
+  // Project-specific fields
+  projectData?: {
+    title: string;
+    projectLead: string;
+    startDate: any;
+    sendingInstitution: string;
+    fundingInstitution: string;
+  };
+  clientRequests?: ClientRequest[];
+}
+
 export default function MemberApprovalsPage() {
   const { user, adminInfo } = useAuth();
-  const [approvals, setApprovals] = useState<MemberApproval[]>([]);
+  const [approvals, setApprovals] = useState<CombinedApproval[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("pending");
-  const [selectedApproval, setSelectedApproval] = useState<MemberApproval | null>(null);
+  const [selectedApproval, setSelectedApproval] = useState<CombinedApproval | null>(null);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [reviewNotes, setReviewNotes] = useState("");
   const [processing, setProcessing] = useState(false);
@@ -59,16 +97,87 @@ export default function MemberApprovalsPage() {
   const fetchApprovals = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getAllMemberApprovals(
+      // Fetch traditional member approvals
+      const memberApprovals = await getAllMemberApprovals(
         filterStatus === "all" ? undefined : filterStatus
       );
+
+      // Fetch project requests (only pending ones initially)
+      const projectRequests = await getPendingProjectRequests();
+
+      // For each project request, fetch associated client requests
+      const projectApprovalsPromises = projectRequests.map(async (pr) => {
+        const clientRequests = await getClientRequestsByInquiry(pr.inquiryId);
+        
+        return {
+          id: pr.id || pr.inquiryId,
+          type: "project" as const,
+          inquiryId: pr.inquiryId,
+          projectTitle: pr.title,
+          projectPid: "DRAFT",
+          submittedBy: pr.requestedBy,
+          submittedByName: pr.requestedByName,
+          status: pr.status as ApprovalStatus,
+          submittedAt: pr.submittedAt,
+          reviewedAt: pr.reviewedAt,
+          reviewedBy: pr.reviewedBy,
+          reviewNotes: pr.rejectionReason,
+          projectData: {
+            title: pr.title,
+            projectLead: pr.projectLead,
+            startDate: pr.startDate,
+            sendingInstitution: pr.sendingInstitution,
+            fundingInstitution: pr.fundingInstitution,
+          },
+          clientRequests: clientRequests,
+          members: clientRequests.map((cr) => ({
+            tempId: cr.id,
+            isPrimary: cr.isPrimary,
+            isValidated: cr.isValidated,
+            formData: {
+              name: cr.name,
+              email: cr.email,
+              affiliation: cr.affiliation,
+              designation: cr.designation,
+              sex: cr.sex,
+              phoneNumber: cr.phoneNumber,
+              affiliationAddress: cr.affiliationAddress,
+            },
+          })),
+        };
+      });
+
+      const projectApprovals = await Promise.all(projectApprovalsPromises);
+
+      // Convert member approvals to combined format
+      const memberApprovalsCombined: CombinedApproval[] = memberApprovals.map((ma) => ({
+        id: ma.id!,
+        type: "member" as const,
+        inquiryId: ma.inquiryId,
+        projectTitle: ma.projectTitle,
+        projectPid: ma.projectPid,
+        submittedBy: ma.submittedBy,
+        submittedByName: ma.submittedByName,
+        status: ma.status,
+        submittedAt: ma.submittedAt,
+        reviewedAt: ma.reviewedAt,
+        reviewedBy: ma.reviewedBy,
+        reviewedByName: ma.reviewedByName,
+        reviewNotes: ma.reviewNotes,
+        members: ma.members,
+      }));
+
+      // Combine both types
+      const combined = [...projectApprovals, ...memberApprovalsCombined];
+
       // Sort by submittedAt descending
-      data.sort((a, b) => {
+      combined.sort((a, b) => {
         const aTime = a.submittedAt ? new Date(a.submittedAt).getTime() : 0;
         const bTime = b.submittedAt ? new Date(b.submittedAt).getTime() : 0;
         return bTime - aTime;
       });
-      setApprovals(data);
+
+      setApprovals(combined);
     } catch (error) {
       console.error("Failed to fetch approvals:", error);
       toast.error("Failed to load approval requests");
@@ -84,16 +193,24 @@ export default function MemberApprovalsPage() {
   const handleApprove = async () => {
     if (!selectedApproval?.id) return;
     setProcessing(true);
+    
     try {
-      const generatedCids = await approveMemberApproval(
-        selectedApproval.id,
-        user?.email || "",
-        adminInfo?.name || user?.displayName || "",
-        reviewNotes
-      );
-      toast.success(
-        `Approved! ${generatedCids.length} client ID(s) generated: ${generatedCids.join(", ")}`
-      );
+      if (selectedApproval.type === "member") {
+        // Traditional member approval
+        const generatedCids = await approveMemberApproval(
+          selectedApproval.id,
+          user?.email || "",
+          adminInfo?.name || user?.displayName || "",
+          reviewNotes
+        );
+        toast.success(
+          `Approved! ${generatedCids.length} client ID(s) generated: ${generatedCids.join(", ")}`
+        );
+      } else if (selectedApproval.type === "project") {
+        // New project + members approval
+        await approveProjectRequest(selectedApproval);
+      }
+      
       setShowReviewDialog(false);
       setSelectedApproval(null);
       setReviewNotes("");
@@ -106,6 +223,95 @@ export default function MemberApprovalsPage() {
     }
   };
 
+  const approveProjectRequest = async (approval: CombinedApproval) => {
+    if (!approval.projectData || !approval.clientRequests) {
+      throw new Error("Missing project data or client requests");
+    }
+
+    // Import required services
+    const { getNextPid } = await import("@/services/projectsService");
+    const { getNextCid } = await import("@/services/clientService");
+    const { updateProjectRequestStatus } = await import("@/services/projectRequestService");
+    const { approveClientRequest } = await import("@/services/clientRequestService");
+    const { doc, setDoc, serverTimestamp } = await import("firebase/firestore");
+    const { db } = await import("@/lib/firebase");
+
+    const year = new Date().getFullYear();
+    
+    // Generate PID
+    const pid = await getNextPid(year);
+
+    // Generate CIDs for all members
+    const memberCids: { email: string; cid: string; isPrimary: boolean }[] = [];
+    for (const clientReq of approval.clientRequests) {
+      const cid = await getNextCid(year);
+      memberCids.push({
+        email: clientReq.email,
+        cid,
+        isPrimary: clientReq.isPrimary || false,
+      });
+
+      // Create client document
+      await setDoc(doc(db, "clients", cid), {
+        cid,
+        pid: [pid],
+        inquiryId: approval.inquiryId,
+        name: clientReq.name,
+        email: clientReq.email,
+        affiliation: clientReq.affiliation,
+        designation: clientReq.designation,
+        sex: clientReq.sex,
+        phoneNumber: clientReq.phoneNumber,
+        affiliationAddress: clientReq.affiliationAddress,
+        isContactPerson: clientReq.isPrimary || false,
+        haveSubmitted: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      // Update clientRequest status
+      await approveClientRequest(
+        approval.inquiryId,
+        clientReq.email,
+        cid,
+        user?.email || ""
+      );
+    }
+
+    // Create project document
+    const clientNames = approval.clientRequests.map((cr) => cr.name);
+    await setDoc(doc(db, "projects", pid), {
+      pid,
+      iid: approval.inquiryId,
+      title: approval.projectData.title,
+      projectLead: approval.projectData.projectLead,
+      startDate: approval.projectData.startDate,
+      sendingInstitution: approval.projectData.sendingInstitution,
+      fundingInstitution: approval.projectData.fundingInstitution,
+      clientNames,
+      status: "Ongoing",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+
+    // Update project request status
+    const primaryCid = memberCids.find((m) => m.isPrimary)?.cid;
+    await updateProjectRequestStatus(
+      approval.inquiryId,
+      "approved",
+      user?.email || "",
+      pid,
+      primaryCid
+    );
+
+    // Success message
+    const cidList = memberCids.map((m) => m.cid).join(", ");
+    toast.success(
+      `Project approved! PID: ${pid} | CIDs: ${cidList}`,
+      { duration: 6000 }
+    );
+  };
+
   const handleReject = async () => {
     if (!selectedApproval?.id) return;
     if (!reviewNotes.trim()) {
@@ -113,13 +319,29 @@ export default function MemberApprovalsPage() {
       return;
     }
     setProcessing(true);
+    
     try {
-      await rejectMemberApproval(
-        selectedApproval.id,
-        user?.email || "",
-        adminInfo?.name || user?.displayName || "",
-        reviewNotes
-      );
+      if (selectedApproval.type === "member") {
+        // Traditional member rejection
+        await rejectMemberApproval(
+          selectedApproval.id,
+          user?.email || "",
+          adminInfo?.name || user?.displayName || "",
+          reviewNotes
+        );
+      } else if (selectedApproval.type === "project") {
+        // Project rejection
+        const { updateProjectRequestStatus } = await import("@/services/projectRequestService");
+        await updateProjectRequestStatus(
+          selectedApproval.inquiryId,
+          "rejected",
+          user?.email || "",
+          undefined,
+          undefined,
+          reviewNotes
+        );
+      }
+      
       toast.success("Submission rejected. The client will be notified.");
       setShowReviewDialog(false);
       setSelectedApproval(null);
@@ -252,24 +474,35 @@ export default function MemberApprovalsPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
+                      {approval.type === "project" && (
+                        <Badge className="bg-purple-100 text-purple-700 border-purple-200 border">
+                          <FileText className="h-3 w-3 mr-1" /> New Project
+                        </Badge>
+                      )}
                       <CardTitle className="text-lg font-bold text-slate-800">
                         {approval.projectTitle}
                       </CardTitle>
                       {getStatusBadge(approval.status)}
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-slate-500">
+                    <div className="flex items-center gap-4 text-sm text-slate-500 flex-wrap">
                       <span className="flex items-center gap-1 font-mono text-xs">
                         <FolderOpen className="h-3.5 w-3.5" />
                         {approval.projectPid}
                       </span>
                       <span className="flex items-center gap-1">
                         <User className="h-3.5 w-3.5" />
-                        Submitted by: {approval.submittedByName || approval.submittedBy}
+                        {approval.submittedByName || approval.submittedBy}
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="h-3.5 w-3.5" />
                         {formatDate(approval.submittedAt)}
                       </span>
+                      {approval.type === "project" && approval.projectData && (
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5" />
+                          Start: {formatDate(approval.projectData.startDate?.toDate?.())}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -290,17 +523,45 @@ export default function MemberApprovalsPage() {
                 </div>
               </CardHeader>
               <CardContent>
+                {approval.type === "project" && approval.projectData && (
+                  <div className="mb-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-slate-500">Project Lead:</span>{" "}
+                        <span className="font-medium text-slate-800">
+                          {approval.projectData.projectLead}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500">Sending Institution:</span>{" "}
+                        <span className="font-medium text-slate-800">
+                          {approval.projectData.sendingInstitution}
+                        </span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-slate-500">Funding Institution:</span>{" "}
+                        <span className="font-medium text-slate-800">
+                          {approval.projectData.fundingInstitution}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center gap-2 text-sm text-slate-600">
                   <Users className="h-4 w-4 text-slate-400" />
                   <span className="font-medium">
-                    {approval.members.filter((m) => !m.isPrimary).length} member(s)
+                    {approval.type === "project"
+                      ? `${approval.members?.length || 0} total member(s)`
+                      : `${(approval.members || []).filter((m) => !m.isPrimary).length} member(s)`}
                   </span>
                   <span className="text-slate-400">•</span>
                   <span>
-                    {approval.members
-                      .filter((m) => !m.isPrimary)
-                      .map((m) => m.formData.name || "Unnamed")
-                      .join(", ")}
+                    {approval.type === "project"
+                      ? approval.members?.map((m) => m.formData.name || "Unnamed").join(", ")
+                      : (approval.members || [])
+                          .filter((m) => !m.isPrimary)
+                          .map((m) => m.formData.name || "Unnamed")
+                          .join(", ")}
                   </span>
                 </div>
                 {approval.reviewedBy && (
@@ -326,23 +587,73 @@ export default function MemberApprovalsPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-xl">
               <ShieldCheck className="h-6 w-6 text-[#166FB5]" />
-              Review Member Submission
+              {selectedApproval?.type === "project" ? "Review New Project Submission" : "Review Member Submission"}
             </DialogTitle>
             <DialogDescription>
-              Review the team members submitted for{" "}
-              <span className="font-semibold text-slate-700">
-                {selectedApproval?.projectTitle}
-              </span>{" "}
-              (
-              <span className="font-mono text-xs">
-                {selectedApproval?.projectPid}
-              </span>
-              )
+              {selectedApproval?.type === "project" ? (
+                <>
+                  Review the new project and team members submitted for approval.
+                </>
+              ) : (
+                <>
+                  Review the team members submitted for{" "}
+                  <span className="font-semibold text-slate-700">
+                    {selectedApproval?.projectTitle}
+                  </span>{" "}
+                  (
+                  <span className="font-mono text-xs">
+                    {selectedApproval?.projectPid}
+                  </span>
+                  )
+                </>
+              )}
             </DialogDescription>
           </DialogHeader>
 
           {selectedApproval && (
             <div className="space-y-4 py-4">
+              {/* Project Info for project-type approvals */}
+              {selectedApproval.type === "project" && selectedApproval.projectData && (
+                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                  <h3 className="text-sm font-semibold text-purple-900 flex items-center gap-2 mb-3">
+                    <FileText className="h-4 w-4" />
+                    Project Details
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="col-span-2">
+                      <span className="text-purple-700 font-medium">Title:</span>{" "}
+                      <span className="font-semibold text-purple-900">
+                        {selectedApproval.projectData.title}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-purple-700 font-medium">Project Lead:</span>{" "}
+                      <span className="text-purple-900">
+                        {selectedApproval.projectData.projectLead}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-purple-700 font-medium">Start Date:</span>{" "}
+                      <span className="text-purple-900">
+                        {formatDate(selectedApproval.projectData.startDate?.toDate?.())}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-purple-700 font-medium">Sending Institution:</span>{" "}
+                      <span className="text-purple-900">
+                        {selectedApproval.projectData.sendingInstitution}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-purple-700 font-medium">Funding Institution:</span>{" "}
+                      <span className="text-purple-900">
+                        {selectedApproval.projectData.fundingInstitution}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Submission Info */}
               <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
                 <div className="grid grid-cols-2 gap-3 text-sm">
@@ -375,17 +686,25 @@ export default function MemberApprovalsPage() {
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                   <Users className="h-4 w-4" />
-                  Team Members ({selectedApproval.members.filter((m) => !m.isPrimary).length})
+                  {selectedApproval.type === "project"
+                    ? `Team Members (${selectedApproval.members?.length || 0})`
+                    : `Team Members (${(selectedApproval.members || []).filter((m) => !m.isPrimary).length})`}
                 </h3>
-                {selectedApproval.members
-                  .filter((m) => !m.isPrimary)
-                  .map((member, idx) => (
+                {(selectedApproval.type === "project"
+                  ? (selectedApproval.members || [])
+                  : (selectedApproval.members || []).filter((m) => !m.isPrimary)
+                ).map((member, idx) => (
                     <Card key={member.tempId || idx} className="border border-slate-200">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
                           <h4 className="font-semibold text-slate-800 flex items-center gap-2">
                             <User className="h-4 w-4 text-[#166FB5]" />
                             {member.formData.name || "Unnamed"}
+                            {member.isPrimary && selectedApproval.type === "project" && (
+                              <Badge className="bg-amber-100 text-amber-700 border-amber-200 border ml-2">
+                                Primary Member
+                              </Badge>
+                            )}
                           </h4>
                           <Badge
                             className={
