@@ -1130,8 +1130,16 @@ export default function ClientPortalPage() {
       return;
     }
     
+    if (!project) {
+      toast.error("Invalid project selected.");
+      return;
+    }
+    
+    console.log("Selecting project:", project);
+    console.log("Parameters - email:", emailParam, "inquiryId:", inquiryIdParam);
+    
     // Clear previous selection state immediately to avoid UI flickering with old data
-    setSelectedProjectPid(project.pid);
+    setSelectedProjectPid(project.pid || "");
     setProjectDetails(project);
     setMembers([]);
     setProjectRequest(null);
@@ -1187,22 +1195,72 @@ export default function ClientPortalPage() {
 
       // 2. If it is a draft project, load the project request data
       if (project.isDraft) {
-        // For draft projects, always use inquiryId to fetch project request
-        // because project.pid might be a fallback value if document ID was missing
-        const pr = await getProjectRequestById(inquiryIdParam);
-        if (pr) {
-          setProjectRequest(pr);
-          setCurrentProjectRequestId(pr.id || null);
-          setApprovalStatus(pr.status as ApprovalStatus);
+        console.log("Loading draft project data for inquiryId:", inquiryIdParam);
+        try {
+          // For draft projects, always use inquiryId to fetch project request
+          // because project.pid might be a fallback value if document ID was missing
+          const pr = await getProjectRequestById(inquiryIdParam);
+          console.log("Project request loaded:", pr);
           
-          // If primary member wasn't found in 'clients' yet, use data from ProjectRequest
-          if (!primaryM && pr.primaryMember) {
+          if (pr) {
+            setProjectRequest(pr);
+            setCurrentProjectRequestId(pr.id || null);
+            setApprovalStatus((pr.status as ApprovalStatus) || "draft");
+            
+            // If primary member wasn't found in 'clients' yet, use data from ProjectRequest
+            if (!primaryM && pr.primaryMember) {
+              console.log("Using primary member from project request:", pr.primaryMember);
+              primaryM = {
+                id: "primary",
+                cid: "draft",
+                formData: pr.primaryMember,
+                errors: {},
+                isSubmitted: true,
+                isPrimary: true,
+                isDraft: true,
+              };
+            }
+          } else {
+            console.warn("No project request found for inquiryId:", inquiryIdParam);
+            // Create a default primary member if no project request found
+            if (!primaryM) {
+              primaryM = {
+                id: "primary",
+                cid: "draft",
+                formData: {
+                  name: "",
+                  email: emailParam,
+                  affiliation: "",
+                  designation: "",
+                  sex: "M",
+                  phoneNumber: "",
+                  affiliationAddress: "",
+                },
+                errors: {},
+                isSubmitted: false,
+                isPrimary: true,
+                isDraft: true,
+              };
+            }
+          }
+        } catch (error) {
+          console.error("Error loading project request:", error);
+          // Ensure we still have a primary member even if project request loading fails
+          if (!primaryM) {
             primaryM = {
               id: "primary",
               cid: "draft",
-              formData: pr.primaryMember,
+              formData: {
+                name: "",
+                email: emailParam,
+                affiliation: "",
+                designation: "",
+                sex: "M",
+                phoneNumber: "",
+                affiliationAddress: "",
+              },
               errors: {},
-              isSubmitted: true,
+              isSubmitted: false,
               isPrimary: true,
               isDraft: true,
             };
@@ -1212,22 +1270,34 @@ export default function ClientPortalPage() {
 
       // 3. Load pending team members from 'memberApprovals' (for existing projects)
       if (!project.isDraft && inquiryIdParam) {
-        const approval = await getMemberApproval(inquiryIdParam, project.pid);
-        if (approval) {
-          setApprovalStatus(approval.status);
-          if (["draft", "pending", "rejected"].includes(approval.status)) {
-            draftM = (approval.members || [])
-              .filter((m) => !m.isPrimary)
-              .map((m, index) => ({
-                id: m.tempId || `draft-${index + 1}`,
-                cid: "",
-                formData: m.formData,
-                errors: {},
-                isSubmitted: m.isValidated,
-                isPrimary: false,
-                isDraft: true,
-              }));
+        try {
+          const approval = await getMemberApproval(inquiryIdParam, project.pid);
+          if (approval) {
+            setApprovalStatus(approval.status);
+            if (["draft", "pending", "rejected"].includes(approval.status)) {
+              draftM = (approval.members || [])
+                .filter((m) => !m.isPrimary)
+                .map((m, index) => ({
+                  id: m.tempId || `draft-${index + 1}`,
+                  cid: "",
+                  formData: m.formData || {
+                    name: "",
+                    email: "",
+                    affiliation: "",
+                    designation: "",
+                    sex: "M",
+                    phoneNumber: "",
+                    affiliationAddress: "",
+                  },
+                  errors: {},
+                  isSubmitted: m.isValidated || false,
+                  isPrimary: false,
+                  isDraft: true,
+                }));
+            }
           }
+        } catch (error) {
+          console.error("Error loading member approvals:", error);
         }
       }
 
@@ -1235,11 +1305,35 @@ export default function ClientPortalPage() {
         ? [primaryM, ...additionalM, ...draftM]
         : [...additionalM, ...draftM];
       
+      console.log("Final project members:", projectMembers);
       setMembers(projectMembers);
       setExpandedMembers(new Set(["primary"]));
     } catch (error) {
       console.error("Error loading project members:", error);
-      toast.error("Failed to load project members");
+      toast.error(`Failed to load project members: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      
+      // Still try to set a basic primary member to prevent complete failure
+      if (emailParam) {
+        const fallbackPrimary: ClientMember = {
+          id: "primary",
+          cid: "draft",
+          formData: {
+            name: "",
+            email: emailParam,
+            affiliation: "",
+            designation: "",
+            sex: "M",
+            phoneNumber: "",
+            affiliationAddress: "",
+          },
+          errors: {},
+          isSubmitted: false,
+          isPrimary: true,
+          isDraft: true,
+        };
+        setMembers([fallbackPrimary]);
+        setExpandedMembers(new Set(["primary"]));
+      }
     }
   };
 
@@ -1807,6 +1901,12 @@ export default function ClientPortalPage() {
           ) : (
             <div className="p-2 space-y-1">
               {projects.map((project) => {
+                // Defensive checks for project properties
+                if (!project || !project.pid) {
+                  console.warn("Invalid project in sidebar:", project);
+                  return null;
+                }
+                
                 const isSelected = selectedProjectPid === project.pid;
                 const isDocsExpanded = expandedProjectDocs.has(project.pid);
                 const docs = projectDocuments.get(project.pid);
@@ -1819,6 +1919,7 @@ export default function ClientPortalPage() {
                     <div className="relative">
                       <button
                         onClick={() => {
+                          console.log("Sidebar click - project:", project);
                           handleSelectProject(project);
                           setMobileSidebarOpen(false);
                         }}
@@ -1835,7 +1936,7 @@ export default function ClientPortalPage() {
                             isSelected ? "text-[#166FB5]" : "text-slate-700"
                           )}
                         >
-                          {project.title}
+                          {project.title || "Untitled Project"}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-[11px] font-mono text-slate-400">
@@ -1848,7 +1949,7 @@ export default function ClientPortalPage() {
                               statusColors[project.status] || "bg-slate-100 text-slate-600"
                             )}
                           >
-                            {project.status}
+                            {project.status || "Unknown"}
                           </Badge>
                         </div>
                       </button>
