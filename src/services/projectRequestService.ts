@@ -163,13 +163,20 @@ export async function getProjectRequest(
 }
 
 /**
- * Get all pending project requests (for admin).
+ * Get project requests by status.
  */
-export async function getPendingProjectRequests(): Promise<ProjectRequest[]> {
-  const q = query(
-    collection(db, COLLECTION),
-    where("status", "==", "pending")
-  );
+export async function getProjectRequestsByStatus(
+  status?: ProjectRequestStatus | "all"
+): Promise<ProjectRequest[]> {
+  let q;
+  if (status && status !== "all") {
+    q = query(
+      collection(db, COLLECTION),
+      where("status", "==", status)
+    );
+  } else {
+    q = query(collection(db, COLLECTION));
+  }
 
   const snapshot = await getDocs(q);
   return snapshot.docs.map((doc) => ({
@@ -179,19 +186,17 @@ export async function getPendingProjectRequests(): Promise<ProjectRequest[]> {
 }
 
 /**
+ * Get all pending project requests (for admin).
+ */
+export async function getPendingProjectRequests(): Promise<ProjectRequest[]> {
+  return getProjectRequestsByStatus("pending");
+}
+
+/**
  * Get all project requests for admin (any status).
  */
 export async function getAllProjectRequests(): Promise<ProjectRequest[]> {
-  const q = query(
-    collection(db, COLLECTION),
-    orderBy("createdAt", "desc")
-  );
-
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as ProjectRequest[];
+  return getProjectRequestsByStatus("all");
 }
 
 /**
