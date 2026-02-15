@@ -33,6 +33,7 @@ export interface ClientRequestData {
 export interface ClientRequest {
   id?: string;
   inquiryId: string;
+  projectRequestId?: string; // Link to specific draft project (optional)
   requestedBy: string; // Email of requester
   requestedByName: string; // Name of requester
   
@@ -67,11 +68,14 @@ export interface ClientRequest {
 const COLLECTION = "clientRequests";
 
 /**
- * Generate document ID from inquiryId and email
+ * Generate document ID from inquiryId, email, and optional projectRequestId
  */
-function getDocId(inquiryId: string, email: string): string {
-  // Use email as part of ID to ensure unique client requests per inquiry
+function getDocId(inquiryId: string, email: string, projectRequestId?: string): string {
+  // Use email as part of ID to ensure unique client requests per inquiry/project
   const sanitizedEmail = email.toLowerCase().replace(/[^a-z0-9]/g, "_");
+  if (projectRequestId) {
+    return `${inquiryId}_${projectRequestId}_${sanitizedEmail}`;
+  }
   return `${inquiryId}_${sanitizedEmail}`;
 }
 

@@ -40,6 +40,8 @@ import {
 } from "@/services/memberApprovalService";
 import {
   getProjectRequest,
+  getProjectRequestById,
+  getProjectRequestsByInquiry,
   saveProjectRequest,
   submitProjectForApproval,
   subscribeToProjectRequest,
@@ -125,6 +127,7 @@ export default function ClientPortalPage() {
   const emailParam = searchParams.get("email");
   const inquiryIdParam = searchParams.get("inquiryId");
   const pidParam = searchParams.get("pid");
+  const projectRequestIdParam = searchParams.get("projectRequestId");
 
   // ── UI state ──────────────────────────────────────────────────
   const [showProjectsList, setShowProjectsList] = useState(true);
@@ -149,6 +152,7 @@ export default function ClientPortalPage() {
   const [projectRequest, setProjectRequest] = useState<ProjectRequest | null>(
     null
   );
+  const [currentProjectRequestId, setCurrentProjectRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -185,9 +189,15 @@ export default function ClientPortalPage() {
       }
 
       setLoading(true);
+      
+      // Initialize projectRequestId from URL if provided
+      if (projectRequestIdParam) {
+        setCurrentProjectRequestId(projectRequestIdParam);
+      }
+      
       try {
-        // Check for draft project first (used for both primary member and project list)
-        const draftProjectRequest = await getProjectRequest(inquiryIdParam);
+        // Fetch ALL draft/pending/rejected project requests for this inquiry
+        const allProjectRequests = await getProjectRequestsByInquiry(inquiryIdParam);
         
         let primaryMember: ClientMember;
         let primaryClientSnapshot: any = null; // Store for later PID linking
@@ -335,29 +345,40 @@ export default function ClientPortalPage() {
         const allProjectPids: string[] = [];
         let fetchedProjectDetails: ProjectDetails | null = null;
 
-        // Show draft/pending/rejected project requests (not yet approved)
-        if (draftProjectRequest && ["draft", "pending", "rejected"].includes(draftProjectRequest.status)) {
-          console.log(`Found ${draftProjectRequest.status} project request`);
-          setProjectRequest(draftProjectRequest);
-          const statusLabel = draftProjectRequest.status === "draft" ? "Draft" : 
-                            draftProjectRequest.status === "pending" ? "Pending Approval" :
-                            "Rejected";
-          const draftProject: ProjectDetails = {
-            pid: draftProjectRequest.status === "draft" ? "DRAFT" : `PENDING-${inquiryIdParam.slice(-6)}`,
-            title: draftProjectRequest.title || "Draft Project",
-            lead: draftProjectRequest.projectLead || "Not specified",
-            startDate: draftProjectRequest.startDate?.toDate?.() || new Date(),
-            sendingInstitution:
-              draftProjectRequest.sendingInstitution || "Not specified",
-            fundingInstitution:
-              draftProjectRequest.fundingInstitution || "Not specified",
-            status: statusLabel,
-            inquiryId: inquiryIdParam,
-            isDraft: true,
-          };
-          fetchedProjects.push(draftProject);
-          fetchedProjectDetails = draftProject;
-        }
+        // Show all draft/pending/rejected project requests (not yet approved)
+        allProjectRequests.forEach((draftProjectRequest) => {
+          if (["draft", "pending", "rejected"].includes(draftProjectRequest.status)) {
+            console.log(`Found ${draftProjectRequest.status} project request: ${draftProjectRequest.id}`);
+            const statusLabel = draftProjectRequest.status === "draft" ? "Draft" : 
+                              draftProjectRequest.status === "pending" ? "Pending Approval" :
+                              "Rejected";
+            const draftProject: ProjectDetails = {
+              pid: draftProjectRequest.id || `DRAFT-${Date.now()}`,
+              title: draftProjectRequest.title || "Draft Project",
+              lead: draftProjectRequest.projectLead || "Not specified",
+              startDate: draftProjectRequest.startDate?.toDate?.() || new Date(),
+              sendingInstitution:
+                draftProjectRequest.sendingInstitution || "Not specified",
+              fundingInstitution:
+                draftProjectRequest.fundingInstitution || "Not specified",
+              status: statusLabel,
+              inquiryId: inquiryIdParam,
+              isDraft: true,
+            };
+            fetchedProjects.push(draftProject);
+            
+            // Set as selected if matches projectRequestIdParam, pidParam, or is the first one
+            if (projectRequestIdParam && draftProjectRequest.id === projectRequestIdParam) {
+              fetchedProjectDetails = draftProject;
+              setProjectRequest(draftProjectRequest);
+              setCurrentProjectRequestId(draftProjectRequest.id || null);
+            } else if (!fetchedProjectDetails || (pidParam && pidParam === draftProject.pid)) {
+              fetchedProjectDetails = draftProject;
+              setProjectRequest(draftProjectRequest);
+              setCurrentProjectRequestId(draftProjectRequest.id || null);
+            }
+          }
+        });
 
         projectsSnapshot.forEach((projectDoc) => {
           const projectData = projectDoc.data();
@@ -471,7 +492,7 @@ export default function ClientPortalPage() {
     }
 
     initializePrimaryMember();
-  }, [emailParam, inquiryIdParam, pidParam, router]);
+  }, [emailParam, inquiryIdParam, pidParam, projectRequestIdParam, router]);
 
   // ────────────────────────────────────────────────────────────────
   //  Approval-status watcher
@@ -731,6 +752,7 @@ export default function ClientPortalPage() {
           isPrimary: member.isPrimary,
           isValidated: true,
           status: "draft",
+          projectRequestId: currentProjectRequestId || undefined,
         });
 
         setMembers((prev) =>
@@ -826,6 +848,7 @@ export default function ClientPortalPage() {
           isPrimary: member.isPrimary,
           isValidated: false,
           status: "draft",
+          projectRequestId: currentProjectRequestId || undefined,
         });
 
         setMembers((prev) =>
@@ -1048,7 +1071,13 @@ export default function ClientPortalPage() {
       console.log("Client requests submitted for approval");
 
       // Submit project for approval (without primary member in project data since it's now in clientRequests)
+      if (!currentProjectRequestId) {
+        toast.error("No project request ID found");
+        return;
+      }
+      
       await submitProjectForApproval(
+        currentProjectRequestId,
         inquiryIdParam,
         emailParam,
         primaryMember.formData.name || emailParam,
@@ -1087,8 +1116,8 @@ export default function ClientPortalPage() {
       );
       
       // Refresh project request to get updated status
-      if (inquiryIdParam) {
-        const updatedProjectRequest = await getProjectRequest(inquiryIdParam);
+      if (currentProjectRequestId) {
+        const updatedProjectRequest = await getProjectRequestById(currentProjectRequestId);
         if (updatedProjectRequest) {
           setProjectRequest(updatedProjectRequest);
         }
@@ -1743,9 +1772,7 @@ export default function ClientPortalPage() {
               handleCreateNewProject();
               setMobileSidebarOpen(false);
             }}
-            disabled={!!(projectRequest && (projectRequest.status === "draft" || projectRequest.status === "pending"))}
-            title={projectRequest && (projectRequest.status === "draft" || projectRequest.status === "pending") ? "Please complete or submit your current project before creating a new one" : ""}
-            className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90 text-white h-9 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90 text-white h-9 text-sm"
           >
             <Plus className="h-4 w-4 mr-2" />
             New Project
@@ -1935,9 +1962,7 @@ export default function ClientPortalPage() {
                     handleCreateNewProject();
                     setMobileSidebarOpen(false);
                   }}
-                  disabled={!!(projectRequest && (projectRequest.status === "draft" || projectRequest.status === "pending"))}
-                  title={projectRequest && (projectRequest.status === "draft" || projectRequest.status === "pending") ? "Please complete or submit your current project before creating a new one" : ""}
-                  className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90 text-white h-9 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90 text-white h-9 text-sm"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   New Project
