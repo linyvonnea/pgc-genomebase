@@ -1071,13 +1071,7 @@ export default function ClientPortalPage() {
       console.log("Client requests submitted for approval");
 
       // Submit project for approval (without primary member in project data since it's now in clientRequests)
-      if (!currentProjectRequestId) {
-        toast.error("No project request ID found");
-        return;
-      }
-      
       await submitProjectForApproval(
-        currentProjectRequestId,
         inquiryIdParam,
         emailParam,
         primaryMember.formData.name || emailParam,
