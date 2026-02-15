@@ -885,6 +885,15 @@ export default function ClientPortalPage() {
   };
 
   const handleFinalSubmit = () => {
+    // Check if all members are validated
+    const unsavedCount = members.filter((m) => !m.isSubmitted).length;
+    if (unsavedCount > 0) {
+      toast.error(
+        `Please save/validate all ${unsavedCount} member(s) before submitting for approval`
+      );
+      return;
+    }
+
     // Check if this is a draft project
     if (projectDetails?.isDraft) {
       // For draft projects, submit project + primary member
@@ -963,6 +972,11 @@ export default function ClientPortalPage() {
     const primaryMember = members.find((m) => m.isPrimary);
     if (!primaryMember) {
       toast.error("Primary member not found");
+      return;
+    }
+
+    if (!primaryMember.isSubmitted) {
+      toast.error("Please save your information as Primary Member first");
       return;
     }
 
@@ -2083,16 +2097,24 @@ export default function ClientPortalPage() {
                   approvalStatus !== "approved" && (
                     <div className="pt-6 border-t-2 border-slate-200">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <p className="text-sm text-slate-500">
-                          {projectDetails?.isDraft
-                            ? "Submit your project and primary member information for admin review"
-                            : members.filter((m) => m.isDraft).length > 0
-                            ? "All draft members must be validated before submitting"
-                            : "All members must be saved before submission"}
-                        </p>
+                        <div className="text-sm text-slate-500">
+                          {members.some((m) => !m.isSubmitted) ? (
+                            <span className="text-[#B9273A] font-semibold flex items-center gap-1.5">
+                              <AlertCircle className="h-4 w-4" />
+                              Please save all member information before submitting
+                            </span>
+                          ) : projectDetails?.isDraft ? (
+                            <span className="flex items-center gap-1.5 text-blue-600 font-medium">
+                              <CheckCircle2 className="h-4 w-4" />
+                              Project and member info ready for submission
+                            </span>
+                          ) : (
+                            "Submit your team members for admin review"
+                          )}
+                        </div>
                         <Button
                           onClick={handleFinalSubmit}
-                          disabled={submitting}
+                          disabled={submitting || members.some((m) => !m.isSubmitted)}
                           className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-bold shadow-xl hover:shadow-2xl disabled:opacity-50 whitespace-nowrap"
                         >
                           <Send className="h-5 w-5 mr-2" />
