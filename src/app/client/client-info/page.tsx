@@ -1677,6 +1677,24 @@ export default function ClientPortalPage() {
         />
       </button>
 
+      {/* New Project button (shown when Projects list is collapsed) */}
+      {!showProjectsList && (
+        <div className="p-3 border-b border-slate-100">
+          <Button
+            onClick={() => {
+              handleCreateNewProject();
+              setMobileSidebarOpen(false);
+            }}
+            disabled={!!(projectRequest && (projectRequest.status === "draft" || projectRequest.status === "pending"))}
+            title={projectRequest && (projectRequest.status === "draft" || projectRequest.status === "pending") ? "Please complete or submit your current project before creating a new one" : ""}
+            className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90 text-white h-9 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Project
+          </Button>
+        </div>
+      )}
+
       {/* Projects list */}
       {showProjectsList && (
         <div className="flex-1 overflow-y-auto">
@@ -1735,23 +1753,29 @@ export default function ClientPortalPage() {
                   </button>
                 );
               })}
+              
+              {/* New Project button at the bottom of the list */}
+              <div className="px-2 pt-2">
+                <Button
+                  onClick={() => {
+                    handleCreateNewProject();
+                    setMobileSidebarOpen(false);
+                  }}
+                  disabled={!!(projectRequest && (projectRequest.status === "draft" || projectRequest.status === "pending"))}
+                  title={projectRequest && (projectRequest.status === "draft" || projectRequest.status === "pending") ? "Please complete or submit your current project before creating a new one" : ""}
+                  className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90 text-white h-9 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Project
+                </Button>
+              </div>
             </div>
           )}
         </div>
       )}
 
       {/* Footer actions */}
-      <div className="p-3 border-t border-slate-100 space-y-2">
-        <Button
-          onClick={() => {
-            handleCreateNewProject();
-            setMobileSidebarOpen(false);
-          }}
-          className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90 text-white h-9 text-sm"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          New Project
-        </Button>
+      <div className="p-3 border-t border-slate-100">
         <Button
           variant="outline"
           size="sm"
