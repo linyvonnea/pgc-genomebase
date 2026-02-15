@@ -1006,15 +1006,8 @@ export default function ClientPortalPage() {
         return;
       }
 
-      console.log("Submitting project for approval:", {
-        inquiryId: inquiryIdParam,
-        email: emailParam,
-        title: projectRequest.title,
-      });
-
       // Submit all client requests for approval (both primary and team members)
       await submitClientRequestsForApproval(inquiryIdParam);
-      console.log("Client requests submitted for approval");
 
       // Submit project for approval (without primary member in project data since it's now in clientRequests)
       await submitProjectForApproval(
@@ -1030,7 +1023,6 @@ export default function ClientPortalPage() {
         },
         primaryMember.formData
       );
-      console.log("Project request submitted for approval");
 
       toast.success(
         "Project and all team members submitted for approval! You will be notified when reviewed.",
@@ -1039,8 +1031,29 @@ export default function ClientPortalPage() {
 
       // Update local state to reflect pending status
       setProjectDetails((prev) =>
-        prev ? { ...prev, status: "Pending Approval" } : prev
+        prev ? { ...prev, status: "Pending Approval", isDraft: false } : prev
       );
+      
+      // Update approval status to pending
+      setApprovalStatus("pending");
+      
+      // Update all members to show pending status
+      setMembers((prev) =>
+        prev.map((m) => ({
+          ...m,
+          isSubmitted: true,
+          isDraft: false,
+          cid: m.cid === "draft" ? "pending" : m.cid,
+        }))
+      );
+      
+      // Refresh project request to get updated status
+      if (inquiryIdParam) {
+        const updatedProjectRequest = await getProjectRequest(inquiryIdParam);
+        if (updatedProjectRequest) {
+          setProjectRequest(updatedProjectRequest);
+        }
+      }
     } catch (error) {
       console.error("Submit project error:", error);
       toast.error("Failed to submit project for approval");
