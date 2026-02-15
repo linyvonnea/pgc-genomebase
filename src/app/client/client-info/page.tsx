@@ -202,7 +202,7 @@ export default function ClientPortalPage() {
               affiliationAddress: primaryDraftRequest.affiliationAddress,
             },
             errors: {},
-            isSubmitted: false, // Draft, not yet approved
+            isSubmitted: !!primaryDraftRequest.isValidated, // Check if user has saved the form
             isPrimary: true,
             isDraft: true,
           };
@@ -271,7 +271,7 @@ export default function ClientPortalPage() {
               affiliationAddress: r.affiliationAddress,
             },
             errors: {},
-            isSubmitted: false,
+            isSubmitted: !!r.isValidated,
             isPrimary: false,
             isDraft: true,
           }));
@@ -712,6 +712,7 @@ export default function ClientPortalPage() {
           phoneNumber: result.data.phoneNumber,
           affiliationAddress: result.data.affiliationAddress,
           isPrimary: member.isPrimary,
+          isValidated: true,
           status: "draft",
         });
 
@@ -806,6 +807,7 @@ export default function ClientPortalPage() {
           phoneNumber: member.formData.phoneNumber,
           affiliationAddress: member.formData.affiliationAddress,
           isPrimary: member.isPrimary,
+          isValidated: false,
           status: "draft",
         });
 

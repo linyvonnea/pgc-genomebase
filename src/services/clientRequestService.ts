@@ -47,6 +47,7 @@ export interface ClientRequest {
   
   // Flags
   isPrimary: boolean; // Is this the primary member?
+  isValidated?: boolean; // Has the user saved/validated this information?
   
   // Approval tracking
   status: ClientRequestStatus;
