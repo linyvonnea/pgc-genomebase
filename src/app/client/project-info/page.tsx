@@ -23,7 +23,7 @@ import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
 import { getNextPid } from "@/services/projectsService";
-import { saveProjectRequest, getProjectRequest } from "@/services/projectRequestService";
+import { saveProjectRequest, getProjectRequest, getProjectRequestById, getProjectRequestsByInquiry } from "@/services/projectRequestService";
 
 export default function ProjectForm() {
   const router = useRouter();
@@ -32,7 +32,9 @@ export default function ProjectForm() {
   const inquiryId = searchParams.get("inquiryId");
   const email = searchParams.get("email");
   const isNewProject = searchParams.get("new") === "true";
+  const projectRequestId = searchParams.get("projectRequestId"); // Optional: edit existing draft
   const [isDraft, setIsDraft] = useState(true); // New projects start as drafts
+  const [currentProjectRequestId, setCurrentProjectRequestId] = useState<string | null>(projectRequestId);
 
   // Form state
   const [formData, setFormData] = useState<ProjectFormData>({
@@ -59,20 +61,28 @@ export default function ProjectForm() {
           return;
         }
 
-        // Check if a draft project request exists
-        const existingRequest = await getProjectRequest(inquiryId);
-        
-        // If explicitly creating a new project, clear the form (will overwrite existing draft)
-        if (isNewProject) {
-          console.log("🆕 Creating new project (will replace existing draft if any)");
-          
-          // Show warning if there's an existing draft
+        // If editing a specific project request
+        if (projectRequestId) {
+          const existingRequest = await getProjectRequestById(projectRequestId);
           if (existingRequest && existingRequest.status === "draft") {
-            toast.info("Creating a new project will replace your current draft.", {
-              duration: 4000,
+            console.log("📝 Loading existing draft project request:", projectRequestId);
+            setFormData({
+              title: existingRequest.title || "",
+              projectLead: existingRequest.projectLead || "",
+              startDate: existingRequest.startDate?.toDate?.() || new Date(),
+              sendingInstitution: (existingRequest.sendingInstitution || "Government") as "UP System" | "SUC/HEI" | "Government" | "Private/Local" | "International" | "N/A",
+              fundingInstitution: existingRequest.fundingInstitution || "",
             });
+            setCurrentProjectRequestId(projectRequestId);
+            setIsDraft(true);
+            setLoading(false);
+            return;
           }
-          
+        }
+        
+        // If explicitly creating a new project, show blank form
+        if (isNewProject) {
+          console.log("🆕 Creating new project");
           setFormData({
             title: "",
             projectLead: "",
@@ -80,22 +90,33 @@ export default function ProjectForm() {
             sendingInstitution: "Government",
             fundingInstitution: "",
           });
+          setCurrentProjectRequestId(null);
           setIsDraft(true);
           setLoading(false);
           return;
         }
         
-        if (existingRequest && existingRequest.status === "draft") {
+        // Check if any draft/pending project requests exist
+        const allProjectRequests = await getProjectRequestsByInquiry(inquiryId);
+        // Check if any draft/pending project requests exist
+        const allProjectRequests = await getProjectRequestsByInquiry(inquiryId);
+        const draftRequests = allProjectRequests.filter(r => r.status === "draft");
+        const pendingRequests = allProjectRequests.filter(r => r.status === "pending");
+        
+        if (draftRequests.length > 0) {
+          // Load first draft
+          const firstDraft = draftRequests[0];
           console.log("📝 Loading existing draft project request");
           setFormData({
-            title: existingRequest.title || "",
-            projectLead: existingRequest.projectLead || "",
-            startDate: existingRequest.startDate?.toDate?.() || new Date(),
-            sendingInstitution: (existingRequest.sendingInstitution || "Government") as "UP System" | "SUC/HEI" | "Government" | "Private/Local" | "International" | "N/A",
-            fundingInstitution: existingRequest.fundingInstitution || "",
+            title: firstDraft.title || "",
+            projectLead: firstDraft.projectLead || "",
+            startDate: firstDraft.startDate?.toDate?.() || new Date(),
+            sendingInstitution: (firstDraft.sendingInstitution || "Government") as "UP System" | "SUC/HEI" | "Government" | "Private/Local" | "International" | "N/A",
+            fundingInstitution: firstDraft.fundingInstitution || "",
           });
+          setCurrentProjectRequestId(firstDraft.id || null);
           setIsDraft(true);
-        } else if (existingRequest && existingRequest.status === "pending") {
+        } else if (pendingRequests.length > 0) {
           console.log("⏳ Project is pending approval, redirecting to client-info");
           toast.info("Your project is currently pending approval.");
           const params = new URLSearchParams();
@@ -103,13 +124,12 @@ export default function ProjectForm() {
           if (inquiryId) params.set("inquiryId", inquiryId);
           router.push(`/client/client-info?${params.toString()}`);
           return;
-        } else if (existingRequest && existingRequest.status === "approved" && existingRequest.pid) {
-          // If already approved, redirect to client-info with the assigned PID
-          console.log("✅ Project already approved, redirecting to client-info");
+        } else if (allProjectRequests.some(r => r.status === "approved" && r.pid)) {\n          // If already has approved project, redirect to client-info\n          console.log("✅ Project already approved, redirecting to client-info");
+          const approvedRequest = allProjectRequests.find(r => r.status === "approved" && r.pid);
           const params = new URLSearchParams();
           if (email) params.set("email", email);
           if (inquiryId) params.set("inquiryId", inquiryId);
-          if (existingRequest.pid) params.set("pid", existingRequest.pid);
+          if (approvedRequest?.pid) params.set("pid", approvedRequest.pid);
           router.push(`/client/client-info?${params.toString()}`);
           return;
         } else {
@@ -124,7 +144,7 @@ export default function ProjectForm() {
       }
     }
     fetchProjectRequest();
-  }, [inquiryId, email, router, isNewProject]);
+  }, [inquiryId, email, router, isNewProject, projectRequestId]);
 
   // Permission check: Verify email and inquiryId exist and are valid
   useEffect(() => {
@@ -211,7 +231,7 @@ export default function ProjectForm() {
       }
 
       // Save as draft project request (NO PID yet)
-      await saveProjectRequest({
+      const savedId = await saveProjectRequest({
         inquiryId,
         requestedBy: email,
         requestedByName: requesterName,
@@ -221,14 +241,16 @@ export default function ProjectForm() {
         sendingInstitution: result.data.sendingInstitution,
         fundingInstitution: result.data.fundingInstitution,
         status: "draft",
-      });
+      }, currentProjectRequestId || undefined);
 
+      setCurrentProjectRequestId(savedId);
       toast.success("Project draft saved! Now add your information as Primary Member.");
       
       setTimeout(() => {
         const params = new URLSearchParams();
         if (email) params.set("email", email);
         if (inquiryId) params.set("inquiryId", inquiryId);
+        if (savedId) params.set("projectRequestId", savedId);
         router.push(`/client/client-info?${params.toString()}`);
       }, 1500);
     } catch (error) {
