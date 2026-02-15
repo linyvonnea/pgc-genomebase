@@ -197,15 +197,26 @@ export default function ClientPortalPage() {
       
       try {
         // Fetch ALL draft/pending/rejected project requests for this inquiry
-        const allProjectRequests = await getProjectRequestsByInquiry(inquiryIdParam);
+        let allProjectRequests: ProjectRequest[] = [];
+        try {
+          allProjectRequests = await getProjectRequestsByInquiry(inquiryIdParam);
+        } catch (e) {
+          console.error("Error fetching project requests:", e);
+        }
         
-        let primaryMember: ClientMember;
+        let primaryMember: ClientMember | null = null;
         let primaryClientSnapshot: any = null; // Store for later PID linking
         const clientsRef = collection(db, "clients");
         
         // Load all draft and pending client requests for this inquiry (new workflow)
-        const allClientRequests = await getClientRequestsByInquiry(inquiryIdParam);
-        const draftClientRequests = allClientRequests.filter(r => r.status === "draft" || r.status === "pending");
+        let draftClientRequests: ClientRequest[] = [];
+        try {
+          const allClientRequests = await getClientRequestsByInquiry(inquiryIdParam);
+          draftClientRequests = allClientRequests.filter(r => r.status === "draft" || r.status === "pending");
+        } catch (e) {
+          console.error("Error fetching client requests:", e);
+        }
+
         const primaryDraftRequest = draftClientRequests.find(r => r.email.toLowerCase() === emailParam.toLowerCase());
         
         if (primaryDraftRequest) {
@@ -214,13 +225,13 @@ export default function ClientPortalPage() {
             id: "primary",
             cid: "draft",
             formData: {
-              name: primaryDraftRequest.name,
-              email: primaryDraftRequest.email,
-              affiliation: primaryDraftRequest.affiliation,
-              designation: primaryDraftRequest.designation,
-              sex: primaryDraftRequest.sex,
-              phoneNumber: primaryDraftRequest.phoneNumber,
-              affiliationAddress: primaryDraftRequest.affiliationAddress,
+              name: primaryDraftRequest.name || "",
+              email: primaryDraftRequest.email || emailParam,
+              affiliation: primaryDraftRequest.affiliation || "",
+              designation: primaryDraftRequest.designation || "",
+              sex: primaryDraftRequest.sex || "M",
+              phoneNumber: primaryDraftRequest.phoneNumber || "",
+              affiliationAddress: primaryDraftRequest.affiliationAddress || "",
             },
             errors: {},
             isSubmitted: !!primaryDraftRequest.isValidated, // Check if user has saved the form
@@ -229,51 +240,58 @@ export default function ClientPortalPage() {
           };
         } else {
           // Check if primary member already exists in clients collection
-          const clientQuery = query(
-            clientsRef,
-            where("email", "==", emailParam),
-            where("inquiryId", "==", inquiryIdParam)
-          );
-          const clientSnapshot = await getDocs(clientQuery);
-          primaryClientSnapshot = clientSnapshot; // Store for later use
+          try {
+            const clientQuery = query(
+              clientsRef,
+              where("email", "==", emailParam),
+              where("inquiryId", "==", inquiryIdParam)
+            );
+            const clientSnapshot = await getDocs(clientQuery);
+            primaryClientSnapshot = clientSnapshot; // Store for later use
 
-          if (!clientSnapshot.empty) {
-            const clientDoc = clientSnapshot.docs[0];
-            const data = clientDoc.data();
-            primaryMember = {
-              id: "primary",
-              cid: clientDoc.id,
-              formData: {
-                name: data.name || "",
-                email: data.email || emailParam,
-                affiliation: data.affiliation || "",
-                designation: data.designation || "",
-                sex: data.sex || "M",
-                phoneNumber: data.phoneNumber || "",
-                affiliationAddress: data.affiliationAddress || "",
-              },
-              errors: {},
-              isSubmitted: !!data.haveSubmitted,
-              isPrimary: true,
-            };
-          } else {
-            primaryMember = {
-              id: "primary",
-              cid: "pending",
-              formData: {
-                name: "",
-                email: emailParam,
-                affiliation: "",
-                designation: "",
-                sex: "M",
-                phoneNumber: "",
-                affiliationAddress: "",
-              },
-              errors: {},
-              isSubmitted: false,
-              isPrimary: true,
-            };
+            if (!clientSnapshot.empty) {
+              const clientDoc = clientSnapshot.docs[0];
+              const data = clientDoc.data();
+              primaryMember = {
+                id: "primary",
+                cid: clientDoc.id,
+                formData: {
+                  name: data.name || "",
+                  email: data.email || emailParam,
+                  affiliation: data.affiliation || "",
+                  designation: data.designation || "",
+                  sex: data.sex || "M",
+                  phoneNumber: data.phoneNumber || "",
+                  affiliationAddress: data.affiliationAddress || "",
+                },
+                errors: {},
+                isSubmitted: !!data.haveSubmitted,
+                isPrimary: true,
+              };
+            }
+          } catch (e) {
+            console.error("Error fetching client data:", e);
           }
+        }
+
+        // Final fallback for primary member if not found anywhere
+        if (!primaryMember) {
+          primaryMember = {
+            id: "primary",
+            cid: "pending",
+            formData: {
+              name: "",
+              email: emailParam,
+              affiliation: "",
+              designation: "",
+              sex: "M",
+              phoneNumber: "",
+              affiliationAddress: "",
+            },
+            errors: {},
+            isSubmitted: false,
+            isPrimary: true,
+          };
         }
 
         // Load additional team members from both clientRequests (drafts) and clients (approved)
@@ -297,50 +315,48 @@ export default function ClientPortalPage() {
             isDraft: true,
           }));
 
-        const allMembersQuery = query(
-          clientsRef,
-          where("inquiryId", "==", inquiryIdParam)
-        );
-        const allMembersSnapshot = await getDocs(allMembersQuery);
+        let approvedMembers: ClientMember[] = [];
+        try {
+          const allMembersQuery = query(
+            clientsRef,
+            where("inquiryId", "==", inquiryIdParam)
+          );
+          const allMembersSnapshot = await getDocs(allMembersQuery);
 
-        const approvedMembers: ClientMember[] = allMembersSnapshot.docs
-          .filter((d) => {
-            const email = d.data().email;
-            if (!email) return true;
-            return email.toLowerCase() !== emailParam.toLowerCase();
-          })
-          .map((d, index) => {
-            const data = d.data();
-            return {
-              id: `member-${index + 1}`,
-              cid: d.id,
-              formData: {
-                name: data.name || "",
-                email: data.email || "",
-                affiliation: data.affiliation || "",
-                designation: data.designation || "",
-                sex: data.sex || "M",
-                phoneNumber: data.phoneNumber || "",
-                affiliationAddress: data.affiliationAddress || "",
-              },
-              errors: {},
-              isSubmitted: !!data.haveSubmitted,
-              isPrimary: false,
-              isDraft: false,
-            };
-          });
+          approvedMembers = allMembersSnapshot.docs
+            .filter((d) => {
+              const email = d.data().email;
+              if (!email) return true;
+              return email.toLowerCase() !== emailParam.toLowerCase();
+            })
+            .map((d, index) => {
+              const data = d.data();
+              return {
+                id: `member-${index + 1}`,
+                cid: d.id,
+                formData: {
+                  name: data.name || "",
+                  email: data.email || "",
+                  affiliation: data.affiliation || "",
+                  designation: data.designation || "",
+                  sex: data.sex || "M",
+                  phoneNumber: data.phoneNumber || "",
+                  affiliationAddress: data.affiliationAddress || "",
+                },
+                errors: {},
+                isSubmitted: !!data.haveSubmitted,
+                isPrimary: false,
+                isDraft: false,
+              };
+            });
+        } catch (e) {
+          console.error("Error fetching approved members:", e);
+        }
 
         // Combine draft and approved members
         const additionalMembers = [...additionalDraftMembers, ...approvedMembers];
 
         // Fetch all projects for this inquiry
-        const projectsRef = collection(db, "projects");
-        const projectsQuery = query(
-          projectsRef,
-          where("iid", "==", inquiryIdParam)
-        );
-        const projectsSnapshot = await getDocs(projectsQuery);
-
         const fetchedProjects: ProjectDetails[] = [];
         const allProjectPids: string[] = [];
         let fetchedProjectDetails: ProjectDetails | null = null;
@@ -380,29 +396,40 @@ export default function ClientPortalPage() {
           }
         });
 
-        projectsSnapshot.forEach((projectDoc) => {
-          const projectData = projectDoc.data();
-          const project: ProjectDetails = {
-            pid: projectData.pid || projectDoc.id,
-            title: projectData.title || "Untitled Project",
-            lead: projectData.lead || "Not specified",
-            startDate:
-              projectData.startDate?.toDate?.() ||
-              projectData.startDate ||
-              new Date(),
-            sendingInstitution:
-              projectData.sendingInstitution || "Not specified",
-            fundingInstitution:
-              projectData.fundingInstitution || "Not specified",
-            status: projectData.status || "Pending",
-            inquiryId: projectData.iid || inquiryIdParam || "",
-          };
-          fetchedProjects.push(project);
-          allProjectPids.push(project.pid);
-          if (pidParam && projectData.pid === pidParam) {
-            fetchedProjectDetails = project;
-          }
-        });
+        try {
+          const projectsRef = collection(db, "projects");
+          const projectsQuery = query(
+            projectsRef,
+            where("iid", "==", inquiryIdParam)
+          );
+          const projectsSnapshot = await getDocs(projectsQuery);
+
+          projectsSnapshot.forEach((projectDoc) => {
+            const projectData = projectDoc.data();
+            const project: ProjectDetails = {
+              pid: projectData.pid || projectDoc.id,
+              title: projectData.title || "Untitled Project",
+              lead: projectData.lead || "Not specified",
+              startDate:
+                projectData.startDate?.toDate?.() ||
+                projectData.startDate ||
+                new Date(),
+              sendingInstitution:
+                projectData.sendingInstitution || "Not specified",
+              fundingInstitution:
+                projectData.fundingInstitution || "Not specified",
+              status: projectData.status || "Pending",
+              inquiryId: projectData.iid || inquiryIdParam || "",
+            };
+            fetchedProjects.push(project);
+            allProjectPids.push(project.pid);
+            if (pidParam && projectData.pid === pidParam) {
+              fetchedProjectDetails = project;
+            }
+          });
+        } catch (e) {
+          console.error("Error fetching projects:", e);
+        }
 
         if (!fetchedProjectDetails && fetchedProjects.length > 0) {
           fetchedProjectDetails = fetchedProjects[0];
@@ -410,28 +437,32 @@ export default function ClientPortalPage() {
 
         // Auto-link any missing PIDs to primary member's record (only for non-draft projects)
         if (primaryClientSnapshot && !primaryClientSnapshot.empty && allProjectPids.length > 0) {
-          const clientDoc = primaryClientSnapshot.docs[0];
-          const clientData = clientDoc.data();
-          const currentPids = Array.isArray(clientData.pid)
-            ? clientData.pid
-            : clientData.pid
-            ? [clientData.pid]
-            : [];
-          const missingPids = allProjectPids.filter(
-            (pid) => !currentPids.includes(pid)
-          );
-          if (missingPids.length > 0) {
-            const updatedPids = [
-              ...new Set([...currentPids, ...missingPids]),
-            ];
-            await setDoc(
-              doc(db, "clients", clientDoc.id),
-              { pid: updatedPids },
-              { merge: true }
+          try {
+            const clientDoc = primaryClientSnapshot.docs[0];
+            const clientData = clientDoc.data();
+            const currentPids = Array.isArray(clientData.pid)
+              ? clientData.pid
+              : clientData.pid
+              ? [clientData.pid]
+              : [];
+            const missingPids = allProjectPids.filter(
+              (pid) => !currentPids.includes(pid)
             );
-            toast.info(
-              `Linked ${missingPids.length} additional project(s) to your profile`
-            );
+            if (missingPids.length > 0) {
+              const updatedPids = [
+                ...new Set([...currentPids, ...missingPids]),
+              ];
+              await setDoc(
+                doc(db, "clients", clientDoc.id),
+                { pid: updatedPids },
+                { merge: true }
+              );
+              toast.info(
+                `Linked ${missingPids.length} additional project(s) to your profile`
+              );
+            }
+          } catch (e) {
+            console.error("Error linking PIDs:", e);
           }
         }
 
@@ -451,29 +482,33 @@ export default function ClientPortalPage() {
         // Skip if we have clientRequests (new workflow handles this)
         const hasClientRequests = draftClientRequests.length > 0;
         if (selectedPid && !selectedPid.startsWith("DRAFT") && !selectedPid.startsWith("PENDING") && inquiryIdParam && !hasClientRequests) {
-          const approval = await getMemberApproval(
-            inquiryIdParam,
-            selectedPid
-          );
-          if (approval) {
-            setApprovalStatus(approval.status);
-            if (
-              approval.status === "draft" ||
-              approval.status === "pending" ||
-              approval.status === "rejected"
-            ) {
-              draftMembers = approval.members
-                .filter((m) => !m.isPrimary)
-                .map((m, index) => ({
-                  id: m.tempId || `memberApproval-${index + 1}`,
-                  cid: "",
-                  formData: m.formData,
-                  errors: {},
-                  isSubmitted: m.isValidated,
-                  isPrimary: false,
-                  isDraft: true,
-                }));
+          try {
+            const approval = await getMemberApproval(
+              inquiryIdParam,
+              selectedPid
+            );
+            if (approval) {
+              setApprovalStatus(approval.status);
+              if (
+                approval.status === "draft" ||
+                approval.status === "pending" ||
+                approval.status === "rejected"
+              ) {
+                draftMembers = approval.members
+                  .filter((m) => !m.isPrimary)
+                  .map((m, index) => ({
+                    id: m.tempId || `memberApproval-${index + 1}`,
+                    cid: "",
+                    formData: m.formData,
+                    errors: {},
+                    isSubmitted: m.isValidated,
+                    isPrimary: false,
+                    isDraft: true,
+                  }));
+              }
             }
+          } catch (e) {
+            console.error("Error fetching member approval:", e);
           }
         }
 
@@ -1138,6 +1173,7 @@ export default function ClientPortalPage() {
     console.log("Selecting project:", project);
     console.log("Parameters - email:", emailParam, "inquiryId:", inquiryIdParam);
     
+    setLoading(true);
     // Clear previous selection state immediately to avoid UI flickering with old data
     setSelectedProjectPid(project.pid || "");
     setProjectDetails(project);
@@ -1222,50 +1258,31 @@ export default function ClientPortalPage() {
             }
           } else {
             console.warn("No project request found for inquiryId:", inquiryIdParam);
-            // Create a default primary member if no project request found
-            if (!primaryM) {
-              primaryM = {
-                id: "primary",
-                cid: "draft",
-                formData: {
-                  name: "",
-                  email: emailParam,
-                  affiliation: "",
-                  designation: "",
-                  sex: "M",
-                  phoneNumber: "",
-                  affiliationAddress: "",
-                },
-                errors: {},
-                isSubmitted: false,
-                isPrimary: true,
-                isDraft: true,
-              };
-            }
           }
         } catch (error) {
           console.error("Error loading project request:", error);
-          // Ensure we still have a primary member even if project request loading fails
-          if (!primaryM) {
-            primaryM = {
-              id: "primary",
-              cid: "draft",
-              formData: {
-                name: "",
-                email: emailParam,
-                affiliation: "",
-                designation: "",
-                sex: "M",
-                phoneNumber: "",
-                affiliationAddress: "",
-              },
-              errors: {},
-              isSubmitted: false,
-              isPrimary: true,
-              isDraft: true,
-            };
-          }
         }
+      }
+
+      // Ensure we ALWAYS have at least a primary member
+      if (!primaryM && emailParam) {
+        primaryM = {
+          id: "primary",
+          cid: project.isDraft ? "draft" : "pending",
+          formData: {
+            name: "",
+            email: emailParam,
+            affiliation: "",
+            designation: "",
+            sex: "M",
+            phoneNumber: "",
+            affiliationAddress: "",
+          },
+          errors: {},
+          isSubmitted: false,
+          isPrimary: true,
+          isDraft: project.isDraft,
+        };
       }
 
       // 3. Load pending team members from 'memberApprovals' (for existing projects)
@@ -1334,6 +1351,8 @@ export default function ClientPortalPage() {
         setMembers([fallbackPrimary]);
         setExpandedMembers(new Set(["primary"]));
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1918,21 +1937,22 @@ export default function ClientPortalPage() {
                   <div key={project.pid} className="space-y-0.5">
                     {/* Main project button */}
                     <div className="relative">
-                      <button
+                      <div
                         onClick={() => {
-                          if (!isClickable) return;
-                          console.log("Sidebar click - project:", project);
-                          handleSelectProject(project);
-                          setMobileSidebarOpen(false);
+                          if (isClickable) {
+                            handleSelectProject(project);
+                          } else if (project.isDraft) {
+                            // Already on this project by default, no need to do anything
+                            // but we could toast if they click it
+                          }
                         }}
                         disabled={!isClickable}
                         className={cn(
                           "w-full text-left p-3 pr-10 rounded-lg transition-all duration-150",
+                          isClickable ? "cursor-pointer hover:bg-slate-50" : "cursor-default opacity-80",
                           isSelected
                             ? "bg-[#166FB5]/8 border-l-[3px] border-l-[#166FB5] shadow-sm"
-                            : isClickable 
-                              ? "hover:bg-slate-50 border-l-[3px] border-l-transparent" 
-                              : "opacity-60 cursor-not-allowed grayscale-[0.5]"
+                            : "border-l-[3px] border-l-transparent"
                         )}
                       >
                         <div className="flex items-center justify-between">
@@ -1944,8 +1964,8 @@ export default function ClientPortalPage() {
                           >
                             {project.title || "Untitled Project"}
                           </p>
-                          {!isClickable && (
-                            <Clock className="h-3 w-3 text-slate-400" />
+                          {isSelected && (
+                            <CheckCircle2 className="h-3 w-3 text-[#166FB5]" />
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-1">
@@ -1962,10 +1982,10 @@ export default function ClientPortalPage() {
                             {project.status || "Unknown"}
                           </Badge>
                         </div>
-                      </button>
+                      </div>
                       
-                      {/* Expand documents button - only for clickable projects */}
-                      {isClickable && (
+                      {/* Expand documents button - always allowed for projects with PIDs */}
+                      {!project.isDraft && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
