@@ -1006,8 +1006,15 @@ export default function ClientPortalPage() {
         return;
       }
 
+      console.log("Submitting project for approval:", {
+        inquiryId: inquiryIdParam,
+        email: emailParam,
+        title: projectRequest.title,
+      });
+
       // Submit all client requests for approval (both primary and team members)
       await submitClientRequestsForApproval(inquiryIdParam);
+      console.log("Client requests submitted for approval");
 
       // Submit project for approval (without primary member in project data since it's now in clientRequests)
       await submitProjectForApproval(
@@ -1023,6 +1030,7 @@ export default function ClientPortalPage() {
         },
         primaryMember.formData
       );
+      console.log("Project request submitted for approval");
 
       toast.success(
         "Project and all team members submitted for approval! You will be notified when reviewed.",

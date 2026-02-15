@@ -104,10 +104,13 @@ export default function MemberApprovalsPage() {
 
       // Fetch project requests (only pending ones initially)
       const projectRequests = await getPendingProjectRequests();
+      console.log("Fetched project requests:", projectRequests);
 
       // For each project request, fetch associated client requests
       const projectApprovalsPromises = projectRequests.map(async (pr) => {
-        const clientRequests = await getClientRequestsByInquiry(pr.inquiryId);
+        // Only get pending client requests for the approval view
+        const clientRequests = await getClientRequestsByInquiry(pr.inquiryId, "pending");
+        console.log(`Client requests for ${pr.inquiryId}:`, clientRequests);
         
         return {
           id: pr.id || pr.inquiryId,
@@ -148,6 +151,7 @@ export default function MemberApprovalsPage() {
       });
 
       const projectApprovals = await Promise.all(projectApprovalsPromises);
+      console.log("Combined project approvals:", projectApprovals);
 
       // Convert member approvals to combined format
       const memberApprovalsCombined: CombinedApproval[] = memberApprovals.map((ma) => ({
@@ -169,6 +173,7 @@ export default function MemberApprovalsPage() {
 
       // Combine both types
       const combined = [...projectApprovals, ...memberApprovalsCombined];
+      console.log("Total combined approvals:", combined.length, combined);
 
       // Sort by submittedAt descending
       combined.sort((a, b) => {
