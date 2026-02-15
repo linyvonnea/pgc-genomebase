@@ -1907,6 +1907,7 @@ export default function ClientPortalPage() {
                   return null;
                 }
                 
+                const isClickable = !project.isDraft && project.status === "Ongoing";
                 const isSelected = selectedProjectPid === project.pid;
                 const isDocsExpanded = expandedProjectDocs.has(project.pid);
                 const docs = projectDocuments.get(project.pid);
@@ -1919,25 +1920,34 @@ export default function ClientPortalPage() {
                     <div className="relative">
                       <button
                         onClick={() => {
+                          if (!isClickable) return;
                           console.log("Sidebar click - project:", project);
                           handleSelectProject(project);
                           setMobileSidebarOpen(false);
                         }}
+                        disabled={!isClickable}
                         className={cn(
                           "w-full text-left p-3 pr-10 rounded-lg transition-all duration-150",
                           isSelected
                             ? "bg-[#166FB5]/8 border-l-[3px] border-l-[#166FB5] shadow-sm"
-                            : "hover:bg-slate-50 border-l-[3px] border-l-transparent"
+                            : isClickable 
+                              ? "hover:bg-slate-50 border-l-[3px] border-l-transparent" 
+                              : "opacity-60 cursor-not-allowed grayscale-[0.5]"
                         )}
                       >
-                        <p
-                          className={cn(
-                            "font-medium text-sm truncate",
-                            isSelected ? "text-[#166FB5]" : "text-slate-700"
+                        <div className="flex items-center justify-between">
+                          <p
+                            className={cn(
+                              "font-medium text-sm truncate",
+                              isSelected ? "text-[#166FB5]" : "text-slate-700"
+                            )}
+                          >
+                            {project.title || "Untitled Project"}
+                          </p>
+                          {!isClickable && (
+                            <Clock className="h-3 w-3 text-slate-400" />
                           )}
-                        >
-                          {project.title || "Untitled Project"}
-                        </p>
+                        </div>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-[11px] font-mono text-slate-400">
                             {project.pid}
@@ -1954,26 +1964,28 @@ export default function ClientPortalPage() {
                         </div>
                       </button>
                       
-                      {/* Expand documents button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleProjectDocs(project);
-                        }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded hover:bg-slate-200/50 transition-colors"
-                        title="View quotations and charge slips"
-                      >
-                        <ChevronRight
-                          className={cn(
-                            "h-4 w-4 text-slate-400 transition-transform duration-200",
-                            isDocsExpanded && "rotate-90"
-                          )}
-                        />
-                      </button>
+                      {/* Expand documents button - only for clickable projects */}
+                      {isClickable && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleProjectDocs(project);
+                          }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded hover:bg-slate-200/50 transition-colors"
+                          title="View quotations and charge slips"
+                        >
+                          <ChevronRight
+                            className={cn(
+                              "h-4 w-4 text-slate-400 transition-transform duration-200",
+                              isDocsExpanded && "rotate-90"
+                            )}
+                          />
+                        </button>
+                      )}
                     </div>
 
-                    {/* Collapsible documents section */}
-                    {isDocsExpanded && (
+                    {/* Collapsible documents section - only for clickable projects */}
+                    {isClickable && isDocsExpanded && (
                       <div className="ml-3 pl-3 border-l-2 border-slate-200 space-y-1 py-1">
                         {docs?.loading ? (
                           <div className="flex items-center gap-2 px-3 py-2 text-xs text-slate-400">
