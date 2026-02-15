@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import admin from 'firebase-admin';
-import path from 'path';
-import fs from 'fs';
 
 // Initialize Firebase Admin if not already initialized
 function initializeFirebaseAdmin() {
   if (!admin.apps.length) {
     try {
-      // Try to use environment variables first (for Vercel)
+      // Use environment variables (required for serverless deployment)
       if (process.env.FIREBASE_SERVICE_ACCOUNT) {
         const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
         admin.initializeApp({
@@ -15,15 +13,8 @@ function initializeFirebaseAdmin() {
         });
         console.log('✅ Firebase Admin initialized from environment variable');
       } else {
-        // Fall back to service account file (for local)
-        const serviceAccountPath = path.join(process.cwd(), 'scripts', 'serviceAccountKey.json');
-        const serviceAccountContent = fs.readFileSync(serviceAccountPath, 'utf8');
-        const serviceAccount = JSON.parse(serviceAccountContent);
-        
-        admin.initializeApp({
-          credential: admin.credential.cert(serviceAccount)
-        });
-        console.log('✅ Firebase Admin initialized from file');
+        console.error('❌ FIREBASE_SERVICE_ACCOUNT environment variable not found');
+        throw new Error('FIREBASE_SERVICE_ACCOUNT environment variable is required for deployment');
       }
     } catch (error) {
       console.error('❌ Failed to initialize Firebase Admin:', error);
@@ -40,13 +31,8 @@ export async function POST(request: NextRequest) {
     console.log('🚀 Starting Firestore backup via API...');
     console.log('Environment:', isVercel ? 'Vercel (Serverless)' : 'Local/Server');
     
-    if (isVercel) {
-      // On Vercel: Create backup data in memory and return for download
-      return await createInMemoryBackup();
-    } else {
-      // On local/server: Use the file-based backup script
-      return await createFileBackup();
-    }
+    // Always use in-memory backup for serverless compatibility
+    return await createInMemoryBackup();
     
   } catch (error) {
     console.error('❌ Backup failed:', error);
@@ -122,28 +108,13 @@ async function createInMemoryBackup() {
 }
 
 async function createFileBackup() {
-  const { exec } = require('child_process');
-  const { promisify } = require('util');
-  const execAsync = promisify(exec);
-  
-  const scriptPath = path.join(process.cwd(), 'scripts', 'firestore-backup.js');
-  console.log('📁 Script path:', scriptPath);
-  
-  // Execute backup script
-  const { stdout, stderr } = await execAsync(`node "${scriptPath}"`, {
-    maxBuffer: 10 * 1024 * 1024,
-    timeout: 300000
-  });
-  
-  if (stderr) {
-    console.error('⚠️  Backup stderr:', stderr);
-  }
-  
-  console.log('✅ Backup completed successfully');
-  
-  return NextResponse.json({
-    success: true,
-    message: 'Backup completed successfully',
-    output: stdout.split('\n').slice(-5).join('\n')
-  });
+  // File-based backup not available in serverless environment
+  return NextResponse.json(
+    { 
+      success: false, 
+      error: 'File-based backup not available in serverless environment',
+      message: 'Please use the in-memory backup option or local scripts'
+    },
+    { status: 501 }
+  );
 }
