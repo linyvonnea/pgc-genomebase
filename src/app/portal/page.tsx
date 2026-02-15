@@ -112,18 +112,22 @@ export default function ClientVerifyPage() {
           inquiryId: inquiryId,
         });
         
-        // Check for draft project first
-        const draftProject = await getProjectRequest(inquiryId);
-        const hasDraft = draftProject && draftProject.status === "draft";
+        // Check for any existing project (draft, pending, or approved)
+        const projectRequest = await getProjectRequest(inquiryId);
+        const hasProjectRequest = projectRequest && (
+          projectRequest.status === "draft" || 
+          projectRequest.status === "pending" ||
+          projectRequest.status === "approved"
+        );
         
-        if (projectPid || hasDraft) {
-          // Project exists (real or draft) - go to Client Portal
+        if (projectPid || hasProjectRequest) {
+          // Project exists (real, draft, pending, or approved) - go to Client Portal
           if (projectPid) {
             params.set("pid", projectPid);
           }
           router.push(`/client/client-info?${params.toString()}`);
         } else {
-          // No project exists - go to Project Information Form
+          // No project exists or was rejected - go to Project Information Form
           router.push(`/client/project-info?${params.toString()}`);
         }
       } else {

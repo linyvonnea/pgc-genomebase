@@ -162,14 +162,13 @@ export async function getClientRequestsByInquiry(
   inquiryId: string,
   status?: ClientRequestStatus
 ): Promise<ClientRequest[]> {
-  let q = query(
-    collection(db, COLLECTION),
-    where("inquiryId", "==", inquiryId)
-  );
+  const constraints = [where("inquiryId", "==", inquiryId)];
   
   if (status) {
-    q = query(q, where("status", "==", status));
+    constraints.push(where("status", "==", status));
   }
+  
+  const q = query(collection(db, COLLECTION), ...constraints);
   
   const snapshot = await getDocs(q);
   return snapshot.docs.map((doc) => ({
