@@ -168,8 +168,7 @@ export async function getProjectRequest(
 export async function getPendingProjectRequests(): Promise<ProjectRequest[]> {
   const q = query(
     collection(db, COLLECTION),
-    where("status", "==", "pending"),
-    orderBy("submittedAt", "desc")
+    where("status", "==", "pending")
   );
 
   const snapshot = await getDocs(q);
