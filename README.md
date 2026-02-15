@@ -88,11 +88,29 @@ All backup features are **restricted to Superadmin role only** through the `data
 
 ## Documentation
 
+- **[Deployment Guide](./DEPLOYMENT_GUIDE.md)** - Fix deployment errors and configure environment variables
 - [Firebase Admin Setup](./FIREBASE_ADMIN_SETUP.md) - Configure Firebase Admin SDK for backup downloads
 - [Google Drive Backup Guide](./GOOGLE_DRIVE_BACKUP_GUIDE.md) - Set up automatic Drive backups
 - [Activity Logging Guide](./ACTIVITY_LOGGING_GUIDE.md) - Configure activity tracking
 - [Catalog Management Guide](./CATALOG_MANAGEMENT_GUIDE.md) - Manage service catalog
 - [Migration Guide](./MIGRATION_GUIDE.md) - Database migration information
+
+## Deployment
+
+### Deploying to Vercel/Netlify/Other Platforms
+
+⚠️ **Important:** Before deploying, you must configure environment variables on your deployment platform.
+
+See the **[Deployment Guide](./DEPLOYMENT_GUIDE.md)** for detailed instructions on:
+- Setting up required environment variables
+- Configuring Firebase credentials
+- Troubleshooting common deployment errors
+
+### Quick Deploy Steps:
+1. Push your code to GitHub
+2. Connect your repository to Vercel/Netlify
+3. **Add all environment variables** (see [Deployment Guide](./DEPLOYMENT_GUIDE.md))
+4. Deploy!
 
 ## Learn More
 
