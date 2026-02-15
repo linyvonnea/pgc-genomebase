@@ -211,13 +211,17 @@ export default function MemberApprovalsPage() {
         await approveProjectRequest(selectedApproval);
       }
       
+      // Close dialog and reset state first
       setShowReviewDialog(false);
       setSelectedApproval(null);
       setReviewNotes("");
-      fetchApprovals();
+      
+      // Then refresh the list
+      await fetchApprovals();
     } catch (error) {
       console.error("Approve error:", error);
-      toast.error(`Failed to approve: ${error instanceof Error ? error.message : "Unknown error"}`);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Failed to approve: ${errorMessage}`);
     } finally {
       setProcessing(false);
     }
@@ -228,12 +232,16 @@ export default function MemberApprovalsPage() {
       throw new Error("Missing project data or client requests");
     }
 
+    if (!approval.clientRequests || approval.clientRequests.length === 0) {
+      throw new Error("No members found for approval");
+    }
+
     // Import required services
     const { getNextPid } = await import("@/services/projectsService");
     const { getNextCid } = await import("@/services/clientService");
     const { updateProjectRequestStatus } = await import("@/services/projectRequestService");
     const { approveClientRequest } = await import("@/services/clientRequestService");
-    const { doc, setDoc, serverTimestamp } = await import("firebase/firestore");
+    const { doc, setDoc, serverTimestamp, Timestamp } = await import("firebase/firestore");
     const { db } = await import("@/lib/firebase");
 
     const year = new Date().getFullYear();
@@ -241,9 +249,19 @@ export default function MemberApprovalsPage() {
     // Generate PID
     const pid = await getNextPid(year);
 
+    // Convert startDate to proper Timestamp
+    let startDate = approval.projectData.startDate;
+    if (startDate && typeof startDate.toDate === 'function') {
+      startDate = Timestamp.fromDate(startDate.toDate());
+    }
+
     // Generate CIDs for all members
     const memberCids: { email: string; cid: string; isPrimary: boolean }[] = [];
     for (const clientReq of approval.clientRequests) {
+      if (!clientReq.email || !clientReq.name) {
+        throw new Error(`Invalid member data: missing email or name`);
+      }
+
       const cid = await getNextCid(year);
       memberCids.push({
         email: clientReq.email,
@@ -256,13 +274,13 @@ export default function MemberApprovalsPage() {
         cid,
         pid: [pid],
         inquiryId: approval.inquiryId,
-        name: clientReq.name,
-        email: clientReq.email,
-        affiliation: clientReq.affiliation,
-        designation: clientReq.designation,
-        sex: clientReq.sex,
-        phoneNumber: clientReq.phoneNumber,
-        affiliationAddress: clientReq.affiliationAddress,
+        name: clientReq.name || "",
+        email: clientReq.email || "",
+        affiliation: clientReq.affiliation || "",
+        designation: clientReq.designation || "",
+        sex: clientReq.sex || "",
+        phoneNumber: clientReq.phoneNumber || "",
+        affiliationAddress: clientReq.affiliationAddress || "",
         isContactPerson: clientReq.isPrimary || false,
         haveSubmitted: true,
         createdAt: serverTimestamp(),
@@ -279,15 +297,15 @@ export default function MemberApprovalsPage() {
     }
 
     // Create project document
-    const clientNames = approval.clientRequests.map((cr) => cr.name);
+    const clientNames = approval.clientRequests.map((cr) => cr.name || "Unknown");
     await setDoc(doc(db, "projects", pid), {
       pid,
       iid: approval.inquiryId,
-      title: approval.projectData.title,
-      projectLead: approval.projectData.projectLead,
-      startDate: approval.projectData.startDate,
-      sendingInstitution: approval.projectData.sendingInstitution,
-      fundingInstitution: approval.projectData.fundingInstitution,
+      title: approval.projectData.title || "",
+      projectLead: approval.projectData.projectLead || "",
+      startDate: startDate,
+      sendingInstitution: approval.projectData.sendingInstitution || "",
+      fundingInstitution: approval.projectData.fundingInstitution || "",
       clientNames,
       status: "Ongoing",
       createdAt: serverTimestamp(),
