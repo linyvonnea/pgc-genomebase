@@ -353,7 +353,7 @@ export default function ClientPortalPage() {
                               draftProjectRequest.status === "pending" ? "Pending Approval" :
                               "Rejected";
             const draftProject: ProjectDetails = {
-              pid: draftProjectRequest.id || `DRAFT-${Date.now()}`,
+              pid: draftProjectRequest.id || inquiryIdParam, // Always use inquiryId for consistency
               title: draftProjectRequest.title || "Draft Project",
               lead: draftProjectRequest.projectLead || "Not specified",
               startDate: draftProjectRequest.startDate?.toDate?.() || new Date(),
@@ -1152,7 +1152,7 @@ export default function ClientPortalPage() {
 
       clientSnapshot.docs.forEach((d, index) => {
         const data = d.data();
-        const pids = data.pid || [];
+        const pids = Array.isArray(data.pid) ? data.pid : (data.pid ? [data.pid] : []);
         const email = data.email;
         
         const isPrimary = email && emailParam && email.toLowerCase() === emailParam.toLowerCase();
@@ -1187,7 +1187,9 @@ export default function ClientPortalPage() {
 
       // 2. If it is a draft project, load the project request data
       if (project.isDraft) {
-        const pr = await getProjectRequestById(project.pid); // pid is inquiryId for drafts
+        // For draft projects, always use inquiryId to fetch project request
+        // because project.pid might be a fallback value if document ID was missing
+        const pr = await getProjectRequestById(inquiryIdParam);
         if (pr) {
           setProjectRequest(pr);
           setCurrentProjectRequestId(pr.id || null);
@@ -1338,7 +1340,9 @@ export default function ClientPortalPage() {
 
   const formatDate = (date: Date | string) => {
     try {
+      if (!date) return "—";
       const d = typeof date === "string" ? new Date(date) : date;
+      if (isNaN(d.getTime())) return "—";
       return d.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
