@@ -31,10 +31,7 @@ export default function ProjectForm() {
   // Get inquiry ID and email from URL
   const inquiryId = searchParams.get("inquiryId");
   const email = searchParams.get("email");
-  const isNewProject = searchParams.get("new") === "true";
-  const projectRequestId = searchParams.get("projectRequestId"); // Optional: edit existing draft
   const [isDraft, setIsDraft] = useState(true); // New projects start as drafts
-  const [currentProjectRequestId, setCurrentProjectRequestId] = useState<string | null>(projectRequestId);
 
   // Form state
   const [formData, setFormData] = useState<ProjectFormData>({
@@ -61,60 +58,20 @@ export default function ProjectForm() {
           return;
         }
 
-        // If editing a specific project request
-        if (projectRequestId) {
-          const existingRequest = await getProjectRequestById(projectRequestId);
-          if (existingRequest && existingRequest.status === "draft") {
-            console.log("📝 Loading existing draft project request:", projectRequestId);
-            setFormData({
-              title: existingRequest.title || "",
-              projectLead: existingRequest.projectLead || "",
-              startDate: existingRequest.startDate?.toDate?.() || new Date(),
-              sendingInstitution: (existingRequest.sendingInstitution || "Government") as "UP System" | "SUC/HEI" | "Government" | "Private/Local" | "International" | "N/A",
-              fundingInstitution: existingRequest.fundingInstitution || "",
-            });
-            setCurrentProjectRequestId(projectRequestId);
-            setIsDraft(true);
-            setLoading(false);
-            return;
-          }
-        }
-        
-        // If explicitly creating a new project, show blank form
-        if (isNewProject) {
-          console.log("🆕 Creating new project");
-          setFormData({
-            title: "",
-            projectLead: "",
-            startDate: new Date(),
-            sendingInstitution: "Government",
-            fundingInstitution: "",
-          });
-          setCurrentProjectRequestId(null);
-          setIsDraft(true);
-          setLoading(false);
-          return;
-        }
-        
-        // Check if any draft/pending project requests exist
-        const allProjectRequests = await getProjectRequestsByInquiry(inquiryId);
-        const draftRequests = allProjectRequests.filter(r => r.status === "draft");
-        const pendingRequests = allProjectRequests.filter(r => r.status === "pending");
-        
-        if (draftRequests.length > 0) {
-          // Load first draft
-          const firstDraft = draftRequests[0];
+        // Check if a draft project request exists
+        const existingRequest = await getProjectRequest(inquiryId);
+
+        if (existingRequest && existingRequest.status === "draft") {
           console.log("📝 Loading existing draft project request");
           setFormData({
-            title: firstDraft.title || "",
-            projectLead: firstDraft.projectLead || "",
-            startDate: firstDraft.startDate?.toDate?.() || new Date(),
-            sendingInstitution: (firstDraft.sendingInstitution || "Government") as "UP System" | "SUC/HEI" | "Government" | "Private/Local" | "International" | "N/A",
-            fundingInstitution: firstDraft.fundingInstitution || "",
+            title: existingRequest.title || "",
+            projectLead: existingRequest.projectLead || "",
+            startDate: existingRequest.startDate?.toDate?.() || new Date(),
+            sendingInstitution: (existingRequest.sendingInstitution || "Government") as "UP System" | "SUC/HEI" | "Government" | "Private/Local" | "International" | "N/A",
+            fundingInstitution: existingRequest.fundingInstitution || "",
           });
-          setCurrentProjectRequestId(firstDraft.id || null);
           setIsDraft(true);
-        } else if (pendingRequests.length > 0) {
+        } else if (existingRequest && existingRequest.status === "pending") {
           console.log("⏳ Project is pending approval, redirecting to client-info");
           toast.info("Your project is currently pending approval.");
           const params = new URLSearchParams();
@@ -241,16 +198,14 @@ export default function ProjectForm() {
         sendingInstitution: result.data.sendingInstitution,
         fundingInstitution: result.data.fundingInstitution,
         status: "draft",
-      }, currentProjectRequestId || undefined);
+      });
 
-      setCurrentProjectRequestId(savedId);
       toast.success("Project draft saved! Now add your information as Primary Member.");
       
       setTimeout(() => {
         const params = new URLSearchParams();
         if (email) params.set("email", email);
         if (inquiryId) params.set("inquiryId", inquiryId);
-        if (savedId) params.set("projectRequestId", savedId);
         router.push(`/client/client-info?${params.toString()}`);
       }, 1500);
     } catch (error) {
@@ -312,12 +267,6 @@ export default function ProjectForm() {
               <p className="text-sm text-slate-600 italic">
                 <strong>Note:</strong> This form creates a draft. After saving, you'll add yourself as the Primary Member, then submit for admin approval.
               </p>
-              {isNewProject && (
-                <p className="text-sm text-amber-700 mt-2 flex items-start gap-2">
-                  <span className="text-amber-600">⚠️</span>
-                  <span>Creating a new project will replace any unsaved draft project information.</span>
-                </p>
-              )}
             </div>
           </div>
 

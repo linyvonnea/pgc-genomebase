@@ -64,25 +64,23 @@ export interface ProjectRequest {
 const COLLECTION = "projectRequests";
 
 /**
- * Generate unique document ID for a new project request
+ * Generate document ID from inquiryId
  */
-function generateDocId(): string {
-  return `pr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+function getDocId(inquiryId: string): string {
+  return inquiryId;
 }
 
 /**
  * Save or update a draft project request.
- * If id is provided, updates existing. Otherwise creates new.
  */
 export async function saveProjectRequest(
-  data: Omit<ProjectRequest, "id" | "createdAt" | "updatedAt">,
-  existingId?: string
+  data: Omit<ProjectRequest, "id" | "createdAt" | "updatedAt">
 ): Promise<string> {
-  const docId = existingId || generateDocId();
+  const docId = getDocId(data.inquiryId);
   const docRef = doc(db, COLLECTION, docId);
-  const existing = existingId ? await getDoc(docRef) : null;
+  const existing = await getDoc(docRef);
 
-  if (existing?.exists()) {
+  if (existing.exists()) {
     // Update existing draft
     await setDoc(
       docRef,
@@ -109,7 +107,6 @@ export async function saveProjectRequest(
  * Requires primary member data to be included.
  */
 export async function submitProjectForApproval(
-  projectRequestId: string,
   inquiryId: string,
   requestedBy: string,
   requestedByName: string,
@@ -122,7 +119,8 @@ export async function submitProjectForApproval(
   },
   primaryMember: PrimaryMemberData
 ): Promise<string> {
-  const docRef = doc(db, COLLECTION, projectRequestId);
+  const docId = getDocId(inquiryId);
+  const docRef = doc(db, COLLECTION, docId);
 
   await setDoc(
     docRef,
@@ -143,7 +141,25 @@ export async function submitProjectForApproval(
     { merge: true }
   );
 
-  return projectRequestId;
+  return docId;
+}
+
+/**
+ * Get a project request by inquiry ID.
+ */
+export async function getProjectRequest(
+  inquiryId: string
+): Promise<ProjectRequest | null> {
+  const docId = getDocId(inquiryId);
+  const docRef = doc(db, COLLECTION, docId);
+  const snap = await getDoc(docRef);
+
+  if (!snap.exists()) return null;
+
+  return {
+    id: snap.id,
+    ...snap.data(),
+  } as ProjectRequest;
 }
 
 /**
@@ -164,31 +180,13 @@ export async function getProjectRequestById(
 }
 
 /**
- * Get all project requests for an inquiry (supports multiple drafts per inquiry).
+ * Get all project requests for an inquiry.
  */
 export async function getProjectRequestsByInquiry(
   inquiryId: string
 ): Promise<ProjectRequest[]> {
-  const q = query(
-    collection(db, COLLECTION),
-    where("inquiryId", "==", inquiryId)
-  );
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as ProjectRequest[];
-}
-
-/**
- * Get a project request by inquiry ID (legacy - returns first match).
- * @deprecated Use getProjectRequestsByInquiry for multiple drafts support
- */
-export async function getProjectRequest(
-  inquiryId: string
-): Promise<ProjectRequest | null> {
-  const requests = await getProjectRequestsByInquiry(inquiryId);
-  return requests.length > 0 ? requests[0] : null;
+  const request = await getProjectRequest(inquiryId);
+  return request ? [request] : [];
 }
 
 /**
@@ -250,49 +248,24 @@ export function subscribeToProjectRequestById(
 }
 
 /**
+ * Subscribe to a project request's status updates.
+ */
+export function subscribeToProjectRequest(
+  inquiryId: string,
+  callback: (request: ProjectRequest | null) => void
+): () => void {
+  return subscribeToProjectRequestById(getDocId(inquiryId), callback);
+}
+
+/**
  * Subscribe to all project requests for an inquiry.
  */
 export function subscribeToProjectRequestsByInquiry(
   inquiryId: string,
   callback: (requests: ProjectRequest[]) => void
 ): () => void {
-  const q = query(
-    collection(db, COLLECTION),
-    where("inquiryId", "==", inquiryId)
-  );
-
-  return onSnapshot(q, (snapshot) => {
-    const requests = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as ProjectRequest[];
-    callback(requests);
-  });
-}
-
-/**
- * Subscribe to a project request's status updates (legacy).
- * @deprecated Use subscribeToProjectRequestById
- */
-export function subscribeToProjectRequest(
-  inquiryId: string,
-  callback: (request: ProjectRequest | null) => void
-): () => void {
-  const q = query(
-    collection(db, COLLECTION),
-    where("inquiryId", "==", inquiryId)
-  );
-
-  return onSnapshot(q, (snapshot) => {
-    if (snapshot.empty) {
-      callback(null);
-      return;
-    }
-    const firstDoc = snapshot.docs[0];
-    callback({
-      id: firstDoc.id,
-      ...firstDoc.data(),
-    } as ProjectRequest);
+  return subscribeToProjectRequestById(getDocId(inquiryId), (req) => {
+    callback(req ? [req] : []);
   });
 }
 
@@ -321,14 +294,10 @@ export async function deleteProjectRequestById(projectRequestId: string): Promis
 }
 
 /**
- * Delete a project request (legacy - deletes first match by inquiryId).
- * @deprecated Use deleteProjectRequestById
+ * Delete a project request by inquiry ID.
  */
 export async function deleteProjectRequest(inquiryId: string): Promise<void> {
-  const requests = await getProjectRequestsByInquiry(inquiryId);
-  if (requests.length > 0) {
-    await deleteProjectRequestById(requests[0].id!);
-  }
+  await deleteProjectRequestById(getDocId(inquiryId));
 }
 
 /**
@@ -359,8 +328,7 @@ export async function updateProjectRequestStatusById(
 }
 
 /**
- * Update request status (legacy).
- * @deprecated Use updateProjectRequestStatusById
+ * Update request status by inquiry ID.
  */
 export async function updateProjectRequestStatus(
   inquiryId: string,
@@ -370,8 +338,12 @@ export async function updateProjectRequestStatus(
   cid?: string,
   rejectionReason?: string
 ): Promise<void> {
-  const requests = await getProjectRequestsByInquiry(inquiryId);
-  if (requests.length > 0) {
-    await updateProjectRequestStatusById(requests[0].id!, status, reviewedBy, pid, cid, rejectionReason);
-  }
+  await updateProjectRequestStatusById(
+    getDocId(inquiryId),
+    status,
+    reviewedBy,
+    pid,
+    cid,
+    rejectionReason
+  );
 }
