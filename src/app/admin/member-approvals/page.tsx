@@ -107,48 +107,82 @@ export default function MemberApprovalsPage() {
 
       // For each project request, fetch associated client requests
       const projectApprovalsPromises = projectRequests.map(async (pr) => {
-        // Only get pending client requests for the approval view
-        const clientRequests = await getClientRequestsByInquiry(pr.inquiryId, "pending");
-        
-        return {
-          id: pr.id || pr.inquiryId,
-          type: "project" as const,
-          inquiryId: pr.inquiryId,
-          projectTitle: pr.title,
-          projectPid: "DRAFT",
-          submittedBy: pr.requestedBy,
-          submittedByName: pr.requestedByName,
-          status: pr.status as ApprovalStatus,
-          submittedAt: pr.submittedAt,
-          reviewedAt: pr.reviewedAt,
-          reviewedBy: pr.reviewedBy,
-          reviewNotes: pr.rejectionReason,
-          projectData: {
-            title: pr.title,
-            projectLead: pr.projectLead,
-            startDate: pr.startDate,
-            sendingInstitution: pr.sendingInstitution,
-            fundingInstitution: pr.fundingInstitution,
-          },
-          clientRequests: clientRequests,
-          members: clientRequests.map((cr) => ({
-            tempId: cr.id,
-            isPrimary: cr.isPrimary,
-            isValidated: cr.isValidated,
-            formData: {
-              name: cr.name,
-              email: cr.email,
-              affiliation: cr.affiliation,
-              designation: cr.designation,
-              sex: cr.sex,
-              phoneNumber: cr.phoneNumber,
-              affiliationAddress: cr.affiliationAddress,
+        try {
+          // Only get pending client requests for the approval view
+          const clientRequests = await getClientRequestsByInquiry(pr.inquiryId, "pending");
+          
+          return {
+            id: pr.id || pr.inquiryId,
+            type: "project" as const,
+            inquiryId: pr.inquiryId,
+            projectTitle: pr.title,
+            projectPid: "DRAFT",
+            submittedBy: pr.requestedBy,
+            submittedByName: pr.requestedByName,
+            status: pr.status as ApprovalStatus,
+            submittedAt: pr.submittedAt,
+            reviewedAt: pr.reviewedAt,
+            reviewedBy: pr.reviewedBy,
+            reviewNotes: pr.rejectionReason,
+            projectData: {
+              title: pr.title,
+              projectLead: pr.projectLead,
+              startDate: pr.startDate,
+              sendingInstitution: pr.sendingInstitution,
+              fundingInstitution: pr.fundingInstitution,
             },
-          })),
-        };
+            clientRequests: clientRequests,
+            members: clientRequests.map((cr) => ({
+              tempId: cr.id,
+              isPrimary: cr.isPrimary,
+              isValidated: cr.isValidated,
+              formData: {
+                name: cr.name,
+                email: cr.email,
+                affiliation: cr.affiliation,
+                designation: cr.designation,
+                sex: cr.sex,
+                phoneNumber: cr.phoneNumber,
+                affiliationAddress: cr.affiliationAddress,
+              },
+            })),
+          };
+        } catch (error) {
+          console.error(`Error fetching client requests for ${pr.inquiryId}:`, error);
+          // Return a basic approval without client requests if there's an error
+          return {
+            id: pr.id || pr.inquiryId,
+            type: "project" as const,
+            inquiryId: pr.inquiryId,
+            projectTitle: pr.title,
+            projectPid: "DRAFT",
+            submittedBy: pr.requestedBy,
+            submittedByName: pr.requestedByName,
+            status: pr.status as ApprovalStatus,
+            submittedAt: pr.submittedAt,
+            reviewedAt: pr.reviewedAt,
+            reviewedBy: pr.reviewedBy,
+            reviewNotes: pr.rejectionReason,
+            projectData: {
+              title: pr.title,
+              projectLead: pr.projectLead,
+              startDate: pr.startDate,
+              sendingInstitution: pr.sendingInstitution,
+              fundingInstitution: pr.fundingInstitution,
+            },
+            clientRequests: [],
+            members: [],
+          };
+        }
       });
 
       const projectApprovals = await Promise.all(projectApprovalsPromises);
+
+      console.log("Fetched approvals:", {
+        projectRequests: projectRequests.length,
+        projectApprovals: projectApprovals.length,
+        memberApprovals: memberApprovals.length,
+      });
 
       // Convert member approvals to combined format
       const memberApprovalsCombined: CombinedApproval[] = memberApprovals.map((ma) => ({
@@ -178,10 +212,20 @@ export default function MemberApprovalsPage() {
         return bTime - aTime;
       });
 
+      console.log("Setting approvals:", {
+        total: combined.length,
+        byType: {
+          project: combined.filter((a) => a.type === "project").length,
+          member: combined.filter((a) => a.type === "member").length,
+        },
+      });
+
       setApprovals(combined);
     } catch (error) {
       console.error("Failed to fetch approvals:", error);
-      toast.error("Failed to load approval requests");
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      toast.error(`Failed to load approval requests: ${errorMessage}`);
+      setApprovals([]); // Clear approvals on error
     } finally {
       setLoading(false);
     }

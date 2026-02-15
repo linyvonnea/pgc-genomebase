@@ -37,56 +37,64 @@ export function useApprovalNotifications() {
     // Listen to traditional member approvals
     const memberApprovalsQuery = query(
       collection(db, "memberApprovals"),
-      where("status", "==", "pending"),
-      orderBy("submittedAt", "desc"),
-      limit(20)
+      where("status", "==", "pending")
     );
 
     // Listen to project requests
     const projectRequestsQuery = query(
       collection(db, "projectRequests"),
-      where("status", "==", "pending"),
-      orderBy("submittedAt", "desc"),
-      limit(20)
+      where("status", "==", "pending")
     );
 
-    const unsubscribeMemberApprovals = onSnapshot(memberApprovalsQuery, (snapshot) => {
-      const memberNotifications: ApprovalNotification[] = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          type: "member" as const,
-          title: `Team Member Submission`,
-          message: `New team members for ${data.projectTitle || "project"}`,
-          submittedBy: data.submittedBy,
-          submittedByName: data.submittedByName,
-          submittedAt: data.submittedAt?.toDate() || new Date(),
-          inquiryId: data.inquiryId,
-          read: false,
-        };
-      });
+    const unsubscribeMemberApprovals = onSnapshot(
+      memberApprovalsQuery, 
+      (snapshot) => {
+        const memberNotifications: ApprovalNotification[] = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            type: "member" as const,
+            title: `Team Member Submission`,
+            message: `New team members for ${data.projectTitle || "project"}`,
+            submittedBy: data.submittedBy,
+            submittedByName: data.submittedByName,
+            submittedAt: data.submittedAt?.toDate() || new Date(),
+            inquiryId: data.inquiryId,
+            read: false,
+          };
+        });
 
-      updateNotifications(memberNotifications, "member");
-    });
+        updateNotifications(memberNotifications, "member");
+      },
+      (error) => {
+        console.error("Error listening to member approvals:", error);
+      }
+    );
 
-    const unsubscribeProjectRequests = onSnapshot(projectRequestsQuery, (snapshot) => {
-      const projectNotifications: ApprovalNotification[] = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          type: "project" as const,
-          title: `New Project Submission`,
-          message: `${data.title || "Untitled Project"} submitted for approval`,
-          submittedBy: data.requestedBy,
-          submittedByName: data.requestedByName,
-          submittedAt: data.submittedAt?.toDate() || new Date(),
-          inquiryId: data.inquiryId,
-          read: false,
-        };
-      });
+    const unsubscribeProjectRequests = onSnapshot(
+      projectRequestsQuery, 
+      (snapshot) => {
+        const projectNotifications: ApprovalNotification[] = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            type: "project" as const,
+            title: `New Project Submission`,
+            message: `${data.title || "Untitled Project"} submitted for approval`,
+            submittedBy: data.requestedBy,
+            submittedByName: data.requestedByName,
+            submittedAt: data.submittedAt?.toDate() || new Date(),
+            inquiryId: data.inquiryId,
+            read: false,
+          };
+        });
 
-      updateNotifications(projectNotifications, "project");
-    });
+        updateNotifications(projectNotifications, "project");
+      },
+      (error) => {
+        console.error("Error listening to project requests:", error);
+      }
+    );
 
     return () => {
       unsubscribeMemberApprovals();
@@ -99,10 +107,10 @@ export function useApprovalNotifications() {
       // Filter out old notifications of the same type
       const otherTypeNotifications = prev.filter((n) => n.type !== type);
       
-      // Combine and sort
-      const combined = [...otherTypeNotifications, ...newNotifications].sort(
-        (a, b) => b.submittedAt.getTime() - a.submittedAt.getTime()
-      );
+      // Combine and sort, limit to top 20
+      const combined = [...otherTypeNotifications, ...newNotifications]
+        .sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime())
+        .slice(0, 20);
 
       const totalCount = combined.length;
       setPendingCount(totalCount);
