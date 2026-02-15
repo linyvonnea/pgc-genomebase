@@ -703,10 +703,12 @@ export default function ClientPortalPage() {
         if (pids.length === 0 && pidParam) pids = [pidParam];
 
         let cidToUse = member.cid;
-        if (cidToUse === "pending" || cidToUse === "draft") {
+        if (!cidToUse || cidToUse === "pending" || cidToUse === "draft") {
           const year = new Date().getFullYear();
           cidToUse = await getNextCid(year);
         }
+
+        if (!cidToUse) throw new Error("Could not generate a valid Client ID");
 
         await setDoc(
           doc(db, "clients", cidToUse),
@@ -750,7 +752,8 @@ export default function ClientPortalPage() {
       }
     } catch (error) {
       console.error("Submission error:", error);
-      toast.error("Failed to save information");
+      const msg = error instanceof Error ? error.message : "Failed to save information";
+      toast.error(msg);
     } finally {
       setSubmitting(false);
       setPendingMemberId(null);
@@ -798,7 +801,7 @@ export default function ClientPortalPage() {
           if (pids.length === 0 && pidParam) pids = [pidParam];
 
           let cidToUse = member.cid;
-          if (cidToUse === "pending" || cidToUse === "draft") {
+          if (!cidToUse || cidToUse === "pending" || cidToUse === "draft") {
             const year = new Date().getFullYear();
             cidToUse = await getNextCid(year);
           }
