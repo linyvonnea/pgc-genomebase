@@ -24,7 +24,7 @@ import {
   rejectMemberApproval,
 } from "@/services/memberApprovalService";
 import {
-  getPendingProjectRequests,
+  getProjectRequestsByStatus,
   ProjectRequest,
 } from "@/services/projectRequestService";
 import {
@@ -102,22 +102,27 @@ export default function MemberApprovalsPage() {
         filterStatus === "all" ? undefined : filterStatus
       );
 
-      // Fetch project requests (only pending ones initially)
-      const projectRequests = await getPendingProjectRequests();
+      // Fetch project requests filtered by status
+      const projectRequests = await getProjectRequestsByStatus(
+        filterStatus === "all" ? "all" : filterStatus
+      );
       console.log("Fetched project requests:", projectRequests);
 
       // For each project request, fetch associated client requests
       const projectApprovalsPromises = projectRequests.map(async (pr) => {
         try {
-          // Only get pending client requests for the approval view
-          const clientRequests = await getClientRequestsByInquiry(pr.inquiryId, "pending");
+          // Get client requests matching the project request status (or all if filtering for all)
+          const clientRequests = await getClientRequestsByInquiry(
+            pr.inquiryId, 
+            filterStatus === "all" ? undefined : filterStatus as any
+          );
           
           return {
             id: pr.id || pr.inquiryId,
             type: "project" as const,
             inquiryId: pr.inquiryId,
             projectTitle: pr.title,
-            projectPid: "DRAFT",
+            projectPid: pr.pid || "DRAFT",
             submittedBy: pr.requestedBy,
             submittedByName: pr.requestedByName,
             status: pr.status as ApprovalStatus,
@@ -156,7 +161,7 @@ export default function MemberApprovalsPage() {
             type: "project" as const,
             inquiryId: pr.inquiryId,
             projectTitle: pr.title,
-            projectPid: "DRAFT",
+            projectPid: pr.pid || "DRAFT",
             submittedBy: pr.requestedBy,
             submittedByName: pr.requestedByName,
             status: pr.status as ApprovalStatus,
