@@ -310,49 +310,53 @@ export default function ClientPortalPage() {
     }
 
     // Process Members
+    // 0. Get set of approved emails for filtering duplicates
+    const approvedEmails = new Set(fetchedClients.map((c: any) => c.email?.toLowerCase()).filter(Boolean));
+
     // 1. Find Primary Member
     let primaryMember: ClientMember | null = null;
     
-    // Check drafts first
-    const primaryDraftRequest = fetchedClientRequests.find(r => r.email.toLowerCase() === emailParam?.toLowerCase());
+    // Check approved clients FIRST for primary
+    const primaryClientDoc = fetchedClients.find((c: any) => c.email?.toLowerCase() === emailParam?.toLowerCase());
     
-    if (primaryDraftRequest) {
-        primaryMember = {
+    if (primaryClientDoc) {
+         primaryMember = {
             id: "primary",
-            cid: "draft",
+            cid: primaryClientDoc.id,
             formData: {
-              name: primaryDraftRequest.name || "",
-              email: primaryDraftRequest.email || emailParam || "",
-              affiliation: primaryDraftRequest.affiliation || "",
-              designation: primaryDraftRequest.designation || "",
-              sex: primaryDraftRequest.sex || "M",
-              phoneNumber: primaryDraftRequest.phoneNumber || "",
-              affiliationAddress: primaryDraftRequest.affiliationAddress || "",
+              name: primaryClientDoc.name || "",
+              email: primaryClientDoc.email || emailParam || "",
+              affiliation: primaryClientDoc.affiliation || "",
+              designation: primaryClientDoc.designation || "",
+              sex: primaryClientDoc.sex || "M",
+              phoneNumber: primaryClientDoc.phoneNumber || "",
+              affiliationAddress: primaryClientDoc.affiliationAddress || "",
             },
             errors: {},
-            isSubmitted: !!primaryDraftRequest.isValidated,
+            isSubmitted: !!primaryClientDoc.haveSubmitted,
             isPrimary: true,
-            isDraft: true,
         };
     } else {
-        // Check approved clients
-        const primaryClientDoc = fetchedClients.find((c: any) => c.email === emailParam);
-        if (primaryClientDoc) {
-             primaryMember = {
+        // Only if not found in approved, check drafts
+        const primaryDraftRequest = fetchedClientRequests.find(r => r.email.toLowerCase() === emailParam?.toLowerCase());
+        
+        if (primaryDraftRequest) {
+            primaryMember = {
                 id: "primary",
-                cid: primaryClientDoc.id,
+                cid: "draft",
                 formData: {
-                  name: primaryClientDoc.name || "",
-                  email: primaryClientDoc.email || emailParam || "",
-                  affiliation: primaryClientDoc.affiliation || "",
-                  designation: primaryClientDoc.designation || "",
-                  sex: primaryClientDoc.sex || "M",
-                  phoneNumber: primaryClientDoc.phoneNumber || "",
-                  affiliationAddress: primaryClientDoc.affiliationAddress || "",
+                  name: primaryDraftRequest.name || "",
+                  email: primaryDraftRequest.email || emailParam || "",
+                  affiliation: primaryDraftRequest.affiliation || "",
+                  designation: primaryDraftRequest.designation || "",
+                  sex: primaryDraftRequest.sex || "M",
+                  phoneNumber: primaryDraftRequest.phoneNumber || "",
+                  affiliationAddress: primaryDraftRequest.affiliationAddress || "",
                 },
                 errors: {},
-                isSubmitted: !!primaryClientDoc.haveSubmitted,
+                isSubmitted: !!primaryDraftRequest.isValidated,
                 isPrimary: true,
+                isDraft: true,
             };
         }
     }
@@ -377,8 +381,14 @@ export default function ClientPortalPage() {
     }
 
     // 2. Process Additional Members
+    // Only show drafts that are NOT in the approved list
     const additionalDraftMembers: ClientMember[] = fetchedClientRequests
-        .filter(r => r.email.toLowerCase() !== emailParam?.toLowerCase())
+        .filter(r => {
+            const email = r.email?.toLowerCase();
+            return email !== emailParam?.toLowerCase() && 
+                   !approvedEmails.has(email) &&
+                   (r.status === "draft" || r.status === "pending" || r.status === "rejected");
+        })
         .map((r, index) => ({
             id: `draft-member-${index + 1}`,
             cid: "draft",
