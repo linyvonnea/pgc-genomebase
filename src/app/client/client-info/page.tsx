@@ -1903,7 +1903,7 @@ export default function ClientPortalPage() {
                                   {docs?.quotations.map((quotation) => (
                                     <a
                                       key={quotation.id}
-                                      href={`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`}
+                                      href={`/admin/quotations/${quotation.referenceNumber}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="block text-[11px] text-slate-500 hover:text-[#166FB5] hover:underline truncate"
@@ -1941,7 +1941,7 @@ export default function ClientPortalPage() {
                                   {docs?.chargeSlips.map((chargeSlip) => (
                                     <a
                                       key={chargeSlip.id}
-                                      href={`/client/view-document?type=charge-slip&ref=${chargeSlip.id}`}
+                                      href={`/admin/charge-slips/${chargeSlip.chargeSlipNumber}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="block text-[11px] text-slate-500 hover:text-[#166FB5] hover:underline truncate"
