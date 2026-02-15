@@ -62,18 +62,30 @@ export default function ProjectForm() {
         // Check if a draft project request exists
         const existingRequest = await getProjectRequest(inquiryId);
         
-        if (existingRequest && existingRequest.status === "draft") {
-          // If user is trying to create a new project but a draft already exists
-          if (isNewProject) {
-            console.log("⚠️ Cannot create new project - draft already exists");
-            toast.warning("You already have a draft project. Please complete or submit it before creating a new one.");
-            const params = new URLSearchParams();
-            if (email) params.set("email", email);
-            if (inquiryId) params.set("inquiryId", inquiryId);
-            router.push(`/client/client-info?${params.toString()}`);
-            return;
+        // If explicitly creating a new project, clear the form (will overwrite existing draft)
+        if (isNewProject) {
+          console.log("🆕 Creating new project (will replace existing draft if any)");
+          
+          // Show warning if there's an existing draft
+          if (existingRequest && existingRequest.status === "draft") {
+            toast.info("Creating a new project will replace your current draft.", {
+              duration: 4000,
+            });
           }
           
+          setFormData({
+            title: "",
+            projectLead: "",
+            startDate: new Date(),
+            sendingInstitution: "Government",
+            fundingInstitution: "",
+          });
+          setIsDraft(true);
+          setLoading(false);
+          return;
+        }
+        
+        if (existingRequest && existingRequest.status === "draft") {
           console.log("📝 Loading existing draft project request");
           setFormData({
             title: existingRequest.title || "",
@@ -84,17 +96,6 @@ export default function ProjectForm() {
           });
           setIsDraft(true);
         } else if (existingRequest && existingRequest.status === "pending") {
-          // If project is pending approval
-          if (isNewProject) {
-            console.log("⚠️ Cannot create new project - project pending approval");
-            toast.warning("Your project is pending approval. Please wait for approval before creating a new project.");
-            const params = new URLSearchParams();
-            if (email) params.set("email", email);
-            if (inquiryId) params.set("inquiryId", inquiryId);
-            router.push(`/client/client-info?${params.toString()}`);
-            return;
-          }
-          
           console.log("⏳ Project is pending approval, redirecting to client-info");
           toast.info("Your project is currently pending approval.");
           const params = new URLSearchParams();
@@ -289,6 +290,12 @@ export default function ProjectForm() {
               <p className="text-sm text-slate-600 italic">
                 <strong>Note:</strong> This form creates a draft. After saving, you'll add yourself as the Primary Member, then submit for admin approval.
               </p>
+              {isNewProject && (
+                <p className="text-sm text-amber-700 mt-2 flex items-start gap-2">
+                  <span className="text-amber-600">⚠️</span>
+                  <span>Creating a new project will replace any unsaved draft project information.</span>
+                </p>
+              )}
             </div>
           </div>
 

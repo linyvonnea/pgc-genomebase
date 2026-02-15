@@ -1743,9 +1743,7 @@ export default function ClientPortalPage() {
               handleCreateNewProject();
               setMobileSidebarOpen(false);
             }}
-            disabled={!!(projectRequest && (projectRequest.status === "draft" || projectRequest.status === "pending"))}
-            title={projectRequest && (projectRequest.status === "draft" || projectRequest.status === "pending") ? "Please complete or submit your current project before creating a new one" : ""}
-            className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90 text-white h-9 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90 text-white h-9 text-sm"
           >
             <Plus className="h-4 w-4 mr-2" />
             New Project
@@ -1935,9 +1933,7 @@ export default function ClientPortalPage() {
                     handleCreateNewProject();
                     setMobileSidebarOpen(false);
                   }}
-                  disabled={!!(projectRequest && (projectRequest.status === "draft" || projectRequest.status === "pending"))}
-                  title={projectRequest && (projectRequest.status === "draft" || projectRequest.status === "pending") ? "Please complete or submit your current project before creating a new one" : ""}
-                  className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90 text-white h-9 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90 text-white h-9 text-sm"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   New Project
