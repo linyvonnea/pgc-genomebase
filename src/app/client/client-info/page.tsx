@@ -1729,10 +1729,11 @@ export default function ClientPortalPage() {
         {/* Card Body – expanded form */}
         {isExpanded && (
           <CardContent className="px-3 pb-3 pt-0 border-t border-slate-100">
-            {/* Remove button for non-primary draft members */}
+            {/* Remove button for non-primary draft members before they are validated */}
             {!member.isPrimary &&
               projectDetails?.status !== "Completed" &&
-              !member.cid && (
+              member.isDraft &&
+              !member.isSubmitted && (
                 <div className="flex justify-end mb-1.5">
                   <Button
                     onClick={() => handleRemoveMember(member.id)}
