@@ -1892,7 +1892,7 @@ export default function ClientPortalPage() {
                           Draft Project — Pending Submission
                         </p>
                         <p className="text-xs text-orange-700 leading-relaxed">
-                          Please fill out your information as the <strong>Primary Member</strong>, then scroll down and click "<strong>Submit Subject and Member/s for Approval</strong>" to send this project to the admin for review. Once approved, you'll receive a PID and CID.
+                          Please fill out your information as the <strong>Primary Member</strong>, then scroll down and click "<strong>Submit Project and Member/s for Approval</strong>" to send this project to the admin for review. Once approved, you'll receive a PID and CID.
                         </p>
                       </div>
                     </div>
@@ -2067,7 +2067,7 @@ export default function ClientPortalPage() {
                           className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-bold shadow-xl hover:shadow-2xl disabled:opacity-50 whitespace-nowrap"
                         >
                           <Send className="h-5 w-5 mr-2" />
-                          Submit Subject and Member/s for Approval
+                          Submit Project and Member/s for Approval
                         </Button>
                       </div>
                     </div>
@@ -2187,7 +2187,7 @@ export default function ClientPortalPage() {
         onConfirm={handleConfirmSubmitForApproval}
         onCancel={() => setShowSubmitForApprovalModal(false)}
         loading={submitting}
-        title="Submit Subject and Member/s for Approval"
+        title="Submit Project and Member/s for Approval"
         description="Once submitted, an administrator will review the project subject and all team members before they are officially registered."
         confirmLabel="Submit for Approval"
         cancelLabel="Go Back"
