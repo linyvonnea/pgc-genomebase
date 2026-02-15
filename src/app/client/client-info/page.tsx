@@ -1077,6 +1077,7 @@ export default function ClientPortalPage() {
       }
       
       await submitProjectForApproval(
+        currentProjectRequestId,
         inquiryIdParam,
         emailParam,
         primaryMember.formData.name || emailParam,
