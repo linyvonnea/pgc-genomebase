@@ -1946,7 +1946,6 @@ export default function ClientPortalPage() {
                             // but we could toast if they click it
                           }
                         }}
-                        disabled={!isClickable}
                         className={cn(
                           "w-full text-left p-3 pr-10 rounded-lg transition-all duration-150",
                           isClickable ? "cursor-pointer hover:bg-slate-50" : "cursor-default opacity-80",
