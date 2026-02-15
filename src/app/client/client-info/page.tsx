@@ -15,6 +15,7 @@ import {
   query,
   where,
   getDocs,
+  onSnapshot,
   deleteDoc,
   Timestamp,
 } from "firebase/firestore";
@@ -45,12 +46,14 @@ import {
   saveProjectRequest,
   submitProjectForApproval,
   subscribeToProjectRequest,
+  subscribeToProjectRequestsByInquiry,
   ProjectRequest,
 } from "@/services/projectRequestService";
 import {
   saveClientRequest,
   getClientRequestsByInquiry,
   submitClientRequestsForApproval,
+  subscribeToClientRequests,
   ClientRequest,
 } from "@/services/clientRequestService";
 import { getQuotationsByInquiryId } from "@/services/quotationService";
@@ -161,6 +164,14 @@ export default function ClientPortalPage() {
   const [pendingMemberId, setPendingMemberId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
+  
+  // Real-time data containers
+  const [fetchedDraftProjects, setFetchedDraftProjects] = useState<ProjectDetails[]>([]);
+  const [fetchedApprovedProjects, setFetchedApprovedProjects] = useState<ProjectDetails[]>([]);
+  
+  const [fetchedClientRequests, setFetchedClientRequests] = useState<ClientRequest[]>([]);
+  const [fetchedClients, setFetchedClients] = useState<any[]>([]); // Using any for raw client doc data for now
+  
   const [showSubmitForApprovalModal, setShowSubmitForApprovalModal] =
     useState(false);
   const [showSubmitProjectModal, setShowSubmitProjectModal] = useState(false);
@@ -178,55 +189,140 @@ export default function ClientPortalPage() {
   );
 
   // ────────────────────────────────────────────────────────────────
-  //  Initialisation
+  //  Data Subscriptions
   // ────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    async function initializePrimaryMember() {
-      if (!emailParam || !inquiryIdParam) {
-        router.replace("/portal");
-        return;
-      }
+    if (!emailParam || !inquiryIdParam) {
+      router.replace("/portal");
+      return;
+    }
 
-      setLoading(true);
-      
-      // Initialize projectRequestId from URL if provided
-      if (projectRequestIdParam) {
-        setCurrentProjectRequestId(projectRequestIdParam);
-      }
-      
-      try {
-        // Fetch ALL draft/pending/rejected project requests for this inquiry
-        let allProjectRequests: ProjectRequest[] = [];
-        try {
-          allProjectRequests = await getProjectRequestsByInquiry(inquiryIdParam);
-        } catch (e) {
-          console.error("Error fetching project requests:", e);
-        }
-        
-        let primaryMember: ClientMember | null = null;
-        let primaryClientSnapshot: any = null; // Store for later PID linking
-        const clientsRef = collection(db, "clients");
-        
-        // Load all draft and pending client requests for this inquiry (new workflow)
-        let draftClientRequests: ClientRequest[] = [];
-        try {
-          const allClientRequests = await getClientRequestsByInquiry(inquiryIdParam);
-          draftClientRequests = allClientRequests.filter(r => r.status === "draft" || r.status === "pending");
-        } catch (e) {
-          console.error("Error fetching client requests:", e);
-        }
+    // Initialize projectRequestId from URL if provided
+    if (projectRequestIdParam) {
+      setCurrentProjectRequestId(projectRequestIdParam);
+    }
 
-        const primaryDraftRequest = draftClientRequests.find(r => r.email.toLowerCase() === emailParam.toLowerCase());
-        
-        if (primaryDraftRequest) {
-          // Load primary member from draft client request
-          primaryMember = {
+    // 1. Subscribe to Draft/Pending Project Requests
+    const unsubDraftProjects = subscribeToProjectRequestsByInquiry(inquiryIdParam, (requests) => {
+      // Filter for draft/pending/rejected
+      const drafts = requests
+        .filter(r => ["draft", "pending", "rejected"].includes(r.status))
+        .map((draftProjectRequest) => {
+           console.log(`Found ${draftProjectRequest.status} project request: ${draftProjectRequest.id}`);
+           const statusLabel = draftProjectRequest.status === "draft" ? "Draft" : 
+                            draftProjectRequest.status === "pending" ? "Pending Approval" :
+                            "Rejected";
+           return {
+            pid: draftProjectRequest.id || inquiryIdParam, // Always use inquiryId for consistency in drafts
+            title: draftProjectRequest.title || "Draft Project",
+            lead: draftProjectRequest.projectLead || "Not specified",
+            startDate: draftProjectRequest.startDate?.toDate?.() || new Date(),
+            sendingInstitution: draftProjectRequest.sendingInstitution || "Not specified",
+            fundingInstitution: draftProjectRequest.fundingInstitution || "Not specified",
+            status: statusLabel,
+            inquiryId: inquiryIdParam,
+            isDraft: true,
+            // Store original request ID for selection matching
+            originalRequestId: draftProjectRequest.id
+           } as ProjectDetails;
+        });
+      setFetchedDraftProjects(drafts);
+      
+      // Update selected project request object if needed
+      if (currentProjectRequestId) {
+        const match = requests.find(r => r.id === currentProjectRequestId);
+        if (match) setProjectRequest(match);
+      } else if (requests.length > 0) {
+        // Default to first usually
+        setProjectRequest(requests[0]);
+      }
+    });
+
+    // 2. Subscribe to Approved Projects
+    const projectsQ = query(collection(db, "projects"), where("iid", "==", inquiryIdParam));
+    const unsubApprovedProjects = onSnapshot(projectsQ, (snapshot) => {
+      const approved = snapshot.docs.map((projectDoc) => {
+        const projectData = projectDoc.data();
+        return {
+          pid: projectData.pid || projectDoc.id,
+          title: projectData.title || "Untitled Project",
+          lead: projectData.lead || "Not specified",
+          startDate: projectData.startDate?.toDate?.() || projectData.startDate || new Date(),
+          sendingInstitution: projectData.sendingInstitution || "Not specified",
+          fundingInstitution: projectData.fundingInstitution || "Not specified",
+          status: projectData.status || "Pending",
+          inquiryId: projectData.iid || inquiryIdParam || "",
+        } as ProjectDetails;
+      });
+      setFetchedApprovedProjects(approved);
+    });
+
+    // 3. Subscribe to Client Requests (Draft Members)
+    const unsubClientRequests = subscribeToClientRequests(inquiryIdParam, (requests) => {
+      setFetchedClientRequests(requests);
+    });
+
+    // 4. Subscribe to Clients (Approved Members)
+    const clientsQ = query(collection(db, "clients"), where("inquiryId", "==", inquiryIdParam));
+    const unsubClients = onSnapshot(clientsQ, (snapshot) => {
+        const clients = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+        setFetchedClients(clients);
+        setLoading(false); // Assume data is loaded once clients return (or empty)
+    });
+
+    return () => {
+      unsubDraftProjects();
+      unsubApprovedProjects();
+      unsubClientRequests();
+      unsubClients();
+    };
+  }, [emailParam, inquiryIdParam, projectRequestIdParam, router]);
+
+  // ────────────────────────────────────────────────────────────────
+  //  Data merging & processing
+  // ────────────────────────────────────────────────────────────────
+  
+  useEffect(() => {
+    // Combine projects
+    const allProjects = [...fetchedDraftProjects, ...fetchedApprovedProjects];
+    setProjects(allProjects);
+
+    // Determine currently selected project details
+    let selectedDetails: ProjectDetails | null = null;
+    if (currentProjectRequestId) {
+       selectedDetails = allProjects.find(p => (p as any).originalRequestId === currentProjectRequestId || p.pid === currentProjectRequestId) || null;
+    } 
+    
+    if (!selectedDetails && pidParam) {
+       selectedDetails = allProjects.find(p => p.pid === pidParam) || null;
+    }
+
+    if (!selectedDetails && allProjects.length > 0) {
+      // Default to first if nothing selected
+      selectedDetails = allProjects[0];
+    }
+    
+    if (selectedDetails) {
+        setProjectDetails(selectedDetails);
+        setSelectedProjectPid(selectedDetails.pid);
+        // Sync URL params logic to be handled by router if needed, but we just update state here
+    }
+
+    // Process Members
+    // 1. Find Primary Member
+    let primaryMember: ClientMember | null = null;
+    
+    // Check drafts first
+    const primaryDraftRequest = fetchedClientRequests.find(r => r.email.toLowerCase() === emailParam?.toLowerCase());
+    
+    if (primaryDraftRequest) {
+        primaryMember = {
             id: "primary",
             cid: "draft",
             formData: {
               name: primaryDraftRequest.name || "",
-              email: primaryDraftRequest.email || emailParam,
+              email: primaryDraftRequest.email || emailParam || "",
               affiliation: primaryDraftRequest.affiliation || "",
               designation: primaryDraftRequest.designation || "",
               sex: primaryDraftRequest.sex || "M",
@@ -234,49 +330,35 @@ export default function ClientPortalPage() {
               affiliationAddress: primaryDraftRequest.affiliationAddress || "",
             },
             errors: {},
-            isSubmitted: !!primaryDraftRequest.isValidated, // Check if user has saved the form
+            isSubmitted: !!primaryDraftRequest.isValidated,
             isPrimary: true,
             isDraft: true,
-          };
-        } else {
-          // Check if primary member already exists in clients collection
-          try {
-            const clientQuery = query(
-              clientsRef,
-              where("email", "==", emailParam),
-              where("inquiryId", "==", inquiryIdParam)
-            );
-            const clientSnapshot = await getDocs(clientQuery);
-            primaryClientSnapshot = clientSnapshot; // Store for later use
-
-            if (!clientSnapshot.empty) {
-              const clientDoc = clientSnapshot.docs[0];
-              const data = clientDoc.data();
-              primaryMember = {
+        };
+    } else {
+        // Check approved clients
+        const primaryClientDoc = fetchedClients.find((c: any) => c.email === emailParam);
+        if (primaryClientDoc) {
+             primaryMember = {
                 id: "primary",
-                cid: clientDoc.id,
+                cid: primaryClientDoc.id,
                 formData: {
-                  name: data.name || "",
-                  email: data.email || emailParam,
-                  affiliation: data.affiliation || "",
-                  designation: data.designation || "",
-                  sex: data.sex || "M",
-                  phoneNumber: data.phoneNumber || "",
-                  affiliationAddress: data.affiliationAddress || "",
+                  name: primaryClientDoc.name || "",
+                  email: primaryClientDoc.email || emailParam || "",
+                  affiliation: primaryClientDoc.affiliation || "",
+                  designation: primaryClientDoc.designation || "",
+                  sex: primaryClientDoc.sex || "M",
+                  phoneNumber: primaryClientDoc.phoneNumber || "",
+                  affiliationAddress: primaryClientDoc.affiliationAddress || "",
                 },
                 errors: {},
-                isSubmitted: !!data.haveSubmitted,
+                isSubmitted: !!primaryClientDoc.haveSubmitted,
                 isPrimary: true,
-              };
-            }
-          } catch (e) {
-            console.error("Error fetching client data:", e);
-          }
+            };
         }
+    }
 
-        // Final fallback for primary member if not found anywhere
-        if (!primaryMember) {
-          primaryMember = {
+    if (!primaryMember && emailParam) {
+         primaryMember = {
             id: "primary",
             cid: "pending",
             formData: {
@@ -292,12 +374,12 @@ export default function ClientPortalPage() {
             isSubmitted: false,
             isPrimary: true,
           };
-        }
+    }
 
-        // Load additional team members from both clientRequests (drafts) and clients (approved)
-        const additionalDraftMembers: ClientMember[] = draftClientRequests
-          .filter(r => r.email.toLowerCase() !== emailParam.toLowerCase())
-          .map((r, index) => ({
+    // 2. Process Additional Members
+    const additionalDraftMembers: ClientMember[] = fetchedClientRequests
+        .filter(r => r.email.toLowerCase() !== emailParam?.toLowerCase())
+        .map((r, index) => ({
             id: `draft-member-${index + 1}`,
             cid: "draft",
             formData: {
@@ -313,28 +395,14 @@ export default function ClientPortalPage() {
             isSubmitted: !!r.isValidated,
             isPrimary: false,
             isDraft: true,
-          }));
+        }));
 
-        let approvedMembers: ClientMember[] = [];
-        try {
-          const allMembersQuery = query(
-            clientsRef,
-            where("inquiryId", "==", inquiryIdParam)
-          );
-          const allMembersSnapshot = await getDocs(allMembersQuery);
-
-          approvedMembers = allMembersSnapshot.docs
-            .filter((d) => {
-              const email = d.data().email;
-              if (!email) return true;
-              return email.toLowerCase() !== emailParam.toLowerCase();
-            })
-            .map((d, index) => {
-              const data = d.data();
-              return {
-                id: `member-${index + 1}`,
-                cid: d.id,
-                formData: {
+    const approvedMembers: ClientMember[] = fetchedClients
+        .filter((c: any) => c.email && c.email.toLowerCase() !== emailParam?.toLowerCase())
+        .map((data: any, index) => ({
+             id: `member-${index + 1}`,
+             cid: data.id,
+             formData: {
                   name: data.name || "",
                   email: data.email || "",
                   affiliation: data.affiliation || "",
@@ -342,192 +410,23 @@ export default function ClientPortalPage() {
                   sex: data.sex || "M",
                   phoneNumber: data.phoneNumber || "",
                   affiliationAddress: data.affiliationAddress || "",
-                },
-                errors: {},
-                isSubmitted: !!data.haveSubmitted,
-                isPrimary: false,
-                isDraft: false,
-              };
-            });
-        } catch (e) {
-          console.error("Error fetching approved members:", e);
-        }
-
-        // Combine draft and approved members
-        const additionalMembers = [...additionalDraftMembers, ...approvedMembers];
-
-        // Fetch all projects for this inquiry
-        const fetchedProjects: ProjectDetails[] = [];
-        const allProjectPids: string[] = [];
-        let fetchedProjectDetails: ProjectDetails | null = null;
-
-        // Show all draft/pending/rejected project requests (not yet approved)
-        allProjectRequests.forEach((draftProjectRequest) => {
-          if (["draft", "pending", "rejected"].includes(draftProjectRequest.status)) {
-            console.log(`Found ${draftProjectRequest.status} project request: ${draftProjectRequest.id}`);
-            const statusLabel = draftProjectRequest.status === "draft" ? "Draft" : 
-                              draftProjectRequest.status === "pending" ? "Pending Approval" :
-                              "Rejected";
-            const draftProject: ProjectDetails = {
-              pid: draftProjectRequest.id || inquiryIdParam, // Always use inquiryId for consistency
-              title: draftProjectRequest.title || "Draft Project",
-              lead: draftProjectRequest.projectLead || "Not specified",
-              startDate: draftProjectRequest.startDate?.toDate?.() || new Date(),
-              sendingInstitution:
-                draftProjectRequest.sendingInstitution || "Not specified",
-              fundingInstitution:
-                draftProjectRequest.fundingInstitution || "Not specified",
-              status: statusLabel,
-              inquiryId: inquiryIdParam,
-              isDraft: true,
-            };
-            fetchedProjects.push(draftProject);
-            
-            // Set as selected if matches projectRequestIdParam, pidParam, or is the first one
-            if (projectRequestIdParam && draftProjectRequest.id === projectRequestIdParam) {
-              fetchedProjectDetails = draftProject;
-              setProjectRequest(draftProjectRequest);
-              setCurrentProjectRequestId(draftProjectRequest.id || null);
-            } else if (!fetchedProjectDetails || (pidParam && pidParam === draftProject.pid)) {
-              fetchedProjectDetails = draftProject;
-              setProjectRequest(draftProjectRequest);
-              setCurrentProjectRequestId(draftProjectRequest.id || null);
-            }
-          }
-        });
-
-        try {
-          const projectsRef = collection(db, "projects");
-          const projectsQuery = query(
-            projectsRef,
-            where("iid", "==", inquiryIdParam)
-          );
-          const projectsSnapshot = await getDocs(projectsQuery);
-
-          projectsSnapshot.forEach((projectDoc) => {
-            const projectData = projectDoc.data();
-            const project: ProjectDetails = {
-              pid: projectData.pid || projectDoc.id,
-              title: projectData.title || "Untitled Project",
-              lead: projectData.lead || "Not specified",
-              startDate:
-                projectData.startDate?.toDate?.() ||
-                projectData.startDate ||
-                new Date(),
-              sendingInstitution:
-                projectData.sendingInstitution || "Not specified",
-              fundingInstitution:
-                projectData.fundingInstitution || "Not specified",
-              status: projectData.status || "Pending",
-              inquiryId: projectData.iid || inquiryIdParam || "",
-            };
-            fetchedProjects.push(project);
-            allProjectPids.push(project.pid);
-            if (pidParam && projectData.pid === pidParam) {
-              fetchedProjectDetails = project;
-            }
-          });
-        } catch (e) {
-          console.error("Error fetching projects:", e);
-        }
-
-        if (!fetchedProjectDetails && fetchedProjects.length > 0) {
-          fetchedProjectDetails = fetchedProjects[0];
-        }
-
-        // Auto-link any missing PIDs to primary member's record (only for non-draft projects)
-        if (primaryClientSnapshot && !primaryClientSnapshot.empty && allProjectPids.length > 0) {
-          try {
-            const clientDoc = primaryClientSnapshot.docs[0];
-            const clientData = clientDoc.data();
-            const currentPids = Array.isArray(clientData.pid)
-              ? clientData.pid
-              : clientData.pid
-              ? [clientData.pid]
-              : [];
-            const missingPids = allProjectPids.filter(
-              (pid) => !currentPids.includes(pid)
-            );
-            if (missingPids.length > 0) {
-              const updatedPids = [
-                ...new Set([...currentPids, ...missingPids]),
-              ];
-              await setDoc(
-                doc(db, "clients", clientDoc.id),
-                { pid: updatedPids },
-                { merge: true }
-              );
-              toast.info(
-                `Linked ${missingPids.length} additional project(s) to your profile`
-              );
-            }
-          } catch (e) {
-            console.error("Error linking PIDs:", e);
-          }
-        }
-
-        setProjects(fetchedProjects);
-        if (fetchedProjectDetails) {
-          setSelectedProjectPid(fetchedProjectDetails.pid);
-          setProjectDetails(fetchedProjectDetails);
-        }
-
-        // Load draft / pending members from memberApprovals (old workflow only)
-        // Don't load if we already have clientRequests (new workflow)
-        let draftMembers: ClientMember[] = [];
-        const selectedPid =
-          fetchedProjectDetails?.pid || pidParam || "";
+             },
+             errors: {},
+             isSubmitted: !!data.haveSubmitted,
+             isPrimary: false,
+             isDraft: false,
+        }));
         
-        // Only load member approvals for non-draft, approved projects that use old workflow
-        // Skip if we have clientRequests (new workflow handles this)
-        const hasClientRequests = draftClientRequests.length > 0;
-        if (selectedPid && !selectedPid.startsWith("DRAFT") && !selectedPid.startsWith("PENDING") && inquiryIdParam && !hasClientRequests) {
-          try {
-            const approval = await getMemberApproval(
-              inquiryIdParam,
-              selectedPid
-            );
-            if (approval) {
-              setApprovalStatus(approval.status);
-              if (
-                approval.status === "draft" ||
-                approval.status === "pending" ||
-                approval.status === "rejected"
-              ) {
-                draftMembers = approval.members
-                  .filter((m) => !m.isPrimary)
-                  .map((m, index) => ({
-                    id: m.tempId || `memberApproval-${index + 1}`,
-                    cid: "",
-                    formData: m.formData,
-                    errors: {},
-                    isSubmitted: m.isValidated,
-                    isPrimary: false,
-                    isDraft: true,
-                  }));
-              }
-            }
-          } catch (e) {
-            console.error("Error fetching member approval:", e);
-          }
-        }
+    const allMembers = [primaryMember, ...additionalDraftMembers, ...approvedMembers].filter((m): m is ClientMember => m !== null);
+    setMembers(allMembers);
+    setExpandedMembers(prev => {
+        const newSet = new Set(prev);
+        if (primaryMember) newSet.add("primary");
+        return newSet;
+    });
 
-        setMembers([primaryMember, ...additionalMembers, ...draftMembers]);
-        setExpandedMembers(new Set(["primary"]));
-      } catch (error) {
-        console.error("Error initializing form:", error);
-        toast.error(
-          `Failed to load member data: ${
-            error instanceof Error ? error.message : "Unknown error"
-          }`
-        );
-      } finally {
-        setLoading(false);
-      }
-    }
+  }, [fetchedDraftProjects, fetchedApprovedProjects, fetchedClientRequests, fetchedClients, emailParam, currentProjectRequestId, pidParam]);
 
-    initializePrimaryMember();
-  }, [emailParam, inquiryIdParam, pidParam, projectRequestIdParam, router]);
 
   // ────────────────────────────────────────────────────────────────
   //  Approval-status watcher
@@ -1938,20 +1837,11 @@ export default function ClientPortalPage() {
                     {/* Main project button */}
                     <div className="relative">
                       <div
-                        onClick={() => {
-                          if (isClickable) {
-                            handleSelectProject(project);
-                          } else if (project.isDraft) {
-                            // Already on this project by default, no need to do anything
-                            // but we could toast if they click it
-                          }
-                        }}
                         className={cn(
-                          "w-full text-left p-3 pr-10 rounded-lg transition-all duration-150",
-                          isClickable ? "cursor-pointer hover:bg-slate-50" : "cursor-default opacity-80",
+                          "w-full text-left p-3 pr-10 rounded-lg transition-all duration-150 cursor-default",
                           isSelected
                             ? "bg-[#166FB5]/8 border-l-[3px] border-l-[#166FB5] shadow-sm"
-                            : "border-l-[3px] border-l-transparent"
+                            : "border-l-[3px] border-l-transparent opacity-80"
                         )}
                       >
                         <div className="flex items-center justify-between">
@@ -2003,8 +1893,8 @@ export default function ClientPortalPage() {
                       )}
                     </div>
 
-                    {/* Collapsible documents section - only for clickable projects */}
-                    {isClickable && isDocsExpanded && (
+                    {/* Collapsible documents section - only for non-draft projects */}
+                    {!project.isDraft && isDocsExpanded && (
                       <div className="ml-3 pl-3 border-l-2 border-slate-200 space-y-1 py-1">
                         {docs?.loading ? (
                           <div className="flex items-center gap-2 px-3 py-2 text-xs text-slate-400">
