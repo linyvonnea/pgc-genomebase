@@ -164,31 +164,30 @@ export async function getProjectRequestById(
 }
 
 /**
- * Get all project requests for an inquiry (supports multiple drafts per inquiry).
+ * Get a specific project request by its ID.
+ */
+export async function getProjectRequestById(
+  projectRequestId: string
+): Promise<ProjectRequest | null> {
+  const docRef = doc(db, COLLECTION, projectRequestId);
+  const snap = await getDoc(docRef);
+
+  if (!snap.exists()) return null;
+
+  return {
+    id: snap.id,
+    ...snap.data(),
+  } as ProjectRequest;
+}
+
+/**
+ * Get all project requests for an inquiry.
  */
 export async function getProjectRequestsByInquiry(
   inquiryId: string
 ): Promise<ProjectRequest[]> {
-  const q = query(
-    collection(db, COLLECTION),
-    where("inquiryId", "==", inquiryId)
-  );
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as ProjectRequest[];
-}
-
-/**
- * Get a project request by inquiry ID (legacy - returns first match).
- * @deprecated Use getProjectRequestsByInquiry for multiple drafts support
- */
-export async function getProjectRequest(
-  inquiryId: string
-): Promise<ProjectRequest | null> {
-  const requests = await getProjectRequestsByInquiry(inquiryId);
-  return requests.length > 0 ? requests[0] : null;
+  const request = await getProjectRequest(inquiryId);
+  return request ? [request] : [];
 }
 
 /**
@@ -250,49 +249,24 @@ export function subscribeToProjectRequestById(
 }
 
 /**
+ * Subscribe to a project request's status updates.
+ */
+export function subscribeToProjectRequest(
+  inquiryId: string,
+  callback: (request: ProjectRequest | null) => void
+): () => void {
+  return subscribeToProjectRequestById(getDocId(inquiryId), callback);
+}
+
+/**
  * Subscribe to all project requests for an inquiry.
  */
 export function subscribeToProjectRequestsByInquiry(
   inquiryId: string,
   callback: (requests: ProjectRequest[]) => void
 ): () => void {
-  const q = query(
-    collection(db, COLLECTION),
-    where("inquiryId", "==", inquiryId)
-  );
-
-  return onSnapshot(q, (snapshot) => {
-    const requests = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    })) as ProjectRequest[];
-    callback(requests);
-  });
-}
-
-/**
- * Subscribe to a project request's status updates (legacy).
- * @deprecated Use subscribeToProjectRequestById
- */
-export function subscribeToProjectRequest(
-  inquiryId: string,
-  callback: (request: ProjectRequest | null) => void
-): () => void {
-  const q = query(
-    collection(db, COLLECTION),
-    where("inquiryId", "==", inquiryId)
-  );
-
-  return onSnapshot(q, (snapshot) => {
-    if (snapshot.empty) {
-      callback(null);
-      return;
-    }
-    const firstDoc = snapshot.docs[0];
-    callback({
-      id: firstDoc.id,
-      ...firstDoc.data(),
-    } as ProjectRequest);
+  return subscribeToProjectRequestById(getDocId(inquiryId), (req) => {
+    callback(req ? [req] : []);
   });
 }
 
@@ -321,14 +295,10 @@ export async function deleteProjectRequestById(projectRequestId: string): Promis
 }
 
 /**
- * Delete a project request (legacy - deletes first match by inquiryId).
- * @deprecated Use deleteProjectRequestById
+ * Delete a project request by inquiry ID.
  */
 export async function deleteProjectRequest(inquiryId: string): Promise<void> {
-  const requests = await getProjectRequestsByInquiry(inquiryId);
-  if (requests.length > 0) {
-    await deleteProjectRequestById(requests[0].id!);
-  }
+  await deleteProjectRequestById(getDocId(inquiryId));
 }
 
 /**
@@ -359,8 +329,7 @@ export async function updateProjectRequestStatusById(
 }
 
 /**
- * Update request status (legacy).
- * @deprecated Use updateProjectRequestStatusById
+ * Update request status by inquiry ID.
  */
 export async function updateProjectRequestStatus(
   inquiryId: string,
@@ -370,8 +339,12 @@ export async function updateProjectRequestStatus(
   cid?: string,
   rejectionReason?: string
 ): Promise<void> {
-  const requests = await getProjectRequestsByInquiry(inquiryId);
-  if (requests.length > 0) {
-    await updateProjectRequestStatusById(requests[0].id!, status, reviewedBy, pid, cid, rejectionReason);
-  }
+  await updateProjectRequestStatusById(
+    getDocId(inquiryId),
+    status,
+    reviewedBy,
+    pid,
+    cid,
+    rejectionReason
+  );
 }

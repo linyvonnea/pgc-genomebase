@@ -1774,21 +1774,7 @@ export default function ClientPortalPage() {
         />
       </button>
 
-      {/* New Project button (shown when Projects list is collapsed) */}
-      {!showProjectsList && (
-        <div className="p-3 border-b border-slate-100">
-          <Button
-            onClick={() => {
-              handleCreateNewProject();
-              setMobileSidebarOpen(false);
-            }}
-            className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90 text-white h-9 text-sm"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            New Project
-          </Button>
-        </div>
-      )}
+      {/* New Project button (shown when Projects list is collapsed) - REMOVED */}
 
       {/* Projects list */}
       {showProjectsList && (
@@ -1965,19 +1951,7 @@ export default function ClientPortalPage() {
                 );
               })}
               
-              {/* New Project button at the bottom of the list */}
-              <div className="px-2 pt-2">
-                <Button
-                  onClick={() => {
-                    handleCreateNewProject();
-                    setMobileSidebarOpen(false);
-                  }}
-                  className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90 text-white h-9 text-sm"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Project
-                </Button>
-              </div>
+              {/* New Project button at the bottom of the list - REMOVED */}
             </div>
           )}
         </div>
