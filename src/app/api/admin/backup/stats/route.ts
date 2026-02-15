@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import admin from 'firebase-admin';
-import path from 'path';
-import fs from 'fs';
 
 // Initialize Firebase Admin if not already initialized
 function initializeFirebaseAdmin() {
   if (!admin.apps.length) {
     try {
-      // Try to use environment variables first (for Vercel)
+      // Use environment variables (required for serverless deployment)
       if (process.env.FIREBASE_SERVICE_ACCOUNT) {
         const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
         admin.initializeApp({
@@ -15,15 +13,8 @@ function initializeFirebaseAdmin() {
         });
         console.log('✅ Firebase Admin initialized from environment variable');
       } else {
-        // Fall back to service account file (for local)
-        const serviceAccountPath = path.join(process.cwd(), 'scripts', 'serviceAccountKey.json');
-        const serviceAccountContent = fs.readFileSync(serviceAccountPath, 'utf8');
-        const serviceAccount = JSON.parse(serviceAccountContent);
-        
-        admin.initializeApp({
-          credential: admin.credential.cert(serviceAccount)
-        });
-        console.log('✅ Firebase Admin initialized from file');
+        console.error('❌ FIREBASE_SERVICE_ACCOUNT environment variable not found');
+        throw new Error('FIREBASE_SERVICE_ACCOUNT environment variable is required for deployment');
       }
     } catch (error) {
       console.error('❌ Failed to initialize Firebase Admin:', error);
