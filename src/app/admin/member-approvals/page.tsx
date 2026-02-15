@@ -110,7 +110,6 @@ export default function MemberApprovalsPage() {
       const projectApprovalsPromises = projectRequests.map(async (pr) => {
         // Only get pending client requests for the approval view
         const clientRequests = await getClientRequestsByInquiry(pr.inquiryId, "pending");
-        console.log(`Client requests for ${pr.inquiryId}:`, clientRequests);
         
         return {
           id: pr.id || pr.inquiryId,
