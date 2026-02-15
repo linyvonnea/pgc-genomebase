@@ -885,6 +885,14 @@ export default function ClientPortalPage() {
   };
 
   const handleFinalSubmit = () => {
+    // Check if this is a draft project
+    if (projectDetails?.isDraft) {
+      // For draft projects, submit project + primary member
+      handleSubmitProjectForApproval();
+      return;
+    }
+
+    // For approved projects, submit additional team members
     const primary = members.find((m) => m.isPrimary);
     if (primary && !primary.isSubmitted) {
       toast.error("Please save your (primary member) information first");
@@ -1860,31 +1868,17 @@ export default function ClientPortalPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {/* Submit Project for Approval (only for draft projects) */}
-                    {projectDetails?.isDraft && primaryMember && (
-                      <Button
-                        onClick={handleSubmitProjectForApproval}
-                        size="sm"
-                        disabled={submitting}
-                        className="bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white shadow-md disabled:opacity-50"
-                      >
-                        <Send className="h-4 w-4 mr-1" />
-                        Submit for Approval
-                      </Button>
-                    )}
-                    {/* Add Member (only for non-draft projects) */}
-                    {!projectDetails?.isDraft && (
-                      <Button
-                        onClick={handleAddMember}
-                        variant="outline"
-                        size="sm"
-                        disabled={projectDetails?.status === "Completed"}
-                        className="border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white disabled:opacity-50"
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add Member
-                      </Button>
-                    )}
+                    {/* Add Member button (for all projects) */}
+                    <Button
+                      onClick={handleAddMember}
+                      variant="outline"
+                      size="sm"
+                      disabled={projectDetails?.status === "Completed" || approvalStatus === "pending"}
+                      className="border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white disabled:opacity-50"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      New Member
+                    </Button>
                   </div>
                 </div>
 
@@ -1898,7 +1892,7 @@ export default function ClientPortalPage() {
                           Draft Project — Pending Submission
                         </p>
                         <p className="text-xs text-orange-700 leading-relaxed">
-                          Please fill out your information as the <strong>Primary Member</strong>, then click "<strong>Submit for Approval</strong>" to send this project to the admin for review. Once approved, you'll receive a PID and CID.
+                          Please fill out your information as the <strong>Primary Member</strong>, then scroll down and click "<strong>Submit Subject and Member/s for Approval</strong>" to send this project to the admin for review. Once approved, you'll receive a PID and CID.
                         </p>
                       </div>
                     </div>
@@ -2061,7 +2055,9 @@ export default function ClientPortalPage() {
                     <div className="pt-6 border-t-2 border-slate-200">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <p className="text-sm text-slate-500">
-                          {members.filter((m) => m.isDraft).length > 0
+                          {projectDetails?.isDraft
+                            ? "Submit your project and primary member information for admin review"
+                            : members.filter((m) => m.isDraft).length > 0
                             ? "All draft members must be validated before submitting"
                             : "All members must be saved before submission"}
                         </p>
@@ -2071,7 +2067,7 @@ export default function ClientPortalPage() {
                           className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-bold shadow-xl hover:shadow-2xl disabled:opacity-50 whitespace-nowrap"
                         >
                           <Send className="h-5 w-5 mr-2" />
-                          Submit Members for Approval
+                          Submit Subject and Member/s for Approval
                         </Button>
                       </div>
                     </div>
@@ -2191,8 +2187,8 @@ export default function ClientPortalPage() {
         onConfirm={handleConfirmSubmitForApproval}
         onCancel={() => setShowSubmitForApprovalModal(false)}
         loading={submitting}
-        title="Submit Members for Approval"
-        description="Once submitted, an administrator will review the team members before they are officially registered."
+        title="Submit Subject and Member/s for Approval"
+        description="Once submitted, an administrator will review the project subject and all team members before they are officially registered."
         confirmLabel="Submit for Approval"
         cancelLabel="Go Back"
       >
