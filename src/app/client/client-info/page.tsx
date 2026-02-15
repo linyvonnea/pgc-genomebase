@@ -417,10 +417,11 @@ export default function ClientPortalPage() {
              isDraft: false,
         }));
         
-    setMembers([primaryMember, ...additionalDraftMembers, ...approvedMembers]);
+    const allMembers = [primaryMember, ...additionalDraftMembers, ...approvedMembers].filter((m): m is ClientMember => m !== null);
+    setMembers(allMembers);
     setExpandedMembers(prev => {
         const newSet = new Set(prev);
-        newSet.add("primary");
+        if (primaryMember) newSet.add("primary");
         return newSet;
     });
 
