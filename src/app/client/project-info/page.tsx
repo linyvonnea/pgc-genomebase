@@ -98,8 +98,6 @@ export default function ProjectForm() {
         
         // Check if any draft/pending project requests exist
         const allProjectRequests = await getProjectRequestsByInquiry(inquiryId);
-        // Check if any draft/pending project requests exist
-        const allProjectRequests = await getProjectRequestsByInquiry(inquiryId);
         const draftRequests = allProjectRequests.filter(r => r.status === "draft");
         const pendingRequests = allProjectRequests.filter(r => r.status === "pending");
         
@@ -124,7 +122,9 @@ export default function ProjectForm() {
           if (inquiryId) params.set("inquiryId", inquiryId);
           router.push(`/client/client-info?${params.toString()}`);
           return;
-        } else if (allProjectRequests.some(r => r.status === "approved" && r.pid)) {\n          // If already has approved project, redirect to client-info\n          console.log("✅ Project already approved, redirecting to client-info");
+        } else if (allProjectRequests.some(r => r.status === "approved" && r.pid)) {
+          // If already has approved project, redirect to client-info
+          console.log("✅ Project already approved, redirecting to client-info");
           const approvedRequest = allProjectRequests.find(r => r.status === "approved" && r.pid);
           const params = new URLSearchParams();
           if (email) params.set("email", email);
