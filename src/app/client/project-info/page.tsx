@@ -79,14 +79,13 @@ export default function ProjectForm() {
           if (inquiryId) params.set("inquiryId", inquiryId);
           router.push(`/client/client-info?${params.toString()}`);
           return;
-        } else if (allProjectRequests.some(r => r.status === "approved" && r.pid)) {
+        } else if (existingRequest && existingRequest.status === "approved" && existingRequest.pid) {
           // If already has approved project, redirect to client-info
           console.log("✅ Project already approved, redirecting to client-info");
-          const approvedRequest = allProjectRequests.find(r => r.status === "approved" && r.pid);
           const params = new URLSearchParams();
           if (email) params.set("email", email);
           if (inquiryId) params.set("inquiryId", inquiryId);
-          if (approvedRequest?.pid) params.set("pid", approvedRequest.pid);
+          if (existingRequest.pid) params.set("pid", existingRequest.pid);
           router.push(`/client/client-info?${params.toString()}`);
           return;
         } else {
@@ -101,7 +100,7 @@ export default function ProjectForm() {
       }
     }
     fetchProjectRequest();
-  }, [inquiryId, email, router, isNewProject, projectRequestId]);
+  }, [inquiryId, email, router]);
 
   // Permission check: Verify email and inquiryId exist and are valid
   useEffect(() => {
