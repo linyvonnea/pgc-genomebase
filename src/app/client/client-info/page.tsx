@@ -686,7 +686,7 @@ export default function ClientPortalPage() {
           isPrimary: member.isPrimary,
           isValidated: true,
           status: "draft",
-          projectRequestId: currentProjectRequestId || undefined,
+          ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
         });
 
         setMembers((prev) =>
@@ -785,7 +785,7 @@ export default function ClientPortalPage() {
           isPrimary: member.isPrimary,
           isValidated: false,
           status: "draft",
-          projectRequestId: currentProjectRequestId || undefined,
+          ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
         });
 
         setMembers((prev) =>
