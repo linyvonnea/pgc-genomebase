@@ -64,25 +64,23 @@ export interface ProjectRequest {
 const COLLECTION = "projectRequests";
 
 /**
- * Generate unique document ID for a new project request
+ * Generate document ID from inquiryId
  */
-function generateDocId(): string {
-  return `pr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+function getDocId(inquiryId: string): string {
+  return inquiryId;
 }
 
 /**
  * Save or update a draft project request.
- * If id is provided, updates existing. Otherwise creates new.
  */
 export async function saveProjectRequest(
-  data: Omit<ProjectRequest, "id" | "createdAt" | "updatedAt">,
-  existingId?: string
+  data: Omit<ProjectRequest, "id" | "createdAt" | "updatedAt">
 ): Promise<string> {
-  const docId = existingId || generateDocId();
+  const docId = getDocId(data.inquiryId);
   const docRef = doc(db, COLLECTION, docId);
-  const existing = existingId ? await getDoc(docRef) : null;
+  const existing = await getDoc(docRef);
 
-  if (existing?.exists()) {
+  if (existing.exists()) {
     // Update existing draft
     await setDoc(
       docRef,
@@ -109,7 +107,6 @@ export async function saveProjectRequest(
  * Requires primary member data to be included.
  */
 export async function submitProjectForApproval(
-  projectRequestId: string,
   inquiryId: string,
   requestedBy: string,
   requestedByName: string,
@@ -122,7 +119,8 @@ export async function submitProjectForApproval(
   },
   primaryMember: PrimaryMemberData
 ): Promise<string> {
-  const docRef = doc(db, COLLECTION, projectRequestId);
+  const docId = getDocId(inquiryId);
+  const docRef = doc(db, COLLECTION, docId);
 
   await setDoc(
     docRef,
@@ -143,16 +141,17 @@ export async function submitProjectForApproval(
     { merge: true }
   );
 
-  return projectRequestId;
+  return docId;
 }
 
 /**
- * Get a specific project request by its ID.
+ * Get a project request by inquiry ID.
  */
-export async function getProjectRequestById(
-  projectRequestId: string
+export async function getProjectRequest(
+  inquiryId: string
 ): Promise<ProjectRequest | null> {
-  const docRef = doc(db, COLLECTION, projectRequestId);
+  const docId = getDocId(inquiryId);
+  const docRef = doc(db, COLLECTION, docId);
   const snap = await getDoc(docRef);
 
   if (!snap.exists()) return null;
