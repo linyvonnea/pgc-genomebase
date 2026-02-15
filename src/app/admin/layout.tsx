@@ -4,6 +4,7 @@
 import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { TabBar } from "@/components/layout/TabBar";
 import { TabContent } from "@/components/layout/TabContent";
+import { NotificationCenter } from "@/components/layout/NotificationCenter";
 import { TabProvider } from "@/contexts/TabContext";
 import { Toaster } from "@/components/ui/sonner";
 import useAuth from "@/hooks/useAuth";
@@ -49,6 +50,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex h-screen">
         <AdminSidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Header with Notification Center */}
+          <div className="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-end">
+            <NotificationCenter />
+          </div>
           {/* Tab Bar */}
           <TabBar />
           {/* Main Content Area */}
