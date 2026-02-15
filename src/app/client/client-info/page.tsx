@@ -1130,32 +1130,44 @@ export default function ClientPortalPage() {
       return;
     }
     
+    // Clear previous selection state immediately to avoid UI flickering with old data
     setSelectedProjectPid(project.pid);
     setProjectDetails(project);
+    setMembers([]);
+    setProjectRequest(null);
+    setApprovalStatus(null);
 
     try {
-      const clientsRef = collection(db, "clients");
-      const projectMembersQuery = query(
-        clientsRef,
-        where("inquiryId", "==", inquiryIdParam),
-        where("pid", "array-contains", project.pid)
-      );
-      const projectMembersSnapshot = await getDocs(projectMembersQuery);
-
       let primaryM: ClientMember | null = null;
       const additionalM: ClientMember[] = [];
+      let draftM: ClientMember[] = [];
 
-      projectMembersSnapshot.docs.forEach((d, index) => {
+      // 1. Fetch ALL members associated with this inquiry from 'clients' collection
+      const clientsRef = collection(db, "clients");
+      const clientQuery = query(
+        clientsRef,
+        where("inquiryId", "==", inquiryIdParam)
+      );
+      const clientSnapshot = await getDocs(clientQuery);
+
+      clientSnapshot.docs.forEach((d, index) => {
         const data = d.data();
+        const pids = data.pid || [];
         const email = data.email;
-
-        if (email && emailParam && email.toLowerCase() === emailParam.toLowerCase()) {
-          primaryM = {
-            id: "primary",
+        
+        const isPrimary = email && emailParam && email.toLowerCase() === emailParam.toLowerCase();
+        
+        // A member belongs to this project if they have the PID, 
+        // OR if this is a draft project and they are the primary member
+        const belongsToProject = pids.includes(project.pid) || (project.isDraft && isPrimary);
+        
+        if (belongsToProject) {
+          const member: ClientMember = {
+            id: isPrimary ? "primary" : `member-${index}`,
             cid: d.id,
             formData: {
               name: data.name || "",
-              email: data.email || emailParam,
+              email: data.email || email || "",
               affiliation: data.affiliation || "",
               designation: data.designation || "",
               sex: data.sex || "M",
@@ -1164,41 +1176,45 @@ export default function ClientPortalPage() {
             },
             errors: {},
             isSubmitted: !!data.haveSubmitted,
-            isPrimary: true,
-          };
-        } else {
-          additionalM.push({
-            id: `member-${index + 1}`,
-            cid: d.id,
-            formData: {
-              name: data.name || "",
-              email: data.email || "",
-              affiliation: data.affiliation || "",
-              designation: data.designation || "",
-              sex: data.sex || "M",
-              phoneNumber: data.phoneNumber || "",
-              affiliationAddress: data.affiliationAddress || "",
-            },
-            errors: {},
-            isSubmitted: !!data.haveSubmitted,
-            isPrimary: false,
+            isPrimary: isPrimary,
             isDraft: false,
-          });
+          };
+          
+          if (isPrimary) primaryM = member;
+          else additionalM.push(member);
         }
       });
 
-      // Load draft/pending members
-      let draftM: ClientMember[] = [];
-      if (inquiryIdParam) {
+      // 2. If it is a draft project, load the project request data
+      if (project.isDraft) {
+        const pr = await getProjectRequestById(project.pid); // pid is inquiryId for drafts
+        if (pr) {
+          setProjectRequest(pr);
+          setCurrentProjectRequestId(pr.id || null);
+          setApprovalStatus(pr.status as ApprovalStatus);
+          
+          // If primary member wasn't found in 'clients' yet, use data from ProjectRequest
+          if (!primaryM && pr.primaryMember) {
+            primaryM = {
+              id: "primary",
+              cid: "draft",
+              formData: pr.primaryMember,
+              errors: {},
+              isSubmitted: true,
+              isPrimary: true,
+              isDraft: true,
+            };
+          }
+        }
+      }
+
+      // 3. Load pending team members from 'memberApprovals' (for existing projects)
+      if (!project.isDraft && inquiryIdParam) {
         const approval = await getMemberApproval(inquiryIdParam, project.pid);
         if (approval) {
           setApprovalStatus(approval.status);
-          if (
-            approval.status === "draft" ||
-            approval.status === "pending" ||
-            approval.status === "rejected"
-          ) {
-            draftM = approval.members
+          if (["draft", "pending", "rejected"].includes(approval.status)) {
+            draftM = (approval.members || [])
               .filter((m) => !m.isPrimary)
               .map((m, index) => ({
                 id: m.tempId || `draft-${index + 1}`,
@@ -1210,14 +1226,13 @@ export default function ClientPortalPage() {
                 isDraft: true,
               }));
           }
-        } else {
-          setApprovalStatus(null);
         }
       }
 
       const projectMembers = primaryM
         ? [primaryM, ...additionalM, ...draftM]
         : [...additionalM, ...draftM];
+      
       setMembers(projectMembers);
       setExpandedMembers(new Set(["primary"]));
     } catch (error) {
