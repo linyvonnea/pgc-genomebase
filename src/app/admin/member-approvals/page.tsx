@@ -450,16 +450,32 @@ export default function MemberApprovalsPage() {
     }
   };
 
-  const formatDate = (date: Date | string | undefined) => {
+  const formatDate = (date: Date | string | any | undefined) => {
     if (!date) return "—";
-    const d = typeof date === "string" ? new Date(date) : date;
-    return d.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    try {
+      // Handle Firestore Timestamp objects
+      if (date && typeof date === 'object' && 'toDate' in date && typeof date.toDate === 'function') {
+        return date.toDate().toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+      // Handle Date objects and strings
+      const d = typeof date === "string" ? new Date(date) : date;
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (error) {
+      console.error('Error formatting date:', error, date);
+      return "—";
+    }
   };
 
   return (
@@ -566,7 +582,7 @@ export default function MemberApprovalsPage() {
                       {approval.type === "project" && approval.projectData && (
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3.5 w-3.5" />
-                          Start: {formatDate(approval.projectData.startDate?.toDate?.())}
+                          Start: {formatDate(approval.projectData.startDate)}
                         </span>
                       )}
                     </div>
@@ -701,7 +717,7 @@ export default function MemberApprovalsPage() {
                     <div>
                       <span className="text-purple-700 font-medium">Start Date:</span>{" "}
                       <span className="text-purple-900">
-                        {formatDate(selectedApproval.projectData.startDate?.toDate?.())}
+                        {formatDate(selectedApproval.projectData.startDate)}
                       </span>
                     </div>
                     <div>
