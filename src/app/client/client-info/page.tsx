@@ -1852,11 +1852,12 @@ export default function ClientPortalPage() {
                     <div className="relative">
                       <div
                         className={cn(
-                          "w-full text-left p-3 pr-10 rounded-lg transition-all duration-150 cursor-default",
+                          "w-full text-left p-3 pr-10 rounded-lg transition-all duration-150 cursor-pointer hover:bg-slate-50",
                           isSelected
                             ? "bg-[#166FB5]/8 border-l-[3px] border-l-[#166FB5] shadow-sm"
                             : "border-l-[3px] border-l-transparent opacity-80"
                         )}
+                        onClick={() => handleSelectProject(project)}
                       >
                         <div className="flex items-center justify-between">
                           <p
@@ -1887,8 +1888,6 @@ export default function ClientPortalPage() {
                         </div>
                       </div>
                       
-                      {/* Expand documents button - always allowed for projects with PIDs */}
-                      {!project.isDraft && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1904,11 +1903,11 @@ export default function ClientPortalPage() {
                             )}
                           />
                         </button>
-                      )}
+                      
                     </div>
 
-                    {/* Collapsible documents section - only for non-draft projects */}
-                    {!project.isDraft && isDocsExpanded && (
+                    {/* Collapsible documents section */}
+                    {isDocsExpanded && (
                       <div className="ml-3 pl-3 border-l-2 border-slate-200 space-y-1 py-1">
                         {docs?.loading ? (
                           <div className="flex items-center gap-2 px-3 py-2 text-xs text-slate-400">
