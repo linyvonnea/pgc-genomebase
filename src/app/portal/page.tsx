@@ -89,7 +89,7 @@ export default function ClientVerifyPage() {
         return;
       }
       const inquiry = inquiryDoc.data();
-      if (!inquiry.isApproved) {
+      if (!inquiry.isApproved && inquiry.status !== "Pending") {
         toast.error("This inquiry has not been approved yet.");
         setVerifying(false);
         return;

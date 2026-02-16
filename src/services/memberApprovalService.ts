@@ -14,6 +14,7 @@ import {
   Timestamp,
   onSnapshot,
   deleteDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { MemberApproval, DraftMember, ApprovalStatus } from "@/types/MemberApproval";
@@ -225,6 +226,16 @@ export async function approveMemberApproval(
         );
         console.log(`✅ Project ${approval.projectPid} status updated to Ongoing`);
       }
+    }
+
+    // Update inquiry status to "Approved Client" if it's not already
+    if (approval.inquiryId) {
+      await updateDoc(doc(db, "inquiries", approval.inquiryId), {
+        status: "Approved Client",
+        isApproved: true,
+        updatedAt: serverTimestamp(),
+      });
+      console.log(`✅ Inquiry ${approval.inquiryId} updated to Approved Client`);
     }
   } catch (error) {
     console.error("Error updating project status:", error);
