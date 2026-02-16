@@ -570,14 +570,22 @@ export default function ClientPortalPage() {
         await deleteDoc(doc(db, "clients", member.cid));
       }
 
+      // If it's a draft member, also try to delete from clientRequests collection
+      if (member.isDraft && member.id && !member.id.startsWith("draft-") && !member.id.startsWith("request-")) {
+        await deleteDoc(doc(db, "clientRequests", member.id));
+        console.log("Deleted draft member from clientRequests:", member.id);
+      }
+
       const updatedMembers = members.filter((m) => m.id !== memberToDelete);
       setMembers(updatedMembers);
 
       // Update memberApprovals if draft member removed
-      if (member.isDraft && selectedProjectPid && inquiryIdParam) {
+      if (member.isDraft && selectedProjectPid && inquiryIdParam && selectedProjectPid !== "DRAFT") {
         const remainingDrafts = updatedMembers.filter(
           (m) => m.isDraft && !m.isPrimary
         );
+        
+        const approvalId = `${inquiryIdParam}_${selectedProjectPid}`;
         if (remainingDrafts.length > 0) {
           await saveMemberApproval({
             inquiryId: inquiryIdParam,
@@ -597,6 +605,9 @@ export default function ClientPortalPage() {
               formData: m.formData,
             })),
           });
+        } else {
+          // If no more drafts for this specific project's approval request, delete the approval record
+          await deleteDoc(doc(db, "memberApprovals", approvalId));
         }
       }
 
@@ -682,7 +693,7 @@ export default function ClientPortalPage() {
 
       if (isDraftProject && inquiryIdParam) {
         // For draft projects, save ALL members to clientRequests collection
-        await saveClientRequest({
+        const savedId = await saveClientRequest({
           inquiryId: inquiryIdParam,
           requestedBy: emailParam || "",
           requestedByName: members.find((m) => m.isPrimary)?.formData.name || result.data.name,
@@ -702,7 +713,7 @@ export default function ClientPortalPage() {
         setMembers((prev) =>
           prev.map((m) =>
             m.id === pendingMemberId
-              ? { ...m, isSubmitted: true, isDraft: true, cid: "draft" }
+              ? { ...m, id: savedId, isSubmitted: true, isDraft: true, cid: "draft" }
               : m
           )
         );
@@ -781,7 +792,7 @@ export default function ClientPortalPage() {
 
       if (isDraftProject && inquiryIdParam) {
         // For draft projects, save to clientRequests collection (without validation)
-        await saveClientRequest({
+        const savedId = await saveClientRequest({
           inquiryId: inquiryIdParam,
           requestedBy: emailParam || "",
           requestedByName: members.find((m) => m.isPrimary)?.formData.name || member.formData.name || "",
@@ -800,7 +811,7 @@ export default function ClientPortalPage() {
 
         setMembers((prev) =>
           prev.map((m) =>
-            m.id === memberId ? { ...m, isDraft: true, cid: "draft" } : m
+            m.id === memberId ? { ...m, id: savedId, isDraft: true, cid: "draft" } : m
           )
         );
         toast.success("Draft saved for member");
