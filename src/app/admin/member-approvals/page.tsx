@@ -294,7 +294,7 @@ export default function MemberApprovalsPage() {
     const { getNextCid } = await import("@/services/clientService");
     const { updateProjectRequestStatus } = await import("@/services/projectRequestService");
     const { approveClientRequest } = await import("@/services/clientRequestService");
-    const { doc, setDoc, serverTimestamp, Timestamp } = await import("firebase/firestore");
+    const { doc, setDoc, updateDoc, serverTimestamp, Timestamp } = await import("firebase/firestore");
     const { db } = await import("@/lib/firebase");
 
     const year = new Date().getFullYear();
@@ -374,6 +374,21 @@ export default function MemberApprovalsPage() {
       pid,
       primaryCid
     );
+
+    // Update inquiry status to "Approved Client"
+    try {
+      if (approval.inquiryId) {
+        await updateDoc(doc(db, "inquiries", approval.inquiryId), {
+          status: "Approved Client",
+          isApproved: true,
+          updatedAt: serverTimestamp(),
+        });
+        console.log(`✅ Inquiry ${approval.inquiryId} updated to Approved Client`);
+      }
+    } catch (inquiryError) {
+      console.error("Error updating inquiry status:", inquiryError);
+      // Non-critical error, don't throw
+    }
 
     // Success message
     const cidList = memberCids.map((m) => m.cid).join(", ");
