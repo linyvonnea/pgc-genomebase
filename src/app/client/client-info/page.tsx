@@ -390,7 +390,7 @@ export default function ClientPortalPage() {
                    (r.status === "draft" || r.status === "pending" || r.status === "rejected");
         })
         .map((r, index) => ({
-            id: `draft-member-${index + 1}`,
+            id: r.id || `draft-member-${index + 1}`,
             cid: "draft",
             formData: {
               name: r.name,
@@ -516,8 +516,8 @@ export default function ClientPortalPage() {
   //  Handlers
   // ────────────────────────────────────────────────────────────────
 
-  const handleAddMember = () => {
-    if (!selectedProjectPid) {
+  const handleAddMember = async () => {
+    if (!selectedProjectPid || !inquiryIdParam) {
       toast.error("Please select a project first");
       return;
     }
@@ -526,29 +526,55 @@ export default function ClientPortalPage() {
       return;
     }
 
-    const newMemberId = `draft-${Date.now()}`;
-    const newMember: ClientMember = {
-      id: newMemberId,
-      cid: "",
-      formData: {
-        name: "",
-        email: "",
-        affiliation: "",
-        designation: "",
-        sex: "M",
-        phoneNumber: "",
-        affiliationAddress: "",
-      },
-      errors: {},
-      isSubmitted: false,
+    const uniqueDraftId = `draft-${Date.now()}`;
+    const dummyEmail = `${uniqueDraftId}@temp.pgc`;
+
+    const newMemberData = {
+      inquiryId: inquiryIdParam,
+      requestedBy: emailParam || "",
+      requestedByName: members.find((m) => m.isPrimary)?.formData.name || "",
+      name: "",
+      email: dummyEmail,
+      affiliation: "",
+      designation: "",
+      sex: "M" as const,
+      phoneNumber: "",
+      affiliationAddress: "",
       isPrimary: false,
-      isDraft: true,
+      isValidated: false,
+      status: "draft" as const,
+      ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
     };
 
-    setMembers((prev) => [newMember, ...prev]);
-    setExpandedMembers((prev) => new Set([...prev, newMemberId]));
-    toast.success("New member added as draft");
-    console.log("✅ Member added at top:", newMemberId, "Total members:", members.length + 1);
+    try {
+      const savedDocId = await saveClientRequest(newMemberData);
+      
+      const newMember: ClientMember = {
+        id: savedDocId,
+        cid: "",
+        formData: {
+          name: "",
+          email: "", // Keep UI empty
+          affiliation: "",
+          designation: "",
+          sex: "M",
+          phoneNumber: "",
+          affiliationAddress: "",
+        },
+        errors: {},
+        isSubmitted: false,
+        isPrimary: false,
+        isDraft: true,
+      };
+
+      setMembers((prev) => [newMember, ...prev]);
+      setExpandedMembers((prev) => new Set([...prev, savedDocId]));
+      toast.success("New member added as draft in database");
+      console.log("✅ Member added and saved to clientRequests:", savedDocId);
+    } catch (error) {
+      console.error("Error adding draft member:", error);
+      toast.error("Failed to add new member draft");
+    }
   };
 
   const handleRemoveMember = (memberId: string) => {
@@ -710,6 +736,16 @@ export default function ClientPortalPage() {
           ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
         });
 
+        // Delete old draft if ID changed (e.g. from dummy email to real email)
+        if (pendingMemberId && pendingMemberId !== savedId && !pendingMemberId.startsWith("draft-") && !pendingMemberId.startsWith("request-")) {
+          try {
+            await deleteDoc(doc(db, "clientRequests", pendingMemberId));
+            console.log("Deleted old member draft record:", pendingMemberId);
+          } catch (delError) {
+            console.warn("Failed to delete old draft document (might not exist):", delError);
+          }
+        }
+
         setMembers((prev) =>
           prev.map((m) =>
             m.id === pendingMemberId
@@ -808,6 +844,16 @@ export default function ClientPortalPage() {
           status: "draft",
           ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
         });
+
+        // Delete old draft if ID changed (e.g. from dummy email to real email)
+        if (memberId && memberId !== savedId && !memberId.startsWith("draft-") && !memberId.startsWith("request-")) {
+          try {
+            await deleteDoc(doc(db, "clientRequests", memberId));
+            console.log("Deleted old member draft record:", memberId);
+          } catch (delError) {
+            console.warn("Failed to delete old draft (might not exist):", delError);
+          }
+        }
 
         setMembers((prev) =>
           prev.map((m) =>
@@ -1750,11 +1796,10 @@ export default function ClientPortalPage() {
         {/* Card Body – expanded form */}
         {isExpanded && (
           <CardContent className="px-3 pb-3 pt-0 border-t border-slate-100">
-            {/* Remove button for non-primary draft members before they are validated */}
+            {/* Remove button for non-primary draft members */}
             {!member.isPrimary &&
               projectDetails?.status !== "Completed" &&
-              member.isDraft &&
-              !member.isSubmitted && (
+              member.isDraft && (
                 <div className="flex justify-end mb-1.5">
                   <Button
                     onClick={() => handleRemoveMember(member.id)}
