@@ -21,6 +21,7 @@ import { revalidatePath } from "next/cache";
 import { InquiryFormData } from "@/schemas/inquirySchema";
 import { AdminInquiryData } from "@/schemas/adminInquirySchema";
 import { logActivity } from "@/services/activityLogService";
+import { initializeQuotationThread } from "@/services/quotationThreadService";
 
 /**
  * Test function to validate email system configuration
@@ -172,6 +173,17 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
 
     // Add the inquiry document to the Firestore 'inquiries' collection
     const docRef = await addDoc(collection(db, "inquiries"), transformedData);
+    
+    // Initialize quotation thread for this inquiry
+    // This creates the management thread for admin-client communication
+    try {
+      await initializeQuotationThread(docRef.id);
+      console.log(`✅ Quotation thread initialized for inquiry ${docRef.id}`);
+    } catch (threadError) {
+      console.error(`⚠️ Failed to initialize quotation thread for inquiry ${docRef.id}:`, threadError);
+      // Don't fail the inquiry creation if thread initialization fails
+      // Admin can manually create thread later if needed
+    }
     
     // Prepare email notification using Firebase Trigger Email extension
     // Template ID corresponds to service type for different email formats
