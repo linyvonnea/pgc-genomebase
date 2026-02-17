@@ -101,6 +101,7 @@ interface ClientMember {
   id: string;
   cid: string;
   formData: ClientFormData;
+  initialData?: ClientFormData;
   errors: Partial<Record<keyof ClientFormData, string>>;
   isSubmitted: boolean;
   isPrimary: boolean;
@@ -332,6 +333,15 @@ export default function ClientPortalPage() {
               phoneNumber: primaryClientDoc.phoneNumber || "",
               affiliationAddress: primaryClientDoc.affiliationAddress || "",
             },
+            initialData: {
+              name: primaryClientDoc.name || "",
+              email: primaryClientDoc.email || emailParam || "",
+              affiliation: primaryClientDoc.affiliation || "",
+              designation: primaryClientDoc.designation || "",
+              sex: (primaryClientDoc.sex || "") as any,
+              phoneNumber: primaryClientDoc.phoneNumber || "",
+              affiliationAddress: primaryClientDoc.affiliationAddress || "",
+            },
             errors: {},
             isSubmitted: !!primaryClientDoc.haveSubmitted,
             isPrimary: true,
@@ -353,6 +363,15 @@ export default function ClientPortalPage() {
                   phoneNumber: primaryDraftRequest.phoneNumber || "",
                   affiliationAddress: primaryDraftRequest.affiliationAddress || "",
                 },
+                initialData: {
+                  name: primaryDraftRequest.name || "",
+                  email: primaryDraftRequest.email || emailParam || "",
+                  affiliation: primaryDraftRequest.affiliation || "",
+                  designation: primaryDraftRequest.designation || "",
+                  sex: (primaryDraftRequest.sex || "") as any,
+                  phoneNumber: primaryDraftRequest.phoneNumber || "",
+                  affiliationAddress: primaryDraftRequest.affiliationAddress || "",
+                },
                 errors: {},
                 isSubmitted: !!primaryDraftRequest.isValidated,
                 isPrimary: true,
@@ -366,6 +385,15 @@ export default function ClientPortalPage() {
             id: "primary",
             cid: "pending",
             formData: {
+              name: "",
+              email: emailParam,
+              affiliation: "",
+              designation: "",
+              sex: "" as any,
+              phoneNumber: "",
+              affiliationAddress: "",
+            },
+            initialData: {
               name: "",
               email: emailParam,
               affiliation: "",
@@ -401,6 +429,15 @@ export default function ClientPortalPage() {
               phoneNumber: r.phoneNumber || "",
               affiliationAddress: r.affiliationAddress || "",
             },
+            initialData: {
+              name: r.name || "",
+              email: r.email?.includes("@temp.pgc") ? "" : r.email || "",
+              affiliation: r.affiliation || "",
+              designation: r.designation || "",
+              sex: (r.sex || "") as any,
+              phoneNumber: r.phoneNumber || "",
+              affiliationAddress: r.affiliationAddress || "",
+            },
             errors: {},
             isSubmitted: !!r.isValidated,
             isPrimary: false,
@@ -417,7 +454,16 @@ export default function ClientPortalPage() {
                   email: data.email || "",
                   affiliation: data.affiliation || "",
                   designation: data.designation || "",
-                  sex: data.sex || "M",
+                  sex: data.sex || "" as any,
+                  phoneNumber: data.phoneNumber || "",
+                  affiliationAddress: data.affiliationAddress || "",
+             },
+             initialData: {
+                  name: data.name || "",
+                  email: data.email || "",
+                  affiliation: data.affiliation || "",
+                  designation: data.designation || "",
+                  sex: data.sex || "" as any,
                   phoneNumber: data.phoneNumber || "",
                   affiliationAddress: data.affiliationAddress || "",
              },
@@ -482,7 +528,16 @@ export default function ClientPortalPage() {
                     email: data.email || "",
                     affiliation: data.affiliation || "",
                     designation: data.designation || "",
-                    sex: data.sex || "M",
+                    sex: (data.sex || "") as any,
+                    phoneNumber: data.phoneNumber || "",
+                    affiliationAddress: data.affiliationAddress || "",
+                  },
+                  initialData: {
+                    name: data.name || "",
+                    email: data.email || "",
+                    affiliation: data.affiliation || "",
+                    designation: data.designation || "",
+                    sex: (data.sex || "") as any,
                     phoneNumber: data.phoneNumber || "",
                     affiliationAddress: data.affiliationAddress || "",
                   },
@@ -572,6 +627,15 @@ export default function ClientPortalPage() {
         formData: {
           name: "",
           email: "", // UI is empty
+          affiliation: "",
+          designation: "",
+          sex: "" as any,
+          phoneNumber: "",
+          affiliationAddress: "",
+        },
+        initialData: {
+          name: "",
+          email: "",
           affiliation: "",
           designation: "",
           sex: "" as any,
@@ -682,7 +746,12 @@ export default function ClientPortalPage() {
     setMembers((prev) =>
       prev.map((member) =>
         member.id === memberId
-          ? { ...member, formData: { ...member.formData, [field]: value } }
+          ? {
+              ...member,
+              formData: { ...member.formData, [field]: value },
+              isSubmitted: false,
+              errors: { ...member.errors, [field]: undefined },
+            }
           : member
       )
     );
@@ -765,7 +834,14 @@ export default function ClientPortalPage() {
         setMembers((prev) =>
           prev.map((m) =>
             m.id === pendingMemberId
-              ? { ...m, id: savedId, isSubmitted: true, isDraft: true, cid: "draft" }
+              ? {
+                  ...m,
+                  id: savedId,
+                  isSubmitted: true,
+                  isDraft: true,
+                  cid: "draft",
+                  initialData: { ...m.formData },
+                }
               : m
           )
         );
@@ -817,7 +893,12 @@ export default function ClientPortalPage() {
         setMembers((prev) =>
           prev.map((m) =>
             m.id === pendingMemberId
-              ? { ...m, cid: cidToUse, isSubmitted: true }
+              ? {
+                  ...m,
+                  cid: cidToUse,
+                  isSubmitted: true,
+                  initialData: { ...m.formData },
+                }
               : m
           )
         );
@@ -839,6 +920,13 @@ export default function ClientPortalPage() {
 
     if (!member.formData.name || !member.formData.email) {
       toast.error("Please provide at least Name and Email to save a draft.");
+      return;
+    }
+
+    // Check if any changes were made
+    const isChanged = JSON.stringify(member.formData) !== JSON.stringify(member.initialData);
+    if (!isChanged) {
+      toast.info("No changes have been made");
       return;
     }
 
@@ -878,7 +966,15 @@ export default function ClientPortalPage() {
 
         setMembers((prev) =>
           prev.map((m) =>
-            m.id === memberId ? { ...m, id: savedId, isDraft: true, cid: "draft" } : m
+            m.id === memberId
+              ? {
+                  ...m,
+                  id: savedId,
+                  isDraft: true,
+                  cid: "draft",
+                  initialData: { ...m.formData },
+                }
+              : m
           )
         );
         toast.success("Draft saved for member");
@@ -1641,6 +1737,9 @@ export default function ClientPortalPage() {
               <SelectItem value="Other">Other</SelectItem>
             </SelectContent>
           </Select>
+          {member.errors.sex && (
+            <p className="text-xs text-red-500 mt-1">{member.errors.sex}</p>
+          )}
         </div>
 
         {/* Phone Number */}
