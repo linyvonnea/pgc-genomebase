@@ -1965,7 +1965,7 @@ export default function ClientPortalPage() {
                     <div className="relative">
                       <div
                         className={cn(
-                          "w-full text-left p-3 pr-10 rounded-lg transition-all duration-150 cursor-pointer hover:bg-slate-50",
+                          "w-full text-left p-3 pr-12 rounded-lg transition-all duration-150 cursor-pointer hover:bg-slate-50",
                           isSelected
                             ? "bg-[#166FB5]/8 border-l-[3px] border-l-[#166FB5] shadow-sm"
                             : "border-l-[3px] border-l-transparent opacity-80"
@@ -2006,12 +2006,17 @@ export default function ClientPortalPage() {
                             e.stopPropagation();
                             toggleProjectDocs(project);
                           }}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded hover:bg-slate-200/50 transition-colors"
+                          className={cn(
+                            "absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-lg transition-all duration-200 shadow-sm border",
+                            isDocsExpanded 
+                              ? "bg-[#166FB5] border-[#166FB5] text-white" 
+                              : "bg-white border-slate-200 text-slate-400 hover:border-[#166FB5] hover:text-[#166FB5] hover:bg-slate-50"
+                          )}
                           title="View quotations and charge slips"
                         >
                           <ChevronRight
                             className={cn(
-                              "h-4 w-4 text-slate-400 transition-transform duration-200",
+                              "h-5 w-5 transition-transform duration-300",
                               isDocsExpanded && "rotate-90"
                             )}
                           />
@@ -2118,16 +2123,18 @@ export default function ClientPortalPage() {
         </div>
       )}
 
-      {/* Footer actions */}
-      <div className="p-3 border-t border-slate-100">
+      {/* Footer actions - Fixed at bottom */}
+      <div className="p-4 border-t border-slate-100 bg-slate-50/50 mt-auto">
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={() => router.push("/portal")}
-          className="w-full justify-start text-slate-500 hover:text-slate-700 h-9 text-sm"
+          className="w-full justify-start text-[#B9273A] hover:bg-[#B9273A]/10 hover:text-[#B9273A] h-12 transition-all rounded-xl shadow-sm border border-transparent hover:border-[#B9273A]/20"
         >
-          <LogOut className="h-4 w-4 mr-2" />
-          Exit Portal
+          <div className="p-2 bg-[#B9273A]/10 rounded-lg mr-3">
+            <LogOut className="h-4 w-4" />
+          </div>
+          <span className="font-semibold text-sm">Exit Portal</span>
         </Button>
       </div>
     </div>
