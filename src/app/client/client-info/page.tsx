@@ -447,7 +447,7 @@ export default function ClientPortalPage() {
     const approvedMembers: ClientMember[] = fetchedClients
         .filter((c: any) => c.email && c.email.toLowerCase() !== emailParam?.toLowerCase())
         .map((data: any, index) => ({
-             id: `member-${index + 1}`,
+             id: data.id || `member-${index + 1}`,
              cid: data.id,
              formData: {
                   name: data.name || "",
@@ -648,7 +648,17 @@ export default function ClientPortalPage() {
         isDraft: true,
       };
 
-      setMembers((prev) => [newMember, ...prev]);
+      // Add new member after primary, or at the start if no primary found
+      setMembers((prev) => {
+        const primaryIdx = prev.findIndex(m => m.isPrimary);
+        if (primaryIdx !== -1) {
+          const newMembers = [...prev];
+          newMembers.splice(primaryIdx + 1, 0, newMember);
+          return newMembers;
+        }
+        return [newMember, ...prev];
+      });
+
       setExpandedMembers((prev) => new Set([...prev, savedDocId]));
       toast.success("New member slot added. Please fill in their details.");
     } catch (error) {
@@ -1293,7 +1303,7 @@ export default function ClientPortalPage() {
         
         if (belongsToProject) {
           const member: ClientMember = {
-            id: isPrimary ? "primary" : `member-${index}`,
+            id: isPrimary ? "primary" : d.id || `member-${index}`,
             cid: d.id,
             formData: {
               name: data.name || "",
@@ -1381,7 +1391,7 @@ export default function ClientPortalPage() {
               draftM = (approval.members || [])
                 .filter((m) => !m.isPrimary)
                 .map((m, index) => ({
-                  id: m.tempId || `draft-${index + 1}`,
+                  id: m.tempId || `draft-${m.formData?.email || index + 1}`,
                   cid: "",
                   formData: m.formData || {
                     name: "",
@@ -1901,15 +1911,16 @@ export default function ClientPortalPage() {
 
           <div className="flex items-center gap-2 flex-shrink-0 ml-3">
             <Badge className={cn(status.color, "text-white border-0 text-[10px] h-5 px-2")}>
-              <StatusIcon className="h-3 w-3 mr-1" />
               {status.label}
             </Badge>
-            <ChevronRight
-              className={cn(
-                "h-4 w-4 text-slate-400 transition-transform duration-200",
-                isExpanded && "rotate-90"
-              )}
-            />
+            <div className="p-1 hover:bg-slate-100 rounded-full transition-colors">
+              <ChevronRight
+                className={cn(
+                  "h-6 w-6 text-[#166FB5] transition-transform duration-200",
+                  isExpanded && "rotate-90"
+                )}
+              />
+            </div>
           </div>
         </button>
 
