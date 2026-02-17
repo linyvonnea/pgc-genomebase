@@ -29,6 +29,7 @@ import {
   getPaginationRowModel,
 } from "@tanstack/react-table"
 import { useState, useMemo } from "react"
+import { useRouter } from "next/navigation"
 import { Inquiry } from "@/types/Inquiry"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -60,6 +61,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
+  const router = useRouter()
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
@@ -73,6 +75,20 @@ export function DataTable<TData, TValue>({
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December"
   ];
+
+  // Handle row click to navigate to detail page
+  const handleRowClick = (inquiry: Inquiry, event: React.MouseEvent) => {
+    // Don't navigate if clicking on a button or interactive element
+    const target = event.target as HTMLElement
+    if (
+      target.closest('button') || 
+      target.closest('[role="button"]') ||
+      target.closest('a')
+    ) {
+      return
+    }
+    router.push(`/admin/inquiry/${inquiry.id}`)
+  }
 
   // Calculate status counts
   const statusCounts = useMemo(() => {
@@ -484,8 +500,9 @@ export function DataTable<TData, TValue>({
                   .map((row) => (
                     <TableRow
                       key={row.id}
-                      className="hover:bg-muted/50 transition-colors"
+                      className="hover:bg-muted/50 transition-colors cursor-pointer"
                       data-state={row.getIsSelected() && "selected"}
+                      onClick={(e) => handleRowClick(row.original as Inquiry, e)}
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id} className="py-2">
