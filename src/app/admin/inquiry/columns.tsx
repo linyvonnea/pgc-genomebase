@@ -151,29 +151,15 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     id: "actions", // Custom column ID since it doesn't map to data
     header: "Actions",
-    size: 250,
+    size: 180,
     cell: ({ row }) => {
       const inquiry = row.original;
       const router = useRouter();
       const { adminInfo } = useAuth();
-      const { canEdit, canCreate, canView } = usePermissions(adminInfo?.role);
+      const { canEdit, canCreate } = usePermissions(adminInfo?.role);
 
       return (
         <div className="flex items-center gap-2">
-          {/* View quotation thread - only show if user can view quotations */}
-          {canView("quotations") && (
-            <Button
-              onClick={() =>
-                router.push(`/admin/quotation-threads/${inquiry.id}`)
-              }
-              variant="default"
-              size="sm"
-              className="whitespace-nowrap"
-            >
-              View Thread
-            </Button>
-          )}
-          
           {/* Edit inquiry modal trigger - only show if user has edit permission */}
           {canEdit("inquiries") && (
             <EditInquiryModal
@@ -183,7 +169,7 @@ export const columns: ColumnDef<Inquiry>[] = [
             />
           )}
           
-          {/* Legacy quotation button - kept for backward compatibility */}
+          {/* Generate quotation button - only show if user can create quotations */}
           {canCreate("quotations") && (
             <Button
               onClick={() =>
