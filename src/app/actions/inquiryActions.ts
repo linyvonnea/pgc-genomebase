@@ -141,7 +141,16 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       designation: inquiryData.designation,
       email: inquiryData.email,
       
-      // Service-specific fields (will be null for non-applicable services)
+      // New Service Selection Fields
+      species: inquiryData.species || null,
+      otherSpecies: inquiryData.otherSpecies || null,
+      researchOverview: inquiryData.researchOverview || null,
+      methodologyFileUrl: inquiryData.methodologyFileUrl || null,
+      sampleCount: inquiryData.sampleCount || null,
+      workflowType: inquiryData.workflowType || null,
+      individualAssayDetails: inquiryData.individualAssayDetails || null,
+      
+      // Service-specific fields (legacy - will be null for non-applicable services)
       // Laboratory Service fields
       workflows: inquiryData.workflows || [],
       additionalInfo: inquiryData.additionalInfo || null, 
@@ -180,8 +189,16 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     };
 
     // Add service-specific data to email template based on inquiry type
-    if (inquiryData.service === 'laboratory') {
-      // Laboratory service: include workflows and additional info
+    if (['laboratory', 'bioinformatics', 'equipment', 'retail'].includes(inquiryData.service)) {
+      // Laboratory services: include new comprehensive fields
+      templateData.species = inquiryData.species || '';
+      templateData.otherSpecies = inquiryData.otherSpecies || '';
+      templateData.researchOverview = inquiryData.researchOverview || '';
+      templateData.methodologyFileUrl = inquiryData.methodologyFileUrl || '';
+      templateData.sampleCount = inquiryData.sampleCount?.toString() || '';
+      templateData.workflowType = inquiryData.workflowType || '';
+      templateData.individualAssayDetails = inquiryData.individualAssayDetails || '';
+      // Legacy fields for backward compatibility
       templateData.workflows = Array.isArray(inquiryData.workflows) 
         ? inquiryData.workflows.join(', ') 
         : inquiryData.workflows || '';
@@ -231,7 +248,13 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
         
         <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="margin-top: 0;">Service Details</h3>
-          <p><strong>Serviace Type:</strong> ${inquiryData.service}</p>
+          <p><strong>Service Type:</strong> ${inquiryData.service}</p>
+          ${inquiryData.species ? `<p><strong>Species:</strong> ${inquiryData.species}${inquiryData.species === 'other' && inquiryData.otherSpecies ? ` (${inquiryData.otherSpecies})` : ''}</p>` : ''}
+          ${inquiryData.researchOverview ? `<p><strong>Research Overview:</strong> ${inquiryData.researchOverview}</p>` : ''}
+          ${inquiryData.methodologyFileUrl ? `<p><strong>Methodology File:</strong> ${inquiryData.methodologyFileUrl}</p>` : ''}
+          ${inquiryData.sampleCount ? `<p><strong>Sample Count:</strong> ${inquiryData.sampleCount}</p>` : ''}
+          ${inquiryData.workflowType ? `<p><strong>Workflow Type:</strong> ${inquiryData.workflowType === 'complete' ? 'Complete Workflow' : 'Individual Assay'}</p>` : ''}
+          ${inquiryData.individualAssayDetails ? `<p><strong>Individual Assay Details:</strong> ${inquiryData.individualAssayDetails}</p>` : ''}
           ${inquiryData.workflows && inquiryData.workflows.length > 0 ? `<p><strong>Workflows:</strong> ${Array.isArray(inquiryData.workflows) ? inquiryData.workflows.join(', ') : inquiryData.workflows}</p>` : ''}
           ${inquiryData.additionalInfo ? `<p><strong>Additional Info:</strong> ${inquiryData.additionalInfo}</p>` : ''}
           ${inquiryData.projectBackground ? `<p><strong>Project Background:</strong> ${inquiryData.projectBackground}</p>` : ''}
