@@ -10,26 +10,10 @@
 import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { Inquiry } from "@/types/Inquiry";
-import { inquirySchema } from "@/schemas/inquirySchema";
 import { Button } from "@/components/ui/button";
 import { EditInquiryModal } from "@/components/forms/EditInquiryModal";
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
-
-/**
- * Utility function to validate inquiry data using Zod schema
- * 
- * This function ensures that the inquiry data conforms to the expected structure
- * before rendering. 
- */
-const validateInquiry = (data: any) => {
-  const result = inquirySchema.safeParse(data);
-  return {
-    isValid: result.success,
-    data: result.success ? result.data : null,
-    error: result.success ? null : result.error,
-  };
-};
 
 /**
  * Utility function to get appropriate CSS classes for status badges
@@ -70,14 +54,21 @@ export const columns: ColumnDef<Inquiry>[] = [
     header: "Date",
     size: 100,
     cell: ({ row }) => {
-      // Custom date formatting with validation
-      const { isValid, data } = validateInquiry(row.original);
+      const createdAt = row.original.createdAt;
       
-      if (!isValid || !data) {
+      if (!createdAt) {
+        return <span className="text-muted-foreground italic">—</span>;
+      }
+      
+      // Ensure we have a Date object
+      const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
+      
+      if (isNaN(date.getTime())) {
         return <span className="text-red-500">Invalid date</span>;
       }
+      
       // Format date for display (YYYY-MM-DD format for consistency)
-      return new Date(data.createdAt).toLocaleDateString("en-CA");
+      return date.toLocaleDateString("en-CA");
     },
   },
   {
@@ -129,21 +120,16 @@ export const columns: ColumnDef<Inquiry>[] = [
     header: "Status",
     size: 120, 
     cell: ({ row }) => {
-      // Custom cell renderer with data validation
-      const { isValid, data } = validateInquiry(row.original);
-
-      if (!isValid || !data) {
-        return <span className="text-red-500">Invalid data</span>;
-      }
+      const status = row.original.status || "Pending";
 
       // Render status as a colored badge
       return (
         <span
           className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
-            data.status
+            status
           )}`}
         >
-          {data.status}
+          {status}
         </span>
       );
     },
