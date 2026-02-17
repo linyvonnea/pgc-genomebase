@@ -329,7 +329,16 @@ export default function ClientPortalPage() {
               email: primaryClientDoc.email || emailParam || "",
               affiliation: primaryClientDoc.affiliation || "",
               designation: primaryClientDoc.designation || "",
-              sex: (primaryClientDoc.sex || "") as any,
+              sex: (primaryClientDoc.sex || "M") as any,
+              phoneNumber: primaryClientDoc.phoneNumber || "",
+              affiliationAddress: primaryClientDoc.affiliationAddress || "",
+            },
+            initialData: {
+              name: primaryClientDoc.name || "",
+              email: primaryClientDoc.email || emailParam || "",
+              affiliation: primaryClientDoc.affiliation || "",
+              designation: primaryClientDoc.designation || "",
+              sex: (primaryClientDoc.sex || "M") as any,
               phoneNumber: primaryClientDoc.phoneNumber || "",
               affiliationAddress: primaryClientDoc.affiliationAddress || "",
             },
@@ -359,7 +368,16 @@ export default function ClientPortalPage() {
                   email: primaryDraftRequest.email || emailParam || "",
                   affiliation: primaryDraftRequest.affiliation || "",
                   designation: primaryDraftRequest.designation || "",
-                  sex: (primaryDraftRequest.sex || "") as any,
+                  sex: (primaryDraftRequest.sex || "M") as any,
+                  phoneNumber: primaryDraftRequest.phoneNumber || "",
+                  affiliationAddress: primaryDraftRequest.affiliationAddress || "",
+                },
+                initialData: {
+                  name: primaryDraftRequest.name || "",
+                  email: primaryDraftRequest.email || emailParam || "",
+                  affiliation: primaryDraftRequest.affiliation || "",
+                  designation: primaryDraftRequest.designation || "",
+                  sex: (primaryDraftRequest.sex || "M") as any,
                   phoneNumber: primaryDraftRequest.phoneNumber || "",
                   affiliationAddress: primaryDraftRequest.affiliationAddress || "",
                 },
@@ -389,7 +407,16 @@ export default function ClientPortalPage() {
               email: emailParam,
               affiliation: "",
               designation: "",
-              sex: "" as any,
+              sex: "M", // Default to M for primary member instead of empty to satisfy validation initially
+              phoneNumber: "",
+              affiliationAddress: "",
+            },
+            initialData: {
+              name: "",
+              email: emailParam,
+              affiliation: "",
+              designation: "",
+              sex: "M",
               phoneNumber: "",
               affiliationAddress: "",
             },
@@ -1342,10 +1369,15 @@ export default function ClientPortalPage() {
             // If primary member wasn't found in 'clients' yet, use data from ProjectRequest
             if (!primaryM && pr.primaryMember) {
               console.log("Using primary member from project request:", pr.primaryMember);
+              const formData = {
+                ...(pr.primaryMember as any),
+                sex: (pr.primaryMember.sex || "M") as any,
+              };
               primaryM = {
                 id: "primary",
                 cid: "draft",
-                formData: pr.primaryMember as any,
+                formData: formData,
+                initialData: { ...formData },
                 errors: {},
                 isSubmitted: true,
                 isPrimary: true,
@@ -1362,23 +1394,51 @@ export default function ClientPortalPage() {
 
       // Ensure we ALWAYS have at least a primary member
       if (!primaryM && emailParam) {
-        primaryM = {
-          id: "primary",
-          cid: project.isDraft ? "draft" : "pending",
-          formData: {
+        // Try to check clientRequests as well (final fallback before empty)
+        const clientRequests = await getClientRequestsByInquiry(inquiryIdParam);
+        const primaryDraft = clientRequests.find(r => r.email.toLowerCase() === emailParam.toLowerCase());
+
+        if (primaryDraft) {
+          const draftData = {
+            name: primaryDraft.name,
+            email: primaryDraft.email,
+            affiliation: primaryDraft.affiliation,
+            designation: primaryDraft.designation,
+            sex: (primaryDraft.sex || "M") as any,
+            phoneNumber: primaryDraft.phoneNumber,
+            affiliationAddress: primaryDraft.affiliationAddress,
+          };
+          primaryM = {
+            id: "primary",
+            cid: "draft",
+            formData: draftData,
+            initialData: { ...draftData },
+            errors: {},
+            isSubmitted: !!primaryDraft.isValidated,
+            isPrimary: true,
+            isDraft: true,
+          };
+        } else {
+          const defaultData = {
             name: "",
             email: emailParam,
             affiliation: "",
             designation: "",
-            sex: "" as any,
+            sex: "M" as any,
             phoneNumber: "",
             affiliationAddress: "",
-          },
-          errors: {},
-          isSubmitted: false,
-          isPrimary: true,
-          isDraft: project.isDraft,
-        };
+          };
+          primaryM = {
+            id: "primary",
+            cid: project.isDraft ? "draft" : "pending",
+            formData: defaultData,
+            initialData: { ...defaultData },
+            errors: {},
+            isSubmitted: false,
+            isPrimary: true,
+            isDraft: project.isDraft,
+          };
+        }
       }
 
       // 3. Load pending team members from 'memberApprovals' (for existing projects)
@@ -1435,7 +1495,16 @@ export default function ClientPortalPage() {
             email: emailParam,
             affiliation: "",
             designation: "",
-            sex: "" as any,
+            sex: "M" as any,
+            phoneNumber: "",
+            affiliationAddress: "",
+          },
+          initialData: {
+            name: "",
+            email: emailParam,
+            affiliation: "",
+            designation: "",
+            sex: "M" as any,
             phoneNumber: "",
             affiliationAddress: "",
           },
