@@ -71,6 +71,13 @@ export default function QuotationRequestForm() {
       affiliation: "",
       designation: "",
       service: "laboratory", 
+      species: undefined,
+      otherSpecies: "",
+      researchOverview: "",
+      methodologyFileUrl: "",
+      sampleCount: undefined,
+      workflowType: undefined,
+      individualAssayDetails: "",
       workflows: [],
       additionalInfo: "",
       projectBackground: "",
@@ -92,9 +99,16 @@ export default function QuotationRequestForm() {
    */
   const handleServiceChange = (value: string) => {
     setSelectedService(value)
-    setValue("service", value as "laboratory" | "research" | "training")
+    setValue("service", value as "laboratory" | "bioinformatics" | "equipment" | "retail" | "research" | "training")
     
     // Reset service-specific fields when switching to prevent cross-contamination
+    setValue("species", undefined)
+    setValue("otherSpecies", "")
+    setValue("researchOverview", "")
+    setValue("methodologyFileUrl", "")
+    setValue("sampleCount", undefined)
+    setValue("workflowType", undefined)
+    setValue("individualAssayDetails", "")
     setValue("workflows", [])
     setValue("additionalInfo", "")
     setValue("projectBackground", "")
@@ -323,26 +337,133 @@ export default function QuotationRequestForm() {
                 Service Selection
               </h2>
               
-              <div>
-                <Label htmlFor="service" className="text-sm font-semibold text-slate-700 mb-2 block">
-                  Select Service Type:
-                </Label>
-                {/* Service type dropdown that triggers form field changes */}
-                <Select onValueChange={handleServiceChange} defaultValue="laboratory">
-                  <SelectTrigger className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12">
-                    <SelectValue placeholder="Select a service" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="laboratory">Laboratory Service</SelectItem>
-                    <SelectItem value="research">Research and Collaboration</SelectItem>
-                    <SelectItem value="training">Training Service</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.service && (
-                  <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
-                    <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                    {errors.service.message}
-                  </p>
+              <div className="space-y-6">
+                {/* Service Type Dropdown */}
+                <div>
+                  <Label htmlFor="service" className="text-sm font-semibold text-slate-700 mb-2 block">
+                    Select Service Type <span className="text-[#B9273A]">*</span>
+                  </Label>
+                  <Select onValueChange={handleServiceChange} defaultValue="laboratory">
+                    <SelectTrigger className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12">
+                      <SelectValue placeholder="Select a service" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="laboratory">Laboratory Services</SelectItem>
+                      <SelectItem value="bioinformatics">Bioinformatics Analysis</SelectItem>
+                      <SelectItem value="equipment">Equipment Use</SelectItem>
+                      <SelectItem value="retail">Retail Sales</SelectItem>
+                      <SelectItem value="research">Research and Collaboration</SelectItem>
+                      <SelectItem value="training">Training</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.service && (
+                    <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                      <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                      {errors.service.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Species Selection - Show for laboratory-type services */}
+                {["laboratory", "bioinformatics", "equipment", "retail"].includes(selectedService) && (
+                  <div>
+                    <Label className="text-sm font-semibold text-slate-700 mb-3 block">
+                      Species <span className="text-[#B9273A]">*</span>
+                      <span className="text-xs font-normal text-slate-500 ml-2">(Choose 1 only)</span>
+                    </Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {[
+                        { id: "human", label: "Human" },
+                        { id: "plant", label: "Plant" },
+                        { id: "animal", label: "Animal" },
+                        { id: "microbe-prokaryote", label: "Microbe (Prokaryote)" },
+                        { id: "microbe-eukaryote", label: "Microbe (Eukaryote)" },
+                        { id: "other", label: "Other" }
+                      ].map((species) => (
+                        <div key={species.id} className="flex items-center space-x-3 p-3 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
+                          <input
+                            type="radio"
+                            id={`species-${species.id}`}
+                            {...register("species")}
+                            value={species.id}
+                            className="rounded-full border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                          />
+                          <Label htmlFor={`species-${species.id}`} className="text-sm text-slate-700 font-medium cursor-pointer flex-1">
+                            {species.label}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                    {errors.species && (
+                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                        {errors.species.message}
+                      </p>
+                    )}
+                    
+                    {/* Other Species Specification */}
+                    {formData.species === "other" && (
+                      <div className="mt-3">
+                        <Input
+                          placeholder="Please specify the species"
+                          {...register("otherSpecies")}
+                          className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
+                        />
+                        {errors.otherSpecies && (
+                          <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                            <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                            {errors.otherSpecies.message}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Research Overview - Show for laboratory-type services */}
+                {["laboratory", "bioinformatics", "equipment", "retail"].includes(selectedService) && (
+                  <div>
+                    <Label htmlFor="researchOverview" className="text-sm font-semibold text-slate-700 mb-2 block">
+                      Brief overview of research, methods, and required services <span className="text-[#B9273A]">*</span>
+                    </Label>
+                    <Textarea
+                      id="researchOverview"
+                      placeholder="Provide a comprehensive description of your research project, methodology, and the specific services you require..."
+                      {...register("researchOverview")}
+                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[120px] resize-none"
+                      rows={5}
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Include details about your research objectives, methods, and expected outcomes</p>
+                    {errors.researchOverview && (
+                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                        {errors.researchOverview.message}
+                      </p>
+                    )}
+                    
+                    {/* File Upload for Methodology */}
+                    <div className="mt-4">
+                      <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                        Upload Methodology/Concept Note (Optional)
+                      </Label>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="file"
+                          accept=".pdf,.doc,.docx"
+                          className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
+                          onChange={(e) => {
+                            // Handle file upload - to be implemented
+                            const file = e.target.files?.[0]
+                            if (file) {
+                              // For now, just store the filename
+                              setValue("methodologyFileUrl", file.name)
+                            }
+                          }}
+                        />
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">Accepted formats: PDF, DOC, DOCX (Max 10MB)</p>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -355,61 +476,100 @@ export default function QuotationRequestForm() {
               </h2>
               
               {/* Laboratory Service Fields */}
-              {selectedService === "laboratory" && (
+              {["laboratory", "bioinformatics", "equipment", "retail"].includes(selectedService) && (
                 <div className="space-y-6">
-                  {/* Workflow Selection - Multiple checkboxes */}
+                  {/* Sample Count */}
                   <div>
-                    <Label className="text-sm font-semibold text-slate-700 mb-3 block">
-                      Kindly choose which workflow you will be availing <span className="text-[#B9273A]">*</span>
+                    <Label htmlFor="sampleCount" className="text-sm font-semibold text-slate-700 mb-2 block">
+                      How many samples are you planning to send? <span className="text-[#B9273A]">*</span>
                     </Label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {([
-                        { id: "dna-extraction", label: "DNA extraction" },
-                        { id: "sequencing", label: "Sequencing" },
-                        { id: "pcr-amplification", label: "PCR amplification" },
-                        { id: "bioinformatics", label: "Bioinformatics" },
-                        { id: "quantification", label: "Quantification" },
-                        { id: "complete-workflow", label: "Complete Workflow" }
-                      ] as Array<{ id: WorkflowOption; label: string }>).map((workflow) => (
-                        <div key={workflow.id} className="flex items-center space-x-3 p-3 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
-                          <input
-                            type="checkbox"
-                            id={workflow.id}
-                            checked={formData.workflows?.includes(workflow.id) || false}
-                            onChange={(e) => handleWorkflowChange(workflow.id, e.target.checked)}
-                            className="rounded border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
-                          />
-                          <Label htmlFor={workflow.id} className="text-sm text-slate-700 font-medium cursor-pointer">
-                            {workflow.label}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
-                    {errors.workflows && (
+                    <Input
+                      id="sampleCount"
+                      type="number"
+                      min="1"
+                      placeholder="Enter number of samples"
+                      {...register("sampleCount", { valueAsNumber: true })}
+                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
+                    />
+                    {errors.sampleCount && (
                       <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
                         <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                        {errors.workflows.message}
+                        {errors.sampleCount.message}
                       </p>
                     )}
                   </div>
 
-                  {/* Additional Information - Optional text area */}
+                  {/* Workflow Selection */}
                   <div>
-                    <Label htmlFor="additionalInfo" className="text-sm font-semibold text-slate-700 mb-2 block">
-                      Do you have questions or any other additional information?
+                    <Label className="text-sm font-semibold text-slate-700 mb-3 block">
+                      Kindly choose which workflow you will be availing <span className="text-[#B9273A]">*</span>
                     </Label>
-                    <Textarea
-                      id="additionalInfo"
-                      placeholder="Enter a description..."
-                      {...register("additionalInfo")}
-                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[100px] resize-none"
-                      rows={4}
-                    />
-                    {errors.additionalInfo && (
+                    <div className="space-y-3">
+                      {/* Complete Workflow Option */}
+                      <div className="flex items-start space-x-3 p-4 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
+                        <input
+                          type="radio"
+                          id="workflow-complete"
+                          {...register("workflowType")}
+                          value="complete"
+                          className="mt-1 rounded-full border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                        />
+                        <div className="flex-1">
+                          <Label htmlFor="workflow-complete" className="text-sm text-slate-700 font-semibold cursor-pointer block">
+                            Complete workflow
+                          </Label>
+                          <p className="text-xs text-slate-600 mt-1">
+                            DNA Extraction, Quantification, Library Preparation, Sequencing, and Bioinformatics Analysis
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Individual Assay Option */}
+                      <div className="flex items-start space-x-3 p-4 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
+                        <input
+                          type="radio"
+                          id="workflow-individual"
+                          {...register("workflowType")}
+                          value="individual"
+                          className="mt-1 rounded-full border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                        />
+                        <div className="flex-1">
+                          <Label htmlFor="workflow-individual" className="text-sm text-slate-700 font-semibold cursor-pointer block">
+                            Individual Assay
+                          </Label>
+                          <p className="text-xs text-slate-600 mt-1">
+                            Select specific services (e.g., DNA Extraction, PCR, etc.)
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    {errors.workflowType && (
                       <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
                         <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                        {errors.additionalInfo.message}
+                        {errors.workflowType.message}
                       </p>
+                    )}
+
+                    {/* Individual Assay Details - Conditional */}
+                    {formData.workflowType === "individual" && (
+                      <div className="mt-4">
+                        <Label htmlFor="individualAssayDetails" className="text-sm font-semibold text-slate-700 mb-2 block">
+                          Please specify the individual assay(s) <span className="text-[#B9273A]">*</span>
+                        </Label>
+                        <Textarea
+                          id="individualAssayDetails"
+                          placeholder="e.g., DNA Extraction, PCR, Quantification, etc."
+                          {...register("individualAssayDetails")}
+                          className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[80px] resize-none"
+                          rows={3}
+                        />
+                        {errors.individualAssayDetails && (
+                          <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                            <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                            {errors.individualAssayDetails.message}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -612,15 +772,40 @@ export default function QuotationRequestForm() {
             <div><span className="font-semibold">Service Type:</span> {pendingData.service}</div>
             
             {/* Show service-specific fields based on service type */}
-            {pendingData.service === "laboratory" && (
-              <div>
-                <span className="font-semibold">Workflows:</span> {pendingData.workflows?.join(", ") || "-"}
-              </div>
-            )}
-            {pendingData.service === "laboratory" && (
-              <div>
-                <span className="font-semibold">Additional Info:</span> {pendingData.additionalInfo || "-"}
-              </div>
+            {["laboratory", "bioinformatics", "equipment", "retail"].includes(pendingData.service) && (
+              <>
+                {pendingData.species && (
+                  <div>
+                    <span className="font-semibold">Species:</span>{" "}
+                    {pendingData.species === "other" 
+                      ? `Other (${pendingData.otherSpecies || "Not specified"})` 
+                      : pendingData.species.replace("-", " ").replace(/\b\w/g, l => l.toUpperCase())}
+                  </div>
+                )}
+                {pendingData.researchOverview && (
+                  <div>
+                    <span className="font-semibold">Research Overview:</span> {pendingData.researchOverview}
+                  </div>
+                )}
+                {pendingData.methodologyFileUrl && (
+                  <div>
+                    <span className="font-semibold">Methodology File:</span> {pendingData.methodologyFileUrl}
+                  </div>
+                )}
+                {pendingData.sampleCount && (
+                  <div>
+                    <span className="font-semibold">Sample Count:</span> {pendingData.sampleCount}
+                  </div>
+                )}
+                {pendingData.workflowType && (
+                  <div>
+                    <span className="font-semibold">Workflow Type:</span>{" "}
+                    {pendingData.workflowType === "complete" 
+                      ? "Complete workflow (DNA Extraction, Quantification, Library Preparation, Sequencing, and Bioinformatics Analysis)" 
+                      : `Individual Assay: ${pendingData.individualAssayDetails || "Not specified"}`}
+                  </div>
+                )}
+              </>
             )}
             {pendingData.service === "research" && (
               <>
