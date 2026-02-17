@@ -9,7 +9,7 @@
 import { getQuotationThread } from "@/services/quotationThreadService";
 import { getInquiryById } from "@/services/inquiryService";
 import { PermissionGuard } from "@/components/PermissionGuard";
-import { QuotationThreadPageClient } from "./page-client";
+import { QuotationThreadPageClient } from "@/app/admin/quotation-threads/[inquiryId]/page-client";
 import { notFound } from "next/navigation";
 
 export const dynamic = 'force-dynamic';
