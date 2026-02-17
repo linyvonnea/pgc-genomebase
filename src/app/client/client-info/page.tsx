@@ -1882,22 +1882,38 @@ export default function ClientPortalPage() {
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="p-5 border-b bg-gradient-to-r from-[#166FB5] to-[#4038AF]">
-        <div className="flex items-center justify-between">
-          <div className="min-w-0">
-            <h2 className="text-white font-bold text-lg">Client Portal</h2>
-            <p className="text-white/60 text-xs truncate mt-0.5">
-              {emailParam}
-            </p>
+      {/* Header - Redesigned as a Card */}
+      <div className="p-4 border-b bg-white">
+        <div className="bg-gradient-to-br from-[#166FB5] to-[#4038AF] rounded-2xl p-5 shadow-md border border-[#166FB5]/20 relative overflow-hidden group">
+          {/* Decorative background element */}
+          <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500" />
+          
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-white/15 backdrop-blur-md rounded-xl border border-white/20 shadow-inner">
+                <Users className="h-6 w-6 text-white" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-white font-extrabold text-xl tracking-tight leading-none">
+                  Client Portal
+                </h2>
+                <div className="flex items-center gap-1.5 mt-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                  <span className="text-white/70 text-[10px] uppercase font-bold tracking-widest">
+                    Active Session
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Close button – mobile only */}
+            <button
+              onClick={() => setMobileSidebarOpen(false)}
+              className="lg:hidden text-white/80 hover:text-white hover:bg-white/20 rounded-xl p-2 transition-all duration-200 border border-transparent hover:border-white/20"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          {/* Close button – mobile only */}
-          <button
-            onClick={() => setMobileSidebarOpen(false)}
-            className="lg:hidden text-white/80 hover:text-white hover:bg-white/20 rounded-lg p-1.5 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
         </div>
       </div>
 
