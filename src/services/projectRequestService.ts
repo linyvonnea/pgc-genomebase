@@ -24,7 +24,7 @@ export interface PrimaryMemberData {
   email: string;
   affiliation: string;
   designation: string;
-  sex: "M" | "F" | "Other";
+  sex: "M" | "F" | "Other" | "";
   phoneNumber: string;
   affiliationAddress: string;
 }

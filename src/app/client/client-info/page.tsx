@@ -328,7 +328,7 @@ export default function ClientPortalPage() {
               email: primaryClientDoc.email || emailParam || "",
               affiliation: primaryClientDoc.affiliation || "",
               designation: primaryClientDoc.designation || "",
-              sex: primaryClientDoc.sex || "M",
+              sex: (primaryClientDoc.sex || "") as any,
               phoneNumber: primaryClientDoc.phoneNumber || "",
               affiliationAddress: primaryClientDoc.affiliationAddress || "",
             },
@@ -349,7 +349,7 @@ export default function ClientPortalPage() {
                   email: primaryDraftRequest.email || emailParam || "",
                   affiliation: primaryDraftRequest.affiliation || "",
                   designation: primaryDraftRequest.designation || "",
-                  sex: primaryDraftRequest.sex || "M",
+                  sex: (primaryDraftRequest.sex || "") as any,
                   phoneNumber: primaryDraftRequest.phoneNumber || "",
                   affiliationAddress: primaryDraftRequest.affiliationAddress || "",
                 },
@@ -370,7 +370,7 @@ export default function ClientPortalPage() {
               email: emailParam,
               affiliation: "",
               designation: "",
-              sex: "M",
+              sex: "" as any,
               phoneNumber: "",
               affiliationAddress: "",
             },
@@ -393,13 +393,13 @@ export default function ClientPortalPage() {
             id: r.id || `draft-member-${index + 1}`,
             cid: "draft",
             formData: {
-              name: r.name,
-              email: r.email,
-              affiliation: r.affiliation,
-              designation: r.designation,
-              sex: r.sex,
-              phoneNumber: r.phoneNumber,
-              affiliationAddress: r.affiliationAddress,
+              name: r.name || "",
+              email: r.email?.includes("@temp.pgc") ? "" : r.email || "",
+              affiliation: r.affiliation || "",
+              designation: r.designation || "",
+              sex: (r.sex || "") as any,
+              phoneNumber: r.phoneNumber || "",
+              affiliationAddress: r.affiliationAddress || "",
             },
             errors: {},
             isSubmitted: !!r.isValidated,
@@ -526,6 +526,23 @@ export default function ClientPortalPage() {
       return;
     }
 
+    // Check for any unsaved member (Primary must be submitted, Team Drafts must be saved)
+    const unsavedMember = members.find(
+      (m) =>
+        (m.isPrimary && !m.isSubmitted) ||
+        (!m.isPrimary && m.isDraft && (m.id.startsWith("draft-") || !m.formData.name || !m.formData.email))
+    );
+
+    if (unsavedMember) {
+      toast.error(
+        unsavedMember.isPrimary
+          ? "Please save your information as Primary Member first before adding new team members."
+          : "Please fill up and click save for the member you just added before adding a new one."
+      );
+      setExpandedMembers((prev) => new Set([...prev, unsavedMember.id]));
+      return;
+    }
+
     const uniqueDraftId = `draft-${Date.now()}`;
     const dummyEmail = `${uniqueDraftId}@temp.pgc`;
 
@@ -537,7 +554,7 @@ export default function ClientPortalPage() {
       email: dummyEmail,
       affiliation: "",
       designation: "",
-      sex: "M" as const,
+      sex: "" as any,
       phoneNumber: "",
       affiliationAddress: "",
       isPrimary: false,
@@ -554,10 +571,10 @@ export default function ClientPortalPage() {
         cid: "",
         formData: {
           name: "",
-          email: "", // Keep UI empty
+          email: "", // UI is empty
           affiliation: "",
           designation: "",
-          sex: "M",
+          sex: "" as any,
           phoneNumber: "",
           affiliationAddress: "",
         },
@@ -569,8 +586,7 @@ export default function ClientPortalPage() {
 
       setMembers((prev) => [newMember, ...prev]);
       setExpandedMembers((prev) => new Set([...prev, savedDocId]));
-      toast.success("New member added as draft in database");
-      console.log("✅ Member added and saved to clientRequests:", savedDocId);
+      toast.success("New member slot added. Please fill in their details.");
     } catch (error) {
       console.error("Error adding draft member:", error);
       toast.error("Failed to add new member draft");
@@ -820,6 +836,11 @@ export default function ClientPortalPage() {
   const handleSaveDraft = async (memberId: string) => {
     const member = members.find((m) => m.id === memberId);
     if (!member) return;
+
+    if (!member.formData.name || !member.formData.email) {
+      toast.error("Please provide at least Name and Email to save a draft.");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -1218,7 +1239,7 @@ export default function ClientPortalPage() {
               primaryM = {
                 id: "primary",
                 cid: "draft",
-                formData: pr.primaryMember,
+                formData: pr.primaryMember as any,
                 errors: {},
                 isSubmitted: true,
                 isPrimary: true,
@@ -1243,7 +1264,7 @@ export default function ClientPortalPage() {
             email: emailParam,
             affiliation: "",
             designation: "",
-            sex: "M",
+            sex: "" as any,
             phoneNumber: "",
             affiliationAddress: "",
           },
@@ -1271,7 +1292,7 @@ export default function ClientPortalPage() {
                     email: "",
                     affiliation: "",
                     designation: "",
-                    sex: "M",
+                    sex: "" as any,
                     phoneNumber: "",
                     affiliationAddress: "",
                   },
@@ -1308,7 +1329,7 @@ export default function ClientPortalPage() {
             email: emailParam,
             affiliation: "",
             designation: "",
-            sex: "M",
+            sex: "" as any,
             phoneNumber: "",
             affiliationAddress: "",
           },
