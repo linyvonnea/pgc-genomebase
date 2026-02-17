@@ -61,7 +61,29 @@ export async function getInquiries(): Promise<Inquiry[]> {
         isApproved: data.isApproved || false,
         affiliation: data.affiliation || '',
         designation: data.designation || '',
-        email: data.email || undefined
+        email: data.email || undefined,
+        
+        // Include new service selection fields
+        serviceType: data.serviceType || null,
+        species: data.species || null,
+        otherSpecies: data.otherSpecies || null,
+        researchOverview: data.researchOverview || null,
+        methodologyFileUrl: data.methodologyFileUrl || null,
+        sampleCount: data.sampleCount || null,
+        workflowType: data.workflowType || null,
+        individualAssayDetails: data.individualAssayDetails || null,
+        
+        // Legacy/Service-specific fields
+        workflows: data.workflows || [],
+        additionalInfo: data.additionalInfo || null,
+        projectBackground: data.projectBackground || null,
+        projectBudget: data.projectBudget || null,
+        specificTrainingNeed: data.specificTrainingNeed || null,
+        targetTrainingDate: data.targetTrainingDate || null,
+        numberOfParticipants: data.numberOfParticipants || null,
+        
+        // System fields
+        haveSubmitted: data.haveSubmitted || false
       };
       inquiries.push(inquiry);
     });
@@ -111,6 +133,28 @@ export async function getInquiryById(id: string): Promise<Inquiry> {
       affiliation: data.affiliation || "",
       designation: data.designation || "",
       email: data.email ?? "", 
+      
+      // Include new service selection fields
+      serviceType: data.serviceType || null,
+      species: data.species || null,
+      otherSpecies: data.otherSpecies || null,
+      researchOverview: data.researchOverview || null,
+      methodologyFileUrl: data.methodologyFileUrl || null,
+      sampleCount: data.sampleCount || null,
+      workflowType: data.workflowType || null,
+      individualAssayDetails: data.individualAssayDetails || null,
+      
+      // Legacy/Service-specific fields
+      workflows: data.workflows || [],
+      additionalInfo: data.additionalInfo || null,
+      projectBackground: data.projectBackground || null,
+      projectBudget: data.projectBudget || null,
+      specificTrainingNeed: data.specificTrainingNeed || null,
+      targetTrainingDate: data.targetTrainingDate || null,
+      numberOfParticipants: data.numberOfParticipants || null,
+      
+      // System fields
+      haveSubmitted: data.haveSubmitted || false
     };
   } catch (error) {
     console.error(`Failed to fetch inquiry ${id}:`, error);

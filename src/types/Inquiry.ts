@@ -12,12 +12,12 @@ export interface Inquiry {
   serviceType?: 'laboratory' | 'bioinformatics' | 'equipment' | 'retail' | 'research' | 'training' | null;
   
   // New Service Selection Fields
-  species?: 'human' | 'animal' | 'plant' | 'bacterial' | 'viral' | 'others' | null;
+  species?: 'human' | 'plant' | 'animal' | 'microbe-prokaryote' | 'microbe-eukaryote' | 'other' | null;
   otherSpecies?: string | null;
   researchOverview?: string | null;
   methodologyFileUrl?: string | null;
   sampleCount?: number | null;
-  workflowType?: 'complete_workflow' | 'individual_assay' | null;
+  workflowType?: 'complete' | 'individual' | null;
   individualAssayDetails?: string | null;
   
   // Legacy Service-specific fields
