@@ -2005,15 +2005,17 @@ export default function ClientPortalPage() {
                           <span className="text-[11px] font-mono text-slate-400">
                             {project.pid}
                           </span>
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "text-[10px] h-4 px-1.5 border",
-                              statusColors[project.status] || "bg-slate-100 text-slate-600"
-                            )}
-                          >
-                            {project.status || "Unknown"}
-                          </Badge>
+                          {project.status !== "Pending Approval" && (
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "text-[10px] h-4 px-1.5 border",
+                                statusColors[project.status] || "bg-slate-100 text-slate-600"
+                              )}
+                            >
+                              {project.status || "Unknown"}
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       
@@ -2222,15 +2224,17 @@ export default function ClientPortalPage() {
                     >
                       {projectDetails.pid}
                     </Badge>
-                    <Badge
-                      className={cn(
-                        "border text-xs",
-                        statusColors[projectDetails.status] ||
-                          "bg-slate-100 text-slate-600"
-                      )}
-                    >
-                      {projectDetails.status}
-                    </Badge>
+                    {projectDetails.status !== "Pending Approval" && (
+                      <Badge
+                        className={cn(
+                          "border text-xs",
+                          statusColors[projectDetails.status] ||
+                            "bg-slate-100 text-slate-600"
+                        )}
+                      >
+                        {projectDetails.status}
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>
@@ -2326,18 +2330,22 @@ export default function ClientPortalPage() {
                   </div>
                 </div>
 
-                {/* Draft/Pending project info banner */}
-                {projectDetails?.isDraft && (
+                {/* Draft/Pending/Approved project info banner */}
+                {(projectDetails?.isDraft || projectDetails?.status === "Ongoing") && (
                   <div className={`rounded-lg p-4 border ${
                     projectDetails.status === "Draft" 
                       ? "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
                       : projectDetails.status === "Pending Approval"
                       ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200"
+                      : projectDetails.status === "Ongoing"
+                      ? "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200"
                       : "bg-gradient-to-r from-red-50 to-pink-50 border-red-200"
                   }`}>
                     <div className="flex items-start gap-3">
                       {projectDetails.status === "Pending Approval" ? (
                         <Clock className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                      ) : projectDetails.status === "Ongoing" ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                       ) : projectDetails.status === "Rejected" ? (
                         <XCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
                       ) : (
@@ -2360,6 +2368,15 @@ export default function ClientPortalPage() {
                             </p>
                             <p className="text-xs text-blue-700 leading-relaxed">
                               Your project and team members have been submitted and are currently under review by the administrator. You'll receive a notification once approved. <strong>No further action needed at this time.</strong>
+                            </p>
+                          </>
+                        ) : projectDetails.status === "Ongoing" ? (
+                          <>
+                            <p className="text-sm font-semibold text-green-900">
+                              Project Approved
+                            </p>
+                            <p className="text-xs text-green-700 leading-relaxed">
+                              Your project has been approved and is now active. You can now see your PID and access project documents. If you need to add more team members, you can do so below.
                             </p>
                           </>
                         ) : (

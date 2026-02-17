@@ -373,9 +373,13 @@ function InquiryDetailContent() {
             </div>
 
             <div className="flex flex-col">
-              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Client Portal Submitted</span>
-              <Badge className={`w-fit mt-1 ${inquiry.haveSubmitted ? "bg-blue-100 text-blue-800" : "bg-gray-100 text-gray-800"}`}>
-                {inquiry.haveSubmitted ? "Yes" : "No"}
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Client Portal Status</span>
+              <Badge className={`w-fit mt-1 px-3 py-1 ${
+                inquiry.haveSubmitted 
+                  ? "bg-green-100 text-green-800 border-green-200" 
+                  : "bg-amber-50 text-amber-700 border-amber-200"
+              }`}>
+                {inquiry.haveSubmitted ? "Portal Submitted" : "Pending Submission"}
               </Badge>
             </div>
           </div>

@@ -141,6 +141,15 @@ export async function submitProjectForApproval(
     { merge: true }
   );
 
+  // Also update the inquiry document to show the portal has been submitted
+  try {
+    const inquiryRef = doc(db, "inquiries", inquiryId);
+    await setDoc(inquiryRef, { haveSubmitted: true }, { merge: true });
+    console.log(`Updated inquiry ${inquiryId} haveSubmitted: true`);
+  } catch (error) {
+    console.error(`Failed to update inquiry ${inquiryId} status:`, error);
+  }
+
   return docId;
 }
 
