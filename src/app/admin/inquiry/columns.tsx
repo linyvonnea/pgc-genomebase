@@ -160,20 +160,19 @@ export const columns: ColumnDef<Inquiry>[] = [
 
       return (
         <div className="flex items-center gap-2">
-          {/* View quotation thread - only show if user can view quotations */}
-          {canView("quotations") && (
+          {canCreate("quotations") && (
             <Button
               onClick={() =>
-                router.push(`/admin/quotation-threads/${inquiry.id}`)
+                router.push(`/admin/quotations/new?inquiryId=${inquiry.id}`)
               }
               variant="default"
               size="sm"
               className="whitespace-nowrap"
             >
-              View Thread
+              Quote
             </Button>
           )}
-          
+
           {/* Edit inquiry modal trigger - only show if user has edit permission */}
           {canEdit("inquiries") && (
             <EditInquiryModal
@@ -181,20 +180,6 @@ export const columns: ColumnDef<Inquiry>[] = [
               inquiry={inquiry}
               onSuccess={() => router.refresh()}
             />
-          )}
-          
-          {/* Legacy quotation button - kept for backward compatibility */}
-          {canCreate("quotations") && (
-            <Button
-              onClick={() =>
-                router.push(`/admin/quotations/new?inquiryId=${inquiry.id}`)
-              }
-              variant="outline"
-              size="sm"
-              className="whitespace-nowrap"
-            >
-              Quote
-            </Button>
           )}
         </div>
       );
