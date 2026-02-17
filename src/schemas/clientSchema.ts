@@ -5,7 +5,9 @@ export const clientFormSchema = z.object({
   email: z.string().email("Invalid email"),
   affiliation: z.string().min(1, "Affiliation is required"),
   designation: z.string().min(1, "Designation is required"),
-  sex: z.enum(["F", "M", "Other"]),
+  sex: z.enum(["F", "M", "Other", ""]).refine((val) => val !== "", {
+    message: "Sex at birth is required",
+  }),
   phoneNumber: z
     .string()
     .regex(/^[0-9]{11}$/, "Enter a valid 11-digit number with no spaces"),

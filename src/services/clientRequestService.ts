@@ -25,7 +25,7 @@ export interface ClientRequestData {
   email: string;
   affiliation: string;
   designation: string;
-  sex: "M" | "F" | "Other";
+  sex: "M" | "F" | "Other" | "";
   phoneNumber: string;
   affiliationAddress: string;
 }
@@ -42,7 +42,7 @@ export interface ClientRequest {
   email: string;
   affiliation: string;
   designation: string;
-  sex: "M" | "F" | "Other";
+  sex: "M" | "F" | "Other" | "";
   phoneNumber: string;
   affiliationAddress: string;
   
