@@ -1960,7 +1960,7 @@ export default function ClientPortalPage() {
               </p>
             </div>
           ) : (
-            <div className="p-2 space-y-1">
+            <div className="pl-4 pr-2 py-2 space-y-1">
               {projects.map((project) => {
                 // Defensive checks for project properties
                 if (!project || !project.pid) {
