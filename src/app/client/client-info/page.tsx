@@ -2432,7 +2432,7 @@ export default function ClientPortalPage() {
                     </div>
                   )}
 
-                {approvalStatus === "pending" && (
+                {approvalStatus === "pending" && approvalStatus !== "approved" && (
                   <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-5">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-orange-100 rounded-lg">
