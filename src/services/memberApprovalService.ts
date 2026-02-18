@@ -190,6 +190,23 @@ export async function approveMemberApproval(
       approvedAt: serverTimestamp(),
       approvedBy: reviewedBy,
     });
+
+    // Mark the corresponding clientRequest as approved (if it exists)
+    if (member.formData.email) {
+      try {
+        const { approveClientRequest } = await import("@/services/clientRequestService");
+        await approveClientRequest(
+          approval.inquiryId,
+          member.formData.email,
+          newCid,
+          reviewedBy
+        );
+        console.log(`✅ Marked clientRequest as approved for ${member.formData.email}`);
+      } catch (error) {
+        console.warn(`Could not update clientRequest for ${member.formData.email}:`, error);
+        // Don't throw - the client record was created successfully
+      }
+    }
   }
 
   // Update approval status

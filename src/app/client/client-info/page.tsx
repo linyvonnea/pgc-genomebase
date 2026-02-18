@@ -909,62 +909,109 @@ export default function ClientPortalPage() {
         );
         toast.success(`${member.isPrimary ? "Primary member" : "Team member"} information saved to draft!`);
       } else {
-        // For approved projects, save to clients collection
-        let pids: string[] = projects.map((p) => p.pid).filter(pid => pid !== "DRAFT");
-        if (pids.length === 0 && pidParam) pids = [pidParam];
+        // For approved projects
+        if (member.isPrimary) {
+          // Primary member: save to clients collection with CID
+          let pids: string[] = projects.map((p) => p.pid).filter(pid => pid !== "DRAFT");
+          if (pids.length === 0 && pidParam) pids = [pidParam];
 
-        let cidToUse = member.cid;
-        if (!cidToUse || cidToUse === "pending" || cidToUse === "draft") {
-          const year = new Date().getFullYear();
-          cidToUse = await getNextCid(year);
-        }
+          let cidToUse = member.cid;
+          if (!cidToUse || cidToUse === "pending" || cidToUse === "draft") {
+            const year = new Date().getFullYear();
+            cidToUse = await getNextCid(year);
+          }
 
-        if (!cidToUse) throw new Error("Could not generate a valid Client ID");
+          if (!cidToUse) throw new Error("Could not generate a valid Client ID");
 
-        await setDoc(
-          doc(db, "clients", cidToUse),
-          {
-            ...result.data,
-            cid: cidToUse,
-            pid: pids,
-            inquiryId: inquiryIdParam,
-            isContactPerson: member.isPrimary,
-            haveSubmitted: true,
-            updatedAt: serverTimestamp(),
-          },
-          { merge: true }
-        );
+          await setDoc(
+            doc(db, "clients", cidToUse),
+            {
+              ...result.data,
+              cid: cidToUse,
+              pid: pids,
+              inquiryId: inquiryIdParam,
+              isContactPerson: true,
+              haveSubmitted: true,
+              updatedAt: serverTimestamp(),
+            },
+            { merge: true }
+          );
 
-        // Update project's clientNames array
-        const currentPid = selectedProjectPid || pidParam;
-        if (currentPid && currentPid !== "DRAFT") {
-          const projectDocRef = doc(db, "projects", currentPid);
-          const projectSnap = await getDoc(projectDocRef);
-          if (projectSnap.exists()) {
-            const clientNames = projectSnap.data().clientNames || [];
-            if (!clientNames.includes(result.data.name)) {
-              await setDoc(
-                projectDocRef,
-                { clientNames: [...clientNames, result.data.name] },
-                { merge: true }
-              );
+          // Update project's clientNames array
+          const currentPid = selectedProjectPid || pidParam;
+          if (currentPid && currentPid !== "DRAFT") {
+            const projectDocRef = doc(db, "projects", currentPid);
+            const projectSnap = await getDoc(projectDocRef);
+            if (projectSnap.exists()) {
+              const clientNames = projectSnap.data().clientNames || [];
+              if (!clientNames.includes(result.data.name)) {
+                await setDoc(
+                  projectDocRef,
+                  { clientNames: [...clientNames, result.data.name] },
+                  { merge: true }
+                );
+              }
             }
           }
-        }
 
-        setMembers((prev) =>
-          prev.map((m) =>
-            m.id === pendingMemberId
-              ? {
-                  ...m,
-                  cid: cidToUse,
-                  isSubmitted: true,
-                  initialData: { ...m.formData },
-                }
-              : m
-          )
-        );
-        toast.success("Your information saved successfully!");
+          setMembers((prev) =>
+            prev.map((m) =>
+              m.id === pendingMemberId
+                ? {
+                    ...m,
+                    cid: cidToUse,
+                    isSubmitted: true,
+                    initialData: { ...m.formData },
+                  }
+                : m
+            )
+          );
+          toast.success("Your information saved successfully!");
+        } else {
+          // Other members: save as validated draft in clientRequests (needs admin approval)
+          const savedId = await saveClientRequest({
+            inquiryId: inquiryIdParam!,
+            requestedBy: emailParam || "",
+            requestedByName: members.find((m) => m.isPrimary)?.formData.name || result.data.name,
+            name: result.data.name,
+            email: result.data.email,
+            affiliation: result.data.affiliation,
+            designation: result.data.designation,
+            sex: result.data.sex,
+            phoneNumber: result.data.phoneNumber,
+            affiliationAddress: result.data.affiliationAddress,
+            isPrimary: false,
+            isValidated: true,
+            status: "draft",
+            ...(selectedProjectPid && { projectRequestId: selectedProjectPid }),
+          });
+
+          // Delete old draft if ID changed
+          if (pendingMemberId && pendingMemberId !== savedId && !pendingMemberId.startsWith("draft-") && !pendingMemberId.startsWith("request-")) {
+            try {
+              await deleteDoc(doc(db, "clientRequests", pendingMemberId));
+              console.log("Deleted old member draft record:", pendingMemberId);
+            } catch (delError) {
+              console.warn("Failed to delete old draft document (might not exist):", delError);
+            }
+          }
+
+          setMembers((prev) =>
+            prev.map((m) =>
+              m.id === pendingMemberId
+                ? {
+                    ...m,
+                    id: savedId,
+                    isSubmitted: true,
+                    isDraft: true,
+                    cid: "draft",
+                    initialData: { ...m.formData },
+                  }
+                : m
+            )
+          );
+          toast.success("Team member information saved! Submit for admin approval when ready.");
+        }
       }
     } catch (error) {
       console.error("Submission error:", error);
@@ -1041,8 +1088,9 @@ export default function ClientPortalPage() {
         );
         toast.success("Draft saved for member");
       } else {
-        // For approved projects, save to clients collection
+        // For approved projects
         if (member.isPrimary) {
+          // Primary member: save to clients collection
           let pids: string[] = projects.map((p) => p.pid).filter(pid => pid !== "DRAFT");
           if (pids.length === 0 && pidParam) pids = [pidParam];
 
@@ -1073,30 +1121,48 @@ export default function ClientPortalPage() {
           );
           toast.success("Draft saved for your information");
         } else {
-          if (selectedProjectPid && inquiryIdParam) {
-            const draftMembers = members.filter(
-              (m) => m.isDraft && !m.isPrimary
-            );
-            await saveMemberApproval({
-              inquiryId: inquiryIdParam,
-              projectPid: selectedProjectPid,
-              projectTitle: projectDetails?.title || "",
-              submittedBy: emailParam || "",
-              submittedByName:
-                members.find((m) => m.isPrimary)?.formData.name || "",
-              status:
-                approvalStatus === "rejected"
-                  ? "draft"
-                  : approvalStatus || "draft",
-              members: draftMembers.map((m) => ({
-                tempId: m.id,
-                isPrimary: false,
-                isValidated: m.isSubmitted,
-                formData: m.formData,
-              })),
-            });
-            toast.success("Draft saved for team member");
+          // Other members: save as draft in clientRequests (same as draft projects)
+          const savedId = await saveClientRequest({
+            inquiryId: inquiryIdParam!,
+            requestedBy: emailParam || "",
+            requestedByName: members.find((m) => m.isPrimary)?.formData.name || member.formData.name || "",
+            name: member.formData.name,
+            email: member.formData.email,
+            affiliation: member.formData.affiliation,
+            designation: member.formData.designation,
+            sex: member.formData.sex,
+            phoneNumber: member.formData.phoneNumber,
+            affiliationAddress: member.formData.affiliationAddress,
+            isPrimary: false,
+            isValidated: false,
+            status: "draft",
+            ...(selectedProjectPid && { projectRequestId: selectedProjectPid }),
+          });
+
+          // Delete old draft if ID changed
+          if (memberId && memberId !== savedId && !memberId.startsWith("draft-") && !memberId.startsWith("request-")) {
+            try {
+              await deleteDoc(doc(db, "clientRequests", memberId));
+              console.log("Deleted old member draft record:", memberId);
+            } catch (delError) {
+              console.warn("Failed to delete old draft (might not exist):", delError);
+            }
           }
+
+          setMembers((prev) =>
+            prev.map((m) =>
+              m.id === memberId
+                ? {
+                    ...m,
+                    id: savedId,
+                    isDraft: true,
+                    cid: "draft",
+                    initialData: { ...m.formData },
+                  }
+                : m
+            )
+          );
+          toast.success("Draft saved for team member");
         }
       }
     } catch (error) {
