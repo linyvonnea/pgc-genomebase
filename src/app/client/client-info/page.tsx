@@ -2503,9 +2503,9 @@ export default function ClientPortalPage() {
                   )}
 
                 {/* ── Submit for Approval Button ─────────── */}
-                {projectDetails?.status !== "Completed" &&
-                  approvalStatus !== "pending" &&
-                  approvalStatus !== "approved" && (
+                {projectDetails?.status !== "Completed" && 
+                  approvalStatus !== "pending" && 
+                  (approvalStatus !== "approved" || members.some(m => m.isDraft && !m.isPrimary)) && (
                     <div className="pt-6 border-t-2 border-slate-200">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="text-sm text-slate-500">
@@ -2529,7 +2529,7 @@ export default function ClientPortalPage() {
                           className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-bold shadow-xl hover:shadow-2xl disabled:opacity-50 whitespace-nowrap"
                         >
                           <Send className="h-5 w-5 mr-2" />
-                          Submit Project and Member/s for Approval
+                          {projectDetails?.isDraft ? "Submit Project and Member/s for Approval" : "Submit Team Member/s for Approval"}
                         </Button>
                       </div>
                     </div>
