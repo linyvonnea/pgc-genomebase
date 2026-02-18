@@ -464,8 +464,13 @@ export default function ClientPortalPage() {
     const additionalDraftMembers: ClientMember[] = fetchedClientRequests
         .filter(r => {
             const email = r.email?.toLowerCase();
+            const name = r.name?.trim();
+            
+            // Skip if completely empty and not just added
+            if (!email && !name) return false;
+
             return email !== emailParam?.toLowerCase() && 
-                   !approvedEmails.has(email) &&
+                   (!email || !approvedEmails.has(email)) &&
                    (r.status === "draft" || r.status === "pending" || r.status === "rejected");
         })
         .map((r, index) => ({
@@ -497,7 +502,12 @@ export default function ClientPortalPage() {
 
     // 2b. Pending members from MemberApprovals (for existing projects)
     const pendingProjectMembers: ClientMember[] = fetchedMemberApprovals
-        .filter(m => !m.isPrimary)
+        .filter(m => {
+            if (m.isPrimary) return false;
+            // Also filter out if already approved
+            const email = m.formData?.email?.toLowerCase();
+            return email && !approvedEmails.has(email);
+        })
         .map((m, index) => ({
             id: m.tempId || `pending-member-${index + 1}`,
             cid: "pending",
@@ -596,57 +606,6 @@ export default function ClientPortalPage() {
         "🎉 Congratulations! Your team members have been approved and registered!",
         { duration: 5000 }
       );
-
-      if (selectedProjectPid && inquiryIdParam && emailParam) {
-        const reloadMembers = async () => {
-          try {
-            const clientsRef = collection(db, "clients");
-            const allMembersQuery = query(
-              clientsRef,
-              where("inquiryId", "==", inquiryIdParam),
-              where("pid", "array-contains", selectedProjectPid)
-            );
-            const allMembersSnapshot = await getDocs(allMembersQuery);
-
-            const reloadedMembers: ClientMember[] =
-              allMembersSnapshot.docs.map((d, index) => {
-                const data = d.data();
-                const isPrimary =
-                  data.email?.toLowerCase() === emailParam.toLowerCase();
-                return {
-                  id: isPrimary ? "primary" : `member-${index + 1}`,
-                  cid: d.id,
-                  formData: {
-                    name: data.name || "",
-                    email: data.email || "",
-                    affiliation: data.affiliation || "",
-                    designation: data.designation || "",
-                    sex: (data.sex || "") as any,
-                    phoneNumber: data.phoneNumber || "",
-                    affiliationAddress: data.affiliationAddress || "",
-                  },
-                  initialData: {
-                    name: data.name || "",
-                    email: data.email || "",
-                    affiliation: data.affiliation || "",
-                    designation: data.designation || "",
-                    sex: (data.sex || "") as any,
-                    phoneNumber: data.phoneNumber || "",
-                    affiliationAddress: data.affiliationAddress || "",
-                  },
-                  errors: {},
-                  isSubmitted: !!data.haveSubmitted,
-                  isPrimary,
-                  isDraft: false,
-                };
-              });
-            setMembers(reloadedMembers);
-          } catch (error) {
-            console.error("Error reloading members:", error);
-          }
-        };
-        reloadMembers();
-      }
 
       setTimeout(() => setShowApprovalCelebration(false), 10000);
     }
