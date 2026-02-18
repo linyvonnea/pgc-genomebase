@@ -262,7 +262,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
           <p><strong>Service Type:</strong> ${inquiryData.service}</p>
           ${inquiryData.species ? `<p><strong>Species:</strong> ${inquiryData.species}${inquiryData.species === 'other' && inquiryData.otherSpecies ? ` (${inquiryData.otherSpecies})` : ''}</p>` : ''}
           ${inquiryData.researchOverview ? `<p><strong>Research Overview:</strong> ${inquiryData.researchOverview}</p>` : ''}
-          ${inquiryData.methodologyFileUrl ? `<p><strong>Methodology File:</strong> ${inquiryData.methodologyFileUrl}</p>` : ''}
+          ${inquiryData.methodologyFileUrl ? `<p><strong>Methodology File:</strong> <a href="${inquiryData.methodologyFileUrl}" target="_blank" rel="noopener noreferrer" style="color: #166FB5; text-decoration: underline;">View Uploaded File</a></p>` : ''}
           ${inquiryData.sampleCount ? `<p><strong>Sample Count:</strong> ${inquiryData.sampleCount}</p>` : ''}
           ${inquiryData.workflowType ? `<p><strong>Workflow Type:</strong> ${inquiryData.workflowType === 'complete' ? 'Complete Workflow' : 'Individual Assay'}</p>` : ''}
           ${inquiryData.individualAssayDetails ? `<p><strong>Individual Assay Details:</strong> ${inquiryData.individualAssayDetails}</p>` : ''}
