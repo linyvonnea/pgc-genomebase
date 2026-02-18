@@ -223,26 +223,41 @@ export async function approveMemberApproval(
     { merge: true }
   );
 
-  // Update project status from "Pending" to "Ongoing" if applicable
+  // Update project status and clientNames array
   try {
     const projectRef = doc(db, "projects", approval.projectPid);
     const projectSnap = await getDoc(projectRef);
     
     if (projectSnap.exists()) {
       const projectData = projectSnap.data();
+      const currentClientNames = projectData.clientNames || [];
+      const newNames = approval.members
+        .filter(m => !m.isPrimary && m.formData.name)
+        .map(m => m.formData.name);
+      
+      const updatedClientNames = [...currentClientNames];
+      newNames.forEach(name => {
+        if (!updatedClientNames.includes(name)) {
+          updatedClientNames.push(name);
+        }
+      });
+
+      const updateData: any = {
+        clientNames: updatedClientNames,
+        updatedAt: serverTimestamp(),
+      };
+
+      // Also update status to Ongoing if it was Pending
       if (projectData.status === "Pending") {
-        await setDoc(
-          projectRef,
-          {
-            status: "Ongoing",
-            statusUpdatedAt: serverTimestamp(),
-            statusUpdatedBy: reviewedBy,
-            statusUpdateReason: "Team members approved",
-          },
-          { merge: true }
-        );
+        updateData.status = "Ongoing";
+        updateData.statusUpdatedAt = serverTimestamp();
+        updateData.statusUpdatedBy = reviewedBy;
+        updateData.statusUpdateReason = "Team members approved";
         console.log(`✅ Project ${approval.projectPid} status updated to Ongoing`);
       }
+
+      await setDoc(projectRef, updateData, { merge: true });
+      console.log(`✅ Updated clientNames for project ${approval.projectPid}`);
     }
 
     // Update inquiry status to "Approved Client" if it's not already
