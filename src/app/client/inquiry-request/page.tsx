@@ -36,6 +36,7 @@ import { toast } from "sonner"
 import useAuth from "@/hooks/useAuth"
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout"
 import { useRouter } from "next/navigation"
+import { uploadFile, validateFile } from "@/lib/fileUpload"
 
 /**
  * Main Quotation Request Form Component
@@ -49,6 +50,10 @@ export default function QuotationRequestForm() {
   
   // Loading state for form submission
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // File upload state
+  const [isUploadingFile, setIsUploadingFile] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
   
   // Modal state for confirmation dialog
   const [showConfirmModal, setShowConfirmModal] = useState(false)
@@ -451,17 +456,66 @@ export default function QuotationRequestForm() {
                           type="file"
                           accept=".pdf,.doc,.docx"
                           className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
-                          onChange={(e) => {
-                            // Handle file upload - to be implemented
+                          disabled={isUploadingFile}
+                          onChange={async (e) => {
                             const file = e.target.files?.[0]
-                            if (file) {
-                              // For now, just store the filename
-                              setValue("methodologyFileUrl", file.name)
+                            if (!file) {
+                              setValue("methodologyFileUrl", "")
+                              setUploadError(null)
+                              return
+                            }
+
+                            try {
+                              // Clear any previous errors
+                              setUploadError(null)
+                              setIsUploadingFile(true)
+                              
+                              // Validate the file
+                              validateFile(file, 10, ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])
+                              
+                              // Upload to Firebase Storage
+                              const downloadUrl = await uploadFile(file, 'methodology-files')
+                              
+                              // Store the download URL in the form
+                              setValue("methodologyFileUrl", downloadUrl)
+                              
+                              toast.success("File uploaded successfully!")
+                            } catch (error) {
+                              console.error('File upload error:', error)
+                              const errorMessage = error instanceof Error ? error.message : 'Failed to upload file'
+                              setUploadError(errorMessage)
+                              setValue("methodologyFileUrl", "")
+                              toast.error(errorMessage)
+                            } finally {
+                              setIsUploadingFile(false)
                             }
                           }}
                         />
                       </div>
                       <p className="text-xs text-slate-500 mt-1">Accepted formats: PDF, DOC, DOCX (Max 10MB)</p>
+                      
+                      {/* Upload Status Feedback */}
+                      {isUploadingFile && (
+                        <div className="flex items-center gap-2 mt-2 text-sm text-blue-600">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                          Uploading file...
+                        </div>
+                      )}
+                      
+                      {uploadError && (
+                        <p className="text-xs text-red-600 mt-2 bg-red-50 p-2 rounded">
+                          {uploadError}
+                        </p>
+                      )}
+                      
+                      {formData.methodologyFileUrl && !isUploadingFile && !uploadError && (
+                        <div className="flex items-center gap-2 mt-2 text-sm text-green-600 bg-green-50 p-2 rounded">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          File uploaded successfully
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -789,7 +843,15 @@ export default function QuotationRequestForm() {
                 )}
                 {pendingData.methodologyFileUrl && (
                   <div>
-                    <span className="font-semibold">Methodology File:</span> {pendingData.methodologyFileUrl}
+                    <span className="font-semibold">Methodology File:</span>{" "}
+                    <a 
+                      href={pendingData.methodologyFileUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 underline"
+                    >
+                      View uploaded file
+                    </a>
                   </div>
                 )}
                 {pendingData.sampleCount && (
