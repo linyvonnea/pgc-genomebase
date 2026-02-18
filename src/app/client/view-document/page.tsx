@@ -11,10 +11,14 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { normalizeDate } from "@/lib/formatters";
+import useAuth from "@/hooks/useAuth";
+import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 function ViewDocumentContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user, isAdmin, loading: authLoading } = useAuth();
   
   const type = searchParams.get("type");
   const ref = searchParams.get("ref");
@@ -24,6 +28,15 @@ function ViewDocumentContent() {
 
   useEffect(() => {
     async function fetchData() {
+      // Wait for auth to be determined
+      if (authLoading) return;
+      
+      if (!user) {
+        toast.error("You must be logged in to view documents.");
+        setLoading(false);
+        return;
+      }
+
       if (!type || !ref) {
         toast.error("Invalid document parameters.");
         setLoading(false);
@@ -35,6 +48,45 @@ function ViewDocumentContent() {
         if (type === "quotation") {
           const quotation = await getQuotationByReferenceNumber(ref);
           if (quotation) {
+            // Verify ownership: Admin can view any, user can only view their own
+            if (!isAdmin) {
+              const userEmail = user.email?.toLowerCase();
+              // QuotationRecord has email directly
+              const quoteEmail = (quotation as any).email?.toLowerCase();
+              
+              // 1. Check direct email match
+              let hasAccess = userEmail === quoteEmail;
+              
+              // 2. Check team membership via inquiryId
+              const inquiryId = (quotation as any).inquiryId;
+              if (!hasAccess && inquiryId) {
+                // Check if user is a member of this inquiry in 'clients' collection
+                const clientQuery = query(
+                  collection(db, "clients"),
+                  where("inquiryId", "==", inquiryId),
+                  where("email", "==", user.email)
+                );
+                const clientSnap = await getDocs(clientQuery);
+                if (!clientSnap.empty) {
+                  hasAccess = true;
+                } else {
+                  // Final check: Is it the original contact person email on the inquiry?
+                  const inquirySnap = await getDoc(doc(db, "inquiries", inquiryId));
+                  if (inquirySnap.exists()) {
+                    const inquiryData = inquirySnap.data();
+                    if (inquiryData.email?.toLowerCase() === userEmail) {
+                      hasAccess = true;
+                    }
+                  }
+                }
+              }
+              
+              if (!hasAccess) {
+                toast.error("Access denied. This document does not belong to you.");
+                router.push("/client");
+                return;
+              }
+            }
             setData(quotation);
           } else {
             toast.error("Quotation not found.");
@@ -42,6 +94,45 @@ function ViewDocumentContent() {
         } else if (type === "charge-slip") {
           const chargeSlip = await getChargeSlipById(ref);
           if (chargeSlip) {
+            // Verify ownership: Admin can view any, user can only view their own
+            if (!isAdmin) {
+              const userEmail = user.email?.toLowerCase();
+              // ChargeSlipRecord has clientInfo.email or cid
+              const slipEmail = (chargeSlip as any).clientInfo?.email?.toLowerCase() || (chargeSlip as any).cid?.toLowerCase();
+              
+              // 1. Check direct email match
+              let hasAccess = userEmail === slipEmail;
+              
+              // 2. Check team membership via projectId/inquiryId
+              if (!hasAccess) {
+                const inquiryId = (chargeSlip as any).inquiryId || (chargeSlip as any).project?.iid;
+                if (inquiryId) {
+                  const clientQuery = query(
+                    collection(db, "clients"),
+                    where("inquiryId", "==", inquiryId),
+                    where("email", "==", user.email)
+                  );
+                  const clientSnap = await getDocs(clientQuery);
+                  if (!clientSnap.empty) {
+                    hasAccess = true;
+                  } else {
+                    const inquirySnap = await getDoc(doc(db, "inquiries", inquiryId));
+                    if (inquirySnap.exists()) {
+                      const inquiryData = inquirySnap.data();
+                      if (inquiryData.email?.toLowerCase() === userEmail) {
+                        hasAccess = true;
+                      }
+                    }
+                  }
+                }
+              }
+              
+              if (!hasAccess) {
+                toast.error("Access denied. This document does not belong to you.");
+                router.push("/client");
+                return;
+              }
+            }
             setData(chargeSlip);
           } else {
             toast.error("Charge slip not found.");
@@ -55,9 +146,9 @@ function ViewDocumentContent() {
       }
     }
     fetchData();
-  }, [type, ref]);
+  }, [type, ref, user, isAdmin, authLoading, router]);
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[#166FB5]" />
