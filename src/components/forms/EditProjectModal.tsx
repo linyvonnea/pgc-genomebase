@@ -394,14 +394,18 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                   </FormLabel>
                   <div className="space-y-2 border rounded-md p-2 bg-gray-50/50">
                     <div className="flex flex-wrap gap-1.5 min-h-6">
-                      {Array.isArray(field.value) && field.value.length > 0 ? (
-                        field.value.map((id, index) => (
+                      {(() => {
+                        const current = Array.isArray(field.value) ? field.value : (field.value ? [field.value] : []);
+                        if (current.length === 0) return (
+                          <span className="text-xs text-gray-400 italic py-1">No inquiry IDs assigned</span>
+                        );
+                        return current.map((id, index) => (
                           <Badge key={index} variant="secondary" className="pl-2 pr-1 py-0.5 flex items-center gap-1 bg-white border shadow-sm transition-all hover:border-red-200">
                             <span className="text-[11px] font-medium text-gray-700">{id}</span>
                             <button
                               type="button"
                               onClick={() => {
-                                const newVal = [...field.value];
+                                const newVal = [...current];
                                 newVal.splice(index, 1);
                                 field.onChange(newVal);
                               }}
@@ -410,10 +414,8 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                               <X className="h-3 w-3" />
                             </button>
                           </Badge>
-                        ))
-                      ) : (
-                        <span className="text-xs text-gray-400 italic py-1">No inquiry IDs assigned</span>
-                      )}
+                        ));
+                      })()}
                     </div>
                     
                     <Select onValueChange={(val) => {
@@ -441,22 +443,24 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                            />
                         </div>
                         {inquiryOptions
-                          .filter(inq => 
-                             !field.value?.includes(inq.id || "") && (
+                          .filter(inq => {
+                             const current = Array.isArray(field.value) ? field.value : (field.value ? [field.value] : []);
+                             return !current.includes(inq.id || "") && (
                                inq.id?.toLowerCase().includes(inquirySearch.toLowerCase()) || 
                                inq.name?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
                                inq.affiliation?.toLowerCase().includes(inquirySearch.toLowerCase())
-                             )
-                          )
+                             );
+                          })
                           .length > 0 ? (
                           inquiryOptions
-                            .filter(inq => 
-                               !field.value?.includes(inq.id || "") && (
+                            .filter(inq => {
+                               const current = Array.isArray(field.value) ? field.value : (field.value ? [field.value] : []);
+                               return !current.includes(inq.id || "") && (
                                  inq.id?.toLowerCase().includes(inquirySearch.toLowerCase()) || 
                                  inq.name?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
                                  inq.affiliation?.toLowerCase().includes(inquirySearch.toLowerCase())
-                               )
-                            )
+                               );
+                            })
                             .map((inquiry) => (
                               <SelectItem key={inquiry.id} value={inquiry.id || ""} className="py-2.5">
                                 <div className="flex flex-col gap-0.5">
