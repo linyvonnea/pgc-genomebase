@@ -36,10 +36,13 @@ import { CalendarIcon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { editProject } from "@/services/editProject";
 import { logActivity } from "@/services/activityLogService";
+import { getInquiries } from "@/services/inquiryService";
+import { Inquiry } from "@/types/Inquiry";
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { getActiveCatalogItems } from "@/services/catalogSettingsService";
 import { CatalogItem } from "@/types/CatalogSettings";
+import { X, Search, ChevronDown, Plus } from "lucide-react";
 
 interface EditProjectModalProps {
   project: Project;
@@ -58,8 +61,16 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
   );
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [personnelOptions, setPersonnelOptions] = useState<CatalogItem[]>([]);
+  const [inquiryOptions, setInquiryOptions] = useState<Inquiry[]>([]);
+  const [inquirySearch, setInquirySearch] = useState("");
 
   useEffect(() => {
+    getInquiries().then((inquiries) => {
+      setInquiryOptions(inquiries);
+    }).catch((error) => {
+      console.error("Error fetching inquiries:", error);
+    });
+
     getActiveCatalogItems("personnelAssigned").then((personnel) => {
       let options = personnel as CatalogItem[];
       // If current assigned personnel isn't in the active options, add it
@@ -84,6 +95,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
     defaultValues: {
       pid: project.pid, // Ensure pid is present for validation
       year: project.year || new Date().getFullYear(),
+      iid: Array.isArray(project.iid) ? project.iid : (project.iid ? [project.iid] : []),
       startDate: project.startDate ? new Date(project.startDate) : undefined,
       lead: project.lead || "",
       title: project.title || "",
@@ -106,6 +118,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
     form.reset({
       pid: project.pid,
       year: project.year || new Date().getFullYear(),
+      iid: Array.isArray(project.iid) ? project.iid : (project.iid ? [project.iid] : []),
       startDate: project.startDate ? new Date(project.startDate) : undefined,
       lead: project.lead || "",
       title: project.title || "",
@@ -362,6 +375,110 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                   <FormControl>
                     <Input placeholder="Enter project title" className="h-9" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Inquiry Numbers (Multi-Select) */}
+            <FormField
+              control={form.control}
+              name="iid"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs flex items-center gap-1.5">
+                    Inquiry ID(s)
+                    <Badge variant="outline" className="text-[10px] font-normal py-0 px-1.5 h-auto">
+                      Multi
+                    </Badge>
+                  </FormLabel>
+                  <div className="space-y-2 border rounded-md p-2 bg-gray-50/50">
+                    <div className="flex flex-wrap gap-1.5 min-h-6">
+                      {Array.isArray(field.value) && field.value.length > 0 ? (
+                        field.value.map((id, index) => (
+                          <Badge key={index} variant="secondary" className="pl-2 pr-1 py-0.5 flex items-center gap-1 bg-white border shadow-sm transition-all hover:border-red-200">
+                            <span className="text-[11px] font-medium text-gray-700">{id}</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newVal = [...field.value];
+                                newVal.splice(index, 1);
+                                field.onChange(newVal);
+                              }}
+                              className="text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50 p-0.5"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-xs text-gray-400 italic py-1">No inquiry IDs assigned</span>
+                      )}
+                    </div>
+                    
+                    <Select onValueChange={(val) => {
+                      const current = Array.isArray(field.value) ? field.value : (field.value ? [field.value] : []);
+                      if (!current.includes(val)) {
+                        field.onChange([...current, val]);
+                      }
+                    }}>
+                      <FormControl>
+                        <SelectTrigger className="w-full h-8 bg-white text-xs">
+                          <div className="flex items-center gap-2">
+                            <Plus className="h-3.5 w-3.5 text-blue-500" />
+                            <span>Add inquiry ID...</span>
+                          </div>
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="max-h-[250px] w-[350px]">
+                        <div className="px-2 py-1 sticky top-0 bg-white border-b z-10 flex items-center gap-2 mb-1">
+                           <Search className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                           <Input 
+                             placeholder="Search inquiry ID or name..." 
+                             className="h-7 text-xs border-none focus-visible:ring-0 shadow-none px-0" 
+                             value={inquirySearch}
+                             onChange={(e) => setInquirySearch(e.target.value)}
+                           />
+                        </div>
+                        {inquiryOptions
+                          .filter(inq => 
+                             !field.value?.includes(inq.id || "") && (
+                               inq.id?.toLowerCase().includes(inquirySearch.toLowerCase()) || 
+                               inq.name?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
+                               inq.affiliation?.toLowerCase().includes(inquirySearch.toLowerCase())
+                             )
+                          )
+                          .length > 0 ? (
+                          inquiryOptions
+                            .filter(inq => 
+                               !field.value?.includes(inq.id || "") && (
+                                 inq.id?.toLowerCase().includes(inquirySearch.toLowerCase()) || 
+                                 inq.name?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
+                                 inq.affiliation?.toLowerCase().includes(inquirySearch.toLowerCase())
+                               )
+                            )
+                            .map((inquiry) => (
+                              <SelectItem key={inquiry.id} value={inquiry.id || ""} className="py-2.5">
+                                <div className="flex flex-col gap-0.5">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-semibold text-xs text-blue-700">{inquiry.id}</span>
+                                    <span className="text-[10px] text-gray-400 font-normal">|</span>
+                                    <span className="text-[11px] font-medium text-gray-700 truncate w-48">{inquiry.name}</span>
+                                  </div>
+                                  {inquiry.affiliation && (
+                                    <span className="text-[10px] text-gray-500 truncate">{inquiry.affiliation}</span>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            ))
+                        ) : (
+                          <div className="py-4 text-center text-xs text-gray-500">
+                            {inquirySearch ? "No matching inquiries found" : "All available inquiries assigned"}
+                          </div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

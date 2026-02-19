@@ -15,7 +15,7 @@ export type ProjectFormData = z.infer<typeof projectFormSchema>;
 // Full schema for Firestore/admin table
 export const projectSchema = z.object({
   pid: z.string().optional().or(z.literal("")),
-  iid: z.string().optional().or(z.literal("")),
+  iid: z.union([z.string(), z.array(z.string())]).optional().or(z.literal("")),
   year: z.number().optional().or(z.nan()),
   startDate: z.union([z.date(), z.string()]).optional().or(z.literal("")),
   createdAt: z.union([z.date(), z.string()]).optional().or(z.literal("")),
