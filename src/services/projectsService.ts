@@ -119,7 +119,7 @@ export async function getProjects(): Promise<Project[]> {
       try {
         const project: Project = {
           pid: candidate.pid || '',
-          iid: candidate.iid || '',
+          iid: candidate.iid ?? '',
           year: candidate.year || undefined,
           title: candidate.title || '',
           lead: candidate.lead || '',

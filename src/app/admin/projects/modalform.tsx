@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { FolderPlus, FileText, Building2, Banknote, Briefcase, Save } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { FolderPlus, FileText, Building2, Banknote, Briefcase, Save, X, Search } from "lucide-react";
 import { Project } from "@/types/Project";
 import { projectSchema as baseProjectSchema } from "@/schemas/projectSchema";
 import { collection, addDoc, serverTimestamp, Timestamp, FieldValue, doc, setDoc } from "firebase/firestore";
@@ -29,7 +30,7 @@ import useAuth from "@/hooks/useAuth";
 // All fields are required except for notes.
 const projectSchema = baseProjectSchema.extend({
   pid: z.string().min(1, "Project ID is required"),
-  iid: z.string().min(1, "Inquiry ID is required"),
+  iid: z.array(z.string()).min(1, "Select at least one inquiry ID"),
   year: z.coerce.number().int().min(2000, "Year is required"),
   clientNames: z
     .string()
@@ -65,8 +66,9 @@ const projectSchema = baseProjectSchema.extend({
 type ProjectFormData = z.infer<typeof projectSchema>;
 
 // Form state type with string for clientNames (before transform)
-type ProjectFormState = Omit<ProjectFormData, "clientNames"> & {
+type ProjectFormState = Omit<ProjectFormData, "clientNames" | "iid"> & {
   clientNames: string;
+  iid: string[];
   status: string;
   fundingCategory: string;
   sendingInstitution: string;
@@ -94,7 +96,7 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
   // Form state for all project fields
   const [formData, setFormData] = useState<ProjectFormState>({
     pid: "",
-    iid: "",
+    iid: [],
     year: new Date().getFullYear(),
     startDate: new Date().toISOString().substring(0, 10),
     lead: "",
@@ -412,62 +414,89 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         {errors.projectTag && <p className="text-red-500 text-xs mt-1">{errors.projectTag}</p>}
       </div>
 
-      {/* Column 1: Inquiry ID */}
-      <div>
-        <Label className="text-xs flex items-center gap-0.5">
-          Inquiry ID
+      {/* Column 1: Inquiry ID (Multi-Select) */}
+      <div className="md:col-span-2">
+        <Label className="text-xs flex items-center gap-0.5 mb-1.5">
+          Inquiry ID(s)
           <span className="text-red-500 ml-0.5">*</span>
+          <Badge variant="outline" className="ml-2 text-[10px] font-normal py-0 px-1.5 h-auto">
+            Select Multiple
+          </Badge>
         </Label>
-        <Select value={formData.iid} onValueChange={(val) => handleSelect("iid", val)}>
-          <SelectTrigger className="h-9">
-            <SelectValue placeholder="Select inquiry">
-              {formData.iid ? (
-                <div className="flex flex-col items-start" title={inquiryOptions.find(i => i.id === formData.iid)?.name}>
-                  <span className="font-medium text-sm">{formData.iid}</span>
-                  {inquiryOptions.find(i => i.id === formData.iid)?.name && (
-                    <span className="text-xs text-gray-500 truncate max-w-[200px]">
-                      {inquiryOptions.find(i => i.id === formData.iid)?.name}
-                    </span>
-                  )}
-                </div>
-              ) : (
-                "Select inquiry"
-              )}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent className="max-h-[300px] w-[400px]">
-            <div className="sticky top-0 bg-white z-10 p-2 border-b">
-              <Input
-                placeholder="Search by ID, Name, or Affiliation..."
-                value={inquirySearch}
-                onChange={e => setInquirySearch(e.target.value)}
-                className="h-9 text-sm"
-              />
-            </div>
-            <div className="max-h-[240px] overflow-y-auto">
-              {filteredInquiryOptions.length > 0 ? (
-                filteredInquiryOptions.map((inq) => (
-                  <SelectItem key={inq.id} value={inq.id || ""} className="text-sm">
-                    <div className="flex flex-col py-1">
-                    <span className="font-medium text-gray-900">{inq.id}</span>
-                    <span className="text-xs text-gray-600">{inq.name}</span>
-                    {inq.affiliation && (
-                      <span className="text-xs text-gray-500 truncate max-w-[350px]" title={inq.affiliation}>
-                        {inq.affiliation}
-                      </span>
-                    )}
-                  </div>
-                </SelectItem>
+        
+        <div className="space-y-2 border rounded-md p-3 bg-gray-50/50">
+          {/* Display selected IIDs as badges */}
+          <div className="flex flex-wrap gap-1.5 min-h-[32px] items-center">
+            {formData.iid && formData.iid.length > 0 ? (
+              formData.iid.map((id, index) => (
+                <Badge key={index} variant="secondary" className="pl-2 pr-1 py-1 flex items-center gap-1 bg-white border shadow-sm transition-all">
+                  <span className="text-xs font-medium text-gray-700">{id}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newVal = [...formData.iid];
+                      newVal.splice(index, 1);
+                      setFormData(prev => ({ ...prev, iid: newVal }));
+                    }}
+                    className="text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50 p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
               ))
             ) : (
-              <div className="p-3 text-sm text-center text-gray-500">
-                No inquiries found
-              </div>
+              <span className="text-xs text-gray-400 italic">No inquiry IDs selected yet</span>
             )}
           </div>
-        </SelectContent>
-      </Select>
-      {errors.iid && <p className="text-red-500 text-xs mt-1">{errors.iid}</p>}
+
+          <Select onValueChange={(val) => {
+            if (!formData.iid.includes(val)) {
+              setFormData(prev => ({ ...prev, iid: [...prev.iid, val] }));
+            }
+          }}>
+            <SelectTrigger className="h-9 bg-white">
+              <SelectValue placeholder="Add an inquiry..." />
+            </SelectTrigger>
+            <SelectContent className="max-h-[300px] w-[500px]">
+              <div className="sticky top-0 bg-white z-10 p-2 border-b flex items-center gap-2 mb-1">
+                <Search className="h-4 w-4 text-gray-400 shrink-0" />
+                <Input
+                  placeholder="Search by ID, Name, or Affiliation..."
+                  value={inquirySearch}
+                  onChange={e => setInquirySearch(e.target.value)}
+                  className="h-8 text-sm border-none shadow-none focus-visible:ring-0 px-0"
+                />
+              </div>
+              <div className="max-h-[240px] overflow-y-auto">
+                {filteredInquiryOptions
+                  .filter(inq => !formData.iid.includes(inq.id || ""))
+                  .length > 0 ? (
+                  filteredInquiryOptions
+                    .filter(inq => !formData.iid.includes(inq.id || ""))
+                    .map((inq) => (
+                    <SelectItem key={inq.id} value={inq.id || ""} className="py-2.5">
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-xs text-blue-700">{inq.id}</span>
+                          <span className="text-[10px] text-gray-400 font-normal">|</span>
+                          <span className="text-[11px] font-medium text-gray-700 truncate max-w-[250px]">{inq.name}</span>
+                        </div>
+                        {inq.affiliation && (
+                          <span className="text-[10px] text-gray-500 truncate">{inq.affiliation}</span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="py-4 text-center text-xs text-gray-500 italic">
+                    {inquirySearch ? "No matching inquiries found" : "All available inquiries selected"}
+                  </div>
+                )}
+              </div>
+            </SelectContent>
+          </Select>
+        </div>
+        {errors.iid && <p className="text-red-500 text-xs mt-1">{errors.iid}</p>}
       </div>
 
       {/* Column 2: Status */}

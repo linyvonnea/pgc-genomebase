@@ -18,6 +18,7 @@ import {
   onSnapshot,
   deleteDoc,
   Timestamp,
+  or,
 } from "firebase/firestore";
 import { clientFormSchema, ClientFormData } from "@/schemas/clientSchema";
 import { Input } from "@/components/ui/input";
@@ -242,7 +243,13 @@ export default function ClientPortalPage() {
     });
 
     // 2. Subscribe to Approved Projects
-    const projectsQ = query(collection(db, "projects"), where("iid", "==", inquiryIdParam));
+    const projectsQ = query(
+      collection(db, "projects"), 
+      or(
+        where("iid", "==", inquiryIdParam),
+        where("iid", "array-contains", inquiryIdParam)
+      )
+    );
     const unsubApprovedProjects = onSnapshot(projectsQ, (snapshot) => {
       const approved = snapshot.docs.map((projectDoc) => {
         const projectData = projectDoc.data();

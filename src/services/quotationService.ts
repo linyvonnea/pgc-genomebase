@@ -14,17 +14,33 @@ import { db } from "@/lib/firebase";
 import { QuotationRecord } from "@/types/Quotation";
 
 /**
- * Get all quotations related to a specific inquiry ID.
+ * Get all quotations related to a specific inquiry ID or a list of inquiry IDs.
  */
 export async function getQuotationsByInquiryId(
-  inquiryId: string
+  inquiryId: string | string[]
 ): Promise<QuotationRecord[]> {
   const quotationsRef = collection(db, "quotations");
-  const q = query(
-    quotationsRef,
-    where("inquiryId", "==", inquiryId),
-    orderBy("dateIssued", "desc")
-  );
+  
+  let q;
+  if (Array.isArray(inquiryId)) {
+    if (inquiryId.length === 0) return [];
+    // Firestore "in" query limited to 30 elements
+    const ids = inquiryId.filter(id => id && id.trim().length > 0);
+    if (ids.length === 0) return [];
+    
+    // For now support up to 30, if more we'd need to chunk
+    q = query(
+      quotationsRef,
+      where("inquiryId", "in", ids.slice(0, 30)),
+      orderBy("dateIssued", "desc")
+    );
+  } else {
+    q = query(
+      quotationsRef,
+      where("inquiryId", "==", inquiryId),
+      orderBy("dateIssued", "desc")
+    );
+  }
 
   const snapshot = await getDocs(q);
 
