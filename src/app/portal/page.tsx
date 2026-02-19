@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { signInWithPopup, GoogleAuthProvider, getAuth } from "firebase/auth";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, collection, query, where, getDocs, or } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { getProjectRequest } from "@/services/projectRequestService";
 import { 
   UserCheck, 
@@ -98,13 +98,7 @@ export default function ClientVerifyPage() {
       // Check if project already exists for this inquiry
       let projectPid = "";
       const projectsRef = collection(db, "projects");
-      const projectQuery = query(
-        projectsRef, 
-        or(
-          where("iid", "==", inquiryId),
-          where("iid", "array-contains", inquiryId)
-        )
-      );
+      const projectQuery = query(projectsRef, where("iid", "==", inquiryId));
       const projectSnapshot = await getDocs(projectQuery);
       
       if (!projectSnapshot.empty) {
