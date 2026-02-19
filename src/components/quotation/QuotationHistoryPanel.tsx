@@ -21,7 +21,7 @@ import { QuotationPDFViewer } from "./QuotationPDFViewer";
 import { QuotationRecord } from "@/types/Quotation";
 
 type QuotationHistoryPanelProps = {
-  inquiryId?: string;
+  inquiryId?: string | string[];
   clientName?: string;
   onSelectQuotation?: (quotation: QuotationRecord) => void;
   onDeselectQuotation?: (quotation: QuotationRecord) => void;
@@ -37,7 +37,9 @@ export function QuotationHistoryPanel({
 }: QuotationHistoryPanelProps) {
   const [selectedQuotationId, setSelectedQuotationId] = useState<string | null>(null);
   
-  const hasInquiryId = !!(inquiryId && inquiryId.trim().length > 0);
+  const hasInquiryId = !!(Array.isArray(inquiryId) 
+    ? inquiryId.length > 0 
+    : (inquiryId && inquiryId.trim().length > 0));
   const hasClientName = !!(clientName && clientName.trim().length > 0);
   const shouldFetch: boolean = hasInquiryId || hasClientName;
   
@@ -71,7 +73,11 @@ export function QuotationHistoryPanel({
   if (history.length === 0) {
     return (
       <div className="text-sm text-muted-foreground">
-        No past quotations yet for {useInquiryId ? <code>{inquiryId}</code> : <code>{clientName}</code>}.
+        No past quotations yet for {useInquiryId ? (
+          <code>{Array.isArray(inquiryId) ? inquiryId.join(", ") : inquiryId}</code>
+        ) : (
+          <code>{clientName}</code>
+        )}.
       </div>
     );
   }
