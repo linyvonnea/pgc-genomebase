@@ -105,30 +105,22 @@ function ViewDocumentContent() {
               
               // 2. Check team membership via projectId/inquiryId
               if (!hasAccess) {
-                const iidRaw = (chargeSlip as any).inquiryId || (chargeSlip as any).project?.iid;
-                const inquiryIds = Array.isArray(iidRaw) ? iidRaw.filter(Boolean) : (iidRaw ? [iidRaw] : []);
-                
-                if (inquiryIds.length > 0) {
-                  // Check clients collection for any of the inquiry IDs
-                  // Firestore 'in' query works for up to 30 elements
+                const inquiryId = (chargeSlip as any).inquiryId || (chargeSlip as any).project?.iid;
+                if (inquiryId) {
                   const clientQuery = query(
                     collection(db, "clients"),
-                    where("inquiryId", "in", inquiryIds.slice(0, 30)),
+                    where("inquiryId", "==", inquiryId),
                     where("email", "==", user.email)
                   );
                   const clientSnap = await getDocs(clientQuery);
                   if (!clientSnap.empty) {
                     hasAccess = true;
                   } else {
-                    // Also check inquiries collection for each ID (limited to first for simplicity or loop)
-                    for (const inquiryId of inquiryIds.slice(0, 5)) { // Limit to 5 for fast response
-                      const inquirySnap = await getDoc(doc(db, "inquiries", inquiryId));
-                      if (inquirySnap.exists()) {
-                        const inquiryData = inquirySnap.data();
-                        if (inquiryData.email?.toLowerCase() === userEmail) {
-                          hasAccess = true;
-                          break;
-                        }
+                    const inquirySnap = await getDoc(doc(db, "inquiries", inquiryId));
+                    if (inquirySnap.exists()) {
+                      const inquiryData = inquirySnap.data();
+                      if (inquiryData.email?.toLowerCase() === userEmail) {
+                        hasAccess = true;
                       }
                     }
                   }

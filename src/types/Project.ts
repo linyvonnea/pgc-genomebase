@@ -1,6 +1,6 @@
 export interface Project {
   pid?: string;
-  iid?: string | string[];
+  iid?: string;
   year?: number;
   startDate?: string;
   createdAt?: Date;
