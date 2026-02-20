@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --turbopack",
     "start": "next start",
     "lint": "next lint",
     "backup": "node scripts/firestore-backup.js",
@@ -51,7 +51,7 @@
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.1",
     "lucide-react": "^0.523.0",
-    "next": "15.3.6",
+    "next": "15.2.4",
     "next-themes": "^0.4.6",
     "react": "^19.0.0",
     "react-day-picker": "^9.7.0",
