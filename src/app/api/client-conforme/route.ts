@@ -1,10 +1,19 @@
-// API route to create Client Conforme with proper IP capture
+// API route to create Client Conforme with proper IP capture and Admin permissions
 import { NextRequest, NextResponse } from "next/server";
-import { createClientConforme, addDirectorSignature } from "@/services/clientConformeService";
+import { adminDb } from "@/lib/firebase-admin";
+import admin from "firebase-admin";
 
 export async function POST(request: NextRequest) {
-  console.log("📋 Client Conforme API called");
+  console.log("📋 Client Conforme API called (Admin Mode)");
   
+  if (!adminDb) {
+    console.warn("⚠️ adminDb not initialized. Please configure your service account.");
+    return NextResponse.json(
+      { error: "Firebase Admin SDK not initialized. Please check your environment variables." },
+      { status: 500 }
+    );
+  }
+
   try {
     const body = await request.json();
     console.log("📄 Request body:", { 
@@ -45,33 +54,50 @@ export async function POST(request: NextRequest) {
                      cfConnectingIp || 
                      "unknown";
 
-    // Create conforme record
-    console.log("💾 Creating conforme record...");
-    const conformeId = await createClientConforme(
-      {
-        documentVersion,
-        clientName: clientName.trim() || "N/A",
-        designation: designation?.trim() || "N/A", 
-        affiliation: affiliation?.trim() || "N/A",
-        projectTitle: projectTitle?.trim() || "N/A",
-        fundingAgency: fundingAgency?.trim() || "N/A",
-        inquiryId,
-        projectPid,
-        projectRequestId,
-        createdBy: clientEmail,
-        clientIpAddress: clientIp,
-        userAgent: request.headers.get("user-agent") || "unknown",
-        status: "pending_director" as const,
-      },
-      clientIp,
-      clientName // Client's typed name as digital signature
-    );
-    console.log("✅ Conforme created with ID:", conformeId);
+    const timestamp = new Date();
+    const conformeId = `${inquiryId}_${timestamp.getTime()}`;
+    const COLLECTION = "clientConformes";
 
-    // Auto-sign by program director
-    console.log("🖋️ Adding director signature...");
-    await addDirectorSignature(conformeId);
-    console.log("✅ Director signature added");
+    // Create conforme record using Admin SDK
+    console.log("💾 Creating conforme record with Admin SDK...", conformeId);
+    
+    const conformeData = {
+      documentVersion,
+      clientName: clientName.trim() || "N/A",
+      designation: designation?.trim() || "N/A", 
+      affiliation: affiliation?.trim() || "N/A",
+      projectTitle: projectTitle?.trim() || "N/A",
+      fundingAgency: fundingAgency?.trim() || "N/A",
+      inquiryId,
+      projectPid: projectPid || null,
+      projectRequestId: projectRequestId || null,
+      createdBy: clientEmail,
+      clientIpAddress: clientIp,
+      userAgent: request.headers.get("user-agent") || "unknown",
+      browserFingerprint: "server_captured",
+      agreementDate: admin.firestore.Timestamp.fromDate(timestamp),
+      createdAt: admin.firestore.Timestamp.fromDate(timestamp),
+      status: "completed",
+      clientSignature: {
+        method: "typed_name",
+        data: clientName,
+        timestamp: admin.firestore.Timestamp.fromDate(timestamp),
+      },
+      programDirectorSignature: {
+        method: "auto_approved",
+        data: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.", 
+        signedBy: "vferriols@pgc.up.edu.ph",
+        timestamp: admin.firestore.Timestamp.fromDate(timestamp),
+      }
+    };
+
+    // Save to Firestore using Admin SDK (bypasses security rules!)
+    // If the collection doesn't exist, Firestore creates it automatically
+    await adminDb.collection(COLLECTION).doc(conformeId).set({
+      data: conformeData
+    });
+
+    console.log("✅ Conforme created successfully with Admin SDK:", conformeId);
 
     return NextResponse.json({ 
       success: true, 
@@ -80,25 +106,10 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("❌ API Error creating Client Conforme:", error);
-    
-    // More specific error messages
-    if (error instanceof Error) {
-      if (error.message.includes('permission')) {
-        return NextResponse.json(
-          { error: "Database permission error. Please contact support." },
-          { status: 403 }
-        );
-      } else if (error.message.includes('network') || error.message.includes('NETWORK')) {
-        return NextResponse.json(
-          { error: "Database connection error. Please try again." },
-          { status: 503 }
-        );
-      }
-    }
+    console.error("❌ API Error creating Client Conforme (Admin):", error);
     
     return NextResponse.json(
-      { error: "Failed to record Client Conforme agreement. Please try again." },
+      { error: "Failed to record Client Conforme agreement. Server permissions error." },
       { status: 500 }
     );
   }
