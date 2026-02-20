@@ -93,6 +93,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import ClientConformeModal from "@/components/forms/ClientConformeModal";
 
 // ────────────────────────────────────────────────────────────────
 //  Types
@@ -178,6 +179,12 @@ export default function ClientPortalPage() {
   const [showSubmitForApprovalModal, setShowSubmitForApprovalModal] =
     useState(false);
   const [showSubmitProjectModal, setShowSubmitProjectModal] = useState(false);
+
+  // Client Conforme modal — shown before final submission
+  const [showConformeModal, setShowConformeModal] = useState(false);
+  const [conformePendingAction, setConformePendingAction] = useState<
+    "draft" | "team" | null
+  >(null);
 
   // ── Approval state ────────────────────────────────────────────
   const [approvalStatus, setApprovalStatus] =
@@ -1180,6 +1187,17 @@ export default function ClientPortalPage() {
     }
   };
 
+  // Called after client confirms the Client Conforme
+  const handleConformeConfirm = () => {
+    setShowConformeModal(false);
+    if (conformePendingAction === "draft") {
+      handleSubmitProjectForApproval();
+    } else if (conformePendingAction === "team") {
+      setShowSubmitForApprovalModal(true);
+    }
+    setConformePendingAction(null);
+  };
+
   const handleFinalSubmit = () => {
     // Check if all members are validated
     const unsavedCount = members.filter((m) => !m.isSubmitted).length;
@@ -1192,8 +1210,15 @@ export default function ClientPortalPage() {
 
     // Check if this is a draft project
     if (projectDetails?.isDraft) {
-      // For draft projects, submit project + primary member
-      handleSubmitProjectForApproval();
+      // Validate primary member before showing conforme
+      const primaryCheck = members.find((m) => m.isPrimary);
+      if (!primaryCheck?.isSubmitted) {
+        toast.error("Please save your information as Primary Member first");
+        return;
+      }
+      // Show Client Conforme before proceeding
+      setConformePendingAction("draft");
+      setShowConformeModal(true);
       return;
     }
 
@@ -1218,7 +1243,9 @@ export default function ClientPortalPage() {
       return;
     }
 
-    setShowSubmitForApprovalModal(true);
+    // Show Client Conforme before proceeding
+    setConformePendingAction("team");
+    setShowConformeModal(true);
   };
 
   const handleConfirmSubmitForApproval = async () => {
@@ -2796,6 +2823,30 @@ export default function ClientPortalPage() {
           </p>
         </div>
       </ConfirmationModalLayout>
+
+      {/* Client Conforme — must be agreed before final submission */}
+      <ClientConformeModal
+        open={showConformeModal}
+        onConfirm={handleConformeConfirm}
+        onCancel={() => {
+          setShowConformeModal(false);
+          setConformePendingAction(null);
+        }}
+        loading={submitting}
+        clientName={members.find((m) => m.isPrimary)?.formData.name ?? ""}
+        designation={members.find((m) => m.isPrimary)?.formData.designation ?? ""}
+        affiliation={members.find((m) => m.isPrimary)?.formData.affiliation ?? ""}
+        projectTitle={
+          projectRequest?.title ??
+          projectDetails?.title ??
+          ""
+        }
+        fundingAgency={
+          projectRequest?.fundingInstitution ??
+          projectDetails?.fundingInstitution ??
+          ""
+        }
+      />
     </>
   );
 }
