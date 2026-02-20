@@ -1,21 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
+import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ClientConforme } from "@/types/ClientConforme";
-
-// Dynamically import PDF components to avoid SSR issues
-const PDFDownloadLink = dynamic(
-  () => import("@react-pdf/renderer").then((mod) => mod.PDFDownloadLink),
-  { ssr: false }
-);
-
-const ClientConformePDF = dynamic(
-  () => import("@/components/pdf/ClientConformePDF").then((mod) => mod.ClientConformePDF),
-  { ssr: false }
-);
+import { toast } from "sonner";
 
 interface DownloadConformeButtonProps {
   conforme: ClientConforme;
@@ -30,43 +19,67 @@ export default function DownloadConformeButton({
   size = "sm",
   showText = true
 }: DownloadConformeButtonProps) {
-  const [isClient, setIsClient] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const handleDownload = async () => {
+    if (!conforme.id) {
+      toast.error("No document ID available");
+      return;
+    }
 
-  if (!isClient) {
-    return (
-      <Button variant={variant} size={size} disabled>
-        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-        {showText && "Loading..."}
-      </Button>
-    );
-  }
+    try {
+      setIsDownloading(true);
+      
+      // Call the server-side PDF generation API
+      const response = await fetch(`/api/generate-conforme-pdf?id=${conforme.id}`);
+      
+      if (!response.ok) {
+        throw new Error("Failed to generate PDF");
+      }
 
-  const fileName = `Client_Conforme_${conforme.data.clientName.replace(/\s+/g, '_')}_${conforme.data.inquiryId}.pdf`;
+      // Get the PDF blob and create download link
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      const fileName = `Client_Conforme_${conforme.data.clientName.replace(/\s+/g, '_')}_${conforme.data.inquiryId}.pdf`;
+      
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up
+      window.URL.revokeObjectURL(url);
+      
+      toast.success("PDF downloaded successfully");
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      toast.error("Failed to download PDF. Please try again.");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   return (
-    <PDFDownloadLink
-      document={<ClientConformePDF conforme={conforme} />}
-      fileName={fileName}
+    <Button 
+      variant={variant} 
+      size={size} 
+      disabled={isDownloading}
+      onClick={handleDownload}
     >
-      {({ loading }) => (
-        <Button variant={variant} size={size} disabled={loading}>
-          {loading ? (
-            <>
-              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-              {showText && "Preparing..."}
-            </>
-          ) : (
-            <>
-              <Download className="w-3 h-3 mr-1" />
-              {showText && "Export PDF"}
-            </>
-          )}
-        </Button>
+      {isDownloading ? (
+        <>
+          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+          {showText && "Generating..."}
+        </>
+      ) : (
+        <>
+          <Download className="w-3 h-3 mr-1" />
+          {showText && "Export PDF"}
+        </>
       )}
-    </PDFDownloadLink>
+    </Button>
   );
 }

@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import useAuth from "@/hooks/useAuth";
 import {
   doc,
