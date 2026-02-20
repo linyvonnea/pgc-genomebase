@@ -2846,6 +2846,10 @@ export default function ClientPortalPage() {
           projectDetails?.fundingInstitution ??
           ""
         }
+        inquiryId={inquiryIdParam ?? ""}
+        clientEmail={emailParam ?? ""}
+        projectPid={selectedProjectPid ?? undefined}
+        projectRequestId={currentProjectRequestId ?? undefined}
       />
     </>
   );

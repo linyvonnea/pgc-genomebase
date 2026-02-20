@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface ClientConformeModalProps {
   open: boolean;
@@ -22,6 +23,11 @@ interface ClientConformeModalProps {
   affiliation: string;
   projectTitle?: string;
   fundingAgency?: string;
+  // Required for creating the conforme record
+  inquiryId: string;
+  clientEmail: string;
+  projectPid?: string;
+  projectRequestId?: string;
 }
 
 export default function ClientConformeModal({
@@ -34,8 +40,13 @@ export default function ClientConformeModal({
   affiliation,
   projectTitle,
   fundingAgency,
+  inquiryId,
+  clientEmail,
+  projectPid,
+  projectRequestId,
 }: ClientConformeModalProps) {
   const [agreed, setAgreed] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const today = new Date().toLocaleDateString("en-PH", {
     year: "numeric",
@@ -46,10 +57,47 @@ export default function ClientConformeModal({
   const filled = (value: string | undefined, fallback = "_______________") =>
     value && value.trim() ? value.trim() : fallback;
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!agreed) return;
-    setAgreed(false);
-    onConfirm();
+    
+    setSaving(true);
+    try {
+      // Call API to create conforme record with proper IP capture
+      const response = await fetch("/api/client-conforme", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          clientName: filled(clientName, "N/A"),
+          designation: filled(designation, "N/A"),
+          affiliation: filled(affiliation, "N/A"),
+          projectTitle: filled(projectTitle, "N/A"),
+          fundingAgency: filled(fundingAgency, "N/A"),
+          inquiryId,
+          clientEmail,
+          projectPid,
+          projectRequestId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      console.log(`✅ Client Conforme created: ${result.conformeId}`);
+      toast.success("Client Conforme agreement recorded", { duration: 3000 });
+      
+      setAgreed(false);
+      onConfirm();
+    } catch (error) {
+      console.error("Failed to save Client Conforme:", error);
+      toast.error("Failed to record agreement. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -313,13 +361,13 @@ export default function ClientConformeModal({
             </Button>
             <Button
               onClick={handleConfirm}
-              disabled={!agreed || loading}
+              disabled={!agreed || loading || saving}
               className="px-6 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold disabled:opacity-50"
             >
-              {loading ? (
+              {(loading || saving) ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Submitting…
+                  {saving ? "Recording Agreement…" : "Submitting…"}
                 </>
               ) : (
                 "Submit for Approval"
