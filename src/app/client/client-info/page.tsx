@@ -60,13 +60,16 @@ import {
 } from "@/services/clientRequestService";
 import { getQuotationsByInquiryId } from "@/services/quotationService";
 import { getChargeSlipsByProjectId } from "@/services/chargeSlipService";
+import { getClientConformeByProject } from "@/services/clientConformeService";
 import { QuotationRecord } from "@/types/Quotation";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { ApprovalStatus } from "@/types/MemberApproval";
+import { ClientConforme } from "@/types/ClientConforme";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
+import DownloadConformeButton from "@/components/pdf/DownloadConformeButton";
 import {
   Plus,
   X,
@@ -163,6 +166,7 @@ export default function ClientPortalPage() {
   const [currentProjectRequestId, setCurrentProjectRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [existingConforme, setExistingConforme] = useState<ClientConforme | null>(null);
 
   // ── Modal state ───────────────────────────────────────────────
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -306,13 +310,37 @@ export default function ClientPortalPage() {
         setLoading(false); // Assume data is loaded once clients return (or empty)
     });
 
+    // 5. Subscribe to Client Conforme
+    const conformesQ = query(
+      collection(db, "clientConformes"),
+      where("data.inquiryId", "==", inquiryIdParam)
+    );
+    const unsubConforme = onSnapshot(conformesQ, (snapshot) => {
+      // Find the one for the selected project if it exists
+      if (!snapshot.empty) {
+        const allConformes = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data().data } as ClientConforme));
+        
+        // If we have a selected project, prioritize that
+        const projectMatch = allConformes.find(c => c.data.projectPid === selectedProjectPid);
+        if (projectMatch) {
+          setExistingConforme(projectMatch);
+        } else {
+          // Fallback to most recent for this inquiry
+          setExistingConforme(allConformes[0]);
+        }
+      } else {
+        setExistingConforme(null);
+      }
+    });
+
     return () => {
       unsubDraftProjects();
       unsubApprovedProjects();
       unsubClientRequests();
       unsubClients();
+      unsubConforme();
     };
-  }, [emailParam, inquiryIdParam, projectRequestIdParam, router, authLoading, user]);
+  }, [emailParam, inquiryIdParam, projectRequestIdParam, router, authLoading, user, selectedProjectPid]);
 
   // 1.5. Subscribe to Member Approvals for the selected project
   useEffect(() => {
@@ -2333,6 +2361,16 @@ export default function ClientPortalPage() {
                       >
                         {projectDetails.status}
                       </Badge>
+                    )}
+                    {existingConforme && (
+                      <div className="flex items-center gap-2">
+                        <DownloadConformeButton
+                          conforme={existingConforme}
+                          variant="outline"
+                          size="sm"
+                          showText={true}
+                        />
+                      </div>
                     )}
                   </div>
                 </div>
