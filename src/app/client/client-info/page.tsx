@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import useAuth from "@/hooks/useAuth";
 import {
   doc,
   setDoc,
@@ -129,6 +130,7 @@ interface ProjectDetails {
 export default function ClientPortalPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
 
   const emailParam = searchParams.get("email");
   const inquiryIdParam = searchParams.get("inquiryId");
@@ -199,12 +201,29 @@ export default function ClientPortalPage() {
   );
 
   // ────────────────────────────────────────────────────────────────
+  //  Authentication Check
+  // ────────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      console.log("🚫 No authenticated user, redirecting to login");
+      router.replace("/login");
+      return;
+    }
+  }, [user, authLoading, router]);
+
+  // ────────────────────────────────────────────────────────────────
   //  Data Subscriptions
   // ────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!emailParam || !inquiryIdParam) {
       router.replace("/portal");
+      return;
+    }
+
+    // Wait for authentication before loading data
+    if (authLoading || !user) {
       return;
     }
 
@@ -293,7 +312,7 @@ export default function ClientPortalPage() {
       unsubClientRequests();
       unsubClients();
     };
-  }, [emailParam, inquiryIdParam, projectRequestIdParam, router]);
+  }, [emailParam, inquiryIdParam, projectRequestIdParam, router, authLoading, user]);
 
   // 1.5. Subscribe to Member Approvals for the selected project
   useEffect(() => {
@@ -2218,6 +2237,27 @@ export default function ClientPortalPage() {
   );
 
   // ────────────────────────────────────────────────────────────────
+  //  Loading states
+  // ────────────────────────────────────────────────────────────────
+
+  // Show loading while authentication is loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="text-slate-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if not authenticated
+  if (!user) {
+    return null; // This will be handled by the useEffect redirect
+  }
+
+  // ────────────────────────────────────────────────────────────────
   //  Main render
   // ────────────────────────────────────────────────────────────────
 
@@ -2847,7 +2887,7 @@ export default function ClientPortalPage() {
           ""
         }
         inquiryId={inquiryIdParam ?? ""}
-        clientEmail={emailParam ?? ""}
+        clientEmail={user?.email ?? ""}
         projectPid={selectedProjectPid ?? undefined}
         projectRequestId={currentProjectRequestId ?? undefined}
       />
