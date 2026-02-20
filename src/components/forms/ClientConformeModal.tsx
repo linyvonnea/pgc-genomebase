@@ -12,6 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { db } from "@/lib/firebase";
+import { doc, setDoc, Timestamp } from "firebase/firestore";
 
 interface ClientConformeModalProps {
   open: boolean;
@@ -59,64 +61,62 @@ export default function ClientConformeModal({
 
   const handleConfirm = async () => {
     if (!agreed) return;
-    
+
     setSaving(true);
     try {
-      // Validate required data before sending
       if (!inquiryId || !clientEmail) {
         toast.error("Missing required information. Please reload the page and try again.");
         return;
       }
 
-      console.log("📋 Creating Client Conforme agreement...", {
-        clientName: filled(clientName, "N/A"),
-        inquiryId,
-        clientEmail
-      });
+      const filled = (v: string | undefined) => (v && v.trim() ? v.trim() : "N/A");
+      const now = new Date();
+      const conformeId = `${inquiryId}_${now.getTime()}`;
+      const ts = Timestamp.fromDate(now);
 
-      // Call API to create conforme record with proper IP capture
-      const response = await fetch("/api/client-conforme", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          clientName: filled(clientName, "N/A"),
-          designation: filled(designation, "N/A"),
-          affiliation: filled(affiliation, "N/A"),
-          projectTitle: filled(projectTitle, "N/A"),
-          fundingAgency: filled(fundingAgency, "N/A"),
+      await setDoc(doc(db, "clientConformes", conformeId), {
+        data: {
+          documentVersion: "PGCV-LF-CC-v005",
+          clientName:      filled(clientName),
+          designation:     filled(designation),
+          affiliation:     filled(affiliation),
+          projectTitle:    filled(projectTitle),
+          fundingAgency:   filled(fundingAgency),
           inquiryId,
-          clientEmail,
-          projectPid,
-          projectRequestId,
-        }),
+          projectPid:        projectPid    ?? null,
+          projectRequestId:  projectRequestId ?? null,
+          createdBy:       clientEmail,
+          clientIpAddress: "client_browser",
+          userAgent:       typeof navigator !== "undefined" ? navigator.userAgent : "unknown",
+          agreementDate:   ts,
+          createdAt:       ts,
+          status:          "completed",
+          clientSignature: {
+            method:    "typed_name",
+            data:      filled(clientName),
+            timestamp: ts,
+          },
+          programDirectorSignature: {
+            method:    "auto_approved",
+            data:      "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.",
+            signedBy:  "vferriols@pgc.up.edu.ph",
+            timestamp: ts,
+          },
+        },
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        console.error("❌ API Error:", {
-          status: response.status,
-          statusText: response.statusText,
-          error: result.error || result.message
-        });
-        toast.error(result.error || result.message || `Server error (${response.status}). Please try again.`);
-        return;
-      }
-      
-      console.log(`✅ Client Conforme created successfully: ${result.conformeId}`);
+      console.log("✅ Client Conforme saved:", conformeId);
       toast.success("Client Conforme agreement recorded successfully", { duration: 3000 });
-      
       setAgreed(false);
       onConfirm();
-    } catch (error) {
-      console.error("❌ Network/Client Error creating Client Conforme:", error);
-      
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        toast.error("Network error. Please check your connection and try again.");
-      } else if (error instanceof SyntaxError) {
-        toast.error("Server response error. Please try again.");
+    } catch (error: unknown) {
+      console.error("❌ Error saving Client Conforme:", error);
+      const msg =
+        error instanceof Error ? error.message : String(error);
+      if (msg.includes("permission") || msg.includes("PERMISSION_DENIED")) {
+        toast.error(
+          "Permission denied. Please ask admin to update Firestore rules for clientConformes collection."
+        );
       } else {
         toast.error("Failed to record agreement. Please try again.");
       }
