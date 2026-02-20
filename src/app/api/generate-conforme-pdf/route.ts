@@ -1,48 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ClientConforme } from "@/types/ClientConforme";
-
-// Server-side Firebase Admin
-let adminInitialized = false;
-let adminDb: any = null;
+import { adminDb } from "@/lib/firebase-admin";
 
 async function getAdminDb() {
-  if (!adminInitialized) {
-    const admin = await import("firebase-admin");
-    
-    if (!admin.apps.length) {
-      // Only try to load local file in development - prevents build failure on Vercel where file is missing
-      if (process.env.NODE_ENV !== "production") {
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-require-imports
-          const serviceAccount = require("../../../../scripts/serviceAccountKey.json");
-          admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-          });
-        } catch (e) {
-          // File not found or failed to load, ignore and fall through to env vars
-        }
-      }
-      
-      // If still not initialized (production or dev fallback), try env vars
-      if (!admin.apps.length) {
-
-        // Fallback to environment variables if file doesn't exist
-        if (process.env.FIREBASE_PRIVATE_KEY) {
-          admin.initializeApp({
-            credential: admin.credential.cert({
-              projectId: process.env.FIREBASE_PROJECT_ID,
-              clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-              privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-            }),
-          });
-        } else {
-          throw new Error("No Firebase credentials available");
-        }
-      }
-    }
-    
-    adminDb = admin.firestore();
-    adminInitialized = true;
+  if (!adminDb) {
+    throw new Error("Firebase Admin not initialized. Check FIREBASE_SERVICE_ACCOUNT env var.");
   }
   return adminDb;
 }
@@ -66,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     const conformeData: ClientConforme = { 
       id: conformeDoc.id, 
-      data: conformeDoc.data() 
+      data: conformeDoc.data() as ClientConforme["data"]
     };
 
     // Import PDF libraries server-side with proper error handling
