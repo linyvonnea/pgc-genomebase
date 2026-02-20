@@ -15,13 +15,15 @@ import {
   Download,
   Shield,
   Clock,
-  CheckCircle2 
+  CheckCircle2,
+  ExternalLink 
 } from "lucide-react";
 import { ClientConforme } from "@/types/ClientConforme";
 import { getClientConformesByInquiry } from "@/services/clientConformeService";
 import { getDocs, collection, query, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
+import DownloadConformeButton from "@/components/pdf/DownloadConformeButton";
 
 export default function ClientConformesPage() {
   const [conformes, setConformes] = useState<ClientConforme[]>([]);
@@ -241,15 +243,13 @@ export default function ClientConformesPage() {
                   <div className="flex gap-2">
                     <Button 
                       size="sm" 
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => setSelectedConforme(conforme)}
                     >
-                      View Details
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      View
                     </Button>
-                    <Button size="sm" variant="outline">
-                      <Download className="w-3 h-3 mr-1" />
-                      Export PDF
-                    </Button>
+                    <DownloadConformeButton conforme={conforme} />
                   </div>
                 </div>
               </CardContent>
