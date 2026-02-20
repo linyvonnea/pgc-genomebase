@@ -1239,9 +1239,9 @@ export default function ClientPortalPage() {
   const handleConformeConfirm = () => {
     setShowConformeModal(false);
     if (conformePendingAction === "draft") {
-      handleSubmitProjectForApproval();
+      performInitialProjectSubmissionAfterConforme();
     } else if (conformePendingAction === "team") {
-      setShowSubmitForApprovalModal(true);
+      performTeamSubmissionAfterConforme();
     }
     setConformePendingAction(null);
   };
@@ -1264,9 +1264,8 @@ export default function ClientPortalPage() {
         toast.error("Please save your information as Primary Member first");
         return;
       }
-      // Show Client Conforme before proceeding
-      setConformePendingAction("draft");
-      setShowConformeModal(true);
+      // Show confirmation modal first (user clicks "Submit to Admin")
+      handleSubmitProjectForApproval();
       return;
     }
 
@@ -1291,13 +1290,18 @@ export default function ClientPortalPage() {
       return;
     }
 
-    // Show Client Conforme before proceeding
+    // Show confirmation modal first (user clicks "Submit to Admin")
+    setShowSubmitForApprovalModal(true);
+  };
+
+  const handleConfirmSubmitForApproval = () => {
+    setShowSubmitForApprovalModal(false);
+    // Next step: legal agreement
     setConformePendingAction("team");
     setShowConformeModal(true);
   };
 
-  const handleConfirmSubmitForApproval = async () => {
-    setShowSubmitForApprovalModal(false);
+  const performTeamSubmissionAfterConforme = async () => {
     setSubmitting(true);
 
     try {
@@ -1375,8 +1379,14 @@ export default function ClientPortalPage() {
     setShowSubmitProjectModal(true);
   };
 
-  const handleConfirmSubmitProject = async () => {
+  const handleConfirmSubmitProject = () => {
     setShowSubmitProjectModal(false);
+    // Next step: legal agreement
+    setConformePendingAction("draft");
+    setShowConformeModal(true);
+  };
+
+  const performInitialProjectSubmissionAfterConforme = async () => {
     setSubmitting(true);
 
     try {
@@ -2828,9 +2838,9 @@ export default function ClientPortalPage() {
         onConfirm={handleConfirmSubmitForApproval}
         onCancel={() => setShowSubmitForApprovalModal(false)}
         loading={submitting}
-        title="Submit Project and Member/s for Approval"
-        description="Once submitted, an administrator will review the project subject and all team members before they are officially registered."
-        confirmLabel="Submit for Approval"
+        title="Submit Additional Team Members"
+        description="Submit newly added team members for administrator review. Once approved, you'll be notified via email."
+        confirmLabel="Submit to Admin"
         cancelLabel="Go Back"
       >
         <div className="space-y-3">
