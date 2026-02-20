@@ -5,24 +5,11 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   serverExternalPackages: ["firebase-admin", "@react-pdf/renderer"],
-  experimental: {
-    serverActions: {
-      bodySizeLimit: "2mb",
-    },
-    esmExternals: "loose"
-  },
   webpack: (config, { isServer }) => {
-    // @react-pdf/renderer is server-side only; exclude it from the client bundle
+    // Mark external packages for server-side only
     if (!isServer) {
-      config.externals.push("@react-pdf/renderer");
+      config.externals = [...(config.externals || []), "@react-pdf/renderer", "canvas"];
     }
-
-    // Handle canvas for PDF generation
-    config.externals = [...config.externals, { canvas: "canvas" }];
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      canvas: false,
-    };
 
     return config;
   },
