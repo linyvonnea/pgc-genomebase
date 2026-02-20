@@ -68,44 +68,62 @@ export async function createClientConforme(
   clientIpAddress: string,
   clientSignatureData?: string
 ): Promise<string> {
-  const metadata = getBrowserMetadata();
-  const timestamp = new Date();
-  
-  const conformeData: ClientConformeData = {
-    ...baseData,
-    documentHash: generateDocumentHash(baseData),
-    agreementDate: timestamp,
-    clientIpAddress,
-    userAgent: metadata.userAgent,
-    browserFingerprint: metadata.browserFingerprint,
-    clientSignature: {
-      method: "typed_name", // Default to typed name
-      data: clientSignatureData || baseData.clientName,
-      timestamp: timestamp,
-    },
-    createdAt: timestamp,
-    status: "pending_director"
-  };
+  try {
+    console.log("🔐 Creating Client Conforme service call", { inquiryId: baseData.inquiryId, clientName: baseData.clientName });
+    
+    const metadata = getBrowserMetadata();
+    const timestamp = new Date();
+    
+    const conformeData: ClientConformeData = {
+      ...baseData,
+      documentHash: generateDocumentHash(baseData),
+      agreementDate: timestamp,
+      clientIpAddress,
+      userAgent: metadata.userAgent,
+      browserFingerprint: metadata.browserFingerprint,
+      clientSignature: {
+        method: "typed_name", // Default to typed name
+        data: clientSignatureData || baseData.clientName,
+        timestamp: timestamp,
+      },
+      createdAt: timestamp,
+      status: "pending_director"
+    };
 
-  // Generate document ID: inquiryId_timestamp
-  const docId = `${baseData.inquiryId}_${timestamp.getTime()}`;
-  const docRef = doc(db, COLLECTION, docId);
+    // Generate document ID: inquiryId_timestamp
+    const docId = `${baseData.inquiryId}_${timestamp.getTime()}`;
+    const docRef = doc(db, COLLECTION, docId);
+    
+    console.log("💾 Saving to Firestore with ID:", docId);
 
-  await setDoc(docRef, {
-    data: {
-      ...conformeData,
-      agreementDate: Timestamp.fromDate(new Date(conformeData.agreementDate)),
-      createdAt: serverTimestamp(),
-      ...(conformeData.clientSignature && {
-        clientSignature: {
-          ...conformeData.clientSignature,
-          timestamp: Timestamp.fromDate(new Date(conformeData.clientSignature.timestamp)),
+    try {
+      await setDoc(docRef, {
+        data: {
+          ...conformeData,
+          agreementDate: Timestamp.fromDate(new Date(conformeData.agreementDate)),
+          createdAt: serverTimestamp(),
+          ...(conformeData.clientSignature && {
+            clientSignature: {
+              ...conformeData.clientSignature,
+              timestamp: Timestamp.fromDate(new Date(conformeData.clientSignature.timestamp)),
+            }
+          })
         }
-      })
-    }
-  });
+      });
 
-  return docId;
+      console.log("✅ Client Conforme saved successfully:", docId);
+    } catch (firestoreError) {
+      console.error("🔥 Firestore Error - likely permission issue:", firestoreError);
+      console.log("📄 Conforme data that would have been saved:", JSON.stringify(conformeData, null, 2));
+      
+      // For development: throw a more descriptive error
+      throw new Error(`Firestore write failed - check security rules for 'clientConformes' collection: ${firestoreError}`);
+    }
+    return docId;
+  } catch (error) {
+    console.error("❌ Error in createClientConforme service:", error);
+    throw error; // Re-throw to let API handle it
+  }
 }
 
 /**
@@ -115,19 +133,28 @@ export async function addDirectorSignature(
   conformeId: string,
   directorEmail: string = "vferriols@pgc.up.edu.ph"
 ): Promise<void> {
-  const docRef = doc(db, COLLECTION, conformeId);
-  
-  const programDirectorSignature = {
-    method: "auto_approved" as const,
-    data: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.", 
-    signedBy: directorEmail,
-    timestamp: Timestamp.fromDate(new Date()),
-  };
+  try {
+    console.log("🖋️ Adding director signature to:", conformeId);
+    
+    const docRef = doc(db, COLLECTION, conformeId);
+    
+    const programDirectorSignature = {
+      method: "auto_approved" as const,
+      data: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.", 
+      signedBy: directorEmail,
+      timestamp: Timestamp.fromDate(new Date()),
+    };
 
-  await setDoc(docRef, {
-    "data.programDirectorSignature": programDirectorSignature,
-    "data.status": "completed"
-  }, { merge: true });
+    await setDoc(docRef, {
+      "data.programDirectorSignature": programDirectorSignature,
+      "data.status": "completed"
+    }, { merge: true });
+    
+    console.log("✅ Director signature added successfully");
+  } catch (error) {
+    console.error("❌ Error adding director signature:", error);
+    throw error;
+  }
 }
 
 /**

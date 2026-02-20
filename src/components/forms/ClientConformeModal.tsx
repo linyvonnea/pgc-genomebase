@@ -62,6 +62,18 @@ export default function ClientConformeModal({
     
     setSaving(true);
     try {
+      // Validate required data before sending
+      if (!inquiryId || !clientEmail) {
+        toast.error("Missing required information. Please reload the page and try again.");
+        return;
+      }
+
+      console.log("📋 Creating Client Conforme agreement...", {
+        clientName: filled(clientName, "N/A"),
+        inquiryId,
+        clientEmail
+      });
+
       // Call API to create conforme record with proper IP capture
       const response = await fetch("/api/client-conforme", {
         method: "POST",
@@ -81,20 +93,33 @@ export default function ClientConformeModal({
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
       const result = await response.json();
+
+      if (!response.ok) {
+        console.error("❌ API Error:", {
+          status: response.status,
+          statusText: response.statusText,
+          error: result.error || result.message
+        });
+        toast.error(result.error || result.message || `Server error (${response.status}). Please try again.`);
+        return;
+      }
       
-      console.log(`✅ Client Conforme created: ${result.conformeId}`);
-      toast.success("Client Conforme agreement recorded", { duration: 3000 });
+      console.log(`✅ Client Conforme created successfully: ${result.conformeId}`);
+      toast.success("Client Conforme agreement recorded successfully", { duration: 3000 });
       
       setAgreed(false);
       onConfirm();
     } catch (error) {
-      console.error("Failed to save Client Conforme:", error);
-      toast.error("Failed to record agreement. Please try again.");
+      console.error("❌ Network/Client Error creating Client Conforme:", error);
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        toast.error("Network error. Please check your connection and try again.");
+      } else if (error instanceof SyntaxError) {
+        toast.error("Server response error. Please try again.");
+      } else {
+        toast.error("Failed to record agreement. Please try again.");
+      }
     } finally {
       setSaving(false);
     }

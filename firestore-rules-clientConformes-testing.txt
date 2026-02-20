@@ -1,0 +1,37 @@
+// TEMPORARY Firestore Security Rules for Client Conforme Collection - TESTING ONLY
+// Add these rules to your firestore.rules file for testing
+// Replace with secure rules from firestore-rules-clientConformes.txt after testing
+
+// Client Conformes - Temporary permissive rules for debugging
+match /clientConformes/{conformeId} {
+  // Allow authenticated users to create, read, and update
+  allow create, read, update: if request.auth != null;
+  
+  // No deletion allowed - legal documents are immutable
+  allow delete: if false;
+}
+
+// After testing, use these secure rules:
+/*
+match /clientConformes/{conformeId} {
+  // Allow create for authenticated users (clients agreeing to terms)
+  allow create: if request.auth != null 
+    && request.auth.token.email != null
+    && request.resource.data.data.createdBy == request.auth.token.email;
+  
+  // Allow read for document creator and admins
+  allow read: if request.auth != null && (
+    // Document creator can read their own conformes
+    resource.data.data.createdBy == request.auth.token.email ||
+    // Admins can read all conformes
+    exists(/databases/$(database)/documents/admins/$(request.auth.token.email))
+  );
+  
+  // Only admins can update (for director signatures)
+  allow update: if request.auth != null 
+    && exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
+  
+  // No deletion allowed - legal documents are immutable
+  allow delete: if false;
+}
+*/

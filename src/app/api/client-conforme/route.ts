@@ -3,8 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClientConforme, addDirectorSignature } from "@/services/clientConformeService";
 
 export async function POST(request: NextRequest) {
+  console.log("📋 Client Conforme API called");
+  
   try {
     const body = await request.json();
+    console.log("📄 Request body:", { 
+      clientName: body.clientName, 
+      inquiryId: body.inquiryId, 
+      clientEmail: body.clientEmail 
+    });
     
     const {
       documentVersion = "PGCV-LF-CC-v005",
@@ -21,8 +28,9 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!clientName || !inquiryId || !clientEmail) {
+      console.error("❌ Missing required fields:", { clientName: !!clientName, inquiryId: !!inquiryId, clientEmail: !!clientEmail });
       return NextResponse.json(
-        { error: "Missing required fields: clientName, inquiryId, clientEmail" },
+        { error: "Missing required information: client name, inquiry ID, or email" },
         { status: 400 }
       );
     }
@@ -38,6 +46,7 @@ export async function POST(request: NextRequest) {
                      "unknown";
 
     // Create conforme record
+    console.log("💾 Creating conforme record...");
     const conformeId = await createClientConforme(
       {
         documentVersion,
@@ -57,9 +66,12 @@ export async function POST(request: NextRequest) {
       clientIp,
       clientName // Client's typed name as digital signature
     );
+    console.log("✅ Conforme created with ID:", conformeId);
 
     // Auto-sign by program director
+    console.log("🖋️ Adding director signature...");
     await addDirectorSignature(conformeId);
+    console.log("✅ Director signature added");
 
     return NextResponse.json({ 
       success: true, 
@@ -68,9 +80,25 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error("API Error creating Client Conforme:", error);
+    console.error("❌ API Error creating Client Conforme:", error);
+    
+    // More specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes('permission')) {
+        return NextResponse.json(
+          { error: "Database permission error. Please contact support." },
+          { status: 403 }
+        );
+      } else if (error.message.includes('network') || error.message.includes('NETWORK')) {
+        return NextResponse.json(
+          { error: "Database connection error. Please try again." },
+          { status: 503 }
+        );
+      }
+    }
+    
     return NextResponse.json(
-      { error: "Failed to record Client Conforme agreement" },
+      { error: "Failed to record Client Conforme agreement. Please try again." },
       { status: 500 }
     );
   }
