@@ -59,7 +59,7 @@ export default function ClientConformeModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleCancel()}>
-      <DialogContent className="max-w-3xl w-full flex flex-col max-h-[90vh] p-0 gap-0">
+      <DialogContent className="max-w-4xl w-full flex flex-col h-[90vh] max-h-[90vh] p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-3 border-b border-slate-200 shrink-0">
           <DialogTitle className="text-lg font-bold text-slate-800">
             Client Conforme — PGCV-LF-CC-v005
@@ -70,58 +70,59 @@ export default function ClientConformeModal({
         </DialogHeader>
 
         {/* Scrollable document body */}
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="px-8 py-6 text-sm text-slate-700 leading-relaxed space-y-5 font-serif">
-
-            {/* Header block */}
-            <div className="text-center space-y-1">
-              <p className="font-bold text-base text-slate-900 uppercase tracking-wide">
-                Philippine Genome Center Visayas
-              </p>
-              <p className="text-xs text-slate-500 uppercase tracking-widest">
-                Client Conforme · PGCV-LF-CC-v005
-              </p>
+        <ScrollArea className="flex-1 min-h-0 w-full">
+          <div className="px-8 py-6 text-sm text-slate-700 leading-relaxed space-y-8 font-serif">
+            {/* Header block with logos */}
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex-1 border-b border-slate-300 pb-2">
+                <p className="font-bold text-lg text-slate-900 uppercase">
+                  Philippine Genome Center Visayas
+                </p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-sans">
+                  PGCV-LF-CC-v005 · Client Conforme
+                </p>
+              </div>
             </div>
-
-            <hr className="border-slate-300" />
 
             {/* Agreement preamble */}
-            <p>
-              Please fill out the information highlighted in gray. Do not leave anything blank.
-              Put N/A for information that is not applicable.
-            </p>
+            <div className="space-y-4">
+              <p className="text-slate-500 text-xs italic border-l-4 border-slate-200 pl-3">
+                Please fill out the information highlighted in gray. Do not leave anything blank.
+                Put N/A for information that is not applicable.
+              </p>
 
-            <p>
-              This agreement is made between{" "}
-              <span className="font-semibold bg-slate-100 px-1 rounded">
-                {filled(clientName)}
-              </span>
-              ,{" "}
-              <span className="font-semibold bg-slate-100 px-1 rounded">
-                {filled(designation)}
-              </span>{" "}
-              of the{" "}
-              <span className="font-semibold bg-slate-100 px-1 rounded">
-                {filled(affiliation)}
-              </span>
-              , hereafter referred to as &ldquo;Client&rdquo; with Client ID{" "}
-              <span className="italic text-slate-500">
-                _______________ (to be filled up by PGC Visayas)
-              </span>{" "}
-              and the Philippine Genome Center Visayas (PGC Visayas), herein referred to as
-              &ldquo;PGC Visayas&rdquo;, and covers all jobs under the Project/Study entitled:
-            </p>
+              <p className="text-justify leading-relaxed">
+                This agreement is made between{" "}
+                <span className="font-bold underline bg-slate-100 px-1 rounded inline-block min-w-[150px] text-center">
+                  {filled(clientName)}
+                </span>
+                ,{" "}
+                <span className="font-bold underline bg-slate-100 px-1 rounded inline-block min-w-[120px] text-center">
+                  {filled(designation)}
+                </span>{" "}
+                of the{" "}
+                <span className="font-bold underline bg-slate-100 px-1 rounded inline-block min-w-[200px] text-center">
+                  {filled(affiliation)}
+                </span>
+                , hereafter referred to as &ldquo;Client&rdquo; with Client ID{" "}
+                <span className="italic text-slate-500 font-sans text-xs">
+                  _______________ (to be filled up by PGC Visayas)
+                </span>{" "}
+                and the Philippine Genome Center Visayas (PGC Visayas), herein referred to as
+                &ldquo;PGC Visayas&rdquo;, and covers all jobs under the Project/Study entitled:
+              </p>
 
-            <div className="border-b border-slate-400 pb-1 font-semibold bg-slate-100 px-2 rounded min-h-[2rem] flex items-center">
-              {filled(projectTitle, "_______________________________________________")}
+              <div className="border-2 border-dashed border-slate-300 p-4 font-bold bg-slate-50 rounded-md text-slate-900 text-center uppercase">
+                {filled(projectTitle, "_______________________________________________")}
+              </div>
+
+              <p className="text-justify">
+                with funding from the (Name of Funding Agency/Source of Fund){" "}
+                <span className="font-bold underline bg-slate-100 px-1 rounded inline-block min-w-[150px] text-center">
+                  {filled(fundingAgency)}
+                </span>
+              </p>
             </div>
-
-            <p>
-              with funding from the (Name of Funding Agency/Source of Fund){" "}
-              <span className="font-semibold bg-slate-100 px-1 rounded">
-                {filled(fundingAgency)}
-              </span>
-            </p>
 
             {/* Section I */}
             <div className="space-y-2">
