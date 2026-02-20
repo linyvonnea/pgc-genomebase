@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     // Return PDF with proper headers
     const fileName = `Client_Conforme_${conformeData.data.clientName?.replace(/\s+/g, '_') || 'Unknown'}_${conformeData.data.inquiryId || 'Unknown'}.pdf`;
     
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
