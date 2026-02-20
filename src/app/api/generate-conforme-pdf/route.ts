@@ -10,24 +10,20 @@ async function getAdminDb() {
     const admin = await import("firebase-admin");
     
     if (!admin.apps.length) {
-      try {
-        // Try to initialize with service account file first
-        // Note: this may fail on Vercel if file is not present (which is expected)
+      // Only try to load local file in development - prevents build failure on Vercel where file is missing
+      if (process.env.NODE_ENV !== "production") {
         try {
-          // Use require to allow failure without crashing the build analysis
-          // This must be inside a try-catch that handles MODULE_NOT_FOUND
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
           const serviceAccount = require("../../../../scripts/serviceAccountKey.json");
           admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
           });
         } catch (e) {
-          // File not found, proceed to env vars
+          // File not found or failed to load, ignore and fall through to env vars
         }
-      } catch (error) {
-        console.error("Failed to init admin:", error);
       }
       
-      // If still not initialized, try env vars
+      // If still not initialized (production or dev fallback), try env vars
       if (!admin.apps.length) {
 
         // Fallback to environment variables if file doesn't exist
