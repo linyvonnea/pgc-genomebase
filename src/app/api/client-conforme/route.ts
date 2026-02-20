@@ -1,4 +1,7 @@
 // API route to create Client Conforme with proper IP capture and Admin permissions
+// Explicitly use Node.js runtime (required for firebase-admin and fs)
+export const runtime = "nodejs";
+
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import admin from "firebase-admin";
