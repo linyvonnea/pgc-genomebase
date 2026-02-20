@@ -12,12 +12,24 @@ async function getAdminDb() {
     if (!admin.apps.length) {
       try {
         // Try to initialize with service account file first
-        const serviceAccount = await import("../../../../scripts/serviceAccountKey.json");
-        admin.initializeApp({
-          credential: admin.credential.cert(serviceAccount as any),
-        });
+        // Note: this may fail on Vercel if file is not present (which is expected)
+        try {
+          // Use require to allow failure without crashing the build analysis
+          // This must be inside a try-catch that handles MODULE_NOT_FOUND
+          const serviceAccount = require("../../../../scripts/serviceAccountKey.json");
+          admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+          });
+        } catch (e) {
+          // File not found, proceed to env vars
+        }
       } catch (error) {
-        console.error("Failed to load service account file, trying environment variables:", error);
+        console.error("Failed to init admin:", error);
+      }
+      
+      // If still not initialized, try env vars
+      if (!admin.apps.length) {
+
         // Fallback to environment variables if file doesn't exist
         if (process.env.FIREBASE_PRIVATE_KEY) {
           admin.initializeApp({
