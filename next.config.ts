@@ -5,6 +5,12 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   serverExternalPackages: ["firebase-admin", "@react-pdf/renderer"],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "2mb",
+    },
+    esmExternals: "loose"
+  },
   webpack: (config, { isServer }) => {
     // @react-pdf/renderer is server-side only; exclude it from the client bundle
     if (!isServer) {
