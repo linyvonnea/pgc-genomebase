@@ -1,35 +1,29 @@
 // src/lib/firebase-admin.ts
 import admin from "firebase-admin";
+import * as fs from "fs";
+import * as path from "path";
 
 // Initialize Firebase Admin SDK
-// This is used for server-side operations that need to bypass client-side security rules
-// or perform administrative tasks.
-
 if (!admin.apps.length) {
   try {
-    // Try to load service account from environment variable first (Vercel/Production)
+    // Try environment variable first (for Vercel/Production)
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
       const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-        // For Firestore, we don't need databaseURL but for other services we might
-        // databaseURL: `https://${serviceAccount.project_id}.firebaseio.com`
       });
       console.log("✅ Firebase Admin initialized via environment variable");
-    } 
-    // Fallback to local service account key file for development
-    else {
-      // In production, NEVER use a file. Use environment variables.
-      // But for local development, we check if the file exists.
-      try {
-        const serviceAccount = require("../../scripts/serviceAccountKey.json");
+    } else {
+      // Fallback: load from local file using absolute path based on process.cwd()
+      const keyPath = path.join(process.cwd(), "scripts", "serviceAccountKey.json");
+      if (fs.existsSync(keyPath)) {
+        const serviceAccount = JSON.parse(fs.readFileSync(keyPath, "utf-8"));
         admin.initializeApp({
-          credential: admin.credential.cert(serviceAccount)
+          credential: admin.credential.cert(serviceAccount),
         });
-        console.log("✅ Firebase Admin initialized via local serviceAccountKey.json");
-      } catch (fileError) {
-        console.warn("⚠️ No serviceAccountKey.json found and FIREBASE_SERVICE_ACCOUNT not set.");
-        // We don't initialize here to avoid crashing if it's not strictly needed for all routes
+        console.log("✅ Firebase Admin initialized via serviceAccountKey.json");
+      } else {
+        console.error("❌ serviceAccountKey.json not found at:", keyPath);
       }
     }
   } catch (error) {
