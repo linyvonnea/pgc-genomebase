@@ -1280,7 +1280,7 @@ export default function ClientPortalPage() {
     const allDraftsValidated = draftMembers.every((m) => m.isSubmitted);
     if (!allDraftsValidated) {
       toast.error(
-        "Please save all member information before submitting for approval"
+        "Please complete and save all member forms before submitting"
       );
       return;
     }
@@ -2380,7 +2380,7 @@ export default function ClientPortalPage() {
                             Draft Project — Pending Submission
                           </p>
                           <p className="text-xs text-orange-700 leading-relaxed">
-                            Please fill out your information as the <strong>Primary Member</strong>, then scroll down and click "<strong>Submit Project and Member/s for Approval</strong>" to send this project to the admin for review. Once approved, you'll receive a PID and CID.
+                            Please fill out your information as the <strong>Primary Member</strong>, then scroll down and click "<strong>Submit Project & Team for Approval</strong>" to send this project to the admin for review. Once approved, you'll receive a PID and CID.
                           </p>
                         </>
                       ) : projectDetails.status === "Pending Approval" ? (
@@ -2678,12 +2678,12 @@ export default function ClientPortalPage() {
                           {members.some((m) => !m.isSubmitted) ? (
                             <span className="text-[#B9273A] font-semibold flex items-center gap-1.5">
                               <AlertCircle className="h-4 w-4" />
-                              Please save all member information before submitting
+                              Complete and save all member details to proceed
                             </span>
                           ) : projectDetails?.isDraft ? (
                             <span className="flex items-center gap-1.5 text-blue-600 font-medium">
                               <CheckCircle2 className="h-4 w-4" />
-                              Project and member info ready for submission
+                              Ready to submit project and team details
                             </span>
                           ) : (
                             "Submit your team members for admin review"
@@ -2695,7 +2695,7 @@ export default function ClientPortalPage() {
                           className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-bold shadow-xl hover:shadow-2xl disabled:opacity-50 whitespace-nowrap"
                         >
                           <Send className="h-5 w-5 mr-2" />
-                          {projectDetails?.isDraft ? "Submit Project and Member/s for Approval" : "Submit Team Member/s for Approval"}
+                          {projectDetails?.isDraft ? "Submit Project & Team for Approval" : "Submit Team Members for Approval"}
                         </Button>
                       </div>
                     </div>
