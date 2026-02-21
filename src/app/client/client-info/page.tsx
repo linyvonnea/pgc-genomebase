@@ -1943,9 +1943,9 @@ export default function ClientPortalPage() {
                 )}
               </div>
               <div className="flex items-center gap-3 mt-0.5">
-                {member.cid && member.cid !== "pending" && (
-                  <span className="text-[11px] font-mono text-[#166FB5]/70">
-                    {member.cid}
+                {member.cid && member.cid !== "pending" && member.cid !== "draft" && (
+                  <span className="text-[11px] font-mono text-[#166FB5]/70 bg-blue-50/50 px-1.5 rounded border border-blue-100/30">
+                    Client ID: {member.cid}
                   </span>
                 )}
                 {member.formData.email && (
@@ -2124,8 +2124,8 @@ export default function ClientPortalPage() {
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[11px] font-mono text-slate-400">
-                            {project.pid}
+                          <span className="text-[10px] font-mono text-slate-400">
+                            ID: {project.pid}
                           </span>
                           {project.status !== "Pending Approval" && (
                             <Badge
@@ -2315,7 +2315,7 @@ export default function ClientPortalPage() {
           </h1>
           {projectDetails?.pid && (
             <p className="text-[11px] text-slate-500 font-mono">
-              {projectDetails.pid}
+              Project ID: {projectDetails.pid}
             </p>
           )}
         </div>
@@ -2376,38 +2376,38 @@ export default function ClientPortalPage() {
                     <div className="flex-1 space-y-2">
                       {projectDetails.status === "Draft" ? (
                         <>
-                          <p className="text-sm font-semibold text-orange-900">
-                            Draft Project — Pending Submission
+                          <p className="text-sm font-semibold text-orange-900 leading-none">
+                            Action Required: Complete Project Submission
                           </p>
-                          <p className="text-xs text-orange-700 leading-relaxed">
-                            Please fill out your information as the <strong>Primary Member</strong>, then scroll down and click "<strong>Submit Project & Team for Approval</strong>" to send this project to the admin for review. Once approved, you'll receive a PID and CID.
+                          <p className="text-sm text-orange-700 leading-relaxed">
+                            Please provide your details as the <strong>Primary Member</strong>. Once finished, scroll to the bottom and click "<strong>Submit Project & Team for Approval</strong>" to send your application for admin review. After approval, you will be assigned a <strong>Project ID</strong> and <strong>Client ID</strong>.
                           </p>
                         </>
                       ) : projectDetails.status === "Pending Approval" ? (
                         <>
-                          <p className="text-sm font-semibold text-orange-900">
-                            Pending Admin Approval
+                          <p className="text-sm font-semibold text-orange-900 leading-none">
+                            Application Under Review
                           </p>
-                          <p className="text-xs text-orange-700 leading-relaxed">
-                            Your project and team members have been submitted and are currently under review by the administrator. You'll receive a notification once approved. <strong>No further action needed at this time.</strong>
+                          <p className="text-sm text-orange-700 leading-relaxed">
+                            Your project and team members have been submitted and are currently being reviewed by our administration team. You will receive a notification and your <strong>Project ID</strong> once approved. <strong>No further action is required at this time.</strong>
                           </p>
                         </>
                       ) : projectDetails.status === "Ongoing" ? (
                         <>
-                          <p className="text-sm font-semibold text-green-900">
+                          <p className="text-sm font-semibold text-green-900 leading-none">
                             Project Approved
                           </p>
-                          <p className="text-xs text-green-700 leading-relaxed">
-                            Your project has been approved and is now active. You can now see your PID and access project documents. If you need to add more team members, you can do so below.
+                          <p className="text-sm text-green-700 leading-relaxed">
+                            Your project has been approved and is now active. You can now view your unique <strong>Project ID</strong> and access all project documents below.
                           </p>
                         </>
                       ) : (
                         <>
-                          <p className="text-sm font-semibold text-red-900">
+                          <p className="text-sm font-semibold text-red-900 leading-none">
                             Project Rejected
                           </p>
-                          <p className="text-xs text-red-700 leading-relaxed">
-                            Your project submission was not approved. Please review the admin's feedback and make necessary corrections before resubmitting.
+                          <p className="text-sm text-red-700 leading-relaxed">
+                            Your project submission was not approved. Please check your email or the feedback section for details on necessary corrections before resubmitting.
                           </p>
                         </>
                       )}
@@ -2427,9 +2427,9 @@ export default function ClientPortalPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge
                       variant="outline"
-                      className="font-mono text-xs bg-blue-50 text-[#166FB5] border-blue-200 px-2"
+                      className="font-mono text-[10px] bg-blue-50 text-[#166FB5] border-blue-200 px-2 py-0.5"
                     >
-                      {projectDetails.pid}
+                      Project ID: {projectDetails.pid}
                     </Badge>
                     {projectDetails.status !== "Pending Approval" && (
                       <Badge
