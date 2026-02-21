@@ -2450,7 +2450,8 @@ export default function ClientPortalPage() {
                         Project ID: {projectDetails.pid}
                       </Badge>
                     )}
-                    {projectDetails.status !== "Pending Approval" && (
+                    {/* Only show status badge in header for non-draft/non-pending projects to reduce redundancy with the top banner */}
+                    {projectDetails.status !== "Draft" && projectDetails.status !== "Pending Approval" && (
                       <Badge
                         className={cn(
                           "border text-xs",
