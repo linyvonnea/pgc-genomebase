@@ -1217,6 +1217,29 @@ export default function ClientPortalPage() {
     setConformePendingAction(null);
   };
 
+  // Helper function to update conforme status
+  const updateConformeStatus = async (status: 'completed' | 'abandoned') => {
+    try {
+      const conformeId = localStorage.getItem('currentConformeId');
+      if (conformeId) {
+        const { updateDoc, doc } = await import('firebase/firestore');
+        await updateDoc(doc(db, 'clientConformes', conformeId), {
+          'data.status': status,
+          'data.lastUpdated': serverTimestamp(),
+          'data.completionTimestamp': status === 'completed' ? serverTimestamp() : null
+        });
+        console.log(`✅ Conforme status updated to: ${status}`);
+        
+        // Clear the stored ID after completion
+        if (status === 'completed') {
+          localStorage.removeItem('currentConformeId');
+        }
+      }
+    } catch (error) {
+      console.error('Error updating conforme status:', error);
+    }
+  };
+
   const handleFinalSubmit = () => {
     // Check if all members are validated
     const unsavedCount = members.filter((m) => !m.isSubmitted).length;
@@ -1271,6 +1294,12 @@ export default function ClientPortalPage() {
     setShowSubmitForApprovalModal(false);
     setSubmitting(true);
 
+    // Show Step 3 progress
+    toast.loading("🔄 Step 3 of 3: Processing submission...", {
+      description: "Submitting team members for administrator review",
+      duration: Infinity
+    });
+
     try {
       if (!selectedProjectPid || !inquiryIdParam) {
         toast.error("Missing project context");
@@ -1278,6 +1307,11 @@ export default function ClientPortalPage() {
       }
 
       const draftMembers = members.filter((m) => m.isDraft && !m.isPrimary);
+      
+      // Update conforme status to completed since submission is proceeding
+      await updateConformeStatus('completed');
+      
+      // ... rest of the existing function
 
       await submitForApproval(
         inquiryIdParam,
@@ -1350,12 +1384,21 @@ export default function ClientPortalPage() {
     setShowSubmitProjectModal(false);
     setSubmitting(true);
 
+    // Show Step 3 progress
+    toast.loading("🔄 Step 3 of 3: Processing submission...", {
+      description: "Submitting project and primary member for administrator review",
+      duration: Infinity
+    });
+
     try {
       if (!inquiryIdParam || !emailParam || !projectRequest) {
         toast.error("Missing required information");
         return;
       }
 
+      // Update conforme status to completed since submission is proceeding
+      await updateConformeStatus('completed');
+      
       const primaryMember = members.find((m) => m.isPrimary);
       if (!primaryMember) {
         toast.error("Primary member not found");
@@ -2787,7 +2830,11 @@ export default function ClientPortalPage() {
       <ConfirmationModalLayout
         open={showSubmitForApprovalModal}
         onConfirm={handleConfirmSubmitForApproval}
-        onCancel={() => setShowSubmitForApprovalModal(false)}
+        onCancel={() => {
+          setShowSubmitForApprovalModal(false);
+          // Mark as abandoned if user cancels after legal agreement
+          updateConformeStatus('abandoned');
+        }}
         loading={submitting}
         title="📋 Final Review & Confirmation"
         description="Please review the team members below before final submission. This is the last step before administrator review."
@@ -2797,11 +2844,11 @@ export default function ClientPortalPage() {
         <div className="space-y-4">
           {/* Progress Indicator */}
           <div className="flex items-center gap-2 mb-3">
-            <Badge variant="secondary" className="bg-green-100 text-green-800 flex items-center gap-1">
+            <Badge variant="secondary" className="bg-blue-100 text-blue-800 flex items-center gap-1">
               <CheckCircle2 className="h-3 w-3" />
-              Step 3 of 3
+              Step 2 of 3
             </Badge>
-            <span className="text-xs text-slate-500">Final Review & Submission</span>
+            <span className="text-xs text-slate-500">Review Team Members</span>
           </div>
           
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -2835,7 +2882,11 @@ export default function ClientPortalPage() {
       <ConfirmationModalLayout
         open={showSubmitProjectModal}
         onConfirm={handleConfirmSubmitProject}
-        onCancel={() => setShowSubmitProjectModal(false)}
+        onCancel={() => {
+          setShowSubmitProjectModal(false);
+          // Mark as abandoned if user cancels after legal agreement  
+          updateConformeStatus('abandoned');
+        }}
         loading={submitting}
         title="📋 Final Review & Confirmation"
         description="Please review your project and member information below before final submission to administrators."
@@ -2845,11 +2896,11 @@ export default function ClientPortalPage() {
         <div className="space-y-4">
           {/* Progress Indicator */}
           <div className="flex items-center gap-2 mb-3">
-            <Badge variant="secondary" className="bg-green-100 text-green-800 flex items-center gap-1">
+            <Badge variant="secondary" className="bg-blue-100 text-blue-800 flex items-center gap-1">
               <CheckCircle2 className="h-3 w-3" />
-              Step 3 of 3
+              Step 2 of 3
             </Badge>
-            <span className="text-xs text-slate-500">Final Review & Submission</span>
+            <span className="text-xs text-slate-500">Review Project Details</span>
           </div>
           
           {projectRequest && (
@@ -2892,6 +2943,8 @@ export default function ClientPortalPage() {
         onCancel={() => {
           setShowConformeModal(false);
           setConformePendingAction(null);
+          // Mark as abandoned if user cancels after agreeing
+          updateConformeStatus('abandoned');
         }}
         loading={submitting}
         clientName={members.find((m) => m.isPrimary)?.formData.name ?? ""}
