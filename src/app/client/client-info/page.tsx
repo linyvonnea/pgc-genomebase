@@ -2106,7 +2106,7 @@ export default function ClientPortalPage() {
               </p>
             </div>
           ) : (
-            <div className="px-3 py-2 space-y-2">
+            <div className="pl-6 pr-3 py-2 space-y-2">
               {projects.map((project) => {
                 // Defensive checks for project properties
                 if (!project || !project.pid) {
@@ -2130,33 +2130,36 @@ export default function ClientPortalPage() {
                       : "border-slate-200 hover:border-slate-300 hover:shadow-sm"
                   )}>
                     {/* ── Project Card - Simple ── */}
-                    <div
-                      className="w-full text-left px-3 py-2.5 cursor-pointer flex items-center gap-2.5 bg-white hover:bg-slate-50"
-                      onClick={() => handleSelectProject(project)}
-                    >
-                      {/* Folder icon */}
-                      <div className="flex-shrink-0">
-                        <FolderOpen className="h-4 w-4 text-[#166FB5]" />
-                      </div>
+                    <div className="w-full flex items-center bg-white hover:bg-slate-50">
+                      {/* Main project content - clickable */}
+                      <div
+                        className="flex-1 min-w-0 text-left px-3 py-2.5 cursor-pointer flex items-center gap-2.5"
+                        onClick={() => handleSelectProject(project)}
+                      >
+                        {/* Folder icon */}
+                        <div className="flex-shrink-0">
+                          <FolderOpen className="h-4 w-4 text-[#166FB5]" />
+                        </div>
 
-                      {/* Title + status */}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm truncate text-slate-800">
-                          {project.title || "Untitled Project"}
-                        </p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <Badge
-                            className={cn(
-                              "text-[10px] h-4 px-1.5 border-0 font-medium",
-                              statusColors[project.status] || "bg-slate-100 text-slate-600"
-                            )}
-                          >
-                            {project.status || "Unknown"}
-                          </Badge>
+                        {/* Title + status */}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate text-slate-800">
+                            {project.title || "Untitled Project"}
+                          </p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <Badge
+                              className={cn(
+                                "text-[10px] h-4 px-1.5 border-0 font-medium",
+                                statusColors[project.status] || "bg-slate-100 text-slate-600"
+                              )}
+                            >
+                              {project.status || "Unknown"}
+                            </Badge>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Documents button - Always visible for Ongoing projects */}
+                      {/* Documents toggle button - Visible chevron on the right */}
                       {isOngoing && (
                         <button
                           onClick={(e) => {
@@ -2164,18 +2167,15 @@ export default function ClientPortalPage() {
                             toggleProjectDocs(project);
                           }}
                           className={cn(
-                            "flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded text-[10px] font-semibold transition-colors",
-                            isDocsExpanded
-                              ? "bg-[#166FB5] text-white"
-                              : "bg-slate-100 text-slate-600 hover:bg-[#166FB5] hover:text-white"
+                            "flex-shrink-0 px-3 py-2.5 hover:bg-slate-100 transition-colors border-l border-slate-200",
+                            isDocsExpanded && "bg-slate-50"
                           )}
                           title="View documents"
+                          aria-label="Toggle documents"
                         >
-                          <FileText className="h-3 w-3" />
-                          <span>{totalDocs}</span>
-                          <ChevronDown className={cn(
-                            "h-2.5 w-2.5 transition-transform",
-                            isDocsExpanded && "rotate-180"
+                          <ChevronRight className={cn(
+                            "h-5 w-5 text-slate-600 transition-transform",
+                            isDocsExpanded && "rotate-90"
                           )} />
                         </button>
                       )}
