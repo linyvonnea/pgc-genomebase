@@ -2940,6 +2940,8 @@ export default function ClientPortalPage() {
         onCancel={() => {
           setShowConformeModal(false);
           setConformePendingAction(null);
+          // Mark as abandoned if user cancels after agreeing
+          updateConformeStatus('abandoned');
         }}
         loading={submitting}
         clientName={members.find((m) => m.isPrimary)?.formData.name ?? ""}
