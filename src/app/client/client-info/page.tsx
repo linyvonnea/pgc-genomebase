@@ -2479,14 +2479,14 @@ export default function ClientPortalPage() {
                     projectDetails.status === "Draft" 
                       ? "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
                       : projectDetails.status === "Pending Approval"
-                      ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200"
+                      ? "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
                       : projectDetails.status === "Ongoing"
                       ? "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200"
                       : "bg-gradient-to-r from-red-50 to-pink-50 border-red-200"
                   }`}>
                     <div className="flex items-start gap-3">
                       {projectDetails.status === "Pending Approval" ? (
-                        <Clock className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <Clock className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
                       ) : projectDetails.status === "Ongoing" ? (
                         <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
                       ) : projectDetails.status === "Rejected" ? (
@@ -2506,11 +2506,11 @@ export default function ClientPortalPage() {
                           </>
                         ) : projectDetails.status === "Pending Approval" ? (
                           <>
-                            <p className="text-sm font-semibold text-blue-900">
-                              ⏳ Pending Administrator Review
+                            <p className="text-sm font-semibold text-orange-900">
+                              Pending Admin Approval
                             </p>
-                            <p className="text-xs text-blue-700 leading-relaxed">
-                              Your submission has been received and is currently under review. You'll receive an email notification once the administrator makes a decision. <strong>No further action needed at this time.</strong>
+                            <p className="text-xs text-orange-700 leading-relaxed">
+                              Your project and team members have been submitted and are currently under review by the administrator. You'll receive a notification once approved. <strong>No further action needed at this time.</strong>
                             </p>
                           </>
                         ) : projectDetails.status === "Ongoing" ? (
@@ -2615,24 +2615,6 @@ export default function ClientPortalPage() {
                       </div>
                     </div>
                   )}
-
-                {approvalStatus === "pending" && !showApprovalCelebration && projectDetails?.status !== "Pending Approval" && (
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <Clock className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-blue-800">
-                          ⏳ Team Members Under Review
-                        </h4>
-                        <p className="text-sm text-blue-700 mt-1">
-                          Additional team members have been submitted for administrator approval. You'll be notified once reviewed.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {approvalStatus === "rejected" && (
                   <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-5">
