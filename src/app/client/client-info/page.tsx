@@ -1493,8 +1493,8 @@ export default function ClientPortalPage() {
         setProjectRequest(null);
     }
     
-    // Update active tab/expanded view
-    setExpandedMembers(new Set(["primary"]));
+    // Preserve current expanded members state - don't force primary to expand
+    // setExpandedMembers(new Set(["primary"])); // Removed - let user control expansion state
     
     // Close mobile sidebar if open
     setMobileSidebarOpen(false);
