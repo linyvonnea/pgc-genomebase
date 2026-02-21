@@ -139,9 +139,25 @@ export default function ClientPortalPage() {
 
   // ── UI state ──────────────────────────────────────────────────
   const [showProjectsList, setShowProjectsList] = useState(true);
-  const [expandedMembers, setExpandedMembers] = useState<Set<string>>(
-    new Set(["primary"])
-  );
+  // Load member expansion state from localStorage for persistence across refreshes
+  const [expandedMembers, setExpandedMembers] = useState<Set<string>>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('expandedMembers');
+      console.log('Loading expanded members from localStorage:', saved);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          console.log('Parsed expansion state:', parsed);
+          return new Set(parsed);
+        } catch (e) {
+          console.error('Failed to parse localStorage expandedMembers:', e);
+          return new Set();
+        }
+      }
+    }
+    console.log('No localStorage data, starting with empty set');
+    return new Set(); // Start with all collapsed, let user decide
+  });
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [expandedProjectDocs, setExpandedProjectDocs] = useState<Set<string>>(new Set());
   const [projectDocuments, setProjectDocuments] = useState<
@@ -601,11 +617,7 @@ export default function ClientPortalPage() {
         
     const allMembers = [primaryMember, ...additionalDraftMembers, ...pendingProjectMembers, ...approvedMembers].filter((m): m is ClientMember => m !== null);
     setMembers(allMembers);
-    setExpandedMembers(prev => {
-        const newSet = new Set(prev);
-        if (primaryMember) newSet.add("primary");
-        return newSet;
-    });
+    // Don't automatically expand primary member - respect user's saved preference from localStorage
 
   }, [
     fetchedDraftProjects, 
@@ -679,7 +691,14 @@ export default function ClientPortalPage() {
           ? "Please complete and save your information as Primary Member first before adding new team members."
           : "Please finish and save the member details you just added before adding a new one."
       );
-      setExpandedMembers((prev) => new Set([...prev, unsavedMember.id]));
+      setExpandedMembers((prev) => {
+        const newSet = new Set([...prev, unsavedMember.id]);
+        // Persist when auto-expanding to show validation error
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('expandedMembers', JSON.stringify(Array.from(newSet)));
+        }
+        return newSet;
+      });
       return;
     }
 
@@ -744,7 +763,7 @@ export default function ClientPortalPage() {
         return [newMember, ...prev];
       });
 
-      setExpandedMembers((prev) => new Set([...prev, savedDocId]));
+      // Don't auto-expand new members - let user decide when to open them
       toast.success("New member slot added. Please fill in their details.");
     } catch (error) {
       console.error("Error adding draft member:", error);
@@ -812,10 +831,13 @@ export default function ClientPortalPage() {
         }
       }
 
-      // Collapse deleted member
+      // Collapse deleted member and persist to localStorage
       setExpandedMembers((prev) => {
         const next = new Set(prev);
         next.delete(memberToDelete);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('expandedMembers', JSON.stringify(Array.from(next)));
+        }
         return next;
       });
 
@@ -1571,19 +1593,17 @@ export default function ClientPortalPage() {
       return {
         label: "Pending Approval",
         color: "bg-orange-500",
-        icon: Clock,
       };
     if (member.isDraft && approvalStatus === "rejected")
-      return { label: "Rejected", color: "bg-red-500", icon: XCircle };
+      return { label: "Rejected", color: "bg-red-500" };
     if (member.isSubmitted)
       return {
         label: member.isDraft ? "Validated" : "Completed",
         color: member.isDraft ? "bg-blue-500" : "bg-green-500",
-        icon: CheckCircle2,
       };
     if (Object.keys(member.errors).length > 0)
-      return { label: "Needs Attention", color: "bg-red-500", icon: AlertCircle };
-    return { label: "Draft", color: "bg-yellow-500", icon: Loader2 };
+      return { label: "Needs Attention", color: "bg-red-500" };
+    return { label: "Draft", color: "bg-yellow-500" };
   };
 
   const toggleMemberExpand = (memberId: string) => {
@@ -1591,6 +1611,11 @@ export default function ClientPortalPage() {
       const next = new Set(prev);
       if (next.has(memberId)) next.delete(memberId);
       else next.add(memberId);
+      // Persist to localStorage so state is remembered across page refreshes
+      if (typeof window !== 'undefined') {
+        console.log('Saving expanded members to localStorage:', Array.from(next));
+        localStorage.setItem('expandedMembers', JSON.stringify(Array.from(next)));
+      }
       return next;
     });
   };
@@ -1893,7 +1918,6 @@ export default function ClientPortalPage() {
   /** Renders a single member card (expandable) */
   const renderMemberCard = (member: ClientMember) => {
     const status = getMemberStatus(member);
-    const StatusIcon = status.icon;
     const isExpanded = expandedMembers.has(member.id);
 
     return (
@@ -2004,26 +2028,37 @@ export default function ClientPortalPage() {
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      {/* Header - Redesigned as a Card */}
-      <div className="p-4 border-b bg-white">
-        <div className="bg-gradient-to-br from-[#166FB5] to-[#4038AF] rounded-2xl p-5 shadow-md border border-[#166FB5]/20 relative overflow-hidden group">
-          {/* Decorative background element */}
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-all duration-500" />
+      {/* Header - Enhanced Client Portal Card */}
+      <div className="p-4 border-b bg-gradient-to-br from-slate-50 to-blue-50/30">
+        <div className="bg-gradient-to-br from-[#166FB5] to-[#1a5fa0] rounded-2xl p-6 shadow-lg border border-blue-200/50 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
+          {/* Decorative background elements */}
+          <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:bg-white/15 transition-all duration-700" />
+          <div className="absolute -left-4 -bottom-4 w-24 h-24 bg-blue-400/10 rounded-full blur-2xl" />
           
-          <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-white/15 backdrop-blur-md rounded-xl border border-white/20 shadow-inner">
-                <Users className="h-6 w-6 text-white" />
+          <div className="flex items-start justify-between relative z-10">
+            <div className="flex items-start gap-3.5 flex-1 min-w-0">
+              {/* Icon */}
+              <div className="p-3 bg-white/90 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg flex-shrink-0 hover:scale-105 transition-transform duration-200">
+                <Users className="h-6 w-6 text-[#166FB5]" />
               </div>
-              <div className="min-w-0">
-                <h2 className="text-white font-extrabold text-xl tracking-tight leading-none">
+              
+              {/* User Info */}
+              <div className="min-w-0 flex-1 pt-0.5">
+                <h2 className="text-white font-extrabold text-lg tracking-tight leading-tight mb-2">
                   Client Portal
                 </h2>
-                <div className="flex items-center gap-1.5 mt-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                  <span className="text-white/70 text-[10px] uppercase font-bold tracking-widest">
-                    Active Session
-                  </span>
+                
+                {/* User details */}
+                <div className="space-y-1.5">
+                  {user?.displayName && (
+                    <p className="text-white/95 text-sm font-semibold truncate">
+                      {user.displayName}
+                    </p>
+                  )}
+                  <p className="text-white/70 text-xs truncate flex items-center gap-1.5">
+                    <span className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />
+                    {user?.email || emailParam || ""}
+                  </p>
                 </div>
               </div>
             </div>
@@ -2031,7 +2066,8 @@ export default function ClientPortalPage() {
             {/* Close button – mobile only */}
             <button
               onClick={() => setMobileSidebarOpen(false)}
-              className="lg:hidden text-white/80 hover:text-white hover:bg-white/20 rounded-xl p-2 transition-all duration-200 border border-transparent hover:border-white/20"
+              className="lg:hidden text-white/70 hover:text-white hover:bg-white/15 rounded-lg p-1.5 transition-all duration-200 flex-shrink-0"
+              aria-label="Close sidebar"
             >
               <X className="h-5 w-5" />
             </button>
@@ -2039,26 +2075,27 @@ export default function ClientPortalPage() {
         </div>
       </div>
 
-      {/* Projects toggle */}
+      {/* Projects section header - Enhanced */}
       <button
         onClick={() => setShowProjectsList(!showProjectsList)}
-        className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 hover:bg-slate-50 transition-colors"
+        className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200/80 hover:bg-gradient-to-r hover:from-slate-50 hover:to-transparent transition-all duration-200 group"
       >
         <div className="flex items-center gap-3">
-          <div className="p-1.5 bg-[#166FB5]/10 rounded-lg">
+          <div className="p-1.5 rounded-lg bg-[#166FB5]/10 group-hover:bg-[#166FB5]/15 transition-colors">
             <FolderOpen className="h-4 w-4 text-[#166FB5]" />
           </div>
-          <span className="font-semibold text-sm text-slate-800">Projects</span>
-          <Badge
-            variant="outline"
-            className="text-[10px] h-5 px-1.5 bg-slate-50"
-          >
-            {projects.length}
-          </Badge>
+          <div className="flex items-center gap-2.5">
+            <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900 transition-colors">
+              My Projects
+            </span>
+            <span className="inline-flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-full bg-[#166FB5] text-white text-xs font-bold shadow-sm">
+              {projects.length}
+            </span>
+          </div>
         </div>
         <ChevronDown
           className={cn(
-            "h-4 w-4 text-slate-400 transition-transform duration-200",
+            "h-4 w-4 text-slate-400 transition-all duration-200 group-hover:text-[#166FB5]",
             showProjectsList && "rotate-180"
           )}
         />
@@ -2082,7 +2119,7 @@ export default function ClientPortalPage() {
               </p>
             </div>
           ) : (
-            <div className="pl-4 pr-2 py-2 space-y-1">
+            <div className="px-3 py-3 space-y-2">
               {projects.map((project) => {
                 // Defensive checks for project properties
                 if (!project || !project.pid) {
@@ -2090,189 +2127,188 @@ export default function ClientPortalPage() {
                   return null;
                 }
                 
-                const isClickable = !project.isDraft && project.status === "Ongoing";
                 const isSelected = selectedProjectPid === project.pid;
                 const isDocsExpanded = expandedProjectDocs.has(project.pid);
                 const docs = projectDocuments.get(project.pid);
                 const quotationCount = docs?.quotations.length || 0;
                 const chargeSlipCount = docs?.chargeSlips.length || 0;
+                const totalDocs = quotationCount + chargeSlipCount;
+                const isOngoing = project.status === "Ongoing";
                 
                 return (
-                  <div key={project.pid} className="space-y-0.5">
-                    {/* Main project button */}
-                    <div className="relative">
-                      <div
-                        className={cn(
-                          "w-full text-left p-3 pr-12 rounded-lg transition-all duration-150 cursor-pointer hover:bg-slate-50",
-                          isSelected
-                            ? "bg-[#166FB5]/8 border-l-[3px] border-l-[#166FB5] shadow-sm"
-                            : "border-l-[3px] border-l-transparent opacity-80"
-                        )}
-                        onClick={() => handleSelectProject(project)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <p
+                  <div key={project.pid} className="rounded-xl overflow-hidden border border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-md transition-all duration-200">
+                    {/* ── Project Row - Enhanced ── */}
+                    <div
+                      className={cn(
+                        "w-full text-left px-4 py-3 cursor-pointer transition-all duration-200 flex items-center gap-3",
+                        isSelected
+                          ? "bg-gradient-to-r from-[#166FB5] to-[#1a5fa0] text-white"
+                          : "bg-white hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50/30 text-slate-700"
+                      )}
+                      onClick={() => handleSelectProject(project)}
+                    >
+                      {/* Folder icon - Enhanced */}
+                      <div className={cn(
+                        "p-2 rounded-xl flex-shrink-0 transition-all duration-200",
+                        isSelected 
+                          ? "bg-white/20 shadow-inner" 
+                          : "bg-gradient-to-br from-slate-100 to-slate-50 shadow-sm"
+                      )}>
+                        <FolderOpen className={cn(
+                          "h-4 w-4",
+                          isSelected ? "text-white" : "text-[#166FB5]"
+                        )} />
+                      </div>
+
+                      {/* Title + status - Enhanced */}
+                      <div className="flex-1 min-w-0">
+                        <p className={cn(
+                          "font-bold text-sm truncate leading-tight mb-1",
+                          isSelected ? "text-white" : "text-slate-900"
+                        )}>
+                          {project.title || "Untitled Project"}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {project.status !== "Draft" && project.status !== "Pending Approval" && (
+                            <span className={cn(
+                              "text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded",
+                              isSelected 
+                                ? "text-white/80 bg-white/10" 
+                                : "text-slate-500 bg-slate-100"
+                            )}>
+                              {project.pid}
+                            </span>
+                          )}
+                          <Badge
                             className={cn(
-                              "font-medium text-sm truncate",
-                              isSelected ? "text-[#166FB5]" : "text-slate-700"
+                              "text-[10px] h-5 px-2 border-0 font-bold shadow-sm",
+                              isSelected
+                                ? "bg-white/25 text-white backdrop-blur-sm"
+                                : statusColors[project.status] || "bg-slate-100 text-slate-600"
                             )}
                           >
-                            {project.title || "Untitled Project"}
-                          </p>
-                          {isSelected && (
-                            <CheckCircle2 className="h-3 w-3 text-[#166FB5]" />
-                          )}
+                            {project.status || "Unknown"}
+                          </Badge>
                         </div>
-                        {/* Only show Project ID for approved/ongoing projects, not drafts (security) */}
-                        {project.status !== "Draft" && project.status !== "Pending Approval" && (
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[10px] font-mono text-slate-400">
-                              ID: {project.pid}
-                            </span>
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "text-[10px] h-4 px-1.5 border",
-                                statusColors[project.status] || "bg-slate-100 text-slate-600"
-                              )}
-                            >
-                              {project.status || "Unknown"}
-                            </Badge>
-                          </div>
-                        )}
-                        {/* For draft projects, show only status badge */}
-                        {(project.status === "Draft" || project.status === "Pending Approval") && (
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "text-[10px] h-4 px-1.5 border",
-                                statusColors[project.status] || "bg-slate-100 text-slate-600"
-                              )}
-                            >
-                              {project.status || "Unknown"}
-                            </Badge>
-                          </div>
-                        )}
                       </div>
-                      
+
+                      {/* Documents toggle – only for Ongoing projects - Enhanced */}
+                      {isOngoing && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleProjectDocs(project);
                           }}
                           className={cn(
-                            "absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-lg transition-all duration-200 shadow-sm border",
-                            isDocsExpanded 
-                              ? "bg-[#166FB5] border-[#166FB5] text-white" 
-                              : "bg-white border-slate-200 text-slate-400 hover:border-[#166FB5] hover:text-[#166FB5] hover:bg-slate-50"
+                            "flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all duration-200 border shadow-sm hover:shadow",
+                            isDocsExpanded
+                              ? isSelected
+                                ? "bg-white/25 border-white/40 text-white"
+                                : "bg-[#166FB5] border-[#166FB5] text-white"
+                              : isSelected
+                                ? "bg-white/15 border-white/30 text-white hover:bg-white/25"
+                                : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-[#166FB5] hover:border-[#166FB5] hover:text-white"
                           )}
-                          title="View quotations and charge slips"
+                          title="View documents"
                         >
-                          <ChevronRight
-                            className={cn(
-                              "h-5 w-5 transition-transform duration-300",
-                              isDocsExpanded && "rotate-90"
-                            )}
-                          />
+                          <FileText className="h-3.5 w-3.5" />
+                          <span>{totalDocs > 0 ? totalDocs : "Docs"}</span>
+                          <ChevronDown className={cn(
+                            "h-3 w-3 transition-transform duration-200",
+                            isDocsExpanded && "rotate-180"
+                          )} />
                         </button>
-                      
+                      )}
                     </div>
 
-                    {/* Collapsible documents section */}
+                    {/* ── Documents sub-panel - Enhanced ── */}
                     {isDocsExpanded && (
-                      <div className="ml-3 pl-3 border-l-2 border-slate-200 space-y-1 py-1">
+                      <div className="bg-gradient-to-b from-slate-50 to-slate-100/50 border-t-2 border-slate-200">
                         {docs?.loading ? (
-                          <div className="flex items-center gap-2 px-3 py-2 text-xs text-slate-400">
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                            <span>Loading documents...</span>
+                          <div className="flex items-center gap-2 px-5 py-4 text-sm text-slate-500">
+                            <Loader2 className="h-4 w-4 animate-spin text-[#166FB5]" />
+                            <span>Loading documents…</span>
                           </div>
                         ) : (
-                          <>
-                            {/* Quotations section */}
-                            <div className="px-2 py-1.5 rounded hover:bg-slate-50">
-                              <div className="flex items-center justify-between mb-1">
+                          <div className="divide-y divide-slate-200">
+                            {/* Quotations - Enhanced */}
+                            <div className="px-4 py-3.5">
+                              <div className="flex items-center justify-between mb-2.5">
                                 <div className="flex items-center gap-2">
-                                  <FileText className="h-3.5 w-3.5 text-purple-600" />
-                                  <span className="text-xs font-medium text-slate-700">
+                                  <div className="p-1.5 rounded-lg bg-purple-100">
+                                    <FileText className="h-3.5 w-3.5 text-purple-600" />
+                                  </div>
+                                  <span className="text-xs font-bold text-slate-700">
                                     Quotations
                                   </span>
                                 </div>
-                                <Badge
-                                  variant="secondary"
-                                  className="h-4 px-1.5 text-[10px] bg-purple-100 text-purple-700"
-                                >
+                                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-purple-600 text-white text-[10px] font-bold shadow-sm">
                                   {quotationCount}
-                                </Badge>
+                                </span>
                               </div>
                               {quotationCount > 0 ? (
-                                <div className="space-y-0.5 ml-5">
+                                <div className="space-y-1.5 pl-1">
                                   {docs?.quotations.map((quotation) => (
                                     <a
                                       key={quotation.id}
                                       href={`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="block text-[11px] text-slate-500 hover:text-[#166FB5] hover:underline truncate"
+                                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-purple-700 hover:bg-purple-50 transition-all duration-150 group/link border border-transparent hover:border-purple-200"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      {quotation.referenceNumber}
+                                      <div className="w-1.5 h-1.5 rounded-full bg-purple-400 group-hover/link:scale-125 transition-transform flex-shrink-0" />
+                                      <span className="truncate">{quotation.referenceNumber}</span>
                                     </a>
                                   ))}
                                 </div>
                               ) : (
-                                <p className="text-[10px] text-slate-400 ml-5">
-                                  No quotations yet
-                                </p>
+                                <p className="text-xs text-slate-400 pl-3 py-1 italic">No quotations yet</p>
                               )}
                             </div>
 
-                            {/* Charge Slips section */}
-                            <div className="px-2 py-1.5 rounded hover:bg-slate-50">
-                              <div className="flex items-center justify-between mb-1">
+                            {/* Charge Slips - Enhanced */}
+                            <div className="px-4 py-3.5">
+                              <div className="flex items-center justify-between mb-2.5">
                                 <div className="flex items-center gap-2">
-                                  <Receipt className="h-3.5 w-3.5 text-green-600" />
-                                  <span className="text-xs font-medium text-slate-700">
+                                  <div className="p-1.5 rounded-lg bg-emerald-100">
+                                    <Receipt className="h-3.5 w-3.5 text-emerald-600" />
+                                  </div>
+                                  <span className="text-xs font-bold text-slate-700">
                                     Charge Slips
                                   </span>
                                 </div>
-                                <Badge
-                                  variant="secondary"
-                                  className="h-4 px-1.5 text-[10px] bg-green-100 text-green-700"
-                                >
+                                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold shadow-sm">
                                   {chargeSlipCount}
-                                </Badge>
+                                </span>
                               </div>
                               {chargeSlipCount > 0 ? (
-                                <div className="space-y-0.5 ml-5">
+                                <div className="space-y-1.5 pl-1">
                                   {docs?.chargeSlips.map((chargeSlip) => (
                                     <a
                                       key={chargeSlip.id}
                                       href={`/client/view-document?type=charge-slip&ref=${chargeSlip.id}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="block text-[11px] text-slate-500 hover:text-[#166FB5] hover:underline truncate"
+                                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 transition-all duration-150 group/link border border-transparent hover:border-emerald-200"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      {chargeSlip.chargeSlipNumber}
+                                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 group-hover/link:scale-125 transition-transform flex-shrink-0" />
+                                      <span className="truncate">{chargeSlip.chargeSlipNumber}</span>
                                     </a>
                                   ))}
                                 </div>
                               ) : (
-                                <p className="text-[10px] text-slate-400 ml-5">
-                                  No charge slips yet
-                                </p>
+                                <p className="text-xs text-slate-400 pl-3 py-1 italic">No charge slips yet</p>
                               )}
                             </div>
-                          </>
+                          </div>
                         )}
                       </div>
                     )}
                   </div>
                 );
               })}
-              
-              {/* New Project button at the bottom of the list - REMOVED */}
             </div>
           )}
         </div>
@@ -2379,16 +2415,7 @@ export default function ClientPortalPage() {
                     ? "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200"
                     : "bg-gradient-to-r from-red-50 to-pink-50 border-red-200"
                 }`}>
-                  <div className="flex items-start gap-3">
-                    {projectDetails.status === "Pending Approval" ? (
-                      <Clock className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                    ) : projectDetails.status === "Ongoing" ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                    ) : projectDetails.status === "Rejected" ? (
-                      <XCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                    ) : (
-                      <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                    )}
+                  <div className="flex items-start">
                     <div className="flex-1 space-y-2">
                       {projectDetails.status === "Draft" ? (
                         <>
