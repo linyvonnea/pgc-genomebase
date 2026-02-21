@@ -2833,8 +2833,6 @@ export default function ClientPortalPage() {
         onConfirm={handleConfirmSubmitForApproval}
         onCancel={() => {
           setShowSubmitForApprovalModal(false);
-          // Mark as abandoned if user cancels after legal agreement
-          updateConformeStatus('abandoned');
         }}
         loading={submitting}
         title="📋 Final Review & Confirmation"
@@ -2885,8 +2883,6 @@ export default function ClientPortalPage() {
         onConfirm={handleConfirmSubmitProject}
         onCancel={() => {
           setShowSubmitProjectModal(false);
-          // Mark as abandoned if user cancels after legal agreement  
-          updateConformeStatus('abandoned');
         }}
         loading={submitting}
         title="📋 Final Review & Confirmation"
@@ -2944,8 +2940,6 @@ export default function ClientPortalPage() {
         onCancel={() => {
           setShowConformeModal(false);
           setConformePendingAction(null);
-          // Mark as abandoned if user cancels after agreeing
-          updateConformeStatus('abandoned');
         }}
         loading={submitting}
         clientName={members.find((m) => m.isPrimary)?.formData.name ?? ""}
