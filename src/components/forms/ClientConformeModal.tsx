@@ -75,6 +75,7 @@ export default function ClientConformeModal({
       const conformeId = `${inquiryId}_${now.getTime()}`;
       const ts = Timestamp.fromDate(now);
 
+      // Save with 'agreed_pending' status - user has read and agreed but not yet completed submission
       await setDoc(doc(db, "clientConformes", conformeId), {
         data: {
           documentVersion: "PGCV-LF-CC-v005",
@@ -91,7 +92,8 @@ export default function ClientConformeModal({
           userAgent:       typeof navigator !== "undefined" ? navigator.userAgent : "unknown",
           agreementDate:   ts,
           createdAt:       ts,
-          status:          "completed",
+          status:          "agreed_pending", // User agreed but hasn't completed submission yet
+          conformeId:      conformeId, // Store the ID for later status updates
           clientSignature: {
             method:    "typed_name",
             data:      filled(clientName),
@@ -106,9 +108,12 @@ export default function ClientConformeModal({
         },
       });
 
-      console.log("✅ Client Conforme saved:", conformeId);
-      toast.success("Client Conforme agreement recorded successfully", { duration: 3000 });
+      console.log("✅ Client Conforme saved with 'agreed_pending' status:", conformeId);
+      toast.success("Legal agreement recorded. Proceeding to final review...", { duration: 3000 });
       setAgreed(false);
+      
+      // Pass the conformeId to the parent for status tracking
+      localStorage.setItem('currentConformeId', conformeId);
       onConfirm();
     } catch (error: unknown) {
       console.error("❌ Error saving Client Conforme:", error);
