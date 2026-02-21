@@ -2123,40 +2123,32 @@ export default function ClientPortalPage() {
                 const isOngoing = project.status === "Ongoing";
                 
                 return (
-                  <div key={project.pid} className="rounded-lg border border-slate-200 overflow-hidden">
+                  <div key={project.pid} className={cn(
+                    "rounded-lg border-2 overflow-hidden transition-all",
+                    isSelected
+                      ? "border-[#166FB5] shadow-md"
+                      : "border-slate-200 hover:border-slate-300 hover:shadow-sm"
+                  )}>
                     {/* ── Project Card - Simple ── */}
                     <div
-                      className={cn(
-                        "w-full text-left px-3 py-2.5 cursor-pointer flex items-center gap-2.5",
-                        isSelected
-                          ? "bg-[#166FB5] text-white"
-                          : "bg-white hover:bg-slate-50 text-slate-700"
-                      )}
+                      className="w-full text-left px-3 py-2.5 cursor-pointer flex items-center gap-2.5 bg-white hover:bg-slate-50"
                       onClick={() => handleSelectProject(project)}
                     >
                       {/* Folder icon */}
                       <div className="flex-shrink-0">
-                        <FolderOpen className={cn(
-                          "h-4 w-4",
-                          isSelected ? "text-white" : "text-[#166FB5]"
-                        )} />
+                        <FolderOpen className="h-4 w-4 text-[#166FB5]" />
                       </div>
 
                       {/* Title + status */}
                       <div className="flex-1 min-w-0">
-                        <p className={cn(
-                          "font-semibold text-sm truncate",
-                          isSelected ? "text-white" : "text-slate-800"
-                        )}>
+                        <p className="font-semibold text-sm truncate text-slate-800">
                           {project.title || "Untitled Project"}
                         </p>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <Badge
                             className={cn(
                               "text-[10px] h-4 px-1.5 border-0 font-medium",
-                              isSelected
-                                ? "bg-white/20 text-white"
-                                : statusColors[project.status] || "bg-slate-100 text-slate-600"
+                              statusColors[project.status] || "bg-slate-100 text-slate-600"
                             )}
                           >
                             {project.status || "Unknown"}
@@ -2172,21 +2164,17 @@ export default function ClientPortalPage() {
                             toggleProjectDocs(project);
                           }}
                           className={cn(
-                            "flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded text-[10px] font-semibold",
+                            "flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded text-[10px] font-semibold transition-colors",
                             isDocsExpanded
-                              ? isSelected
-                                ? "bg-white/20 text-white"
-                                : "bg-[#166FB5] text-white"
-                              : isSelected
-                                ? "bg-white/10 text-white hover:bg-white/20"
-                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                              ? "bg-[#166FB5] text-white"
+                              : "bg-slate-100 text-slate-600 hover:bg-[#166FB5] hover:text-white"
                           )}
                           title="View documents"
                         >
                           <FileText className="h-3 w-3" />
                           <span>{totalDocs}</span>
                           <ChevronDown className={cn(
-                            "h-2.5 w-2.5",
+                            "h-2.5 w-2.5 transition-transform",
                             isDocsExpanded && "rotate-180"
                           )} />
                         </button>
