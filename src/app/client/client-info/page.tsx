@@ -6,7 +6,6 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
 import useAuth from "@/hooks/useAuth";
 import {
   doc,
@@ -61,16 +60,13 @@ import {
 } from "@/services/clientRequestService";
 import { getQuotationsByInquiryId } from "@/services/quotationService";
 import { getChargeSlipsByProjectId } from "@/services/chargeSlipService";
-import { getClientConformeByProject } from "@/services/clientConformeService";
 import { QuotationRecord } from "@/types/Quotation";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { ApprovalStatus } from "@/types/MemberApproval";
-import { ClientConforme } from "@/types/ClientConforme";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
 import { useApprovalStatus } from "@/hooks/useApprovalStatus";
-import DownloadConformeButton from "@/components/pdf/DownloadConformeButton";
 import {
   Plus,
   X,
@@ -167,7 +163,6 @@ export default function ClientPortalPage() {
   const [currentProjectRequestId, setCurrentProjectRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [existingConforme, setExistingConforme] = useState<ClientConforme | null>(null);
 
   // ── Modal state ───────────────────────────────────────────────
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -311,37 +306,13 @@ export default function ClientPortalPage() {
         setLoading(false); // Assume data is loaded once clients return (or empty)
     });
 
-    // 5. Subscribe to Client Conforme
-    const conformesQ = query(
-      collection(db, "clientConformes"),
-      where("data.inquiryId", "==", inquiryIdParam)
-    );
-    const unsubConforme = onSnapshot(conformesQ, (snapshot) => {
-      // Find the one for the selected project if it exists
-      if (!snapshot.empty) {
-        const allConformes = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data().data } as ClientConforme));
-        
-        // If we have a selected project, prioritize that
-        const projectMatch = allConformes.find(c => c.data.projectPid === selectedProjectPid);
-        if (projectMatch) {
-          setExistingConforme(projectMatch);
-        } else {
-          // Fallback to most recent for this inquiry
-          setExistingConforme(allConformes[0]);
-        }
-      } else {
-        setExistingConforme(null);
-      }
-    });
-
     return () => {
       unsubDraftProjects();
       unsubApprovedProjects();
       unsubClientRequests();
       unsubClients();
-      unsubConforme();
     };
-  }, [emailParam, inquiryIdParam, projectRequestIdParam, router, authLoading, user, selectedProjectPid]);
+  }, [emailParam, inquiryIdParam, projectRequestIdParam, router, authLoading, user]);
 
   // 1.5. Subscribe to Member Approvals for the selected project
   useEffect(() => {
@@ -1239,9 +1210,9 @@ export default function ClientPortalPage() {
   const handleConformeConfirm = () => {
     setShowConformeModal(false);
     if (conformePendingAction === "draft") {
-      performInitialProjectSubmissionAfterConforme();
+      handleSubmitProjectForApproval();
     } else if (conformePendingAction === "team") {
-      performTeamSubmissionAfterConforme();
+      setShowSubmitForApprovalModal(true);
     }
     setConformePendingAction(null);
   };
@@ -1264,8 +1235,9 @@ export default function ClientPortalPage() {
         toast.error("Please save your information as Primary Member first");
         return;
       }
-      // Show confirmation modal first (user clicks "Submit to Admin")
-      handleSubmitProjectForApproval();
+      // Show Client Conforme before proceeding
+      setConformePendingAction("draft");
+      setShowConformeModal(true);
       return;
     }
 
@@ -1290,18 +1262,13 @@ export default function ClientPortalPage() {
       return;
     }
 
-    // Show confirmation modal first (user clicks "Submit to Admin")
-    setShowSubmitForApprovalModal(true);
-  };
-
-  const handleConfirmSubmitForApproval = () => {
-    setShowSubmitForApprovalModal(false);
-    // Next step: legal agreement
+    // Show Client Conforme before proceeding
     setConformePendingAction("team");
     setShowConformeModal(true);
   };
 
-  const performTeamSubmissionAfterConforme = async () => {
+  const handleConfirmSubmitForApproval = async () => {
+    setShowSubmitForApprovalModal(false);
     setSubmitting(true);
 
     try {
@@ -1379,14 +1346,8 @@ export default function ClientPortalPage() {
     setShowSubmitProjectModal(true);
   };
 
-  const handleConfirmSubmitProject = () => {
+  const handleConfirmSubmitProject = async () => {
     setShowSubmitProjectModal(false);
-    // Next step: legal agreement
-    setConformePendingAction("draft");
-    setShowConformeModal(true);
-  };
-
-  const performInitialProjectSubmissionAfterConforme = async () => {
     setSubmitting(true);
 
     try {
@@ -2373,16 +2334,6 @@ export default function ClientPortalPage() {
                         {projectDetails.status}
                       </Badge>
                     )}
-                    {existingConforme && (
-                      <div className="flex items-center gap-2">
-                        <DownloadConformeButton
-                          conforme={existingConforme}
-                          variant="outline"
-                          size="sm"
-                          showText={true}
-                        />
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -2838,9 +2789,9 @@ export default function ClientPortalPage() {
         onConfirm={handleConfirmSubmitForApproval}
         onCancel={() => setShowSubmitForApprovalModal(false)}
         loading={submitting}
-        title="Submit Additional Team Members"
-        description="Submit newly added team members for administrator review. Once approved, you'll be notified via email."
-        confirmLabel="Submit to Admin"
+        title="Submit Project and Member/s for Approval"
+        description="Once submitted, an administrator will review the project subject and all team members before they are officially registered."
+        confirmLabel="Submit for Approval"
         cancelLabel="Go Back"
       >
         <div className="space-y-3">

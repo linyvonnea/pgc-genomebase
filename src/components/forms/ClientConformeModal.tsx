@@ -10,12 +10,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/firebase";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
-import DownloadConformeButton from "@/components/pdf/DownloadConformeButton";
-import { ClientConforme } from "@/types/ClientConforme";
 
 interface ClientConformeModalProps {
   open: boolean;
@@ -51,7 +49,6 @@ export default function ClientConformeModal({
 }: ClientConformeModalProps) {
   const [agreed, setAgreed] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [savedRecord, setSavedRecord] = useState<ClientConforme | null>(null);
 
   const today = new Date().toLocaleDateString("en-PH", {
     year: "numeric",
@@ -72,65 +69,50 @@ export default function ClientConformeModal({
         return;
       }
 
-      // 1. Get IP Info (for the audit trail)
-      let ipAddress = "127.0.0.1";
-      try {
-        const ipRes = await fetch("/api/client-conforme");
-        if (ipRes.ok) {
-          const ipData = await ipRes.json();
-          ipAddress = ipData.ip;
-        }
-      } catch (e) {
-        console.error("Failed to fetch IP info:", e);
-      }
-
+      const filled = (v: string | undefined) => (v && v.trim() ? v.trim() : "N/A");
       const now = new Date();
       const conformeId = `${inquiryId}_${now.getTime()}`;
+      const ts = Timestamp.fromDate(now);
 
-      const conformeRecord: ClientConforme = {
-        id: conformeId,
+      await setDoc(doc(db, "clientConformes", conformeId), {
         data: {
           documentVersion: "PGCV-LF-CC-v005",
-          documentHash:    "sha256-v005-agreement-" + inquiryId,
           clientName:      filled(clientName),
           designation:     filled(designation),
           affiliation:     filled(affiliation),
           projectTitle:    filled(projectTitle),
           fundingAgency:   filled(fundingAgency),
           inquiryId,
-          projectPid:        projectPid    || undefined,
-          projectRequestId:  projectRequestId || undefined,
+          projectPid:        projectPid    ?? null,
+          projectRequestId:  projectRequestId ?? null,
           createdBy:       clientEmail,
-          clientIpAddress: ipAddress,
+          clientIpAddress: "client_browser",
           userAgent:       typeof navigator !== "undefined" ? navigator.userAgent : "unknown",
-          agreementDate:   now,
-          createdAt:       now,
+          agreementDate:   ts,
+          createdAt:       ts,
           status:          "completed",
           clientSignature: {
             method:    "typed_name",
             data:      filled(clientName),
-            timestamp: now,
+            timestamp: ts,
           },
           programDirectorSignature: {
             method:    "auto_approved",
             data:      "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.",
             signedBy:  "vferriols@pgc.up.edu.ph",
-            timestamp: now,
+            timestamp: ts,
           },
         },
-      };
-
-      // 2. Save directly to Firestore using Client SDK (preferred for auth-context rules)
-      await setDoc(doc(db, "clientConformes", conformeId), conformeRecord.data);
+      });
 
       console.log("✅ Client Conforme saved:", conformeId);
       toast.success("Client Conforme agreement recorded successfully", { duration: 3000 });
-      setSavedRecord(conformeRecord);
       setAgreed(false);
-      // Note: onConfirm will be called after user clicks "Done" in success screen
-    } catch (error: any) {
+      onConfirm();
+    } catch (error: unknown) {
       console.error("❌ Error saving Client Conforme:", error);
-      const msg = error?.message || String(error);
+      const msg =
+        error instanceof Error ? error.message : String(error);
       if (msg.includes("permission") || msg.includes("PERMISSION_DENIED")) {
         toast.error(
           "Permission denied. Please ask admin to update Firestore rules for clientConformes collection."
@@ -145,10 +127,7 @@ export default function ClientConformeModal({
 
   const handleCancel = () => {
     setAgreed(false);
-    // Only call onCancel if we didn't just save a record
-    if (!savedRecord) {
-      onCancel();
-    }
+    onCancel();
   };
 
   return (
@@ -165,42 +144,8 @@ export default function ClientConformeModal({
 
         {/* Scrollable document body */}
         <ScrollArea className="flex-1 min-h-0 w-full">
-          {savedRecord ? (
-            <div className="flex flex-col items-center justify-center h-full py-20 px-8 text-center space-y-6">
-              <div className="bg-green-100 p-4 rounded-full">
-                <CheckCircle2 className="h-12 w-12 text-green-600" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-2xl font-bold text-slate-900">Agreement Recorded!</h3>
-                <p className="text-slate-600 max-w-md mx-auto">
-                  Your Client Conforme agreement has been securely recorded and digitally signed. 
-                  You can now download a copy for your records or proceed with your project submission.
-                </p>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <DownloadConformeButton 
-                  conforme={savedRecord} 
-                  variant="default" 
-                  size="lg"
-                  showText={true}
-                />
-                <Button 
-                  variant="outline" 
-                  size="lg"
-                  onClick={() => {
-                    setSavedRecord(null);
-                    onConfirm();
-                  }}
-                >
-                  Proceed to Submission
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="px-8 py-6 text-sm text-slate-700 leading-relaxed space-y-8 font-serif">
-              {/* Header block with logos */}
-              {/* ... (rest of the document content) */}
+          <div className="px-8 py-6 text-sm text-slate-700 leading-relaxed space-y-8 font-serif">
+            {/* Header block with logos */}
             <div className="flex justify-between items-center mb-6">
               <div className="flex-1 border-b border-slate-300 pb-2">
                 <p className="font-bold text-lg text-slate-900 uppercase">
@@ -414,50 +359,47 @@ export default function ClientConformeModal({
               </div>
             </div>
           </div>
-          )}
         </ScrollArea>
 
-        {/* Footer: agree checkbox + buttons (hide if saved) */}
-        {!savedRecord && (
-          <div className="shrink-0 border-t border-slate-200 px-6 py-4 bg-slate-50 space-y-4">
-            <label className="flex items-start gap-3 cursor-pointer group">
-              <Checkbox
-                id="conforme-agree"
-                checked={agreed}
-                onCheckedChange={(v) => setAgreed(v === true)}
-                className="mt-0.5 shrink-0"
-              />
-              <span className="text-sm text-slate-700 group-hover:text-slate-900 transition-colors">
-                I have read and understood the Client Conforme and I agree to its terms and conditions.
-              </span>
-            </label>
+        {/* Footer: agree checkbox + buttons */}
+        <div className="shrink-0 border-t border-slate-200 px-6 py-4 bg-slate-50 space-y-4">
+          <label className="flex items-start gap-3 cursor-pointer group">
+            <Checkbox
+              id="conforme-agree"
+              checked={agreed}
+              onCheckedChange={(v) => setAgreed(v === true)}
+              className="mt-0.5 shrink-0"
+            />
+            <span className="text-sm text-slate-700 group-hover:text-slate-900 transition-colors">
+              I have read and understood the Client Conforme and I agree to its terms and conditions.
+            </span>
+          </label>
 
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                disabled={loading}
-                className="px-6"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleConfirm}
-                disabled={!agreed || loading || saving}
-                className="px-6 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold disabled:opacity-50"
-              >
-                {(loading || saving) ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {saving ? "Recording Agreement…" : "Submitting…"}
-                  </>
-                ) : (
-                  "Submit for Approval"
-                )}
-              </Button>
-            </div>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              disabled={loading}
+              className="px-6"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirm}
+              disabled={!agreed || loading || saving}
+              className="px-6 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold disabled:opacity-50"
+            >
+              {(loading || saving) ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  {saving ? "Recording Agreement…" : "Submitting…"}
+                </>
+              ) : (
+                "Submit for Approval"
+              )}
+            </Button>
           </div>
-        )}
+        </div>
       </DialogContent>
     </Dialog>
   );
