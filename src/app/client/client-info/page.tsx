@@ -2507,10 +2507,10 @@ export default function ClientPortalPage() {
                         ) : projectDetails.status === "Pending Approval" ? (
                           <>
                             <p className="text-sm font-semibold text-blue-900">
-                              Pending Admin Approval
+                              ⏳ Pending Administrator Review
                             </p>
                             <p className="text-xs text-blue-700 leading-relaxed">
-                              Your project and team members have been submitted and are currently under review by the administrator. You'll receive a notification once approved. <strong>No further action needed at this time.</strong>
+                              Your submission has been received and is currently under review. You'll receive an email notification once the administrator makes a decision. <strong>No further action needed at this time.</strong>
                             </p>
                           </>
                         ) : projectDetails.status === "Ongoing" ? (
@@ -2616,19 +2616,18 @@ export default function ClientPortalPage() {
                     </div>
                   )}
 
-                {approvalStatus === "pending" && !showApprovalCelebration && (
-                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-5">
+                {approvalStatus === "pending" && !showApprovalCelebration && projectDetails?.status !== "Pending Approval" && (
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-orange-100 rounded-lg">
-                        <Clock className="h-5 w-5 text-orange-600" />
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Clock className="h-5 w-5 text-blue-600" />
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-semibold text-orange-800">
-                          Pending Admin Approval
+                        <h4 className="font-semibold text-blue-800">
+                          ⏳ Team Members Under Review
                         </h4>
-                        <p className="text-sm text-orange-700 mt-1">
-                          Your team members have been submitted for review. You
-                          will be notified once a decision is made.
+                        <p className="text-sm text-blue-700 mt-1">
+                          Additional team members have been submitted for administrator approval. You'll be notified once reviewed.
                         </p>
                       </div>
                     </div>
