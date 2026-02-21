@@ -10,7 +10,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, FileText, CheckCircle2, Send } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/firebase";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
@@ -134,12 +135,26 @@ export default function ClientConformeModal({
     <Dialog open={open} onOpenChange={(o) => !o && handleCancel()}>
       <DialogContent className="max-w-4xl w-full flex flex-col h-[90vh] max-h-[90vh] p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-3 border-b border-slate-200 shrink-0">
+          {/* Progress Indicator */}
+          <div className="flex items-center gap-2 mb-3">
+            <Badge variant="default" className="bg-[#166FB5] text-white flex items-center gap-1">
+              <FileText className="h-3 w-3" />
+              Step 1 of 3
+            </Badge>
+            <span className="text-xs text-slate-500">Legal Agreement Required</span>
+          </div>
+          
           <DialogTitle className="text-lg font-bold text-slate-800">
-            Client Conforme — PGCV-LF-CC-v005
+            Legal Agreement Required
           </DialogTitle>
-          <p className="text-sm text-slate-500 mt-1">
-            Please read the entire document carefully before agreeing.
-          </p>
+          <div className="space-y-2">
+            <p className="text-sm text-slate-600">
+              Before submission, you must review and agree to our client terms and conditions.
+            </p>
+            <p className="text-xs text-slate-500 bg-blue-50 border border-blue-200 rounded-md p-2">
+              📋 <strong>Next:</strong> After agreeing, you'll review your submission details before final approval.
+            </p>
+          </div>
         </DialogHeader>
 
         {/* Scrollable document body */}
@@ -363,16 +378,21 @@ export default function ClientConformeModal({
 
         {/* Footer: agree checkbox + buttons */}
         <div className="shrink-0 border-t border-slate-200 px-6 py-4 bg-slate-50 space-y-4">
-          <label className="flex items-start gap-3 cursor-pointer group">
+          <label className="flex items-start gap-3 cursor-pointer group p-3 bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
             <Checkbox
               id="conforme-agree"
               checked={agreed}
               onCheckedChange={(v) => setAgreed(v === true)}
               className="mt-0.5 shrink-0"
             />
-            <span className="text-sm text-slate-700 group-hover:text-slate-900 transition-colors">
-              I have read and understood the Client Conforme and I agree to its terms and conditions.
-            </span>
+            <div className="space-y-1">
+              <span className="text-sm text-slate-700 group-hover:text-slate-900 transition-colors font-medium">
+                ✓ I have read and understood the Client Conforme agreement
+              </span>
+              <p className="text-xs text-slate-500">
+                I agree to the terms and conditions outlined in this legal document (PGCV-LF-CC-v005).
+              </p>
+            </div>
           </label>
 
           <div className="flex justify-end gap-3">
@@ -392,10 +412,13 @@ export default function ClientConformeModal({
               {(loading || saving) ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  {saving ? "Recording Agreement…" : "Submitting…"}
+                  {saving ? "Recording Agreement…" : "Processing…"}
                 </>
               ) : (
-                "Submit for Approval"
+                <>
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  I Agree & Continue
+                </>
               )}
             </Button>
           </div>
