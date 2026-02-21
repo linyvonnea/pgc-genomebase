@@ -1329,8 +1329,8 @@ export default function ClientPortalPage() {
 
       setApprovalStatus("pending");
       toast.success(
-        "Team members submitted for admin approval! You will be notified once reviewed.",
-        { id: toastId }
+        "✅ Team members successfully submitted for administrator review",
+        { id: toastId, duration: 4000 }
       );
     } catch (error) {
       console.error("Submit for approval error:", error);
@@ -1433,8 +1433,8 @@ export default function ClientPortalPage() {
       console.log("Project request submitted for approval");
 
       toast.success(
-        "Project and all team members submitted for approval! You will be notified when reviewed.",
-        { id: toastId, duration: 5000 }
+        "✅ Project and team members successfully submitted for administrator review",
+        { id: toastId, duration: 4000 }
       );
 
       // Update local state to reflect pending status
@@ -2869,11 +2869,6 @@ export default function ClientPortalPage() {
                 ))}
             </ul>
           </div>
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-            <p className="text-xs text-amber-700">
-              📋 <strong>What happens next:</strong> You will be notified once the administrator has reviewed your submission. No CIDs will be generated until approval.
-            </p>
-          </div>
         </div>
       </ConfirmationModalLayout>
 
@@ -2925,11 +2920,6 @@ export default function ClientPortalPage() {
               </div>
             </div>
           )}
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-            <p className="text-xs text-amber-700">
-              📋 <strong>What happens next:</strong> Once approved, you'll receive your official PID and CID. The administrator will review your project details and primary member information.
-            </p>
-          </div>
         </div>
       </ConfirmationModalLayout>
 
