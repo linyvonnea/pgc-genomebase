@@ -1295,14 +1295,14 @@ export default function ClientPortalPage() {
     setSubmitting(true);
 
     // Show Step 3 progress
-    toast.loading("🔄 Step 3 of 3: Processing submission...", {
+    const toastId = toast.loading("🔄 Step 3 of 3: Processing submission...", {
       description: "Submitting team members for administrator review",
       duration: Infinity
     });
 
     try {
       if (!selectedProjectPid || !inquiryIdParam) {
-        toast.error("Missing project context");
+        toast.error("Missing project context", { id: toastId });
         return;
       }
 
@@ -1329,11 +1329,12 @@ export default function ClientPortalPage() {
 
       setApprovalStatus("pending");
       toast.success(
-        "Team members submitted for admin approval! You will be notified once reviewed."
+        "Team members submitted for admin approval! You will be notified once reviewed.",
+        { id: toastId }
       );
     } catch (error) {
       console.error("Submit for approval error:", error);
-      toast.error("Failed to submit for approval");
+      toast.error("Failed to submit for approval", { id: toastId });
     } finally {
       setSubmitting(false);
     }
@@ -1385,14 +1386,14 @@ export default function ClientPortalPage() {
     setSubmitting(true);
 
     // Show Step 3 progress
-    toast.loading("🔄 Step 3 of 3: Processing submission...", {
+    const toastId = toast.loading("🔄 Step 3 of 3: Processing submission...", {
       description: "Submitting project and primary member for administrator review",
       duration: Infinity
     });
 
     try {
       if (!inquiryIdParam || !emailParam || !projectRequest) {
-        toast.error("Missing required information");
+        toast.error("Missing required information", { id: toastId });
         return;
       }
 
@@ -1401,7 +1402,7 @@ export default function ClientPortalPage() {
       
       const primaryMember = members.find((m) => m.isPrimary);
       if (!primaryMember) {
-        toast.error("Primary member not found");
+        toast.error("Primary member not found", { id: toastId });
         return;
       }
 
@@ -1433,7 +1434,7 @@ export default function ClientPortalPage() {
 
       toast.success(
         "Project and all team members submitted for approval! You will be notified when reviewed.",
-        { duration: 5000 }
+        { id: toastId, duration: 5000 }
       );
 
       // Update local state to reflect pending status
@@ -1463,7 +1464,7 @@ export default function ClientPortalPage() {
       }
     } catch (error) {
       console.error("Submit project error:", error);
-      toast.error("Failed to submit project for approval");
+      toast.error("Failed to submit project for approval", { id: toastId });
     } finally {
       setSubmitting(false);
     }
