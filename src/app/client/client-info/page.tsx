@@ -443,7 +443,7 @@ export default function ClientPortalPage() {
                   email: primaryDraftRequest.email || emailParam || "",
                   affiliation: primaryDraftRequest.affiliation || "",
                   designation: primaryDraftRequest.designation || "",
-                  sex: (primaryDraftRequest.sex || "M") as any,
+                  sex: (primaryDraftRequest.sex || "") as any,
                   phoneNumber: primaryDraftRequest.phoneNumber || "",
                   affiliationAddress: primaryDraftRequest.affiliationAddress || "",
                 },
@@ -452,7 +452,7 @@ export default function ClientPortalPage() {
                   email: primaryDraftRequest.email || emailParam || "",
                   affiliation: primaryDraftRequest.affiliation || "",
                   designation: primaryDraftRequest.designation || "",
-                  sex: (primaryDraftRequest.sex || "M") as any,
+                  sex: (primaryDraftRequest.sex || "") as any,
                   phoneNumber: primaryDraftRequest.phoneNumber || "",
                   affiliationAddress: primaryDraftRequest.affiliationAddress || "",
                 },
@@ -473,7 +473,7 @@ export default function ClientPortalPage() {
               email: emailParam,
               affiliation: "",
               designation: "",
-              sex: "M", // Default to M for primary member instead of empty to satisfy validation initially
+              sex: "" as any,
               phoneNumber: "",
               affiliationAddress: "",
             },
@@ -482,7 +482,7 @@ export default function ClientPortalPage() {
               email: emailParam,
               affiliation: "",
               designation: "",
-              sex: "M",
+              sex: "" as any,
               phoneNumber: "",
               affiliationAddress: "",
             },
@@ -1787,7 +1787,7 @@ export default function ClientPortalPage() {
             }
           >
             <SelectTrigger className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-10 disabled:opacity-70">
-              <SelectValue placeholder="Select sex" />
+              <SelectValue placeholder="Select Sex at Birth" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="M">Male</SelectItem>
