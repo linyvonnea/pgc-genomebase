@@ -17,6 +17,7 @@
 
 "use client"
 
+import React from "react";
 import {
   ColumnDef,
   flexRender,
@@ -69,7 +70,9 @@ export function DataTable<TData, TValue>({
   const [selectedYear, setSelectedYear] = useState<string>("")
   const [selectedMonth, setSelectedMonth] = useState<string>("")
   const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false)
-  const [filterOrder, setFilterOrder] = useState<Array<{type: string, value: string}>>([])
+  // Filter order type definition
+  type FilterOrderItem = {type: string, value: string};
+  const [filterOrder, setFilterOrder] = useState<FilterOrderItem[]>([]);
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
@@ -102,10 +105,10 @@ export function DataTable<TData, TValue>({
 
   // Filter summary label with click order tracking
   const filterSummaryLabel = useMemo(() => {
-    const orderedFilters = [];
+    const orderedFilters: string[] = [];
     
     // Add filters in the order they were selected
-    filterOrder.forEach(filter => {
+    filterOrder.forEach((filter: FilterOrderItem) => {
       if (filter.type === 'status' && activeStatusFilter) {
         orderedFilters.push(activeStatusFilter);
       } else if (filter.type === 'year' && selectedYear && selectedYear !== "all") {
@@ -117,10 +120,10 @@ export function DataTable<TData, TValue>({
     });
     
     // Add Year and Month at the end if not already added via filterOrder
-    if (selectedYear && selectedYear !== "all" && !filterOrder.some(f => f.type === 'year')) {
+    if (selectedYear && selectedYear !== "all" && !filterOrder.some((f: FilterOrderItem) => f.type === 'year')) {
       orderedFilters.push(selectedYear);
     }
-    if (selectedMonth && selectedMonth !== "all" && !filterOrder.some(f => f.type === 'month')) {
+    if (selectedMonth && selectedMonth !== "all" && !filterOrder.some((f: FilterOrderItem) => f.type === 'month')) {
       const monthName = monthNames[parseInt(selectedMonth) - 1];
       if (monthName) orderedFilters.push(monthName);
     }
@@ -207,9 +210,9 @@ export function DataTable<TData, TValue>({
     setActiveStatusFilter(status)
     table.getColumn("status")?.setFilterValue(status)
     if (status) {
-      setFilterOrder(prev => [...prev.filter(f => f.type !== 'status'), {type: 'status', value: status}])
+      setFilterOrder((prev: FilterOrderItem[]) => [...prev.filter((f: FilterOrderItem) => f.type !== 'status'), {type: 'status', value: status}])
     } else {
-      setFilterOrder(prev => prev.filter(f => f.type !== 'status'))
+      setFilterOrder((prev: FilterOrderItem[]) => prev.filter((f: FilterOrderItem) => f.type !== 'status'))
     }
   }
 
@@ -218,9 +221,9 @@ export function DataTable<TData, TValue>({
     if (year === "all") setSelectedMonth("")
     
     if (year === "all") {
-      setFilterOrder(prev => prev.filter(f => f.type !== 'year'))
+      setFilterOrder((prev: FilterOrderItem[]) => prev.filter((f: FilterOrderItem) => f.type !== 'year'))
     } else {
-      setFilterOrder(prev => [...prev.filter(f => f.type !== 'year'), {type: 'year', value: year}])
+      setFilterOrder((prev: FilterOrderItem[]) => [...prev.filter((f: FilterOrderItem) => f.type !== 'year'), {type: 'year', value: year}])
     }
   }
 
@@ -228,9 +231,9 @@ export function DataTable<TData, TValue>({
     setSelectedMonth(month === "all" ? "" : month)
     
     if (month === "all") {
-      setFilterOrder(prev => prev.filter(f => f.type !== 'month'))
+      setFilterOrder((prev: FilterOrderItem[]) => prev.filter((f: FilterOrderItem) => f.type !== 'month'))
     } else {
-      setFilterOrder(prev => [...prev.filter(f => f.type !== 'month'), {type: 'month', value: month}])
+      setFilterOrder((prev: FilterOrderItem[]) => [...prev.filter((f: FilterOrderItem) => f.type !== 'month'), {type: 'month', value: month}])
     }
   }
 
@@ -324,7 +327,7 @@ export function DataTable<TData, TValue>({
                     <Input
                       placeholder="Search all fields..."
                       value={globalFilter ?? ""}
-                      onChange={(event) => setGlobalFilter(event.target.value)}
+                      onChange={(event: React.ChangeEvent<HTMLInputElement>) => setGlobalFilter(event.target.value)}
                       className="w-56 pl-3 pr-8 h-8 text-sm"
                     />
                     {globalFilter && (
@@ -346,7 +349,7 @@ export function DataTable<TData, TValue>({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Years</SelectItem>
-                      {availableYears.map((year) => (
+                      {availableYears.map((year: string) => (
                         <SelectItem key={year} value={year}>{year}</SelectItem>
                       ))}
                     </SelectContent>
@@ -502,7 +505,7 @@ export function DataTable<TData, TValue>({
                       key={row.id}
                       className="hover:bg-muted/50 transition-colors cursor-pointer"
                       data-state={row.getIsSelected() && "selected"}
-                      onClick={(e) => handleRowClick(row.original as Inquiry, e)}
+                      onClick={(e: React.MouseEvent) => handleRowClick(row.original as Inquiry, e)}
                     >
                       {row.getVisibleCells().map((cell) => (
                         <TableCell key={cell.id} className="py-2">
@@ -533,7 +536,7 @@ export function DataTable<TData, TValue>({
             <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
             <Select
               value={table.getState().pagination.pageSize.toString()}
-              onValueChange={(value) => table.setPageSize(Number(value))}
+              onValueChange={(value: string) => table.setPageSize(Number(value))}
             >
               <SelectTrigger className="w-[70px] h-8">
                 <SelectValue />

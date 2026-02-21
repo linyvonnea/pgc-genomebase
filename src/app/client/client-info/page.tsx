@@ -2791,12 +2791,7 @@ export default function ClientPortalPage() {
         loading={submitting}
         title="📋 Final Review & Confirmation"
         description="Please review the team members below before final submission. This is the last step before administrator review."
-        confirmLabel={
-          <>
-            <Send className="h-4 w-4 mr-2" />
-            Submit to Administrator
-          </>
-        }
+        confirmLabel="Submit to Administrator"
         cancelLabel="Go Back"
       >
         <div className="space-y-4">
@@ -2844,12 +2839,7 @@ export default function ClientPortalPage() {
         loading={submitting}
         title="📋 Final Review & Confirmation"
         description="Please review your project and member information below before final submission to administrators."
-        confirmLabel={
-          <>
-            <Send className="h-4 w-4 mr-2" />
-            Submit to Administrator
-          </>
-        }
+        confirmLabel="Submit to Administrator"
         cancelLabel="Go Back"
       >
         <div className="space-y-4">
