@@ -676,8 +676,8 @@ export default function ClientPortalPage() {
     if (unsavedMember) {
       toast.error(
         unsavedMember.isPrimary
-          ? "Please save your information as Primary Member first before adding new team members."
-          : "Please fill up and click save for the member you just added before adding a new one."
+          ? "Please complete and save your information as Primary Member first before adding new team members."
+          : "Please finish and save the member details you just added before adding a new one."
       );
       setExpandedMembers((prev) => new Set([...prev, unsavedMember.id]));
       return;
@@ -1255,7 +1255,7 @@ export default function ClientPortalPage() {
       // Validate primary member before showing conforme
       const primaryCheck = members.find((m) => m.isPrimary);
       if (!primaryCheck?.isSubmitted) {
-        toast.error("Please save your information as Primary Member first");
+        toast.error("Please complete and save your primary member details first");
         return;
       }
       // Show Client Conforme before proceeding
@@ -1267,7 +1267,7 @@ export default function ClientPortalPage() {
     // For approved projects, submit additional team members
     const primary = members.find((m) => m.isPrimary);
     if (primary && !primary.isSubmitted) {
-      toast.error("Please save your (primary member) information first");
+      toast.error("Please complete and save your primary member details first");
       return;
     }
 
@@ -1353,7 +1353,7 @@ export default function ClientPortalPage() {
     }
 
     if (!primaryMember.isSubmitted) {
-      toast.error("Please save your information as Primary Member first");
+      toast.error("Please complete and save your primary member details first");
       return;
     }
 
@@ -1582,7 +1582,7 @@ export default function ClientPortalPage() {
         icon: CheckCircle2,
       };
     if (Object.keys(member.errors).length > 0)
-      return { label: "Error", color: "bg-red-500", icon: AlertCircle };
+      return { label: "Needs Attention", color: "bg-red-500", icon: AlertCircle };
     return { label: "Draft", color: "bg-yellow-500", icon: Loader2 };
   };
 
@@ -1883,7 +1883,7 @@ export default function ClientPortalPage() {
               Saving...
             </>
           ) : (
-            `Save ${member.isPrimary ? "Your" : "Member"} Information`
+            `${member.isPrimary ? "Save & Verify My Details" : "Save & Verify Member Details"}`
           )}
         </Button>
       </div>
