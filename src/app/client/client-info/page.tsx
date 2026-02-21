@@ -2123,11 +2123,12 @@ export default function ClientPortalPage() {
                             <CheckCircle2 className="h-3 w-3 text-[#166FB5]" />
                           )}
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-[10px] font-mono text-slate-400">
-                            ID: {project.pid}
-                          </span>
-                          {project.status !== "Pending Approval" && (
+                        {/* Only show Project ID for approved/ongoing projects, not drafts (security) */}
+                        {project.status !== "Draft" && project.status !== "Pending Approval" && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[10px] font-mono text-slate-400">
+                              ID: {project.pid}
+                            </span>
                             <Badge
                               variant="outline"
                               className={cn(
@@ -2137,8 +2138,22 @@ export default function ClientPortalPage() {
                             >
                               {project.status || "Unknown"}
                             </Badge>
-                          )}
-                        </div>
+                          </div>
+                        )}
+                        {/* For draft projects, show only status badge */}
+                        {(project.status === "Draft" || project.status === "Pending Approval") && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "text-[10px] h-4 px-1.5 border",
+                                statusColors[project.status] || "bg-slate-100 text-slate-600"
+                              )}
+                            >
+                              {project.status || "Unknown"}
+                            </Badge>
+                          </div>
+                        )}
                       </div>
                       
                         <button
@@ -2313,7 +2328,8 @@ export default function ClientPortalPage() {
           <h1 className="font-bold text-slate-800 text-sm truncate">
             {projectDetails?.title || "Client Portal"}
           </h1>
-          {projectDetails?.pid && (
+          {/* Hide inquiry ID for draft projects (security) */}
+          {projectDetails?.pid && projectDetails.status !== "Draft" && (
             <p className="text-[11px] text-slate-500 font-mono">
               Project ID: {projectDetails.pid}
             </p>
