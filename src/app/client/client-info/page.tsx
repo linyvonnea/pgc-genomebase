@@ -2028,45 +2028,36 @@ export default function ClientPortalPage() {
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      {/* Header - Enhanced Client Portal Card */}
-      <div className="p-4 border-b bg-gradient-to-br from-slate-50 to-blue-50/30">
-        <div className="bg-gradient-to-br from-[#166FB5] to-[#1a5fa0] rounded-2xl p-6 shadow-lg border border-blue-200/50 relative overflow-hidden group hover:shadow-xl transition-all duration-300">
-          {/* Decorative background elements */}
-          <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:bg-white/15 transition-all duration-700" />
-          <div className="absolute -left-4 -bottom-4 w-24 h-24 bg-blue-400/10 rounded-full blur-2xl" />
-          
-          <div className="flex items-start justify-between relative z-10">
-            <div className="flex items-start gap-3.5 flex-1 min-w-0">
+      {/* Header - Simple Client Portal Card */}
+      <div className="p-4 border-b bg-white">
+        <div className="bg-[#166FB5] rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
               {/* Icon */}
-              <div className="p-3 bg-white/90 backdrop-blur-sm rounded-2xl border border-white/40 shadow-lg flex-shrink-0 hover:scale-105 transition-transform duration-200">
-                <Users className="h-6 w-6 text-[#166FB5]" />
+              <div className="p-2 bg-white/20 rounded-lg flex-shrink-0">
+                <Users className="h-5 w-5 text-white" />
               </div>
               
               {/* User Info */}
-              <div className="min-w-0 flex-1 pt-0.5">
-                <h2 className="text-white font-extrabold text-lg tracking-tight leading-tight mb-2">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-white font-bold text-base mb-1">
                   Client Portal
                 </h2>
-                
-                {/* User details */}
-                <div className="space-y-1.5">
-                  {user?.displayName && (
-                    <p className="text-white/95 text-sm font-semibold truncate">
-                      {user.displayName}
-                    </p>
-                  )}
-                  <p className="text-white/70 text-xs truncate flex items-center gap-1.5">
-                    <span className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />
-                    {user?.email || emailParam || ""}
+                {user?.displayName && (
+                  <p className="text-white/90 text-sm font-medium truncate">
+                    {user.displayName}
                   </p>
-                </div>
+                )}
+                <p className="text-white/70 text-xs truncate">
+                  {user?.email || emailParam || ""}
+                </p>
               </div>
             </div>
             
             {/* Close button – mobile only */}
             <button
               onClick={() => setMobileSidebarOpen(false)}
-              className="lg:hidden text-white/70 hover:text-white hover:bg-white/15 rounded-lg p-1.5 transition-all duration-200 flex-shrink-0"
+              className="lg:hidden text-white/80 hover:text-white rounded p-1 flex-shrink-0"
               aria-label="Close sidebar"
             >
               <X className="h-5 w-5" />
@@ -2075,27 +2066,23 @@ export default function ClientPortalPage() {
         </div>
       </div>
 
-      {/* Projects section header - Enhanced */}
+      {/* Projects section header - Simple */}
       <button
         onClick={() => setShowProjectsList(!showProjectsList)}
-        className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200/80 hover:bg-gradient-to-r hover:from-slate-50 hover:to-transparent transition-all duration-200 group"
+        className="flex items-center justify-between px-4 py-3 border-b hover:bg-slate-50"
       >
-        <div className="flex items-center gap-3">
-          <div className="p-1.5 rounded-lg bg-[#166FB5]/10 group-hover:bg-[#166FB5]/15 transition-colors">
-            <FolderOpen className="h-4 w-4 text-[#166FB5]" />
-          </div>
-          <div className="flex items-center gap-2.5">
-            <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900 transition-colors">
-              My Projects
-            </span>
-            <span className="inline-flex items-center justify-center min-w-[22px] h-5 px-1.5 rounded-full bg-[#166FB5] text-white text-xs font-bold shadow-sm">
-              {projects.length}
-            </span>
-          </div>
+        <div className="flex items-center gap-2">
+          <FolderOpen className="h-4 w-4 text-[#166FB5]" />
+          <span className="text-sm font-semibold text-slate-700">
+            My Projects
+          </span>
+          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#166FB5] text-white text-xs font-bold">
+            {projects.length}
+          </span>
         </div>
         <ChevronDown
           className={cn(
-            "h-4 w-4 text-slate-400 transition-all duration-200 group-hover:text-[#166FB5]",
+            "h-4 w-4 text-slate-400",
             showProjectsList && "rotate-180"
           )}
         />
@@ -2119,7 +2106,7 @@ export default function ClientPortalPage() {
               </p>
             </div>
           ) : (
-            <div className="px-3 py-3 space-y-2">
+            <div className="px-3 py-2 space-y-2">
               {projects.map((project) => {
                 // Defensive checks for project properties
                 if (!project || !project.pid) {
@@ -2136,54 +2123,39 @@ export default function ClientPortalPage() {
                 const isOngoing = project.status === "Ongoing";
                 
                 return (
-                  <div key={project.pid} className="rounded-xl overflow-hidden border border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-md transition-all duration-200">
-                    {/* ── Project Row - Enhanced ── */}
+                  <div key={project.pid} className="rounded-lg border border-slate-200 overflow-hidden">
+                    {/* ── Project Card - Simple ── */}
                     <div
                       className={cn(
-                        "w-full text-left px-4 py-3 cursor-pointer transition-all duration-200 flex items-center gap-3",
+                        "w-full text-left px-3 py-2.5 cursor-pointer flex items-center gap-2.5",
                         isSelected
-                          ? "bg-gradient-to-r from-[#166FB5] to-[#1a5fa0] text-white"
-                          : "bg-white hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50/30 text-slate-700"
+                          ? "bg-[#166FB5] text-white"
+                          : "bg-white hover:bg-slate-50 text-slate-700"
                       )}
                       onClick={() => handleSelectProject(project)}
                     >
-                      {/* Folder icon - Enhanced */}
-                      <div className={cn(
-                        "p-2 rounded-xl flex-shrink-0 transition-all duration-200",
-                        isSelected 
-                          ? "bg-white/20 shadow-inner" 
-                          : "bg-gradient-to-br from-slate-100 to-slate-50 shadow-sm"
-                      )}>
+                      {/* Folder icon */}
+                      <div className="flex-shrink-0">
                         <FolderOpen className={cn(
                           "h-4 w-4",
                           isSelected ? "text-white" : "text-[#166FB5]"
                         )} />
                       </div>
 
-                      {/* Title + status - Enhanced */}
+                      {/* Title + status */}
                       <div className="flex-1 min-w-0">
                         <p className={cn(
-                          "font-bold text-sm truncate leading-tight mb-1",
-                          isSelected ? "text-white" : "text-slate-900"
+                          "font-semibold text-sm truncate",
+                          isSelected ? "text-white" : "text-slate-800"
                         )}>
                           {project.title || "Untitled Project"}
                         </p>
-                        <div className="flex items-center gap-2 mt-1">
-                          {project.status !== "Draft" && project.status !== "Pending Approval" && (
-                            <span className={cn(
-                              "text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded",
-                              isSelected 
-                                ? "text-white/80 bg-white/10" 
-                                : "text-slate-500 bg-slate-100"
-                            )}>
-                              {project.pid}
-                            </span>
-                          )}
+                        <div className="flex items-center gap-1.5 mt-0.5">
                           <Badge
                             className={cn(
-                              "text-[10px] h-5 px-2 border-0 font-bold shadow-sm",
+                              "text-[10px] h-4 px-1.5 border-0 font-medium",
                               isSelected
-                                ? "bg-white/25 text-white backdrop-blur-sm"
+                                ? "bg-white/20 text-white"
                                 : statusColors[project.status] || "bg-slate-100 text-slate-600"
                             )}
                           >
@@ -2192,7 +2164,7 @@ export default function ClientPortalPage() {
                         </div>
                       </div>
 
-                      {/* Documents toggle – only for Ongoing projects - Enhanced */}
+                      {/* Documents button - Always visible for Ongoing projects */}
                       {isOngoing && (
                         <button
                           onClick={(e) => {
@@ -2200,106 +2172,92 @@ export default function ClientPortalPage() {
                             toggleProjectDocs(project);
                           }}
                           className={cn(
-                            "flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all duration-200 border shadow-sm hover:shadow",
+                            "flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded text-[10px] font-semibold",
                             isDocsExpanded
                               ? isSelected
-                                ? "bg-white/25 border-white/40 text-white"
-                                : "bg-[#166FB5] border-[#166FB5] text-white"
+                                ? "bg-white/20 text-white"
+                                : "bg-[#166FB5] text-white"
                               : isSelected
-                                ? "bg-white/15 border-white/30 text-white hover:bg-white/25"
-                                : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-[#166FB5] hover:border-[#166FB5] hover:text-white"
+                                ? "bg-white/10 text-white hover:bg-white/20"
+                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                           )}
                           title="View documents"
                         >
-                          <FileText className="h-3.5 w-3.5" />
-                          <span>{totalDocs > 0 ? totalDocs : "Docs"}</span>
+                          <FileText className="h-3 w-3" />
+                          <span>{totalDocs}</span>
                           <ChevronDown className={cn(
-                            "h-3 w-3 transition-transform duration-200",
+                            "h-2.5 w-2.5",
                             isDocsExpanded && "rotate-180"
                           )} />
                         </button>
                       )}
                     </div>
 
-                    {/* ── Documents sub-panel - Enhanced ── */}
+                    {/* ── Documents sub-panel ── */}
                     {isDocsExpanded && (
-                      <div className="bg-gradient-to-b from-slate-50 to-slate-100/50 border-t-2 border-slate-200">
+                      <div className="bg-slate-50 border-t">
                         {docs?.loading ? (
-                          <div className="flex items-center gap-2 px-5 py-4 text-sm text-slate-500">
-                            <Loader2 className="h-4 w-4 animate-spin text-[#166FB5]" />
-                            <span>Loading documents…</span>
+                          <div className="flex items-center gap-2 px-3 py-3 text-xs text-slate-500">
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            <span>Loading…</span>
                           </div>
                         ) : (
-                          <div className="divide-y divide-slate-200">
-                            {/* Quotations - Enhanced */}
-                            <div className="px-4 py-3.5">
-                              <div className="flex items-center justify-between mb-2.5">
-                                <div className="flex items-center gap-2">
-                                  <div className="p-1.5 rounded-lg bg-purple-100">
-                                    <FileText className="h-3.5 w-3.5 text-purple-600" />
-                                  </div>
-                                  <span className="text-xs font-bold text-slate-700">
-                                    Quotations
-                                  </span>
-                                </div>
-                                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-purple-600 text-white text-[10px] font-bold shadow-sm">
-                                  {quotationCount}
+                          <div className="p-3 space-y-3">
+                            {/* Quotations */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <FileText className="h-3 w-3 text-purple-600" />
+                                <span className="text-xs font-semibold text-slate-700">
+                                  Quotations
                                 </span>
+                                <span className="text-[10px] text-slate-500">({quotationCount})</span>
                               </div>
                               {quotationCount > 0 ? (
-                                <div className="space-y-1.5 pl-1">
+                                <div className="space-y-1 ml-5">
                                   {docs?.quotations.map((quotation) => (
                                     <a
                                       key={quotation.id}
                                       href={`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-purple-700 hover:bg-purple-50 transition-all duration-150 group/link border border-transparent hover:border-purple-200"
+                                      className="block text-xs text-slate-600 hover:text-purple-600 hover:underline truncate"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      <div className="w-1.5 h-1.5 rounded-full bg-purple-400 group-hover/link:scale-125 transition-transform flex-shrink-0" />
-                                      <span className="truncate">{quotation.referenceNumber}</span>
+                                      • {quotation.referenceNumber}
                                     </a>
                                   ))}
                                 </div>
                               ) : (
-                                <p className="text-xs text-slate-400 pl-3 py-1 italic">No quotations yet</p>
+                                <p className="text-xs text-slate-400 ml-5">None yet</p>
                               )}
                             </div>
 
-                            {/* Charge Slips - Enhanced */}
-                            <div className="px-4 py-3.5">
-                              <div className="flex items-center justify-between mb-2.5">
-                                <div className="flex items-center gap-2">
-                                  <div className="p-1.5 rounded-lg bg-emerald-100">
-                                    <Receipt className="h-3.5 w-3.5 text-emerald-600" />
-                                  </div>
-                                  <span className="text-xs font-bold text-slate-700">
-                                    Charge Slips
-                                  </span>
-                                </div>
-                                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold shadow-sm">
-                                  {chargeSlipCount}
+                            {/* Charge Slips */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <Receipt className="h-3 w-3 text-green-600" />
+                                <span className="text-xs font-semibold text-slate-700">
+                                  Charge Slips
                                 </span>
+                                <span className="text-[10px] text-slate-500">({chargeSlipCount})</span>
                               </div>
                               {chargeSlipCount > 0 ? (
-                                <div className="space-y-1.5 pl-1">
+                                <div className="space-y-1 ml-5">
                                   {docs?.chargeSlips.map((chargeSlip) => (
                                     <a
                                       key={chargeSlip.id}
                                       href={`/client/view-document?type=charge-slip&ref=${chargeSlip.id}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 transition-all duration-150 group/link border border-transparent hover:border-emerald-200"
+                                      className="block text-xs text-slate-600 hover:text-green-600 hover:underline truncate"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 group-hover/link:scale-125 transition-transform flex-shrink-0" />
-                                      <span className="truncate">{chargeSlip.chargeSlipNumber}</span>
+                                      • {chargeSlip.chargeSlipNumber}
                                     </a>
                                   ))}
                                 </div>
                               ) : (
-                                <p className="text-xs text-slate-400 pl-3 py-1 italic">No charge slips yet</p>
+                                <p className="text-xs text-slate-400 ml-5">None yet</p>
                               )}
                             </div>
                           </div>
