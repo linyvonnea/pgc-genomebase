@@ -2352,6 +2352,70 @@ export default function ClientPortalPage() {
         <main className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50/50 to-blue-50/30">
           {projectDetails ? (
             <div className="p-4 lg:p-6 max-w-5xl mx-auto space-y-6">
+              {/* Draft/Pending/Approved status banner */}
+              {(projectDetails?.isDraft || projectDetails?.status === "Ongoing" || projectDetails?.status === "Pending Approval" || projectDetails?.status === "Rejected") && (
+                <div className={`rounded-lg p-4 border ${
+                  projectDetails.status === "Draft" 
+                    ? "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
+                    : projectDetails.status === "Pending Approval"
+                    ? "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
+                    : projectDetails.status === "Ongoing"
+                    ? "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200"
+                    : "bg-gradient-to-r from-red-50 to-pink-50 border-red-200"
+                }`}>
+                  <div className="flex items-start gap-3">
+                    {projectDetails.status === "Pending Approval" ? (
+                      <Clock className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                    ) : projectDetails.status === "Ongoing" ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    ) : projectDetails.status === "Rejected" ? (
+                      <XCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                    )}
+                    <div className="flex-1 space-y-2">
+                      {projectDetails.status === "Draft" ? (
+                        <>
+                          <p className="text-sm font-semibold text-orange-900">
+                            Draft Project — Pending Submission
+                          </p>
+                          <p className="text-xs text-orange-700 leading-relaxed">
+                            Please fill out your information as the <strong>Primary Member</strong>, then scroll down and click "<strong>Submit Project and Member/s for Approval</strong>" to send this project to the admin for review. Once approved, you'll receive a PID and CID.
+                          </p>
+                        </>
+                      ) : projectDetails.status === "Pending Approval" ? (
+                        <>
+                          <p className="text-sm font-semibold text-orange-900">
+                            Pending Admin Approval
+                          </p>
+                          <p className="text-xs text-orange-700 leading-relaxed">
+                            Your project and team members have been submitted and are currently under review by the administrator. You'll receive a notification once approved. <strong>No further action needed at this time.</strong>
+                          </p>
+                        </>
+                      ) : projectDetails.status === "Ongoing" ? (
+                        <>
+                          <p className="text-sm font-semibold text-green-900">
+                            Project Approved
+                          </p>
+                          <p className="text-xs text-green-700 leading-relaxed">
+                            Your project has been approved and is now active. You can now see your PID and access project documents. If you need to add more team members, you can do so below.
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-sm font-semibold text-red-900">
+                            Project Rejected
+                          </p>
+                          <p className="text-xs text-red-700 leading-relaxed">
+                            Your project submission was not approved. Please review the admin's feedback and make necessary corrections before resubmitting.
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* ── Project Header ────────────────────────── */}
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div className="min-w-0">
@@ -2473,69 +2537,6 @@ export default function ClientPortalPage() {
                   </div>
                 </div>
 
-                {/* Draft/Pending/Approved project info banner */}
-                {(projectDetails?.isDraft || projectDetails?.status === "Ongoing") && (
-                  <div className={`rounded-lg p-4 border ${
-                    projectDetails.status === "Draft" 
-                      ? "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
-                      : projectDetails.status === "Pending Approval"
-                      ? "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
-                      : projectDetails.status === "Ongoing"
-                      ? "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200"
-                      : "bg-gradient-to-r from-red-50 to-pink-50 border-red-200"
-                  }`}>
-                    <div className="flex items-start gap-3">
-                      {projectDetails.status === "Pending Approval" ? (
-                        <Clock className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                      ) : projectDetails.status === "Ongoing" ? (
-                        <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      ) : projectDetails.status === "Rejected" ? (
-                        <XCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
-                      ) : (
-                        <AlertCircle className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
-                      )}
-                      <div className="flex-1 space-y-2">
-                        {projectDetails.status === "Draft" ? (
-                          <>
-                            <p className="text-sm font-semibold text-orange-900">
-                              Draft Project — Pending Submission
-                            </p>
-                            <p className="text-xs text-orange-700 leading-relaxed">
-                              Please fill out your information as the <strong>Primary Member</strong>, then scroll down and click "<strong>Submit Project and Member/s for Approval</strong>" to send this project to the admin for review. Once approved, you'll receive a PID and CID.
-                            </p>
-                          </>
-                        ) : projectDetails.status === "Pending Approval" ? (
-                          <>
-                            <p className="text-sm font-semibold text-orange-900">
-                              Pending Admin Approval
-                            </p>
-                            <p className="text-xs text-orange-700 leading-relaxed">
-                              Your project and team members have been submitted and are currently under review by the administrator. You'll receive a notification once approved. <strong>No further action needed at this time.</strong>
-                            </p>
-                          </>
-                        ) : projectDetails.status === "Ongoing" ? (
-                          <>
-                            <p className="text-sm font-semibold text-green-900">
-                              Project Approved
-                            </p>
-                            <p className="text-xs text-green-700 leading-relaxed">
-                              Your project has been approved and is now active. You can now see your PID and access project documents. If you need to add more team members, you can do so below.
-                            </p>
-                          </>
-                        ) : (
-                          <>
-                            <p className="text-sm font-semibold text-red-900">
-                              Project Rejected
-                            </p>
-                            <p className="text-xs text-red-700 leading-relaxed">
-                              Your project submission was not approved. Please review the admin's feedback and make necessary corrections before resubmitting.
-                            </p>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* Primary member */}
                 {primaryMember && (
