@@ -2441,12 +2441,15 @@ export default function ClientPortalPage() {
                     </h1>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Badge
-                      variant="outline"
-                      className="font-mono text-[10px] bg-blue-50 text-[#166FB5] border-blue-200 px-2 py-0.5"
-                    >
-                      Project ID: {projectDetails.pid}
-                    </Badge>
+                    {/* Only show Project ID badge for officially approved projects, not drafts (inquiry ID is temporary password) */}
+                    {projectDetails.status !== "Draft" && projectDetails.status !== "Pending Approval" && (
+                      <Badge
+                        variant="outline"
+                        className="font-mono text-[10px] bg-blue-50 text-[#166FB5] border-blue-200 px-2 py-0.5"
+                      >
+                        Project ID: {projectDetails.pid}
+                      </Badge>
+                    )}
                     {projectDetails.status !== "Pending Approval" && (
                       <Badge
                         className={cn(
