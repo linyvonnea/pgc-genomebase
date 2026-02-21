@@ -72,8 +72,14 @@ export default function ClientConformeModal({
 
       const filled = (v: string | undefined) => (v && v.trim() ? v.trim() : "N/A");
       const now = new Date();
-      const conformeId = `${inquiryId}_${now.getTime()}`;
       const ts = Timestamp.fromDate(now);
+
+      // Best Practice: Reuse the same document if the user re-agrees in the same session
+      // This avoids generating multiple documents for the same submission attempt.
+      const savedConformeId = localStorage.getItem('currentConformeId');
+      const conformeId = (savedConformeId && savedConformeId.startsWith(`${inquiryId}_`))
+        ? savedConformeId
+        : `${inquiryId}_${now.getTime()}`;
 
       // Save with 'agreed_pending' status - user has read and agreed but not yet completed submission
       await setDoc(doc(db, "clientConformes", conformeId), {
@@ -91,9 +97,9 @@ export default function ClientConformeModal({
           clientIpAddress: "client_browser",
           userAgent:       typeof navigator !== "undefined" ? navigator.userAgent : "unknown",
           agreementDate:   ts,
-          createdAt:       ts,
+          createdAt:       ts, // This will be updated if they re-sign, which is technically correct (most recent agreement)
           status:          "agreed_pending", // User agreed but hasn't completed submission yet
-          conformeId:      conformeId, // Store the ID for later status updates
+          conformeId:      conformeId, 
           clientSignature: {
             method:    "typed_name",
             data:      filled(clientName),
@@ -106,9 +112,9 @@ export default function ClientConformeModal({
             timestamp: ts,
           },
         },
-      });
+      }, { merge: true }); // Use merge: true to preserve any fields if somehow already existing
 
-      console.log("✅ Client Conforme saved with 'agreed_pending' status:", conformeId);
+      console.log("✅ Client Conforme recorded with 'agreed_pending' status:", conformeId);
       toast.success("Legal agreement recorded. Proceeding to final review...", { duration: 3000 });
       setAgreed(false);
       
