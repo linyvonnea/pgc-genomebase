@@ -2723,96 +2723,99 @@ export default function ClientPortalPage() {
         description="Please review the details below to ensure accuracy before saving."
         confirmLabel="Confirm & Save"
         cancelLabel="Edit Details"
+        className="max-w-2xl"
       >
         {pendingMemberId &&
           (() => {
             const member = members.find((m) => m.id === pendingMemberId);
             if (!member) return null;
             return (
-              <div className="space-y-6">
-                {/* Profile Header Card */}
-                <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#166FB5] to-[#4038AF] flex items-center justify-center shadow-md flex-shrink-0">
-                    <User className="h-6 w-6 text-white" />
+              <div className="space-y-4">
+                {/* Profile Header Card - Compact */}
+                <div className="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#166FB5] to-[#4038AF] flex items-center justify-center shadow-md flex-shrink-0">
+                    <User className="h-5 w-5 text-white" />
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-lg text-slate-800 truncate">
-                      {member.formData.name || "Unnamed Member"}
-                    </h3>
-                    <div className="flex items-center gap-2 text-sm text-slate-500">
-                      <Mail className="h-3.5 w-3.5" />
-                      <span className="truncate">{member.formData.email || "No email provided"}</span>
+                  <div className="min-w-0 flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                    <div>
+                      <h3 className="font-bold text-base text-slate-800 truncate">
+                        {member.formData.name || "Unnamed Member"}
+                      </h3>
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <Mail className="h-3 w-3" />
+                        <span className="truncate">{member.formData.email || "No email provided"}</span>
+                      </div>
                     </div>
                     {member.isPrimary && (
-                      <Badge className="mt-2 bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200">
+                      <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200 text-[10px] px-2 py-0.5 h-auto self-start sm:self-center">
                         Primary Contact
                       </Badge>
                     )}
                   </div>
                 </div>
 
-                {/* Details Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                {/* Details Grid - 3 Columns for wider layout */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
                   {/* Affiliation */}
-                  <div className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
-                    <div className="flex items-center gap-2 text-slate-400 mb-1">
-                      <Building2 className="h-3.5 w-3.5" />
-                      <span className="text-xs font-semibold uppercase tracking-wide">Affiliation</span>
+                  <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
+                    <div className="flex items-center gap-1.5 text-slate-400 mb-0.5">
+                      <Building2 className="h-3 w-3" />
+                      <span className="text-[10px] font-bold uppercase tracking-wide">Affiliation</span>
                     </div>
-                    <p className="font-medium text-slate-700 truncate" title={member.formData.affiliation}>
+                    <p className="font-medium text-slate-700 truncate text-xs sm:text-sm" title={member.formData.affiliation}>
                       {member.formData.affiliation || "—"}
                     </p>
                   </div>
 
                   {/* Designation */}
-                  <div className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
-                    <div className="flex items-center gap-2 text-slate-400 mb-1">
-                      <Briefcase className="h-3.5 w-3.5" />
-                      <span className="text-xs font-semibold uppercase tracking-wide">Designation</span>
+                  <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
+                    <div className="flex items-center gap-1.5 text-slate-400 mb-0.5">
+                      <Briefcase className="h-3 w-3" />
+                      <span className="text-[10px] font-bold uppercase tracking-wide">Designation</span>
                     </div>
-                    <p className="font-medium text-slate-700 truncate" title={member.formData.designation}>
+                    <p className="font-medium text-slate-700 truncate text-xs sm:text-sm" title={member.formData.designation}>
                       {member.formData.designation || "—"}
                     </p>
                   </div>
 
                   {/* Mobile Number */}
-                  <div className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
-                    <div className="flex items-center gap-2 text-slate-400 mb-1">
-                      <Smartphone className="h-3.5 w-3.5" />
-                      <span className="text-xs font-semibold uppercase tracking-wide">Mobile Number</span>
+                  <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
+                    <div className="flex items-center gap-1.5 text-slate-400 mb-0.5">
+                      <Smartphone className="h-3 w-3" />
+                      <span className="text-[10px] font-bold uppercase tracking-wide">Mobile</span>
                     </div>
-                    <p className="font-medium text-slate-700 font-mono">
+                    <p className="font-medium text-slate-700 font-mono text-xs sm:text-sm">
                       {member.formData.phoneNumber || "—"}
                     </p>
                   </div>
 
                   {/* Sex */}
-                  <div className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
-                    <div className="flex items-center gap-2 text-slate-400 mb-1">
-                      <User className="h-3.5 w-3.5" />
-                      <span className="text-xs font-semibold uppercase tracking-wide">Sex</span>
+                  <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
+                    <div className="flex items-center gap-1.5 text-slate-400 mb-0.5">
+                      <User className="h-3 w-3" />
+                      <span className="text-[10px] font-bold uppercase tracking-wide">Sex</span>
                     </div>
-                    <p className="font-medium text-slate-700">
+                    <p className="font-medium text-slate-700 text-xs sm:text-sm">
                       {member.formData.sex === "M" ? "Male" : member.formData.sex === "F" ? "Female" : member.formData.sex || "—"}
                     </p>
                   </div>
 
-                  {/* Address - Full Width */}
-                  <div className="sm:col-span-2 bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
-                    <div className="flex items-center gap-2 text-slate-400 mb-1">
-                      <MapPin className="h-3.5 w-3.5" />
-                      <span className="text-xs font-semibold uppercase tracking-wide">Affiliation Address</span>
+                  {/* Address - Spans 2 cols */}
+                  <div className="sm:col-span-2 bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm">
+                    <div className="flex items-center gap-1.5 text-slate-400 mb-0.5">
+                      <MapPin className="h-3 w-3" />
+                      <span className="text-[10px] font-bold uppercase tracking-wide">Affiliation Address</span>
                     </div>
-                    <p className="font-medium text-slate-700 break-words leading-relaxed">
+                    <p className="font-medium text-slate-700 truncate text-xs sm:text-sm" title={member.formData.affiliationAddress}>
                       {member.formData.affiliationAddress || "—"}
                     </p>
                   </div>
                 </div>
 
-                <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100 flex items-start gap-3">
-                  <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
-                  <p className="text-xs text-blue-600">
-                    Please ensure all details are correct. This information will be used for official communications and project documentation.
+                <div className="bg-blue-50/50 p-2.5 rounded-lg border border-blue-100 flex items-start gap-2">
+                  <Info className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                  <p className="text-[11px] text-blue-600 leading-snug">
+                    Please ensure all details are correct. This information will be used for official communications.
                   </p>
                 </div>
               </div>
