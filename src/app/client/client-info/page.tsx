@@ -1278,7 +1278,7 @@ export default function ClientPortalPage() {
     const unsavedCount = members.filter((m) => !m.isSubmitted).length;
     if (unsavedCount > 0) {
       toast.error(
-        `Please save/validate all ${unsavedCount} member(s) before submitting for approval`
+        `Please finalize and save all ${unsavedCount} member details before submitting for approval`
       );
       return;
     }
@@ -1919,7 +1919,7 @@ export default function ClientPortalPage() {
               Saving...
             </>
           ) : (
-            `${member.isPrimary ? "Save & Verify My Details" : "Save & Verify Member Details"}`
+            `${member.isPrimary ? "Save & Confirm My Details" : "Save & Confirm Member Details"}`
           )}
         </Button>
       </div>
