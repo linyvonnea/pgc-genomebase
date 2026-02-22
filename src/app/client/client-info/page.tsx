@@ -1971,11 +1971,6 @@ export default function ClientPortalPage() {
                     Primary
                   </Badge>
                 )}
-                {member.isDraft && (
-                  <Badge variant="outline" className="text-[10px] h-5 px-1.5 border-orange-200 text-orange-600">
-                    Draft
-                  </Badge>
-                )}
               </div>
               <div className="flex items-center gap-3 mt-0.5">
                 {member.cid && member.cid !== "pending" && member.cid !== "draft" && (
