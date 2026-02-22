@@ -2397,7 +2397,7 @@ export default function ClientPortalPage() {
                             Application Submitted & Under Review
                           </p>
                           <p className="text-sm text-blue-700 leading-relaxed">
-                            Your project and team details have been successfully submitted. Our team is currently reviewing your application. Please check this portal dashboard for your <strong>Project ID</strong> and approval notification. <strong>No further action is required at this time.</strong>
+                            Your project and team details have been successfully submitted. Our team is currently reviewing your application. Please check this portal dashboard for your <strong>Project ID</strong>, <strong>Client ID</strong>, and approval notification. <strong>No further action is required at this time.</strong>
                           </p>
                         </>
                       ) : projectDetails.status === "Ongoing" ? (
