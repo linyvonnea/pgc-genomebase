@@ -1181,7 +1181,7 @@ export default function ClientPortalPage() {
               : m
           )
         );
-        toast.success("Draft saved for member");
+        toast.success("Member details saved as draft");
       } else {
         // For approved projects
         if (member.isPrimary) {
@@ -1257,7 +1257,7 @@ export default function ClientPortalPage() {
                 : m
             )
           );
-          toast.success("Draft saved for team member");
+          toast.success("Member details saved as draft");
         }
       }
     } catch (error) {
