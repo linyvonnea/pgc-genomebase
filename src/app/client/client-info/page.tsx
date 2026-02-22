@@ -463,7 +463,18 @@ export default function ClientPortalPage() {
         };
     } else {
         // Only if not found in approved, check drafts
-        const primaryDraftRequest = fetchedClientRequests.find(r => r.email.toLowerCase() === emailParam?.toLowerCase());
+        // Prioritize draft for the current project if we have an ID
+        const primaryDraftRequest = fetchedClientRequests.find(r => {
+             const emailMatch = r.email.toLowerCase() === emailParam?.toLowerCase();
+             if (!emailMatch) return false;
+             
+             if (currentProjectRequestId) {
+                 return r.projectRequestId === currentProjectRequestId;
+             }
+             // If no project ID yet, take the most recent draft or specific one? 
+             // Without project ID, we might match wrong draft, but usually this happens during creation
+             return true; 
+        });
         
         if (primaryDraftRequest) {
             primaryMember = {

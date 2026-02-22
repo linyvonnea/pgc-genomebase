@@ -85,7 +85,7 @@ function getDocId(inquiryId: string, email: string, projectRequestId?: string): 
 export async function saveClientRequest(
   data: Omit<ClientRequest, "id" | "createdAt" | "updatedAt">
 ): Promise<string> {
-  const docId = getDocId(data.inquiryId, data.email);
+  const docId = getDocId(data.inquiryId, data.email, data.projectRequestId);
   const docRef = doc(db, COLLECTION, docId);
   const existing = await getDoc(docRef);
 
