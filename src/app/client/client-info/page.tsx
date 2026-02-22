@@ -1629,6 +1629,14 @@ export default function ClientPortalPage() {
   // ────────────────────────────────────────────────────────────────
 
   const getMemberStatus = (member: ClientMember) => {
+    // Check global project status first
+    if ((projectDetails?.status === "Pending Approval" || approvalStatus === "pending") && member.isDraft) {
+        return {
+          label: "Pending Approval",
+          color: "bg-blue-500", // Blue to indicate info/waiting state rather than warning
+        };
+    }
+    
     if (member.isDraft && approvalStatus === "pending")
       return {
         label: "Pending Approval",
@@ -2532,7 +2540,7 @@ export default function ClientPortalPage() {
                       onClick={handleAddMember}
                       variant="outline"
                       size="sm"
-                      disabled={projectDetails?.status === "Completed" || approvalStatus === "pending"}
+                      disabled={projectDetails?.status === "Completed" || approvalStatus === "pending" || projectDetails?.status === "Pending Approval"}
                       className="border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white disabled:opacity-50"
                     >
                       <Plus className="h-4 w-4 mr-1" />
@@ -2674,6 +2682,7 @@ export default function ClientPortalPage() {
 
                 {/* ── Submit for Approval Button ─────────── */}
                 {projectDetails?.status !== "Completed" && 
+                  projectDetails?.status !== "Pending Approval" && // Hide if main project is pending
                   approvalStatus !== "pending" && 
                   (approvalStatus !== "approved" || members.some(m => m.isDraft && !m.isPrimary)) && (
                     <div className="pt-6 border-t-2 border-slate-200">
