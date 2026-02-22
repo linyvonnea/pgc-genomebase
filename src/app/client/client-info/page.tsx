@@ -1685,7 +1685,7 @@ export default function ClientPortalPage() {
 
   const statusColors: Record<string, string> = {
     Draft: "bg-slate-100 text-slate-700 border-slate-200",
-    "Pending Approval": "bg-orange-100 text-orange-700 border-orange-200",
+    "Pending Approval": "bg-blue-600 text-white shadow-sm",
     Rejected: "bg-red-100 text-red-700 border-red-200",
     Pending: "bg-blue-100 text-blue-700 border-blue-200",
     Ongoing: "bg-green-100 text-green-700 border-green-200",
@@ -2118,9 +2118,6 @@ export default function ClientPortalPage() {
           <FolderOpen className="h-4 w-4 text-[#166FB5]" />
           <span className="text-sm font-semibold text-slate-700">
             My Projects
-          </span>
-          <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[#166FB5] text-white text-xs font-bold">
-            {projects.length}
           </span>
         </div>
         <ChevronDown
