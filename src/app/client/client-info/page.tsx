@@ -2041,7 +2041,7 @@ export default function ClientPortalPage() {
     <div className="flex flex-col h-full">
       {/* Header - CLIENT PORTAL + User Identity Card */}
       <div className="p-4 border-b bg-white">
-        <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">
+        <h2 className="text-sm font-black text-slate-700 uppercase tracking-[0.2em] mb-3 ml-1">
           Client Portal
         </h2>
         

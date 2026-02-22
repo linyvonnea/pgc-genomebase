@@ -61,11 +61,6 @@ export default function Header({ user, onLogout, showNavigation = true }: Header
                 </DropdownMenuTrigger>
                 
                 <DropdownMenuContent className="w-[200px] mt-2 p-1.5 rounded-xl border-slate-200" align="end">
-                  <DropdownMenuLabel className="px-3 py-2 border-b border-slate-50 mb-1">
-                    <div className="font-bold text-slate-800 text-sm truncate">{user.displayName || "User"}</div>
-                    <div className="text-[10px] text-slate-400 font-medium truncate">{user.email}</div>
-                  </DropdownMenuLabel>
-                  
                   <DropdownMenuItem className="flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer text-slate-700 hover:bg-slate-50 transition-colors">
                     <Settings className="w-4 h-4 text-[#166FB5]" />
                     <span className="font-medium">Settings</span>
