@@ -2375,7 +2375,12 @@ export default function ClientPortalPage() {
                             Action Required: Complete Project Submission
                           </p>
                           <p className="text-sm text-orange-700 leading-relaxed">
-                            Please provide your details as the <strong>Primary Member</strong>. Once finished, scroll to the bottom and click "<strong>Submit Project & Team for Approval</strong>" to send your application for admin review. After approval, you will be assigned a <strong>Project ID</strong> and <strong>Client ID</strong>.
+                            {members.some(m => m.isPrimary && !m.isSubmitted) ? (
+                              <>Please provide your details as the <strong>Primary Member</strong>. </>
+                            ) : (
+                              <>Please finalize your team members. </>
+                            )}
+                            Once finished, scroll to the bottom and click "<strong>Submit Project & Team for Approval</strong>" to send your application for admin review. After approval, you will be assigned a <strong>Project ID</strong> and <strong>Client ID</strong>.
                           </p>
                         </>
                       ) : projectDetails.status === "Pending Approval" ? (
