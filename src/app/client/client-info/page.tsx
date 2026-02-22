@@ -790,7 +790,19 @@ export default function ClientPortalPage() {
       });
 
       // Don't auto-expand new members - let user decide when to open them
-      toast.success("New member slot added. Please fill in their details.");
+      // toast.success("New member slot added. Please fill in their details.");
+
+      // UPDATE: Auto-expand ONLY the new member (collapse primary/others)
+      setExpandedMembers(() => {
+        const next = new Set([savedDocId]);
+        // Persist to localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('expandedMembers', JSON.stringify(Array.from(next)));
+        }
+        return next;
+      });
+      
+      toast.success("New member slot added");
     } catch (error) {
       console.error("Error adding draft member:", error);
       toast.error("Failed to add new member draft");
