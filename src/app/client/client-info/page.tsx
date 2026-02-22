@@ -2039,42 +2039,15 @@ export default function ClientPortalPage() {
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      {/* Header - Simple Client Portal Card */}
-      <div className="p-4 border-b bg-white">
-        <div className="bg-[#166FB5] rounded-xl p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              {/* Icon */}
-              <div className="p-2 bg-white/20 rounded-lg flex-shrink-0">
-                <Users className="h-5 w-5 text-white" />
-              </div>
-              
-              {/* User Info */}
-              <div className="min-w-0 flex-1">
-                <h2 className="text-white font-bold text-base mb-1">
-                  Client Portal
-                </h2>
-                {user?.displayName && (
-                  <p className="text-white/90 text-sm font-medium truncate">
-                    {user.displayName}
-                  </p>
-                )}
-                <p className="text-white/70 text-xs truncate">
-                  {user?.email || emailParam || ""}
-                </p>
-              </div>
-            </div>
-            
-            {/* Close button – mobile only */}
-            <button
-              onClick={() => setMobileSidebarOpen(false)}
-              className="lg:hidden text-white/80 hover:text-white rounded p-1 flex-shrink-0"
-              aria-label="Close sidebar"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
+      {/* Mobile-only Header with Close Button */}
+      <div className="lg:hidden flex items-center justify-end p-4 border-b bg-white">
+        <button
+          onClick={() => setMobileSidebarOpen(false)}
+          className="text-slate-400 hover:text-slate-600 rounded-lg p-1"
+          aria-label="Close sidebar"
+        >
+          <X className="h-6 w-6" />
+        </button>
       </div>
 
       {/* Projects section header - Simple */}
@@ -2309,77 +2282,7 @@ export default function ClientPortalPage() {
 
   return (
     <>
-      {/* Top Header with User Menu */}
-      <div className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg font-bold text-slate-800">Client Portal</h1>
-          </div>
-          
-          {/* Simple Hamburger Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="p-2 hover:bg-slate-100 rounded-lg"
-              >
-                <Menu className="w-5 h-5 text-slate-600" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-48 mt-2" align="end">
-              <DropdownMenuLabel className="text-xs text-slate-400 font-bold uppercase tracking-wider">
-                Menu
-              </DropdownMenuLabel>
-              <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
-                <Settings className="w-4 h-4 text-[#166FB5]" />
-                <span>Settings</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
-                <Key className="w-4 h-4 text-purple-600" />
-                <span>Change Password</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
-                <Info className="w-4 h-4 text-orange-600" />
-                <span>About</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => router.push("/portal")}
-                className="flex items-center gap-2 cursor-pointer text-[#B9273A] hover:bg-[#B9273A]/10"
-              >
-                <LogOut className="w-4 h-4" />
-                <span className="font-semibold">Logout</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      {/* Mobile header bar */}
-      <div className="lg:hidden sticky top-[73px] z-30 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm">
-        <div className="min-w-0">
-          <h1 className="font-bold text-slate-800 text-sm truncate">
-            {projectDetails?.title || "Client Portal"}
-          </h1>
-          {/* Hide inquiry ID for draft projects (security) */}
-          {projectDetails?.pid && projectDetails.status !== "Draft" && (
-            <p className="text-[11px] text-slate-500 font-mono">
-              Project ID: {projectDetails.pid}
-            </p>
-          )}
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setMobileSidebarOpen(true)}
-          className="text-slate-600"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      </div>
-
-      <div className="flex h-[calc(100vh-146px)] lg:h-[calc(100vh-73px)]">{/* Adjusted for new header */}
+      <div className="flex h-[calc(100vh-73px)]">
         {/* ═════ LEFT SIDEBAR — Desktop ═════ */}
         <aside className="hidden lg:flex w-[320px] min-w-[280px] bg-white border-r border-slate-200 flex-shrink-0 flex-col">
           {sidebarContent}

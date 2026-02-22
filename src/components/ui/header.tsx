@@ -1,6 +1,6 @@
 // src/components/ui/header.tsx
 import Image from "next/image";
-import { LogOut, User, Settings, Info, Key, ChevronDown } from "lucide-react";
+import { LogOut, User, Settings, Info, Key, ChevronDown, Menu } from "lucide-react";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 export interface HeaderProps {
   showNavigation?: boolean;
@@ -36,10 +37,10 @@ export default function Header({ user, onLogout, showNavigation = true }: Header
               />
             </div>
             <div className="hidden md:block">
-              <div className="text-sm font-semibold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent">
+              <div className="text-sm font-semibold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent uppercase tracking-wider">
                 PHILIPPINE GENOME CENTER VISAYAS
               </div>
-              <div className="text-xs text-slate-500 font-medium">
+              <div className="text-[10px] text-slate-500 font-medium">
                 UNIVERSITY OF THE PHILIPPINES VISAYAS, MIAGAO, ILOILO
               </div>
             </div>
@@ -50,21 +51,19 @@ export default function Header({ user, onLogout, showNavigation = true }: Header
             <div className="flex items-center gap-3">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-3 bg-white hover:bg-slate-50 rounded-full px-2 py-1.5 sm:px-4 sm:py-2 border border-slate-200 transition-all duration-200 hover:shadow-md focus:outline-none group">
-                    <div className="w-8 h-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] rounded-full flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-200">
-                      <User className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="hidden sm:block text-left mr-1">
-                      <div className="font-semibold text-slate-800 text-sm leading-none">{user.displayName || "User"}</div>
-                      <div className="text-[10px] text-slate-500 font-medium mt-1 truncate max-w-[120px]">{user.email}</div>
-                    </div>
-                    <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-colors duration-200 ml-1" />
-                  </button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors border border-slate-100"
+                  >
+                    <Menu className="w-6 h-6 text-[#166FB5]" />
+                  </Button>
                 </DropdownMenuTrigger>
                 
                 <DropdownMenuContent className="w-[200px] mt-2 p-1.5 rounded-xl border-slate-200" align="end">
-                  <DropdownMenuLabel className="px-2 py-1.5 text-xs text-slate-400 font-bold uppercase tracking-wider">
-                    My Account
+                  <DropdownMenuLabel className="px-3 py-2 border-b border-slate-50 mb-1">
+                    <div className="font-bold text-slate-800 text-sm truncate">{user.displayName || "User"}</div>
+                    <div className="text-[10px] text-slate-400 font-medium truncate">{user.email}</div>
                   </DropdownMenuLabel>
                   
                   <DropdownMenuItem className="flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer text-slate-700 hover:bg-slate-50 transition-colors">
