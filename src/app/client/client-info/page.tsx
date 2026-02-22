@@ -2039,8 +2039,35 @@ export default function ClientPortalPage() {
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
+      {/* Header - CLIENT PORTAL + User Identity Card */}
+      <div className="p-4 border-b bg-white">
+        <h2 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">
+          Client Portal
+        </h2>
+        
+        {/* Attached Design: Pill-shaped identity card */}
+        <div className="flex items-center gap-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-full px-3 py-1.5 shadow-sm transition-all duration-200">
+          {/* Circular Blue Avatar */}
+          <div className="w-9 h-9 bg-gradient-to-r from-[#166FB5] to-[#4038AF] rounded-full flex items-center justify-center flex-shrink-0 shadow-inner">
+            <User className="w-4 h-4 text-white" />
+          </div>
+          
+          {/* User Info from Attachment */}
+          <div className="min-w-0 flex-1">
+            <div className="font-bold text-slate-800 text-xs truncate leading-tight">
+              {user?.displayName || "Merlito Dayon Jr. UPV-PGCV"}
+            </div>
+            <div className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
+              {user?.email || emailParam || "merlito.dayon@gmail.com"}
+            </div>
+          </div>
+          
+          {/* The arrow down icon is explicitly removed per request */}
+        </div>
+      </div>
+
       {/* Mobile-only Header with Close Button */}
-      <div className="lg:hidden flex items-center justify-end p-4 border-b bg-white">
+      <div className="lg:hidden flex items-center justify-end p-2 border-b bg-white">
         <button
           onClick={() => setMobileSidebarOpen(false)}
           className="text-slate-400 hover:text-slate-600 rounded-lg p-1"
