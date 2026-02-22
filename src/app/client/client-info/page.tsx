@@ -103,6 +103,10 @@ import {
   Settings,
   Key,
   Info,
+  Mail,
+  Smartphone,
+  MapPin,
+  Briefcase,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ClientConformeModal from "@/components/forms/ClientConformeModal";
@@ -2716,43 +2720,100 @@ export default function ClientPortalPage() {
         }}
         loading={submitting}
         title="Confirm Member Information"
-        description="Please review the information below before saving."
-        confirmLabel="Save Member"
-        cancelLabel="Go Back"
+        description="Please review the details below to ensure accuracy before saving."
+        confirmLabel="Confirm & Save"
+        cancelLabel="Edit Details"
       >
         {pendingMemberId &&
           (() => {
             const member = members.find((m) => m.id === pendingMemberId);
             if (!member) return null;
             return (
-              <div className="space-y-2 text-slate-800 text-sm">
-                <div>
-                  <span className="font-semibold">Full Name:</span>{" "}
-                  {member.formData.name}
+              <div className="space-y-6">
+                {/* Profile Header Card */}
+                <div className="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#166FB5] to-[#4038AF] flex items-center justify-center shadow-md flex-shrink-0">
+                    <User className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-lg text-slate-800 truncate">
+                      {member.formData.name || "Unnamed Member"}
+                    </h3>
+                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <Mail className="h-3.5 w-3.5" />
+                      <span className="truncate">{member.formData.email || "No email provided"}</span>
+                    </div>
+                    {member.isPrimary && (
+                      <Badge className="mt-2 bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200">
+                        Primary Contact
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <span className="font-semibold">Email:</span>{" "}
-                  {member.formData.email}
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                  {/* Affiliation */}
+                  <div className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                    <div className="flex items-center gap-2 text-slate-400 mb-1">
+                      <Building2 className="h-3.5 w-3.5" />
+                      <span className="text-xs font-semibold uppercase tracking-wide">Affiliation</span>
+                    </div>
+                    <p className="font-medium text-slate-700 truncate" title={member.formData.affiliation}>
+                      {member.formData.affiliation || "—"}
+                    </p>
+                  </div>
+
+                  {/* Designation */}
+                  <div className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                    <div className="flex items-center gap-2 text-slate-400 mb-1">
+                      <Briefcase className="h-3.5 w-3.5" />
+                      <span className="text-xs font-semibold uppercase tracking-wide">Designation</span>
+                    </div>
+                    <p className="font-medium text-slate-700 truncate" title={member.formData.designation}>
+                      {member.formData.designation || "—"}
+                    </p>
+                  </div>
+
+                  {/* Mobile Number */}
+                  <div className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                    <div className="flex items-center gap-2 text-slate-400 mb-1">
+                      <Smartphone className="h-3.5 w-3.5" />
+                      <span className="text-xs font-semibold uppercase tracking-wide">Mobile Number</span>
+                    </div>
+                    <p className="font-medium text-slate-700 font-mono">
+                      {member.formData.phoneNumber || "—"}
+                    </p>
+                  </div>
+
+                  {/* Sex */}
+                  <div className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                    <div className="flex items-center gap-2 text-slate-400 mb-1">
+                      <User className="h-3.5 w-3.5" />
+                      <span className="text-xs font-semibold uppercase tracking-wide">Sex</span>
+                    </div>
+                    <p className="font-medium text-slate-700">
+                      {member.formData.sex === "M" ? "Male" : member.formData.sex === "F" ? "Female" : member.formData.sex || "—"}
+                    </p>
+                  </div>
+
+                  {/* Address - Full Width */}
+                  <div className="sm:col-span-2 bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+                    <div className="flex items-center gap-2 text-slate-400 mb-1">
+                      <MapPin className="h-3.5 w-3.5" />
+                      <span className="text-xs font-semibold uppercase tracking-wide">Affiliation Address</span>
+                    </div>
+                    <p className="font-medium text-slate-700 break-words leading-relaxed">
+                      {member.formData.affiliationAddress || "—"}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <span className="font-semibold">Affiliation:</span>{" "}
-                  {member.formData.affiliation}
-                </div>
-                <div>
-                  <span className="font-semibold">Designation:</span>{" "}
-                  {member.formData.designation}
-                </div>
-                <div>
-                  <span className="font-semibold">Sex:</span>{" "}
-                  {member.formData.sex}
-                </div>
-                <div>
-                  <span className="font-semibold">Mobile Number:</span>{" "}
-                  {member.formData.phoneNumber}
-                </div>
-                <div>
-                  <span className="font-semibold">Affiliation Address:</span>{" "}
-                  {member.formData.affiliationAddress}
+
+                <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100 flex items-start gap-3">
+                  <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+                  <p className="text-xs text-blue-600">
+                    Please ensure all details are correct. This information will be used for official communications and project documentation.
+                  </p>
                 </div>
               </div>
             );
