@@ -2862,15 +2862,46 @@ export default function ClientPortalPage() {
           setMemberToDelete(null);
         }}
         loading={false}
-        title="Remove Member?"
-        description="Are you sure you want to remove this member?"
-        confirmLabel="Remove"
+        title="Remove Member"
+        description="Are you sure you want to remove this team member from the project?"
+        confirmLabel="Remove Member"
         cancelLabel="Cancel"
+        className="max-w-xl"
       >
-        <p className="text-sm text-slate-600">
-          Note: This will remove them from the current session. If previously
-          saved, their record will remain in the database.
-        </p>
+        {memberToDelete &&
+          (() => {
+            const member = members.find((m) => m.id === memberToDelete);
+            if (!member) return null;
+            return (
+              <div className="space-y-4">
+                {/* Profile Header Card - Compact */}
+                <div className="flex items-center gap-4 bg-red-50 p-3 rounded-xl border border-red-100">
+                  <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center shadow-sm flex-shrink-0">
+                    <Trash2 className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-bold text-base text-slate-800 truncate">
+                      {member.formData.name || "Unnamed Member"}
+                    </h3>
+                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                      <Mail className="h-3 w-3" />
+                      <span className="truncate">{member.formData.email || "No email provided"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Warning Message */}
+                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                   <p className="text-sm text-slate-600">
+                    This will remove <strong>{member.formData.name || "this member"}</strong> from the current list. 
+                    {member.isDraft 
+                      ? " Since this is a draft, the data will be permanently deleted." 
+                      : " If this member has already been submitted, this request will need approval."}
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
       </ConfirmationModalLayout>
 
       {/* Submit for approval confirmation modal */}
