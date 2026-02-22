@@ -1609,7 +1609,7 @@ export default function ClientPortalPage() {
       return { label: "Rejected", color: "bg-red-500" };
     if (member.isSubmitted)
       return {
-        label: member.isDraft ? "Validated" : "Completed",
+        label: member.isDraft ? "Ready" : "Complete",
         color: member.isDraft ? "bg-blue-500" : "bg-green-500",
       };
     if (Object.keys(member.errors).length > 0)
