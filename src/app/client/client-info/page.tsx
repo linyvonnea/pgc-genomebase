@@ -2378,7 +2378,7 @@ export default function ClientPortalPage() {
                             {members.some(m => m.isPrimary && !m.isSubmitted) ? (
                               <>Please provide your details as the <strong>Primary Member</strong>. </>
                             ) : (
-                              <>Please finalize your team members. </>
+                              <>If you have additional team members, please add them now. </>
                             )}
                             Once finished, scroll to the bottom and click "<strong>Submit Project & Team for Approval</strong>" to send your application for admin review. After approval, you will be assigned a <strong>Project ID</strong> and <strong>Client ID</strong>.
                           </p>
