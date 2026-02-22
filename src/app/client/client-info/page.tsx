@@ -977,7 +977,9 @@ export default function ClientPortalPage() {
               : m
           )
         );
-        toast.success(`${member.isPrimary ? "Primary member" : "Team member"} information saved to draft!`);
+        toast.success(
+          `${member.isPrimary ? "Primary member" : "Team member"} details confirmed and saved successfully.`
+        );
       } else {
         // For approved projects
         if (member.isPrimary) {
