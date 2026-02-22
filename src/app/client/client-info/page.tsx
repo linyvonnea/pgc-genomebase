@@ -2106,7 +2106,7 @@ export default function ClientPortalPage() {
               </p>
             </div>
           ) : (
-            <div className="pl-6 pr-3 py-2 space-y-2">
+            <div className="pl-10 pr-3 py-2 space-y-2">
               {projects.map((project) => {
                 // Defensive checks for project properties
                 if (!project || !project.pid) {
@@ -2160,25 +2160,23 @@ export default function ClientPortalPage() {
                       </div>
 
                       {/* Documents toggle button - Visible chevron on the right */}
-                      {isOngoing && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleProjectDocs(project);
-                          }}
-                          className={cn(
-                            "flex-shrink-0 px-3 py-2.5 hover:bg-slate-100 transition-colors border-l border-slate-200",
-                            isDocsExpanded && "bg-slate-50"
-                          )}
-                          title="View documents"
-                          aria-label="Toggle documents"
-                        >
-                          <ChevronRight className={cn(
-                            "h-5 w-5 text-slate-600 transition-transform",
-                            isDocsExpanded && "rotate-90"
-                          )} />
-                        </button>
-                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleProjectDocs(project);
+                        }}
+                        className={cn(
+                          "flex-shrink-0 px-3 py-2.5 hover:bg-slate-100 transition-colors border-l border-slate-200 group/chevron",
+                          isDocsExpanded && "bg-blue-50"
+                        )}
+                        title="View documents"
+                        aria-label="Toggle documents"
+                      >
+                        <ChevronRight className={cn(
+                          "h-5 w-5 text-[#166FB5] transition-all duration-200 group-hover/chevron:translate-x-0.5",
+                          isDocsExpanded && "rotate-90"
+                        )} />
+                      </button>
                     </div>
 
                     {/* ── Documents sub-panel ── */}
