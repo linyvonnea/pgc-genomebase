@@ -2362,7 +2362,7 @@ export default function ClientPortalPage() {
                   projectDetails.status === "Draft" 
                     ? "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
                     : projectDetails.status === "Pending Approval"
-                    ? "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
+                    ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200"
                     : projectDetails.status === "Ongoing"
                     ? "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200"
                     : "bg-gradient-to-r from-red-50 to-pink-50 border-red-200"
@@ -2385,11 +2385,11 @@ export default function ClientPortalPage() {
                         </>
                       ) : projectDetails.status === "Pending Approval" ? (
                         <>
-                          <p className="text-sm font-semibold text-orange-900 leading-none">
-                            Application Under Review
+                          <p className="text-sm font-semibold text-blue-900 leading-none">
+                            Application Submitted & Under Review
                           </p>
-                          <p className="text-sm text-orange-700 leading-relaxed">
-                            Your project and team members have been submitted and are currently being reviewed by our administration team. You will receive a notification and your <strong>Project ID</strong> once approved. <strong>No further action is required at this time.</strong>
+                          <p className="text-sm text-blue-700 leading-relaxed">
+                            Your project and team details have been successfully submitted. Our team is currently reviewing your application. You will receive an email notification with your <strong>Project ID</strong> once approved. <strong>No further action is required at this time.</strong>
                           </p>
                         </>
                       ) : projectDetails.status === "Ongoing" ? (
