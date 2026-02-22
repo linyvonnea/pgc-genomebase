@@ -35,6 +35,14 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { getNextCid } from "@/services/clientService";
 import {
   saveMemberApproval,
@@ -92,6 +100,9 @@ import {
   Menu,
   FileText,
   Receipt,
+  Settings,
+  Key,
+  Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ClientConformeModal from "@/components/forms/ClientConformeModal";
@@ -2198,7 +2209,7 @@ export default function ClientPortalPage() {
                                 </span>
                                 <span className="text-[10px] text-slate-500">({quotationCount})</span>
                               </div>
-                              {quotationCount > 0 ? (
+                              {quotationCount > 0 && (
                                 <div className="space-y-1 ml-5">
                                   {docs?.quotations.map((quotation) => (
                                     <a
@@ -2213,8 +2224,6 @@ export default function ClientPortalPage() {
                                     </a>
                                   ))}
                                 </div>
-                              ) : (
-                                <p className="text-xs text-slate-400 ml-5">None yet</p>
                               )}
                             </div>
 
@@ -2227,7 +2236,7 @@ export default function ClientPortalPage() {
                                 </span>
                                 <span className="text-[10px] text-slate-500">({chargeSlipCount})</span>
                               </div>
-                              {chargeSlipCount > 0 ? (
+                              {chargeSlipCount > 0 && (
                                 <div className="space-y-1 ml-5">
                                   {docs?.chargeSlips.map((chargeSlip) => (
                                     <a
@@ -2242,8 +2251,6 @@ export default function ClientPortalPage() {
                                     </a>
                                   ))}
                                 </div>
-                              ) : (
-                                <p className="text-xs text-slate-400 ml-5">None yet</p>
                               )}
                             </div>
                           </div>
@@ -2302,8 +2309,55 @@ export default function ClientPortalPage() {
 
   return (
     <>
+      {/* Top Header with User Menu */}
+      <div className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg font-bold text-slate-800">Client Portal</h1>
+          </div>
+          
+          {/* Simple Hamburger Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="p-2 hover:bg-slate-100 rounded-lg"
+              >
+                <Menu className="w-5 h-5 text-slate-600" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-48 mt-2" align="end">
+              <DropdownMenuLabel className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+                Menu
+              </DropdownMenuLabel>
+              <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                <Settings className="w-4 h-4 text-[#166FB5]" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                <Key className="w-4 h-4 text-purple-600" />
+                <span>Change Password</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="flex items-center gap-2 cursor-pointer">
+                <Info className="w-4 h-4 text-orange-600" />
+                <span>About</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => router.push("/portal")}
+                className="flex items-center gap-2 cursor-pointer text-[#B9273A] hover:bg-[#B9273A]/10"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="font-semibold">Logout</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
       {/* Mobile header bar */}
-      <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm">
+      <div className="lg:hidden sticky top-[73px] z-30 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm">
         <div className="min-w-0">
           <h1 className="font-bold text-slate-800 text-sm truncate">
             {projectDetails?.title || "Client Portal"}
@@ -2325,7 +2379,7 @@ export default function ClientPortalPage() {
         </Button>
       </div>
 
-      <div className="flex h-[calc(100vh-73px)] lg:h-full">
+      <div className="flex h-[calc(100vh-146px)] lg:h-[calc(100vh-73px)]">{/* Adjusted for new header */}
         {/* ═════ LEFT SIDEBAR — Desktop ═════ */}
         <aside className="hidden lg:flex w-[320px] min-w-[280px] bg-white border-r border-slate-200 flex-shrink-0 flex-col">
           {sidebarContent}
