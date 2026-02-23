@@ -642,7 +642,18 @@ export default function ClientPortalPage() {
         }));
         
     const allMembers = [primaryMember, ...additionalDraftMembers, ...pendingProjectMembers, ...approvedMembers].filter((m): m is ClientMember => m !== null);
-    setMembers(allMembers);
+    
+    // Deduplicate by email to prevent "other member double" bug during submission transition
+    const seenEmails = new Set<string>();
+    const uniqueMembers = allMembers.filter(member => {
+      const email = member.formData?.email?.toLowerCase()?.trim();
+      if (!email) return true;
+      if (seenEmails.has(email)) return false;
+      seenEmails.add(email);
+      return true;
+    });
+
+    setMembers(uniqueMembers);
     // Don't automatically expand primary member - respect user's saved preference from localStorage
 
   }, [
