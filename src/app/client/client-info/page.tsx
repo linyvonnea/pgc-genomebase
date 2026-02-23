@@ -2690,7 +2690,7 @@ export default function ClientPortalPage() {
                 {projectDetails?.status !== "Completed" && 
                   projectDetails?.status !== "Pending Approval" && // Hide if main project is pending
                   approvalStatus !== "pending" && 
-                  (approvalStatus !== "approved" || members.some(m => m.isDraft && !m.isPrimary)) && (
+                  (projectDetails?.isDraft || members.some((m) => m.isDraft && !m.isPrimary)) && (
                     <div className="pt-6 border-t-2 border-slate-200">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="text-sm text-slate-500">
