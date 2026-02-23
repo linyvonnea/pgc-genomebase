@@ -205,10 +205,28 @@ export function QuotationPDF({
 
           <View style={styles.signature}>
             <Text>Sincerely,</Text>
-            {preparedBy.name === "Ma. Carmel F. Javier" && (
-               <Image src="/assets/signature_carmel.png" style={{ width: 100, height: 40, marginTop: 4, marginBottom: -10 }} />
-            )}
-            <Text style={{ fontWeight: "bold", marginTop: preparedBy.name === "Ma. Carmel F. Javier" ? 4 : 16 }}>{preparedBy.name}</Text>
+            {(() => {
+              const name = preparedBy.name.trim().toUpperCase();
+              let signatureSrc = null;
+
+              if (name === "MA. CARMEL F. JAVIER") signatureSrc = "/assets/signature_carmel.png";
+              else if (name === "ALBERT NOBLEZADA") signatureSrc = "/assets/signature_noblezada.png";
+              else if (name === "CRISTINE MARIE FLORECE") signatureSrc = "/assets/signature_florece.png";
+              else if (name === "CAMILLE ROSE MUEDA") signatureSrc = "/assets/signature_mueda.png";
+              else if (name === "JASMINE C. VELO") signatureSrc = "/assets/signature_velo.png";
+              else if (name === "KARL ANGELO TENIZO") signatureSrc = "/assets/signature_tenizo.png";
+              else if (name === "MERLITO A. DAYON JR.") signatureSrc = "/assets/signature_dayon.png";
+              else if (name === "MICAH DANIELLE LOJERA") signatureSrc = "/assets/signature_lojera.png";
+
+              return (
+                <>
+                  {signatureSrc && (
+                    <Image src={signatureSrc} style={{ width: 100, height: 40, marginTop: 4, marginBottom: -10 }} />
+                  )}
+                  <Text style={{ fontWeight: "bold", marginTop: signatureSrc ? 4 : 16 }}>{preparedBy.name}</Text>
+                </>
+              );
+            })()}
             <Text><Text style={{ fontStyle: "italic" }}>{preparedBy.position}</Text></Text>
           </View>
         </View>
