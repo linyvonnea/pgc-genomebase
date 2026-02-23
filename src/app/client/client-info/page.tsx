@@ -1759,7 +1759,9 @@ export default function ClientPortalPage() {
             onChange={(e) => handleChange(member.id, "name", e.target.value)}
             placeholder="Enter full name"
             disabled={
-              member.isSubmitted || projectDetails?.status === "Completed"
+              member.isSubmitted ||
+              projectDetails?.status === "Completed" ||
+              projectDetails?.status === "Pending Approval"
             }
             className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-10 disabled:opacity-70"
           />
@@ -1789,7 +1791,8 @@ export default function ClientPortalPage() {
             disabled={
               member.isPrimary ||
               member.isSubmitted ||
-              projectDetails?.status === "Completed"
+              projectDetails?.status === "Completed" ||
+              projectDetails?.status === "Pending Approval"
             }
             className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-10 disabled:bg-slate-50 disabled:opacity-70"
           />
@@ -1813,7 +1816,9 @@ export default function ClientPortalPage() {
             }
             placeholder="e.g. Division of Biological Sciences - UPV CAS"
             disabled={
-              member.isSubmitted || projectDetails?.status === "Completed"
+              member.isSubmitted ||
+              projectDetails?.status === "Completed" ||
+              projectDetails?.status === "Pending Approval"
             }
             className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-10 disabled:opacity-70"
           />
@@ -1836,7 +1841,9 @@ export default function ClientPortalPage() {
             }
             placeholder="e.g. Research Assistant, Professor"
             disabled={
-              member.isSubmitted || projectDetails?.status === "Completed"
+              member.isSubmitted ||
+              projectDetails?.status === "Completed" ||
+              projectDetails?.status === "Pending Approval"
             }
             className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-10 disabled:opacity-70"
           />
@@ -1856,7 +1863,9 @@ export default function ClientPortalPage() {
             value={member.formData.sex}
             onValueChange={(val) => handleChange(member.id, "sex", val)}
             disabled={
-              member.isSubmitted || projectDetails?.status === "Completed"
+              member.isSubmitted ||
+              projectDetails?.status === "Completed" ||
+              projectDetails?.status === "Pending Approval"
             }
           >
             <SelectTrigger className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-10 disabled:opacity-70">
@@ -1885,7 +1894,9 @@ export default function ClientPortalPage() {
             }
             placeholder="e.g. 09091234567"
             disabled={
-              member.isSubmitted || projectDetails?.status === "Completed"
+              member.isSubmitted ||
+              projectDetails?.status === "Completed" ||
+              projectDetails?.status === "Pending Approval"
             }
             className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-10 disabled:opacity-70"
           />
@@ -1908,7 +1919,9 @@ export default function ClientPortalPage() {
             }
             placeholder="Enter complete address of your institution/organization"
             disabled={
-              member.isSubmitted || projectDetails?.status === "Completed"
+              member.isSubmitted ||
+              projectDetails?.status === "Completed" ||
+              projectDetails?.status === "Pending Approval"
             }
             className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[80px] resize-none disabled:opacity-70"
           />
@@ -1928,7 +1941,8 @@ export default function ClientPortalPage() {
           disabled={
             member.isSubmitted ||
             submitting ||
-            projectDetails?.status === "Completed"
+            projectDetails?.status === "Completed" ||
+            projectDetails?.status === "Pending Approval"
           }
           variant="outline"
           className="h-10 px-6 border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold disabled:opacity-50"
@@ -1941,7 +1955,8 @@ export default function ClientPortalPage() {
           disabled={
             member.isSubmitted ||
             submitting ||
-            projectDetails?.status === "Completed"
+            projectDetails?.status === "Completed" ||
+            projectDetails?.status === "Pending Approval"
           }
           className="h-10 px-6 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold shadow-md disabled:opacity-50"
         >
@@ -2045,6 +2060,7 @@ export default function ClientPortalPage() {
             {/* Remove button for non-primary draft members */}
             {!member.isPrimary &&
               projectDetails?.status !== "Completed" &&
+              projectDetails?.status !== "Pending Approval" &&
               member.isDraft && (
                 <div className="flex justify-end mb-1.5">
                   <Button
