@@ -2430,7 +2430,7 @@ export default function ClientPortalPage() {
                             Project Approved
                           </p>
                           <p className="text-sm text-green-700 leading-relaxed">
-                            Your project has been approved and is now active. You can now view your unique <strong>Project ID</strong> and access all project documents below.
+                            Your project has been approved and is now active. You can now view your unique <strong>Project ID</strong> and <strong>Client IDs</strong>, and access all project documents below.
                           </p>
                         </>
                       ) : (
