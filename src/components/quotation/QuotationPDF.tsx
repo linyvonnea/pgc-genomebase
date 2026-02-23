@@ -93,7 +93,7 @@ export function QuotationPDF({
     description: s.description,
     hasDescription: !!(s as any).description
   })));*/
-  // group by category (fallback to �Uncategorized�)
+  // group by category (fallback to "Uncategorized")
   const groupedByCategory = safeServices.reduce<Record<string, ServiceLike[]>>((acc, svc) => {
     const key = svc.category && svc.category.trim() ? svc.category : "Uncategorized";
     (acc[key] ||= []).push(svc);
@@ -105,7 +105,7 @@ export function QuotationPDF({
   const computedDiscount = useInternalPrice ? r2(computedSubtotal * 0.12) : 0;
   const computedTotal = r2(computedSubtotal - computedDiscount);
 
-  // ? If overrides are provided (migrated quotes), use them
+  // If overrides are provided (migrated quotes), use them
   const subtotal = totalsOverride?.subtotal ?? computedSubtotal;
   const discount = totalsOverride?.discount ?? computedDiscount;
   const total = totalsOverride?.total ?? computedTotal;
