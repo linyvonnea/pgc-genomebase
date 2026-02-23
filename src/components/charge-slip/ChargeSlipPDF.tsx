@@ -368,14 +368,28 @@ export function ChargeSlipPDF({
         {/* Signatures */}
         <View style={[styles.signatureSection, { marginTop: 10 }]}>
           <Text style={styles.signatureLabel}>Prepared By:</Text>
-          {preparedBy.name.trim().toUpperCase() === "MA. CARMEL F. JAVIER" ? (
-             <Image 
-                src="/assets/signature_carmel.png" 
-                style={{ width: 120, height: 50, marginTop: 5, marginBottom: -15, marginLeft: 0 }} 
-             />
-          ) : (
-             <Text>{"\n"}</Text>
-          )}
+          {(() => {
+            const name = preparedBy.name.trim().toUpperCase();
+            let signatureSrc = null;
+
+            if (name === "MA. CARMEL F. JAVIER") signatureSrc = "/assets/signature_carmel.png";
+            else if (name === "ALBERT NOBLEZADA") signatureSrc = "/assets/signature_noblezada.png";
+            else if (name === "CRISTINE MARIE FLORECE") signatureSrc = "/assets/signature_florece.png";
+            else if (name === "CAMILLE ROSE MUEDA") signatureSrc = "/assets/signature_mueda.png";
+            else if (name === "JASMINE C. VELO") signatureSrc = "/assets/signature_velo.png";
+            else if (name === "KARL ANGELO TENIZO") signatureSrc = "/assets/signature_tenizo.png";
+            else if (name === "MERLITO A. DAYON JR.") signatureSrc = "/assets/signature_dayon.png";
+            else if (name === "MICAH DANIELLE LOJERA") signatureSrc = "/assets/signature_lojera.png";
+
+            return signatureSrc ? (
+              <Image 
+                  src={signatureSrc} 
+                  style={{ width: 120, height: 50, marginTop: 5, marginBottom: -15, marginLeft: 0 }} 
+              />
+            ) : (
+              <Text>{"\n"}</Text>
+            );
+          })()}
           <Text style={styles.signatureName}>{preparedBy.name}</Text>
           <Text style={styles.signaturePosition}>{preparedBy.position}</Text>
 
