@@ -49,19 +49,33 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <TabProvider>
       <div className="flex flex-col h-screen bg-slate-50/30 overflow-hidden">
         {/* New Consolidated Top Header */}
-        <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between z-20">
-          {/* Logo Section - 1/4 of screen length */}
-          <div className="w-1/4">
-            <img
-              src="/assets/pgc-logo.png"
-              alt="PGC Logo"
-              className="w-full h-auto max-h-16 object-contain object-left"
-            />
-          </div>
+        <header className="bg-white/90 backdrop-blur-md shadow-sm border-b border-slate-100 sticky top-0 z-50">
+          <div className="w-full px-4 py-3">
+            <div className="flex justify-between items-center px-2">
+              {/* Logo Section */}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center">
+                  <img
+                    src="/assets/pgc-logo.png"
+                    alt="Philippine Genome Center Logo"
+                    className="w-[120px] h-[75px] object-contain"
+                  />
+                </div>
+                <div className="hidden md:block">
+                  <div className="text-sm font-semibold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent uppercase tracking-wider">
+                    PHILIPPINE GENOME CENTER VISAYAS
+                  </div>
+                  <div className="text-[10px] text-slate-500 font-medium">
+                    UNIVERSITY OF THE PHILIPPINES VISAYAS, MIAGAO, ILOILO
+                  </div>
+                </div>
+              </div>
 
-          {/* Right Header Content */}
-          <div className="flex items-center gap-4">
-            <NotificationCenter />
+              {/* Right Header Content */}
+              <div className="flex items-center gap-4">
+                <NotificationCenter />
+              </div>
+            </div>
           </div>
         </header>
 
