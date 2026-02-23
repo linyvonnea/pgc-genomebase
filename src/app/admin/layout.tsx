@@ -47,19 +47,37 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <TabProvider>
-      <div className="flex h-screen">
-        <AdminSidebar />
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header with Notification Center */}
-          <div className="bg-white border-b border-slate-200 px-4 py-2 flex items-center justify-end">
+      <div className="flex flex-col h-screen bg-slate-50/30 overflow-hidden">
+        {/* New Consolidated Top Header */}
+        <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between z-20">
+          {/* Logo Section - 1/4 of screen length */}
+          <div className="w-1/4">
+            <img
+              src="/assets/pgc-logo.png"
+              alt="PGC Logo"
+              className="w-full h-auto max-h-16 object-contain object-left"
+            />
+          </div>
+
+          {/* Right Header Content */}
+          <div className="flex items-center gap-4">
             <NotificationCenter />
           </div>
-          {/* Tab Bar */}
-          <TabBar />
-          {/* Main Content Area */}
-          <main className="flex-1 overflow-auto bg-gradient-to-br from-slate-50/30 via-blue-50/20 to-indigo-50/30">
-            <TabContent>{children}</TabContent>
-          </main>
+        </header>
+
+        <div className="flex flex-1 overflow-hidden">
+          <AdminSidebar />
+          <div className="flex-1 flex flex-col overflow-hidden relative">
+            {/* Tab Bar Container */}
+            <div className="bg-white border-b border-slate-200 z-10">
+              <TabBar />
+            </div>
+
+            {/* Main Content Area */}
+            <main className="flex-1 overflow-auto bg-gradient-to-br from-slate-50/30 via-blue-50/20 to-indigo-50/30">
+              <TabContent>{children}</TabContent>
+            </main>
+          </div>
         </div>
         <Toaster />
       </div>

@@ -185,17 +185,6 @@ export function AdminSidebar() {
 
   return (
     <div className="flex flex-col h-full w-64 bg-white border-r border-slate-200">
-      {/* Simple Logo Header */}
-      <div className="px-6 py-5 border-b border-slate-100">
-        <div className="flex items-center gap-3">
-          <img
-            src="/assets/pgc-logo.png"
-            alt="PGC Logo"
-            className="h-8 w-auto object-contain"
-          />
-        </div>
-      </div>
-
       {/* Clean Navigation */}
       <div className="flex-1 overflow-y-auto p-4">
         <nav className="space-y-6">
