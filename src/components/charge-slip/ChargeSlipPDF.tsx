@@ -368,7 +368,7 @@ export function ChargeSlipPDF({
         {/* Signatures */}
         <View style={[styles.signatureSection, { marginTop: 10 }]}>
           <Text style={styles.signatureLabel}>Prepared By:</Text>
-          {preparedBy.name === "MA. CARMEL F. JAVIER" ? (
+          {preparedBy.name.trim().toUpperCase() === "MA. CARMEL F. JAVIER" ? (
              <Image 
                 src="/assets/signature_carmel.png" 
                 style={{ width: 120, height: 50, marginTop: 5, marginBottom: -15, marginLeft: 20 }} 
@@ -380,7 +380,7 @@ export function ChargeSlipPDF({
           <Text style={styles.signaturePosition}>{preparedBy.position}</Text>
 
           <Text style={[styles.signatureLabel, styles.marginTop16]}>Approved:</Text>
-          {approvedBy.name === "VICTOR MARCO EMMANUEL N. FERRIOLS, PH.D." ? (
+          {approvedBy.name.trim().toUpperCase().includes("VICTOR MARCO EMMANUEL N. FERRIOLS") ? (
              <Image 
                 src="/assets/signature_ferriols.png" 
                 style={{ width: 120, height: 50, marginTop: 5, marginBottom: -15, marginLeft: 20 }} 
