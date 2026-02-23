@@ -4,6 +4,7 @@
 import { Page, Text, View, Document, StyleSheet, Image } from "@react-pdf/renderer";
 import { SelectedService } from "@/types/Quotation";
 import { pgcLogo, schoolLogo } from "@/assets/logosBase64";
+import { signatureCarmel } from "@/assets/signatures";
 
 const styles = StyleSheet.create({
   page: { padding: 36, fontSize: 10, fontFamily: "Helvetica", lineHeight: 1.4 },
