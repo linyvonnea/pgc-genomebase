@@ -685,7 +685,7 @@ export default function ClientPortalPage() {
     ) {
       setShowApprovalCelebration(true);
       toast.success(
-        "🎉 Congratulations! Your team members have been approved and registered!",
+        "✅ Project and team members approved and registered!",
         { duration: 5000 }
       );
 
@@ -2601,43 +2601,38 @@ export default function ClientPortalPage() {
                 {/* ── Approval Banners ────────────────────── */}
                 {showApprovalCelebration &&
                   approvalStatus === "approved" && (
-                    <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 border-2 border-green-300 rounded-xl p-6 shadow-lg animate-in slide-in-from-top duration-500">
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6 shadow-sm animate-in slide-in-from-top duration-500">
                       <div className="flex items-start gap-4">
-                        <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg animate-bounce">
-                          <PartyPopper className="h-6 w-6 text-white" />
+                        <div className="p-3 bg-green-100 rounded-lg flex-shrink-0 border border-green-200">
+                          <CheckCircle2 className="h-6 w-6 text-green-600" />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-bold text-xl text-green-800">
-                              🎉 Team Members Approved!
+                            <h4 className="font-bold text-lg text-green-900 leading-tight">
+                              Project & Team Approved
                             </h4>
-                            <Sparkles className="h-5 w-5 text-yellow-500 animate-pulse" />
                           </div>
-                          <p className="text-green-700 mb-3 leading-relaxed">
-                            Your team members have been reviewed and approved by{" "}
-                            <strong>
-                              {approvalStatusData.reviewedByName ||
-                                "the administrator"}
-                            </strong>
-                            . All members are registered with unique Client IDs.
+                          <p className="text-green-800/90 mb-3 text-sm leading-relaxed">
+                            Your project and team members have been approved and are now active. 
+                            You can now view your unique **Project ID**, **Client IDs**, and access all project documents in this portal.
                           </p>
                           {approvalStatusData.reviewNotes && (
-                            <div className="bg-white/70 rounded-lg p-3 mt-2 border border-green-200">
-                              <p className="text-sm font-semibold text-green-800 mb-1">
-                                Admin Notes:
+                            <div className="bg-white/50 rounded-lg p-3 mt-2 border border-green-100 italic">
+                              <p className="text-xs font-bold text-green-900 mb-1 uppercase tracking-wider not-italic">
+                                Administrator Remarks
                               </p>
-                              <p className="text-sm text-green-700 italic">
-                                {approvalStatusData.reviewNotes}
+                              <p className="text-sm text-green-800">
+                                "{approvalStatusData.reviewNotes}"
                               </p>
                             </div>
                           )}
                           <div className="mt-4 flex items-center gap-3">
-                            <Badge className="bg-green-600 text-white border-0 text-xs px-3 py-1">
+                            <Badge className="bg-green-600 text-white border-0 text-[10px] px-2.5 h-6">
                               <CheckCircle2 className="h-3 w-3 mr-1" />
-                              All Members Registered
+                              Members Registered
                             </Badge>
-                            <Badge className="bg-blue-600 text-white border-0 text-xs px-3 py-1">
-                              Project Status: Ongoing
+                            <Badge className="bg-blue-600 text-white border-0 text-[10px] px-2.5 h-6">
+                              Project Active
                             </Badge>
                           </div>
                         </div>
@@ -2645,7 +2640,7 @@ export default function ClientPortalPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => setShowApprovalCelebration(false)}
-                          className="text-green-600 hover:text-green-800 hover:bg-green-100"
+                          className="text-green-600 hover:text-green-800 hover:bg-green-200/50 -mt-1 -mr-1"
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -2686,18 +2681,17 @@ export default function ClientPortalPage() {
                   !showApprovalCelebration &&
                   !members.some((m) => m.isDraft) &&
                   members.filter((m) => !m.isPrimary).length > 0 && (
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5">
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5 shadow-sm">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-green-100 rounded-lg">
-                          <ShieldCheck className="h-5 w-5 text-green-600" />
+                          <CheckCircle2 className="h-5 w-5 text-green-600" />
                         </div>
                         <div className="flex-1">
                           <h4 className="font-semibold text-green-800">
-                            Team Approved
+                            Project & Team Approved
                           </h4>
                           <p className="text-sm text-green-700 mt-1">
-                            All team members have been approved and registered
-                            with their Client IDs.
+                            Your project and all team members have been approved. You can view unique Project and Client IDs below.
                           </p>
                         </div>
                       </div>
