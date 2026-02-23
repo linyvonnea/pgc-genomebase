@@ -384,7 +384,7 @@ export function ChargeSlipPDF({
             return signatureSrc ? (
               <Image 
                   src={signatureSrc} 
-                  style={{ width: 120, height: 50, marginTop: 10, marginBottom: -25, marginLeft: 0 }} 
+                  style={{ width: 120, height: 50, marginTop: 10, marginBottom: -25, marginLeft: -10 }} 
               />
             ) : (
               <Text>{"\n"}</Text>
@@ -397,7 +397,7 @@ export function ChargeSlipPDF({
           {approvedBy.name.trim().toUpperCase().includes("VICTOR MARCO EMMANUEL N. FERRIOLS") ? (
              <Image 
                 src="/assets/signature_ferriols.png" 
-                style={{ width: 120, height: 50, marginTop: 10, marginBottom: -25, marginLeft: 65 }} 
+                style={{ width: 120, height: 50, marginTop: 10, marginBottom: -25, marginLeft: 55 }} 
              />
           ) : (
              <Text>{"\n"}</Text>
