@@ -221,9 +221,9 @@ export function QuotationPDF({
               return (
                 <>
                   {signatureSrc && (
-                    <Image src={signatureSrc} style={{ width: 100, height: 40, marginTop: 4, marginBottom: -10 }} />
+                    <Image src={signatureSrc} style={{ width: 100, height: 40, marginTop: 10, marginBottom: -25 }} />
                   )}
-                  <Text style={{ fontWeight: "bold", marginTop: signatureSrc ? 4 : 16 }}>{preparedBy.name}</Text>
+                  <Text style={{ fontWeight: "bold", marginTop: signatureSrc ? 0 : 16 }}>{preparedBy.name}</Text>
                 </>
               );
             })()}
