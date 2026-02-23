@@ -88,12 +88,12 @@ export function QuotationPDF({
       s != null && typeof (s as any).price === "number" && typeof (s as any).quantity === "number"
   );
   // Debug: Log services with descriptions
-  console.log('PDF Services:', safeServices.map(s => ({
+  /*console.log('PDF Services:', safeServices.map(s => ({
     name: s.name,
     description: s.description,
     hasDescription: !!(s as any).description
-  })));
-  // group by category (fallback to “Uncategorized”)
+  })));*/
+  // group by category (fallback to "Uncategorized")
   const groupedByCategory = safeServices.reduce<Record<string, ServiceLike[]>>((acc, svc) => {
     const key = svc.category && svc.category.trim() ? svc.category : "Uncategorized";
     (acc[key] ||= []).push(svc);
@@ -105,7 +105,7 @@ export function QuotationPDF({
   const computedDiscount = useInternalPrice ? r2(computedSubtotal * 0.12) : 0;
   const computedTotal = r2(computedSubtotal - computedDiscount);
 
-  // ✅ If overrides are provided (migrated quotes), use them
+  // If overrides are provided (migrated quotes), use them
   const subtotal = totalsOverride?.subtotal ?? computedSubtotal;
   const discount = totalsOverride?.discount ?? computedDiscount;
   const total = totalsOverride?.total ?? computedTotal;
@@ -219,12 +219,12 @@ export function QuotationPDF({
               else if (name === "MICAH DANIELLE LOJERA") signatureSrc = "/assets/signature_lojera.png";
 
               return (
-                <>
-                  {signatureSrc && (
-                    <Image src={signatureSrc} style={{ width: 100, height: 40, marginTop: 25, marginBottom: -35 }} />
-                  )}
+                <View>
+                  {signatureSrc ? (
+                    <Image src={signatureSrc} style={{ width: 100, height: 40, marginTop: 5, marginBottom: -15 }} />
+                  ) : null}
                   <Text style={{ fontWeight: "bold", marginTop: signatureSrc ? 0 : 16 }}>{preparedBy.name}</Text>
-                </>
+                </View>
               );
             })()}
             <Text><Text style={{ fontStyle: "italic" }}>{preparedBy.position}</Text></Text>
