@@ -87,8 +87,13 @@ export function QuotationPDF({
     (s): s is ServiceLike =>
       s != null && typeof (s as any).price === "number" && typeof (s as any).quantity === "number"
   );
-
-  // group by category (fallback to â€œUncategorizedâ€)
+  // Debug: Log services with descriptions
+  /*console.log('PDF Services:', safeServices.map(s => ({
+    name: s.name,
+    description: s.description,
+    hasDescription: !!(s as any).description
+  })));*/
+  // group by category (fallback to “Uncategorized”)
   const groupedByCategory = safeServices.reduce<Record<string, ServiceLike[]>>((acc, svc) => {
     const key = svc.category && svc.category.trim() ? svc.category : "Uncategorized";
     (acc[key] ||= []).push(svc);
@@ -100,7 +105,7 @@ export function QuotationPDF({
   const computedDiscount = useInternalPrice ? r2(computedSubtotal * 0.12) : 0;
   const computedTotal = r2(computedSubtotal - computedDiscount);
 
-  // âœ… If overrides are provided (migrated quotes), use them
+  // ? If overrides are provided (migrated quotes), use them
   const subtotal = totalsOverride?.subtotal ?? computedSubtotal;
   const discount = totalsOverride?.discount ?? computedDiscount;
   const total = totalsOverride?.total ?? computedTotal;
