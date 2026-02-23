@@ -384,7 +384,7 @@ export function ChargeSlipPDF({
             return signatureSrc ? (
               <Image 
                   src={signatureSrc} 
-                  style={{ width: 120, height: 50, marginTop: 10, marginBottom: -25, marginLeft: -10 }} 
+                  style={{ width: 120, height: 50, marginTop: 2, marginBottom: -25, marginLeft: -10 }} 
               />
             ) : (
               <Text>{"\n"}</Text>
