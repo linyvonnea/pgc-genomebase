@@ -58,7 +58,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <img
                     src="/assets/pgc-logo.png"
                     alt="Philippine Genome Center Logo"
-                    className="w-[120px] h-[75px] object-contain"
+                    className="w-[100px] h-[65px] object-contain"
                   />
                 </div>
                 <div className="hidden md:block">
