@@ -221,7 +221,7 @@ export function QuotationPDF({
               return (
                 <View>
                   {signatureSrc ? (
-                    <Image src={signatureSrc} style={{ width: 100, height: 40, marginTop: 15, marginBottom: -25 }} />
+                    <Image src={signatureSrc} style={{ width: 100, height: 40, marginTop: 5, marginBottom: -15 }} />
                   ) : null}
                   <Text style={{ fontWeight: "bold", marginTop: signatureSrc ? 0 : 16 }}>{preparedBy.name}</Text>
                 </View>
