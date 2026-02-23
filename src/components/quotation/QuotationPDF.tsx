@@ -206,7 +206,7 @@ export function QuotationPDF({
           <View style={styles.signature}>
             <Text>Sincerely,</Text>
             {preparedBy.name === "Ma. Carmel F. Javier" && (
-               <Image src={signatureCarmel} style={{ width: 100, height: 40, marginTop: 4, marginBottom: -10 }} />
+               <Image src="/assets/signature_carmel.png" style={{ width: 100, height: 40, marginTop: 4, marginBottom: -10 }} />
             )}
             <Text style={{ fontWeight: "bold", marginTop: preparedBy.name === "Ma. Carmel F. Javier" ? 4 : 16 }}>{preparedBy.name}</Text>
             <Text><Text style={{ fontStyle: "italic" }}>{preparedBy.position}</Text></Text>
