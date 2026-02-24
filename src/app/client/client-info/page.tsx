@@ -2155,6 +2155,7 @@ export default function ClientPortalPage() {
               projects.map((project) => {
                 if (!project || !project.pid) return null;
                 const isSelected = selectedProjectPid === project.pid;
+                const isDocsExpanded = expandedProjectDocs.has(project.pid);
                 const docs = projectDocuments.get(project.pid);
                 const quotationCount = docs?.quotations.length || 0;
                 const chargeSlipCount = docs?.chargeSlips.length || 0;
@@ -2167,47 +2168,141 @@ export default function ClientPortalPage() {
                       : "bg-white border-slate-200 hover:border-blue-200 hover:shadow-sm"
                   )}>
                     {/* Project Header */}
-                    <div 
-                      className="p-3 cursor-pointer"
-                      onClick={() => handleSelectProject(project)}
-                    >
-                      <div className="flex items-start gap-3">
-                         <div className={cn(
+                    <div className="flex items-center bg-white hover:bg-slate-50">
+                      {/* Main project content - clickable */}
+                      <div 
+                        className="flex-1 min-w-0 p-3 cursor-pointer"
+                        onClick={() => handleSelectProject(project)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={cn(
                             "mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
                             isSelected ? "bg-blue-100 text-[#166FB5]" : "bg-slate-100 text-slate-400 group-hover:bg-blue-50 group-hover:text-[#166FB5]"
-                         )}>
+                          )}>
                             <FolderOpen className="h-4 w-4" />
-                         </div>
-                         <div className="flex-1 min-w-0">
+                          </div>
+                          <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1">
-                               <p className={cn("text-xs font-bold truncate pr-2", isSelected ? "text-[#166FB5]" : "text-slate-700")}>
-                                  Project {project.pid.split('-').pop()}
-                               </p>
-                               <Badge className={cn(
-                                  "text-[10px] h-4 px-1.5 rounded-md font-semibold border-0",
-                                  statusColors[project.status] || "bg-slate-100 text-slate-500"
-                               )}>
-                                  {project.status || "Draft"}
-                               </Badge>
+                              <p className={cn("text-xs font-bold truncate pr-2", isSelected ? "text-[#166FB5]" : "text-slate-700")}>
+                                Project {project.pid.split('-').pop()}
+                              </p>
+                              <Badge className={cn(
+                                "text-[10px] h-4 px-1.5 rounded-md font-semibold border-0",
+                                statusColors[project.status] || "bg-slate-100 text-slate-500"
+                              )}>
+                                {project.status || "Draft"}
+                              </Badge>
                             </div>
                             <p className="text-xs text-slate-500 truncate mb-2 leading-tight">
-                               {project.title || "Untitled Project"}
+                              {project.title || "Untitled Project"}
                             </p>
                             
                             {/* Stats */}
                             <div className="flex items-center gap-3">
-                               <div className="flex items-center gap-1.5 text-[10px] font-medium text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded-md">
-                                  <FileText className="h-3 w-3" />
-                                  <span>{quotationCount} Quotes</span>
-                               </div>
-                               <div className="flex items-center gap-1.5 text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
-                                  <Receipt className="h-3 w-3" />
-                                  <span>{chargeSlipCount} Slips</span>
-                               </div>
+                              <div className="flex items-center gap-1.5 text-[10px] font-medium text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded-md">
+                                <FileText className="h-3 w-3" />
+                                <span>{quotationCount} Quotes</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                                <Receipt className="h-3 w-3" />
+                                <span>{chargeSlipCount} Slips</span>
+                              </div>
                             </div>
-                         </div>
+                          </div>
+                        </div>
                       </div>
+
+                      {/* Documents toggle button - Chevron on the right */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleProjectDocs(project);
+                        }}
+                        className={cn(
+                          "flex-shrink-0 px-3 py-3 hover:bg-slate-100 transition-colors border-l border-slate-200 group/chevron",
+                          isDocsExpanded && "bg-blue-50"
+                        )}
+                        title="View documents"
+                        aria-label="Toggle documents"
+                      >
+                        <ChevronRight className={cn(
+                          "h-5 w-5 text-[#166FB5] transition-all duration-200 group-hover/chevron:translate-x-0.5",
+                          isDocsExpanded && "rotate-90"
+                        )} />
+                      </button>
                     </div>
+
+                    {/* Documents sub-panel */}
+                    {isDocsExpanded && (
+                      <div className="bg-slate-50 border-t">
+                        {docs?.loading ? (
+                          <div className="flex items-center gap-2 px-3 py-3 text-xs text-slate-500">
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                            <span>Loading…</span>
+                          </div>
+                        ) : (
+                          <div className="p-3 space-y-3">
+                            {/* Quotations */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <FileText className="h-3 w-3 text-purple-600" />
+                                <span className="text-xs font-semibold text-slate-700">
+                                  Quotations
+                                </span>
+                                <span className="text-[10px] text-slate-500">({quotationCount})</span>
+                              </div>
+                              {quotationCount > 0 ? (
+                                <div className="space-y-1 ml-5">
+                                  {docs?.quotations.map((quotation) => (
+                                    <a
+                                      key={quotation.id}
+                                      href={`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="block text-xs text-slate-600 hover:text-purple-600 hover:underline truncate"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      • {quotation.referenceNumber}
+                                    </a>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-slate-400 ml-5">No quotations yet</p>
+                              )}
+                            </div>
+
+                            {/* Charge Slips */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <Receipt className="h-3 w-3 text-green-600" />
+                                <span className="text-xs font-semibold text-slate-700">
+                                  Charge Slips
+                                </span>
+                                <span className="text-[10px] text-slate-500">({chargeSlipCount})</span>
+                              </div>
+                              {chargeSlipCount > 0 ? (
+                                <div className="space-y-1 ml-5">
+                                  {docs?.chargeSlips.map((chargeSlip) => (
+                                    <a
+                                      key={chargeSlip.id}
+                                      href={`/client/view-document?type=charge-slip&ref=${chargeSlip.id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="block text-xs text-slate-600 hover:text-green-600 hover:underline truncate"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      • {chargeSlip.chargeSlipNumber}
+                                    </a>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-slate-400 ml-5">No charge slips yet</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })
