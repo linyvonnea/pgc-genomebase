@@ -152,16 +152,9 @@ export default function ClientConformeModal({
               <FileText className="h-3 w-3" />
               Step 1 of 3
             </Badge>
-            <span className="text-xs text-slate-500">Legal Agreement Required</span>
           </div>
           
-          <DialogTitle className="text-lg font-bold text-slate-800">
-            Legal Agreement Required
-          </DialogTitle>
           <div className="space-y-2">
-            <p className="text-sm text-slate-600">
-              Before submission, you must review and agree to our client terms and conditions.
-            </p>
             <p className="text-xs text-slate-500 bg-blue-50 border border-blue-200 rounded-md p-2">
               📋 <strong>Next:</strong> After agreeing, you'll review your submission details before final approval.
             </p>
@@ -181,13 +174,6 @@ export default function ClientConformeModal({
               </div>
               <p className="text-xs text-slate-500 font-sans tracking-widest">
                 PGCV-LF-CC-V005
-              </p>
-            </div>
-
-            {/* Introduction */}
-            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
-              <p className="text-sm text-slate-700 font-sans">
-                Before submitting, kindly carefully review and agree to our Client Terms and Conditions.
               </p>
             </div>
 
