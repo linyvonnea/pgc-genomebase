@@ -17,6 +17,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { logActivity } from "@/services/activityLogService";
 
 export type ClientRequestStatus = "draft" | "pending" | "approved" | "rejected";
 
@@ -88,6 +89,7 @@ export async function saveClientRequest(
   const docId = getDocId(data.inquiryId, data.email, data.projectRequestId);
   const docRef = doc(db, COLLECTION, docId);
   const existing = await getDoc(docRef);
+  const isNewMember = !existing.exists();
 
   if (existing.exists()) {
     // Update existing draft
@@ -105,6 +107,20 @@ export async function saveClientRequest(
       ...data,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
+    });
+    
+    // Log new member creation
+    await logActivity({
+      userId: data.requestedBy,
+      userEmail: data.requestedBy,
+      userName: data.requestedByName,
+      userRole: 'client',
+      action: 'CREATE',
+      entityType: 'client',
+      entityId: docId,
+      entityName: data.name,
+      description: `${data.isPrimary ? 'Primary' : 'Team'} member added: ${data.name}`,
+      changesAfter: data,
     });
   }
 
@@ -127,8 +143,13 @@ export async function submitClientRequestsForApproval(
   const snapshot = await getDocs(q);
   const batch = writeBatch(db);
   
-  snapshot.docs.forEach((doc) => {
-    batch.update(doc.ref, {
+  // Collect member names for logging
+  const memberNames: string[] = [];
+  
+  snapshot.docs.forEach((docSnap) => {
+    const data = docSnap.data();
+    memberNames.push(data.name || 'Unnamed');
+    batch.update(docSnap.ref, {
       status: "pending",
       submittedAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -136,6 +157,22 @@ export async function submitClientRequestsForApproval(
   });
   
   await batch.commit();
+  
+  // Log the batch submission
+  if (snapshot.docs.length > 0) {
+    const firstDoc = snapshot.docs[0].data();
+    await logActivity({
+      userId: firstDoc.requestedBy || 'unknown',
+      userEmail: firstDoc.requestedBy || 'unknown',
+      userName: firstDoc.requestedByName,
+      userRole: 'client',
+      action: 'UPDATE',
+      entityType: 'client',
+      entityId: inquiryId,
+      entityName: memberNames.join(', '),
+      description: `${snapshot.docs.length} team member(s) submitted for approval: ${memberNames.join(', ')}`,
+    });
+  }
 }
 
 /**
