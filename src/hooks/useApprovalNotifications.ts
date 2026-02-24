@@ -1,5 +1,5 @@
 // Real-time notification hook for approval requests
-// Tracks both traditional member approvals AND new project submission requests
+// Tracks member approvals, project submission requests, AND new inquiries
 
 import { useState, useEffect, useRef } from "react";
 import { 
@@ -16,7 +16,7 @@ import { toast } from "sonner";
 
 export interface ApprovalNotification {
   id: string;
-  type: "member" | "project";
+  type: "member" | "project" | "inquiry";
   title: string;
   message: string;
   submittedBy: string;
@@ -29,9 +29,12 @@ export interface ApprovalNotification {
 export function useApprovalNotifications() {
   const [notifications, setNotifications] = useState<ApprovalNotification[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
+  const [inquiryCount, setInquiryCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const previousCountRef = useRef(0);
+  const previousInquiryCountRef = useRef(0);
   const isInitialLoadRef = useRef(true);
+  const isInitialInquiryLoadRef = useRef(true);
 
   useEffect(() => {
     // Listen to traditional member approvals
@@ -44,6 +47,12 @@ export function useApprovalNotifications() {
     const projectRequestsQuery = query(
       collection(db, "projectRequests"),
       where("status", "==", "pending")
+    );
+    
+    // Listen to new inquiries with "Pending" status
+    const inquiriesQuery = query(
+      collection(db, "inquiries"),
+      where("status", "==", "Pending")
     );
 
     const unsubscribeMemberApprovals = onSnapshot(
@@ -95,10 +104,48 @@ export function useApprovalNotifications() {
         console.error("Error listening to project requests:", error);
       }
     );
+    
+    const unsubscribeInquiries = onSnapshot(
+      inquiriesQuery, 
+      (snapshot) => {
+        const count = snapshot.docs.length;
+        setInquiryCount(count);
+        
+        // Show toast notification for new inquiries (only after initial load)
+        if (!isInitialInquiryLoadRef.current && count > previousInquiryCountRef.current) {
+          const latestDoc = snapshot.docs.sort((a, b) => {
+            const aTime = a.data().createdAt?.toDate()?.getTime() || 0;
+            const bTime = b.data().createdAt?.toDate()?.getTime() || 0;
+            return bTime - aTime;
+          })[0];
+          
+          if (latestDoc) {
+            const data = latestDoc.data();
+            toast.info("New Inquiry Request", {
+              description: `${data.name || "Unknown"} from ${data.affiliation || "Unknown"}`,
+              duration: 5000,
+              action: {
+                label: "View",
+                onClick: () => {
+                  window.location.href = "/admin/inquiry";
+                },
+              },
+            });
+          }
+        }
+
+        previousInquiryCountRef.current = count;
+        isInitialInquiryLoadRef.current = false;
+      },
+      (error) => {
+        console.error("Error listening to inquiry notifications:", error);
+      }
+    );
 
     return () => {
       unsubscribeMemberApprovals();
       unsubscribeProjectRequests();
+      unsubscribeInquiries();
     };
   }, []);
 
@@ -152,6 +199,7 @@ export function useApprovalNotifications() {
   return {
     notifications,
     pendingCount,
+    inquiryCount,
     unreadCount,
     markAsRead,
     markAllAsRead,

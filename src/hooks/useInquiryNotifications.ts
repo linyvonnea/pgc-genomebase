@@ -1,5 +1,6 @@
 // Real-time notification hook for new inquiry requests
 // Tracks inquiries with "Pending" status that need admin review
+// Pattern follows useApprovalNotifications.ts
 
 import { useState, useEffect, useRef } from "react";
 import { 
@@ -7,7 +8,6 @@ import {
   query, 
   where, 
   onSnapshot,
-  orderBy,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
@@ -30,11 +30,10 @@ export function useInquiryNotifications() {
   const isInitialLoadRef = useRef(true);
 
   useEffect(() => {
-    // Listen to inquiries with "Pending" status
+    // Listen to inquiries with "Pending" status (capital P to match createInquiryAction)
     const inquiriesQuery = query(
       collection(db, "inquiries"),
-      where("status", "==", "Pending"),
-      orderBy("createdAt", "desc")
+      where("status", "==", "Pending")
     );
 
     const unsubscribeInquiries = onSnapshot(
@@ -52,12 +51,12 @@ export function useInquiryNotifications() {
             read: false,
           };
         });
+        
+        // Sort in memory by createdAt descending
+        inquiryNotifications.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-        setNotifications(inquiryNotifications);
         const totalCount = inquiryNotifications.length;
-        setPendingCount(totalCount);
-        setUnreadCount(inquiryNotifications.filter((n) => !n.read).length);
-
+        
         // Show toast notification for new inquiries (only after initial load)
         if (!isInitialLoadRef.current && totalCount > previousCountRef.current) {
           const latestInquiry = inquiryNotifications[0];
@@ -75,6 +74,10 @@ export function useInquiryNotifications() {
 
         previousCountRef.current = totalCount;
         isInitialLoadRef.current = false;
+        
+        setNotifications(inquiryNotifications);
+        setPendingCount(totalCount);
+        setUnreadCount(inquiryNotifications.filter((n) => !n.read).length);
       },
       (error) => {
         console.error("Error listening to inquiry notifications:", error);
