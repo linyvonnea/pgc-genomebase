@@ -62,57 +62,92 @@ export default function ClientConformeModal({
   }, [open]);
 
   useEffect(() => {
-    if (!open || !bottomRef.current) return;
+    if (!open) return;
 
-    // Find the ScrollArea viewport (the actual scrolling container)
-    const scrollViewport = bottomRef.current.closest('[data-radix-scroll-area-viewport]');
-    
-    if (!scrollViewport) {
-      console.warn('ScrollArea viewport not found');
-      return;
-    }
+    let observer: IntersectionObserver | null = null;
+    let scrollViewport: HTMLElement | null = null;
+    let timerId: any = null;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          console.log('✅ User scrolled to bottom - enabling agreement');
+    // We use a small delay because Radix Dialogs/ScrollAreas 
+    // might not be fully measured in the DOM immediately upon 'open'
+    const setup = () => {
+      if (!bottomRef.current) return;
+
+      // 1. Find the Radix ScrollArea viewport
+      scrollViewport = bottomRef.current.closest('[data-radix-scroll-area-viewport]') as HTMLElement;
+      
+      // Fallback: If Radix attribute is missing, find any parent that might be scrolling
+      if (!scrollViewport) {
+        let parent = bottomRef.current.parentElement;
+        while (parent && parent !== document.body) {
+          const style = window.getComputedStyle(parent);
+          if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+            scrollViewport = parent;
+            break;
+          }
+          parent = parent.parentElement;
+        }
+      }
+
+      // 2. Setup Intersection Observer - More aggressive
+      observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            console.log("✅ Sentinel is now visible. Enabling agree checkbox.");
+            setCanAgree(true);
+          }
+        },
+        { 
+          // We don't specify 'root' if we want it to intersect with the true viewport, 
+          // but Radix viewport works too. Let's try both paths by using more lenient settings.
+          threshold: 0, 
+          rootMargin: "250px" // Trigger as soon as you are within 250px of the bottom
+        }
+      );
+      observer.observe(bottomRef.current);
+
+      // 3. Setup Scroll Listener - Backup
+      const handleScroll = () => {
+        if (!scrollViewport) return;
+        const { scrollTop, scrollHeight, clientHeight } = scrollViewport;
+        // User is near the bottom (within 250px)
+        if (scrollHeight - scrollTop <= clientHeight + 250) {
           setCanAgree(true);
         }
-      },
-      { 
-        root: scrollViewport,
-        threshold: 0.8, // Trigger when 80% visible to account for padding
-        rootMargin: '0px'
-      }
-    );
+      };
 
-    observer.observe(bottomRef.current);
-
-    // Backup: Also listen for scroll events to detect bottom
-    const handleScroll = () => {
-      const element = scrollViewport as HTMLElement;
-      const scrolledToBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 50;
-      if (scrolledToBottom) {
-        console.log('✅ Scroll event detected bottom - enabling agreement');
-        setCanAgree(true);
+      if (scrollViewport) {
+        scrollViewport.addEventListener("scroll", handleScroll, { passive: true });
       }
+
+      // 4. Manual check: Is the document so small that it is already at the bottom?
+      const checkInitialState = () => {
+        if (!scrollViewport) {
+          // Fallback if no scroll container found: just enable it 
+          // to prevent users from getting stuck forever.
+          setCanAgree(true);
+          return;
+        }
+        if (scrollViewport.scrollHeight <= scrollViewport.clientHeight + 100) {
+          setCanAgree(true);
+        }
+      };
+      
+      checkInitialState();
+
+      return () => {
+        if (scrollViewport) {
+          scrollViewport.removeEventListener("scroll", handleScroll);
+        }
+        observer?.disconnect();
+      };
     };
 
-    scrollViewport.addEventListener('scroll', handleScroll);
-    
-    // Check immediately in case content is already short enough
-    setTimeout(() => {
-      const element = scrollViewport as HTMLElement;
-      const isContentShort = element.scrollHeight <= element.clientHeight + 10;
-      if (isContentShort) {
-        console.log('✅ Content is short enough - enabling agreement immediately');
-        setCanAgree(true);
-      }
-    }, 100);
+    // Run setup after a short delay
+    timerId = setTimeout(setup, 300);
 
     return () => {
-      observer.disconnect();
-      scrollViewport.removeEventListener('scroll', handleScroll);
+      clearTimeout(timerId);
     };
   }, [open]);
 
@@ -407,7 +442,7 @@ export default function ClientConformeModal({
             </div>
 
             {/* Scroll Observer Sentinel */}
-            <div ref={bottomRef} className="h-4 w-full" />
+            <div ref={bottomRef} className="h-20 w-full" />
             
           </div>
         </ScrollArea>
