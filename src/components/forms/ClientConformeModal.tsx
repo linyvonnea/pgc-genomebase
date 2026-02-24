@@ -215,7 +215,7 @@ export default function ClientConformeModal({
       }, { merge: true }); // Use merge: true to preserve any fields if somehow already existing
 
       console.log("✅ Client Conforme recorded with 'agreed_pending' status:", conformeId);
-      toast.success("Legal agreement recorded. Proceeding to final review...", { duration: 3000 });
+      toast.success("Got it! You're all set. Proceeding to final review...", { duration: 3000 });
       setAgreed(false);
       
       // Pass the conformeId to the parent for status tracking
