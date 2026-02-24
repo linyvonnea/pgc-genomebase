@@ -108,15 +108,36 @@ export function useApprovalNotifications() {
     const unsubscribeInquiries = onSnapshot(
       inquiriesQuery, 
       (snapshot) => {
-        const count = snapshot.docs.length;
+        // Filter for recent inquiries only (last 24 hours)
+        const recentInquiries = snapshot.docs.filter(doc => {
+          const data = doc.data();
+          let createdAt: Date;
+          
+          if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+            createdAt = data.createdAt.toDate();
+          } else if (data.createdAt) {
+            createdAt = new Date(data.createdAt);
+          } else {
+            return false; // No date = treat as old
+          }
+          
+          const now = new Date();
+          const oneDayAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+          return createdAt >= oneDayAgo;
+        });
+
+        const count = recentInquiries.length;
         setInquiryCount(count);
         
         // Show toast notification for new inquiries (only after initial load)
         if (!isInitialInquiryLoadRef.current && count > previousInquiryCountRef.current) {
-          const latestDoc = snapshot.docs.sort((a, b) => {
-            const aTime = a.data().createdAt?.toDate()?.getTime() || 0;
-            const bTime = b.data().createdAt?.toDate()?.getTime() || 0;
-            return bTime - aTime;
+          const latestDoc = recentInquiries.sort((a, b) => {
+            const getDataTime = (d: any) => {
+               if (d.createdAt && typeof d.createdAt.toDate === 'function') return d.createdAt.toDate().getTime();
+               if (d.createdAt) return new Date(d.createdAt).getTime();
+               return 0;
+            };
+            return getDataTime(b.data()) - getDataTime(a.data());
           })[0];
           
           if (latestDoc) {
