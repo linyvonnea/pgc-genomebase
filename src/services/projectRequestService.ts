@@ -16,6 +16,7 @@ import {
   deleteDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { logActivity } from "@/services/activityLogService";
 
 export type ProjectRequestStatus = "draft" | "pending" | "approved" | "rejected";
 
@@ -80,6 +81,8 @@ export async function saveProjectRequest(
   const docRef = doc(db, COLLECTION, docId);
   const existing = await getDoc(docRef);
 
+  const isNewProject = !existing.exists();
+  
   if (existing.exists()) {
     // Update existing draft
     await setDoc(
@@ -96,6 +99,20 @@ export async function saveProjectRequest(
       ...data,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
+    });
+    
+    // Log project request creation
+    await logActivity({
+      userId: data.requestedBy,
+      userEmail: data.requestedBy,
+      userName: data.requestedByName,
+      userRole: 'client',
+      action: 'CREATE',
+      entityType: 'project',
+      entityId: docId,
+      entityName: data.title,
+      description: `Draft project created: ${data.title}`,
+      changesAfter: data,
     });
   }
 
@@ -140,6 +157,20 @@ export async function submitProjectForApproval(
     },
     { merge: true }
   );
+  
+  // Log project submission for approval
+  await logActivity({
+    userId: requestedBy,
+    userEmail: requestedBy,
+    userName: requestedByName,
+    userRole: 'client',
+    action: 'UPDATE',
+    entityType: 'project',
+    entityId: docId,
+    entityName: projectData.title,
+    description: `Project submitted for approval: ${projectData.title}`,
+    changesAfter: { ...projectData, primaryMember, status: 'pending' },
+  });
 
   // Also update the inquiry document to show the portal has been submitted
   try {

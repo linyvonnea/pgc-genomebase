@@ -174,6 +174,20 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     // Add the inquiry document to the Firestore 'inquiries' collection
     const docRef = await addDoc(collection(db, "inquiries"), transformedData);
     
+    // Log the inquiry creation to activity logs
+    await logActivity({
+      userId: inquiryData.email || 'anonymous',
+      userEmail: inquiryData.email || 'anonymous',
+      userName: inquiryData.name,
+      userRole: 'client',
+      action: 'CREATE',
+      entityType: 'inquiry',
+      entityId: docRef.id,
+      entityName: inquiryData.name,
+      description: `New inquiry request submitted by ${inquiryData.name} (${inquiryData.service})`,
+      changesAfter: transformedData,
+    });
+    
     // Initialize quotation thread for this inquiry (DISABLED FOR NOW)
     /*
     try {
