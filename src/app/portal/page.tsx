@@ -114,9 +114,14 @@ export default function ClientVerifyPage() {
       // Permission logic: contact person or after contact person submits
       // Added master email bypass for admin access
       const masterEmail = "madayon1@up.edu.ph";
-      if (googleUser.email === inquiry.email || googleUser.email === masterEmail || inquiry.haveSubmitted === true) {
+      const isMasterAdmin = googleUser.email === masterEmail;
+
+      if (googleUser.email === inquiry.email || isMasterAdmin || inquiry.haveSubmitted === true) {
+        // When master admin logs in, impersonate the inquiry's email to see their data accurately
+        const activeEmail = isMasterAdmin ? inquiry.email : googleUser.email;
+
         const params = new URLSearchParams({
-          email: googleUser.email,
+          email: activeEmail,
           inquiryId: inquiryId,
         });
         
