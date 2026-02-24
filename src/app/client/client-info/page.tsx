@@ -2174,26 +2174,16 @@ export default function ClientPortalPage() {
                         className="flex-1 min-w-0 p-3 cursor-pointer"
                         onClick={() => handleSelectProject(project)}
                       >
-                        <div className="flex items-start gap-3">
-                          <div className={cn(
-                            "mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
-                            isSelected ? "bg-blue-100 text-[#166FB5]" : "bg-slate-100 text-slate-400 group-hover:bg-blue-50 group-hover:text-[#166FB5]"
+                        <div className="flex flex-col gap-1">
+                          <p className="text-xs text-slate-700 font-medium truncate leading-tight">
+                            {project.title || "Untitled Project"}
+                          </p>
+                          <Badge className={cn(
+                            "text-[10px] h-4 px-1.5 rounded-md font-semibold border-0 w-fit",
+                            statusColors[project.status] || "bg-slate-100 text-slate-500"
                           )}>
-                            <FolderOpen className="h-4 w-4" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                              <p className="text-xs text-slate-500 truncate leading-tight">
-                                {project.title || "Untitled Project"}
-                              </p>
-                              <Badge className={cn(
-                                "text-[10px] h-4 px-1.5 rounded-md font-semibold border-0",
-                                statusColors[project.status] || "bg-slate-100 text-slate-500"
-                              )}>
-                                {project.status || "Draft"}
-                              </Badge>
-                            </div>
-                          </div>
+                            {project.status || "Draft"}
+                          </Badge>
                         </div>
                       </div>
 
@@ -2226,7 +2216,7 @@ export default function ClientPortalPage() {
                             <span>Loading…</span>
                           </div>
                         ) : (
-                          <div className="p-3 space-y-3">
+                          <div className="p-3 pl-6 space-y-3">
                             {/* Quotations */}
                             <div>
                               <div className="flex items-center gap-2 mb-1.5">
