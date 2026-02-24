@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, FileText, CheckCircle2, Send } from "lucide-react";
+import { Loader2, FileText, CheckCircle2, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/firebase";
 import { doc, setDoc, Timestamp } from "firebase/firestore";
@@ -50,6 +50,33 @@ export default function ClientConformeModal({
 }: ClientConformeModalProps) {
   const [agreed, setAgreed] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [canAgree, setCanAgree] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Reset canAgree when the modal opens
+    if (open) {
+      setCanAgree(false);
+      setAgreed(false);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setCanAgree(true);
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    if (bottomRef.current) {
+      observer.observe(bottomRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [open]);
 
   const today = new Date().toLocaleDateString("en-PH", {
     year: "numeric",
@@ -340,23 +367,35 @@ export default function ClientConformeModal({
                 </div>
               </div>
             </div>
+
+            {/* Scroll Observer Sentinel */}
+            <div ref={bottomRef} className="h-4 w-full" />
             
           </div>
         </ScrollArea>
 
         {/* Footer: agree checkbox + buttons */}
         <div className="shrink-0 border-t border-slate-200 px-6 py-4 bg-slate-50 space-y-4">
-          <label className="flex items-start gap-3 cursor-pointer group p-3 bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors">
+          <label className={`flex items-start gap-3 p-3 bg-white border rounded-lg transition-colors ${
+            !canAgree ? "cursor-not-allowed border-slate-200 opacity-60" : "cursor-pointer border-slate-200 hover:border-slate-300 group"
+          }`}>
             <Checkbox
               id="conforme-agree"
               checked={agreed}
+              disabled={!canAgree}
               onCheckedChange={(v) => setAgreed(v === true)}
               className="mt-0.5 shrink-0"
             />
             <div className="space-y-1">
-              <span className="text-sm text-slate-700 group-hover:text-slate-900 transition-colors font-medium">
-                ✓ I have read and understood the Client Conforme agreement
+              <span className="text-sm text-slate-700 transition-colors font-medium">
+                I have read and understood the Client Conforme agreement
               </span>
+              {!canAgree && (
+                <p className="text-xs text-amber-500 font-medium flex items-center gap-1">
+                  <ChevronDown className="h-3 w-3 animate-bounce" />
+                  Please scroll to the bottom to agree
+                </p>
+              )}
             </div>
           </label>
 
@@ -371,7 +410,7 @@ export default function ClientConformeModal({
             </Button>
             <Button
               onClick={handleConfirm}
-              disabled={!agreed || loading || saving}
+              disabled={!agreed || !canAgree || loading || saving}
               className="px-6 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold disabled:opacity-50"
             >
               {(loading || saving) ? (

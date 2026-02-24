@@ -89,7 +89,12 @@ export default function ClientVerifyPage() {
         return;
       }
       const inquiry = inquiryDoc.data();
-      if (!inquiry.isApproved && inquiry.status !== "Pending") {
+      
+      // Allow login for Pending, Approved Client (isApproved), and Quotation Only
+      const allowedStatuses = ["Pending", "Approved Client", "Quotation Only"];
+      const isAllowed = inquiry.isApproved || allowedStatuses.includes(inquiry.status);
+      
+      if (!isAllowed) {
         toast.error("This inquiry has not been approved yet.");
         setVerifying(false);
         return;
