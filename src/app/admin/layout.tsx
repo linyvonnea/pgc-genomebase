@@ -10,6 +10,15 @@ import { Toaster } from "@/components/ui/sonner";
 import useAuth from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { LogOut, Settings, Info, Key, Menu } from "lucide-react";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, signOut, loading } = useAuth();
@@ -74,6 +83,46 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {/* Right Header Content */}
               <div className="flex items-center gap-4">
                 <NotificationCenter />
+                
+                {/* Admin Menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="p-2 hover:bg-slate-100 rounded-lg transition-colors border border-slate-100"
+                    >
+                      <Menu className="w-6 h-6 text-[#166FB5]" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  
+                  <DropdownMenuContent className="w-[200px] mt-2 p-1.5 rounded-xl border-slate-200" align="end">
+                    <DropdownMenuItem className="flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer text-slate-700 hover:bg-slate-50 transition-colors">
+                      <Settings className="w-4 h-4 text-[#166FB5]" />
+                      <span className="font-medium">Settings</span>
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuItem className="flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer text-slate-700 hover:bg-slate-50 transition-colors">
+                      <Key className="w-4 h-4 text-purple-600" />
+                      <span className="font-medium">Change Password</span>
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuItem className="flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer text-slate-700 hover:bg-slate-50 transition-colors">
+                      <Info className="w-4 h-4 text-orange-600" />
+                      <span className="font-medium">About</span>
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuSeparator className="my-1.5 bg-slate-100" />
+                    
+                    <DropdownMenuItem 
+                      onClick={signOut}
+                      className="flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer text-[#B9273A] hover:bg-[#B9273A]/10 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span className="font-bold">Logout</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>
