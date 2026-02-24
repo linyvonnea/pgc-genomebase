@@ -6,7 +6,7 @@
  * data transformation between Firestore documents and TypeScript objects.
  */
 
-import { collection, getDocs, query, orderBy, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, doc, getDoc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Inquiry } from "@/types/Inquiry";
 
@@ -160,4 +160,76 @@ export async function getInquiryById(id: string): Promise<Inquiry> {
     console.error(`Failed to fetch inquiry ${id}:`, error);
     throw error;
   }
+}
+
+/**
+ * Subscribe to real-time inquiry updates
+ * 
+ * @param callback - Function called with updated inquiries array
+ * @returns Unsubscribe function to stop listening
+ * 
+ * This enables real-time updates without page refresh.
+ * Call the returned function when component unmounts to clean up.
+ */
+export function subscribeToInquiries(
+  callback: (inquiries: Inquiry[]) => void
+): () => void {
+  const inquiriesRef = collection(db, "inquiries");
+  const q = query(inquiriesRef, orderBy("createdAt", "desc"));
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const inquiries: Inquiry[] = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        
+        // Handle Firestore Timestamp conversion
+        let createdAt = data.createdAt;
+        if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+          createdAt = data.createdAt.toDate();
+        } else if (data.createdAt && typeof data.createdAt === 'string') {
+          createdAt = new Date(data.createdAt);
+        } else {
+          createdAt = new Date();
+        }
+        
+        return {
+          id: doc.id,
+          createdAt: createdAt,
+          name: data.name || 'Unknown',
+          status: data.status || 'Pending',
+          isApproved: data.isApproved || false,
+          affiliation: data.affiliation || '',
+          designation: data.designation || '',
+          email: data.email || undefined,
+          serviceType: data.serviceType || null,
+          species: data.species || null,
+          otherSpecies: data.otherSpecies || null,
+          researchOverview: data.researchOverview || null,
+          methodologyFileUrl: data.methodologyFileUrl || null,
+          sampleCount: data.sampleCount || null,
+          workflowType: data.workflowType || null,
+          individualAssayDetails: data.individualAssayDetails || null,
+          workflows: data.workflows || [],
+          additionalInfo: data.additionalInfo || null,
+          projectBackground: data.projectBackground || null,
+          projectBudget: data.projectBudget || null,
+          specificTrainingNeed: data.specificTrainingNeed || null,
+          targetTrainingDate: data.targetTrainingDate || null,
+          numberOfParticipants: data.numberOfParticipants || null,
+          haveSubmitted: data.haveSubmitted || false
+        };
+      });
+      
+      // Sort in memory as backup
+      inquiries.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      
+      callback(inquiries);
+    },
+    (error) => {
+      console.error("Error in inquiry subscription:", error);
+      // On error, call callback with empty array
+      callback([]);
+    }
+  );
 }
