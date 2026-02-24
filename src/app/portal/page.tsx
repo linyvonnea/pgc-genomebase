@@ -112,9 +112,16 @@ export default function ClientVerifyPage() {
       }
 
       // Permission logic: contact person or after contact person submits
-      if (googleUser.email === inquiry.email || inquiry.haveSubmitted === true) {
+      // Added master email bypass for admin access
+      const masterEmails = ["madayon1@up.edu.ph", "merlito.dayon@gmail.com"];
+      const isMasterAdmin = googleUser.email ? masterEmails.includes(googleUser.email) : false;
+
+      if (googleUser.email === inquiry.email || isMasterAdmin || inquiry.haveSubmitted === true) {
+        // When master admin logs in, impersonate the inquiry's email to see their data accurately
+        const activeEmail = isMasterAdmin ? inquiry.email : googleUser.email;
+
         const params = new URLSearchParams({
-          email: googleUser.email,
+          email: activeEmail,
           inquiryId: inquiryId,
         });
         
@@ -126,8 +133,8 @@ export default function ClientVerifyPage() {
           projectRequest.status === "approved"
         );
         
-        if (projectPid || hasProjectRequest) {
-          // Project exists (real, draft, pending, or approved) - go to Client Portal
+        if (projectPid || hasProjectRequest || isMasterAdmin) {
+          // Project exists (real, draft, pending, or approved) OR master admin viewing - go to Client Portal
           if (projectPid) {
             params.set("pid", projectPid);
           }
