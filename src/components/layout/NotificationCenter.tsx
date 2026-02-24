@@ -37,12 +37,14 @@ export function NotificationCenter() {
     markAllAsRead();
   };
 
-  const getNotificationIcon = (type: "member" | "project") => {
+  const getNotificationIcon = (type: "member" | "project" | "inquiry") => {
     switch (type) {
       case "project":
         return <FileText className="h-4 w-4 text-purple-600" />;
       case "member":
         return <Users className="h-4 w-4 text-blue-600" />;
+      case "inquiry":
+        return <Bell className="h-4 w-4 text-green-600" />;
       default:
         return <Bell className="h-4 w-4 text-slate-600" />;
     }
