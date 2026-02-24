@@ -170,118 +170,65 @@ export default function ClientConformeModal({
 
         {/* Scrollable document body */}
         <ScrollArea className="flex-1 min-h-0 w-full">
-          <div className="px-8 py-10 text-sm text-slate-800 leading-relaxed font-serif max-w-4xl mx-auto space-y-8">
-            
+          <div className="px-8 py-12 text-sm text-slate-700 leading-relaxed font-serif max-w-3xl mx-auto">
             {/* Header */}
-            <div className="text-center space-y-1 mb-8">
-              <h2 className="font-bold text-xl text-slate-900">CLIENT CONFORME</h2>
-              <div className="font-bold text-slate-900">PHILIPPINE GENOME CENTER VISAYAS</div>
-              <div className="text-xs text-slate-500 font-sans tracking-widest pt-1">PGCV-LF-CC-V005</div>
-              <p className="text-xs text-slate-500 italic mt-4 bg-yellow-50 p-2 border border-yellow-100 rounded inline-block">
-                Before submitting, kindly carefully review and agree to our Client Terms and Conditions.
+            <div className="text-center space-y-2 mb-12">
+              <h2 className="font-bold text-2xl text-slate-900 tracking-wide">
+                CLIENT CONFORME
+              </h2>
+              <div className="text-slate-900 uppercase font-semibold tracking-wider text-sm">
+                Philippine Genome Center Visayas
+              </div>
+              <p className="text-xs text-slate-500 font-sans tracking-widest pt-2">
+                PGCV-LF-CC-V005
               </p>
             </div>
 
-            {/* Intro */}
-            <div className="space-y-4 text-justify">
-              <p>
-                This agreement is made between <span className="font-bold underline decoration-slate-400 underline-offset-4 px-1">{filled(clientName)}</span>, <span className="font-bold underline decoration-slate-400 underline-offset-4 px-1">{filled(designation)}</span> of the <span className="font-bold underline decoration-slate-400 underline-offset-4 px-1">{filled(affiliation)}</span>, hereafter referred to as “Client” and the Philippine Genome Center Visayas (PGC Visayas), herein referred to as “PGC Visayas”, and covers all jobs under the Project/Study entitled:
-              </p>
-              <div className="font-bold underline decoration-slate-400 underline-offset-4 text-center py-2 bg-slate-50 rounded">
-                {filled(projectTitle)}
-              </div>
-              <p>
-                with funding from the (Name of Funding Agency/Source of Fund) <span className="font-bold underline decoration-slate-400 underline-offset-4 px-1">{filled(fundingAgency)}</span>
-              </p>
-            </div>
-
-            {/* Sections */}
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <h3 className="font-bold text-slate-900 border-b border-slate-200 pb-1 inline-block">Summary of the Deliverables of the Project</h3>
-                <div className="space-y-2 text-justify">
-                  <p>The Client shall engage PGC Visayas to perform and deliver the services in accordance with the agreed project deliverables as discussed and approved by both parties.</p>
-                  <p>The Client shall provide the required information and materials, hereinafter collectively referred to as the “Samples” and/or “Data/Metadata,” and shall remit the corresponding Service Fee as detailed in the approved Charge Slip for the Project.</p>
-                  <p>In consideration thereof, PGC Visayas shall deliver the agreed outputs, which may include a service report and/or raw sequence data, within the specified project or service duration.</p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="font-bold text-slate-900 border-b border-slate-200 pb-1 inline-block">Duration of the Project</h3>
-                <p className="text-justify">
-                  The service/project is in effect once PGC Visayas has received the samples from the Client and is ended upon release of the Service Report. For Equipment Use and Other Services, the service/project is in effect upon receiving all necessary details from the client and ends once the Client has finished all necessary experiments. Any additional services beyond the initial scope of the agreed terms for the project are subject to additional charges and must be agreed upon between the parties.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="font-bold text-slate-900 border-b border-slate-200 pb-1 inline-block">Compliance with Sample Submission Requirements</h3>
-                <p className="text-justify">
-                  The Client agrees to conform to the Sample Submission Requirements set by PGC Visayas, who will, upon acceptance of the samples, inspect the samples and perform necessary quality check assays before any analysis. If the samples do not pass the inspection or the quality checks, PGC Visayas has the right to reject the samples and request the Client to submit new samples. Should the Client wish to proceed without resending new samples, the Client agrees that PGC Visayas will not be liable for the resulting outcomes.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="font-bold text-slate-900 border-b border-slate-200 pb-1 inline-block">Sample Retention</h3>
-                <p className="text-justify">
-                  All submitted samples will be discarded immediately after processing, except for sanger sequencing and NGS samples, which will be discarded one week after the Project has ended. For nucleic acid extraction, a backup of the purified DNA or RNA will be kept one week after the project has ended. Back-up sequence files will be kept for one month, during which the Client may have his or her data re-sent for whatever purpose. For NGS, libraries will be kept for six (6) months, and backup files will be kept for one (1) year only. The Client may request PGC Visayas not to keep any backup files or samples. In this case, PGC Visayas will discard all samples and data upon project completion.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="font-bold text-slate-900 border-b border-slate-200 pb-1 inline-block">Confidentiality</h3>
-                <p className="text-justify">
-                  PGC Visayas agrees to keep all data strictly confidential and will be accessible only to those involved in the project, as agreed upon by PGC Visayas and the Client.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="font-bold text-slate-900 border-b border-slate-200 pb-1 inline-block">Ownership</h3>
-                <p className="text-justify">
-                  The Client retains full ownership of all data and intellectual property rights arising from the Project. However, PGC Visayas must be properly acknowledged in any presentations, reports, or publications resulting from the services rendered.
-                </p>
-              </div>
-
-               <div className="space-y-2">
-                <h3 className="font-bold text-slate-900 border-b border-slate-200 pb-1 inline-block">Terms of Payment</h3>
-                <p className="text-justify">
-                  The Client agrees that payment should be received within thirty (30) days after the receipt of the Charge Slip. Should the Client fail to comply with this requirement. Any deliverables stipulated in Section I shall not be released.
-                </p>
-              </div>
-            </div>
-
-            <div className="text-center font-medium bg-slate-50 p-4 border border-slate-200 rounded-md text-slate-700 mt-8">
-              By checking the agreement box and submitting this form, the Client confirms that they have read, understood, and agreed to all the above terms and conditions.
-            </div>
-
-            {/* Signature Block */}
-            <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-12 pt-8 border-t border-slate-200">
-              <div className="space-y-8">
-                <div>
-                  <div className="font-bold">Client:</div>
-                </div>
+            {/* Autofilled Fields Grid */}
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-8 shadow-sm space-y-8">
+              <div className="grid gap-8">
                 <div className="space-y-1">
-                  <div className="font-bold text-slate-900 uppercase border-b border-slate-400 pb-1 inline-block min-w-[200px]">
-                    {filled(clientName)}
-                  </div>
-                  <div className="text-xs text-slate-500 uppercase tracking-wide">CLIENT NAME</div>
-                </div>
-                <div className="space-y-1">
-                   <div className="font-bold text-slate-900 border-b border-slate-400 pb-1 inline-block min-w-[200px]">
-                    {today}
-                  </div>
-                  <div className="text-xs text-slate-500 uppercase tracking-wide">DATE</div>
+                   <label className="text-xs uppercase text-slate-500 font-semibold tracking-wider block">Client Name</label>
+                   <div className="font-medium text-lg text-slate-900 border-b border-slate-300 pb-2">
+                      {filled(clientName)}
+                   </div>
                 </div>
 
-              <div className="space-y-8">
-                <div>
-                  <div className="font-bold">PGC Visayas:</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                   <div className="space-y-1">
+                      <label className="text-xs uppercase text-slate-500 font-semibold tracking-wider block">Designation</label>
+                      <div className="font-medium text-slate-900 border-b border-slate-300 pb-2">
+                        {filled(designation)}
+                      </div>
+                   </div>
+                   <div className="space-y-1">
+                      <label className="text-xs uppercase text-slate-500 font-semibold tracking-wider block">Affiliation</label>
+                      <div className="font-medium text-slate-900 border-b border-slate-300 pb-2">
+                        {filled(affiliation)}
+                      </div>
+                   </div>
                 </div>
+
                 <div className="space-y-1">
-                  <div className="font-bold text-slate-900 uppercase border-b border-slate-400 pb-1 inline-block min-w-[250px]">
-                    VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.
-                  </div>
-                  <div className="text-xs text-slate-500 uppercase tracking-wide">Director</div>
-                  <div className="text-xs text-slate-500 uppercase tracking-wide">PGC Visayas</div>
+                   <label className="text-xs uppercase text-slate-500 font-semibold tracking-wider block">Project Title</label>
+                   <div className="font-medium text-slate-900 border-b border-slate-300 pb-2 italic">
+                      {filled(projectTitle)}
+                   </div>
+                </div>
+
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                   <div className="space-y-1">
+                      <label className="text-xs uppercase text-slate-500 font-semibold tracking-wider block">Funding Institution</label>
+                      <div className="font-medium text-slate-900 border-b border-slate-300 pb-2">
+                        {filled(fundingAgency)}
+                      </div>
+                   </div>
+                   <div className="space-y-1">
+                      <label className="text-xs uppercase text-slate-500 font-semibold tracking-wider block">Date</label>
+                      <div className="font-medium text-slate-900 border-b border-slate-300 pb-2">
+                        {today}
+                      </div>
+                   </div>
                 </div>
               </div>
             </div>
