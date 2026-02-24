@@ -138,8 +138,8 @@ export default function ClientVerifyPage() {
           projectRequest.status === "approved"
         );
         
-        if (projectPid || hasProjectRequest || isMasterAdmin) {
-          // Project exists (real, draft, pending, or approved) OR master admin viewing - go to Client Portal
+        if (projectPid || hasProjectRequest) {
+          // Project exists (real, draft, pending, or approved) - go to Client Portal
           if (projectPid) {
             params.set("pid", projectPid);
           }
