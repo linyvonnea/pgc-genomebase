@@ -58,6 +58,8 @@ export function AdminSidebar() {
   const { openTab, activeTab, isTabOpen, setActiveTab } = useTabContext();
   const { pendingCount } = useApprovalNotifications();
   const { pendingCount: inquiryPendingCount } = useInquiryNotifications();
+  
+  console.log("🔔 AdminSidebar - Inquiry pending count:", inquiryPendingCount);
 
   const handleNavClick = (href: string, label: string, icon: React.ElementType) => {
     const tabId = href.replace("/admin/", "");
