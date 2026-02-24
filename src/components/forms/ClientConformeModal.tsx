@@ -177,6 +177,13 @@ export default function ClientConformeModal({
               </p>
             </div>
 
+            {/* Introduction */}
+            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+              <p className="text-sm text-slate-700 font-sans text-center">
+                Before submitting, kindly carefully review and agree to our Client Terms and Conditions.
+              </p>
+            </div>
+
             {/* Agreement Preamble */}
             <div className="mb-8 space-y-4">
               <p className="text-justify leading-relaxed">
