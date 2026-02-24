@@ -271,7 +271,6 @@ export default function ClientConformeModal({
                   </div>
                   <div className="text-xs text-slate-500 uppercase tracking-wide">DATE</div>
                 </div>
-              </div>
 
               <div className="space-y-8">
                 <div>
@@ -286,6 +285,10 @@ export default function ClientConformeModal({
                 </div>
               </div>
             </div>
+            
+            <p className="text-center text-xs text-slate-400 mt-12 font-sans">
+              By clicking "I Agree & Continue", you acknowledge the terms of this engagement.
+            </p>
           </div>
         </ScrollArea>
 
