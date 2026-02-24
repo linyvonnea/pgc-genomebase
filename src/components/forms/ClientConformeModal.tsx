@@ -336,7 +336,6 @@ export default function ClientConformeModal({
                     Date
                   </p>
                 </div>
-              </div>
 
               {/* PGC Visayas */}
               <div className="space-y-4">
@@ -353,6 +352,10 @@ export default function ClientConformeModal({
                 </div>
               </div>
             </div>
+            
+            <p className="text-center text-xs text-slate-400 mt-12 font-sans">
+              By clicking "I Agree & Continue", you acknowledge the terms of this engagement.
+            </p>
           </div>
         </ScrollArea>
 
