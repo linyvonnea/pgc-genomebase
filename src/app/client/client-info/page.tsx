@@ -2146,7 +2146,7 @@ export default function ClientPortalPage() {
         </div>
 
         {showProjectsList && (
-           <div className="space-y-3 mt-3">
+           <div className="space-y-3 mt-3 ml-6">
             {projects.length === 0 ? (
                <div className="text-center py-8 bg-slate-50 rounded-lg border border-slate-100 border-dashed mx-2">
                   <p className="text-xs text-slate-400">No projects found</p>
@@ -2183,8 +2183,8 @@ export default function ClientPortalPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1">
-                              <p className={cn("text-xs font-bold truncate pr-2", isSelected ? "text-[#166FB5]" : "text-slate-700")}>
-                                Project {project.pid.split('-').pop()}
+                              <p className="text-xs text-slate-500 truncate leading-tight">
+                                {project.title || "Untitled Project"}
                               </p>
                               <Badge className={cn(
                                 "text-[10px] h-4 px-1.5 rounded-md font-semibold border-0",
@@ -2192,21 +2192,6 @@ export default function ClientPortalPage() {
                               )}>
                                 {project.status || "Draft"}
                               </Badge>
-                            </div>
-                            <p className="text-xs text-slate-500 truncate mb-2 leading-tight">
-                              {project.title || "Untitled Project"}
-                            </p>
-                            
-                            {/* Stats */}
-                            <div className="flex items-center gap-3">
-                              <div className="flex items-center gap-1.5 text-[10px] font-medium text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded-md">
-                                <FileText className="h-3 w-3" />
-                                <span>{quotationCount} Quotes</span>
-                              </div>
-                              <div className="flex items-center gap-1.5 text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
-                                <Receipt className="h-3 w-3" />
-                                <span>{chargeSlipCount} Slips</span>
-                              </div>
                             </div>
                           </div>
                         </div>
