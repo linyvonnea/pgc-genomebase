@@ -2175,7 +2175,7 @@ export default function ClientPortalPage() {
                         onClick={() => handleSelectProject(project)}
                       >
                         <div className="flex flex-col gap-1">
-                          <p className="text-xs text-slate-700 font-medium truncate leading-tight">
+                          <p className="text-sm text-slate-700 font-medium truncate leading-tight">
                             {project.title || "Untitled Project"}
                           </p>
                           <Badge className={cn(
@@ -2221,7 +2221,7 @@ export default function ClientPortalPage() {
                             <div>
                               <div className="flex items-center gap-2 mb-1.5">
                                 <FileText className="h-3 w-3 text-purple-600" />
-                                <span className="text-xs font-semibold text-slate-700">
+                                <span className="text-sm font-semibold text-slate-700">
                                   Quotations
                                 </span>
                                 <span className="text-[10px] text-slate-500">({quotationCount})</span>
@@ -2250,7 +2250,7 @@ export default function ClientPortalPage() {
                             <div>
                               <div className="flex items-center gap-2 mb-1.5">
                                 <Receipt className="h-3 w-3 text-green-600" />
-                                <span className="text-xs font-semibold text-slate-700">
+                                <span className="text-sm font-semibold text-slate-700">
                                   Charge Slips
                                 </span>
                                 <span className="text-[10px] text-slate-500">({chargeSlipCount})</span>
