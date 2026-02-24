@@ -24,7 +24,6 @@ import {
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useApprovalNotifications } from "@/hooks/useApprovalNotifications";
-import { useInquiryNotifications } from "@/hooks/useInquiryNotifications";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -56,10 +55,7 @@ export function AdminSidebar() {
   const { user, signOut, adminInfo } = useAuth();
   const { canView, loading: permissionsLoading } = usePermissions(adminInfo?.role);
   const { openTab, activeTab, isTabOpen, setActiveTab } = useTabContext();
-  const { pendingCount } = useApprovalNotifications();
-  const { pendingCount: inquiryPendingCount } = useInquiryNotifications();
-  
-  console.log("🔔 AdminSidebar - Inquiry pending count:", inquiryPendingCount);
+  const { pendingCount, inquiryCount } = useApprovalNotifications();
 
   const handleNavClick = (href: string, label: string, icon: React.ElementType) => {
     const tabId = href.replace("/admin/", "");
@@ -220,14 +216,14 @@ export function AdminSidebar() {
                     <span className="text-sm font-medium flex-1">{label}</span>
                     
                     {/* Notification badge for Inquiries */}
-                    {href === "/admin/inquiry" && inquiryPendingCount > 0 && (
+                    {href === "/admin/inquiry" && inquiryCount > 0 && (
                       <span className={cn(
                         "min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-bold px-1.5",
                         isActive(href)
                           ? "bg-white text-[#166FB5]"
                           : "bg-red-500 text-white animate-pulse"
                       )}>
-                        {inquiryPendingCount}
+                        {inquiryCount}
                       </span>
                     )}
                     

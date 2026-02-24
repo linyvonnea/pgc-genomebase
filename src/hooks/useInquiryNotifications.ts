@@ -1,5 +1,6 @@
 // Real-time notification hook for new inquiry requests
 // Tracks inquiries with "Pending" status that need admin review
+// Pattern follows useApprovalNotifications.ts
 
 import { useState, useEffect, useRef } from "react";
 import { 
@@ -7,7 +8,6 @@ import {
   query, 
   where, 
   onSnapshot,
-  orderBy,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
@@ -30,10 +30,7 @@ export function useInquiryNotifications() {
   const isInitialLoadRef = useRef(true);
 
   useEffect(() => {
-    console.log("🔔 Inquiry notifications hook initializing...");
-    
-    // Listen to inquiries with "Pending" status
-    // Remove orderBy to avoid composite index requirement - we'll sort in memory
+    // Listen to inquiries with "Pending" status (capital P to match createInquiryAction)
     const inquiriesQuery = query(
       collection(db, "inquiries"),
       where("status", "==", "Pending")
@@ -42,8 +39,6 @@ export function useInquiryNotifications() {
     const unsubscribeInquiries = onSnapshot(
       inquiriesQuery, 
       (snapshot) => {
-        console.log(`🔔 Inquiry snapshot received: ${snapshot.docs.length} pending inquiries`);
-        
         const inquiryNotifications: InquiryNotification[] = snapshot.docs.map((doc) => {
           const data = doc.data();
           return {
@@ -60,17 +55,11 @@ export function useInquiryNotifications() {
         // Sort in memory by createdAt descending
         inquiryNotifications.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-        setNotifications(inquiryNotifications);
         const totalCount = inquiryNotifications.length;
-        setPendingCount(totalCount);
-        setUnreadCount(inquiryNotifications.filter((n) => !n.read).length);
         
-        console.log(`🔔 Pending inquiry count: ${totalCount}, isInitialLoad: ${isInitialLoadRef.current}`);
-
         // Show toast notification for new inquiries (only after initial load)
         if (!isInitialLoadRef.current && totalCount > previousCountRef.current) {
           const latestInquiry = inquiryNotifications[0];
-          console.log("🔔 New inquiry detected! Showing toast notification");
           toast.info("New Inquiry Request", {
             description: `${latestInquiry.name} from ${latestInquiry.affiliation}`,
             duration: 5000,
@@ -85,15 +74,17 @@ export function useInquiryNotifications() {
 
         previousCountRef.current = totalCount;
         isInitialLoadRef.current = false;
+        
+        setNotifications(inquiryNotifications);
+        setPendingCount(totalCount);
+        setUnreadCount(inquiryNotifications.filter((n) => !n.read).length);
       },
       (error) => {
-        console.error("❌ Error listening to inquiry notifications:", error);
-        console.error("Error details:", error.message, error.code);
+        console.error("Error listening to inquiry notifications:", error);
       }
     );
 
     return () => {
-      console.log("🔔 Inquiry notifications hook cleanup");
       unsubscribeInquiries();
     };
   }, []);
