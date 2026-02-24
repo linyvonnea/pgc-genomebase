@@ -336,6 +336,7 @@ export default function ClientConformeModal({
                     Date
                   </p>
                 </div>
+              </div>
 
               {/* PGC Visayas */}
               <div className="space-y-4">
