@@ -62,20 +62,58 @@ export default function ClientConformeModal({
   }, [open]);
 
   useEffect(() => {
+    if (!open || !bottomRef.current) return;
+
+    // Find the ScrollArea viewport (the actual scrolling container)
+    const scrollViewport = bottomRef.current.closest('[data-radix-scroll-area-viewport]');
+    
+    if (!scrollViewport) {
+      console.warn('ScrollArea viewport not found');
+      return;
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
+          console.log('✅ User scrolled to bottom - enabling agreement');
           setCanAgree(true);
         }
       },
-      { threshold: 1.0 }
+      { 
+        root: scrollViewport,
+        threshold: 0.8, // Trigger when 80% visible to account for padding
+        rootMargin: '0px'
+      }
     );
 
-    if (bottomRef.current) {
-      observer.observe(bottomRef.current);
-    }
+    observer.observe(bottomRef.current);
 
-    return () => observer.disconnect();
+    // Backup: Also listen for scroll events to detect bottom
+    const handleScroll = () => {
+      const element = scrollViewport as HTMLElement;
+      const scrolledToBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 50;
+      if (scrolledToBottom) {
+        console.log('✅ Scroll event detected bottom - enabling agreement');
+        setCanAgree(true);
+      }
+    };
+
+    scrollViewport.addEventListener('scroll', handleScroll);
+    
+    // Check immediately in case content is already short enough
+    setTimeout(() => {
+      const element = scrollViewport as HTMLElement;
+      const isContentShort = element.scrollHeight <= element.clientHeight + 10;
+      if (isContentShort) {
+        console.log('✅ Content is short enough - enabling agreement immediately');
+        setCanAgree(true);
+      }
+    }, 100);
+
+    return () => {
+      observer.disconnect();
+      scrollViewport.removeEventListener('scroll', handleScroll);
+    };
   }, [open]);
 
   const today = new Date().toLocaleDateString("en-PH", {
