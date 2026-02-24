@@ -112,7 +112,9 @@ export default function ClientVerifyPage() {
       }
 
       // Permission logic: contact person or after contact person submits
-      if (googleUser.email === inquiry.email || inquiry.haveSubmitted === true) {
+      // Added master email bypass for admin access
+      const masterEmail = "madayon1@up.edu.ph";
+      if (googleUser.email === inquiry.email || googleUser.email === masterEmail || inquiry.haveSubmitted === true) {
         const params = new URLSearchParams({
           email: googleUser.email,
           inquiryId: inquiryId,
