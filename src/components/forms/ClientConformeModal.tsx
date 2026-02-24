@@ -153,12 +153,6 @@ export default function ClientConformeModal({
               Step 1 of 3
             </Badge>
           </div>
-          
-          <div className="space-y-2">
-            <p className="text-xs text-slate-500 bg-blue-50 border border-blue-200 rounded-md p-2">
-              📋 <strong>Next:</strong> After agreeing, you'll review your submission details before final approval.
-            </p>
-          </div>
         </DialogHeader>
 
         {/* Scrollable document body */}
@@ -347,9 +341,6 @@ export default function ClientConformeModal({
               </div>
             </div>
             
-            <p className="text-center text-xs text-slate-400 mt-12 font-sans">
-              By clicking "I Agree & Continue", you acknowledge the terms of this engagement.
-            </p>
           </div>
         </ScrollArea>
 
@@ -366,9 +357,6 @@ export default function ClientConformeModal({
               <span className="text-sm text-slate-700 group-hover:text-slate-900 transition-colors font-medium">
                 ✓ I have read and understood the Client Conforme agreement
               </span>
-              <p className="text-xs text-slate-500">
-                I agree to the terms and conditions outlined in this legal document (PGCV-LF-CC-v005).
-              </p>
             </div>
           </label>
 
