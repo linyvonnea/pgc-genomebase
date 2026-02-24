@@ -153,12 +153,6 @@ export default function ClientConformeModal({
               Step 1 of 3
             </Badge>
           </div>
-          
-          <div className="space-y-2">
-            <p className="text-xs text-slate-500 bg-blue-50 border border-blue-200 rounded-md p-2">
-              📋 <strong>Next:</strong> After agreeing, you'll review your submission details before final approval.
-            </p>
-          </div>
         </DialogHeader>
 
         {/* Scrollable document body */}
