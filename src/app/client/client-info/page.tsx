@@ -2097,243 +2097,136 @@ export default function ClientPortalPage() {
   // ────────────────────────────────────────────────────────────────
 
   const sidebarContent = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white border-r border-slate-200">
       {/* Header - CLIENT PORTAL + User Identity Card */}
-      <div className="p-4 border-b bg-white">
-        <h2 className="text-sm font-black text-slate-700 uppercase tracking-[0.2em] mb-3 ml-1">
-          Client Portal
-        </h2>
+      <div className="px-5 py-6 border-b border-slate-100 relative">
+        <div className="flex justify-between items-center mb-4 pl-1">
+          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+            Client Portal
+          </h2>
+          {/* Mobile Close Button */}
+          <button
+            onClick={() => setMobileSidebarOpen(false)}
+            className="lg:hidden text-slate-400 hover:text-slate-600 p-1"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
         
-        {/* Attached Design: Pill-shaped identity card */}
-        <div className="flex items-center gap-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-full px-3 py-1.5 shadow-sm transition-all duration-200">
-          {/* Circular Blue Avatar */}
-          <div className="w-9 h-9 bg-gradient-to-r from-[#166FB5] to-[#4038AF] rounded-full flex items-center justify-center flex-shrink-0 shadow-inner">
-            <User className="w-4 h-4 text-white" />
+        {/* User Identity Card - Simple & Professional */}
+        <div className="flex items-center gap-3 p-1">
+          <div className="relative">
+            <div className="w-10 h-10 bg-[#166FB5] rounded-full flex items-center justify-center flex-shrink-0 text-white shadow-sm ring-2 ring-white">
+              <span className="font-bold text-sm">
+                {user?.displayName ? user.displayName.charAt(0).toUpperCase() : <User className="w-5 h-5" />}
+              </span>
+            </div>
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full ring-2 ring-white"></div>
           </div>
           
-          {/* User Info from Attachment */}
           <div className="min-w-0 flex-1">
-            <div className="font-bold text-slate-800 text-xs truncate leading-tight">
-              {user?.displayName || "Merlito Dayon Jr. UPV-PGCV"}
+            <div className="font-bold text-slate-800 text-sm truncate">
+              {user?.displayName || "Merlito Dayon Jr."}
             </div>
-            <div className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
+            <div className="text-xs text-slate-500 truncate">
               {user?.email || emailParam || "merlito.dayon@gmail.com"}
             </div>
           </div>
-          
-          {/* The arrow down icon is explicitly removed per request */}
         </div>
       </div>
 
-      {/* Mobile-only Header with Close Button */}
-      <div className="lg:hidden flex items-center justify-end p-2 border-b bg-white">
-        <button
-          onClick={() => setMobileSidebarOpen(false)}
-          className="text-slate-400 hover:text-slate-600 rounded-lg p-1"
-          aria-label="Close sidebar"
-        >
-          <X className="h-6 w-6" />
-        </button>
-      </div>
-
-      {/* Projects section header - Simple */}
-      <button
-        onClick={() => setShowProjectsList(!showProjectsList)}
-        className="flex items-center justify-between px-4 py-3 border-b hover:bg-slate-50"
-      >
-        <div className="flex items-center gap-2">
-          <FolderOpen className="h-4 w-4 text-[#166FB5]" />
-          <span className="text-sm font-semibold text-slate-700">
-            My Projects
-          </span>
+      {/* Projects Section */}
+      <div className="flex-1 overflow-y-auto px-3 py-6">
+        <div className="mb-2 px-3 flex items-center justify-between group cursor-pointer" onClick={() => setShowProjectsList(!showProjectsList)}>
+          <div className="flex items-center gap-2 text-slate-600 group-hover:text-[#166FB5] transition-colors">
+            <FolderOpen className="h-4 w-4" />
+            <span className="text-sm font-bold">My Projects</span>
+          </div>
+          <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform", showProjectsList && "rotate-180")} />
         </div>
-        <ChevronDown
-          className={cn(
-            "h-4 w-4 text-slate-400",
-            showProjectsList && "rotate-180"
-          )}
-        />
-      </button>
 
-      {/* New Project button (shown when Projects list is collapsed) - REMOVED */}
-
-      {/* Projects list */}
-      {showProjectsList && (
-        <div className="flex-1 overflow-y-auto">
-          {projects.length === 0 ? (
-            <div className="text-center py-10 px-4">
-              <div className="p-3 bg-slate-100 rounded-full w-fit mx-auto mb-3">
-                <FolderOpen className="h-6 w-6 text-slate-400" />
-              </div>
-              <p className="text-sm text-slate-500 font-medium">
-                No projects yet
-              </p>
-              <p className="text-xs text-slate-400 mt-1">
-                Create your first project below
-              </p>
-            </div>
-          ) : (
-            <div className="pl-10 pr-3 py-2 space-y-2">
-              {projects.map((project) => {
-                // Defensive checks for project properties
-                if (!project || !project.pid) {
-                  console.warn("Invalid project in sidebar:", project);
-                  return null;
-                }
-                
+        {showProjectsList && (
+           <div className="space-y-3 mt-3">
+            {projects.length === 0 ? (
+               <div className="text-center py-8 bg-slate-50 rounded-lg border border-slate-100 border-dashed mx-2">
+                  <p className="text-xs text-slate-400">No projects found</p>
+               </div>
+            ) : (
+              projects.map((project) => {
+                if (!project || !project.pid) return null;
                 const isSelected = selectedProjectPid === project.pid;
-                const isDocsExpanded = expandedProjectDocs.has(project.pid);
                 const docs = projectDocuments.get(project.pid);
                 const quotationCount = docs?.quotations.length || 0;
                 const chargeSlipCount = docs?.chargeSlips.length || 0;
-                const totalDocs = quotationCount + chargeSlipCount;
-                const isOngoing = project.status === "Ongoing";
                 
                 return (
                   <div key={project.pid} className={cn(
-                    "rounded-lg border-2 overflow-hidden transition-all",
-                    isSelected
-                      ? "border-[#166FB5] shadow-md"
-                      : "border-slate-200 hover:border-slate-300 hover:shadow-sm"
+                    "rounded-xl border transition-all duration-200 overflow-hidden group",
+                    isSelected 
+                      ? "bg-blue-50/50 border-[#166FB5] shadow-sm" 
+                      : "bg-white border-slate-200 hover:border-blue-200 hover:shadow-sm"
                   )}>
-                    {/* ── Project Card - Simple ── */}
-                    <div className="w-full flex items-center bg-white hover:bg-slate-50">
-                      {/* Main project content - clickable */}
-                      <div
-                        className="flex-1 min-w-0 text-left px-3 py-2.5 cursor-pointer flex items-center gap-2.5"
-                        onClick={() => handleSelectProject(project)}
-                      >
-                        {/* Folder icon */}
-                        <div className="flex-shrink-0">
-                          <FolderOpen className="h-4 w-4 text-[#166FB5]" />
-                        </div>
-
-                        {/* Title + status */}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm truncate text-slate-800">
-                            {project.title || "Untitled Project"}
-                          </p>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <Badge
-                              className={cn(
-                                "text-[10px] h-4 px-1.5 border-0 font-medium",
-                                statusColors[project.status] || "bg-slate-100 text-slate-600"
-                              )}
-                            >
-                              {project.status || "Unknown"}
-                            </Badge>
-                          </div>
-                        </div>
+                    {/* Project Header */}
+                    <div 
+                      className="p-3 cursor-pointer"
+                      onClick={() => handleSelectProject(project)}
+                    >
+                      <div className="flex items-start gap-3">
+                         <div className={cn(
+                            "mt-0.5 w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors",
+                            isSelected ? "bg-blue-100 text-[#166FB5]" : "bg-slate-100 text-slate-400 group-hover:bg-blue-50 group-hover:text-[#166FB5]"
+                         )}>
+                            <FolderOpen className="h-4 w-4" />
+                         </div>
+                         <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-1">
+                               <p className={cn("text-xs font-bold truncate pr-2", isSelected ? "text-[#166FB5]" : "text-slate-700")}>
+                                  Project {project.pid.split('-').pop()}
+                               </p>
+                               <Badge className={cn(
+                                  "text-[10px] h-4 px-1.5 rounded-md font-semibold border-0",
+                                  statusColors[project.status] || "bg-slate-100 text-slate-500"
+                               )}>
+                                  {project.status || "Draft"}
+                               </Badge>
+                            </div>
+                            <p className="text-xs text-slate-500 truncate mb-2 leading-tight">
+                               {project.title || "Untitled Project"}
+                            </p>
+                            
+                            {/* Stats */}
+                            <div className="flex items-center gap-3">
+                               <div className="flex items-center gap-1.5 text-[10px] font-medium text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded-md">
+                                  <FileText className="h-3 w-3" />
+                                  <span>{quotationCount} Quotes</span>
+                               </div>
+                               <div className="flex items-center gap-1.5 text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                                  <Receipt className="h-3 w-3" />
+                                  <span>{chargeSlipCount} Slips</span>
+                               </div>
+                            </div>
+                         </div>
                       </div>
-
-                      {/* Documents toggle button - Visible chevron on the right */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleProjectDocs(project);
-                        }}
-                        className={cn(
-                          "flex-shrink-0 px-3 py-2.5 hover:bg-slate-100 transition-colors border-l border-slate-200 group/chevron",
-                          isDocsExpanded && "bg-blue-50"
-                        )}
-                        title="View documents"
-                        aria-label="Toggle documents"
-                      >
-                        <ChevronRight className={cn(
-                          "h-5 w-5 text-[#166FB5] transition-all duration-200 group-hover/chevron:translate-x-0.5",
-                          isDocsExpanded && "rotate-90"
-                        )} />
-                      </button>
                     </div>
-
-                    {/* ── Documents sub-panel ── */}
-                    {isDocsExpanded && (
-                      <div className="bg-slate-50 border-t">
-                        {docs?.loading ? (
-                          <div className="flex items-center gap-2 px-3 py-3 text-xs text-slate-500">
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                            <span>Loading…</span>
-                          </div>
-                        ) : (
-                          <div className="p-3 space-y-3">
-                            {/* Quotations */}
-                            <div>
-                              <div className="flex items-center gap-2 mb-1.5">
-                                <FileText className="h-3 w-3 text-purple-600" />
-                                <span className="text-xs font-semibold text-slate-700">
-                                  Quotations
-                                </span>
-                                <span className="text-[10px] text-slate-500">({quotationCount})</span>
-                              </div>
-                              {quotationCount > 0 && (
-                                <div className="space-y-1 ml-5">
-                                  {docs?.quotations.map((quotation) => (
-                                    <a
-                                      key={quotation.id}
-                                      href={`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="block text-xs text-slate-600 hover:text-purple-600 hover:underline truncate"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      • {quotation.referenceNumber}
-                                    </a>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Charge Slips */}
-                            <div>
-                              <div className="flex items-center gap-2 mb-1.5">
-                                <Receipt className="h-3 w-3 text-green-600" />
-                                <span className="text-xs font-semibold text-slate-700">
-                                  Charge Slips
-                                </span>
-                                <span className="text-[10px] text-slate-500">({chargeSlipCount})</span>
-                              </div>
-                              {chargeSlipCount > 0 && (
-                                <div className="space-y-1 ml-5">
-                                  {docs?.chargeSlips.map((chargeSlip) => (
-                                    <a
-                                      key={chargeSlip.id}
-                                      href={`/client/view-document?type=charge-slip&ref=${chargeSlip.id}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="block text-xs text-slate-600 hover:text-green-600 hover:underline truncate"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      • {chargeSlip.chargeSlipNumber}
-                                    </a>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
                 );
-              })}
-            </div>
-          )}
-        </div>
-      )}
+              })
+            )}
+           </div>
+        )}
+      </div>
 
-      {/* Footer actions - Fixed at bottom */}
-      <div className="p-4 border-t border-slate-100 bg-slate-50/50 mt-auto">
-        <Button
-          variant="ghost"
-          size="sm"
+      {/* Footer */}
+      <div className="p-4 border-t border-slate-100">
+        <button
           onClick={() => router.push("/portal")}
-          className="w-full justify-start text-[#B9273A] hover:bg-[#B9273A]/10 hover:text-[#B9273A] h-12 transition-all rounded-xl shadow-sm border border-transparent hover:border-[#B9273A]/20"
+          className="w-full flex items-center gap-3 px-4 py-3 text-[#B9273A] bg-red-50 hover:bg-red-100/80 rounded-xl transition-colors group"
         >
-          <div className="p-2 bg-[#B9273A]/10 rounded-lg mr-3">
-            <LogOut className="h-4 w-4" />
+          <div className="p-1.5 bg-white rounded-lg shadow-sm group-hover:scale-105 transition-transform">
+             <LogOut className="h-4 w-4" />
           </div>
           <span className="font-semibold text-sm">Exit Portal</span>
-        </Button>
+        </button>
       </div>
     </div>
   );
