@@ -257,9 +257,9 @@ export default function ClientConformeModal({
 
         {/* Scrollable document body */}
         <ScrollArea className="flex-1 min-h-0 w-full">
-          <div className="px-8 py-8 text-sm text-slate-700 leading-relaxed font-serif max-w-4xl mx-auto">
+          <div className="px-8 py-4 text-sm text-slate-700 leading-relaxed font-serif max-w-4xl mx-auto">
             {/* Header */}
-            <div className="text-center space-y-2 mb-8">
+            <div className="text-center space-y-1 mb-4">
               <h2 className="font-bold text-2xl text-slate-900 tracking-wide">
                 CLIENT CONFORME
               </h2>
@@ -271,15 +271,15 @@ export default function ClientConformeModal({
               </p>
             </div>
 
-            {/* Introduction */}
-            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
-              <p className="text-sm text-slate-700 font-sans text-center">
+            {/* Introduction - Simplified */}
+            <div className="mb-4">
+              <p className="text-sm text-slate-700 font-sans text-center italic text-slate-500">
                 Before submitting, kindly carefully review and agree to our Client Terms and Conditions.
               </p>
             </div>
 
             {/* Agreement Preamble */}
-            <div className="mb-8 space-y-4">
+            <div className="mb-4 space-y-2">
               <p className="text-justify leading-relaxed">
                 This agreement is made between{" "}
                 <span className="font-bold text-slate-900 underline decoration-slate-400">
