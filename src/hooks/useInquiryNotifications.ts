@@ -1,0 +1,107 @@
+// Real-time notification hook for new inquiry requests
+// Tracks inquiries with "Pending" status that need admin review
+
+import { useState, useEffect, useRef } from "react";
+import { 
+  collection, 
+  query, 
+  where, 
+  onSnapshot,
+  orderBy,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { toast } from "sonner";
+
+export interface InquiryNotification {
+  id: string;
+  name: string;
+  email: string;
+  affiliation: string;
+  serviceType: string;
+  createdAt: Date;
+  read?: boolean;
+}
+
+export function useInquiryNotifications() {
+  const [notifications, setNotifications] = useState<InquiryNotification[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const previousCountRef = useRef(0);
+  const isInitialLoadRef = useRef(true);
+
+  useEffect(() => {
+    // Listen to inquiries with "Pending" status
+    const inquiriesQuery = query(
+      collection(db, "inquiries"),
+      where("status", "==", "Pending"),
+      orderBy("createdAt", "desc")
+    );
+
+    const unsubscribeInquiries = onSnapshot(
+      inquiriesQuery, 
+      (snapshot) => {
+        const inquiryNotifications: InquiryNotification[] = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name || "Unknown",
+            email: data.email || "",
+            affiliation: data.affiliation || "",
+            serviceType: data.serviceType || "general",
+            createdAt: data.createdAt?.toDate() || new Date(),
+            read: false,
+          };
+        });
+
+        setNotifications(inquiryNotifications);
+        const totalCount = inquiryNotifications.length;
+        setPendingCount(totalCount);
+        setUnreadCount(inquiryNotifications.filter((n) => !n.read).length);
+
+        // Show toast notification for new inquiries (only after initial load)
+        if (!isInitialLoadRef.current && totalCount > previousCountRef.current) {
+          const latestInquiry = inquiryNotifications[0];
+          toast.info("New Inquiry Request", {
+            description: `${latestInquiry.name} from ${latestInquiry.affiliation}`,
+            duration: 5000,
+            action: {
+              label: "View",
+              onClick: () => {
+                window.location.href = "/admin/inquiry";
+              },
+            },
+          });
+        }
+
+        previousCountRef.current = totalCount;
+        isInitialLoadRef.current = false;
+      },
+      (error) => {
+        console.error("Error listening to inquiry notifications:", error);
+      }
+    );
+
+    return () => {
+      unsubscribeInquiries();
+    };
+  }, []);
+
+  const markAsRead = (notificationId: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+    );
+  };
+
+  const markAllAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnreadCount(0);
+  };
+
+  return {
+    notifications,
+    pendingCount,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+  };
+}
