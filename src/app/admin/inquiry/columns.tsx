@@ -50,7 +50,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
     header: "Inquiry ID",
-    size: 130,
+    size: 200,
     cell: ({ row }) => {
       const inquiry = row.original;
       
@@ -79,12 +79,12 @@ export const columns: ColumnDef<Inquiry>[] = [
       return (
         <div className="flex items-center gap-2">
           {showNew && (
-            <Badge variant="destructive" className="h-4 px-1 text-[8px] animate-pulse">NEW</Badge>
+            <Badge variant="destructive" className="h-4 px-1 text-[8px] animate-pulse shrink-0">NEW</Badge>
           )}
-          <span className="font-mono text-[10px]">{inquiry.id}</span>
+          <span className="font-mono text-xs truncate" title={inquiry.id}>{inquiry.id}</span>
           <button
             onClick={handleCopy}
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 rounded"
+            className="p-1 hover:bg-slate-100 rounded shrink-0"
             title="Copy Inquiry ID"
           >
             <Copy className="h-3 w-3 text-slate-500" />
@@ -96,7 +96,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "createdAt",
     header: "Date",
-    size: 90,
+    size: 85,
     cell: ({ row }) => {
       const createdAt = row.original.createdAt;
       
@@ -118,11 +118,11 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    size: 150,
+    size: 130,
     cell: ({ getValue }) => {
       const name = getValue() as string;
       return (
-        <div className="max-w-[150px] truncate" title={name}>
+        <div className="max-w-[130px] truncate" title={name}>
           {name}
         </div>
       );
@@ -131,11 +131,11 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "email",
     header: "Email",
-    size: 160,
+    size: 150,
     cell: ({ getValue }) => {
       const email = getValue() as string || "—";
       return (
-        <div className="max-w-[160px] truncate" title={email}>
+        <div className="max-w-[150px] truncate" title={email}>
           {email}
         </div>
       );
@@ -144,11 +144,11 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "affiliation",
     header: "Affiliation",
-    size: 160,
+    size: 150,
     cell: ({ getValue }) => {
       const affiliation = getValue() as string;
       return (
-        <div className="max-w-[160px] truncate" title={affiliation}>
+        <div className="max-w-[150px] truncate" title={affiliation}>
           {affiliation}
         </div>
       );
