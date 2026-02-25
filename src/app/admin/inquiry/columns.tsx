@@ -47,7 +47,18 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
     header: "Inquiry ID",
-    size: 120,
+    size: 150,
+    cell: ({ row }) => {
+      const inquiry = row.original;
+      return (
+        <div className="flex items-center gap-2">
+          {inquiry.status === "Pending" && (
+            <Badge variant="destructive" className="h-4 px-1 text-[8px] animate-pulse">NEW</Badge>
+          )}
+          <span className="font-mono text-xs">{inquiry.id}</span>
+        </div>
+      );
+    }
   },
   {
     accessorKey: "createdAt",
