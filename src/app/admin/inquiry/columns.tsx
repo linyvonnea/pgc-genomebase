@@ -51,9 +51,22 @@ export const columns: ColumnDef<Inquiry>[] = [
     size: 150,
     cell: ({ row }) => {
       const inquiry = row.original;
+      
+      // Check if inquiry is within last 24 hours
+      const isRecent = (() => {
+        if (!inquiry.createdAt) return false;
+        const date = inquiry.createdAt instanceof Date ? inquiry.createdAt : new Date(inquiry.createdAt);
+        const now = new Date();
+        const oneDayAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+        return date >= oneDayAgo;
+      })();
+      
+      // Show NEW badge only for recent pending inquiries (matching notification logic)
+      const showNew = inquiry.status === "Pending" && isRecent;
+      
       return (
         <div className="flex items-center gap-2">
-          {inquiry.status === "Pending" && (
+          {showNew && (
             <Badge variant="destructive" className="h-4 px-1 text-[8px] animate-pulse">NEW</Badge>
           )}
           <span className="font-mono text-xs">{inquiry.id}</span>
