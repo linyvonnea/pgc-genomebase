@@ -50,7 +50,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
     header: "Inquiry ID",
-    size: 150,
+    size: 130,
     cell: ({ row }) => {
       const inquiry = row.original;
       
@@ -81,7 +81,7 @@ export const columns: ColumnDef<Inquiry>[] = [
           {showNew && (
             <Badge variant="destructive" className="h-4 px-1 text-[8px] animate-pulse">NEW</Badge>
           )}
-          <span className="font-mono text-xs">{inquiry.id}</span>
+          <span className="font-mono text-[10px]">{inquiry.id}</span>
           <button
             onClick={handleCopy}
             className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 rounded"
@@ -96,7 +96,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "createdAt",
     header: "Date",
-    size: 100,
+    size: 90,
     cell: ({ row }) => {
       const createdAt = row.original.createdAt;
       
@@ -118,11 +118,11 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    size: 180,
+    size: 150,
     cell: ({ getValue }) => {
       const name = getValue() as string;
       return (
-        <div className="max-w-[180px] truncate" title={name}>
+        <div className="max-w-[150px] truncate" title={name}>
           {name}
         </div>
       );
@@ -131,11 +131,11 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "email",
     header: "Email",
-    size: 200,
+    size: 160,
     cell: ({ getValue }) => {
       const email = getValue() as string || "—";
       return (
-        <div className="max-w-[200px] truncate" title={email}>
+        <div className="max-w-[160px] truncate" title={email}>
           {email}
         </div>
       );
@@ -144,11 +144,11 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "affiliation",
     header: "Affiliation",
-    size: 220,
+    size: 160,
     cell: ({ getValue }) => {
       const affiliation = getValue() as string;
       return (
-        <div className="max-w-[220px] truncate" title={affiliation}>
+        <div className="max-w-[160px] truncate" title={affiliation}>
           {affiliation}
         </div>
       );
@@ -162,7 +162,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 120, 
+    size: 100, 
     cell: ({ row }) => {
       const status = row.original.status || "Pending";
 
@@ -180,8 +180,8 @@ export const columns: ColumnDef<Inquiry>[] = [
   },
   {
     id: "actions", // Custom column ID since it doesn't map to data
-    header: "Actions",
-    size: 250,
+    header: () => <div className="text-center w-full">Actions</div>,
+    size: 140,
     cell: ({ row }) => {
       const inquiry = row.original;
       const router = useRouter();
@@ -189,7 +189,7 @@ export const columns: ColumnDef<Inquiry>[] = [
       const { canEdit, canCreate, canView } = usePermissions(adminInfo?.role);
 
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           {canCreate("quotations") && (
             <Button
               onClick={() =>
@@ -197,7 +197,7 @@ export const columns: ColumnDef<Inquiry>[] = [
               }
               variant="default"
               size="sm"
-              className="whitespace-nowrap"
+              className="whitespace-nowrap h-8 px-2 text-xs"
             >
               Quote
             </Button>
