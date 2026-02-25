@@ -42,7 +42,7 @@ export function DataTable<TData, TValue>({
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [yearFilter, setYearFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
-  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
+  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(true);
 
   const monthNames = useMemo(() => [
     "January", "February", "March", "April", "May", "June",
@@ -238,7 +238,7 @@ export function DataTable<TData, TValue>({
           onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
         >
           <h3 className="text-base font-bold text-gray-800">Filters & Overview</h3>
-          <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? "" : "rotate-180"}`} />
         </div>
         
         {!isFiltersCollapsed && (

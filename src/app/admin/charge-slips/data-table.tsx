@@ -86,7 +86,7 @@ export function ChargeSlipTable({ data, columns }: Props) {
     }, 0);
   }, [filteredRows]);
 
-  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
+  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(true);
 
   return (
     <div className="space-y-4">
@@ -97,7 +97,7 @@ export function ChargeSlipTable({ data, columns }: Props) {
           onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
         >
           <h3 className="text-base font-bold text-gray-800">Filters & Overview</h3>
-          <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? "" : "rotate-180"}`} />
         </div>
         
         {!isFiltersCollapsed && (
