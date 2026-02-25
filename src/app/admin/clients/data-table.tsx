@@ -166,7 +166,7 @@ export function DataTable<TData, TValue>({
   // Year and Month filter state
   const [yearFilter, setYearFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
-  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
+  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(true);
   const [filterOrder, setFilterOrder] = useState<Array<{type: string, value: string}>>([]);
   
   const monthNames = [
@@ -387,7 +387,7 @@ export function DataTable<TData, TValue>({
           onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
         >
           <h3 className="text-base font-bold text-gray-800">Filters & Overview</h3>
-          <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? "" : "rotate-180"}`} />
         </div>
         {!isFiltersCollapsed && (
           <div className="p-2.5 space-y-2.5">
