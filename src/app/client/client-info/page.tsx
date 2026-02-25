@@ -789,17 +789,6 @@ export default function ClientPortalPage() {
         isDraft: true,
       };
 
-      // Add new member after primary, or at the start if no primary found
-      setMembers((prev) => {
-        const primaryIdx = prev.findIndex(m => m.isPrimary);
-        if (primaryIdx !== -1) {
-          const newMembers = [...prev];
-          newMembers.splice(primaryIdx + 1, 0, newMember);
-          return newMembers;
-        }
-        return [newMember, ...prev];
-      });
-
       // Don't auto-expand new members - let user decide when to open them
       // toast.success("New member slot added. Please fill in their details.");
 
