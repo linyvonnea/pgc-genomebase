@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { EditInquiryModal } from "@/components/forms/EditInquiryModal";
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { QuoteButton } from "./QuoteButton";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
 
@@ -191,16 +192,7 @@ export const columns: ColumnDef<Inquiry>[] = [
       return (
         <div className="flex items-center justify-center gap-2">
           {canCreate("quotations") && (
-            <Button
-              onClick={() =>
-                router.push(`/admin/quotations/new?inquiryId=${inquiry.id}`)
-              }
-              variant="default"
-              size="sm"
-              className="whitespace-nowrap h-8 px-2 text-xs"
-            >
-              Quote
-            </Button>
+            <QuoteButton inquiryId={inquiry.id} />
           )}
 
           {/* Edit inquiry modal trigger - only show if user has edit permission */}
