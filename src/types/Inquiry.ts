@@ -3,7 +3,7 @@ export interface Inquiry {
   createdAt: Date;
   name: string;
   isApproved: boolean;
-  status: 'Pending' | 'Approved Client' | 'Quotation Only';
+  status: 'Pending' | 'Ongoing Quotation' | 'Approved Client' | 'Quotation Only';
   affiliation: string;
   designation: string;
   email?: string;
