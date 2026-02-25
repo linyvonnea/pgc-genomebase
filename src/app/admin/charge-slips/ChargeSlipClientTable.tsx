@@ -86,7 +86,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [yearFilter, setYearFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
-  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
+  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(true);
 
   const monthNames = useMemo(() => [
     "January", "February", "March", "April", "May", "June",
@@ -139,6 +139,14 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   const filteredTotalValue = useMemo(() => {
     return filteredData.reduce((sum, item) => sum + (item.total || 0), 0);
   }, [filteredData]);
+
+  const activeFiltersCount = useMemo(() => [
+    statusFilter !== "__all",
+    categoryFilter.length > 0,
+    yearFilter !== "all",
+    monthFilter !== "all",
+    globalFilter !== "",
+  ].filter(Boolean).length, [statusFilter, categoryFilter, yearFilter, monthFilter, globalFilter]);
 
   // Reset to first page when filters change
   const prevFilterRef = useState({ globalFilter, statusFilter, categoryFilter, yearFilter, monthFilter })[0];
@@ -300,8 +308,15 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
           className="flex items-center justify-between px-3 py-2 border-b cursor-pointer hover:bg-gray-50 transition-colors"
           onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
         >
-          <h3 className="text-base font-bold text-gray-800">Filters & Overview</h3>
-          <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? 'rotate-180' : ''}`} />
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-gray-800">Filters & Overview</h3>
+            {activeFiltersCount > 0 && isFiltersCollapsed && (
+              <Badge variant="secondary" className="h-5 px-2 text-[10px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-100">
+                {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} active
+              </Badge>
+            )}
+          </div>
+          <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? "" : "rotate-180"}`} />
         </div>
         
         {!isFiltersCollapsed && (
@@ -324,13 +339,13 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                             setCategoryFilter([...categoryFilter, cat.name]);
                           }
                         }}
-                        className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                        className={`rounded-md border px-2 py-2 text-[10px] font-medium transition-all duration-200 hover:shadow-sm ${
                           isActive
                             ? `${cat.bg} ${cat.border} font-semibold ${cat.color}`
                             : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                         }`}
                       >
-                        {cat.name}
+                        {cat.name} ({categoryCounts[cat.name] || 0})
                       </button>
                     );
                   })}
@@ -343,17 +358,18 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                 <div className="grid grid-cols-2 gap-1">
                   {statuses.map((stat) => {
                     const isActive = statusFilter === stat.id;
+                    const count = statusCounts[stat.id] || 0;
                     return (
                       <button
                         key={stat.id}
                         onClick={() => setStatusFilter(isActive ? "__all" : stat.id)}
-                        className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                        className={`rounded-md border px-2 py-2 text-[10px] font-medium transition-all duration-200 hover:shadow-sm ${
                           isActive
                             ? `${stat.bg} ${stat.border} font-semibold ${stat.color}`
                             : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                         }`}
                       >
-                        {stat.label}
+                        {stat.label} ({count})
                       </button>
                     );
                   })}
