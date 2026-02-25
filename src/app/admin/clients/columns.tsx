@@ -43,6 +43,32 @@ export const columns: ColumnDef<Client>[] = [
     size: 120,
   },
   {
+    accessorKey: "createdAt",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-accent"
+        >
+          Date
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      )
+    },
+    size: 120,
+    cell: ({ getValue }) => {
+      const val = getValue() as string | number | Date | undefined;
+      if (!val) return "-";
+      const date = new Date(val);
+      return isNaN(date.getTime()) ? "-" : date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    },
+  },
+  {
     accessorKey: "name",
     header: ({ column }) => {
       return (
@@ -129,16 +155,6 @@ export const columns: ColumnDef<Client>[] = [
     cell: ({ getValue }) => (
       <div className="max-w-[200px] line-clamp-2" title={getValue() as string}>
         {getValue() as string}
-      </div>
-    ),
-  },
-  {
-    accessorKey: "affiliationAddress",
-    header: "Affiliation Address",
-    size: 180,
-    cell: ({ getValue }) => (
-      <div className="max-w-[180px] line-clamp-2" title={getValue() as string}>
-        {getValue() as string || "-"}
       </div>
     ),
   },
