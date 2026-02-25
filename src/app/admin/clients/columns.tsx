@@ -43,62 +43,6 @@ export const columns: ColumnDef<Client>[] = [
     size: 100,
   },
   {
-    accessorKey: "createdAt",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="hover:bg-accent px-2 text-xs"
-        >
-          Date
-          <ArrowUpDown className="ml-1 h-3 w-3" />
-        </Button>
-      )
-    },
-    size: 90,
-    cell: ({ getValue }) => {
-      const val = getValue() as string | number | Date | undefined;
-      if (!val) return "-";
-      const date = new Date(val);
-      return isNaN(date.getTime()) ? "-" : (
-        <span className="text-[11px] whitespace-nowrap">
-          {date.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })}
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: "createdAt",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="hover:bg-accent"
-        >
-          Date
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    size: 120,
-    cell: ({ getValue }) => {
-      const val = getValue() as string | number | Date | undefined;
-      if (!val) return "-";
-      const date = new Date(val);
-      return isNaN(date.getTime()) ? "-" : date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-    },
-  },
-  {
     accessorKey: "name",
     header: ({ column }) => {
       return (
