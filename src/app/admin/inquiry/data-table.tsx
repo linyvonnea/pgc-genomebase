@@ -465,7 +465,7 @@ export function DataTable<TData, TValue>({
       {/* Compact Table with Sticky Header */}
       <div className="rounded-md border overflow-hidden">
         <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-          <Table>
+          <Table className="table-fixed">
             <TableHeader className="sticky top-0 bg-muted/95 backdrop-blur-sm z-10">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
@@ -477,6 +477,7 @@ export function DataTable<TData, TValue>({
                         key={header.id}
                         onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
                         className={`${canSort ? "cursor-pointer select-none" : ""} h-10 text-xs font-semibold`}
+                        style={{ width: header.column.columnDef.size }}
                       >
                         <div className="flex items-center gap-1">
                           {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
@@ -508,7 +509,11 @@ export function DataTable<TData, TValue>({
                       onClick={(e: React.MouseEvent) => handleRowClick(row.original as Inquiry, e)}
                     >
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="py-2">
+                        <TableCell 
+                          key={cell.id} 
+                          className="py-2"
+                          style={{ width: cell.column.columnDef.size }}
+                        >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
                         </TableCell>
                       ))}
