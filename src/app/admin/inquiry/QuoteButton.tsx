@@ -38,18 +38,20 @@ export function QuoteButton({ inquiryId }: QuoteButtonProps) {
             }
             variant="outline"
             size="sm"
-            className="whitespace-nowrap h-8 px-3 text-xs bg-white hover:bg-slate-50 border-slate-200 text-slate-700 font-medium flex items-center gap-2"
+            className="whitespace-nowrap h-8 w-[88px] px-2 text-xs bg-white hover:bg-slate-50 border-slate-200 text-slate-700 font-medium flex items-center justify-between"
           >
             <span>Quote</span>
-            {count > 0 && (
-              <span className="flex items-center justify-center bg-slate-100 text-slate-600 rounded-full h-5 min-w-[20px] px-1.5 text-[10px] font-bold border border-slate-200">
-                {isLoading ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  count
-                )}
-              </span>
-            )}
+            <div className="flex items-center justify-center w-6">
+              {count > 0 && (
+                <span className="flex items-center justify-center bg-slate-100 text-slate-600 rounded-full h-5 min-w-[20px] px-1 text-[10px] font-bold border border-slate-200">
+                  {isLoading ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    count
+                  )}
+                </span>
+              )}
+            </div>
           </Button>
         </TooltipTrigger>
         
