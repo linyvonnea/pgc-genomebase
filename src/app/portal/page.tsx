@@ -90,8 +90,8 @@ export default function ClientVerifyPage() {
       }
       const inquiry = inquiryDoc.data();
       
-      // Allow login for Pending, Approved Client (isApproved), and Quotation Only
-      const allowedStatuses = ["Pending", "Approved Client", "Quotation Only"];
+      // Allow login for Pending, Approved Client (isApproved), Quotation Only, and Ongoing Quotation
+      const allowedStatuses = ["Pending", "Approved Client", "Quotation Only", "Ongoing Quotation"];
       const isAllowed = inquiry.isApproved || allowedStatuses.includes(inquiry.status);
       
       if (!isAllowed) {
