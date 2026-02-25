@@ -505,15 +505,19 @@ export function DataTable<TData, TValue>({
         </div>
         <PaginationControls />
       </div>
-      {/* Compact Table with Sticky Header */}
-      <div className="rounded-md border overflow-hidden">
-        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-          <Table>
-            <TableHeader className="sticky top-0 bg-muted/95 backdrop-blur-sm z-10">
+      {/* Optimized Table Container */}
+      <div className="rounded-md border bg-white shadow-sm overflow-hidden">
+        <div className="w-full overflow-x-auto">
+          <Table className="w-full border-collapse">
+            <TableHeader className="bg-slate-50/80 sticky top-0 z-10 backdrop-blur-sm border-b">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="h-10 text-xs font-semibold">
+                    <TableHead 
+                      key={header.id} 
+                      className="h-9 px-2 text-[11px] font-bold text-slate-700 uppercase tracking-tight"
+                      style={{ width: header.getSize() }}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -530,10 +534,14 @@ export function DataTable<TData, TValue>({
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    className="hover:bg-slate-50/50 transition-colors border-b last:border-0"
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="py-2">
+                      <TableCell 
+                        key={cell.id} 
+                        className="py-1.5 px-2 align-middle border-r last:border-r-0"
+                        style={{ width: cell.column.getSize() }}
+                      >
                         {flexRender(cell.column.columnDef.cell, { ...cell.getContext(), meta })}
                       </TableCell>
                     ))}
