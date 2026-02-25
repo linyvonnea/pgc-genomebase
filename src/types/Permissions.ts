@@ -48,7 +48,7 @@ export const MODULE_LABELS: Record<keyof RolePermissions, string> = {
   manualQuotation: "Manual Quotation",
   serviceCatalog: "Service Catalog",
   catalogSettings: "Catalog Settings",
-  memberApprovals: "Member Approvals",
+  memberApprovals: "Projects Approval",
   usersPermissions: "Users & Permissions",
   roleManagement: "Role Management",
   activityLogs: "Activity Logs",

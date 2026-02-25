@@ -507,10 +507,10 @@ export default function MemberApprovalsPage() {
             <div className="p-2 bg-gradient-to-br from-[#166FB5] to-[#4038AF] rounded-lg">
               <ShieldCheck className="h-6 w-6 text-white" />
             </div>
-            Member Approvals
+            Projects Approval
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Review and approve team member registrations submitted from the client portal
+            Review and approve project submissions and team member registrations from the client portal
           </p>
         </div>
       </div>
@@ -559,7 +559,7 @@ export default function MemberApprovalsPage() {
               </h3>
               <p className="text-slate-500 max-w-md">
                 {filterStatus === "pending"
-                  ? "There are no pending member approvals at this time."
+                  ? "There are no pending project or member approvals at this time."
                   : "No approval requests match the current filter."}
               </p>
             </div>
