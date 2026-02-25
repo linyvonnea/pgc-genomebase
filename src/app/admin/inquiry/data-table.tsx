@@ -503,7 +503,7 @@ export function DataTable<TData, TValue>({
                   .map((row) => (
                     <TableRow
                       key={row.id}
-                      className="hover:bg-muted/50 transition-colors cursor-pointer"
+                      className="group hover:bg-muted/50 transition-colors cursor-pointer"
                       data-state={row.getIsSelected() && "selected"}
                       onClick={(e: React.MouseEvent) => handleRowClick(row.original as Inquiry, e)}
                     >
