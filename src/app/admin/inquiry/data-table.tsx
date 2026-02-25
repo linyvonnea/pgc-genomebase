@@ -69,7 +69,7 @@ export function DataTable<TData, TValue>({
   const [activeStatusFilter, setActiveStatusFilter] = useState<string | undefined>(undefined)
   const [selectedYear, setSelectedYear] = useState<string>("")
   const [selectedMonth, setSelectedMonth] = useState<string>("")
-  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false)
+  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(true)
   // Filter order type definition
   type FilterOrderItem = {type: string, value: string};
   const [filterOrder, setFilterOrder] = useState<FilterOrderItem[]>([]);
@@ -261,8 +261,15 @@ export function DataTable<TData, TValue>({
           className="flex items-center justify-between px-3 py-2 border-b cursor-pointer hover:bg-gray-50 transition-colors"
           onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
         >
-          <h3 className="text-base font-bold text-gray-800">Filters & Overview</h3>
-          <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? 'rotate-180' : ''}`} />
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-gray-800">Filters & Overview</h3>
+            {activeFiltersCount > 0 && isFiltersCollapsed && (
+              <Badge variant="secondary" className="h-5 px-2 text-[10px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-100">
+                {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} active
+              </Badge>
+            )}
+          </div>
+          <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? "" : "rotate-180"}`} />
         </div>
         
         {!isFiltersCollapsed && (
