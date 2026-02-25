@@ -15,6 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { EditInquiryModal } from "@/components/forms/EditInquiryModal";
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { Copy } from "lucide-react";
+import { toast } from "sonner";
 
 /**
  * Utility function to get appropriate CSS classes for status badges
@@ -64,12 +66,29 @@ export const columns: ColumnDef<Inquiry>[] = [
       // Show NEW badge only for recent pending inquiries (matching notification logic)
       const showNew = inquiry.status === "Pending" && isRecent;
       
+      const handleCopy = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+          await navigator.clipboard.writeText(inquiry.id);
+          toast.success("Inquiry ID copied to clipboard");
+        } catch (err) {
+          toast.error("Failed to copy Inquiry ID");
+        }
+      };
+      
       return (
         <div className="flex items-center gap-2">
           {showNew && (
             <Badge variant="destructive" className="h-4 px-1 text-[8px] animate-pulse">NEW</Badge>
           )}
           <span className="font-mono text-xs">{inquiry.id}</span>
+          <button
+            onClick={handleCopy}
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-slate-100 rounded"
+            title="Copy Inquiry ID"
+          >
+            <Copy className="h-3 w-3 text-slate-500" />
+          </button>
         </div>
       );
     }
