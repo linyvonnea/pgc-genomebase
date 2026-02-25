@@ -126,8 +126,8 @@ export function AdminSidebar() {
       items: [
         {
           href: "/admin/member-approvals",
-          label: "Member Approvals",
-          icon: UserCheck,
+          label: "Projects Approval",
+          icon: ShieldCheck,
         },
       ]
     },
@@ -228,7 +228,7 @@ export function AdminSidebar() {
                       </span>
                     )}
                     
-                    {/* Notification badge for Member Approvals */}
+                    {/* Notification badge for Projects Approval */}
                     {href === "/admin/member-approvals" && pendingCount > 0 && (
                       <span className={cn(
                         "min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-bold px-1.5",
