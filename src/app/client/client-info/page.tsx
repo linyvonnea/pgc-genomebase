@@ -2628,27 +2628,6 @@ export default function ClientPortalPage() {
                   </div>
                 )}
 
-                {approvalStatus === "approved" &&
-                  !showApprovalCelebration &&
-                  !members.some((m) => m.isDraft) &&
-                  members.filter((m) => !m.isPrimary).length > 0 && (
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5 shadow-sm">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-100 rounded-lg">
-                          <CheckCircle2 className="h-5 w-5 text-green-600" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-green-800">
-                            Project & Team Approved
-                          </h4>
-                          <p className="text-sm text-green-700 mt-1">
-                            Your project and all team members have been approved. You can view unique Project and Client IDs below.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                 {/* ── Submit for Approval Button ─────────── */}
                 {projectDetails?.status !== "Completed" && 
                   projectDetails?.status !== "Pending Approval" && // Hide if main project is pending
