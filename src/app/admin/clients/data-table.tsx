@@ -136,6 +136,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { ChevronDown, ChevronsLeft, ChevronsRight } from "lucide-react"
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
@@ -202,6 +203,12 @@ export function DataTable<TData, TValue>({
     
     return orderedFilters.length > 0 ? orderedFilters.join(" + ") : "No filters applied";
   }, [yearFilter, monthFilter, globalFilter, filterOrder, monthNames]);
+
+  const activeFiltersCount = [
+    yearFilter !== "all",
+    monthFilter !== "all",
+    globalFilter !== "",
+  ].filter(Boolean).length;
   
   // Derive available years from data and always include 2019-2026
   const availableYears = useMemo(() => {
@@ -386,7 +393,14 @@ export function DataTable<TData, TValue>({
           className="flex items-center justify-between px-3 py-2 border-b cursor-pointer hover:bg-gray-50 transition-colors"
           onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
         >
-          <h3 className="text-base font-bold text-gray-800">Filters & Overview</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-gray-800">Filters & Overview</h3>
+            {activeFiltersCount > 0 && isFiltersCollapsed && (
+              <Badge variant="secondary" className="h-5 px-2 text-[10px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-100">
+                {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} active
+              </Badge>
+            )}
+          </div>
           <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? "" : "rotate-180"}`} />
         </div>
         {!isFiltersCollapsed && (

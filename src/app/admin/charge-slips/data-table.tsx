@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { ChevronDown } from "lucide-react";
 import {
@@ -86,6 +87,12 @@ export function ChargeSlipTable({ data, columns }: Props) {
     }, 0);
   }, [filteredRows]);
 
+  const activeFiltersCount = [
+    statusFilter !== "__all",
+    categoryFilters.length > 0,
+    globalFilter !== "",
+  ].filter(Boolean).length;
+
   const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(true);
 
   return (
@@ -96,7 +103,14 @@ export function ChargeSlipTable({ data, columns }: Props) {
           className="flex items-center justify-between px-3 py-2 border-b cursor-pointer hover:bg-gray-50 transition-colors"
           onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
         >
-          <h3 className="text-base font-bold text-gray-800">Filters & Overview</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-gray-800">Filters & Overview</h3>
+            {activeFiltersCount > 0 && isFiltersCollapsed && (
+              <Badge variant="secondary" className="h-5 px-2 text-[10px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-100">
+                {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} active
+              </Badge>
+            )}
+          </div>
           <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? "" : "rotate-180"}`} />
         </div>
         
