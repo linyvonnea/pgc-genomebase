@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { Inquiry } from "@/types/Inquiry";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { EditInquiryModal } from "@/components/forms/EditInquiryModal";
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
