@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { saveQuotationToFirestore, getAllQuotations } from "@/services/quotationService";
+import { updateInquiryStatus } from "@/services/inquiryService";
 import { QuotationRecord } from "@/types/Quotation";
 import { logActivity } from "@/services/activityLogService";
 import { sanitizeObject } from "@/lib/sanitizeObject";
@@ -13,6 +14,15 @@ export async function saveQuotationAction(
   try {
     const cleanedQuotation = sanitizeObject(quotation) as QuotationRecord;
     await saveQuotationToFirestore(cleanedQuotation);
+
+    // Automatically update inquiry status from "Pending" to "Ongoing Quotation"
+    if (quotation.inquiryId) {
+      try {
+        await updateInquiryStatus(quotation.inquiryId, "Ongoing Quotation");
+      } catch (statusError) {
+        console.warn("Could not update inquiry status, but quotation was saved:", statusError);
+      }
+    }
 
     // Log the activity
     await logActivity({

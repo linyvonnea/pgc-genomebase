@@ -25,6 +25,7 @@ import { toast } from "sonner";
  * Provides consistent color coding across the admin interface:
  * - Green: Approved clients (ready for service)
  * - Blue: Quotation only (pricing information provided)
+ * - Orange: Ongoing quotation (quotation in progress)
  * - Yellow: Pending (awaiting admin review)
  * 
  */
@@ -33,7 +34,9 @@ const getStatusColor = (status: string) => {
     case "Approved Client":
       return "bg-green-100 text-green-800"; 
     case "Quotation Only":
-      return "bg-blue-100 text-blue-800";   
+      return "bg-blue-100 text-blue-800";
+    case "Ongoing Quotation":
+      return "bg-orange-100 text-orange-800";
     case "Pending":
     default:
       return "bg-yellow-100 text-yellow-800"; 

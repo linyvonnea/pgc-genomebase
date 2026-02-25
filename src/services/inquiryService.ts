@@ -6,7 +6,7 @@
  * data transformation between Firestore documents and TypeScript objects.
  */
 
-import { collection, getDocs, query, orderBy, doc, getDoc, onSnapshot } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Inquiry } from "@/types/Inquiry";
 
@@ -232,4 +232,23 @@ export function subscribeToInquiries(
       callback([]);
     }
   );
+}
+
+/**
+ * Updates the status of a specific inquiry
+ * @param inquiryId - The ID of the inquiry to update
+ * @param status - The new status to set
+ */
+export async function updateInquiryStatus(
+  inquiryId: string, 
+  status: Inquiry['status']
+): Promise<void> {
+  try {
+    const inquiryRef = doc(db, "inquiries", inquiryId);
+    await updateDoc(inquiryRef, { status });
+    console.log(`Updated inquiry ${inquiryId} status to: ${status}`);
+  } catch (error) {
+    console.error(`Error updating inquiry ${inquiryId} status:`, error);
+    throw error;
+  }
 }

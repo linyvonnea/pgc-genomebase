@@ -99,6 +99,7 @@ export function DataTable<TData, TValue>({
     return {
       approvedClient: inquiries.filter(i => i.status === "Approved Client").length,
       quotationOnly: inquiries.filter(i => i.status === "Quotation Only").length,
+      ongoingQuotation: inquiries.filter(i => i.status === "Ongoing Quotation").length,
       pending: inquiries.filter(i => i.status === "Pending").length,
     }
   }, [data])
@@ -307,6 +308,20 @@ export function DataTable<TData, TValue>({
                     }`}
                   >
                     Quotation Only
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleStatusFilter(
+                        activeStatusFilter === "Ongoing Quotation" ? undefined : "Ongoing Quotation"
+                      )
+                    }
+                    className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                      activeStatusFilter === "Ongoing Quotation"
+                        ? "bg-orange-50 border-orange-200 font-semibold text-orange-600"
+                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                    }`}
+                  >
+                    Ongoing Quotation
                   </button>
                   <button
                     onClick={() =>

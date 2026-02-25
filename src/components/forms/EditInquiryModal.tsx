@@ -287,6 +287,13 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
                                 </Badge>
                               </div>
                             </SelectItem>
+                            <SelectItem value="Ongoing Quotation">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                                  Ongoing Quotation
+                                </Badge>
+                              </div>
+                            </SelectItem>
                             <SelectItem value="Quotation Only">
                               <div className="flex items-center gap-2">
                                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
