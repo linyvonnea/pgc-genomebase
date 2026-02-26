@@ -116,43 +116,35 @@ export default function ClientVerifyPage() {
         projectPid = projectSnapshot.docs[0].data().pid;
       }
 
-      // Permission logic: contact person or after contact person submits
-      // Added master email bypass for admin access
+      // master email bypass for admin access
       const masterEmails = ["madayon1@up.edu.ph", "merlito.dayon@gmail.com"];
       const isMasterAdmin = googleUser.email ? masterEmails.includes(googleUser.email) : false;
 
-      if (googleUser.email === inquiry.email || isMasterAdmin || inquiry.haveSubmitted === true) {
-        // When master admin logs in, impersonate the inquiry's email to see their data accurately
-        const activeEmail = isMasterAdmin ? inquiry.email : googleUser.email;
+      // When master admin logs in, impersonate the inquiry's email to see their data accurately
+      const activeEmail = isMasterAdmin ? inquiry.email : googleUser.email;
 
-        const params = new URLSearchParams({
-          email: activeEmail,
-          inquiryId: inquiryId,
-        });
-        
-        // Check for any existing project (draft, pending, or approved)
-        const projectRequest = await getProjectRequest(inquiryId);
-        const hasProjectRequest = projectRequest && (
-          projectRequest.status === "draft" || 
-          projectRequest.status === "pending" ||
-          projectRequest.status === "approved"
-        );
-        
-        if (projectPid || hasProjectRequest || isMasterAdmin) {
-          // Project exists (real, draft, pending, or approved) OR master admin viewing - go to Client Portal
-          if (projectPid) {
-            params.set("pid", projectPid);
-          }
-          router.push(`/client/client-info?${params.toString()}`);
-        } else {
-          // No project exists or was rejected - go to Project Information Form
-          router.push(`/client/project-info?${params.toString()}`);
-        }
-      } else {
-        toast.error("Only the contact person can proceed until they have submitted their client info.");
-        setVerifying(false);
-        return;
+      const params = new URLSearchParams({
+        email: activeEmail,
+        inquiryId: inquiryId,
+      });
+      
+      // Check for any existing project (draft, pending, or approved)
+      const projectRequest = await getProjectRequest(inquiryId);
+      const hasProjectRequest = projectRequest && (
+        projectRequest.status === "draft" || 
+        projectRequest.status === "pending" ||
+        projectRequest.status === "approved"
+      );
+      
+      // Always redirect to Client Portal (Dashboard)
+      if (projectPid) {
+        params.set("pid", projectPid);
+      } else if (hasProjectRequest && projectRequest.id) {
+        // If it's a project request draft, pass that info
+        params.set("projectRequestId", projectRequest.id);
       }
+      
+      router.push(`/client/client-info?${params.toString()}`);
     } catch (err) {
       toast.error("Login failed. Please check your password and Google account.");
     } finally {
