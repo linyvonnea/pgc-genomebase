@@ -256,7 +256,7 @@ export default function QuotationRequestForm() {
             {/* Information banner explaining available services */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
               <p className="text-slate-700 leading-relaxed">
-                Thank you for reaching out to PGC researchers for your research needs. We offer a range of 
+                Thank you for reaching out to PGC Visayas for your research needs. We offer a range of 
                 services from Equipment Use, DNA Extraction, Polymerase Chain Reaction (PCR), Sample 
                 Purification, Next Generation Sequencing (NGS), Bioinformatics Analysis, and Training Services. 
                 To assist you better, kindly provide us with the following information:
