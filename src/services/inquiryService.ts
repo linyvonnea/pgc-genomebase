@@ -163,6 +163,65 @@ export async function getInquiryById(id: string): Promise<Inquiry> {
 }
 
 /**
+ * Subscribes to changes in a single inquiry document
+ * 
+ * @param id - The Firestore document ID of the inquiry to monitor
+ * @param callback - Function called with the updated Inquiry object
+ * @returns Unsubscribe function to stop listening
+ */
+export function subscribeToInquiryById(
+  id: string,
+  callback: (inquiry: Inquiry | null) => void
+): () => void {
+  const docRef = doc(db, "inquiries", id);
+
+  return onSnapshot(
+    docRef,
+    (snapshot) => {
+      if (!snapshot.exists()) {
+        callback(null);
+        return;
+      }
+
+      const data = snapshot.data();
+      
+      const inquiry: Inquiry = {
+        id: snapshot.id,
+        createdAt: data.createdAt?.toDate?.() ?? new Date(),
+        name: data.name || "Unknown",
+        status: data.status || "Pending",
+        isApproved: data.isApproved || false,
+        affiliation: data.affiliation || "",
+        designation: data.designation || "",
+        email: data.email ?? "", 
+        serviceType: data.serviceType || null,
+        species: data.species || null,
+        otherSpecies: data.otherSpecies || null,
+        researchOverview: data.researchOverview || null,
+        methodologyFileUrl: data.methodologyFileUrl || null,
+        sampleCount: data.sampleCount || null,
+        workflowType: data.workflowType || null,
+        individualAssayDetails: data.individualAssayDetails || null,
+        workflows: data.workflows || [],
+        additionalInfo: data.additionalInfo || null,
+        projectBackground: data.projectBackground || null,
+        projectBudget: data.projectBudget || null,
+        specificTrainingNeed: data.specificTrainingNeed || null,
+        targetTrainingDate: data.targetTrainingDate || null,
+        numberOfParticipants: data.numberOfParticipants || null,
+        haveSubmitted: data.haveSubmitted || false
+      };
+      
+      callback(inquiry);
+    },
+    (error) => {
+      console.error(`Error in inquiry subscription for ${id}:`, error);
+      callback(null);
+    }
+  );
+}
+
+/**
  * Subscribe to real-time inquiry updates
  * 
  * @param callback - Function called with updated inquiries array
