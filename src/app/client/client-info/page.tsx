@@ -2690,35 +2690,35 @@ export default function ClientPortalPage() {
             </div>
           ) : (
             /* ── Dashboard Overview (no project selected) ─────── */
-            <div className="h-full overflow-y-auto bg-slate-50/30 p-4 lg:p-8">
-              <div className="max-w-4xl mx-auto space-y-8">
+            <div className="h-full overflow-y-auto bg-slate-50/30 p-4 lg:p-6">
+              <div className="max-w-4xl mx-auto space-y-6">
                 {/* Welcome & Status Header */}
-                <div className="bg-white rounded-2xl p-6 lg:p-8 shadow-sm border border-slate-100 relative overflow-hidden">
+                <div className="bg-white rounded-2xl p-5 lg:p-6 shadow-sm border border-slate-100 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-bl-full -mr-8 -mt-8 opacity-50"></div>
                   <div className="relative">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                      <div className="space-y-2">
-                        <h2 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <h2 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent">
                           Welcome to your Workspace
                         </h2>
-                        <p className="text-slate-500 max-w-md">
-                          Review your inquiry details, access your official quotations, and manage your research projects here.
+                        <p className="text-slate-500 text-sm max-w-md">
+                          Review your official quotations and manage your research projects here.
                         </p>
                       </div>
                       
                       {currentInquiry && (
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center gap-4 min-w-[240px]">
+                        <div className="bg-slate-50 px-4 py-3 rounded-xl border border-slate-100 flex items-center gap-3 min-w-[200px]">
                           <div className={cn(
-                            "w-12 h-12 rounded-full flex items-center justify-center shadow-sm",
+                            "w-10 h-10 rounded-full flex items-center justify-center shadow-sm",
                             currentInquiry.status === "Approved Client" ? "bg-green-100 text-green-600" :
                             currentInquiry.status === "Quotation Only" ? "bg-blue-100 text-blue-600" :
                             "bg-amber-100 text-amber-600"
                           )}>
-                            <Info className="h-6 w-6" />
+                            <Info className="h-5 w-5" />
                           </div>
                           <div>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Current Status</p>
-                            <p className="font-bold text-slate-700">{currentInquiry.status}</p>
+                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Inquiry Status</p>
+                            <p className="font-bold text-slate-700 text-sm">{currentInquiry.status}</p>
                           </div>
                         </div>
                       )}
@@ -2726,123 +2726,12 @@ export default function ClientPortalPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  {/* Left Column: Inquiry Summary & Documents */}
-                  <div className="lg:col-span-2 space-y-8">
-                    {/* Inquiry Details Summary */}
-                    {currentInquiry && (
-                      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                        <div className="flex items-center justify-between mb-6">
-                          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                            <FileText className="h-5 w-5 text-blue-500" />
-                            Inquiry Overview
-                          </h3>
-                          <span className="text-[10px] text-slate-400 font-mono">
-                            ID: {currentInquiry.id}
-                          </span>
-                        </div>
-                        
-                        <div className="space-y-6">
-                          {/* Top Grid: Service & Species */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm pb-6 border-b border-slate-50">
-                            <div className="space-y-1">
-                              <p className="text-slate-400 font-medium">Service Selection</p>
-                              <p className="font-semibold text-slate-700">{currentInquiry.serviceType || "—"}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <p className="text-slate-400 font-medium">Target Species</p>
-                              <p className="font-semibold text-slate-700 uppercase">
-                                {currentInquiry.species === "other" || currentInquiry.species === "animal" 
-                                  ? `${currentInquiry.species} (${currentInquiry.otherSpecies || 'Not specified'})`
-                                  : (currentInquiry.species || "—")}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Middle Section: Workflow & Samples */}
-                          {["laboratory", "bioinformatics", "equipment", "retail"].includes(currentInquiry.serviceType?.toLowerCase() || "") && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm pb-6 border-b border-slate-50">
-                              <div className="space-y-1">
-                                <p className="text-slate-400 font-medium">Sample Count</p>
-                                <p className="font-semibold text-slate-700">{currentInquiry.sampleCount || "0"} samples</p>
-                              </div>
-                              <div className="space-y-1">
-                                <p className="text-slate-400 font-medium">Workflow Preference</p>
-                                <p className="font-semibold text-slate-700 capitalize">{currentInquiry.workflowType || "—"}</p>
-                              </div>
-                              
-                              {currentInquiry.workflowType === "individual" && (
-                                <div className="sm:col-span-2 pt-2">
-                                  <p className="text-slate-400 font-medium mb-1">Selected Services</p>
-                                  <div className="p-3 bg-slate-50 rounded-lg text-slate-700 border border-slate-100 italic">
-                                    {currentInquiry.individualAssayDetails || "No specific assays listed"}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Research & Training Specifics */}
-                          {currentInquiry.serviceType?.toLowerCase() === "research" && (
-                            <div className="grid grid-cols-1 gap-4 text-sm pb-6 border-b border-slate-50">
-                              <div className="space-y-1">
-                                <p className="text-slate-400 font-medium">Project Background</p>
-                                <p className="text-slate-700">{currentInquiry.projectBackground || "—"}</p>
-                              </div>
-                              <div className="space-y-1">
-                                <p className="text-slate-400 font-medium">Estimated Budget</p>
-                                <p className="font-semibold text-slate-700">{currentInquiry.projectBudget || "—"}</p>
-                              </div>
-                            </div>
-                          )}
-
-                          {currentInquiry.serviceType?.toLowerCase() === "training" && (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm pb-6 border-b border-slate-50">
-                              <div className="sm:col-span-2 space-y-1">
-                                <p className="text-slate-400 font-medium">Training Need</p>
-                                <p className="text-slate-700">{currentInquiry.specificTrainingNeed || "—"}</p>
-                              </div>
-                              <div className="space-y-1">
-                                <p className="text-slate-400 font-medium">Target Date</p>
-                                <p className="font-semibold text-slate-700">
-                                  {currentInquiry.targetTrainingDate 
-                                    ? new Date(currentInquiry.targetTrainingDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-                                    : "—"}
-                                </p>
-                              </div>
-                              <div className="space-y-1">
-                                <p className="text-slate-400 font-medium">No. of Participants</p>
-                                <p className="font-semibold text-slate-700">{currentInquiry.numberOfParticipants || "—"}</p>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Research Overview */}
-                          <div className="space-y-2">
-                            <p className="text-slate-400 font-medium text-sm">Research Objectives & Details</p>
-                            <div className="p-4 bg-blue-50/50 rounded-xl text-slate-600 leading-relaxed italic border border-blue-100/50">
-                              "{currentInquiry.researchOverview}"
-                            </div>
-                          </div>
-
-                          {/* Footer Info: Submitted On */}
-                          <div className="pt-4 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-50">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              <span>Submitted on {currentInquiry.createdAt ? new Date(currentInquiry.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "—"}</span>
-                            </div>
-                            <div className="flex items-center gap-1 uppercase tracking-widest font-bold">
-                              <Building2 className="h-3 w-3" />
-                              <span>{currentInquiry.affiliation}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Official Documents (Quotations) */}
-                    <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                      <div className="flex items-center justify-between mb-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left Column: Documents FIRST, then Summary */}
+                  <div className="lg:col-span-2 space-y-6">
+                    {/* Official Documents (Quotations) - MOVED UP */}
+                    <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                      <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
                           <Receipt className="h-5 w-5 text-indigo-500" />
                           Official Documents
@@ -2855,34 +2744,31 @@ export default function ClientPortalPage() {
                       </div>
 
                       {loadingQuotations ? (
-                        <div className="flex flex-col items-center justify-center py-10 text-slate-400 gap-2">
-                          <Loader2 className="h-8 w-8 animate-spin" />
-                          <p className="text-sm font-medium">Fetching documents...</p>
+                        <div className="flex flex-col items-center justify-center py-6 text-slate-400 gap-2">
+                          <Loader2 className="h-6 w-6 animate-spin" />
+                          <p className="text-xs font-medium">Fetching documents...</p>
                         </div>
                       ) : inquiryQuotations.length === 0 ? (
-                        <div className="text-center py-10 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-                          <div className="p-3 bg-white w-fit mx-auto rounded-full shadow-sm mb-3">
-                            <Receipt className="h-6 w-6 text-slate-300" />
-                          </div>
-                          <p className="text-sm text-slate-500 italic">No official quotations found for this inquiry yet.</p>
+                        <div className="text-center py-8 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                          <p className="text-xs text-slate-500 italic">No official quotations found for this inquiry yet.</p>
                         </div>
                       ) : (
-                        <div className="space-y-3">
+                        <div className="space-y-2">
                           {inquiryQuotations.map((quote) => (
                             <div 
                               key={quote.id} 
-                              className="group flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white rounded-xl border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 gap-4"
+                              className="group flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-white rounded-xl border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 gap-3"
                             >
-                              <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-100 transition-colors">
-                                  <FileText className="h-5 w-5" />
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-100 transition-colors">
+                                  <FileText className="h-4 w-4" />
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="font-bold text-slate-800 truncate mb-0.5">
+                                  <p className="font-bold text-slate-800 truncate text-sm">
                                     Quotation: {quote.referenceNumber}
                                   </p>
-                                  <div className="flex items-center gap-2 text-xs text-slate-500">
-                                    <Calendar className="h-3 w-3" />
+                                  <div className="flex items-center gap-2 text-[10px] text-slate-500">
+                                    <Calendar className="h-2.5 w-2.5" />
                                     <span>{new Date(quote.dateIssued).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                                     <span>•</span>
                                     <span>{new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(quote.total)}</span>
@@ -2893,7 +2779,7 @@ export default function ClientPortalPage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => router.push(`/client/view-document?type=quotation&ref=${quote.referenceNumber}`)}
-                                className="border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold"
+                                className="border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold h-8 text-xs"
                               >
                                 View PDF
                               </Button>
@@ -2902,45 +2788,118 @@ export default function ClientPortalPage() {
                         </div>
                       )}
                     </div>
+
+                    {/* Inquiry Details Summary - MOVED DOWN & TIGHTENED */}
+                    {currentInquiry && (
+                      <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-blue-500" />
+                            Inquiry Overview
+                          </h3>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          {/* Top Grid: Service & Species */}
+                          <div className="grid grid-cols-2 gap-4 text-xs">
+                            <div className="space-y-0.5">
+                              <p className="text-slate-400 font-medium uppercase tracking-tighter">Service</p>
+                              <p className="font-semibold text-slate-700">{currentInquiry.serviceType || "—"}</p>
+                            </div>
+                            <div className="space-y-0.5">
+                              <p className="text-slate-400 font-medium uppercase tracking-tighter">Species</p>
+                              <p className="font-semibold text-slate-700 uppercase truncate">
+                                {currentInquiry.species === "other" || currentInquiry.species === "animal" 
+                                  ? `${currentInquiry.species} (${currentInquiry.otherSpecies || 'N/A'})`
+                                  : (currentInquiry.species || "—")}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Middle Section: Workflow & Samples - Condensed */}
+                          {["laboratory", "bioinformatics", "equipment", "retail"].includes(currentInquiry.serviceType?.toLowerCase() || "") && (
+                            <div className="grid grid-cols-2 gap-4 text-xs pt-3 border-t border-slate-50">
+                              <div className="space-y-0.5">
+                                <p className="text-slate-400 font-medium uppercase tracking-tighter">Samples</p>
+                                <p className="font-semibold text-slate-700">{currentInquiry.sampleCount || "0"} pcs</p>
+                              </div>
+                              <div className="space-y-0.5">
+                                <p className="text-slate-400 font-medium uppercase tracking-tighter">Workflow</p>
+                                <p className="font-semibold text-slate-700 capitalize">{currentInquiry.workflowType || "—"}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Training/Research Specifics - Condensed */}
+                          {(currentInquiry.serviceType?.toLowerCase() === "research" || currentInquiry.serviceType?.toLowerCase() === "training") && (
+                            <div className="text-xs pt-3 border-t border-slate-50">
+                              <p className="text-slate-400 font-medium uppercase tracking-tighter mb-1">Project Details</p>
+                              <p className="text-slate-700 line-clamp-2">
+                                {currentInquiry.projectBackground || currentInquiry.specificTrainingNeed || "—"}
+                              </p>
+                            </div>
+                          )}
+
+                          {/* Research Overview - Condensed */}
+                          <div className="space-y-1.5 pt-3 border-t border-slate-50">
+                            <p className="text-slate-400 font-medium text-[10px] uppercase tracking-tighter">Research Objectives</p>
+                            <div className="p-3 bg-blue-50/30 rounded-lg text-slate-600 text-xs italic leading-relaxed border border-blue-100/30">
+                              "{currentInquiry.researchOverview}"
+                            </div>
+                          </div>
+
+                          {/* Footer Info - Compact */}
+                          <div className="pt-3 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-50 font-medium">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-2.5 w-2.5" />
+                              <span>{currentInquiry.createdAt ? new Date(currentInquiry.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : "—"}</span>
+                            </div>
+                            <div className="flex items-center gap-1 uppercase truncate max-w-[150px]">
+                              <Building2 className="h-2.5 w-2.5" />
+                              <span>{currentInquiry.affiliation}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Right Column: Quick Actions & Projects */}
-                  <div className="space-y-8">
-                    {/* Quick Access Card */}
-                    <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group">
-                      <Sparkles className="absolute top-2 right-2 h-16 w-16 text-white/10 -rotate-12 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-12" />
+                  <div className="space-y-6">
+                    {/* Quick Access Card - Tighter */}
+                    <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden group">
+                      <Sparkles className="absolute top-2 right-2 h-12 w-12 text-white/10 -rotate-12 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-12" />
                       <div className="relative">
-                        <h3 className="font-bold text-lg mb-2">Create New Project</h3>
-                        <p className="text-blue-100 text-sm mb-6 leading-relaxed">
-                          Ready to proceed? Formalize your inquiry into a new project and add your research team.
+                        <h3 className="font-bold text-base mb-1">Create Project</h3>
+                        <p className="text-blue-100 text-xs mb-4 leading-normal">
+                          Ready to proceed? Formalize your inquiry into a new project.
                         </p>
                         <Button 
                           onClick={handleCreateNewProject}
-                          className="w-full bg-white text-blue-700 hover:bg-blue-50 font-bold shadow-md"
+                          className="w-full h-9 bg-white text-blue-700 hover:bg-blue-50 font-bold shadow-md text-xs"
                         >
-                          <Plus className="h-4 w-4 mr-2" />
+                          <Plus className="h-3 w-3 mr-1.5" />
                           Get Started 
                         </Button>
                       </div>
                     </div>
 
-                    {/* Project Status Summary if projects exist */}
+                    {/* Project Status Summary if projects exist - Tighter */}
                     {projects.length > 0 && (
-                      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                        <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                          <FolderOpen className="h-5 w-5 text-amber-500" />
+                      <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                        <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2 text-sm">
+                          <FolderOpen className="h-4 w-4 text-amber-500" />
                           Project Library
                         </h3>
                         <div className="space-y-3">
-                          <p className="text-xs text-slate-500 mb-4">Choose a project from the sidebar to manage your details.</p>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
-                              <p className="text-sm font-bold text-slate-800">{projects.length}</p>
-                              <p className="text-[10px] uppercase font-bold text-slate-400">Total</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-center">
+                              <p className="text-base font-bold text-slate-800">{projects.length}</p>
+                              <p className="text-[9px] uppercase font-bold text-slate-400">Total</p>
                             </div>
-                            <div className="bg-green-50 p-3 rounded-xl border border-green-100 text-center">
-                              <p className="text-sm font-bold text-green-700">{projects.filter(p => !p.isDraft).length}</p>
-                              <p className="text-[10px] uppercase font-bold text-green-400">Approved</p>
+                            <div className="bg-green-50 p-2.5 rounded-xl border border-green-100 text-center">
+                              <p className="text-base font-bold text-green-700">{projects.filter(p => !p.isDraft).length}</p>
+                              <p className="text-[9px] uppercase font-bold text-green-400">Approved</p>
                             </div>
                           </div>
                         </div>
