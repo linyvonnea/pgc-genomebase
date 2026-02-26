@@ -209,8 +209,8 @@ function InquiryDetailContent() {
                   <div className="flex flex-col">
                     <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Species</span>
                     <span className="text-sm font-medium text-slate-800 capitalize mt-1">
-                      {inquiry.species === 'other' && inquiry.otherSpecies
-                        ? `Other: ${inquiry.otherSpecies}`
+                      {(inquiry.species === 'other' || inquiry.species === 'animal') && inquiry.otherSpecies
+                        ? `${inquiry.species}: ${inquiry.otherSpecies}`
                         : inquiry.species}
                     </span>
                   </div>

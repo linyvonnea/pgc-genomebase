@@ -407,10 +407,10 @@ export default function QuotationRequestForm() {
                     )}
                     
                     {/* Other Species Specification */}
-                    {formData.species === "other" && (
+                    {(formData.species === "other" || formData.species === "animal") && (
                       <div className="mt-3">
                         <Input
-                          placeholder="Please specify the species"
+                          placeholder={formData.species === "animal" ? "Please specify animal species" : "Please specify the species"}
                           {...register("otherSpecies")}
                           className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
                         />
