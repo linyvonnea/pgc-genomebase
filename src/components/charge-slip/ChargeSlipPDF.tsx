@@ -271,7 +271,7 @@ export function ChargeSlipPDF({
           <Image src={pgcLogo} style={styles.pgcLogo} />
         </View>
 
-        <Text style={styles.title}>CHARGE SLIP/BILLING</Text>
+        <Text style={styles.title}>CHARGE SLIP</Text>
         <Text style={styles.subtitle}>VSF-LF-CS / Revision No. 003</Text>
 
         {/* Metadata */}
@@ -284,13 +284,11 @@ export function ChargeSlipPDF({
               day: "numeric",
             }) : "N/A"}
           </Text>
-          <Text>PAYEE: UP VISAYAS</Text>
-          <Text>AGENCY: Philippine Genome Center Visayas (PGC Visayas)</Text>
         </View>
 
         {/* Client Info */}
         <View style={styles.section}>
-          <Text style={styles.bold}>PAYOR: {useAffiliationAsClientName ? (client?.affiliation || clientInfo.name) : clientInfo.name}</Text>
+          <Text style={styles.bold}>CLIENT NAME: {useAffiliationAsClientName ? (client?.affiliation || clientInfo.name) : clientInfo.name}</Text>
           <Text style={styles.bold}>ADDRESS: {client?.affiliationAddress || client?.affiliation || "—"}</Text>
           <Text style={styles.bold}>PAYMENT FOR: {project?.title || "—"}</Text>
         </View>
