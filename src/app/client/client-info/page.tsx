@@ -2813,7 +2813,7 @@ export default function ClientPortalPage() {
                         <div className="flex items-center justify-between mb-4">
                           <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
                             <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#6E308E] rounded-full"></div>
-                            Service Selection
+                            Quotation Request Details
                           </h3>
                         </div>
                         
