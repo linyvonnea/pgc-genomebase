@@ -2818,15 +2818,25 @@ export default function ClientPortalPage() {
 
                           {/* Middle Section: Workflow & Samples - Condensed */}
                           {["laboratory", "bioinformatics", "equipment", "retail"].includes(currentInquiry.serviceType?.toLowerCase() || "") && (
-                            <div className="grid grid-cols-2 gap-4 text-xs pt-3 border-t border-slate-50">
-                              <div className="space-y-0.5">
-                                <p className="text-slate-400 font-medium uppercase tracking-tighter">Samples</p>
-                                <p className="font-semibold text-slate-700">{currentInquiry.sampleCount || "0"} pcs</p>
+                            <div className="pt-3 border-t border-slate-50 space-y-3">
+                              <div className="grid grid-cols-2 gap-4 text-xs">
+                                <div className="space-y-0.5">
+                                  <p className="text-slate-400 font-medium uppercase tracking-tighter">Samples</p>
+                                  <p className="font-semibold text-slate-700">{currentInquiry.sampleCount || "0"} pcs</p>
+                                </div>
+                                <div className="space-y-0.5">
+                                  <p className="text-slate-400 font-medium uppercase tracking-tighter">Workflow</p>
+                                  <p className="font-semibold text-slate-700 capitalize">{currentInquiry.workflowType || "—"}</p>
+                                </div>
                               </div>
-                              <div className="space-y-0.5">
-                                <p className="text-slate-400 font-medium uppercase tracking-tighter">Workflow</p>
-                                <p className="font-semibold text-slate-700 capitalize">{currentInquiry.workflowType || "—"}</p>
-                              </div>
+                              {currentInquiry.workflowType === "individual" && (
+                                <div className="bg-slate-50/50 p-2 rounded-lg border border-slate-100/50">
+                                  <p className="text-slate-400 font-medium uppercase tracking-tighter text-[9px] mb-1">Selected Assays/Services</p>
+                                  <p className="text-slate-600 text-[11px] leading-snug">
+                                    {currentInquiry.individualAssayDetails || "—"}
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           )}
 
