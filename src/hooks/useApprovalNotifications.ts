@@ -130,22 +130,26 @@ export function useApprovalNotifications() {
           }
         });
 
-        // 2. Show toasts for new inquiries (including initial ones if requested, but let's stick to post-initial for safety unless we want them all)
-        // User says "do not expire", so showing all current pending once per login/session is probably what they want.
+        // 2. Show toasts for new inquiries (only AFTER initial load to prevent flooding)
         pendingInquiries.forEach(iq => {
           if (!inquiryToastIdsRef.current[iq.id]) {
-            // New inquiry detected!
-            const tId = toast.info("Pending Inquiry", {
-              description: `${iq.name || "Unknown"} from ${iq.affiliation || "Unknown"}`,
-              duration: Infinity, // Does not expire
-              action: {
-                label: "View",
-                onClick: () => {
-                  window.location.href = `/admin/inquiry/${iq.id}`;
+            if (!isInitialInquiryLoadRef.current) {
+              // New inquiry detected!
+              const tId = toast.info("Pending Inquiry", {
+                description: `${iq.name || "Unknown"} from ${iq.affiliation || "Unknown"}`,
+                duration: Infinity, // Does not expire
+                action: {
+                  label: "View",
+                  onClick: () => {
+                    window.location.href = `/admin/inquiry/${iq.id}`;
+                  },
                 },
-              },
-            });
-            inquiryToastIdsRef.current[iq.id] = tId;
+              });
+              inquiryToastIdsRef.current[iq.id] = tId;
+            } else {
+              // Mark as tracked during initial load so we don't toast later
+              inquiryToastIdsRef.current[iq.id] = "existing";
+            }
           }
         });
 

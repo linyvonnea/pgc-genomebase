@@ -69,20 +69,25 @@ export function useInquiryNotifications() {
           }
         });
 
-        // 2. Show toasts for each pending inquiry
+        // 2. Show toasts for each pending inquiry (only AFTER initial load to prevent flooding)
         inquiryNotifications.forEach(n => {
           if (!toastIdsRef.current[n.id]) {
-            const tId = toast.info("Pending Inquiry", {
-              description: `${n.name} from ${n.affiliation}`,
-              duration: Infinity,
-              action: {
-                label: "View",
-                onClick: () => {
-                  window.location.href = `/admin/inquiry/${n.id}`;
+            if (!isInitialLoadRef.current) {
+              const tId = toast.info("Pending Inquiry", {
+                description: `${n.name} from ${n.affiliation}`,
+                duration: Infinity,
+                action: {
+                  label: "View",
+                  onClick: () => {
+                    window.location.href = `/admin/inquiry/${n.id}`;
+                  },
                 },
-              },
-            });
-            toastIdsRef.current[n.id] = tId;
+              });
+              toastIdsRef.current[n.id] = tId;
+            } else {
+              // Just track without showing toast during initial snapshot
+              toastIdsRef.current[n.id] = "existing";
+            }
           }
         });
 
