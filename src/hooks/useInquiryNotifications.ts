@@ -28,6 +28,7 @@ export function useInquiryNotifications() {
   const [unreadCount, setUnreadCount] = useState(0);
   const previousCountRef = useRef(0);
   const isInitialLoadRef = useRef(true);
+  const toastIdsRef = useRef<Record<string, string | number>>({});
 
   useEffect(() => {
     // Listen to inquiries with "Pending" status (capital P to match createInquiryAction)
@@ -57,20 +58,38 @@ export function useInquiryNotifications() {
 
         const totalCount = inquiryNotifications.length;
         
-        // Show toast notification for new inquiries (only after initial load)
-        if (!isInitialLoadRef.current && totalCount > previousCountRef.current) {
-          const latestInquiry = inquiryNotifications[0];
-          toast.info("New Inquiry Request", {
-            description: `${latestInquiry.name} from ${latestInquiry.affiliation}`,
-            duration: 5000,
-            action: {
-              label: "View",
-              onClick: () => {
-                window.location.href = "/admin/inquiry";
-              },
-            },
-          });
-        }
+        // Use persistent toasts for pending inquiries
+        const currentIds = new Set(inquiryNotifications.map(n => n.id));
+
+        // 1. Dismiss toasts for inquiries no longer "Pending"
+        Object.keys(toastIdsRef.current).forEach(id => {
+          if (!currentIds.has(id)) {
+            toast.dismiss(toastIdsRef.current[id]);
+            delete toastIdsRef.current[id];
+          }
+        });
+
+        // 2. Show toasts for each pending inquiry (only AFTER initial load to prevent flooding)
+        inquiryNotifications.forEach(n => {
+          if (!toastIdsRef.current[n.id]) {
+            if (!isInitialLoadRef.current) {
+              const tId = toast.info("Pending Inquiry", {
+                description: `${n.name} from ${n.affiliation}`,
+                duration: Infinity,
+                action: {
+                  label: "View",
+                  onClick: () => {
+                    window.location.href = `/admin/inquiry/${n.id}`;
+                  },
+                },
+              });
+              toastIdsRef.current[n.id] = tId;
+            } else {
+              // Just track without showing toast during initial snapshot
+              toastIdsRef.current[n.id] = "existing";
+            }
+          }
+        });
 
         previousCountRef.current = totalCount;
         isInitialLoadRef.current = false;
@@ -85,6 +104,8 @@ export function useInquiryNotifications() {
     );
 
     return () => {
+      // Clean up toasts on unmount to avoid persistent UI after leaving the admin area
+      Object.values(toastIdsRef.current).forEach(id => toast.dismiss(id));
       unsubscribeInquiries();
     };
   }, []);
