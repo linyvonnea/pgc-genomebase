@@ -2807,152 +2807,153 @@ export default function ClientPortalPage() {
                       )}
                     </div>
 
-                    {/* Inquiry Details Summary - MOVED DOWN & TIGHTENED */}
+                    {/* Quotation Request Details (previously Inquiry Details Summary) */}
                     {currentInquiry && (
-                      <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                            <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#6E308E] rounded-full"></div>
+                      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                        <div className="flex items-center justify-between mb-6">
+                          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 bg-gradient-to-r from-[#912ABD] to-[#6E308E] rounded-full"></div>
                             Quotation Request Details
                           </h3>
                         </div>
                         
-                        <div className="space-y-4">
-                          {/* Service Type */}
-                          <div className="flex flex-col">
-                            <div className="flex items-center gap-2 mb-1">
-                              <FlaskConical className="h-3.5 w-3.5 text-slate-400" />
-                              <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Service Type</span>
+                        <div className="space-y-6">
+                          {/* Top Section: Quick Stats */}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                            {/* Service Type */}
+                            <div className="space-y-1.5">
+                              <div className="flex items-center gap-2">
+                                <FlaskConical className="h-4 w-4 text-slate-400" />
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Service Type</span>
+                              </div>
+                              <Badge className="w-fit capitalize bg-blue-50 text-blue-700 border-blue-100 text-xs px-2.5 py-0.5 font-bold">
+                                {formatServiceType(currentInquiry.serviceType)}
+                              </Badge>
                             </div>
-                            <Badge className="w-fit capitalize bg-gradient-to-r from-[#166FB5]/10 to-[#4038AF]/10 text-[#166FB5] border-[#166FB5]/20 text-[11px] py-0 h-5">
-                              {formatServiceType(currentInquiry.serviceType)}
-                            </Badge>
+
+                            {/* Sample Count */}
+                            {currentInquiry.sampleCount && (
+                              <div className="space-y-1.5">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Quantity</span>
+                                <p className="text-sm font-bold text-slate-900">{currentInquiry.sampleCount} samples</p>
+                              </div>
+                            )}
+
+                            {/* Project Budget */}
+                            {currentInquiry.projectBudget && (
+                              <div className="space-y-1.5">
+                                <div className="flex items-center gap-1.5">
+                                  <DollarSign className="h-4 w-4 text-slate-400" />
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Estim. Budget</span>
+                                </div>
+                                <p className="text-sm font-bold text-slate-900">{currentInquiry.projectBudget}</p>
+                              </div>
+                            )}
                           </div>
 
-                          {/* Research Details Header (if any relevant fields) */}
-                          {(currentInquiry.species || currentInquiry.researchOverview || currentInquiry.sampleCount || currentInquiry.workflowType) && (
-                            <div className="pt-3 border-t border-slate-50 space-y-3">
-                              <h4 className="text-[11px] font-bold text-slate-700 uppercase tracking-tight">Technical Details</h4>
-                              
-                              <div className="grid grid-cols-2 gap-4">
-                                {currentInquiry.species && (
-                                  <div className="flex flex-col">
-                                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">Species</span>
-                                    <span className="text-xs font-semibold text-slate-700 capitalize">
-                                      {(currentInquiry.species === 'other' || currentInquiry.species === 'animal') && currentInquiry.otherSpecies
-                                        ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}`
-                                        : currentInquiry.species}
-                                    </span>
-                                  </div>
-                                )}
-
-                                {currentInquiry.sampleCount && (
-                                  <div className="flex flex-col">
-                                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">Sample Count</span>
-                                    <span className="text-xs font-semibold text-slate-700">{currentInquiry.sampleCount}</span>
-                                  </div>
-                                )}
-
-                                {currentInquiry.workflowType && (
-                                  <div className="flex flex-col">
-                                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">Workflow Type</span>
-                                    <span className="text-xs font-semibold text-slate-700">
-                                      {formatWorkflowType(currentInquiry.workflowType)}
-                                    </span>
-                                  </div>
-                                )}
-
-                                {currentInquiry.projectBudget && (
-                                  <div className="flex flex-col">
-                                    <div className="flex items-center gap-2">
-                                      <DollarSign className="h-2.5 w-2.5 text-slate-400" />
-                                      <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">Project Budget</span>
-                                    </div>
-                                    <span className="text-xs font-semibold text-slate-700">{currentInquiry.projectBudget}</span>
-                                  </div>
-                                )}
-                              </div>
-
-                              {currentInquiry.individualAssayDetails && (
-                                <div className="flex flex-col gap-1">
-                                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">
-                                    Individual Assay Details
-                                  </span>
-                                  <p className="text-[11px] text-slate-600 bg-slate-50/50 p-2 rounded-lg border border-slate-100/50 leading-relaxed whitespace-pre-wrap">
-                                    {currentInquiry.individualAssayDetails}
+                          {/* Technical Block */}
+                          {(currentInquiry.species || currentInquiry.workflowType) && (
+                            <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {currentInquiry.species && (
+                                <div className="space-y-1">
+                                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Species / Organism</span>
+                                  <p className="text-sm font-semibold text-slate-800 capitalize">
+                                    {(currentInquiry.species === 'other' || currentInquiry.species === 'animal') && currentInquiry.otherSpecies
+                                      ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}`
+                                      : currentInquiry.species}
                                   </p>
                                 </div>
                               )}
 
-                              {currentInquiry.researchOverview && (
-                                <div className="flex flex-col gap-1">
-                                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">
-                                    Research Overview
-                                  </span>
-                                  <p className="text-[11px] text-slate-600 bg-blue-50/30 p-2 rounded-lg border border-blue-100/30 italic leading-relaxed whitespace-pre-wrap">
-                                    "{currentInquiry.researchOverview}"
+                              {currentInquiry.workflowType && (
+                                <div className="space-y-1">
+                                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Analysis Strategy</span>
+                                  <p className="text-sm font-semibold text-slate-800">
+                                    {formatWorkflowType(currentInquiry.workflowType)}
                                   </p>
-                                </div>
-                              )}
-
-                              {(currentInquiry.projectBackground || currentInquiry.specificTrainingNeed) && (
-                                <div className="flex flex-col gap-1">
-                                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">
-                                    {currentInquiry.specificTrainingNeed ? "Training Need" : "Project Background"}
-                                  </span>
-                                  <p className="text-[11px] text-slate-700 bg-slate-50/50 p-2 rounded-lg border border-slate-100/50 leading-relaxed whitespace-pre-wrap">
-                                    {currentInquiry.projectBackground || currentInquiry.specificTrainingNeed}
-                                  </p>
-                                </div>
-                              )}
-
-                              {/* Target Date (Training) */}
-                              {currentInquiry.targetTrainingDate && (
-                                <div className="flex flex-col">
-                                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">Target Date</span>
-                                  <span className="text-xs font-semibold text-slate-700">
-                                    {new Date(currentInquiry.targetTrainingDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                                  </span>
-                                </div>
-                              )}
-
-                              {/* Participants (Training) */}
-                              {currentInquiry.numberOfParticipants && (
-                                <div className="flex flex-col">
-                                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">No. of Participants</span>
-                                  <span className="text-xs font-semibold text-slate-700">{currentInquiry.numberOfParticipants}</span>
-                                </div>
-                              )}
-
-                              {/* Methodology File */}
-                              {currentInquiry.methodologyFileUrl && (
-                                <div className="flex flex-col gap-1 pt-2">
-                                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">
-                                    Methodology File
-                                  </span>
-                                  <a
-                                    href={currentInquiry.methodologyFileUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-[11px] text-[#166FB5] hover:underline flex items-center gap-1.5 font-medium"
-                                  >
-                                    <FileText className="h-3.5 w-3.5" />
-                                    View Attached File
-                                  </a>
                                 </div>
                               )}
                             </div>
                           )}
 
-                          {/* Footer Info - Compact */}
-                          <div className="pt-3 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-50 font-medium">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-2.5 w-2.5" />
-                              <span>{currentInquiry.createdAt ? new Date(currentInquiry.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : "—"}</span>
+                          {/* Specific Needs & Assays */}
+                          {currentInquiry.individualAssayDetails && (
+                            <div className="space-y-2">
+                              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Selected Assays</span>
+                              <div className="p-3 bg-white rounded-xl border border-slate-100 text-sm text-slate-700 leading-relaxed shadow-sm">
+                                {currentInquiry.individualAssayDetails}
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1 uppercase truncate max-w-[150px]">
-                              <Building2 className="h-2.5 w-2.5" />
-                              <span>{currentInquiry.affiliation}</span>
+                          )}
+
+                          {/* Research Narrative */}
+                          {currentInquiry.researchOverview && (
+                            <div className="space-y-2">
+                              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Objectives & Brief Overview</span>
+                              <div className="p-4 bg-indigo-50/30 rounded-xl border border-indigo-100/30 text-sm text-slate-800 italic leading-relaxed font-medium">
+                                "{currentInquiry.researchOverview}"
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Training & Logistics */}
+                          {(currentInquiry.projectBackground || currentInquiry.specificTrainingNeed || currentInquiry.targetTrainingDate) && (
+                            <div className="pt-4 border-t border-slate-100 space-y-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {currentInquiry.targetTrainingDate && (
+                                  <div className="space-y-1">
+                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Requested Date</span>
+                                    <p className="text-sm font-bold text-slate-800">
+                                      {new Date(currentInquiry.targetTrainingDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                    </p>
+                                  </div>
+                                )}
+                                {currentInquiry.numberOfParticipants && (
+                                  <div className="space-y-1">
+                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Attendance</span>
+                                    <p className="text-sm font-bold text-slate-800">{currentInquiry.numberOfParticipants} pax</p>
+                                  </div>
+                                )}
+                              </div>
+
+                              {(currentInquiry.projectBackground || currentInquiry.specificTrainingNeed) && (
+                                <div className="space-y-2">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    {currentInquiry.specificTrainingNeed ? "Training Scope" : "Technical Background"}
+                                  </span>
+                                  <div className="p-3 bg-slate-50/50 rounded-lg text-sm text-slate-700 leading-relaxed border border-slate-100 whitespace-pre-wrap">
+                                    {currentInquiry.projectBackground || currentInquiry.specificTrainingNeed}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Attachments Section */}
+                          {currentInquiry.methodologyFileUrl && (
+                            <div className="flex items-center gap-3 pt-4 border-t border-dashed border-slate-100">
+                              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Documentation:</span>
+                              <a
+                                href={currentInquiry.methodologyFileUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-bold hover:bg-blue-100 transition-colors"
+                              >
+                                <FileText className="h-4 w-4" />
+                                View Concept/Methodology
+                              </a>
+                            </div>
+                          )}
+
+                          {/* Submission Footer */}
+                          <div className="pt-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-slate-50">
+                            <div className="flex items-center gap-2 text-slate-400">
+                              <Calendar className="h-4 w-4" />
+                              <span className="text-xs font-medium">Submitted {currentInquiry.createdAt ? new Date(currentInquiry.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : "—"}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[#4038AF] font-bold text-xs uppercase tracking-widest bg-indigo-50/50 px-3 py-1 rounded-full border border-indigo-100/50">
+                              <Building2 className="h-3.5 w-3.5" />
+                              <span className="truncate max-w-[200px]">{currentInquiry.affiliation}</span>
                             </div>
                           </div>
                         </div>
