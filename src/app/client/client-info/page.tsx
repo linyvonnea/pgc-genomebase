@@ -2732,24 +2732,109 @@ export default function ClientPortalPage() {
                     {/* Inquiry Details Summary */}
                     {currentInquiry && (
                       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                          <FileText className="h-5 w-5 text-blue-500" />
-                          Inquiry Overview
-                        </h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-sm">
-                          <div className="space-y-1">
-                            <p className="text-slate-400 font-medium">Service Type</p>
-                            <p className="font-semibold text-slate-700">{currentInquiry.serviceType || "—"}</p>
+                        <div className="flex items-center justify-between mb-6">
+                          <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                            <FileText className="h-5 w-5 text-blue-500" />
+                            Inquiry Overview
+                          </h3>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            ID: {currentInquiry.id}
+                          </span>
+                        </div>
+                        
+                        <div className="space-y-6">
+                          {/* Top Grid: Service & Species */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm pb-6 border-b border-slate-50">
+                            <div className="space-y-1">
+                              <p className="text-slate-400 font-medium">Service Selection</p>
+                              <p className="font-semibold text-slate-700">{currentInquiry.serviceType || "—"}</p>
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-slate-400 font-medium">Target Species</p>
+                              <p className="font-semibold text-slate-700 uppercase">
+                                {currentInquiry.species === "other" || currentInquiry.species === "animal" 
+                                  ? `${currentInquiry.species} (${currentInquiry.otherSpecies || 'Not specified'})`
+                                  : (currentInquiry.species || "—")}
+                              </p>
+                            </div>
                           </div>
-                          <div className="space-y-1">
-                            <p className="text-slate-400 font-medium">Research Species</p>
-                            <p className="font-semibold text-slate-700 uppercase">{currentInquiry.species || "—"}</p>
-                          </div>
-                          <div className="sm:col-span-2 pt-2 space-y-1 border-t border-slate-50">
-                            <p className="text-slate-400 font-medium">Research Overview</p>
-                            <p className="text-slate-600 leading-relaxed italic line-clamp-3">
+
+                          {/* Middle Section: Workflow & Samples */}
+                          {["laboratory", "bioinformatics", "equipment", "retail"].includes(currentInquiry.serviceType?.toLowerCase() || "") && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm pb-6 border-b border-slate-50">
+                              <div className="space-y-1">
+                                <p className="text-slate-400 font-medium">Sample Count</p>
+                                <p className="font-semibold text-slate-700">{currentInquiry.sampleCount || "0"} samples</p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-slate-400 font-medium">Workflow Preference</p>
+                                <p className="font-semibold text-slate-700 capitalize">{currentInquiry.workflowType || "—"}</p>
+                              </div>
+                              
+                              {currentInquiry.workflowType === "individual" && (
+                                <div className="sm:col-span-2 pt-2">
+                                  <p className="text-slate-400 font-medium mb-1">Selected Services</p>
+                                  <div className="p-3 bg-slate-50 rounded-lg text-slate-700 border border-slate-100 italic">
+                                    {currentInquiry.individualAssayDetails || "No specific assays listed"}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Research & Training Specifics */}
+                          {currentInquiry.serviceType?.toLowerCase() === "research" && (
+                            <div className="grid grid-cols-1 gap-4 text-sm pb-6 border-b border-slate-50">
+                              <div className="space-y-1">
+                                <p className="text-slate-400 font-medium">Project Background</p>
+                                <p className="text-slate-700">{currentInquiry.projectBackground || "—"}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-slate-400 font-medium">Estimated Budget</p>
+                                <p className="font-semibold text-slate-700">{currentInquiry.projectBudget || "—"}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {currentInquiry.serviceType?.toLowerCase() === "training" && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm pb-6 border-b border-slate-50">
+                              <div className="sm:col-span-2 space-y-1">
+                                <p className="text-slate-400 font-medium">Training Need</p>
+                                <p className="text-slate-700">{currentInquiry.specificTrainingNeed || "—"}</p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-slate-400 font-medium">Target Date</p>
+                                <p className="font-semibold text-slate-700">
+                                  {currentInquiry.targetTrainingDate 
+                                    ? new Date(currentInquiry.targetTrainingDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+                                    : "—"}
+                                </p>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-slate-400 font-medium">No. of Participants</p>
+                                <p className="font-semibold text-slate-700">{currentInquiry.numberOfParticipants || "—"}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Research Overview */}
+                          <div className="space-y-2">
+                            <p className="text-slate-400 font-medium text-sm">Research Objectives & Details</p>
+                            <div className="p-4 bg-blue-50/50 rounded-xl text-slate-600 leading-relaxed italic border border-blue-100/50">
                               "{currentInquiry.researchOverview}"
-                            </p>
+                            </div>
+                          </div>
+
+                          {/* Footer Info: Submitted On */}
+                          <div className="pt-4 flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-50">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              <span>Submitted on {currentInquiry.createdAt ? new Date(currentInquiry.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "—"}</span>
+                            </div>
+                            <div className="flex items-center gap-1 uppercase tracking-widest font-bold">
+                              <Building2 className="h-3 w-3" />
+                              <span>{currentInquiry.affiliation}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
