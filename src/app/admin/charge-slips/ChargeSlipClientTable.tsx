@@ -509,13 +509,21 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    onClick={() =>
+                    onClick={() => {
+                      // We'll rely on the onClick inside cells or e.stopPropagation
+                      // But to be safe, we check if default was prevented
                       router.push(`/admin/charge-slips/${row.original.chargeSlipNumber}`)
-                    }
+                    }}
                     className="cursor-pointer hover:bg-muted/50 transition-colors h-12"
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="py-2 px-3 text-sm">
+                      <TableCell 
+                        key={cell.id} 
+                        className="py-2 px-3 text-sm"
+                        onClick={(e) => {
+                          if (e.defaultPrevented) return;
+                        }}
+                      >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
