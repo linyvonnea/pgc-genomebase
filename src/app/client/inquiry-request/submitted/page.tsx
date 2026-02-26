@@ -10,11 +10,20 @@ export default function InquiryThankYouPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1200); // 1.2s loading
-    return () => clearTimeout(timer);
-  }, []);
+    
+    // Auto-redirect to portal after 8 seconds
+    const redirectTimer = setTimeout(() => {
+      router.push("/portal");
+    }, 8000);
 
-  const handleNewInquiry = () => {
-    router.push("/client/inquiry-request");
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(redirectTimer);
+    };
+  }, [router]);
+
+  const handleGoToPortal = () => {
+    router.push("/portal");
   };
 
   if (loading) {
@@ -47,16 +56,24 @@ export default function InquiryThankYouPage() {
           </h1>
 
           {/* Message */}
-          <p className="text-slate-700 mb-8 leading-relaxed">
-            Thank you for submitting your inquiry. Please wait for PGC Visayas to reach out to you regarding your quotation request.
-          </p>
+          <div className="space-y-4 mb-8">
+            <p className="text-slate-700 leading-relaxed">
+              Thank you for submitting your inquiry. Please wait for PGC Visayas to reach out to you regarding your quotation request.
+            </p>
+            <p className="text-sm text-slate-500 italic">
+              A temporary password will be sent to your email. You can use it with your Google account email to access the client portal.
+            </p>
+            <p className="text-xs text-blue-500 animate-pulse">
+              Redirecting to portal in 8 seconds...
+            </p>
+          </div>
 
           {/* Action Button */}
           <Button
-            onClick={handleNewInquiry}
+            onClick={handleGoToPortal}
             className="w-full h-12 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 mb-8"
           >
-            Make Another Inquiry
+            Go to Client Portal
           </Button>
 
           {/* Divider */}
