@@ -181,11 +181,11 @@ function InquiryDetailContent() {
           </div>
         </div>
 
-        {/* Service Selection Card */}
+        {/* Quotation Request Details Card */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
           <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
             <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#6E308E] rounded-full"></div>
-            Service Selection
+            Quotation Request Details
           </h2>
 
           <div className="space-y-4">
