@@ -274,7 +274,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
         <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3 style="margin-top: 0;">Service Details</h3>
           <p><strong>Service Type:</strong> ${inquiryData.service}</p>
-          ${inquiryData.species ? `<p><strong>Species:</strong> ${inquiryData.species}${inquiryData.species === 'other' && inquiryData.otherSpecies ? ` (${inquiryData.otherSpecies})` : ''}</p>` : ''}
+          ${inquiryData.species ? `<p><strong>Species:</strong> ${inquiryData.species}${(inquiryData.species === 'other' || inquiryData.species === 'animal') && inquiryData.otherSpecies ? ` (${inquiryData.otherSpecies})` : ''}</p>` : ''}
           ${inquiryData.researchOverview ? `<p><strong>Research Overview:</strong> ${inquiryData.researchOverview}</p>` : ''}
           ${inquiryData.methodologyFileUrl ? `<p><strong>Methodology File:</strong> <a href="${inquiryData.methodologyFileUrl}" target="_blank" rel="noopener noreferrer" style="color: #166FB5; text-decoration: underline;">View Uploaded File</a></p>` : ''}
           ${inquiryData.sampleCount ? `<p><strong>Sample Count:</strong> ${inquiryData.sampleCount}</p>` : ''}
