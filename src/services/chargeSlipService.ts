@@ -11,6 +11,7 @@ import {
   query,
   Timestamp,
   limit,
+  deleteDoc,
 } from "firebase/firestore";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { convertToDate, convertToTimestamp } from "@/lib/convert";
@@ -120,6 +121,11 @@ export async function getChargeSlipById(id: string): Promise<ChargeSlipRecord | 
     dateOfOR: convertToDate(data.dateOfOR),
     createdAt: convertToDate(data.createdAt),
   };
+}
+
+export async function deleteChargeSlip(chargeSlipNumber: string): Promise<void> {
+  const docRef = doc(db, CHARGE_SLIPS_COLLECTION, chargeSlipNumber);
+  await deleteDoc(docRef);
 }
 
 export async function saveChargeSlip(slip: ChargeSlipRecord): Promise<string> {

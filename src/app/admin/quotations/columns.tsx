@@ -1,7 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { QuotationRecord } from "@/types/Quotation";
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { deleteQuotation } from "@/services/quotationService";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const categoryColors: Record<string, string> = {
   laboratory: "bg-green-100 text-green-800",
@@ -21,6 +27,44 @@ function toMillis(v: unknown): number {
   if (v instanceof Date) return v.getTime();
   return NaN;
 }
+
+const ActionCell = ({ row }: { row: any }) => {
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click
+    if (!window.confirm(`Are you sure you want to delete quotation ${row.original.referenceNumber}?`)) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await deleteQuotation(row.original.referenceNumber);
+      toast.success("Quotation deleted successfully");
+      router.refresh();
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("Failed to delete quotation");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <div className="flex justify-end pr-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+        onClick={handleDelete}
+        disabled={isDeleting}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+};
 
 export const columns: ColumnDef<QuotationRecord>[] = [
   {
@@ -108,5 +152,10 @@ export const columns: ColumnDef<QuotationRecord>[] = [
         </div>
       );
     },
+  },
+  {
+    id: "actions",
+    header: () => <div className="text-right pr-4">Actions</div>,
+    cell: ({ row }) => <ActionCell row={row} />,
   },
 ];

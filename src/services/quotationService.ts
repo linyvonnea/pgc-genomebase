@@ -9,6 +9,7 @@ import {
   setDoc,
   getDoc,
   limit,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { QuotationRecord } from "@/types/Quotation";
@@ -117,6 +118,14 @@ export async function getQuotationsByClientName(
 export async function saveQuotationToFirestore(quotation: QuotationRecord) {
   const docRef = doc(db, "quotations", quotation.referenceNumber);
   await setDoc(docRef, quotation);
+}
+
+/**
+ * Delete a quotation by its reference number.
+ */
+export async function deleteQuotation(refNumber: string): Promise<void> {
+  const docRef = doc(db, "quotations", refNumber);
+  await deleteDoc(docRef);
 }
 
 /**

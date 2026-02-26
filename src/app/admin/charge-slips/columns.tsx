@@ -1,9 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { UIChargeSlipRecord } from "@/types/UIChargeSlipRecord";
 import { Badge } from "@/components/ui/badge";
 import { ValidCategory } from "@/types/ValidCategory";
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { deleteChargeSlip } from "@/services/chargeSlipService";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 // Badge colors for statuses
 const statusColors: Record<string, string> = {
@@ -31,6 +37,44 @@ function toMillis(v: unknown): number {
   if (v instanceof Date) return v.getTime();
   return NaN;
 }
+
+const ActionCell = ({ row }: { row: any }) => {
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Avoid triggering any row click navigation
+    if (!window.confirm(`Are you sure you want to delete charge slip ${row.original.chargeSlipNumber}?`)) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await deleteChargeSlip(row.original.chargeSlipNumber);
+      toast.success("Charge slip deleted successfully");
+      router.refresh(); // Tells Next.js to re-fetch Server Components data
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("Failed to delete charge slip");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <div className="flex justify-end pr-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+        onClick={handleDelete}
+        disabled={isDeleting}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+};
 
 export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
   {
@@ -182,5 +226,11 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
         </div>
       );
     },
+  },
+  {
+    id: "actions",
+    header: () => <div className="text-right pr-4">Actions</div>,
+    cell: ({ row }) => <ActionCell row={row} />,
+    size: 60,
   },
 ];

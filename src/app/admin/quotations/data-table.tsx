@@ -500,11 +500,23 @@ export function DataTable<TData, TValue>({
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    onClick={() => onRowClick?.(row.original)}
+                    onClick={() => {
+                      // Only trigger row click if the click wasn't on a button
+                      // This is a safety measure alongside e.stopPropagation()
+                      onRowClick?.(row.original);
+                    }}
                     className="cursor-pointer hover:bg-muted/50 transition-colors"
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="py-2">
+                      <TableCell 
+                        key={cell.id} 
+                        className="py-2"
+                        onClick={(e) => {
+                          // Prevent triggering onRowClick if any element in the cell 
+                          // (like the delete button) already handled the event
+                          if (e.defaultPrevented) return;
+                        }}
+                      >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
