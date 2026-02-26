@@ -109,9 +109,27 @@ import {
   Smartphone,
   MapPin,
   Briefcase,
+  FlaskConical,
+  DollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ClientConformeModal from "@/components/forms/ClientConformeModal";
+
+// ────────────────────────────────────────────────────────────────
+//  Formatting Helpers
+// ────────────────────────────────────────────────────────────────
+
+// Format service type for display
+const formatServiceType = (type: string | null | undefined): string => {
+  if (!type) return "—";
+  return type.charAt(0).toUpperCase() + type.slice(1);
+};
+
+// Format workflow type for display
+const formatWorkflowType = (type: string | null | undefined): string => {
+  if (!type) return "—";
+  return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
 
 // ────────────────────────────────────────────────────────────────
 //  Types
@@ -2794,69 +2812,137 @@ export default function ClientPortalPage() {
                       <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
                         <div className="flex items-center justify-between mb-4">
                           <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-blue-500" />
-                            Inquiry Overview
+                            <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#6E308E] rounded-full"></div>
+                            Service Selection
                           </h3>
                         </div>
                         
                         <div className="space-y-4">
-                          {/* Top Grid: Service & Species */}
-                          <div className="grid grid-cols-2 gap-4 text-xs">
-                            <div className="space-y-0.5">
-                              <p className="text-slate-400 font-medium uppercase tracking-tighter">Service</p>
-                              <p className="font-semibold text-slate-700">{currentInquiry.serviceType || "—"}</p>
+                          {/* Service Type */}
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2 mb-1">
+                              <FlaskConical className="h-3.5 w-3.5 text-slate-400" />
+                              <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Service Type</span>
                             </div>
-                            <div className="space-y-0.5">
-                              <p className="text-slate-400 font-medium uppercase tracking-tighter">Species</p>
-                              <p className="font-semibold text-slate-700 uppercase truncate">
-                                {currentInquiry.species === "other" || currentInquiry.species === "animal" 
-                                  ? `${currentInquiry.species} (${currentInquiry.otherSpecies || 'N/A'})`
-                                  : (currentInquiry.species || "—")}
-                              </p>
-                            </div>
+                            <Badge className="w-fit capitalize bg-gradient-to-r from-[#166FB5]/10 to-[#4038AF]/10 text-[#166FB5] border-[#166FB5]/20 text-[11px] py-0 h-5">
+                              {formatServiceType(currentInquiry.serviceType)}
+                            </Badge>
                           </div>
 
-                          {/* Middle Section: Workflow & Samples - Condensed */}
-                          {["laboratory", "bioinformatics", "equipment", "retail"].includes(currentInquiry.serviceType?.toLowerCase() || "") && (
+                          {/* Research Details Header (if any relevant fields) */}
+                          {(currentInquiry.species || currentInquiry.researchOverview || currentInquiry.sampleCount || currentInquiry.workflowType) && (
                             <div className="pt-3 border-t border-slate-50 space-y-3">
-                              <div className="grid grid-cols-2 gap-4 text-xs">
-                                <div className="space-y-0.5">
-                                  <p className="text-slate-400 font-medium uppercase tracking-tighter">Samples</p>
-                                  <p className="font-semibold text-slate-700">{currentInquiry.sampleCount || "0"} pcs</p>
-                                </div>
-                                <div className="space-y-0.5">
-                                  <p className="text-slate-400 font-medium uppercase tracking-tighter">Workflow</p>
-                                  <p className="font-semibold text-slate-700 capitalize">{currentInquiry.workflowType || "—"}</p>
-                                </div>
+                              <h4 className="text-[11px] font-bold text-slate-700 uppercase tracking-tight">Technical Details</h4>
+                              
+                              <div className="grid grid-cols-2 gap-4">
+                                {currentInquiry.species && (
+                                  <div className="flex flex-col">
+                                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">Species</span>
+                                    <span className="text-xs font-semibold text-slate-700 capitalize">
+                                      {(currentInquiry.species === 'other' || currentInquiry.species === 'animal') && currentInquiry.otherSpecies
+                                        ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}`
+                                        : currentInquiry.species}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {currentInquiry.sampleCount && (
+                                  <div className="flex flex-col">
+                                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">Sample Count</span>
+                                    <span className="text-xs font-semibold text-slate-700">{currentInquiry.sampleCount}</span>
+                                  </div>
+                                )}
+
+                                {currentInquiry.workflowType && (
+                                  <div className="flex flex-col">
+                                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">Workflow Type</span>
+                                    <span className="text-xs font-semibold text-slate-700">
+                                      {formatWorkflowType(currentInquiry.workflowType)}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {currentInquiry.projectBudget && (
+                                  <div className="flex flex-col">
+                                    <div className="flex items-center gap-2">
+                                      <DollarSign className="h-2.5 w-2.5 text-slate-400" />
+                                      <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">Project Budget</span>
+                                    </div>
+                                    <span className="text-xs font-semibold text-slate-700">{currentInquiry.projectBudget}</span>
+                                  </div>
+                                )}
                               </div>
-                              {currentInquiry.workflowType === "individual" && (
-                                <div className="bg-slate-50/50 p-2 rounded-lg border border-slate-100/50">
-                                  <p className="text-slate-400 font-medium uppercase tracking-tighter text-[9px] mb-1">Selected Assays/Services</p>
-                                  <p className="text-slate-600 text-[11px] leading-snug">
-                                    {currentInquiry.individualAssayDetails || "—"}
+
+                              {currentInquiry.individualAssayDetails && (
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">
+                                    Individual Assay Details
+                                  </span>
+                                  <p className="text-[11px] text-slate-600 bg-slate-50/50 p-2 rounded-lg border border-slate-100/50 leading-relaxed whitespace-pre-wrap">
+                                    {currentInquiry.individualAssayDetails}
                                   </p>
+                                </div>
+                              )}
+
+                              {currentInquiry.researchOverview && (
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">
+                                    Research Overview
+                                  </span>
+                                  <p className="text-[11px] text-slate-600 bg-blue-50/30 p-2 rounded-lg border border-blue-100/30 italic leading-relaxed whitespace-pre-wrap">
+                                    "{currentInquiry.researchOverview}"
+                                  </p>
+                                </div>
+                              )}
+
+                              {(currentInquiry.projectBackground || currentInquiry.specificTrainingNeed) && (
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">
+                                    {currentInquiry.specificTrainingNeed ? "Training Need" : "Project Background"}
+                                  </span>
+                                  <p className="text-[11px] text-slate-700 bg-slate-50/50 p-2 rounded-lg border border-slate-100/50 leading-relaxed whitespace-pre-wrap">
+                                    {currentInquiry.projectBackground || currentInquiry.specificTrainingNeed}
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Target Date (Training) */}
+                              {currentInquiry.targetTrainingDate && (
+                                <div className="flex flex-col">
+                                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">Target Date</span>
+                                  <span className="text-xs font-semibold text-slate-700">
+                                    {new Date(currentInquiry.targetTrainingDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Participants (Training) */}
+                              {currentInquiry.numberOfParticipants && (
+                                <div className="flex flex-col">
+                                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">No. of Participants</span>
+                                  <span className="text-xs font-semibold text-slate-700">{currentInquiry.numberOfParticipants}</span>
+                                </div>
+                              )}
+
+                              {/* Methodology File */}
+                              {currentInquiry.methodologyFileUrl && (
+                                <div className="flex flex-col gap-1 pt-2">
+                                  <span className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">
+                                    Methodology File
+                                  </span>
+                                  <a
+                                    href={currentInquiry.methodologyFileUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[11px] text-[#166FB5] hover:underline flex items-center gap-1.5 font-medium"
+                                  >
+                                    <FileText className="h-3.5 w-3.5" />
+                                    View Attached File
+                                  </a>
                                 </div>
                               )}
                             </div>
                           )}
-
-                          {/* Training/Research Specifics - Condensed */}
-                          {(currentInquiry.serviceType?.toLowerCase() === "research" || currentInquiry.serviceType?.toLowerCase() === "training") && (
-                            <div className="text-xs pt-3 border-t border-slate-50">
-                              <p className="text-slate-400 font-medium uppercase tracking-tighter mb-1">Project Details</p>
-                              <p className="text-slate-700 line-clamp-2">
-                                {currentInquiry.projectBackground || currentInquiry.specificTrainingNeed || "—"}
-                              </p>
-                            </div>
-                          )}
-
-                          {/* Research Overview - Condensed */}
-                          <div className="space-y-1.5 pt-3 border-t border-slate-50">
-                            <p className="text-slate-400 font-medium text-[10px] uppercase tracking-tighter">Research Objectives</p>
-                            <div className="p-3 bg-blue-50/30 rounded-lg text-slate-600 text-xs italic leading-relaxed border border-blue-100/30">
-                              "{currentInquiry.researchOverview}"
-                            </div>
-                          </div>
 
                           {/* Footer Info - Compact */}
                           <div className="pt-3 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-50 font-medium">
