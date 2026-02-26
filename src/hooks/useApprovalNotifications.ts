@@ -35,7 +35,6 @@ export function useApprovalNotifications() {
   const previousInquiryCountRef = useRef(0);
   const isInitialLoadRef = useRef(true);
   const isInitialInquiryLoadRef = useRef(true);
-  const inquiryToastIdsRef = useRef<Record<string, string | number>>({});
 
   useEffect(() => {
     // Listen to traditional member approvals
@@ -109,45 +108,52 @@ export function useApprovalNotifications() {
     const unsubscribeInquiries = onSnapshot(
       inquiriesQuery, 
       (snapshot) => {
-        // Get all pending inquiries (removed 24h filter as requested)
-        const pendingInquiries = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as any));
-
-        const count = pendingInquiries.length;
-        setInquiryCount(count);
-        
-        // Show persistent toasts for each pending inquiry
-        // Track current IDs in the snapshot
-        const currentInquiryIds = new Set(pendingInquiries.map(iq => iq.id));
-
-        // 1. Dismiss toasts for inquiries no longer in "Pending" status
-        Object.keys(inquiryToastIdsRef.current).forEach(id => {
-          if (!currentInquiryIds.has(id)) {
-            toast.dismiss(inquiryToastIdsRef.current[id]);
-            delete inquiryToastIdsRef.current[id];
+        // Filter for recent inquiries only (last 24 hours)
+        const recentInquiries = snapshot.docs.filter(doc => {
+          const data = doc.data();
+          let createdAt: Date;
+          
+          if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+            createdAt = data.createdAt.toDate();
+          } else if (data.createdAt) {
+            createdAt = new Date(data.createdAt);
+          } else {
+            return false; // No date = treat as old
           }
+          
+          const now = new Date();
+          const oneDayAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+          return createdAt >= oneDayAgo;
         });
 
-        // 2. Show toasts for new inquiries (including initial ones if requested, but let's stick to post-initial for safety unless we want them all)
-        // User says "do not expire", so showing all current pending once per login/session is probably what they want.
-        pendingInquiries.forEach(iq => {
-          if (!inquiryToastIdsRef.current[iq.id]) {
-            // New inquiry detected!
-            const tId = toast.info("Pending Inquiry", {
-              description: `${iq.name || "Unknown"} from ${iq.affiliation || "Unknown"}`,
-              duration: Infinity, // Does not expire
+        const count = recentInquiries.length;
+        setInquiryCount(count);
+        
+        // Show toast notification for new inquiries (only after initial load)
+        if (!isInitialInquiryLoadRef.current && count > previousInquiryCountRef.current) {
+          const latestDoc = recentInquiries.sort((a, b) => {
+            const getDataTime = (d: any) => {
+               if (d.createdAt && typeof d.createdAt.toDate === 'function') return d.createdAt.toDate().getTime();
+               if (d.createdAt) return new Date(d.createdAt).getTime();
+               return 0;
+            };
+            return getDataTime(b.data()) - getDataTime(a.data());
+          })[0];
+          
+          if (latestDoc) {
+            const data = latestDoc.data();
+            toast.info("New Inquiry Request", {
+              description: `${data.name || "Unknown"} from ${data.affiliation || "Unknown"}`,
+              duration: 5000,
               action: {
                 label: "View",
                 onClick: () => {
-                  window.location.href = `/admin/inquiry/${iq.id}`;
+                  window.location.href = "/admin/inquiry";
                 },
               },
             });
-            inquiryToastIdsRef.current[iq.id] = tId;
           }
-        });
+        }
 
         previousInquiryCountRef.current = count;
         isInitialInquiryLoadRef.current = false;
@@ -158,9 +164,6 @@ export function useApprovalNotifications() {
     );
 
     return () => {
-      // Clean up inquiry toasts
-      Object.values(inquiryToastIdsRef.current).forEach(id => toast.dismiss(id));
-      
       unsubscribeMemberApprovals();
       unsubscribeProjectRequests();
       unsubscribeInquiries();
