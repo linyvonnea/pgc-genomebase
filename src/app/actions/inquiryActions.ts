@@ -372,6 +372,66 @@ Submitted: ${new Date().toLocaleString()}
       console.log("Email Document ID:", emailDocRef.id);
       console.log("Email Document Path:", emailDocRef.path);
       console.log("Email Document Full Path:", `mail/${emailDocRef.id}`);
+
+      // === CLIENT CONFIRMATION EMAIL ===
+      // Send automated confirmation email to the client with credentials
+      try {
+        if (inquiryData.email) {
+          console.log("EMAIL DEBUG: Creating client confirmation email for:", inquiryData.email);
+          
+          const clientEmailHtml = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <p>Thank you for your inquiry.</p>
+              <br>
+              <p>Hello, ${inquiryData.name}!</p>
+              <br>
+              <p>Welcome to PGC Visayas!</p>
+              <br>
+              <p>Thank you for sending us your inquiry.</p>
+              <br>
+              <p>Please login in to your Client Portal to view your quotation once available.</p>
+              <br>
+              <p>Use the credentials below:</p>
+              <p>Gmail Adress: ${inquiryData.email}</p>
+              <p>Temporary Password: ${docRef.id}</p>
+            </div>
+          `;
+
+          const clientEmailText = `
+Thank you for your inquiry.
+
+Hello, ${inquiryData.name}!
+
+Welcome to PGC Visayas!
+
+Thank you for sending us your inquiry.
+
+Please login in to your Client Portal to view your quotation once available.
+
+Use the credentials below:
+Gmail Adress: ${inquiryData.email}
+Temporary Password: ${docRef.id}
+          `.trim();
+
+          const clientEmailData = {
+            to: [inquiryData.email],
+            inquiryId: docRef.id,
+            message: {
+              subject: "Thank you for your inquiry - PGC Visayas",
+              text: clientEmailText,
+              html: clientEmailHtml
+            }
+          };
+
+          await addDoc(mailCollection, clientEmailData);
+          console.log("✅ EMAIL SUCCESS: Client confirmation email sent to:", inquiryData.email);
+        } else {
+          console.log("⚠️ EMAIL WARNING: No client email provided, skipping confirmation email");
+        }
+      } catch (clientEmailError) {
+        console.error("❌ CLIENT EMAIL FAILED:", clientEmailError);
+        // Continue execution even if client email fails
+      }
       
       // Immediately verify the document exists in Firestore
       console.log("EMAIL DEBUG: Starting immediate verification...");
