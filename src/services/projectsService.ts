@@ -34,7 +34,6 @@ export async function getProjects(): Promise<Project[]> {
 
     querySnapshot.forEach((doc) => {
       const data = doc.data();
-}
 
       // Convert Firestore Timestamps to JS Dates
       if (data.createdAt && typeof data.createdAt.toDate === "function") {
@@ -84,44 +83,36 @@ export async function getProjects(): Promise<Project[]> {
 
       if (result.success) {
         const raw = result.data;
-        // Normalize and format project fields
-        const allowedInstitutions = [
-          "UP System",
-          "SUC/HEI",
-          "Government",
-          "Private/Local",
-          "International",
-          "N/A",
-        ] as const;
 
+        // Ensure startDate is a string and createdAt is a Date for the Project interface
         const project: Project = {
           ...raw,
-          //createdAt:
-          //  raw.createdAt instanceof Date
-          //    ? raw.createdAt
-          //    : raw.createdAt
-          //    ? new Date(raw.createdAt)
-          //    : undefined,
-          //fundingCategory:
-          //  raw.fundingCategory === "External" || raw.fundingCategory === "In-House"
-          //    ? raw.fundingCategory
-          //    : undefined,
-          //startDate: raw.startDate
-          //  ? formatDateToMMDDYYYY(new Date(raw.startDate))
-          //  : undefined,
-          //clientNames: raw.clientNames
-          //  ? raw.clientNames.map((s) => s.trim())
-          //  : undefined,
-          //status:
-          //  raw.status === "Ongoing" ||
-          //  raw.status === "Cancelled" ||
-          //  raw.status === "Completed"
-          //    ? raw.status
-          //    : undefined,
-          //sendingInstitution:
-          //  allowedInstitutions.includes(raw.sendingInstitution as typeof allowedInstitutions[number])
-          //    ? (raw.sendingInstitution as typeof allowedInstitutions[number])
-          //    : undefined,
+          startDate: raw.startDate instanceof Date 
+            ? raw.startDate.toISOString() 
+            : typeof raw.startDate === 'string' 
+              ? raw.startDate 
+              : undefined,
+          createdAt: typeof raw.createdAt === 'string' 
+            ? new Date(raw.createdAt) 
+            : raw.createdAt instanceof Date 
+              ? raw.createdAt 
+              : undefined,
+          status: (raw.status === "Ongoing" || raw.status === "Cancelled" || raw.status === "Completed")
+            ? raw.status
+            : undefined,
+          sendingInstitution: [
+            "UP System",
+            "SUC/HEI",
+            "Government",
+            "Private/Local",
+            "International",
+            "N/A",
+          ].includes(raw.sendingInstitution as any)
+            ? (raw.sendingInstitution as any)
+            : undefined,
+          fundingCategory: (raw.fundingCategory === "External" || raw.fundingCategory === "In-House")
+            ? raw.fundingCategory
+            : undefined,
         };
         projects.push(project);
       } else {
