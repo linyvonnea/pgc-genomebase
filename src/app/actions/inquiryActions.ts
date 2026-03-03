@@ -380,24 +380,57 @@ Submitted: ${new Date().toLocaleString()}
           console.log("EMAIL DEBUG: Creating client confirmation email for:", inquiryData.email);
           
           const clientEmailHtml = `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <p>Thank you for sending your inquiry. Wait for the admin to reach out to you.</p>
-              <br>
-              <p>Best regards.</p>
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.6;">
+              <div style="background-color: #f8fafc; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <h2 style="color: #1e40af; margin-top: 0;">Inquiry Received - PGC Visayas</h2>
+                <p>Dear ${inquiryData.name},</p>
+                <p>Welcome to PGC Visayas! Thank you for reaching out to us with your inquiry. We have successfully received your request and our team is currently reviewing the details.</p>
+                
+                <div style="background-color: #ffffff; padding: 20px; border-radius: 6px; border-left: 4px solid #1e40af; margin: 24px 0;">
+                  <h3 style="margin-top: 0; color: #1e40af; font-size: 16px;">Next Steps</h3>
+                  <p style="margin-bottom: 0;">You may monitor the status of your request and view your quotation once available through our Client Portal.</p>
+                  <p style="margin-top: 12px;"><a href="https://pgc-genomebase.vercel.app/portal" style="background-color: #1e40af; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600;">Access Client Portal</a></p>
+                </div>
+
+                <div style="font-size: 14px; color: #64748b;">
+                  <p style="margin-bottom: 8px;"><strong>Temporary Access Credentials:</strong></p>
+                  <p style="margin: 4px 0;"><strong>Email:</strong> ${inquiryData.email}</p>
+                  <p style="margin: 4px 0;"><strong>Temporary Password:</strong> <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">${docRef.id}</code></p>
+                </div>
+
+                <p style="margin-top: 24px;">An administrator will contact you shortly if additional information is required. Should you have any immediate questions, please feel free to reply to this email.</p>
+                
+                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+                <p style="font-size: 13px; color: #94a3b8; margin-bottom: 0;">Best regards,<br /><strong>Philippine Genome Center Visayas</strong></p>
+              </div>
             </div>
           `;
 
           const clientEmailText = `
-Thank you for sending your inquiry. Wait for the admin to reach out to you.
+Inquiry Received - PGC Visayas
 
-Best regards.
+Dear ${inquiryData.name},
+
+Welcome to PGC Visayas! Thank you for reaching out to us with your inquiry. We have successfully received your request and our team is currently reviewing the details.
+
+NEXT STEPS:
+You may monitor the status of your request and view your quotation once available through our Client Portal: https://pgc-genomebase.vercel.app/portal
+
+TEMPORARY ACCESS CREDENTIALS:
+Email: ${inquiryData.email}
+Temporary Password: ${docRef.id}
+
+An administrator will contact you shortly if additional information is required. Should you have any immediate questions, please feel free to reply to this email at pgc.upvisayas@up.edu.ph.
+
+Best regards,
+Philippine Genome Center Visayas
           `.trim();
 
           const clientEmailData = {
             to: [inquiryData.email],
             inquiryId: docRef.id,
             message: {
-              subject: "Thank you for your inquiry - PGC Visayas",
+              subject: "Inquiry Received: PGC Visayas - Confirmation and Next Steps",
               text: clientEmailText,
               html: clientEmailHtml
             }
