@@ -215,11 +215,11 @@ export default function QuotationRequestForm() {
         }, 2000)
         return
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting form:", error)
       toast.dismiss()
       toast.error("Failed to submit inquiry", {
-        description: "There was an error submitting your request. Please try again.",
+        description: error.message || "There was an error submitting your request. Please try again.",
       })
     } finally {
       setIsSubmitting(false)
