@@ -47,3 +47,4 @@ serviceAccountKey.json
 clientscripts/
 
 projectscripts/
+.env*.local
