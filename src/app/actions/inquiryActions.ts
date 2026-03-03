@@ -250,7 +250,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     console.log("Firebase DB instance:", db ? "Connected" : "Not Connected");
     
     // Validate that email recipient is configured
-    const emailRecipient = "merlito.dayon@gmail.com";
+    const emailRecipient = "madayon1@up.edu.ph";
     if (!emailRecipient) {
       console.error("EMAIL ERROR: No recipient configured");
       throw new Error("Email recipient not configured");
@@ -381,36 +381,16 @@ Submitted: ${new Date().toLocaleString()}
           
           const clientEmailHtml = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <p>Thank you for your inquiry.</p>
+              <p>Thank you for sending your inquiry. Wait for the admin to reach out to you.</p>
               <br>
-              <p>Hello, ${inquiryData.name}!</p>
-              <br>
-              <p>Welcome to PGC Visayas!</p>
-              <br>
-              <p>Thank you for sending us your inquiry.</p>
-              <br>
-              <p>Please login in to your Client Portal to view your quotation once available.</p>
-              <br>
-              <p>Use the credentials below:</p>
-              <p>Gmail Adress: ${inquiryData.email}</p>
-              <p>Temporary Password: ${docRef.id}</p>
+              <p>Best regards.</p>
             </div>
           `;
 
           const clientEmailText = `
-Thank you for your inquiry.
+Thank you for sending your inquiry. Wait for the admin to reach out to you.
 
-Hello, ${inquiryData.name}!
-
-Welcome to PGC Visayas!
-
-Thank you for sending us your inquiry.
-
-Please login in to your Client Portal to view your quotation once available.
-
-Use the credentials below:
-Gmail Adress: ${inquiryData.email}
-Temporary Password: ${docRef.id}
+Best regards.
           `.trim();
 
           const clientEmailData = {
