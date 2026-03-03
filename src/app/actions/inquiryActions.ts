@@ -545,9 +545,7 @@ Temporary Password: ${docRef.id}
     };
   } catch (error) {
     console.error("Error creating inquiry:", error);
-    // Include the error message in the thrown error for Toast notification 
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to create inquiry: ${errorMessage}`);
+    throw new Error("Failed to create inquiry");
   }
 }
 
