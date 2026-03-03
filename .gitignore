@@ -49,5 +49,3 @@ clientscripts/
 
 projectscripts/
 .env*.local
-scripts/~$PGC_Database_Export.xlsx
-scripts/PGC_Database_Export.xlsx
