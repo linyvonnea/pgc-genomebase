@@ -67,8 +67,10 @@ export const columns: ColumnDef<Inquiry>[] = [
         return date >= oneDayAgo;
       })();
       
-      // Show NEW badge only for recent pending inquiries (matching notification logic)
-      const showNew = inquiry.status === "Pending" && isRecent;
+      // NEW badge logic:
+      // 1. Show if status is "Pending" (regardless of time)
+      // 2. Show if it's very recent (last 24h) regardless of status
+      const showNew = inquiry.status === "Pending" || isRecent;
       
       const handleCopy = async (e: React.MouseEvent) => {
         e.stopPropagation();
