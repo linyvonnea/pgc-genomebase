@@ -11,14 +11,8 @@ export default function InquiryThankYouPage() {
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1200); // 1.2s loading
     
-    // Auto-redirect to portal after 8 seconds
-    const redirectTimer = setTimeout(() => {
-      router.push("/portal");
-    }, 8000);
-
     return () => {
       clearTimeout(timer);
-      clearTimeout(redirectTimer);
     };
   }, [router]);
 
@@ -62,9 +56,6 @@ export default function InquiryThankYouPage() {
             </p>
             <p className="text-sm text-slate-500 italic">
               A temporary password will be sent to your email. You can use it with your Google account email to access the client portal.
-            </p>
-            <p className="text-xs text-blue-500 animate-pulse">
-              Redirecting to portal in 8 seconds...
             </p>
           </div>
 
