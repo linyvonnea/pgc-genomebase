@@ -411,7 +411,7 @@ Inquiry Received - PGC Visayas
 
 Dear ${inquiryData.name},
 
-Welcome to PGC Visayas! Thank you for reaching out to us with your inquiry. We have successfully received your request and our team is currently reviewing the details.
+Thank you for reaching out to PGC Visayas for your research needs. Our team will be reviewing your inquiry and will get back to you as soon as possible.
 
 NEXT STEPS:
 You may monitor the status of your request and view your quotation once available through our Client Portal: https://pgc-genomebase.vercel.app/portal
@@ -420,9 +420,9 @@ TEMPORARY ACCESS CREDENTIALS:
 Email: ${inquiryData.email}
 Temporary Password: ${docRef.id}
 
-An administrator will contact you shortly if additional information is required. Should you have any immediate questions, please feel free to reply to this email at pgc.upvisayas@up.edu.ph.
+One of our researchers will contact you shortly if additional information is needed. Should you have any immediate questions, feel free to reply through this email.
 
-Best regards,
+Yours in utilizing OMICS for a better Philippines,
 Philippine Genome Center Visayas
           `.trim();
 
@@ -430,7 +430,7 @@ Philippine Genome Center Visayas
             to: [inquiryData.email],
             inquiryId: docRef.id,
             message: {
-              subject: "Inquiry Received: PGC Visayas - Confirmation and Next Steps",
+              subject: "Inquiry Received: PGC Visayas",
               text: clientEmailText,
               html: clientEmailHtml
             }
