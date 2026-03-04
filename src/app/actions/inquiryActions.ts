@@ -384,7 +384,7 @@ Submitted: ${new Date().toLocaleString()}
               <div style="background-color: #f8fafc; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
                 <h2 style="color: #1e40af; margin-top: 0;">Inquiry Received - PGC Visayas</h2>
                 <p>Dear ${inquiryData.name},</p>
-                <p>Welcome to PGC Visayas! Thank you for reaching out to us with your inquiry. We have successfully received your request and our team is currently reviewing the details.</p>
+                <p>Thank you for reaching out to PGC Visayas for your research needs. Our team will be reviewing your inquiry and will get back to you as soon as possible.</p>
                 
                 <div style="background-color: #ffffff; padding: 20px; border-radius: 6px; border-left: 4px solid #1e40af; margin: 24px 0;">
                   <h3 style="margin-top: 0; color: #1e40af; font-size: 16px;">Next Steps</h3>
@@ -398,10 +398,10 @@ Submitted: ${new Date().toLocaleString()}
                   <p style="margin: 4px 0;"><strong>Temporary Password:</strong> <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">${docRef.id}</code></p>
                 </div>
 
-                <p style="margin-top: 24px;">An administrator will contact you shortly if additional information is required. Should you have any immediate questions, please feel free to reply to this email.</p>
+                <p style="margin-top: 24px;">One of our researchers will contact you shortly if additional information is needed. Should you have any immediate questions, feel free to reply through this email.</p>
                 
                 <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-                <p style="font-size: 13px; color: #94a3b8; margin-bottom: 0;">Best regards,<br /><strong>Philippine Genome Center Visayas</strong></p>
+                <p style="font-size: 13px; color: #94a3b8; margin-bottom: 0;">Yours in utilizing OMICS for a better Philippines,<br /><strong>Philippine Genome Center Visayas</strong></p>
               </div>
             </div>
           `;
