@@ -249,14 +249,10 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     console.log("Template Data:", templateData);
     console.log("Firebase DB instance:", db ? "Connected" : "Not Connected");
     
-    // Validate that email recipient is configured
-    const emailRecipient = "madayon1@up.edu.ph";
-    if (!emailRecipient) {
-      console.error("EMAIL ERROR: No recipient configured");
-      throw new Error("Email recipient not configured");
-    }
+    // Configure recipients for internal notification
+    const emailRecipients = ["sequencing.pgc.upvisayas@up.edu.ph", "madayon1@up.edu.ph"];
     
-    console.log("EMAIL DEBUG: Creating email for recipient:", emailRecipient);
+    console.log("EMAIL DEBUG: Creating email for recipients:", emailRecipients.join(", "));
     
     // Create a comprehensive HTML email body
     const emailHtml = `
@@ -346,7 +342,7 @@ Submitted: ${new Date().toLocaleString()}
     
     // Create email document with simplified structure for better compatibility
     const emailData = {
-      to: [emailRecipient],
+      to: emailRecipients,
       inquiryId: docRef.id, // Root level for easy searching
       message: {
         subject: `New ${inquiryData.service.charAt(0).toUpperCase() + inquiryData.service.slice(1)} Inquiry from ${inquiryData.name}`,
@@ -356,7 +352,113 @@ Submitted: ${new Date().toLocaleString()}
     };
 
     console.log("EMAIL DEBUG: Email document structure:", {
-      recipient: emailData.to,
+      recipients: emailData.to,
+      inquiryId: emailData.inquiryId,
+      hasSubject: !!emailData.message.subject,
+      subjectLength: emailData.message.subject.length,
+      htmlLength: emailData.message.html.length,
+      textLength: emailData.message.text.length
+    });
+    
+    // Create a comprehensive HTML email body
+    const emailHtml = `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.5;">
+        <div style="background-color: #f8fafc; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+          <h2 style="color: #1e40af; margin-top: 0; font-size: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
+            New ${inquiryData.service.charAt(0).toUpperCase() + inquiryData.service.slice(1)} Inquiry
+          </h2>
+          
+          <div style="margin: 20px 0;">
+            <p style="margin: 5px 0;"><strong>Name:</strong> ${inquiryData.name}</p>
+            <p style="margin: 5px 0;"><strong>Email:</strong> ${inquiryData.email}</p>
+            <p style="margin: 5px 0;"><strong>Affiliation:</strong> ${inquiryData.affiliation}</p>
+            <p style="margin: 5px 0;"><strong>Designation:</strong> ${inquiryData.designation}</p>
+          </div>
+          
+          <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; margin: 20px 0;">
+            <h3 style="margin-top: 0; font-size: 16px; color: #1e40af;">Service Details</h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr>
+                <td style="padding: 4px 0; width: 140px; color: #64748b;">Service Type:</td>
+                <td style="padding: 4px 0;">${inquiryData.service}</td>
+              </tr>
+              ${inquiryData.species ? `
+              <tr>
+                <td style="padding: 4px 0; color: #64748b;">Species:</td>
+                <td style="padding: 4px 0;">${inquiryData.species}${(inquiryData.species === 'other' || inquiryData.species === 'animal') && inquiryData.otherSpecies ? ` (${inquiryData.otherSpecies})` : ''}</td>
+              </tr>` : ''}
+              ${inquiryData.sampleCount ? `
+              <tr>
+                <td style="padding: 4px 0; color: #64748b;">Sample Count:</td>
+                <td style="padding: 4px 0;">${inquiryData.sampleCount}</td>
+              </tr>` : ''}
+              ${inquiryData.workflowType ? `
+              <tr>
+                <td style="padding: 4px 0; color: #64748b;">Workflow:</td>
+                <td style="padding: 4px 0;">${inquiryData.workflowType === 'complete' ? 'Complete Workflow' : 'Individual Assay'}</td>
+              </tr>` : ''}
+            </table>
+            
+            ${inquiryData.researchOverview ? `
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9;">
+              <p style="margin: 0; color: #64748b; font-size: 13px;"><strong>Research Overview:</strong></p>
+              <p style="margin: 4px 0; font-size: 14px;">${inquiryData.researchOverview}</p>
+            </div>` : ''}
+            
+            ${inquiryData.methodologyFileUrl ? `
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9;">
+              <p style="margin: 0;"><a href="${inquiryData.methodologyFileUrl}" style="color: #1e40af; text-decoration: underline; font-weight: 600;">View Uploaded Methodology</a></p>
+            </div>` : ''}
+          </div>
+          
+          <div style="margin-top: 20px;">
+            <a href="https://pgc-genomebase.vercel.app/admin/inquiry" style="background-color: #1e40af; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 14px;">Review in Admin Panel</a>
+          </div>
+
+          <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8;">
+            <p style="margin: 2px 0;">Inquiry ID: ${docRef.id}</p>
+            <p style="margin: 2px 0;">Submitted: ${new Date().toLocaleString()}</p>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Create email text version
+    const emailText = `
+New ${inquiryData.service.charAt(0).toUpperCase() + inquiryData.service.slice(1)} Inquiry
+
+Contact Information:
+Name: ${inquiryData.name}
+Email: ${inquiryData.email}
+Affiliation: ${inquiryData.affiliation}
+Designation: ${inquiryData.designation}
+
+Service Type: ${inquiryData.service}
+${inquiryData.workflows && inquiryData.workflows.length > 0 ? `Workflows: ${Array.isArray(inquiryData.workflows) ? inquiryData.workflows.join(', ') : inquiryData.workflows}\n` : ''}
+${inquiryData.additionalInfo ? `Additional Info: ${inquiryData.additionalInfo}\n` : ''}
+${inquiryData.projectBackground ? `Project Background: ${inquiryData.projectBackground}\n` : ''}
+${inquiryData.projectBudget ? `Project Budget: ${inquiryData.projectBudget}\n` : ''}
+${inquiryData.specificTrainingNeed ? `Training Need: ${inquiryData.specificTrainingNeed}\n` : ''}
+${inquiryData.targetTrainingDate ? `Training Date: ${inquiryData.targetTrainingDate}\n` : ''}
+${inquiryData.numberOfParticipants ? `Participants: ${inquiryData.numberOfParticipants}\n` : ''}
+
+Inquiry ID: ${docRef.id}
+Submitted: ${new Date().toLocaleString()}
+    `.trim();
+    
+    // Create email document with simplified structure for better compatibility
+    const emailData = {
+      to: emailRecipients,
+      inquiryId: docRef.id, // Root level for easy searching
+      message: {
+        subject: `New ${inquiryData.service.charAt(0).toUpperCase() + inquiryData.service.slice(1)} Inquiry from ${inquiryData.name}`,
+        text: emailText,
+        html: emailHtml
+      }
+    };
+
+    console.log("EMAIL DEBUG: Email document structure:", {
+      recipients: emailData.to,
       inquiryId: emailData.inquiryId,
       hasSubject: !!emailData.message.subject,
       subjectLength: emailData.message.subject.length,
@@ -389,51 +491,55 @@ Submitted: ${new Date().toLocaleString()}
         messageKeys: Object.keys(emailData.message)
       }, null, 2));
       
-      // Create the email document
-      console.log("EMAIL DEBUG: Calling addDoc...");
-      const emailDocRef = await addDoc(mailCollection, emailData);
-      emailDocumentCreated = true;
-      emailDocId = emailDocRef.id;
-      
-      console.log("✅ EMAIL SUCCESS: Email document created!");
-      console.log("Email Document ID:", emailDocRef.id);
-      console.log("Email Document Path:", emailDocRef.path);
-      console.log("Email Document Full Path:", `mail/${emailDocRef.id}`);
+const emailRecipients = ["sequencing.pgc.upvisayas@up.edu.ph", "madayon1@up.edu.ph"];
+    
+    console.log("EMAIL DEBUG: Creating email for recipients:", emailRecipients.join(", "));
+    
+    // Create the email document
+    console.log("EMAIL DEBUG: Calling addDoc...");
+    const emailDocRef = await addDoc(mailCollection, emailData);
+    emailDocumentCreated = true;
+    emailDocId = emailDocRef.id;
+    
+    console.log("✅ EMAIL SUCCESS: Email document created!");
+    console.log("Email Document ID:", emailDocRef.id);
+    console.log("Email Document Path:", emailDocRef.path);
+    console.log("Email Document Full Path:", `mail/${emailDocRef.id}`);
 
-      // === CLIENT CONFIRMATION EMAIL ===
-      // Send automated confirmation email to the client with credentials
-      try {
-        if (inquiryData.email) {
-          console.log("EMAIL DEBUG: Creating client confirmation email for:", inquiryData.email);
-          
-          const clientEmailHtml = `
-            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.6;">
-              <div style="background-color: #f8fafc; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                <h2 style="color: #1e40af; margin-top: 0;">Inquiry Received - PGC Visayas</h2>
-                <p>Dear ${inquiryData.name},</p>
-                <p>Thank you for reaching out to PGC Visayas for your research needs. Our team will be reviewing your inquiry and will get back to you as soon as possible.</p>
-                
-                <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border-left: 4px solid #1e40af; margin: 15px 0;">
-                  <h3 style="margin-top: 0; color: #1e40af; font-size: 14px; margin-bottom: 8px;">Next Steps</h3>
-                  <p style="margin-bottom: 12px; font-size: 14px;">Monitor your request status and view quotations via the Client Portal.</p>
-                  <p style="margin: 0;"><a href="https://pgc-genomebase.vercel.app/portal" style="background-color: #1e40af; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 13px;">Access Client Portal</a></p>
-                </div>
-
-                <div style="font-size: 14px; color: #64748b;">
-                  <p style="margin-bottom: 8px;"><strong>Temporary Access Credentials:</strong></p>
-                  <p style="margin: 4px 0;"><strong>Email:</strong> ${inquiryData.email}</p>
-                  <p style="margin: 4px 0;"><strong>Temporary Password:</strong> <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">${docRef.id}</code></p>
-                </div>
-
-                <p style="margin-top: 24px;">One of our researchers will contact you shortly if additional information is needed. Should you have any immediate questions, feel free to reply through this email.</p>
-                
-                <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-                <p style="font-size: 13px; color: #94a3b8; margin-bottom: 0;">Yours in utilizing OMICS for a better Philippines,<br /><strong>Philippine Genome Center Visayas</strong></p>
+    // === CLIENT CONFIRMATION EMAIL ===
+    // Send automated confirmation email to the client with credentials
+    try {
+      if (inquiryData.email) {
+        console.log("EMAIL DEBUG: Creating client confirmation email for:", inquiryData.email);
+        
+        const clientEmailHtml = `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.6;">
+            <div style="background-color: #f8fafc; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
+              <h2 style="color: #1e40af; margin-top: 0;">Inquiry Received - PGC Visayas</h2>
+              <p>Dear ${inquiryData.name},</p>
+              <p>Thank you for reaching out to PGC Visayas for your research needs. Our team will be reviewing your inquiry and will get back to you as soon as possible.</p>
+              
+              <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border-left: 4px solid #1e40af; margin: 15px 0;">
+                <h3 style="margin-top: 0; color: #1e40af; font-size: 14px; margin-bottom: 8px;">Next Steps</h3>
+                <p style="margin-bottom: 12px; font-size: 14px;">Monitor your request status and view quotations via the Client Portal.</p>
+                <p style="margin: 0;"><a href="https://pgc-genomebase.vercel.app/portal" style="background-color: #1e40af; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 13px;">Access Client Portal</a></p>
               </div>
-            </div>
-          `;
 
-          const clientEmailText = `
+              <div style="font-size: 14px; color: #64748b;">
+                <p style="margin-bottom: 8px;"><strong>Temporary Access Credentials:</strong></p>
+                <p style="margin: 4px 0;"><strong>Email:</strong> ${inquiryData.email}</p>
+                <p style="margin: 4px 0;"><strong>Temporary Password:</strong> <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">${docRef.id}</code></p>
+              </div>
+
+              <p style="margin-top: 24px;">One of our researchers will contact you shortly if additional information is needed. Should you have any immediate questions, feel free to reply through this email.</p>
+              
+              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+              <p style="font-size: 13px; color: #94a3b8; margin-bottom: 0;">Yours in utilizing OMICS for a better Philippines,<br /><strong>Philippine Genome Center Visayas</strong></p>
+            </div>
+          </div>
+        `;
+
+        const clientEmailText = `
 Inquiry Received - PGC Visayas
 
 Dear ${inquiryData.name},
@@ -451,38 +557,38 @@ One of our researchers will contact you shortly if additional information is nee
 
 Yours in utilizing OMICS for a better Philippines,
 Philippine Genome Center Visayas
-          `.trim();
+        `.trim();
 
-          const clientEmailData = {
-            to: [inquiryData.email],
-            inquiryId: docRef.id,
-            message: {
-              subject: "Inquiry Received: PGC Visayas",
-              text: clientEmailText,
-              html: clientEmailHtml
-            }
-          };
+        const clientEmailData = {
+          to: [inquiryData.email],
+          inquiryId: docRef.id,
+          message: {
+            subject: "Inquiry Received: PGC Visayas",
+            text: clientEmailText,
+            html: clientEmailHtml
+          }
+        };
 
-          await addDoc(mailCollection, clientEmailData);
-          console.log("✅ EMAIL SUCCESS: Client confirmation email sent to:", inquiryData.email);
-        } else {
-          console.log("⚠️ EMAIL WARNING: No client email provided, skipping confirmation email");
-        }
-      } catch (clientEmailError) {
-        console.error("❌ CLIENT EMAIL FAILED:", clientEmailError);
-        // Continue execution even if client email fails
+        await addDoc(mailCollection, clientEmailData);
+        console.log("✅ EMAIL SUCCESS: Client confirmation email sent to:", inquiryData.email);
+      } else {
+        console.log("⚠️ EMAIL WARNING: No client email provided, skipping confirmation email");
       }
-      
-      // Immediately verify the document exists in Firestore
-      console.log("EMAIL DEBUG: Starting immediate verification...");
-      try {
-        const verifyDoc = await getDoc(emailDocRef);
-        if (verifyDoc.exists()) {
-          const docData = verifyDoc.data();
-          console.log("✅ VERIFICATION SUCCESS: Email document confirmed in Firestore!");
-          console.log("Verified data:", {
-            inquiryId: docData.inquiryId,
-            recipient: docData.to,
+    } catch (clientEmailError) {
+      console.error("❌ CLIENT EMAIL FAILED:", clientEmailError);
+      // Continue execution even if client email fails
+    }
+    
+    // Immediately verify the document exists in Firestore
+    console.log("EMAIL DEBUG: Starting immediate verification...");
+    try {
+      const verifyDoc = await getDoc(emailDocRef);
+      if (verifyDoc.exists()) {
+        const docData = verifyDoc.data();
+        console.log("✅ VERIFICATION SUCCESS: Email document confirmed in Firestore!");
+        console.log("Verified data:", {
+          inquiryId: docData.inquiryId,
+          recipients: docData.to,
             hasMessage: !!docData.message,
             subject: docData.message?.subject
           });
