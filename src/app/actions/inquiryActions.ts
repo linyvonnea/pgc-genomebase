@@ -386,10 +386,10 @@ Submitted: ${new Date().toLocaleString()}
                 <p>Dear ${inquiryData.name},</p>
                 <p>Thank you for reaching out to PGC Visayas for your research needs. Our team will be reviewing your inquiry and will get back to you as soon as possible.</p>
                 
-                <div style="background-color: #ffffff; padding: 20px; border-radius: 6px; border-left: 4px solid #1e40af; margin: 24px 0;">
-                  <h3 style="margin-top: 0; color: #1e40af; font-size: 16px;">Next Steps</h3>
-                  <p style="margin-bottom: 0;">You may monitor the status of your request and view your quotation once available through our Client Portal.</p>
-                  <p style="margin-top: 12px;"><a href="https://pgc-genomebase.vercel.app/portal" style="background-color: #1e40af; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600;">Access Client Portal</a></p>
+                <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border-left: 4px solid #1e40af; margin: 15px 0;">
+                  <h3 style="margin-top: 0; color: #1e40af; font-size: 14px; margin-bottom: 8px;">Next Steps</h3>
+                  <p style="margin-bottom: 12px; font-size: 14px;">Monitor your request status and view quotations via the Client Portal.</p>
+                  <p style="margin: 0;"><a href="https://pgc-genomebase.vercel.app/portal" style="background-color: #1e40af; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 13px;">Access Client Portal</a></p>
                 </div>
 
                 <div style="font-size: 14px; color: #64748b;">
