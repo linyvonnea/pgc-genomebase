@@ -34,7 +34,11 @@ export async function saveQuotationAction(
                 <p>Dear ${inquiry.name},</p>
                 <p>Your quotation is now available in your client portal. <strong>Please note that the quotation does not include re-runs for unsuccessful samples.</strong> Make sure to read our FAQs for details about turnaround time, sample submission, and payment details.</p>
                 
-                <p>To view the quotation and progress of requested services, kindly log in to your Client Portal at <a href="https://pgc-genomebase.com/portal" style="color: #1e3a8a; font-weight: bold; text-decoration: underline;">https://pgc-genomebase.com/portal</a>.</p>
+                <div style="background-color: #ffffff; padding: 20px; border-radius: 6px; border-left: 4px solid #1e3a8a; margin: 24px 0;">
+                  <h3 style="margin-top: 0; color: #1e3a8a; font-size: 16px;">Next Steps</h3>
+                  <p style="margin-bottom: 16px;">To view the quotation and progress of requested services, kindly log in to your Client Portal.</p>
+                  <p><a href="https://pgc-genomebase.vercel.app/portal" style="background-color: #1e3a8a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600;">Access Client Portal</a></p>
+                </div>
 
                 <p>If you'd like to proceed with the service, please complete the client and project details in the portal and submit for admin review. Kindly wait for a confirmation if your project has been approved before scheduling any laboratory use or sending samples.</p>
                 
@@ -51,7 +55,7 @@ Dear ${inquiry.name},
 
 Your quotation is now available in your client portal. Please note that the quotation does not include re-runs for unsuccessful samples. Make sure to read our FAQs for details about turnaround time, sample submission, and payment details.
 
-To view the quotation and progress of requested services, kindly log in to your Client Portal: https://pgc-genomebase.com/portal
+To view the quotation and progress of requested services, kindly log in to your Client Portal: https://pgc-genomebase.vercel.app/portal
 
 If you'd like to proceed with the service, please complete the client and project details in the portal and submit for admin review. Kindly wait for a confirmation if your project has been approved before scheduling any laboratory use or sending samples.
 
