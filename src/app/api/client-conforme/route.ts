@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       programDirectorSignature: {
         method: "auto_approved",
         data: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.", 
-        signedBy: "vferriols@pgc.up.edu.ph",
+        signedBy: "vnferriols@up.edu.ph",
         timestamp: admin.firestore.Timestamp.fromDate(timestamp),
       }
     };

@@ -208,7 +208,7 @@ export default function ClientConformeModal({
           programDirectorSignature: {
             method:    "auto_approved",
             data:      "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.",
-            signedBy:  "vferriols@pgc.up.edu.ph",
+            signedBy:  "vnferriols@up.edu.ph",
             timestamp: ts,
           },
         },

@@ -131,7 +131,7 @@ export async function createClientConforme(
  */
 export async function addDirectorSignature(
   conformeId: string,
-  directorEmail: string = "vferriols@pgc.up.edu.ph"
+  directorEmail: string = "vnferriols@up.edu.ph"
 ): Promise<void> {
   try {
     console.log("🖋️ Adding director signature to:", conformeId);
