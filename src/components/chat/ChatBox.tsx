@@ -40,7 +40,7 @@ export default function ChatBox({ inquiryId, role }: ChatBoxProps) {
           .filter(Boolean);
 
         if (unreadIds.length > 0) {
-          markMessagesAsRead(inquiryId, unreadIds, user.email || "unknown").catch(console.error);
+          markMessagesAsRead(inquiryId, role, user.email || "unknown").catch(console.error);
         }
       });
 
@@ -76,7 +76,7 @@ export default function ChatBox({ inquiryId, role }: ChatBoxProps) {
         ? "Admin (" + (user.email?.split("@")[0] || "Staff") + ")"
         : user.displayName || user.email?.split("@")[0] || "Client";
         
-      await addThreadMessage(inquiryId, {
+      await addThreadMessage({
         threadId: inquiryId,
         type: "text",
         content: messageContent,
@@ -84,7 +84,7 @@ export default function ChatBox({ inquiryId, role }: ChatBoxProps) {
         senderName: senderDisplayName,
         senderRole: role,
         isRead: false,
-      } as Omit<ThreadMessage, "createdAt">);
+      } as Omit<ThreadMessage, "id" | "createdAt">);
     } catch (error) {
       console.error("Failed to send message:", error);
       setError("Failed to send message. Please try again.");
