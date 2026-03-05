@@ -63,6 +63,11 @@ export default function QuotationRequestForm() {
   const { user } = useAuth()
   const router = useRouter()
 
+  // Show logged-in email at the top (best practice: clear, non-intrusive, accessible)
+  // Only show if user is authenticated
+  // Place above the main form
+  const [showEmailBanner, setShowEmailBanner] = useState(false)
+
   // Initialize form with validation schema and default values
   const form = useForm<InquiryFormData>({
     resolver: zodResolver(inquiryFormSchema), 
