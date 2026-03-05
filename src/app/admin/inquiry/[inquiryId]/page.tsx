@@ -9,7 +9,8 @@ import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import { Inquiry } from "@/types/Inquiry";
-import { FileText, Calendar, User, Building2, Mail, Briefcase, FlaskConical, DollarSign } from "lucide-react";
+import ChatBox from "@/components/chat/ChatBox";
+import { FileText, Calendar, User, Building2, Mail, Briefcase, FlaskConical, DollarSign, MessageSquare } from "lucide-react";
 
 // Utility to format date
 const formatDate = (val: Date | string | null | undefined): string => {
@@ -392,7 +393,6 @@ function InquiryDetailContent() {
             Available Actions
           </h2>
           <p className="text-sm text-slate-600 mb-4">Create a quotation for this inquiry</p>
-
           <Button
             onClick={() => router.push(`/admin/quotations/new?inquiryId=${inquiry.id}`)}
             className="bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#145a9b] hover:to-[#362f8f] text-white font-medium px-6 py-2 rounded-lg transition-all duration-200 shadow-lg"
@@ -401,6 +401,13 @@ function InquiryDetailContent() {
           </Button>
         </div>
       </div>
+    
+      {/* Messages */}
+      <div className="max-w-4xl mx-auto space-y-6 mt-6 pb-12 w-full col-span-1 lg:col-span-2">
+        <ChatBox inquiryId={inquiry.id} role="admin" />
+      </div>
     </div>
   );
 }
+
+

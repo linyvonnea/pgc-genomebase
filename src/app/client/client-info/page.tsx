@@ -71,6 +71,7 @@ import { subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { getChargeSlipsByProjectId } from "@/services/chargeSlipService";
 import { QuotationRecord } from "@/types/Quotation";
+import ChatBox from "@/components/chat/ChatBox";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { ApprovalStatus } from "@/types/MemberApproval";
 import { db } from "@/lib/firebase";
@@ -2807,7 +2808,14 @@ export default function ClientPortalPage() {
                       )}
                     </div>
 
-                    {/* Quotation Request Details (previously Inquiry Details Summary) */}
+                                          {/* Messages / Communications */}
+                      {currentInquiry && (
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                          <ChatBox inquiryId={currentInquiry.id} role="client" />
+                        </div>
+                      )}
+
+                      {/* Quotation Request Details (previously Inquiry Details Summary) */}
                     {currentInquiry && (
                       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
                         <div className="flex items-center justify-between mb-6">
@@ -3304,3 +3312,5 @@ export default function ClientPortalPage() {
     </>
   );
 }
+
+
