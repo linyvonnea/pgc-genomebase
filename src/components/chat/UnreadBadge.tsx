@@ -42,3 +42,4 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
     </div>
   );
 }
+
