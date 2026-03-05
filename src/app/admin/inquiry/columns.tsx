@@ -15,8 +15,14 @@ import { Badge } from "@/components/ui/badge";
 import { EditInquiryModal } from "@/components/forms/EditInquiryModal";
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { QuoteButton } from "./QuoteButton";
-import { Copy } from "lucide-react";
+import { Copy, User, Eye } from "lucide-react";
 import { toast } from "sonner";
 
 /**
@@ -172,16 +178,44 @@ export const columns: ColumnDef<Inquiry>[] = [
     size: 100, 
     cell: ({ row }) => {
       const status = row.original.status || "Pending";
+      const hasLoggedIn = row.original.hasLoggedIn;
+      const hasOpenedQuotation = row.original.hasOpenedQuotation;
 
       // Render status as a colored badge
       return (
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
-            status
-          )}`}
-        >
-          {status}
-        </span>
+        <div className="flex items-center gap-1.5">
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
+              status
+            )}`}
+          >
+            {status}
+          </span>
+          {hasLoggedIn && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <User className="h-3.5 w-3.5 text-green-600 fill-green-600 cursor-default" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-[10px]">Client has logged into portal</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          {hasOpenedQuotation && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Eye className="h-3.5 w-3.5 text-blue-500 cursor-default" strokeWidth={2.5} />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-[10px]">Client has viewed quotation</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
       );
     },
   },
@@ -198,11 +232,7 @@ export const columns: ColumnDef<Inquiry>[] = [
       return (
         <div className="flex items-center justify-center gap-2">
           {canCreate("quotations") && (
-            <QuoteButton 
-              inquiryId={inquiry.id} 
-              hasSeen={inquiry.hasOpenedQuotation} 
-              hasLoggedIn={inquiry.hasLoggedIn}
-            />
+            <QuoteButton inquiryId={inquiry.id} />
           )}
 
           {/* Edit inquiry modal trigger - only show if user has edit permission */}
