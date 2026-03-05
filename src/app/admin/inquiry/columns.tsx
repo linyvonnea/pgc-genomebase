@@ -22,6 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { QuoteButton } from "./QuoteButton";
+import UnreadBadge from "@/components/chat/UnreadBadge";
 import { Copy, User, Eye } from "lucide-react";
 import { toast } from "sonner";
 
@@ -184,9 +185,10 @@ export const columns: ColumnDef<Inquiry>[] = [
 
       // Render status as a colored badge
       return (
-        <div className="flex items-center gap-1.5 min-w-[180px]">
-          <div className="flex items-center gap-1 shrink-0">
-            {!!hasLoggedIn && (
+                  <div className="flex items-center gap-1.5 min-w-[180px]">
+            <div className="flex items-center gap-1 shrink-0">
+              <UnreadBadge inquiryId={inquiry.id} role="admin" />
+              {!!hasLoggedIn && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -251,3 +253,4 @@ export const columns: ColumnDef<Inquiry>[] = [
     },
   },
 ];
+
