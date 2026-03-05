@@ -198,7 +198,11 @@ export const columns: ColumnDef<Inquiry>[] = [
       return (
         <div className="flex items-center justify-center gap-2">
           {canCreate("quotations") && (
-            <QuoteButton inquiryId={inquiry.id} hasSeen={inquiry.hasOpenedQuotation} />
+            <QuoteButton 
+              inquiryId={inquiry.id} 
+              hasSeen={inquiry.hasOpenedQuotation} 
+              hasLoggedIn={inquiry.hasLoggedIn}
+            />
           )}
 
           {/* Edit inquiry modal trigger - only show if user has edit permission */}

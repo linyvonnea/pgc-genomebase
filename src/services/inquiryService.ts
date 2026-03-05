@@ -84,7 +84,8 @@ export async function getInquiries(): Promise<Inquiry[]> {
         
         // System fields
         haveSubmitted: data.haveSubmitted || false,
-        hasOpenedQuotation: data.hasOpenedQuotation || false
+        hasOpenedQuotation: data.hasOpenedQuotation || false,
+        hasLoggedIn: data.hasLoggedIn || false
       };
       inquiries.push(inquiry);
     });
@@ -156,7 +157,8 @@ export async function getInquiryById(id: string): Promise<Inquiry> {
       
       // System fields
       haveSubmitted: data.haveSubmitted || false,
-      hasOpenedQuotation: data.hasOpenedQuotation || false
+      hasOpenedQuotation: data.hasOpenedQuotation || false,
+      hasLoggedIn: data.hasLoggedIn || false
     };
   } catch (error) {
     console.error(`Failed to fetch inquiry ${id}:`, error);
@@ -279,7 +281,8 @@ export function subscribeToInquiries(
           targetTrainingDate: data.targetTrainingDate || null,
           numberOfParticipants: data.numberOfParticipants || null,
           haveSubmitted: data.haveSubmitted || false,
-          hasOpenedQuotation: data.hasOpenedQuotation || false
+          hasOpenedQuotation: data.hasOpenedQuotation || false,
+          hasLoggedIn: data.hasLoggedIn || false
         };
       });
       
@@ -312,5 +315,24 @@ export async function updateInquiryStatus(
   } catch (error) {
     console.error(`Error updating inquiry ${inquiryId} status:`, error);
     throw error;
+  }
+}
+
+/**
+ * Marks an inquiry as having the client logged in.
+ * 
+ * @param inquiryId - The ID of the inquiry to update
+ */
+export async function markInquiryAsLoggedIn(inquiryId: string): Promise<void> {
+  if (!inquiryId) return;
+  
+  try {
+    const inquiryRef = doc(db, "inquiries", inquiryId);
+    await updateDoc(inquiryRef, { 
+      hasLoggedIn: true 
+    });
+    console.log(`[Firestore] Inquiry ${inquiryId} marked as logged in.`);
+  } catch (error) {
+    console.error(`[Firestore] Error marking inquiry ${inquiryId} as logged in:`, error);
   }
 }

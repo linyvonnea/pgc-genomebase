@@ -18,6 +18,7 @@ import { signInWithPopup, GoogleAuthProvider, getAuth } from "firebase/auth";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, collection, query, where, getDocs, or } from "firebase/firestore";
 import { getProjectRequest } from "@/services/projectRequestService";
+import { markInquiryAsLoggedIn } from "@/services/inquiryService";
 import { 
   UserCheck, 
   Shield,
@@ -142,6 +143,11 @@ export default function ClientVerifyPage() {
       } else if (hasProjectRequest && projectRequest.id) {
         // If it's a project request draft, pass that info
         params.set("projectRequestId", projectRequest.id);
+      }
+      
+      // Mark as logged in if not admin
+      if (!isMasterAdmin) {
+        markInquiryAsLoggedIn(inquiryId);
       }
       
       router.push(`/client/client-info?${params.toString()}`);

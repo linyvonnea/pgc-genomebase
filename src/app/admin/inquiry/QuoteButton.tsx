@@ -10,14 +10,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Loader2, Eye } from "lucide-react";
+import { Loader2, Eye, User } from "lucide-react";
 
 interface QuoteButtonProps {
   inquiryId: string;
   hasSeen?: boolean;
+  hasLoggedIn?: boolean;
 }
 
-export function QuoteButton({ inquiryId, hasSeen }: QuoteButtonProps) {
+export function QuoteButton({ inquiryId, hasSeen, hasLoggedIn }: QuoteButtonProps) {
   const router = useRouter();
 
   // Fetch quotations related to this inquiry
@@ -43,6 +44,9 @@ export function QuoteButton({ inquiryId, hasSeen }: QuoteButtonProps) {
           >
             <div className="flex items-center gap-1">
               <span>Quote</span>
+              {hasLoggedIn && (
+                <User className="h-3 w-3 text-green-600 fill-green-600" />
+              )}
               {hasSeen && (
                 <Eye className="h-3.5 w-3.5 text-blue-500" strokeWidth={2.5} />
               )}
