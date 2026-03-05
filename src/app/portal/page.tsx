@@ -19,6 +19,7 @@ import { db } from "@/lib/firebase";
 import { doc, getDoc, collection, query, where, getDocs, or } from "firebase/firestore";
 import { getProjectRequest } from "@/services/projectRequestService";
 import { markInquiryAsLoggedIn } from "@/services/inquiryService";
+import { logActivity } from "@/services/activityLogService";
 import { 
   UserCheck, 
   Shield,
@@ -147,7 +148,20 @@ export default function ClientVerifyPage() {
       
       // Mark as logged in if not admin
       if (!isMasterAdmin) {
-        markInquiryAsLoggedIn(inquiryId);
+        await markInquiryAsLoggedIn(inquiryId);
+        
+        // Log the successful login
+        await logActivity({
+          userId: googleUser.email,
+          userEmail: googleUser.email,
+          userName: inquiry.name,
+          userRole: "client",
+          action: "LOGIN",
+          entityType: "inquiry",
+          entityId: inquiryId,
+          entityName: inquiry.name,
+          description: `Client logged into portal using Inquiry ID: ${inquiryId}`,
+        });
       }
       
       router.push(`/client/client-info?${params.toString()}`);
