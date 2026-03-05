@@ -31,4 +31,5 @@ export interface Inquiry {
   
   // System fields
   haveSubmitted?: boolean;
+  hasOpenedQuotation?: boolean;
 }

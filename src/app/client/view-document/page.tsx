@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { PDFViewer } from "@react-pdf/renderer";
-import { getQuotationByReferenceNumber } from "@/services/quotationService";
+import { getQuotationByReferenceNumber, markQuotationAsSeen } from "@/services/quotationService";
 import { getChargeSlipById } from "@/services/chargeSlipService";
 import { QuotationPDF } from "@/components/quotation/QuotationPDF";
 import { ChargeSlipPDF } from "@/components/charge-slip/ChargeSlipPDF";
@@ -88,6 +88,11 @@ function ViewDocumentContent() {
               }
             }
             setData(quotation);
+            
+            // Mark as seen if a client (not admin) is viewing it
+            if (!isAdmin && quotation.inquiryId) {
+              markQuotationAsSeen(quotation.inquiryId);
+            }
           } else {
             toast.error("Quotation not found.");
           }
