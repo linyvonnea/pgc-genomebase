@@ -10,15 +10,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Loader2, Eye, User } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface QuoteButtonProps {
   inquiryId: string;
-  hasSeen?: boolean;
-  hasLoggedIn?: boolean;
 }
 
-export function QuoteButton({ inquiryId, hasSeen, hasLoggedIn }: QuoteButtonProps) {
+export function QuoteButton({ inquiryId }: QuoteButtonProps) {
   const router = useRouter();
 
   // Fetch quotations related to this inquiry
@@ -40,18 +38,10 @@ export function QuoteButton({ inquiryId, hasSeen, hasLoggedIn }: QuoteButtonProp
             }
             variant="outline"
             size="sm"
-            className="whitespace-nowrap h-8 min-w-[88px] px-2 text-xs bg-white hover:bg-slate-50 border-slate-200 text-slate-700 font-medium flex items-center justify-between gap-1.5"
+            className="whitespace-nowrap h-8 w-[88px] px-2 text-xs bg-white hover:bg-slate-50 border-slate-200 text-slate-700 font-medium flex items-center justify-between"
           >
-            <div className="flex items-center gap-1">
-              <span>Quote</span>
-              {hasLoggedIn && (
-                <User className="h-3 w-3 text-green-600 fill-green-600" />
-              )}
-              {hasSeen && (
-                <Eye className="h-3.5 w-3.5 text-blue-500" strokeWidth={2.5} />
-              )}
-            </div>
-            <div className="flex items-center justify-center min-w-[1.25rem]">
+            <span>Quote</span>
+            <div className="flex items-center justify-center w-6">
               {count > 0 && (
                 <span className="flex items-center justify-center bg-slate-100 text-slate-600 rounded-full h-5 min-w-[20px] px-1 text-[10px] font-bold border border-slate-200">
                   {isLoading ? (
