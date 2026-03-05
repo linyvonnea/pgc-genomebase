@@ -2967,9 +2967,9 @@ export default function ClientPortalPage() {
                     <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden group">
                       <Sparkles className="absolute top-2 right-2 h-12 w-12 text-white/10 -rotate-12 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-12" />
                       <div className="relative">
-                        <h3 className="font-bold text-base mb-1">Create Project</h3>
+                        <h3 className="font-bold text-base mb-1">Start a New Project</h3>
                         <p className="text-blue-100 text-xs mb-4 leading-normal">
-                          Ready to proceed? Formalize your inquiry into a new project.
+                          To proceed with our services, please submit your project and client information for approval.
                         </p>
                         <Button 
                           onClick={handleCreateNewProject}
