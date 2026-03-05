@@ -469,7 +469,7 @@ export async function getThreadMessages(threadId: string): Promise<ThreadMessage
     const q = query(
       messagesRef,
       where("threadId", "==", threadId),
-      orderBy("createdAt", "asc")
+      // orderBy("createdAt", "asc")
     );
     
     const snapshot = await getDocs(q);
@@ -491,11 +491,16 @@ export function subscribeToThreadMessages(
   const q = query(
     messagesRef,
     where("threadId", "==", threadId),
-    orderBy("createdAt", "asc")
+    // orderBy("createdAt", "asc")
   );
   
   return onSnapshot(q, (snapshot) => {
     const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ThreadMessage));
+    messages.sort((a, b) => {
+      const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+      const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+      return timeA - timeB;
+    });
     callback(messages);
   });
 }
@@ -616,3 +621,5 @@ export async function requestQuotationRevision(
     throw error;
   }
 }
+
+
