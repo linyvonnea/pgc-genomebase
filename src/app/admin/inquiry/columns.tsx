@@ -175,7 +175,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 100, 
+    size: 200, 
     cell: ({ row }) => {
       const inquiry = row.original;
       const status = inquiry.status || "Pending";
@@ -184,7 +184,7 @@ export const columns: ColumnDef<Inquiry>[] = [
 
       // Render status as a colored badge
       return (
-        <div className="flex items-center gap-1.5 min-w-[140px]">
+        <div className="flex items-center gap-1.5 min-w-[180px]">
           <div className="flex items-center gap-1 shrink-0">
             {!!hasLoggedIn && (
               <TooltipProvider>
