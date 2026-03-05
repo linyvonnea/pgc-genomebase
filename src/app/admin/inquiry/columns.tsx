@@ -177,9 +177,10 @@ export const columns: ColumnDef<Inquiry>[] = [
     header: "Status",
     size: 100, 
     cell: ({ row }) => {
-      const status = row.original.status || "Pending";
-      const hasLoggedIn = row.original.hasLoggedIn;
-      const hasOpenedQuotation = row.original.hasOpenedQuotation;
+      const inquiry = row.original;
+      const status = inquiry.status || "Pending";
+      const hasLoggedIn = inquiry.hasLoggedIn;
+      const hasOpenedQuotation = inquiry.hasOpenedQuotation;
 
       // Render status as a colored badge
       return (
@@ -191,26 +192,26 @@ export const columns: ColumnDef<Inquiry>[] = [
           >
             {status}
           </span>
-          {hasLoggedIn && (
+          {!!hasLoggedIn && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <User className="h-3.5 w-3.5 text-green-600 fill-green-600 cursor-default" />
+                  <User className="h-4 w-4 text-green-600 fill-green-600 cursor-default shrink-0" />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-[10px]">Client has logged into portal</p>
+                  <p className="text-xs">Client has logged into portal</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           )}
-          {hasOpenedQuotation && (
+          {!!hasOpenedQuotation && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Eye className="h-3.5 w-3.5 text-blue-500 cursor-default" strokeWidth={2.5} />
+                  <Eye className="h-4 w-4 text-blue-500 cursor-default shrink-0" strokeWidth={3} />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p className="text-[10px]">Client has viewed quotation</p>
+                  <p className="text-xs">Client has viewed quotation</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
