@@ -71,7 +71,7 @@ import { subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { getChargeSlipsByProjectId } from "@/services/chargeSlipService";
 import { QuotationRecord } from "@/types/Quotation";
-import ChatBox from "@/components/chat/ChatBox";
+import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { ApprovalStatus } from "@/types/MemberApproval";
 import { db } from "@/lib/firebase";
@@ -2808,11 +2808,9 @@ export default function ClientPortalPage() {
                       )}
                     </div>
 
-                                          {/* Messages / Communications */}
+                                          {/* Messages / Communications (Floating) */}
                       {currentInquiry && (
-                        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                          <ChatBox inquiryId={currentInquiry.id} role="client" />
-                        </div>
+                        <FloatingChatWidget inquiryId={currentInquiry.id} role="client" />
                       )}
 
                       {/* Quotation Request Details (previously Inquiry Details Summary) */}
@@ -3312,5 +3310,7 @@ export default function ClientPortalPage() {
     </>
   );
 }
+
+
 
 
