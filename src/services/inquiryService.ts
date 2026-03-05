@@ -213,7 +213,9 @@ export function subscribeToInquiryById(
         specificTrainingNeed: data.specificTrainingNeed || null,
         targetTrainingDate: data.targetTrainingDate || null,
         numberOfParticipants: data.numberOfParticipants || null,
-        haveSubmitted: data.haveSubmitted || false
+        haveSubmitted: data.haveSubmitted || false,
+        hasOpenedQuotation: data.hasOpenedQuotation || false,
+        hasLoggedIn: data.hasLoggedIn || false
       };
       
       callback(inquiry);
