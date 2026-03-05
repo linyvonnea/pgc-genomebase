@@ -547,9 +547,6 @@ export default function QuotationRequestForm() {
                           <Label htmlFor="workflow-individual" className="text-sm text-slate-700 font-semibold cursor-pointer block">
                             Individual Assay
                           </Label>
-                          <p className="text-xs text-slate-600 mt-1">
-                            Select specific services (e.g., DNA Extraction, PCR, etc.)
-                          </p>
                         </div>
                       </div>
                     </div>
@@ -564,11 +561,11 @@ export default function QuotationRequestForm() {
                     {formData.workflowType === "individual" && (
                       <div className="mt-4">
                         <Label htmlFor="individualAssayDetails" className="text-sm font-semibold text-slate-700 mb-2 block">
-                          Please specify services (e.g., DNA Extraction, PCR, etc.) <span className="text-[#B9273A]">*</span>
+                          Please provide specific services <span className="text-[#B9273A]">*</span>
                         </Label>
                         <Textarea
                           id="individualAssayDetails"
-                          placeholder="e.g., DNA Extraction, PCR, etc"
+                          placeholder="e.g., DNA Extraction, PCR, Sequencing, Bioinformatics Analysis etc"
                           {...register("individualAssayDetails")}
                           className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[80px] resize-none"
                           rows={3}
