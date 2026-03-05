@@ -14,9 +14,10 @@ import { format } from "date-fns";
 interface ChatBoxProps {
   inquiryId: string;
   role: MessageSenderRole; // "admin" or "client"
+  variant?: "default" | "floating";
 }
 
-export default function ChatBox({ inquiryId, role }: ChatBoxProps) {
+export default function ChatBox({ inquiryId, role, variant = "default" }: ChatBoxProps) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ThreadMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -109,7 +110,7 @@ export default function ChatBox({ inquiryId, role }: ChatBoxProps) {
 
   if (!user) {
     return (
-      <Card className="w-full h-[500px] flex items-center justify-center bg-gray-50 border-gray-200">
+      <Card className={`w-full flex items-center justify-center bg-gray-50 border-gray-200 ${variant === 'floating' ? 'h-full border-none shadow-none' : 'h-[500px]'}`}>
         <div className="text-center text-gray-500">
           <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
           <p>Please log in to view messages.</p>
@@ -119,13 +120,15 @@ export default function ChatBox({ inquiryId, role }: ChatBoxProps) {
   }
 
   return (
-    <Card className="flex flex-col h-[500px] shadow-sm border-gray-200 flex-1 relative">
-      <CardHeader className="py-3 px-4 border-b bg-gray-50/50">
-        <CardTitle className="text-sm font-medium flex items-center gap-2 text-gray-700">
-          <MessageCircle className="w-4 h-4 text-blue-500" />
-          Activity & Messages
-        </CardTitle>
-      </CardHeader>
+    <Card className={`flex flex-col flex-1 relative ${variant === 'floating' ? 'h-full border-none shadow-none rounded-none' : 'h-[500px] shadow-sm border-gray-200'}`}>
+      {variant !== 'floating' && (
+        <CardHeader className="py-3 px-4 border-b bg-gray-50/50">
+          <CardTitle className="text-sm font-medium flex items-center gap-2 text-gray-700">
+            <MessageCircle className="w-4 h-4 text-blue-500" />
+            Activity & Messages
+          </CardTitle>
+        </CardHeader>
+      )}
       
       <CardContent className="flex-1 p-0 overflow-hidden relative bg-white">
         <div 
