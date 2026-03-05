@@ -147,7 +147,11 @@ export default function ClientVerifyPage() {
       }
       
       // Mark as logged in if not admin
-      if (!isMasterAdmin) {
+      // Check if it's a client login (not an admin bypass)
+      const isClientLogin = !isMasterAdmin;
+      
+      if (isClientLogin) {
+        console.log(`[Portal] Client login detected for inquiry ${inquiryId}. Marking as logged in.`);
         await markInquiryAsLoggedIn(inquiryId);
         
         // Log the successful login

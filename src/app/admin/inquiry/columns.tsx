@@ -184,31 +184,33 @@ export const columns: ColumnDef<Inquiry>[] = [
 
       // Render status as a colored badge
       return (
-        <div className="flex items-center gap-1.5">
-          {!!hasLoggedIn && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <User className="h-4 w-4 text-green-600 fill-green-600 cursor-default shrink-0" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">Client has logged into portal</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-          {!!hasOpenedQuotation && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Eye className="h-4 w-4 text-blue-500 cursor-default shrink-0" strokeWidth={3} />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="text-xs">Client has viewed quotation</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
+        <div className="flex items-center gap-1.5 min-w-[140px]">
+          <div className="flex items-center gap-1 shrink-0">
+            {!!hasLoggedIn && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <User className="h-4 w-4 text-green-600 fill-green-600 cursor-default" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs font-semibold">Client has logged into portal</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {!!hasOpenedQuotation && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Eye className="h-4 w-4 text-blue-500 cursor-default" strokeWidth={3} />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs font-semibold">Client has viewed quotation</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
           <span
             className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
               status
