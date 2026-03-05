@@ -185,13 +185,6 @@ export const columns: ColumnDef<Inquiry>[] = [
       // Render status as a colored badge
       return (
         <div className="flex items-center gap-1.5">
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
-              status
-            )}`}
-          >
-            {status}
-          </span>
           {!!hasLoggedIn && (
             <TooltipProvider>
               <Tooltip>
@@ -216,6 +209,13 @@ export const columns: ColumnDef<Inquiry>[] = [
               </Tooltip>
             </TooltipProvider>
           )}
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
+              status
+            )}`}
+          >
+            {status}
+          </span>
         </div>
       );
     },
