@@ -254,7 +254,7 @@ export default function QuotationRequestForm() {
               </h1>
             </div>
             {/* Information banner explaining available services */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100 mb-6">
               <p className="text-slate-700 leading-relaxed">
                 Thank you for reaching out to PGC Visayas for your research needs. We offer a range of 
                 services from Equipment Use, DNA Extraction, Polymerase Chain Reaction (PCR), Sample 
@@ -262,6 +262,34 @@ export default function QuotationRequestForm() {
                 To assist you better, kindly provide us with the following information:
               </p>
             </div>
+
+            {/* User identification banner - for transparency */}
+            {user && (
+              <div className="flex items-center gap-3 px-5 py-3 mb-8 bg-white border border-slate-100 rounded-xl shadow-sm animate-in fade-in slide-in-from-top-2 duration-700">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100">
+                  <span className="text-[#166FB5] font-bold text-xs uppercase">
+                    {(user.displayName || user.email || "U").charAt(0)}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">Logged in as</p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-slate-800 truncate max-w-[200px]">
+                      {user.displayName || "Client User"}
+                    </span>
+                    <span className="inline-block w-1 h-1 bg-slate-300 rounded-full"></span>
+                    <span className="text-sm font-mono text-[#166FB5] truncate">
+                      {user.email}
+                    </span>
+                  </div>
+                </div>
+                <div className="hidden sm:block">
+                  <div className="px-2 py-1 bg-green-50 text-green-600 text-[10px] font-bold rounded-md border border-green-100 uppercase tracking-tight">
+                    Verified Account
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
