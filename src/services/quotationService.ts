@@ -10,6 +10,7 @@ import {
   getDoc,
   limit,
   deleteDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { QuotationRecord } from "@/types/Quotation";
@@ -217,4 +218,23 @@ export async function generateNextReferenceNumber(
       : String(nextNumber);
 
   return `${prefixForYear}-${suffix}`;
+}
+
+/**
+ * Marks an inquiry as having its quotation opened/seen by the client.
+ * 
+ * @param inquiryId - The Firestore document ID of the inquiry to update
+ */
+export async function markQuotationAsSeen(inquiryId: string): Promise<void> {
+  if (!inquiryId) return;
+  
+  try {
+    const inquiryRef = doc(db, "inquiries", inquiryId);
+    await updateDoc(inquiryRef, { 
+      hasOpenedQuotation: true 
+    });
+    console.log(`[Firestore] Inquiry ${inquiryId} marked as quotation seen.`);
+  } catch (error) {
+    console.error(`[Firestore] Error marking inquiry ${inquiryId} as seen:`, error);
+  }
 }

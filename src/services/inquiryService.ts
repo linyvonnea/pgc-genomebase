@@ -83,7 +83,8 @@ export async function getInquiries(): Promise<Inquiry[]> {
         numberOfParticipants: data.numberOfParticipants || null,
         
         // System fields
-        haveSubmitted: data.haveSubmitted || false
+        haveSubmitted: data.haveSubmitted || false,
+        hasOpenedQuotation: data.hasOpenedQuotation || false
       };
       inquiries.push(inquiry);
     });
@@ -154,7 +155,8 @@ export async function getInquiryById(id: string): Promise<Inquiry> {
       numberOfParticipants: data.numberOfParticipants || null,
       
       // System fields
-      haveSubmitted: data.haveSubmitted || false
+      haveSubmitted: data.haveSubmitted || false,
+      hasOpenedQuotation: data.hasOpenedQuotation || false
     };
   } catch (error) {
     console.error(`Failed to fetch inquiry ${id}:`, error);
@@ -276,7 +278,8 @@ export function subscribeToInquiries(
           specificTrainingNeed: data.specificTrainingNeed || null,
           targetTrainingDate: data.targetTrainingDate || null,
           numberOfParticipants: data.numberOfParticipants || null,
-          haveSubmitted: data.haveSubmitted || false
+          haveSubmitted: data.haveSubmitted || false,
+          hasOpenedQuotation: data.hasOpenedQuotation || false
         };
       });
       
