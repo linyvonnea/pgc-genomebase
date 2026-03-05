@@ -359,112 +359,6 @@ Submitted: ${new Date().toLocaleString()}
       htmlLength: emailData.message.html.length,
       textLength: emailData.message.text.length
     });
-    
-    // Create a comprehensive HTML email body
-    const emailHtml = `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.5;">
-        <div style="background-color: #f8fafc; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-          <h2 style="color: #1e40af; margin-top: 0; font-size: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
-            New ${inquiryData.service.charAt(0).toUpperCase() + inquiryData.service.slice(1)} Inquiry
-          </h2>
-          
-          <div style="margin: 20px 0;">
-            <p style="margin: 5px 0;"><strong>Name:</strong> ${inquiryData.name}</p>
-            <p style="margin: 5px 0;"><strong>Email:</strong> ${inquiryData.email}</p>
-            <p style="margin: 5px 0;"><strong>Affiliation:</strong> ${inquiryData.affiliation}</p>
-            <p style="margin: 5px 0;"><strong>Designation:</strong> ${inquiryData.designation}</p>
-          </div>
-          
-          <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; margin: 20px 0;">
-            <h3 style="margin-top: 0; font-size: 16px; color: #1e40af;">Service Details</h3>
-            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-              <tr>
-                <td style="padding: 4px 0; width: 140px; color: #64748b;">Service Type:</td>
-                <td style="padding: 4px 0;">${inquiryData.service}</td>
-              </tr>
-              ${inquiryData.species ? `
-              <tr>
-                <td style="padding: 4px 0; color: #64748b;">Species:</td>
-                <td style="padding: 4px 0;">${inquiryData.species}${(inquiryData.species === 'other' || inquiryData.species === 'animal') && inquiryData.otherSpecies ? ` (${inquiryData.otherSpecies})` : ''}</td>
-              </tr>` : ''}
-              ${inquiryData.sampleCount ? `
-              <tr>
-                <td style="padding: 4px 0; color: #64748b;">Sample Count:</td>
-                <td style="padding: 4px 0;">${inquiryData.sampleCount}</td>
-              </tr>` : ''}
-              ${inquiryData.workflowType ? `
-              <tr>
-                <td style="padding: 4px 0; color: #64748b;">Workflow:</td>
-                <td style="padding: 4px 0;">${inquiryData.workflowType === 'complete' ? 'Complete Workflow' : 'Individual Assay'}</td>
-              </tr>` : ''}
-            </table>
-            
-            ${inquiryData.researchOverview ? `
-            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9;">
-              <p style="margin: 0; color: #64748b; font-size: 13px;"><strong>Research Overview:</strong></p>
-              <p style="margin: 4px 0; font-size: 14px;">${inquiryData.researchOverview}</p>
-            </div>` : ''}
-            
-            ${inquiryData.methodologyFileUrl ? `
-            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9;">
-              <p style="margin: 0;"><a href="${inquiryData.methodologyFileUrl}" style="color: #1e40af; text-decoration: underline; font-weight: 600;">View Uploaded Methodology</a></p>
-            </div>` : ''}
-          </div>
-          
-          <div style="margin-top: 20px;">
-            <a href="https://pgc-genomebase.vercel.app/admin/inquiry" style="background-color: #1e40af; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 14px;">Review in Admin Panel</a>
-          </div>
-
-          <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8;">
-            <p style="margin: 2px 0;">Inquiry ID: ${docRef.id}</p>
-            <p style="margin: 2px 0;">Submitted: ${new Date().toLocaleString()}</p>
-          </div>
-        </div>
-      </div>
-    `;
-    
-    // Create email text version
-    const emailText = `
-New ${inquiryData.service.charAt(0).toUpperCase() + inquiryData.service.slice(1)} Inquiry
-
-Contact Information:
-Name: ${inquiryData.name}
-Email: ${inquiryData.email}
-Affiliation: ${inquiryData.affiliation}
-Designation: ${inquiryData.designation}
-
-Service Type: ${inquiryData.service}
-${inquiryData.workflows && inquiryData.workflows.length > 0 ? `Workflows: ${Array.isArray(inquiryData.workflows) ? inquiryData.workflows.join(', ') : inquiryData.workflows}\n` : ''}
-${inquiryData.additionalInfo ? `Additional Info: ${inquiryData.additionalInfo}\n` : ''}
-${inquiryData.projectBackground ? `Project Background: ${inquiryData.projectBackground}\n` : ''}
-${inquiryData.projectBudget ? `Project Budget: ${inquiryData.projectBudget}\n` : ''}
-${inquiryData.specificTrainingNeed ? `Training Need: ${inquiryData.specificTrainingNeed}\n` : ''}
-${inquiryData.targetTrainingDate ? `Training Date: ${inquiryData.targetTrainingDate}\n` : ''}
-${inquiryData.numberOfParticipants ? `Participants: ${inquiryData.numberOfParticipants}\n` : ''}
-
-Inquiry ID: ${docRef.id}
-Submitted: ${new Date().toLocaleString()}
-    `.trim();
-    
-    // Create email document with simplified structure for better compatibility
-    const emailData = {
-      to: emailRecipients,
-      inquiryId: docRef.id, // Root level for easy searching
-      message: {
-        subject: `New ${inquiryData.service.charAt(0).toUpperCase() + inquiryData.service.slice(1)} Inquiry from ${inquiryData.name}`,
-        text: emailText,
-        html: emailHtml
-      }
-    };
-
-    console.log("EMAIL DEBUG: Email document structure:", {
-      recipients: emailData.to,
-      inquiryId: emailData.inquiryId,
-      hasSubject: !!emailData.message.subject,
-      subjectLength: emailData.message.subject.length,
-      htmlLength: emailData.message.html.length,
-      textLength: emailData.message.text.length
-    });
 
     // Attempt to create email document with enhanced error handling
     let emailDocumentCreated = false;
@@ -686,7 +580,7 @@ Philippine Genome Center Visayas
       emailSent: emailDocumentCreated,
       emailDocId: emailDocId,
       message: emailDocumentCreated 
-        ? `Inquiry submitted successfully! Email notification sent to ${emailRecipient}. Email ID: ${emailDocId}`
+        ? `Inquiry submitted successfully! Email notification sent to ${emailRecipients}. Email ID: ${emailDocId}`
         : "Inquiry submitted successfully, but email notification may not have been sent."
     };
   } catch (error) {
