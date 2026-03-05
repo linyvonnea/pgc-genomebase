@@ -43,7 +43,6 @@ export function QuoteButton({ inquiryId }: QuoteButtonProps) {
             <span>Quote</span>
             <div className="flex items-center justify-center w-6">
               {count > 0 && (
-              {count > 0 && (
                 <span className="flex items-center justify-center bg-slate-100 text-slate-600 rounded-full h-5 min-w-[20px] px-1 text-[10px] font-bold border border-slate-200">
                   {isLoading ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
