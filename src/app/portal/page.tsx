@@ -92,9 +92,19 @@ export default function ClientVerifyPage() {
       }
       const inquiry = inquiryDoc.data();
       
+      // Verify email matches Google User email (except for master admins)
+      const masterEmails = ["madayon1@up.edu.ph", "merlito.dayon@gmail.com"];
+      const isMasterAdmin = googleUser.email ? masterEmails.includes(googleUser.email) : false;
+      
+      if (!isMasterAdmin && inquiry.email?.toLowerCase() !== googleUser.email.toLowerCase()) {
+        toast.error("The password provided does not match the email associated with this account.");
+        setVerifying(false);
+        return;
+      }
+
       // Allow login for Pending, Approved Client (isApproved), Quotation Only, and Ongoing Quotation
       const allowedStatuses = ["Pending", "Approved Client", "Quotation Only", "Ongoing Quotation"];
-      const isAllowed = inquiry.isApproved || allowedStatuses.includes(inquiry.status);
+      const isAllowed = (inquiry as any).isApproved || allowedStatuses.includes((inquiry as any).status);
       
       if (!isAllowed) {
         toast.error("This inquiry has not been approved yet.");
@@ -117,10 +127,6 @@ export default function ClientVerifyPage() {
       if (!projectSnapshot.empty) {
         projectPid = projectSnapshot.docs[0].data().pid;
       }
-
-      // master email bypass for admin access
-      const masterEmails = ["madayon1@up.edu.ph", "merlito.dayon@gmail.com"];
-      const isMasterAdmin = googleUser.email ? masterEmails.includes(googleUser.email) : false;
 
       // When master admin logs in, impersonate the inquiry's email to see their data accurately
       const activeEmail = isMasterAdmin ? inquiry.email : googleUser.email;
