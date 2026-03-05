@@ -386,7 +386,7 @@ export default function ClientConformeModal({
                   Terms of Payment
                 </h3>
                 <p className="text-justify">
-                  The Client agrees that payment should be received within thirty (30) days after the receipt of the Charge Slip. Should the Client fail to comply with this requirement. Any deliverables stipulated in Section I shall not be released.
+                  The Client agrees that payment should be received within thirty (30) days after the receipt of the Charge Slip. Should the Client fail to comply with this requirement, any deliverables stipulated in Section I shall not be released.
                 </p>
               </div>
             </div>
