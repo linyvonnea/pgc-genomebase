@@ -117,7 +117,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
   // Reset form once when modal is opened
   useEffect(() => {
     if (isOpen) {
-      form.reset({
+      const resetData = {
         pid: project.pid,
         year: project.year || new Date().getFullYear(),
         iid: Array.isArray(project.iid) ? project.iid : (project.iid ? [project.iid] : []),
@@ -135,7 +135,9 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
           : [],
         notes: project.notes || "",
         personnelAssigned: project.personnelAssigned || "",
-      });
+      };
+      
+      form.reset(resetData);
       
       // Update serviceRequestedInput as well
       setServiceRequestedInput(
@@ -144,7 +146,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
           : project.serviceRequested || ""
       );
     }
-  }, [isOpen]); // Only reset when modal opens
+  }, [isOpen, project.pid]); // Only reset when modal opens or project changes
 
   useEffect(() => {
     const val = form.getValues("serviceRequested");
@@ -348,36 +350,43 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
               <FormField
                 control={form.control}
                 name="startDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">Start Date</FormLabel>
-                    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={"w-full justify-start text-left font-normal h-9" + (field.value ? "" : " text-muted-foreground")}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ?
-                            new Date(field.value).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })
-                            : "Pick a date"}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 z-[100]" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value ? new Date(field.value) : undefined}
-                          onSelect={(date) => {
-                            field.onChange(date);
-                            setPopoverOpen(false);
-                          }}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const currentValue = field.value;
+                  const displayDate = currentValue instanceof Date ? currentValue : 
+                                     currentValue ? new Date(currentValue) : undefined;
+                  
+                  return (
+                    <FormItem>
+                      <FormLabel className="text-xs">Start Date</FormLabel>
+                      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={`w-full justify-start text-left font-normal h-9 ${!displayDate ? "text-muted-foreground" : ""}`}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {displayDate ?
+                              displayDate.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })
+                              : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 z-[100]" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={displayDate}
+                            onSelect={(date) => {
+                              console.log('Date selected:', date); // Debug log
+                              field.onChange(date);
+                              setPopoverOpen(false);
+                            }}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
             </div>
 
