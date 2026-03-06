@@ -183,7 +183,13 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
     } else if (!Array.isArray(serviceRequested)) {
       serviceRequested = [];
     }
-    const updatedData = { ...data, pid, serviceRequested };
+    const updatedData = { 
+      ...data, 
+      pid, 
+      serviceRequested,
+      // Ensure startDate is properly formatted for storage if it's a Date object
+      startDate: data.startDate instanceof Date ? data.startDate : data.startDate
+    };
 
     try {
       // Get old project data for logging
