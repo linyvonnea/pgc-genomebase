@@ -41,12 +41,18 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
       }
     >
       <Mail
-        className={`h-4 w-4 transition-colors ${
+        className={`h-4 w-4 transition-all ${
           unreadCount > 0
-            ? "text-[#F69122] drop-shadow-sm" // Accent orange
+            ? "text-[#B9273A] drop-shadow-sm animate-bounce" // Strategic red and animation
             : "text-slate-400 opacity-60"
         }`}
       />
+      {unreadCount > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#B9273A]"></span>
+        </span>
+      )}
     </div>
   );
 }
