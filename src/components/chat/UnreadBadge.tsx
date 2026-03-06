@@ -11,9 +11,11 @@ import { useRouter } from "next/navigation";
 interface UnreadBadgeProps {
   inquiryId: string;
   role: MessageSenderRole;
+  senderId?: string;
+  senderName?: string;
 }
 
-export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
+export default function UnreadBadge({ inquiryId, role, senderId, senderName }: UnreadBadgeProps) {
   const router = useRouter();
   const { user } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
@@ -58,7 +60,7 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
     if (unreadCount > 0 && user?.email) {
       // Then update Firebase in background
       try {
-        await markMessagesAsRead(inquiryId, role, user.email);
+        await markMessagesAsRead(inquiryId, role, user.email, senderId, senderName);
       } catch (error) {
         console.error("Error marking messages as read:", error);
       }
