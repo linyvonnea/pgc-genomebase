@@ -416,9 +416,11 @@ function InquiryDetailContent() {
         </div>
       </div>
     
-      <FloatingChatWidget inquiryId={inquiry.id} role="admin" />
-    </div>
-  );
+      <FloatingChatWidget 
+        inquiryId={inquiry.id} 
+        role="admin" 
+        className="!bottom-20 mb-2" 
+      />
 }
 
 
