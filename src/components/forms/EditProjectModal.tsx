@@ -63,6 +63,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
   const [personnelOptions, setPersonnelOptions] = useState<CatalogItem[]>([]);
   const [inquiryOptions, setInquiryOptions] = useState<Inquiry[]>([]);
   const [inquirySearch, setInquirySearch] = useState("");
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   useEffect(() => {
     getInquiries().then((inquiries) => {
@@ -341,7 +342,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-xs">Start Date</FormLabel>
-                    <Popover>
+                    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
@@ -350,14 +351,17 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {field.value ?
                             new Date(field.value).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })
-                            : ""}
+                            : "Pick a date"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className="w-auto p-0 z-[100]" align="start">
                         <Calendar
                           mode="single"
                           selected={field.value ? new Date(field.value) : undefined}
-                          onSelect={date => field.onChange(date)}
+                          onSelect={(date) => {
+                            field.onChange(date);
+                            setPopoverOpen(false);
+                          }}
                           initialFocus
                         />
                       </PopoverContent>
