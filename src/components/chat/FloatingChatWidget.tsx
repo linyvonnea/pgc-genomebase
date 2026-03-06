@@ -59,8 +59,8 @@ export default function FloatingChatWidget({
   useEffect(() => {
     if (searchParams.get("focus") === "messages") {
       setIsOpen(true);
-      if (inquiryId && user) {
-        markMessagesAsRead(inquiryId, role, user.email || "unknown").catch(
+      if (inquiryId) {
+        markMessagesAsRead(inquiryId, role, user?.email || "admin").catch(
           console.error,
         );
       }
@@ -77,8 +77,8 @@ export default function FloatingChatWidget({
       ).length;
 
       // If the chat widget is currently open or messages are being continuously viewed, mark them as read immediately
-      if (isOpen && unread > 0 && user) {
-        markMessagesAsRead(inquiryId, role, user.email || "unknown").catch(console.error);
+      if (isOpen && unread > 0) {
+        markMessagesAsRead(inquiryId, role, user?.email || "admin").catch(console.error);
       }
 
       setUnreadCount(unread);
@@ -98,8 +98,8 @@ export default function FloatingChatWidget({
     setIsOpen(newOpenState);
 
     // If opening, mark as read immediately
-    if (newOpenState && inquiryId && user) {
-      markMessagesAsRead(inquiryId, role, user.email || "unknown").catch(
+    if (newOpenState && inquiryId) {
+      markMessagesAsRead(inquiryId, role, user?.email || "admin").catch(
         console.error,
       );
     }
