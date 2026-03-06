@@ -115,33 +115,35 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
 
   // Reset form with new project data when project changes
   useEffect(() => {
-    form.reset({
-      pid: project.pid,
-      year: project.year || new Date().getFullYear(),
-      iid: Array.isArray(project.iid) ? project.iid : (project.iid ? [project.iid] : []),
-      startDate: project.startDate ? new Date(project.startDate) : undefined,
-      lead: project.lead || "",
-      title: project.title || "",
-      projectTag: project.projectTag || "",
-      status: project.status || "Ongoing",
-      sendingInstitution: project.sendingInstitution || "Government",
-      fundingCategory: project.fundingCategory || "In-House",
-      fundingInstitution: project.fundingInstitution || "",
-      serviceRequested: Array.isArray(project.serviceRequested)
-        ? project.serviceRequested.filter((s): s is "Laboratory Services" | "Retail Sales" | "Equipment Use" | "Bioinformatics Analysis" | "Training" =>
-          ["Laboratory Services", "Retail Sales", "Equipment Use", "Bioinformatics Analysis", "Training"].includes(s))
-        : [],
-      notes: project.notes || "",
-      personnelAssigned: project.personnelAssigned || "",
-    });
-    
-    // Update serviceRequestedInput as well
-    setServiceRequestedInput(
-      Array.isArray(project.serviceRequested)
-        ? project.serviceRequested.join(", ")
-        : project.serviceRequested || ""
-    );
-  }, [project, form]);
+    if (isOpen) {
+      form.reset({
+        pid: project.pid,
+        year: project.year || new Date().getFullYear(),
+        iid: Array.isArray(project.iid) ? project.iid : (project.iid ? [project.iid] : []),
+        startDate: project.startDate ? new Date(project.startDate) : undefined,
+        lead: project.lead || "",
+        title: project.title || "",
+        projectTag: project.projectTag || "",
+        status: project.status || "Ongoing",
+        sendingInstitution: project.sendingInstitution || "Government",
+        fundingCategory: project.fundingCategory || "In-House",
+        fundingInstitution: project.fundingInstitution || "",
+        serviceRequested: Array.isArray(project.serviceRequested)
+          ? project.serviceRequested.filter((s): s is "Laboratory Services" | "Retail Sales" | "Equipment Use" | "Bioinformatics Analysis" | "Training" =>
+            ["Laboratory Services", "Retail Sales", "Equipment Use", "Bioinformatics Analysis", "Training"].includes(s))
+          : [],
+        notes: project.notes || "",
+        personnelAssigned: project.personnelAssigned || "",
+      });
+      
+      // Update serviceRequestedInput as well
+      setServiceRequestedInput(
+        Array.isArray(project.serviceRequested)
+          ? project.serviceRequested.join(", ")
+          : project.serviceRequested || ""
+      );
+    }
+  }, [project, form, isOpen]);
 
   useEffect(() => {
     const val = form.getValues("serviceRequested");
