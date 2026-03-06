@@ -11,8 +11,10 @@ import {
   markMessagesAsRead,
 } from "@/services/quotationThreadService";
 import { motion, AnimatePresence } from "framer-motion";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
+import { subscribeToInquiryById } from "@/services/inquiryService";
+import { Inquiry } from "@/types/Inquiry";
 
 interface FloatingChatWidgetProps {
   inquiryId: string;
@@ -28,7 +30,31 @@ export default function FloatingChatWidget({
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAuth();
+  const [inquiryData, setInquiryData] = useState<Inquiry | null>(null);
+
+  useEffect(() => {
+    if (!inquiryId) return;
+    const unsubscribe = subscribeToInquiryById(inquiryId, (data) => {
+      setInquiryData(data);
+    });
+    return () => unsubscribe();
+  }, [inquiryId]);
+
+  const closeWidget = () => {
+    setIsOpen(false);
+    if (searchParams.get("focus") === "messages" && searchParams.get("inquiryId") === inquiryId) {
+      // Create new URLSearchParams without focus and inquiryId
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("focus");
+      params.delete("inquiryId");
+      
+      const newQuery = params.toString();
+      router.replace(pathname + (newQuery ? `?${newQuery}` : ""), { scroll: false });
+    }
+  };
 
   useEffect(() => {
     if (searchParams.get("focus") === "messages") {
@@ -57,6 +83,12 @@ export default function FloatingChatWidget({
 
   const toggleOpen = () => {
     const newOpenState = !isOpen;
+    
+    if (!newOpenState) {
+      closeWidget();
+      return;
+    }
+    
     setIsOpen(newOpenState);
 
     // If opening, mark as read immediately
@@ -81,12 +113,21 @@ export default function FloatingChatWidget({
             className="mb-4 w-[350px] shadow-2xl rounded-2xl overflow-hidden border border-slate-200 bg-white"
           >
             <div className="flex items-center justify-between bg-blue-600 px-4 py-3 text-white">
-              <div className="flex items-center gap-2">
-                <MessageCircle className="w-5 h-5" />
-                <span className="font-semibold text-sm">Messages</span>
+              <div className="flex items-center gap-3">
+                <MessageCircle className="w-5 h-5 flex-shrink-0" />
+                <div className="flex flex-col">
+                  <span className="font-semibold text-sm line-clamp-1">
+                    {inquiryData ? inquiryData.name : "Messages"}
+                  </span>
+                  {inquiryData?.affiliation && (
+                    <span className="text-[10px] text-white/80 line-clamp-1">
+                      {inquiryData.affiliation}
+                    </span>
+                  )}
+                </div>
               </div>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={closeWidget}
                 className="text-white/80 hover:text-white transition-colors p-1"
               >
                 <X className="w-5 h-5" />
