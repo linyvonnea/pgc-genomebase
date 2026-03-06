@@ -46,10 +46,15 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
     
     // If there are unread messages, mark them as read
     if (unreadCount > 0 && user?.email) {
+      // Optimistically update UI immediately (turn red to orange)
+      setUnreadCount(0);
+      
+      // Then update Firebase in background
       try {
         await markMessagesAsRead(inquiryId, role, user.email);
       } catch (error) {
         console.error("Error marking messages as read:", error);
+        // Note: The subscription will restore the correct count if the update fails
       }
     }
     
