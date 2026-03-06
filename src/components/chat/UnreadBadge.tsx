@@ -20,9 +20,11 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
     // Listen to messages for this thread
     const unsubscribe = subscribeToThreadMessages(inquiryId, (messages) => {
       setHasMessages(messages.length > 0);
-      
+
       // Count messages that are NOT read and are NOT from us
-      const unread = messages.filter((m) => !m.isRead && m.senderRole !== role).length;
+      const unread = messages.filter(
+        (m) => !m.isRead && m.senderRole !== role,
+      ).length;
       setUnreadCount(unread);
     });
 
@@ -32,14 +34,24 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
   if (!hasMessages && unreadCount === 0) return null;
 
   return (
-    <div className="relative flex items-center justify-center w-6 h-6 ml-1" title={unreadCount > 0 ? `${unreadCount} unread message(s)` : "Has messages"}>
-      <Mail className={`w-4 h-4 ${unreadCount > 0 ? "text-blue-500" : "text-gray-400"}`} />
+    <div
+      className="relative ml-1 flex h-6 w-6 cursor-pointer items-center justify-center transition-transform hover:scale-110 active:scale-95"
+      title={
+        unreadCount > 0 ? `${unreadCount} new message(s)` : "Messages"
+      }
+    >
+      <Mail
+        className={`h-4 w-4 transition-colors ${
+          unreadCount > 0
+            ? "text-[#F69122] drop-shadow-sm" // Accent orange
+            : "text-slate-400 opacity-60"
+        }`}
+      />
       {unreadCount > 0 && (
-        <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-500 text-[9px] font-bold text-white shadow-sm ring-1 ring-white">
+        <span className="absolute -right-1.5 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#B9273A] text-[9px] font-bold text-white shadow-sm ring-2 ring-white animate-in zoom-in duration-300">
           {unreadCount > 9 ? "9+" : unreadCount}
         </span>
       )}
     </div>
   );
 }
-
