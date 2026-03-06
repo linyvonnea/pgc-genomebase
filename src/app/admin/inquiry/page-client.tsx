@@ -58,6 +58,7 @@ export function InquiryPageClient({
 
       {focusMode === "messages" && inquiryIdToFocus && (
         <FloatingChatWidget
+          key={`chat-${inquiryIdToFocus}`}
           inquiryId={inquiryIdToFocus}
           role="admin"
           className="!bottom-20 mb-2"
