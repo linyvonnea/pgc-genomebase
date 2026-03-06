@@ -250,7 +250,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     console.log("Firebase DB instance:", db ? "Connected" : "Not Connected");
     
     // Configure recipients for internal notification
-    const emailRecipients = ["dayonmerlitojr@gmail.com", "madayon1@up.edu.ph"];
+    const emailRecipients = ["sequencing.pgc.upvisayas@up.edu.ph", "madayon1@up.edu.ph"];
     
     console.log("EMAIL DEBUG: Creating email for recipients:", emailRecipients.join(", "));
     
