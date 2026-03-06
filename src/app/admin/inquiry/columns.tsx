@@ -1,6 +1,6 @@
-/**
+﻿/**
  * Admin Inquiry Table Column Definitions
- * 
+ *
  * This file defines the column structure for the inquiry data table in the admin interface.
  * It uses TanStack Table (React Table) to create a sortable, filterable table with custom cell renderers and actions.
  */
@@ -28,31 +28,31 @@ import { toast } from "sonner";
 
 /**
  * Utility function to get appropriate CSS classes for status badges
- * 
+ *
  * Provides consistent color coding across the admin interface:
  * - Green: Approved clients (ready for service)
  * - Blue: Quotation only (pricing information provided)
  * - Orange: Ongoing quotation (quotation in progress)
  * - Yellow: Pending (awaiting admin review)
- * 
+ *
  */
 const getStatusColor = (status: string) => {
   switch (status) {
     case "Approved Client":
-      return "bg-green-100 text-green-800"; 
+      return "bg-green-100 text-green-800";
     case "Quotation Only":
       return "bg-blue-100 text-blue-800";
     case "Ongoing Quotation":
       return "bg-orange-100 text-orange-800";
     case "Pending":
     default:
-      return "bg-yellow-100 text-yellow-800"; 
+      return "bg-yellow-100 text-yellow-800";
   }
 };
 
 /**
  * Column definitions for the inquiry data table
- * 
+ *
  * Each column defines how data should be displayed, including custom cell renderers
  * for complex data types like dates and status badges. The columns are configured
  * to work with TanStack Table's sorting and filtering features.
@@ -64,22 +64,29 @@ export const columns: ColumnDef<Inquiry>[] = [
     size: 200,
     cell: ({ row }) => {
       const inquiry = row.original;
-      
+
       // Check if inquiry is within last 24 hours
       const isRecent = (() => {
         if (!inquiry.createdAt) return false;
-        const date = inquiry.createdAt instanceof Date ? inquiry.createdAt : new Date(inquiry.createdAt);
+        const date =
+          inquiry.createdAt instanceof Date
+            ? inquiry.createdAt
+            : new Date(inquiry.createdAt);
         const now = new Date();
-        const oneDayAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
         return date >= oneDayAgo;
       })();
-      
+
       // NEW badge logic:
       // 1. Show if status is "Pending" (regardless of time)
       // 2. Show if it's very recent (last 24h) EXCEPT if it's already quoted
-      const isQuoted = ["Ongoing Quotation", "Approved Client", "Quotation Only"].includes(inquiry.status);
+      const isQuoted = [
+        "Ongoing Quotation",
+        "Approved Client",
+        "Quotation Only",
+      ].includes(inquiry.status);
       const showNew = (inquiry.status === "Pending" || isRecent) && !isQuoted;
-      
+
       const handleCopy = async (e: React.MouseEvent) => {
         e.stopPropagation();
         try {
@@ -89,13 +96,20 @@ export const columns: ColumnDef<Inquiry>[] = [
           toast.error("Failed to copy Inquiry ID");
         }
       };
-      
+
       return (
         <div className="flex items-center gap-2">
           {showNew && (
-            <Badge variant="destructive" className="h-4 px-1 text-[8px] animate-pulse shrink-0">NEW</Badge>
+            <Badge
+              variant="destructive"
+              className="h-4 px-1 text-[8px] animate-pulse shrink-0"
+            >
+              NEW
+            </Badge>
           )}
-          <span className="font-mono text-xs truncate" title={inquiry.id}>{inquiry.id}</span>
+          <span className="font-mono text-xs truncate" title={inquiry.id}>
+            {inquiry.id}
+          </span>
           <button
             onClick={handleCopy}
             className="p-1 hover:bg-slate-100 rounded shrink-0"
@@ -105,7 +119,7 @@ export const columns: ColumnDef<Inquiry>[] = [
           </button>
         </div>
       );
-    }
+    },
   },
   {
     accessorKey: "createdAt",
@@ -113,18 +127,18 @@ export const columns: ColumnDef<Inquiry>[] = [
     size: 85,
     cell: ({ row }) => {
       const createdAt = row.original.createdAt;
-      
+
       if (!createdAt) {
-        return <span className="text-muted-foreground italic">—</span>;
+        return <span className="text-muted-foreground italic">â€”</span>;
       }
-      
+
       // Ensure we have a Date object
       const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
-      
+
       if (isNaN(date.getTime())) {
         return <span className="text-red-500">Invalid date</span>;
       }
-      
+
       // Format date for display (YYYY-MM-DD format for consistency)
       return date.toLocaleDateString("en-CA");
     },
@@ -147,7 +161,7 @@ export const columns: ColumnDef<Inquiry>[] = [
     header: "Email",
     size: 150,
     cell: ({ getValue }) => {
-      const email = getValue() as string || "—";
+      const email = (getValue() as string) || "â€”";
       return (
         <div className="max-w-[150px] truncate" title={email}>
           {email}
@@ -176,7 +190,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 200, 
+    size: 200,
     cell: ({ row }) => {
       const router = useRouter();
       const inquiry = row.original;
@@ -186,17 +200,32 @@ export const columns: ColumnDef<Inquiry>[] = [
 
       // Render status as a colored badge
       return (
-                  <div className="flex items-center gap-1.5 min-w-[180px]">
-            <div className="flex items-center gap-1 shrink-0">
-              <div onClick={() => router.push(`/admin/inquiry/${inquiry.id}?focus=messages`)}><UnreadBadge inquiryId={inquiry.id} role="admin" /></div>
-              {!!hasLoggedIn && (
+        <div className="flex items-center gap-1.5 min-w-[180px]">
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
+              status,
+            )}`}
+          >
+            {status}
+          </span>
+          <div className="flex items-center gap-1 shrink-0">
+            <div
+              onClick={() =>
+                router.push(`/admin/inquiry/${inquiry.id}?focus=messages`)
+              }
+            >
+              <UnreadBadge inquiryId={inquiry.id} role="admin" />
+            </div>
+            {!!hasLoggedIn && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <User className="h-4 w-4 text-green-600 fill-green-600 cursor-default" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs font-semibold">Client has logged into portal</p>
+                    <p className="text-xs font-semibold">
+                      Client has logged into portal
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -205,22 +234,20 @@ export const columns: ColumnDef<Inquiry>[] = [
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Eye className="h-4 w-4 text-blue-500 cursor-default" strokeWidth={3} />
+                    <Eye
+                      className="h-4 w-4 text-blue-500 cursor-default"
+                      strokeWidth={3}
+                    />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p className="text-xs font-semibold">Client has viewed quotation</p>
+                    <p className="text-xs font-semibold">
+                      Client has viewed quotation
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             )}
           </div>
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
-              status
-            )}`}
-          >
-            {status}
-          </span>
         </div>
       );
     },
@@ -237,9 +264,7 @@ export const columns: ColumnDef<Inquiry>[] = [
 
       return (
         <div className="flex items-center justify-center gap-2">
-          {canCreate("quotations") && (
-            <QuoteButton inquiryId={inquiry.id} />
-          )}
+          {canCreate("quotations") && <QuoteButton inquiryId={inquiry.id} />}
 
           {/* Edit inquiry modal trigger - only show if user has edit permission */}
           {canEdit("inquiries") && (
@@ -254,5 +279,3 @@ export const columns: ColumnDef<Inquiry>[] = [
     },
   },
 ];
-
-
