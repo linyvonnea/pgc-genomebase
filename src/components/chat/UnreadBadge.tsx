@@ -20,8 +20,6 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
   const [hasMessages, setHasMessages] = useState(false);
   const [hasClientMessages, setHasClientMessages] = useState(false);
   const [threadData, setThreadData] = useState<QuotationThread | null>(null);
-  // Guard ref to prevent subscription from reverting the optimistic UI update
-  const isMarkingAsReadRef = useRef(false);
 
   useEffect(() => {
     if (!inquiryId) return;
@@ -44,11 +42,7 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
         (m) => !m.isRead && m.senderRole !== role,
       ).length;
 
-      // Only update if we're NOT in the middle of marking as read
-      // This prevents the subscription from reverting the optimistic red→orange transition
-      if (!isMarkingAsReadRef.current) {
-        setUnreadCount(unread);
-      }
+      setUnreadCount(unread);
     });
 
     return () => {
@@ -62,20 +56,11 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
     
     // If there are unread messages, mark them as read
     if (unreadCount > 0 && user?.email) {
-      // Set guard to prevent subscription from reverting optimistic state
-      isMarkingAsReadRef.current = true;
-      
-      // Optimistically update UI immediately (turn red to orange)
-      setUnreadCount(0);
-      
       // Then update Firebase in background
       try {
         await markMessagesAsRead(inquiryId, role, user.email);
       } catch (error) {
         console.error("Error marking messages as read:", error);
-      } finally {
-        // Release guard after Firestore has been updated
-        setTimeout(() => { isMarkingAsReadRef.current = false; }, 500);
       }
     }
     
