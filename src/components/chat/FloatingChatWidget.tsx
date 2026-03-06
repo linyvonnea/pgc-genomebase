@@ -8,6 +8,7 @@ import { MessageSenderRole } from "@/types/QuotationThread";
 import UnreadBadge from "@/components/chat/UnreadBadge";
 import { subscribeToThreadMessages } from "@/services/quotationThreadService";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSearchParams } from "next/navigation";
 
 interface FloatingChatWidgetProps {
   inquiryId: string;
@@ -17,6 +18,13 @@ interface FloatingChatWidgetProps {
 export default function FloatingChatWidget({ inquiryId, role }: FloatingChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("focus") === "messages") {
+      setIsOpen(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!inquiryId) return;

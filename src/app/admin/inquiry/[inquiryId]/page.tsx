@@ -9,7 +9,7 @@ import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import { Inquiry } from "@/types/Inquiry";
-import ChatBox from "@/components/chat/ChatBox";
+import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
 import { FileText, Calendar, User, Building2, Mail, Briefcase, FlaskConical, DollarSign, MessageSquare } from "lucide-react";
 
 // Utility to format date
@@ -416,15 +416,10 @@ function InquiryDetailContent() {
         </div>
       </div>
     
-      {/* Messages */}
-      <div ref={chatRef} id="messages" className="max-w-4xl mx-auto space-y-6 mt-6 pb-12 w-full col-span-1 lg:col-span-2 scroll-mt-6">
-        <ChatBox inquiryId={inquiry.id} role="admin" />
-      </div>
+      <FloatingChatWidget inquiryId={inquiry.id} role="admin" />
     </div>
   );
 }
-
-
 
 
 
