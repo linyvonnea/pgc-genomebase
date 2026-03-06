@@ -2,8 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { Mail } from "lucide-react";
-import { subscribeToThreadMessages } from "@/services/quotationThreadService";
+import { subscribeToThreadMessages, markMessagesAsRead } from "@/services/quotationThreadService";
 import { MessageSenderRole } from "@/types/QuotationThread";
+import useAuth from "@/hooks/useAuth";
+
+import { useRouter } from "next/navigation";
 
 interface UnreadBadgeProps {
   inquiryId: string;
@@ -11,6 +14,8 @@ interface UnreadBadgeProps {
 }
 
 export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
+  const router = useRouter();
+  const { user } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const [hasMessages, setHasMessages] = useState(false);
 
@@ -31,11 +36,28 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
     return () => unsubscribe();
   }, [inquiryId, role]);
 
+  const handleClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    // If there are unread messages, mark them as read
+    if (unreadCount > 0 && user?.email) {
+      try {
+        await markMessagesAsRead(inquiryId, role, user.email);
+      } catch (error) {
+        console.error("Error marking messages as read:", error);
+      }
+    }
+    
+    // Navigate to the inquiry details after marking as read
+    router.push(`/admin/inquiry?inquiryId=${inquiryId}&focus=messages`);
+  };
+
   if (!hasMessages && unreadCount === 0) return null;
 
   return (
     <div
       className="relative ml-1 flex h-6 w-6 cursor-pointer items-center justify-center transition-transform hover:scale-110 active:scale-95"
+      onClick={handleClick}
       title={
         unreadCount > 0 ? `${unreadCount} new message(s)` : "Messages"
       }
@@ -43,8 +65,8 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
       <Mail
         className={`h-4 w-4 transition-all ${
           unreadCount > 0
-            ? "text-[#B9273A] drop-shadow-sm animate-bounce" // Strategic red and animation
-            : "text-slate-400 opacity-60"
+            ? "text-[#B9273A] drop-shadow-sm animate-bounce"
+            : "text-[#F69122] opacity-100" // Turns orange when read/no new messages
         }`}
       />
       {unreadCount > 0 && (
