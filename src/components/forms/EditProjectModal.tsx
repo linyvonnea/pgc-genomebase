@@ -188,7 +188,6 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       pid, 
       serviceRequested,
       // Ensure startDate is properly formatted for storage (as string YYYY-MM-DD if needed, or Date)
-      // If the rest of the app expects a string for startDate, we should convert it here.
       // Based on types/Project.ts, startDate is a string.
       startDate: data.startDate instanceof Date ? data.startDate.toISOString().split('T')[0] : data.startDate
     };
@@ -199,7 +198,9 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       const projectDoc = await getDoc(projectRef);
       const oldData = projectDoc.data();
 
-      await editProject(updatedData);
+      // Type cast to any or a more permissive type to allow the string startDate for Firestore
+      // while the internal schema uses Date for the calendar component.
+      await editProject(updatedData as any);
 
       // Log the activity
       const changedFields = Object.keys(updatedData).filter(
