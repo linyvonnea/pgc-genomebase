@@ -241,9 +241,11 @@ export const columns: ColumnDef<Inquiry>[] = [
               </TooltipProvider>
             )}
             <div
-              onClick={() =>
-                router.push(`/admin/inquiry?inquiryId=${inquiry.id}&focus=messages`)
-              }
+              role="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/admin/inquiry?inquiryId=${inquiry.id}&focus=messages`);
+              }}
             >
               <UnreadBadge inquiryId={inquiry.id} role="admin" />
             </div>
