@@ -370,13 +370,13 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                               : "Pick a date"}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 z-[100]" align="start">
+                        <PopoverContent className="w-auto p-0 z-[110]" align="start">
                           <Calendar
                             mode="single"
                             selected={displayDate}
                             onSelect={(date) => {
                               console.log('Date selected:', date); // Debug log
-                              field.onChange(date);
+                              field.onChange(date || undefined);
                               setPopoverOpen(false);
                             }}
                             initialFocus
