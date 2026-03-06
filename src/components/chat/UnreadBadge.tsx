@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Mail } from "lucide-react";
 import { subscribeToThreadMessages, markMessagesAsRead } from "@/services/quotationThreadService";
 import { MessageSenderRole } from "@/types/QuotationThread";
@@ -19,6 +19,8 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [hasMessages, setHasMessages] = useState(false);
   const [hasClientMessages, setHasClientMessages] = useState(false);
+  // Guard ref to prevent subscription from reverting the optimistic UI update
+  const isMarkingAsReadRef = useRef(false);
 
   useEffect(() => {
     if (!inquiryId) return;
@@ -35,7 +37,11 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
       const unread = messages.filter(
         (m) => !m.isRead && m.senderRole !== role,
       ).length;
-      setUnreadCount(unread);
+      // Only update if we're NOT in the middle of marking as read
+      // This prevents the subscription from reverting the optimistic red→orange transition
+      if (!isMarkingAsReadRef.current) {
+        setUnreadCount(unread);
+      }
     });
 
     return () => unsubscribe();
@@ -46,6 +52,9 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
     
     // If there are unread messages, mark them as read
     if (unreadCount > 0 && user?.email) {
+      // Set guard to prevent subscription from reverting optimistic state
+      isMarkingAsReadRef.current = true;
+      
       // Optimistically update UI immediately (turn red to orange)
       setUnreadCount(0);
       
@@ -54,7 +63,9 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
         await markMessagesAsRead(inquiryId, role, user.email);
       } catch (error) {
         console.error("Error marking messages as read:", error);
-        // Note: The subscription will restore the correct count if the update fails
+      } finally {
+        // Release guard after Firestore has been updated
+        setTimeout(() => { isMarkingAsReadRef.current = false; }, 500);
       }
     }
     
