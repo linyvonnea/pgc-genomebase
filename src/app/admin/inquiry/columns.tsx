@@ -209,13 +209,6 @@ export const columns: ColumnDef<Inquiry>[] = [
             {status}
           </span>
           <div className="flex items-center gap-1 shrink-0">
-            <div
-              onClick={() =>
-                router.push(`/admin/inquiry/${inquiry.id}?focus=messages`)
-              }
-            >
-              <UnreadBadge inquiryId={inquiry.id} role="admin" />
-            </div>
             {!!hasLoggedIn && (
               <TooltipProvider>
                 <Tooltip>
@@ -247,6 +240,13 @@ export const columns: ColumnDef<Inquiry>[] = [
                 </Tooltip>
               </TooltipProvider>
             )}
+            <div
+              onClick={() =>
+                router.push(`/admin/inquiry/${inquiry.id}?focus=messages`)
+              }
+            >
+              <UnreadBadge inquiryId={inquiry.id} role="admin" />
+            </div>
           </div>
         </div>
       );
