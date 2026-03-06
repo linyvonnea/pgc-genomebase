@@ -57,7 +57,7 @@ export default function FloatingChatWidget({
   };
 
   useEffect(() => {
-    if (searchParams.get("focus") === "messages") {
+    if (searchParams.get("focus") === "messages" && searchParams.get("inquiryId") === inquiryId) {
       setIsOpen(true);
       if (inquiryId) {
         markMessagesAsRead(inquiryId, role, user?.email || "admin").catch(
