@@ -75,11 +75,17 @@ export default function FloatingChatWidget({
       const unread = messages.filter(
         (m) => !m.isRead && m.senderRole !== role,
       ).length;
+
+      // If the chat widget is currently open or messages are being continuously viewed, mark them as read immediately
+      if (isOpen && unread > 0 && user) {
+        markMessagesAsRead(inquiryId, role, user.email || "unknown").catch(console.error);
+      }
+
       setUnreadCount(unread);
     });
 
     return () => unsubscribe();
-  }, [inquiryId, role]);
+  }, [inquiryId, role, isOpen, user]);
 
   const toggleOpen = () => {
     const newOpenState = !isOpen;
@@ -119,6 +125,11 @@ export default function FloatingChatWidget({
                   <span className="font-semibold text-sm line-clamp-1">
                     {inquiryData ? inquiryData.name : "Messages"}
                   </span>
+                  {inquiryData?.email && (
+                    <span className="text-[10px] text-white/90 line-clamp-1">
+                      {inquiryData.email}
+                    </span>
+                  )}
                   {inquiryData?.affiliation && (
                     <span className="text-[10px] text-white/80 line-clamp-1">
                       {inquiryData.affiliation}
