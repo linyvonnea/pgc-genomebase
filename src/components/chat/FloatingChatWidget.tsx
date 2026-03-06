@@ -60,16 +60,12 @@ export default function FloatingChatWidget({
     if (searchParams.get("focus") === "messages" && searchParams.get("inquiryId") === inquiryId) {
       setIsOpen(true);
       if (inquiryId) {
-        markMessagesAsRead(
-          inquiryId, 
-          role, 
-          user?.email || "admin",
-          inquiryData?.email || undefined,
-          inquiryData?.name || undefined
-        ).catch(console.error);
+        markMessagesAsRead(inquiryId, role, user?.email || "admin").catch(
+          console.error,
+        );
       }
     }
-  }, [searchParams, inquiryId, user, role, inquiryData]);
+  }, [searchParams, inquiryId, user, role]);
 
   useEffect(() => {
     if (!inquiryId) return;
@@ -82,13 +78,7 @@ export default function FloatingChatWidget({
 
       // If the chat widget is currently open or messages are being continuously viewed, mark them as read immediately
       if (isOpen && unread > 0) {
-        markMessagesAsRead(
-          inquiryId, 
-          role, 
-          user?.email || "admin",
-          inquiryData?.email || undefined,
-          inquiryData?.name || undefined
-        ).catch(console.error);
+        markMessagesAsRead(inquiryId, role, user?.email || "admin").catch(console.error);
       }
 
       setUnreadCount(unread);
@@ -109,13 +99,9 @@ export default function FloatingChatWidget({
 
     // If opening, mark as read immediately
     if (newOpenState && inquiryId) {
-      markMessagesAsRead(
-        inquiryId, 
-        role, 
-        user?.email || "admin",
-        inquiryData?.email || undefined,
-        inquiryData?.name || undefined
-      ).catch(console.error);
+      markMessagesAsRead(inquiryId, role, user?.email || "admin").catch(
+        console.error,
+      );
     }
   };
 
