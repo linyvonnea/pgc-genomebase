@@ -114,7 +114,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
     },
   });
 
-  // Reset form with new project data when project changes
+  // Reset form once when modal is opened
   useEffect(() => {
     if (isOpen) {
       form.reset({
@@ -144,7 +144,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
           : project.serviceRequested || ""
       );
     }
-  }, [project, form, isOpen]);
+  }, [isOpen]); // Only reset when modal opens
 
   useEffect(() => {
     const val = form.getValues("serviceRequested");
@@ -187,8 +187,10 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       ...data, 
       pid, 
       serviceRequested,
-      // Ensure startDate is properly formatted for storage if it's a Date object
-      startDate: data.startDate instanceof Date ? data.startDate : data.startDate
+      // Ensure startDate is properly formatted for storage (as string YYYY-MM-DD if needed, or Date)
+      // If the rest of the app expects a string for startDate, we should convert it here.
+      // Based on types/Project.ts, startDate is a string.
+      startDate: data.startDate instanceof Date ? data.startDate.toISOString().split('T')[0] : data.startDate
     };
 
     try {
