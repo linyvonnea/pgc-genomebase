@@ -8,13 +8,20 @@ import { Inquiry } from "@/types/Inquiry";
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { subscribeToInquiries } from "@/services/inquiryService";
+import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
+import { useSearchParams } from "next/navigation";
 
 interface InquiryPageClientProps {
   data: Inquiry[];
 }
 
-export function InquiryPageClient({ data: initialData }: InquiryPageClientProps) {
+export function InquiryPageClient({
+  data: initialData,
+}: InquiryPageClientProps) {
   const { adminInfo } = useAuth();
+  const searchParams = useSearchParams();
+  const inquiryIdToFocus = searchParams.get("inquiryId") || "";
+  const focusMode = searchParams.get("focus");
   const { canCreate } = usePermissions(adminInfo?.role);
   const [inquiries, setInquiries] = useState<Inquiry[]>(initialData);
 
@@ -34,9 +41,12 @@ export function InquiryPageClient({ data: initialData }: InquiryPageClientProps)
         {/* Page Header */}
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-xl font-semibold tracking-tight">Inquiry Management</h1>
+            <h1 className="text-xl font-semibold tracking-tight">
+              Inquiry Management
+            </h1>
             <p className="text-sm text-muted-foreground">
-              Manage and review research inquiries with advanced filtering and overview.
+              Manage and review research inquiries with advanced filtering and
+              overview.
             </p>
           </div>
           {/* Add new inquiry button - only show if user has create permission */}
@@ -45,7 +55,14 @@ export function InquiryPageClient({ data: initialData }: InquiryPageClientProps)
         {/* Enhanced Data Table with Filters & Overview */}
         <DataTable columns={columns} data={inquiries} />
       </div>
+
+      {focusMode === "messages" && inquiryIdToFocus && (
+        <FloatingChatWidget
+          inquiryId={inquiryIdToFocus}
+          role="admin"
+          className="!bottom-20 mb-2"
+        />
+      )}
     </div>
   );
 }
-

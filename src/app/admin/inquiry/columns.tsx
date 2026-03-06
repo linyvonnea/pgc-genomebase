@@ -242,7 +242,7 @@ export const columns: ColumnDef<Inquiry>[] = [
             )}
             <div
               onClick={() =>
-                router.push(`/admin/inquiry/${inquiry.id}?focus=messages`)
+                router.push(`/admin/inquiry?inquiryId=${inquiry.id}&focus=messages`)
               }
             >
               <UnreadBadge inquiryId={inquiry.id} role="admin" />
