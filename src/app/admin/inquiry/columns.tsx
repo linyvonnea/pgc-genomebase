@@ -241,11 +241,7 @@ export const columns: ColumnDef<Inquiry>[] = [
               </TooltipProvider>
             )}
             <div
-              role="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                router.push(`/admin/inquiry?inquiryId=${inquiry.id}&focus=messages`);
-              }}
+              className="flex items-center"
             >
               <UnreadBadge inquiryId={inquiry.id} role="admin" />
             </div>
