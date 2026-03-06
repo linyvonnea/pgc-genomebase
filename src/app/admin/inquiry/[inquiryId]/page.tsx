@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter, notFound } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
+import { useParams, useRouter, useSearchParams, notFound } from "next/navigation";
 import { getInquiryById } from "@/services/inquiryService";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +60,20 @@ function InquiryDetailContent() {
 
   const [inquiry, setInquiry] = useState<Inquiry | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  const searchParams = useSearchParams();
+  const searchFocus = searchParams.get('focus');
+  const chatRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (searchFocus === 'messages' && chatRef.current && !loading) {
+      setTimeout(() => {
+        chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        chatRef.current?.classList.add('ring-2', 'ring-blue-500', 'ring-offset-4', 'rounded-2xl', 'transition-all', 'duration-1000');
+        setTimeout(() => chatRef.current?.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-4'), 2000);
+      }, 300); // Wait slightly for render
+    }
+  }, [searchFocus, loading]);
 
   useEffect(() => {
     const fetch = async () => {
@@ -403,11 +417,15 @@ function InquiryDetailContent() {
       </div>
     
       {/* Messages */}
-      <div className="max-w-4xl mx-auto space-y-6 mt-6 pb-12 w-full col-span-1 lg:col-span-2">
+      <div ref={chatRef} id="messages" className="max-w-4xl mx-auto space-y-6 mt-6 pb-12 w-full col-span-1 lg:col-span-2 scroll-mt-6">
         <ChatBox inquiryId={inquiry.id} role="admin" />
       </div>
     </div>
   );
 }
+
+
+
+
 
 

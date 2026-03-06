@@ -178,6 +178,7 @@ export const columns: ColumnDef<Inquiry>[] = [
     header: "Status",
     size: 200, 
     cell: ({ row }) => {
+      const router = useRouter();
       const inquiry = row.original;
       const status = inquiry.status || "Pending";
       const hasLoggedIn = inquiry.hasLoggedIn;
@@ -187,7 +188,7 @@ export const columns: ColumnDef<Inquiry>[] = [
       return (
                   <div className="flex items-center gap-1.5 min-w-[180px]">
             <div className="flex items-center gap-1 shrink-0">
-              <UnreadBadge inquiryId={inquiry.id} role="admin" />
+              <div onClick={() => router.push(`/admin/inquiry/${inquiry.id}?focus=messages`)}><UnreadBadge inquiryId={inquiry.id} role="admin" /></div>
               {!!hasLoggedIn && (
               <TooltipProvider>
                 <Tooltip>
@@ -253,4 +254,5 @@ export const columns: ColumnDef<Inquiry>[] = [
     },
   },
 ];
+
 
