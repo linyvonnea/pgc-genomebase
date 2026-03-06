@@ -511,44 +511,26 @@ export function subscribeToThreadMessages(
 export async function markMessagesAsRead(
   threadId: string,
   userRole: MessageSenderRole,
-  userEmail: string,
-  senderId?: string,
-  senderName?: string
+  userEmail: string
 ): Promise<void> {
   try {
     const thread = await getQuotationThread(threadId);
     if (!thread) return;
-
-    // Reset unread count for the CURRENT user role
+    
+    // Reset unread count
     const threadRef = doc(db, THREADS_COLLECTION, threadId);
     const unreadCountUpdate = userRole === "admin"
       ? { "unreadCount.admin": 0 }
       : { "unreadCount.client": 0 };
-
+    
     await updateDoc(threadRef, unreadCountUpdate);
-
-    // Mark individual messages as read IF they were sent by the OTHER party
+    
+    // Mark individual messages as read
     const messages = await getThreadMessages(threadId);
     const batch = writeBatch(db);
-
+    
     messages.forEach(msg => {
-      // Logic for marking as read:
-      // 1. Message must be currently unread
-      // 2. Message must NOT be from current user's role
-      // 3. Optional: Filter by specific sender (id/name)
-      const isFromOtherParty = msg.senderRole !== userRole;
-      const isUnread = !msg.isRead;
-      
-      let shouldMark = isUnread && isFromOtherParty;
-      
-      // If specific sender filter provided, apply it to the OTHER party's messages
-      if (shouldMark && (senderId || senderName)) {
-        const matchesId = senderId ? msg.senderId === senderId : true;
-        const matchesName = senderName ? msg.senderName === senderName : true;
-        shouldMark = matchesId && matchesName;
-      }
-
-      if (shouldMark && msg.id) {
+      if (!msg.isRead && msg.senderRole !== userRole && msg.id) {
         const msgRef = doc(db, MESSAGES_COLLECTION, msg.id);
         batch.update(msgRef, {
           isRead: true,

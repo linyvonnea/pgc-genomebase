@@ -243,12 +243,7 @@ export const columns: ColumnDef<Inquiry>[] = [
             <div
               className="flex items-center"
             >
-              <UnreadBadge 
-                inquiryId={inquiry.id} 
-                role="admin" 
-                senderId={inquiry.email} 
-                senderName={inquiry.name} 
-              />
+              <UnreadBadge inquiryId={inquiry.id} role="admin" />
             </div>
           </div>
         </div>
