@@ -13,9 +13,10 @@ import { useSearchParams } from "next/navigation";
 interface FloatingChatWidgetProps {
   inquiryId: string;
   role: MessageSenderRole;
+  className?: string;
 }
 
-export default function FloatingChatWidget({ inquiryId, role }: FloatingChatWidgetProps) {
+export default function FloatingChatWidget({ inquiryId, role, className }: FloatingChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const searchParams = useSearchParams();
@@ -39,7 +40,7 @@ export default function FloatingChatWidget({ inquiryId, role }: FloatingChatWidg
   }, [inquiryId, role]);
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+    <div className={`fixed bottom-6 right-6 z-50 flex flex-col items-end ${className || ""}`}>
       <AnimatePresence>
         {isOpen && (
           <motion.div
