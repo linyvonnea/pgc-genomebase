@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Mail } from "lucide-react";
-import { subscribeToThreadMessages, markMessagesAsRead } from "@/services/quotationThreadService";
-import { MessageSenderRole } from "@/types/QuotationThread";
+import { subscribeToThreadMessages, markMessagesAsRead, subscribeToQuotationThread } from "@/services/quotationThreadService";
+import { MessageSenderRole, QuotationThread } from "@/types/QuotationThread";
 import useAuth from "@/hooks/useAuth";
 
 import { useRouter } from "next/navigation";
@@ -19,14 +19,20 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [hasMessages, setHasMessages] = useState(false);
   const [hasClientMessages, setHasClientMessages] = useState(false);
+  const [threadData, setThreadData] = useState<QuotationThread | null>(null);
   // Guard ref to prevent subscription from reverting the optimistic UI update
   const isMarkingAsReadRef = useRef(false);
 
   useEffect(() => {
     if (!inquiryId) return;
 
-    // Listen to messages for this thread
-    const unsubscribe = subscribeToThreadMessages(inquiryId, (messages) => {
+    // 1. Subscribe to the thread to get last message metadata (senderId, senderName)
+    const unsubscribeThread = subscribeToQuotationThread(inquiryId, (thread) => {
+      setThreadData(thread);
+    });
+
+    // 2. Listen to messages for this thread
+    const unsubscribeMessages = subscribeToThreadMessages(inquiryId, (messages) => {
       setHasMessages(messages.length > 0);
 
       // Check if there are any messages from client
@@ -37,6 +43,7 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
       const unread = messages.filter(
         (m) => !m.isRead && m.senderRole !== role,
       ).length;
+
       // Only update if we're NOT in the middle of marking as read
       // This prevents the subscription from reverting the optimistic red→orange transition
       if (!isMarkingAsReadRef.current) {
@@ -44,7 +51,10 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeThread();
+      unsubscribeMessages();
+    };
   }, [inquiryId, role]);
 
   const handleClick = async (e: React.MouseEvent) => {
@@ -97,9 +107,11 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
     shouldAnimate = true;
     tooltipText = `${unreadCount} new message(s)`;
   } else if (isRead) {
-    // Orange for read messages from client
+    // Orange for read messages from client (Triggered when isRead=true)
     envelopeColor = "text-[#F69122] opacity-100";
-    tooltipText = "View messages";
+    // Include sender reference in tooltip if available
+    const senderRef = threadData?.lastMessageBy ? ` - ${threadData.lastMessageBy}` : "";
+    tooltipText = `View messages${senderRef}`;
   } else if (isAdminOnly) {
     // Grey for admin-only messages
     envelopeColor = "text-slate-400 opacity-60";
