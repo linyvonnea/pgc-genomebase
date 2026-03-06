@@ -47,11 +47,6 @@ export default function UnreadBadge({ inquiryId, role }: UnreadBadgeProps) {
             : "text-slate-400 opacity-60"
         }`}
       />
-      {unreadCount > 0 && (
-        <span className="absolute -right-1.5 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#B9273A] text-[9px] font-bold text-white shadow-sm ring-2 ring-white animate-in zoom-in duration-300">
-          {unreadCount > 9 ? "9+" : unreadCount}
-        </span>
-      )}
     </div>
   );
 }
