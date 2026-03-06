@@ -549,6 +549,9 @@ export async function markMessagesAsRead(
       }
 
       if (shouldMark && msg.id) {
+        const msgRef = doc(db, MESSAGES_COLLECTION, msg.id);
+        batch.update(msgRef, {
+          isRead: true,
           readAt: serverTimestamp(),
           readBy: userEmail,
         });
