@@ -81,23 +81,23 @@ export default function Home() {
 
           {/* CTA Buttons */}
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4 justify-center lg:justify-start">
               <Link href="/inquire">
-                <Button size="lg" className="w-full sm:w-auto h-14 px-8 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 text-base border-2 border-transparent">
+                <Button size="lg" className="h-12 px-6 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-300 text-sm border-2 border-transparent">
                   Submit an Inquiry
-                  <ArrowRight className="w-5 h-5 ml-2" />
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
               <Link href="/faqs">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-base group">
-                  <HelpCircle className="w-5 h-5 mr-2" />
+                <Button size="lg" variant="outline" className="h-12 px-6 bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold shadow-sm hover:shadow-md transition-all duration-300 text-sm group">
+                  <HelpCircle className="w-4 h-4 mr-2" />
                   View FAQs
                 </Button>
               </Link>
               <Link href="/portal">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 bg-white border-2 border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-base group">
+                <Button size="lg" variant="outline" className="h-12 px-6 bg-white border-2 border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white font-semibold shadow-sm hover:shadow-md transition-all duration-300 text-sm group">
                   Login to Client Portal
-                  <UserCheck className="w-5 h-5 ml-2 transition-transform group-hover:scale-110" />
+                  <UserCheck className="w-4 h-4 ml-2 transition-transform group-hover:scale-110" />
                 </Button>
               </Link>
             </div>
