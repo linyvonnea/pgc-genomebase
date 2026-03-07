@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useRef } from "react";
-import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { collection, query, where, onSnapshot, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { QuotationThread } from "@/types/QuotationThread";
 
@@ -31,29 +31,27 @@ export function useMessageNotifications() {
   useEffect(() => {
     const q = query(
       collection(db, "quotationThreads"),
-      where("unreadCount.admin", ">", 0)
+      orderBy("lastMessageAt", "desc")
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const threads: MessageNotification[] = snapshot.docs
         .map((docSnap) => {
           const data = docSnap.data() as QuotationThread;
+          const unreadCount = data.unreadCount?.admin ?? 0;
           return {
             inquiryId: docSnap.id,
             clientName: data.clientName || "Unknown",
             clientEmail: data.clientEmail || "",
             clientAffiliation: data.clientAffiliation || "",
-            unreadCount: data.unreadCount?.admin ?? 0,
+            unreadCount,
             lastMessageAt: data.lastMessageAt?.toDate?.(),
             lastMessageBy: data.lastMessageBy,
             viewed: viewedRef.current.has(docSnap.id),
           };
         })
-        .sort((a, b) => {
-          const tA = a.lastMessageAt?.getTime() ?? 0;
-          const tB = b.lastMessageAt?.getTime() ?? 0;
-          return tB - tA; // newest first
-        });
+        .filter((n) => n.unreadCount > 0 || !!n.lastMessageAt)
+        .slice(0, 15); // limit to recent/unread to avoid huge list
 
       const total = threads.reduce((sum, t) => sum + t.unreadCount, 0);
       setTotalUnread(total);
