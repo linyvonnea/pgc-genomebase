@@ -85,10 +85,10 @@ export default function UnreadBadge({
         (message) => !message.isRead && message.senderRole !== role,
       ).length;
 
-      // Logic to prevent "flickering" back to red:
-      // If we are currently in "viewed" mode (orange), only turn red if the 
-      // actual number of unread messages has INCREASED (meaning a new message arrived).
-      if ((isClearingUnread || isManuallyViewed) && lastSeenCount !== null && currentUnread > lastSeenCount) {
+      // Logic to ensure transitions back to red when new messages arrive:
+      // If we are currently in "viewed" mode (orange/clearing), we MUST turn back to red 
+      // if the actual number of unread messages from the client increases.
+      if (currentUnread > (lastSeenCount ?? 0)) {
         setIsClearingUnread(false);
         setIsManuallyViewed(false);
         localStorage.removeItem(viewedKey);
