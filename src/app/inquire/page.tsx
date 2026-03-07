@@ -19,7 +19,8 @@ import {
   Info,
   Mail,
   ArrowLeft,
-  FileSearch
+  FileSearch,
+  HelpCircle
 } from "lucide-react";
 
 export default function InquirePage() {
@@ -92,11 +93,15 @@ export default function InquirePage() {
               </div>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-4">
               <CardTitle className="text-3xl font-bold">Submit Inquiry</CardTitle>
               <CardDescription className="text-slate-500">
                 Sign in to proceed with your service request
               </CardDescription>
+              <Link href="/faqs" className="inline-flex items-center gap-2 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full transition-colors border border-blue-100">
+                <HelpCircle className="h-3.5 w-3.5" />
+                Have questions? View our FAQs
+              </Link>
             </div>
           </CardHeader>
           
