@@ -81,11 +81,17 @@ export default function Home() {
 
           {/* CTA Buttons */}
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4 justify-center lg:justify-start">
               <Link href="/inquire">
-                <Button size="lg" className="w-full sm:w-auto h-14 px-8 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 text-base border-2 border-transparent">
+                <Button size="lg" className="h-12 px-6 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-300 text-sm border-2 border-transparent">
                   Submit an Inquiry
-                  <ArrowRight className="w-5 h-5 ml-2" />
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+              <Link href="/faqs">
+                <Button size="lg" variant="outline" className="h-12 px-6 bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold shadow-sm hover:shadow-md transition-all duration-300 text-sm group">
+                  <HelpCircle className="w-4 h-4 mr-2" />
+                  View FAQs
                 </Button>
               </Link>
               <Link href="/faqs">
@@ -95,9 +101,9 @@ export default function Home() {
                 </Button>
               </Link>
               <Link href="/portal">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 bg-white border-2 border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-base group">
+                <Button size="lg" variant="outline" className="h-12 px-6 bg-white border-2 border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white font-semibold shadow-sm hover:shadow-md transition-all duration-300 text-sm group">
                   Login to Client Portal
-                  <UserCheck className="w-5 h-5 ml-2 transition-transform group-hover:scale-110" />
+                  <UserCheck className="w-4 h-4 ml-2 transition-transform group-hover:scale-110" />
                 </Button>
               </Link>
             </div>
@@ -110,14 +116,14 @@ export default function Home() {
         </div>
 
         {/* Right Section - Simple Steps */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20">
-          <div className="space-y-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 lg:p-8 shadow-xl border border-white/20 scale-90 lg:scale-100 origin-top">
+          <div className="space-y-4 lg:space-y-6">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-slate-800 mb-2">How to Get Started</h2>
-              <p className="text-slate-600">Follow these simple steps</p>
+              <h2 className="text-xl lg:text-2xl font-bold text-slate-800 mb-1 lg:mb-2">How to Get Started</h2>
+              <p className="text-sm text-slate-600">Follow these simple steps</p>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-3 lg:space-y-4">
               {[
                 { icon: Mail, title: "Sign in with Google", description: "Your account will be used to communicate with PGC Visayas", color: "text-[#166FB5]" },
                 { icon: FileText, title: "Submit Inquiry Form", description: "Indicate services or objectives", color: "text-[#F69122]" },
@@ -131,23 +137,34 @@ export default function Home() {
                 return (
                   <div 
                     key={index} 
-                    className={`flex items-start gap-4 p-3 rounded-lg transition-all duration-300 ${
+                    className={`flex items-start gap-4 p-2 lg:p-3 rounded-lg transition-all duration-300 relative ${
                       isActive 
-                        ? 'bg-gradient-to-r from-[#F69122]/10 to-[#912ABD]/10 scale-105 shadow-md' 
+                        ? 'bg-gradient-to-r from-[#F69122]/10 to-[#912ABD]/10 scale-[1.02] shadow-sm' 
                         : 'hover:bg-slate-50'
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                    <div className={`w-7 h-7 lg:w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
                       isActive ? 'bg-gradient-to-r from-[#F69122] to-[#912ABD]' : 'bg-slate-100'
                     }`}>
-                      <IconComponent className={`h-4 w-4 ${isActive ? 'text-white' : step.color}`} />
+                      <IconComponent className={`h-3 w-3 lg:h-4 w-4 ${isActive ? 'text-white' : step.color}`} />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className={`font-medium ${isActive ? 'text-slate-800' : 'text-slate-600'}`}>
+                    <div className="flex-1 min-w-0 pr-4">
+                      <h3 className={`text-sm lg:text-base font-medium ${isActive ? 'text-slate-800' : 'text-slate-600'}`}>
                         {step.title}
                       </h3>
-                      <p className="text-sm text-slate-500 leading-relaxed">
+                      <p className="text-[10px] lg:text-sm text-slate-500 leading-tight lg:leading-relaxed">
                         {step.description}
+                      </p>
+                    </div>
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] lg:text-xs font-bold text-slate-300">
+                      {index + 1}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
                       </p>
                     </div>
                     <span className="text-xs text-slate-400 mt-1">
