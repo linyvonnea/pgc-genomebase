@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Mail } from "lucide-react";
-import { subscribeToThreadMessages, markMessagesAsRead, subscribeToQuotationThread } from "@/services/quotationThreadService";
+import {
+  subscribeToThreadMessages,
+  markMessagesAsRead,
+  subscribeToQuotationThread,
+} from "@/services/quotationThreadService";
 import { MessageSenderRole, QuotationThread } from "@/types/QuotationThread";
 import useAuth from "@/hooks/useAuth";
-
 import { useRouter } from "next/navigation";
 
 interface UnreadBadgeProps {
@@ -15,34 +18,44 @@ interface UnreadBadgeProps {
   senderName?: string;
 }
 
-export default function UnreadBadge({ inquiryId, role, senderId, senderName }: UnreadBadgeProps) {
+export default function UnreadBadge({
+  inquiryId,
+  role,
+  senderId,
+  senderName,
+}: UnreadBadgeProps) {
   const router = useRouter();
   const { user } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const [hasMessages, setHasMessages] = useState(false);
   const [hasClientMessages, setHasClientMessages] = useState(false);
   const [threadData, setThreadData] = useState<QuotationThread | null>(null);
+  const [isClearingUnread, setIsClearingUnread] = useState(false);
 
   useEffect(() => {
     if (!inquiryId) return;
 
-    // 1. Subscribe to the thread to get last message metadata (senderId, senderName)
     const unsubscribeThread = subscribeToQuotationThread(inquiryId, (thread) => {
       setThreadData(thread);
     });
 
-    // 2. Listen to messages for this thread
     const unsubscribeMessages = subscribeToThreadMessages(inquiryId, (messages) => {
       setHasMessages(messages.length > 0);
 
-      // Check if there are any messages from client
-      const clientMessages = messages.filter((m) => m.senderRole === "client");
+      const clientMessages = messages.filter((message) => message.senderRole === "client");
       setHasClientMessages(clientMessages.length > 0);
 
-      // Count messages that are NOT read and are NOT from us
       const unread = messages.filter(
-      const [isClearingUnread, setIsClearingUnread] = useState(false);
+        (message) => !message.isRead && message.senderRole !== role,
       ).length;
+
+      if (unread === 0) {
+        setIsClearingUnread(false);
+      }
+
+      if (isClearingUnread && unread > 0) {
+        return;
+      }
 
       setUnreadCount(unread);
     });
@@ -51,68 +64,45 @@ export default function UnreadBadge({ inquiryId, role, senderId, senderName }: U
       unsubscribeThread();
       unsubscribeMessages();
     };
-  }, [inquiryId, role]);
+  }, [inquiryId, isClearingUnread, role]);
 
-  const handleClick = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    // If there are unread messages, mark them as read
+  const handleClick = async (event: React.MouseEvent) => {
+    event.stopPropagation();
+
     if (unreadCount > 0 && user?.email) {
-      // Then update Firebase in background
+      setIsClearingUnread(true);
+      setUnreadCount(0);
+
       try {
         await markMessagesAsRead(inquiryId, role, user.email, senderId, senderName);
       } catch (error) {
+        setIsClearingUnread(false);
         console.error("Error marking messages as read:", error);
-          if (unread === 0) {
-            setIsClearingUnread(false);
-          }
-
-          if (isClearingUnread && unread > 0) {
-            return;
-          }
-
       }
     }
-    
-    // Navigate to the inquiry details after marking as read
+
     router.push(`/admin/inquiry?inquiryId=${inquiryId}&focus=messages`);
   };
 
-  // Determine envelope state and color
-  // 1. No messages at all: hide icon
   if (!hasMessages) return null;
 
-  // 2. Only admin messages (no client messages): Grey envelope
   const isAdminOnly = !hasClientMessages;
-  
-          setIsClearingUnread(true);
-          setUnreadCount(0);
-
-  // 3. New unread messages from client: Red + bounce + ping
   const hasUnread = unreadCount > 0;
-  
-  // 4. Client messages but all read: Orange envelope
-            setIsClearingUnread(false);
   const isRead = hasClientMessages && !hasUnread;
 
-  // Determine color and animation
-  let envelopeColor = "text-slate-400 opacity-60"; // Default grey
+  let envelopeColor = "text-slate-400 opacity-60";
   let shouldAnimate = false;
   let tooltipText = "Messages";
 
   if (hasUnread) {
-    // Red with bounce animation for new messages
     envelopeColor = "text-[#B9273A] drop-shadow-sm animate-bounce";
     shouldAnimate = true;
     tooltipText = unreadCount === 1 ? "New message" : `${unreadCount} new messages`;
   } else if (isRead) {
-    // Orange for read messages from client (Triggered when isRead=true)
     envelopeColor = "text-[#F69122] opacity-100";
-    // Include sender reference in tooltip if available
     const senderRef = threadData?.lastMessageBy ? ` - ${threadData.lastMessageBy}` : "";
     tooltipText = `View messages${senderRef}`;
   } else if (isAdminOnly) {
-    // Grey for admin-only messages
     envelopeColor = "text-slate-400 opacity-60";
     tooltipText = "Admin messages only";
   }
