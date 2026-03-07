@@ -73,17 +73,6 @@ export function MessageNotificationCenter() {
                 : "All caught up!"}
             </p>
           </div>
-          {unviewedCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={markAllViewed}
-              className="text-xs text-slate-500 hover:text-slate-700"
-            >
-              <Check className="h-3 w-3 mr-1" />
-              Mark all seen
-            </Button>
-          )}
         </div>
 
         {/* List */}
@@ -163,20 +152,6 @@ export function MessageNotificationCenter() {
             </div>
           )}
         </ScrollArea>
-
-        <Separator />
-        <div className="p-3">
-          <Button
-            variant="outline"
-            className="w-full text-sm"
-            onClick={() => {
-              setOpen(false);
-              router.push("/admin/inquiry");
-            }}
-          >
-            View All Inquiries
-          </Button>
-        </div>
       </PopoverContent>
     </Popover>
   );
