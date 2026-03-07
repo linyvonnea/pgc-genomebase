@@ -479,15 +479,19 @@ export async function addThreadMessage(
         await updateDoc(inquiryRef, {
           messageState: "has_unread",
           unreadMessageCount: newUnread,
-        }).catch(() => {}); // silently ignore if inquiry doc doesn't exist
+        }).catch((err) => {
+          console.error("Error updating inquiry messageState (client):", err);
+        }); 
       } else {
         // Admin sent — only change to admin_only if there are no unread client messages
-        const adminUnread = thread.unreadCount.admin || 0;
+        const adminUnread = (thread.unreadCount.admin || 0);
         if (adminUnread === 0) {
           await updateDoc(inquiryRef, {
             messageState: "admin_only",
             unreadMessageCount: 0,
-          }).catch(() => {});
+          }).catch((err) => {
+            console.error("Error updating inquiry messageState (admin):", err);
+          });
         }
       }
     }
@@ -601,15 +605,26 @@ export async function markMessagesAsRead(
 
     // Denormalize message state onto the inquiries document
     // After admin reads, determine the resulting state:
+    // - If no messages at all -> none
     // - If no client messages exist at all → admin_only
     // - If there were client messages and admin just read them → all_read
     const hasClientMessages = messages.some((m) => m.senderRole === "client");
-    const newState = hasClientMessages ? "all_read" : "admin_only";
+    const hasAdminMessages = messages.some((m) => m.senderRole === "admin");
+    let newState: "none" | "admin_only" | "all_read" = "none";
+    
+    if (hasClientMessages) {
+      newState = "all_read";
+    } else if (hasAdminMessages) {
+      newState = "admin_only";
+    }
+
     const inquiryRef = doc(db, "inquiries", threadId);
     await updateDoc(inquiryRef, {
       messageState: newState,
       unreadMessageCount: 0,
-    }).catch(() => {}); // silently ignore if inquiry doc doesn't exist
+    }).catch((err) => {
+      console.error("Error updating inquiry messageState (markRead):", err);
+    }); 
   } catch (error) {
     console.error("Error marking messages as read:", error);
     throw error;
