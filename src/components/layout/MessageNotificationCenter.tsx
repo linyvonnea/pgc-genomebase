@@ -120,9 +120,11 @@ export function MessageNotificationCenter() {
                         <p className="font-semibold text-sm text-slate-900 truncate">
                           {n.clientName}
                         </p>
-                        <span className="flex-shrink-0 inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold">
-                          {n.unreadCount > 9 ? "9+" : n.unreadCount}
-                        </span>
+                        {n.unreadCount > 0 && (
+                          <span className="flex-shrink-0 inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold">
+                            {n.unreadCount > 9 ? "9+" : n.unreadCount}
+                          </span>
+                        )}
                       </div>
                       {n.clientAffiliation && (
                         <p className="text-xs text-slate-500 truncate">
