@@ -139,11 +139,6 @@ export default function FloatingChatWidget({
                   <span className="font-semibold text-sm line-clamp-1">
                     {inquiryData ? inquiryData.name : "Messages"}
                   </span>
-                  {inquiryData?.email && (
-                    <span className="text-[10px] text-white/90 line-clamp-1">
-                      {inquiryData.email}
-                    </span>
-                  )}
                   {inquiryData?.affiliation && (
                     <span className="text-[10px] text-white/80 line-clamp-1">
                       {inquiryData.affiliation}
