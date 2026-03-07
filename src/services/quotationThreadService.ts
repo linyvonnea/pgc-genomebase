@@ -159,6 +159,26 @@ export async function getAdminAssignedThreads(adminEmail: string): Promise<Quota
 }
 
 /**
+ * Subscribe to all threads where admin has unread messages (real-time, single query).
+ * Efficient: Firestore only returns documents where unreadCount.admin > 0.
+ */
+export function subscribeToAllAdminUnreadCounts(
+  callback: (unreadThreads: { inquiryId: string; clientName: string; unreadCount: number }[]) => void
+): () => void {
+  const threadsRef = collection(db, THREADS_COLLECTION);
+  const q = query(threadsRef, where("unreadCount.admin", ">", 0));
+
+  return onSnapshot(q, (snapshot) => {
+    const unreadThreads = snapshot.docs.map((docSnap) => ({
+      inquiryId: docSnap.id,
+      clientName: (docSnap.data().clientName || "Unknown") as string,
+      unreadCount: (docSnap.data().unreadCount?.admin || 0) as number,
+    }));
+    callback(unreadThreads);
+  });
+}
+
+/**
  * Subscribe to quotation thread updates (real-time)
  */
 export function subscribeToQuotationThread(

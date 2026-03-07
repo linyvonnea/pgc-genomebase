@@ -51,22 +51,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ChevronDown, X } from "lucide-react"
+import { ChevronDown, X, MessageCircle } from "lucide-react"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  unreadInquiryIds?: Set<string>
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  unreadInquiryIds = new Set(),
 }: DataTableProps<TData, TValue>) {
   const router = useRouter()
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [globalFilter, setGlobalFilter] = useState("")
   const [activeStatusFilter, setActiveStatusFilter] = useState<string | undefined>(undefined)
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false)
   const [selectedYear, setSelectedYear] = useState<string>("")
   const [selectedMonth, setSelectedMonth] = useState<string>("")
   const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(true)
@@ -204,8 +207,15 @@ export function DataTable<TData, TValue>({
     },
   })
 
-  // Apply date filter
-  const filteredRows = table.getFilteredRowModel().rows.filter(dateFilter)
+  // Apply date + unread filters
+  const filteredRows = table.getFilteredRowModel().rows.filter((row) => {
+    if (!dateFilter(row)) return false
+    if (showUnreadOnly) {
+      const inquiry = row.original as unknown as { id: string }
+      return unreadInquiryIds.has(inquiry.id)
+    }
+    return true
+  })
 
   const handleStatusFilter = (status: string | undefined) => {
     setActiveStatusFilter(status)
@@ -240,6 +250,7 @@ export function DataTable<TData, TValue>({
 
   const clearAllFilters = () => {
     setActiveStatusFilter(undefined)
+    setShowUnreadOnly(false)
     setSelectedYear("")
     setSelectedMonth("")
     setGlobalFilter("")
@@ -252,6 +263,7 @@ export function DataTable<TData, TValue>({
     selectedYear,
     selectedMonth,
     globalFilter,
+    showUnreadOnly ? "unread" : undefined,
   ].filter(Boolean).length
 
   return (
@@ -276,7 +288,26 @@ export function DataTable<TData, TValue>({
         {!isFiltersCollapsed && (
           <div className="bg-white rounded-lg border border-gray-200 p-3 space-y-3">
             {/* Primary Content Filters Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">                {/* Unread Messages Quick Filter */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Messages</label>
+                  <button
+                    onClick={() => setShowUnreadOnly((prev) => !prev)}
+                    className={`w-full flex items-center gap-2 rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                      showUnreadOnly
+                        ? "bg-blue-50 border-blue-300 font-semibold text-blue-700"
+                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                    }`}
+                  >
+                    <MessageCircle className="h-3.5 w-3.5 shrink-0" />
+                    <span>Unread Messages</span>
+                    {unreadInquiryIds.size > 0 && (
+                      <span className="ml-auto flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white">
+                        {unreadInquiryIds.size}
+                      </span>
+                    )}
+                  </button>
+                </div>
               {/* Processing Status */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Processing Status</label>
@@ -526,7 +557,11 @@ export function DataTable<TData, TValue>({
                   .map((row) => (
                     <TableRow
                       key={row.id}
-                      className="group hover:bg-muted/50 transition-colors cursor-pointer"
+                      className={`group hover:bg-muted/50 transition-colors cursor-pointer ${
+                        unreadInquiryIds.has((row.original as unknown as { id: string }).id)
+                          ? "border-l-4 border-l-blue-500 bg-blue-50/40"
+                          : ""
+                      }`}
                       data-state={row.getIsSelected() && "selected"}
                       onClick={(e: React.MouseEvent) => handleRowClick(row.original as Inquiry, e)}
                     >
