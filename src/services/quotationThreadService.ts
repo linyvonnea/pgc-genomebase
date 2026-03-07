@@ -471,6 +471,25 @@ export async function addThreadMessage(
         lastMessageBy: message.senderId,
         updatedAt: serverTimestamp(),
       });
+
+      // Denormalize message state onto the inquiries document for efficient table display
+      const inquiryRef = doc(db, "inquiries", message.threadId);
+      if (message.senderRole === "client") {
+        const newUnread = (thread.unreadCount.admin || 0) + 1;
+        await updateDoc(inquiryRef, {
+          messageState: "has_unread",
+          unreadMessageCount: newUnread,
+        }).catch(() => {}); // silently ignore if inquiry doc doesn't exist
+      } else {
+        // Admin sent — only change to admin_only if there are no unread client messages
+        const adminUnread = thread.unreadCount.admin || 0;
+        if (adminUnread === 0) {
+          await updateDoc(inquiryRef, {
+            messageState: "admin_only",
+            unreadMessageCount: 0,
+          }).catch(() => {});
+        }
+      }
     }
     
     return messageRef.id;
@@ -579,6 +598,18 @@ export async function markMessagesAsRead(
     });
     
     await batch.commit();
+
+    // Denormalize message state onto the inquiries document
+    // After admin reads, determine the resulting state:
+    // - If no client messages exist at all → admin_only
+    // - If there were client messages and admin just read them → all_read
+    const hasClientMessages = messages.some((m) => m.senderRole === "client");
+    const newState = hasClientMessages ? "all_read" : "admin_only";
+    const inquiryRef = doc(db, "inquiries", threadId);
+    await updateDoc(inquiryRef, {
+      messageState: newState,
+      unreadMessageCount: 0,
+    }).catch(() => {}); // silently ignore if inquiry doc doesn't exist
   } catch (error) {
     console.error("Error marking messages as read:", error);
     throw error;

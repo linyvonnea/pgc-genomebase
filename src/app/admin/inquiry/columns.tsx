@@ -22,8 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { QuoteButton } from "./QuoteButton";
-import UnreadBadge from "@/components/chat/UnreadBadge";
-import { Copy, User, Eye } from "lucide-react";
+import { Copy, User, Eye, Mail } from "lucide-react";
 import { toast } from "sonner";
 
 /**
@@ -240,17 +239,71 @@ export const columns: ColumnDef<Inquiry>[] = [
                 </Tooltip>
               </TooltipProvider>
             )}
-            <div
-              className="flex items-center"
-            >
-              <UnreadBadge 
-                inquiryId={inquiry.id} 
-                role="admin" 
-                senderId={inquiry.email} 
-                senderName={inquiry.name} 
-              />
-            </div>
           </div>
+        </div>
+      );
+    },
+  },
+  {
+    id: "message",
+    header: () => <div className="text-center w-full">Message</div>,
+    size: 80,
+    cell: ({ row }) => {
+      const router = useRouter();
+      const inquiry = row.original;
+      const state = inquiry.messageState ?? "none";
+      const unread = inquiry.unreadMessageCount ?? 0;
+
+      // No messages at all — show nothing
+      if (state === "none") return <div className="flex justify-center" />;
+
+      let iconClass = "";
+      let tooltipText = "";
+      let showPing = false;
+
+      if (state === "has_unread") {
+        // Red + bounce: unread client messages
+        iconClass = "text-[#B9273A] animate-bounce drop-shadow-sm";
+        tooltipText = `${unread} unread message${unread > 1 ? "s" : ""}`;
+        showPing = true;
+      } else if (state === "all_read") {
+        // Orange: client messages, all read
+        iconClass = "text-[#F69122]";
+        tooltipText = "Messages read";
+      } else {
+        // Grey: admin-only messages, no client reply
+        iconClass = "text-slate-400 opacity-60";
+        tooltipText = "Admin sent message";
+      }
+
+      const handleClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        router.push(`/admin/inquiry?inquiryId=${inquiry.id}&focus=messages`);
+      };
+
+      return (
+        <div className="flex justify-center">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  className="relative flex h-7 w-7 cursor-pointer items-center justify-center rounded-md transition-transform hover:scale-110 active:scale-95 hover:bg-slate-100"
+                  onClick={handleClick}
+                >
+                  <Mail className={`h-4 w-4 transition-all ${iconClass}`} />
+                  {showPing && (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#B9273A]" />
+                    </span>
+                  )}
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <p className="text-xs font-semibold">{tooltipText}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       );
     },

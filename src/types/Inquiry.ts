@@ -33,4 +33,12 @@ export interface Inquiry {
   haveSubmitted?: boolean;
   hasOpenedQuotation?: boolean;
   hasLoggedIn?: boolean;
+
+  // Message state — denormalized from threadMessages for efficient table display
+  // 'none'       : no messages exist yet
+  // 'admin_only' : admin has sent messages but no client reply
+  // 'has_unread' : client sent message(s) that admin hasn't read
+  // 'all_read'   : all client messages have been read by admin
+  messageState?: 'none' | 'admin_only' | 'has_unread' | 'all_read';
+  unreadMessageCount?: number;
 }
