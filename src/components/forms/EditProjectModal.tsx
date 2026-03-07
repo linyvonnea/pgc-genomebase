@@ -373,16 +373,18 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0 z-[110]" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={displayDate}
-                            onSelect={(date) => {
-                              console.log('Date selected:', date); // Debug log
-                              field.onChange(date || undefined);
-                              setPopoverOpen(false);
-                            }}
-                            initialFocus
-                          />
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <Calendar
+                              mode="single"
+                              selected={displayDate}
+                              onSelect={(date) => {
+                                console.log('Date selected:', date);
+                                field.onChange(date || undefined);
+                                setPopoverOpen(false);
+                              }}
+                              initialFocus
+                            />
+                          </div>
                         </PopoverContent>
                       </Popover>
                       <FormMessage />
