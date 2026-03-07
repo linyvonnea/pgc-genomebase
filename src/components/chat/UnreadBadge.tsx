@@ -85,6 +85,8 @@ export default function UnreadBadge({
         (message) => !message.isRead && message.senderRole !== role,
       ).length;
 
+      setUnreadCount(currentUnread);
+
       // Logic to ensure transitions back to red when new messages arrive:
       // If we are currently in "viewed" mode (orange/clearing), we MUST turn back to red 
       // if the actual number of unread messages from the client increases.
@@ -141,7 +143,7 @@ export default function UnreadBadge({
   let tooltipText = "Messages";
 
   if (isRed) {
-    envelopeColor = "text-[#B9273A] drop-shadow-sm animate-bounce";
+    envelopeColor = "text-red-600 drop-shadow-sm animate-bounce";
     shouldAnimate = true;
     tooltipText = unreadCount === 1 ? "New message" : `${unreadCount} new messages`;
   } else if (isOrange) {
@@ -159,9 +161,9 @@ export default function UnreadBadge({
       onClick={handleClick}
       title={tooltipText}
     >
-      <Mail className={`h-4 w-4 transition-all ${envelopeColor}`} />
+      <Mail className={`h-4 w-4 transition-all ${envelopeColor}`} strokeWidth={isRed ? 2.5 : 2} />
       {isRed && (
-        <span className="absolute -top-2 -right-2 min-w-[1rem] rounded-full bg-[#B9273A] px-1 text-center text-[10px] font-semibold leading-4 text-white shadow-sm">
+        <span className="absolute -top-2 -right-2 min-w-[1rem] h-4 flex items-center justify-center rounded-full bg-red-600 px-1 text-center text-[9px] font-bold leading-none text-white shadow-sm ring-1 ring-white">
           {unreadCount > 9 ? "9+" : unreadCount}
         </span>
       )}
