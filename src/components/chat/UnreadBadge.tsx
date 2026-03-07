@@ -41,7 +41,7 @@ export default function UnreadBadge({ inquiryId, role, senderId, senderName }: U
 
       // Count messages that are NOT read and are NOT from us
       const unread = messages.filter(
-      const [isClearingUnread, setIsClearingUnread] = useState(false);
+        (m) => !m.isRead && m.senderRole !== role,
       ).length;
 
       setUnreadCount(unread);
@@ -63,14 +63,6 @@ export default function UnreadBadge({ inquiryId, role, senderId, senderName }: U
         await markMessagesAsRead(inquiryId, role, user.email, senderId, senderName);
       } catch (error) {
         console.error("Error marking messages as read:", error);
-          if (unread === 0) {
-            setIsClearingUnread(false);
-          }
-
-          if (isClearingUnread && unread > 0) {
-            return;
-          }
-
       }
     }
     
@@ -85,14 +77,10 @@ export default function UnreadBadge({ inquiryId, role, senderId, senderName }: U
   // 2. Only admin messages (no client messages): Grey envelope
   const isAdminOnly = !hasClientMessages;
   
-          setIsClearingUnread(true);
-          setUnreadCount(0);
-
   // 3. New unread messages from client: Red + bounce + ping
   const hasUnread = unreadCount > 0;
   
   // 4. Client messages but all read: Orange envelope
-            setIsClearingUnread(false);
   const isRead = hasClientMessages && !hasUnread;
 
   // Determine color and animation
