@@ -281,19 +281,6 @@ export function DataTable<TData, TValue>({
                 {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} active
               </Badge>
             )}
-            {unreadInquiryIds.size > 0 && (
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowUnreadOnly((prev) => !prev); }}
-                className={`flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-semibold transition-colors ${
-                  showUnreadOnly
-                    ? "bg-blue-600 text-white"
-                    : "bg-red-100 text-red-700 hover:bg-red-200"
-                }`}
-              >
-                <MessageCircle className="h-2.5 w-2.5" />
-                {unreadInquiryIds.size} unread
-              </button>
-            )}
           </div>
           <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? "" : "rotate-180"}`} />
         </div>
