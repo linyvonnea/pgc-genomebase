@@ -456,43 +456,63 @@ export async function addThreadMessage(
     
     const messageRef = await addDoc(collection(db, MESSAGES_COLLECTION), messageData);
     
-    // Update thread
+    // Ensure the quotationThreads document exists — auto-create if missing.
+    // This handles existing inquiries that were created before thread initialization
+    // was part of the inquiry submission flow.
     const threadRef = doc(db, THREADS_COLLECTION, message.threadId);
-    const thread = await getQuotationThread(message.threadId);
+    let thread = await getQuotationThread(message.threadId);
     
-    if (thread) {
-      const unreadCountUpdate = message.senderRole === "admin"
-        ? { "unreadCount.client": (thread.unreadCount.client || 0) + 1 }
-        : { "unreadCount.admin": (thread.unreadCount.admin || 0) + 1 };
+    if (!thread) {
+      // Fetch inquiry data to populate the thread
+      const inquirySnap = await getDoc(doc(db, "inquiries", message.threadId));
+      const inquiryData = inquirySnap.exists() ? inquirySnap.data() : {};
       
-      await updateDoc(threadRef, {
-        ...unreadCountUpdate,
-        lastMessageAt: serverTimestamp(),
-        lastMessageBy: message.senderId,
-        updatedAt: serverTimestamp(),
-      });
+      const newThreadData = {
+        inquiryId: message.threadId,
+        clientEmail: inquiryData.email || "",
+        clientName: inquiryData.name || "",
+        clientAffiliation: inquiryData.affiliation || "",
+        status: "pending" as InquiryStatus,
+        quotations: [],
+        unreadCount: { admin: 0, client: 0 },
+        createdAt: serverTimestamp() as Timestamp,
+        updatedAt: serverTimestamp() as Timestamp,
+      };
+      await setDoc(threadRef, newThreadData);
+      thread = { id: message.threadId, ...newThreadData };
+    }
 
-      // Denormalize message state onto the inquiries document for efficient table display
-      const inquiryRef = doc(db, "inquiries", message.threadId);
-      if (message.senderRole === "client") {
-        const newUnread = (thread.unreadCount.admin || 0) + 1;
+    const unreadCountUpdate = message.senderRole === "admin"
+      ? { "unreadCount.client": (thread.unreadCount.client || 0) + 1 }
+      : { "unreadCount.admin": (thread.unreadCount.admin || 0) + 1 };
+    
+    await updateDoc(threadRef, {
+      ...unreadCountUpdate,
+      lastMessageAt: serverTimestamp(),
+      lastMessageBy: message.senderId,
+      updatedAt: serverTimestamp(),
+    });
+
+    // Denormalize message state onto the inquiries document for efficient table display
+    const inquiryRef = doc(db, "inquiries", message.threadId);
+    if (message.senderRole === "client") {
+      const newUnread = (thread.unreadCount.admin || 0) + 1;
+      await updateDoc(inquiryRef, {
+        messageState: "has_unread",
+        unreadMessageCount: newUnread,
+      }).catch((err) => {
+        console.error("Error updating inquiry messageState (client):", err);
+      }); 
+    } else {
+      // Admin sent — only change to admin_only if there are no unread client messages
+      const adminUnread = (thread.unreadCount.admin || 0);
+      if (adminUnread === 0) {
         await updateDoc(inquiryRef, {
-          messageState: "has_unread",
-          unreadMessageCount: newUnread,
+          messageState: "admin_only",
+          unreadMessageCount: 0,
         }).catch((err) => {
-          console.error("Error updating inquiry messageState (client):", err);
-        }); 
-      } else {
-        // Admin sent — only change to admin_only if there are no unread client messages
-        const adminUnread = (thread.unreadCount.admin || 0);
-        if (adminUnread === 0) {
-          await updateDoc(inquiryRef, {
-            messageState: "admin_only",
-            unreadMessageCount: 0,
-          }).catch((err) => {
-            console.error("Error updating inquiry messageState (admin):", err);
-          });
-        }
+          console.error("Error updating inquiry messageState (admin):", err);
+        });
       }
     }
     

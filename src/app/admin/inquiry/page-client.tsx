@@ -11,7 +11,7 @@ import { subscribeToInquiries } from "@/services/inquiryService";
 import {
   subscribeToAllAdminUnreadCounts,
 } from "@/services/quotationThreadService";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { MessageCircle } from "lucide-react";
 
@@ -23,7 +23,6 @@ export function InquiryPageClient({
   data: initialData,
 }: InquiryPageClientProps) {
   const { adminInfo } = useAuth();
-  const searchParams = useSearchParams();
   const router = useRouter();
   const { canCreate } = usePermissions(adminInfo?.role);
   const [inquiries, setInquiries] = useState<Inquiry[]>(initialData);
