@@ -94,12 +94,6 @@ export default function Home() {
                   View FAQs
                 </Button>
               </Link>
-              <Link href="/faqs">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-base group">
-                  <HelpCircle className="w-5 h-5 mr-2" />
-                  View FAQs
-                </Button>
-              </Link>
               <Link href="/portal">
                 <Button size="lg" variant="outline" className="h-12 px-6 bg-white border-2 border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white font-semibold shadow-sm hover:shadow-md transition-all duration-300 text-sm group">
                   Login to Client Portal
@@ -157,17 +151,6 @@ export default function Home() {
                       </p>
                     </div>
                     <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] lg:text-xs font-bold text-slate-300">
-                      {index + 1}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-                      </p>
-                    </div>
-                    <span className="text-xs text-slate-400 mt-1">
                       {index + 1}
                     </span>
                   </div>
