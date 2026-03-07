@@ -82,16 +82,16 @@ export default function Home() {
           {/* CTA Buttons */}
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-4 justify-center lg:justify-start">
-              <Link href="/inquire">
-                <Button size="lg" className="h-12 px-6 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-300 text-sm border-2 border-transparent">
-                  Submit an Inquiry
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
               <Link href="/faqs">
                 <Button size="lg" variant="outline" className="h-12 px-6 bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold shadow-sm hover:shadow-md transition-all duration-300 text-sm group">
                   <HelpCircle className="w-4 h-4 mr-2" />
                   View FAQs
+                </Button>
+              </Link>
+              <Link href="/inquire">
+                <Button size="lg" className="h-12 px-6 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-md hover:shadow-lg transition-all duration-300 text-sm border-2 border-transparent">
+                  Submit an Inquiry
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>
               <Link href="/portal">
