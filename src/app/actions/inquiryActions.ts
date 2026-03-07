@@ -188,15 +188,13 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       changesAfter: transformedData,
     });
     
-    // Initialize quotation thread for this inquiry (DISABLED FOR NOW)
-    /*
+    // Initialize quotation thread for this inquiry so the messaging system is ready
     try {
       await initializeQuotationThread(docRef.id);
-      console.log(`✅ Quotation thread initialized for inquiry ${docRef.id}`);
     } catch (threadError) {
       console.error(`⚠️ Failed to initialize quotation thread for inquiry ${docRef.id}:`, threadError);
+      // Non-fatal — the thread will be auto-created on first message if this fails
     }
-    */
     
     // Prepare email notification using Firebase Trigger Email extension
     // Template ID corresponds to service type for different email formats
