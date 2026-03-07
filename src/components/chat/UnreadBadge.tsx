@@ -65,12 +65,8 @@ export default function UnreadBadge({
         (message) => !message.isRead && message.senderRole !== role,
       ).length;
 
-      if (unread === 0) {
-        setIsClearingUnread(false);
-      }
-
-      if (isClearingUnread && unread > 0) {
-        return;
+if (hasUnread) {
+      setIsClearingUnread(false);
       }
 
       setUnreadCount(unread);
@@ -103,8 +99,8 @@ export default function UnreadBadge({
   if (!hasMessages) return null;
 
   const isAdminOnly = !hasClientMessages;
-  const hasUnread = unreadCount > 0;
-  const isRead = hasClientMessages && !hasUnread;
+  const hasUnread = unreadCount > 0 && !isClearingUnread;
+  const isRead = (hasClientMessages && !hasUnread) || isClearingUnread;
 
   let envelopeColor = "text-slate-400 opacity-60";
   let shouldAnimate = false;
