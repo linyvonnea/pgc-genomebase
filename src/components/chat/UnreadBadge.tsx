@@ -65,9 +65,8 @@ export default function UnreadBadge({
         (message) => !message.isRead && message.senderRole !== role,
       ).length;
 
-      // Reset the "clearing" state if new unread messages arrive while we are looking at the thread
-      // This ensures if a client sends a message while the admin has the chat open, 
-      // the red badge can reappear if the markAsRead hasn't finished or if the widget closes.
+      // If we see new unread messages, we stop "clearing" and allow the red badge to show.
+      // We only do this if the widget isn't actively open right now.
       if (unread > 0 && !isWidgetOpen) {
         setIsClearingUnread(false);
       }
@@ -79,7 +78,7 @@ export default function UnreadBadge({
       unsubscribeThread();
       unsubscribeMessages();
     };
-  }, [inquiryId, isClearingUnread, role]);
+  }, [inquiryId, isWidgetOpen, role]);
 
   const handleClick = async (event: React.MouseEvent) => {
     event.stopPropagation();
