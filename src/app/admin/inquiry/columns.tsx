@@ -254,8 +254,17 @@ export const columns: ColumnDef<Inquiry>[] = [
       const state = inquiry.messageState ?? "none";
       const unread = inquiry.unreadMessageCount ?? 0;
 
+      // Debugging: uncomment to see data in console
+      // console.log("Inquiry Row Info:", { id: inquiry.id, state, unread });
+
       // No messages at all — show nothing
-      if (state === "none") return <div className="flex justify-center" />;
+      if (state === "none") {
+        return (
+          <div className="flex justify-center opacity-10">
+            <Mail className="h-4 w-4" />
+          </div>
+        );
+      }
 
       let iconClass = "";
       let tooltipText = "";

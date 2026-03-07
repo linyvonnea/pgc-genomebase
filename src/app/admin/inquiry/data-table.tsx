@@ -208,7 +208,7 @@ export function DataTable<TData, TValue>({
   })
 
   // Apply date + unread filters
-  const filteredRows = table.getFilteredRowModel().rows.filter((row) => {
+  const filteredRows = table.getRowModel().rows.filter((row) => {
     if (!dateFilter(row)) return false
     if (showUnreadOnly) {
       const inquiry = row.original as unknown as { id: string }
@@ -577,33 +577,28 @@ export function DataTable<TData, TValue>({
 
             <TableBody>
               {filteredRows.length ? (
-                filteredRows
-                  .slice(
-                    table.getState().pagination.pageIndex * table.getState().pagination.pageSize,
-                    (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize
-                  )
-                  .map((row) => (
-                    <TableRow
-                      key={row.id}
-                      className={`group hover:bg-muted/50 transition-colors cursor-pointer ${
-                        unreadInquiryIds.has((row.original as unknown as { id: string }).id)
-                          ? "border-l-4 border-l-blue-500 bg-blue-50/40"
-                          : ""
-                      }`}
-                      data-state={row.getIsSelected() && "selected"}
-                      onClick={(e: React.MouseEvent) => handleRowClick(row.original as Inquiry, e)}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell 
-                          key={cell.id} 
-                          className="py-2"
-                          style={{ width: cell.column.columnDef.size }}
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
+                filteredRows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className={`group hover:bg-muted/50 transition-colors cursor-pointer ${
+                      unreadInquiryIds.has((row.original as unknown as { id: string }).id)
+                        ? "border-l-4 border-l-blue-500 bg-blue-50/40"
+                        : ""
+                    }`}
+                    data-state={row.getIsSelected() && "selected"}
+                    onClick={(e: React.MouseEvent) => handleRowClick(row.original as Inquiry, e)}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell 
+                        key={cell.id} 
+                        className="py-2"
+                        style={{ width: cell.column.columnDef.size }}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
               ) : (
                 <TableRow>
                   <TableCell colSpan={columns.length} className="text-center h-24 text-muted-foreground">
