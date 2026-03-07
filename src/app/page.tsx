@@ -15,7 +15,8 @@ import {
   Shield,
   Sparkles,
   ArrowRight,
-  Zap
+  Zap,
+  HelpCircle
 } from "lucide-react";
 
 export default function Home() {
@@ -85,6 +86,12 @@ export default function Home() {
                 <Button size="lg" className="w-full sm:w-auto h-14 px-8 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 text-base">
                   Submit an Inquiry
                   <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
+              <Link href="/faqs">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto h-14 px-8 bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-base group">
+                  <HelpCircle className="w-5 h-5 mr-2" />
+                  View FAQs
                 </Button>
               </Link>
               <Link href="/portal">
