@@ -65,8 +65,8 @@ export default function UnreadBadge({
         (message) => !message.isRead && message.senderRole !== role,
       ).length;
 
-if (hasUnread) {
-      setIsClearingUnread(false);
+      if (unread > 0) {
+        setIsClearingUnread(false);
       }
 
       setUnreadCount(unread);
