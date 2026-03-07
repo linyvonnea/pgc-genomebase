@@ -22,7 +22,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { QuoteButton } from "./QuoteButton";
-import { Copy, User, Eye, Mail } from "lucide-react";
+import UnreadBadge from "@/components/chat/UnreadBadge";
+import { Copy, User, Eye } from "lucide-react";
 import { toast } from "sonner";
 
 /**
@@ -239,6 +240,12 @@ export const columns: ColumnDef<Inquiry>[] = [
                 </Tooltip>
               </TooltipProvider>
             )}
+            <UnreadBadge
+              inquiryId={inquiry.id}
+              role="admin"
+              senderId={inquiry.email}
+              senderName={inquiry.name}
+            />
           </div>
         </div>
       );

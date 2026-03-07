@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Mail } from "lucide-react";
 import { subscribeToThreadMessages, markMessagesAsRead, subscribeToQuotationThread } from "@/services/quotationThreadService";
 import { MessageSenderRole, QuotationThread } from "@/types/QuotationThread";
@@ -92,7 +92,7 @@ export default function UnreadBadge({ inquiryId, role, senderId, senderName }: U
     // Red with bounce animation for new messages
     envelopeColor = "text-[#B9273A] drop-shadow-sm animate-bounce";
     shouldAnimate = true;
-    tooltipText = `${unreadCount} new message(s)`;
+    tooltipText = unreadCount === 1 ? "New message" : `${unreadCount} new messages`;
   } else if (isRead) {
     // Orange for read messages from client (Triggered when isRead=true)
     envelopeColor = "text-[#F69122] opacity-100";
@@ -112,10 +112,15 @@ export default function UnreadBadge({ inquiryId, role, senderId, senderName }: U
       title={tooltipText}
     >
       <Mail className={`h-4 w-4 transition-all ${envelopeColor}`} />
+      {hasUnread && (
+        <span className="absolute -top-2 -right-2 min-w-[1rem] rounded-full bg-[#B9273A] px-1 text-center text-[10px] font-semibold leading-4 text-white shadow-sm">
+          {unreadCount > 9 ? "9+" : unreadCount}
+        </span>
+      )}
       {shouldAnimate && (
-        <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#B9273A]"></span>
+        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+          <span className="relative inline-flex h-3 w-3 rounded-full bg-transparent"></span>
         </span>
       )}
     </div>
