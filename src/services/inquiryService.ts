@@ -85,7 +85,9 @@ export async function getInquiries(): Promise<Inquiry[]> {
         // System fields
         haveSubmitted: data.haveSubmitted || false,
         hasOpenedQuotation: data.hasOpenedQuotation || false,
-        hasLoggedIn: data.hasLoggedIn || false
+        hasLoggedIn: data.hasLoggedIn || false,
+        messageState: data.messageState || 'none',
+        unreadMessageCount: data.unreadMessageCount || 0
       };
       inquiries.push(inquiry);
     });
@@ -158,7 +160,9 @@ export async function getInquiryById(id: string): Promise<Inquiry> {
       // System fields
       haveSubmitted: data.haveSubmitted || false,
       hasOpenedQuotation: data.hasOpenedQuotation || false,
-      hasLoggedIn: data.hasLoggedIn || false
+      hasLoggedIn: data.hasLoggedIn || false,
+      messageState: data.messageState || 'none',
+      unreadMessageCount: data.unreadMessageCount || 0
     };
   } catch (error) {
     console.error(`Failed to fetch inquiry ${id}:`, error);
@@ -215,7 +219,9 @@ export function subscribeToInquiryById(
         numberOfParticipants: data.numberOfParticipants || null,
         haveSubmitted: data.haveSubmitted || false,
         hasOpenedQuotation: data.hasOpenedQuotation || false,
-        hasLoggedIn: data.hasLoggedIn || false
+        hasLoggedIn: data.hasLoggedIn || false,
+        messageState: data.messageState || 'none',
+        unreadMessageCount: data.unreadMessageCount || 0
       };
       
       callback(inquiry);
@@ -284,7 +290,9 @@ export function subscribeToInquiries(
           numberOfParticipants: data.numberOfParticipants || null,
           haveSubmitted: data.haveSubmitted || false,
           hasOpenedQuotation: data.hasOpenedQuotation || false,
-          hasLoggedIn: data.hasLoggedIn || false
+          hasLoggedIn: data.hasLoggedIn || false,
+          messageState: data.messageState || 'none',
+          unreadMessageCount: data.unreadMessageCount || 0
         };
       });
       
