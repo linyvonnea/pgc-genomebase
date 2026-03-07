@@ -35,6 +35,19 @@ export default function UnreadBadge({
 
   const [lastSeenCount, setLastSeenCount] = useState<number | null>(null);
 
+  // Use localStorage to remember if the envelope was clicked/viewed until a new message arrives
+  const viewedKey = `viewed_inquiry_${inquiryId}`;
+  
+  const [isManuallyViewed, setIsManuallyViewed] = useState(false);
+
+  useEffect(() => {
+    // Check if we've seen this before on mount
+    const stored = localStorage.getItem(viewedKey);
+    if (stored === "true") {
+      setIsManuallyViewed(true);
+    }
+  }, [viewedKey]);
+
   // Detect when the chat widget is open for THIS inquiry
   const isWidgetOpen =
     searchParams.get("inquiryId") === inquiryId &&
@@ -45,13 +58,15 @@ export default function UnreadBadge({
     if (!isWidgetOpen || !user?.email) return;
     setIsClearingUnread(true);
     setUnreadCount(0);
+    setIsManuallyViewed(true);
+    localStorage.setItem(viewedKey, "true");
     // When we open it, we record the current unread count as "seen"
     // so we only turn red again if the count increases beyond this.
     setLastSeenCount(null); 
     markMessagesAsRead(inquiryId, role, user.email, senderId, senderName).catch(
       () => setIsClearingUnread(false),
     );
-  }, [isWidgetOpen, inquiryId, role, user?.email, senderId, senderName]);
+  }, [isWidgetOpen, inquiryId, role, user?.email, senderId, senderName, viewedKey]);
 
   useEffect(() => {
     if (!inquiryId) return;
@@ -73,11 +88,15 @@ export default function UnreadBadge({
       // Logic to prevent "flickering" back to red:
       // If we are currently in "viewed" mode (orange), only turn red if the 
       // actual number of unread messages has INCREASED (meaning a new message arrived).
-      if (isClearingUnread && lastSeenCount !== null && currentUnread > lastSeenCount) {
+      if ((isClearingUnread || isManuallyViewed) && lastSeenCount !== null && currentUnread > lastSeenCount) {
         setIsClearingUnread(false);
+        setIsManuallyViewed(false);
+        localStorage.removeItem(viewedKey);
         setLastSeenCount(null);
-      } else if (!isClearingUnread && currentUnread > 0) {
-        // If we aren't clearing and there are unread, it's red.
+      } else if (currentUnread === 0) {
+        // If everything is read in DB, we can clean up our manual flag
+        setIsManuallyViewed(false);
+        localStorage.removeItem(viewedKey);
       }
 
       setUnreadCount(currentUnread);
@@ -87,13 +106,15 @@ export default function UnreadBadge({
       unsubscribeThread();
       unsubscribeMessages();
     };
-  }, [inquiryId, isWidgetOpen, role, isClearingUnread, lastSeenCount]);
+  }, [inquiryId, isWidgetOpen, role, isClearingUnread, lastSeenCount, isManuallyViewed, viewedKey]);
 
   const handleClick = async (event: React.MouseEvent) => {
     event.stopPropagation();
 
     if (user?.email) {
       setIsClearingUnread(true);
+      setIsManuallyViewed(true);
+      localStorage.setItem(viewedKey, "true");
       setLastSeenCount(unreadCount); // Capture the current count before clearing
       setUnreadCount(0);
 
@@ -112,8 +133,8 @@ export default function UnreadBadge({
   if (!hasMessages) return null;
 
   const isAdminOnly = !hasClientMessages;
-  const isRed = unreadCount > 0 && !isClearingUnread;
-  const isOrange = hasClientMessages && (unreadCount === 0 || isClearingUnread);
+  const isRed = unreadCount > 0 && !isClearingUnread && !isManuallyViewed;
+  const isOrange = hasClientMessages && (unreadCount === 0 || isClearingUnread || isManuallyViewed);
 
   let envelopeColor = "text-slate-400 opacity-60";
   let shouldAnimate = false;
