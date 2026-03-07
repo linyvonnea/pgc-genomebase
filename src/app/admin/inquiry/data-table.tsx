@@ -281,6 +281,19 @@ export function DataTable<TData, TValue>({
                 {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} active
               </Badge>
             )}
+            {unreadInquiryIds.size > 0 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowUnreadOnly((prev) => !prev); }}
+                className={`flex items-center gap-1 h-5 px-2 rounded-full text-[10px] font-semibold transition-colors ${
+                  showUnreadOnly
+                    ? "bg-blue-600 text-white"
+                    : "bg-red-100 text-red-700 hover:bg-red-200"
+                }`}
+              >
+                <MessageCircle className="h-2.5 w-2.5" />
+                {unreadInquiryIds.size} unread
+              </button>
+            )}
           </div>
           <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? "" : "rotate-180"}`} />
         </div>
@@ -454,8 +467,23 @@ export function DataTable<TData, TValue>({
       
       {/* Table Header with Record Count and Navigation */}
       <div className="flex items-center justify-between py-1">
-        <div className="text-sm text-muted-foreground">
-          Showing {filteredRows.length > 0 ? (table.getState().pagination.pageIndex * table.getState().pagination.pageSize) + 1 : 0} - {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, filteredRows.length)} of {filteredRows.length} records
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">
+            Showing {filteredRows.length > 0 ? (table.getState().pagination.pageIndex * table.getState().pagination.pageSize) + 1 : 0} - {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, filteredRows.length)} of {filteredRows.length} records
+          </span>
+          {unreadInquiryIds.size > 0 && (
+            <button
+              onClick={() => setShowUnreadOnly((prev) => !prev)}
+              className={`flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors ${
+                showUnreadOnly
+                  ? "bg-blue-600 text-white"
+                  : "bg-red-500 text-white animate-pulse hover:animate-none hover:bg-red-600"
+              }`}
+            >
+              <MessageCircle className="h-3 w-3" />
+              {unreadInquiryIds.size} unread message{unreadInquiryIds.size > 1 ? "s" : ""}
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
