@@ -33,6 +33,8 @@ export default function UnreadBadge({
   const [threadData, setThreadData] = useState<QuotationThread | null>(null);
   const [isClearingUnread, setIsClearingUnread] = useState(false);
 
+  const [lastSeenCount, setLastSeenCount] = useState<number | null>(null);
+
   // Detect when the chat widget is open for THIS inquiry
   const isWidgetOpen =
     searchParams.get("inquiryId") === inquiryId &&
@@ -43,6 +45,9 @@ export default function UnreadBadge({
     if (!isWidgetOpen || !user?.email) return;
     setIsClearingUnread(true);
     setUnreadCount(0);
+    // When we open it, we record the current unread count as "seen"
+    // so we only turn red again if the count increases beyond this.
+    setLastSeenCount(null); 
     markMessagesAsRead(inquiryId, role, user.email, senderId, senderName).catch(
       () => setIsClearingUnread(false),
     );
@@ -61,36 +66,42 @@ export default function UnreadBadge({
       const clientMessages = messages.filter((message) => message.senderRole === "client");
       setHasClientMessages(clientMessages.length > 0);
 
-      const unread = messages.filter(
+      const currentUnread = messages.filter(
         (message) => !message.isRead && message.senderRole !== role,
       ).length;
 
-      // If we see new unread messages, we stop "clearing" and allow the red badge to show.
-      // We only do this if the widget isn't actively open right now.
-      if (unread > 0 && !isWidgetOpen) {
+      // Logic to prevent "flickering" back to red:
+      // If we are currently in "viewed" mode (orange), only turn red if the 
+      // actual number of unread messages has INCREASED (meaning a new message arrived).
+      if (isClearingUnread && lastSeenCount !== null && currentUnread > lastSeenCount) {
         setIsClearingUnread(false);
+        setLastSeenCount(null);
+      } else if (!isClearingUnread && currentUnread > 0) {
+        // If we aren't clearing and there are unread, it's red.
       }
 
-      setUnreadCount(unread);
+      setUnreadCount(currentUnread);
     });
 
     return () => {
       unsubscribeThread();
       unsubscribeMessages();
     };
-  }, [inquiryId, isWidgetOpen, role]);
+  }, [inquiryId, isWidgetOpen, role, isClearingUnread, lastSeenCount]);
 
   const handleClick = async (event: React.MouseEvent) => {
     event.stopPropagation();
 
-    if (unreadCount > 0 && user?.email) {
+    if (user?.email) {
       setIsClearingUnread(true);
+      setLastSeenCount(unreadCount); // Capture the current count before clearing
       setUnreadCount(0);
 
       try {
         await markMessagesAsRead(inquiryId, role, user.email, senderId, senderName);
       } catch (error) {
         setIsClearingUnread(false);
+        setLastSeenCount(null);
         console.error("Error marking messages as read:", error);
       }
     }
