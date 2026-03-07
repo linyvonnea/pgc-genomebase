@@ -191,7 +191,9 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       serviceRequested,
       // Ensure startDate is properly formatted for storage (as string YYYY-MM-DD if needed, or Date)
       // Based on types/Project.ts, startDate is a string.
-      startDate: data.startDate instanceof Date ? data.startDate.toISOString().split('T')[0] : data.startDate
+      startDate: data.startDate instanceof Date 
+        ? data.startDate.toLocaleDateString('en-CA') // Format as YYYY-MM-DD
+        : data.startDate
     };
 
     try {
