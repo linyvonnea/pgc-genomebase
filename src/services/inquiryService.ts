@@ -6,7 +6,7 @@
  * data transformation between Firestore documents and TypeScript objects.
  */
 
-import { collection, getDocs, query, orderBy, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Inquiry } from "@/types/Inquiry";
 
@@ -61,7 +61,31 @@ export async function getInquiries(): Promise<Inquiry[]> {
         isApproved: data.isApproved || false,
         affiliation: data.affiliation || '',
         designation: data.designation || '',
-        email: data.email || undefined
+        email: data.email || undefined,
+        
+        // Include new service selection fields
+        serviceType: data.serviceType || null,
+        species: data.species || null,
+        otherSpecies: data.otherSpecies || null,
+        researchOverview: data.researchOverview || null,
+        methodologyFileUrl: data.methodologyFileUrl || null,
+        sampleCount: data.sampleCount || null,
+        workflowType: data.workflowType || null,
+        individualAssayDetails: data.individualAssayDetails || null,
+        
+        // Legacy/Service-specific fields
+        workflows: data.workflows || [],
+        additionalInfo: data.additionalInfo || null,
+        projectBackground: data.projectBackground || null,
+        projectBudget: data.projectBudget || null,
+        specificTrainingNeed: data.specificTrainingNeed || null,
+        targetTrainingDate: data.targetTrainingDate || null,
+        numberOfParticipants: data.numberOfParticipants || null,
+        
+        // System fields
+        haveSubmitted: data.haveSubmitted || false,
+        hasOpenedQuotation: data.hasOpenedQuotation || false,
+        hasLoggedIn: data.hasLoggedIn || false
       };
       inquiries.push(inquiry);
     });
@@ -111,9 +135,206 @@ export async function getInquiryById(id: string): Promise<Inquiry> {
       affiliation: data.affiliation || "",
       designation: data.designation || "",
       email: data.email ?? "", 
+      
+      // Include new service selection fields
+      serviceType: data.serviceType || null,
+      species: data.species || null,
+      otherSpecies: data.otherSpecies || null,
+      researchOverview: data.researchOverview || null,
+      methodologyFileUrl: data.methodologyFileUrl || null,
+      sampleCount: data.sampleCount || null,
+      workflowType: data.workflowType || null,
+      individualAssayDetails: data.individualAssayDetails || null,
+      
+      // Legacy/Service-specific fields
+      workflows: data.workflows || [],
+      additionalInfo: data.additionalInfo || null,
+      projectBackground: data.projectBackground || null,
+      projectBudget: data.projectBudget || null,
+      specificTrainingNeed: data.specificTrainingNeed || null,
+      targetTrainingDate: data.targetTrainingDate || null,
+      numberOfParticipants: data.numberOfParticipants || null,
+      
+      // System fields
+      haveSubmitted: data.haveSubmitted || false,
+      hasOpenedQuotation: data.hasOpenedQuotation || false,
+      hasLoggedIn: data.hasLoggedIn || false
     };
   } catch (error) {
     console.error(`Failed to fetch inquiry ${id}:`, error);
     throw error;
+  }
+}
+
+/**
+ * Subscribes to changes in a single inquiry document
+ * 
+ * @param id - The Firestore document ID of the inquiry to monitor
+ * @param callback - Function called with the updated Inquiry object
+ * @returns Unsubscribe function to stop listening
+ */
+export function subscribeToInquiryById(
+  id: string,
+  callback: (inquiry: Inquiry | null) => void
+): () => void {
+  const docRef = doc(db, "inquiries", id);
+
+  return onSnapshot(
+    docRef,
+    (snapshot) => {
+      if (!snapshot.exists()) {
+        callback(null);
+        return;
+      }
+
+      const data = snapshot.data();
+      
+      const inquiry: Inquiry = {
+        id: snapshot.id,
+        createdAt: data.createdAt?.toDate?.() ?? new Date(),
+        name: data.name || "Unknown",
+        status: data.status || "Pending",
+        isApproved: data.isApproved || false,
+        affiliation: data.affiliation || "",
+        designation: data.designation || "",
+        email: data.email ?? "", 
+        serviceType: data.serviceType || null,
+        species: data.species || null,
+        otherSpecies: data.otherSpecies || null,
+        researchOverview: data.researchOverview || null,
+        methodologyFileUrl: data.methodologyFileUrl || null,
+        sampleCount: data.sampleCount || null,
+        workflowType: data.workflowType || null,
+        individualAssayDetails: data.individualAssayDetails || null,
+        workflows: data.workflows || [],
+        additionalInfo: data.additionalInfo || null,
+        projectBackground: data.projectBackground || null,
+        projectBudget: data.projectBudget || null,
+        specificTrainingNeed: data.specificTrainingNeed || null,
+        targetTrainingDate: data.targetTrainingDate || null,
+        numberOfParticipants: data.numberOfParticipants || null,
+        haveSubmitted: data.haveSubmitted || false,
+        hasOpenedQuotation: data.hasOpenedQuotation || false,
+        hasLoggedIn: data.hasLoggedIn || false
+      };
+      
+      callback(inquiry);
+    },
+    (error) => {
+      console.error(`Error in inquiry subscription for ${id}:`, error);
+      callback(null);
+    }
+  );
+}
+
+/**
+ * Subscribe to real-time inquiry updates
+ * 
+ * @param callback - Function called with updated inquiries array
+ * @returns Unsubscribe function to stop listening
+ * 
+ * This enables real-time updates without page refresh.
+ * Call the returned function when component unmounts to clean up.
+ */
+export function subscribeToInquiries(
+  callback: (inquiries: Inquiry[]) => void
+): () => void {
+  const inquiriesRef = collection(db, "inquiries");
+  const q = query(inquiriesRef, orderBy("createdAt", "desc"));
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const inquiries: Inquiry[] = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        
+        // Handle Firestore Timestamp conversion
+        let createdAt = data.createdAt;
+        if (data.createdAt && typeof data.createdAt.toDate === 'function') {
+          createdAt = data.createdAt.toDate();
+        } else if (data.createdAt && typeof data.createdAt === 'string') {
+          createdAt = new Date(data.createdAt);
+        } else {
+          createdAt = new Date();
+        }
+        
+        return {
+          id: doc.id,
+          createdAt: createdAt,
+          name: data.name || 'Unknown',
+          status: data.status || 'Pending',
+          isApproved: data.isApproved || false,
+          affiliation: data.affiliation || '',
+          designation: data.designation || '',
+          email: data.email || undefined,
+          serviceType: data.serviceType || null,
+          species: data.species || null,
+          otherSpecies: data.otherSpecies || null,
+          researchOverview: data.researchOverview || null,
+          methodologyFileUrl: data.methodologyFileUrl || null,
+          sampleCount: data.sampleCount || null,
+          workflowType: data.workflowType || null,
+          individualAssayDetails: data.individualAssayDetails || null,
+          workflows: data.workflows || [],
+          additionalInfo: data.additionalInfo || null,
+          projectBackground: data.projectBackground || null,
+          projectBudget: data.projectBudget || null,
+          specificTrainingNeed: data.specificTrainingNeed || null,
+          targetTrainingDate: data.targetTrainingDate || null,
+          numberOfParticipants: data.numberOfParticipants || null,
+          haveSubmitted: data.haveSubmitted || false,
+          hasOpenedQuotation: data.hasOpenedQuotation || false,
+          hasLoggedIn: data.hasLoggedIn || false
+        };
+      });
+      
+      // Sort in memory as backup
+      inquiries.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      
+      callback(inquiries);
+    },
+    (error) => {
+      console.error("Error in inquiry subscription:", error);
+      // On error, call callback with empty array
+      callback([]);
+    }
+  );
+}
+
+/**
+ * Updates the status of a specific inquiry
+ * @param inquiryId - The ID of the inquiry to update
+ * @param status - The new status to set
+ */
+export async function updateInquiryStatus(
+  inquiryId: string, 
+  status: Inquiry['status']
+): Promise<void> {
+  try {
+    const inquiryRef = doc(db, "inquiries", inquiryId);
+    await updateDoc(inquiryRef, { status });
+    console.log(`Updated inquiry ${inquiryId} status to: ${status}`);
+  } catch (error) {
+    console.error(`Error updating inquiry ${inquiryId} status:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Marks an inquiry as having the client logged in.
+ * 
+ * @param inquiryId - The ID of the inquiry to update
+ */
+export async function markInquiryAsLoggedIn(inquiryId: string): Promise<void> {
+  if (!inquiryId) return;
+  
+  try {
+    const inquiryRef = doc(db, "inquiries", inquiryId);
+    await updateDoc(inquiryRef, { 
+      hasLoggedIn: true 
+    });
+    console.log(`[Firestore] Inquiry ${inquiryId} marked as logged in.`);
+  } catch (error) {
+    console.error(`[Firestore] Error marking inquiry ${inquiryId} as logged in:`, error);
   }
 }
