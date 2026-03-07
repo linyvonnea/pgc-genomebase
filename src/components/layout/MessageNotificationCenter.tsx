@@ -104,24 +104,35 @@ export function MessageNotificationCenter() {
                 <button
                   key={n.inquiryId}
                   onClick={() => handleNotificationClick(n.inquiryId)}
-                  className={`w-full p-4 text-left hover:bg-slate-50 transition-colors group ${
-                    !n.viewed ? "bg-blue-50/40" : ""
+                  className={`w-full p-4 text-left hover:bg-slate-50 transition-colors group relative ${
+                    n.unreadCount > 0 ? "bg-blue-50/40" : ""
                   }`}
                 >
+                  {/* Status Indicator Bar */}
+                  {n.unreadCount > 0 && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600" />
+                  )}
+
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
-                    <div className="flex-shrink-0 mt-0.5 h-8 w-8 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
-                      <Users className="h-4 w-4 text-blue-600" />
+                    <div className={`flex-shrink-0 mt-0.5 h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
+                      n.unreadCount > 0 
+                        ? "bg-blue-600 text-white" 
+                        : "bg-slate-100 text-slate-500"
+                    }`}>
+                      <Users className="h-4 w-4" />
                     </div>
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-0.5">
-                        <p className="font-semibold text-sm text-slate-900 truncate">
+                        <p className={`text-sm truncate ${
+                          n.unreadCount > 0 ? "font-bold text-slate-900" : "font-medium text-slate-600"
+                        }`}>
                           {n.clientName}
                         </p>
                         {n.unreadCount > 0 && (
-                          <span className="flex-shrink-0 inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold">
+                          <span className="flex-shrink-0 inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold ring-2 ring-white">
                             {n.unreadCount > 9 ? "9+" : n.unreadCount}
                           </span>
                         )}
@@ -140,9 +151,11 @@ export function MessageNotificationCenter() {
                       )}
                     </div>
 
-                    {/* Unread dot */}
-                    {!n.viewed && (
-                      <span className="flex-shrink-0 mt-1.5 h-2 w-2 rounded-full bg-blue-500" />
+                    {/* Unread Status Icon */}
+                    {n.unreadCount > 0 && (
+                      <div className="flex-shrink-0 self-center">
+                        <div className="h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
+                      </div>
                     )}
                   </div>
                 </button>
