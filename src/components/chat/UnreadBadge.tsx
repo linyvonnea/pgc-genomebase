@@ -99,18 +99,18 @@ export default function UnreadBadge({
   if (!hasMessages) return null;
 
   const isAdminOnly = !hasClientMessages;
-  const hasUnread = unreadCount > 0 && !isClearingUnread;
-  const isRead = (hasClientMessages && !hasUnread) || isClearingUnread;
+  const isRed = unreadCount > 0 && !isClearingUnread;
+  const isOrange = hasClientMessages && (unreadCount === 0 || isClearingUnread);
 
   let envelopeColor = "text-slate-400 opacity-60";
   let shouldAnimate = false;
   let tooltipText = "Messages";
 
-  if (hasUnread) {
+  if (isRed) {
     envelopeColor = "text-[#B9273A] drop-shadow-sm animate-bounce";
     shouldAnimate = true;
     tooltipText = unreadCount === 1 ? "New message" : `${unreadCount} new messages`;
-  } else if (isRead) {
+  } else if (isOrange) {
     envelopeColor = "text-[#F69122] opacity-100";
     const senderRef = threadData?.lastMessageBy ? ` - ${threadData.lastMessageBy}` : "";
     tooltipText = `View messages${senderRef}`;
@@ -126,7 +126,7 @@ export default function UnreadBadge({
       title={tooltipText}
     >
       <Mail className={`h-4 w-4 transition-all ${envelopeColor}`} />
-      {hasUnread && (
+      {isRed && (
         <span className="absolute -top-2 -right-2 min-w-[1rem] rounded-full bg-[#B9273A] px-1 text-center text-[10px] font-semibold leading-4 text-white shadow-sm">
           {unreadCount > 9 ? "9+" : unreadCount}
         </span>
