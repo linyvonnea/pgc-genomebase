@@ -9,7 +9,7 @@ import {
 } from "@/services/quotationThreadService";
 import { MessageSenderRole, QuotationThread } from "@/types/QuotationThread";
 import useAuth from "@/hooks/useAuth";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 interface UnreadBadgeProps {
   inquiryId: string;
@@ -25,12 +25,28 @@ export default function UnreadBadge({
   senderName,
 }: UnreadBadgeProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const [hasMessages, setHasMessages] = useState(false);
   const [hasClientMessages, setHasClientMessages] = useState(false);
   const [threadData, setThreadData] = useState<QuotationThread | null>(null);
   const [isClearingUnread, setIsClearingUnread] = useState(false);
+
+  // Detect when the chat widget is open for THIS inquiry
+  const isWidgetOpen =
+    searchParams.get("inquiryId") === inquiryId &&
+    searchParams.get("focus") === "messages";
+
+  // When the widget opens, immediately clear the badge and mark as read
+  useEffect(() => {
+    if (!isWidgetOpen || !user?.email) return;
+    setIsClearingUnread(true);
+    setUnreadCount(0);
+    markMessagesAsRead(inquiryId, role, user.email, senderId, senderName).catch(
+      () => setIsClearingUnread(false),
+    );
+  }, [isWidgetOpen, inquiryId, role, user?.email, senderId, senderName]);
 
   useEffect(() => {
     if (!inquiryId) return;
