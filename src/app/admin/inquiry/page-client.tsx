@@ -11,7 +11,6 @@ import { subscribeToInquiries } from "@/services/inquiryService";
 import {
   subscribeToAllAdminUnreadCounts,
 } from "@/services/quotationThreadService";
-import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { MessageCircle } from "lucide-react";
@@ -26,8 +25,6 @@ export function InquiryPageClient({
   const { adminInfo } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const inquiryIdToFocus = searchParams.get("inquiryId") || "";
-  const focusMode = searchParams.get("focus");
   const { canCreate } = usePermissions(adminInfo?.role);
   const [inquiries, setInquiries] = useState<Inquiry[]>(initialData);
   const [unreadInquiryIds, setUnreadInquiryIds] = useState<Set<string>>(new Set());
@@ -102,14 +99,7 @@ export function InquiryPageClient({
         />
       </div>
 
-      {focusMode === "messages" && inquiryIdToFocus && (
-        <FloatingChatWidget
-          key={`chat-${inquiryIdToFocus}`}
-          inquiryId={inquiryIdToFocus}
-          role="admin"
-          className="!bottom-20 mb-2"
-        />
-      )}
+      {/* FloatingChatWidget is rendered globally in admin/layout.tsx via GlobalChatWidget */}
     </div>
   );
 }
