@@ -65,7 +65,10 @@ export default function UnreadBadge({
         (message) => !message.isRead && message.senderRole !== role,
       ).length;
 
-      if (unread > 0) {
+      // Reset the "clearing" state if new unread messages arrive while we are looking at the thread
+      // This ensures if a client sends a message while the admin has the chat open, 
+      // the red badge can reappear if the markAsRead hasn't finished or if the widget closes.
+      if (unread > 0 && !isWidgetOpen) {
         setIsClearingUnread(false);
       }
 
