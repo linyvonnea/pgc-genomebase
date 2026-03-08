@@ -252,7 +252,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     
     // Add Bioinformatics specialist if service type matches
     if (inquiryData.service === 'bioinformatics') {
-      emailRecipients.push("ping.biason@gmail.com");
+      emailRecipients.push("bioinfo.pgc.upvisayas@up.edu.ph");
     }
     
     console.log("EMAIL DEBUG: Creating email for recipients:", emailRecipients.join(", "));
