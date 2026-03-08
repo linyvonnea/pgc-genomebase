@@ -634,6 +634,43 @@ export default function QuotationRequestForm() {
                 </div>
               )}
 
+              {/* Retail Sales Fields */}
+              {selectedService === "retail" && (
+                <div className="space-y-6">
+                  <div>
+                    <Label className="text-sm font-semibold text-slate-700 mb-4 block">
+                      Kindly choose which items you will be availing (Choose 1 or more) <span className="text-[#B9273A]">*</span>
+                    </Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {[
+                        "Type 1 (Ultrapure) Milli-Q Water",
+                        "Type 2 (Pure/Elix) Distilled Water",
+                        "Liquid Nitrogen",
+                        "Flake Ice"
+                      ].map((item) => (
+                        <div key={item} className="flex items-center space-x-3 p-3 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={formData.retailItems?.includes(item)}
+                            onChange={(e) => handleRetailItemChange(item, e.target.checked)}
+                            className="h-4 w-4 rounded border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                          />
+                          <Label className="text-sm text-slate-700 font-medium cursor-pointer">
+                            {item}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                    {errors.retailItems && (
+                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                        {errors.retailItems.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Research Service Fields */}
               {selectedService === "research" && (
                 <div className="space-y-6">
