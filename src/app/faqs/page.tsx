@@ -135,10 +135,6 @@ export default function FAQPage() {
           <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
             Frequently Asked Questions (FAQs)
           </h1>
-          <p className="text-blue-100 text-lg max-w-2xl mx-auto font-medium">
-            Find answers to common questions about our services, pricing, 
-            sample submission, and research collaborations.
-          </p>
         </div>
       </div>
 
