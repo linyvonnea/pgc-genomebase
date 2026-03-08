@@ -250,6 +250,11 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     // Configure recipients for internal notification
     const emailRecipients = ["sequencing.pgc.upvisayas@up.edu.ph", "madayon1@up.edu.ph"];
     
+    // Add Bioinformatics specialist if service type matches
+    if (inquiryData.service === 'bioinformatics') {
+      emailRecipients.push("ping.biason@gmail.com");
+    }
+    
     console.log("EMAIL DEBUG: Creating email for recipients:", emailRecipients.join(", "));
     
     // Create a comprehensive HTML email body
