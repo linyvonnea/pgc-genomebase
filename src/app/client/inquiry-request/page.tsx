@@ -538,7 +538,7 @@ export default function QuotationRequestForm() {
               </h2>
               
               {/* Laboratory Service Fields */}
-              {["laboratory", "bioinformatics", "equipment"].includes(selectedService) && (
+              {["laboratory", "bioinformatics", "equipment", "retail"].includes(selectedService) && (
                 <div className="space-y-6">
                   {/* Sample Count */}
                   <div>
@@ -633,25 +633,6 @@ export default function QuotationRequestForm() {
                     </div>
                   </div>
                 )}
-
-              {/* Retail Sales Service Fields */}
-              {selectedService === "retail" && (
-                <div className="space-y-6">
-                  <div>
-                    <Label htmlFor="additionalInfo" className="text-sm font-semibold text-slate-700 mb-2 block">
-                      Additional Information/Specific Requirements
-                    </Label>
-                    <Textarea
-                      id="additionalInfo"
-                      placeholder="Please specify any additional details, preferred pickup time, or specific volume requirements..."
-                      {...register("additionalInfo")}
-                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[120px] resize-none"
-                      rows={5}
-                    />
-                    <p className="text-xs text-slate-500 mt-1">Include any relevant information that might help us process your request faster.</p>
-                  </div>
-                </div>
-              )}
 
               {/* Research Service Fields */}
               {selectedService === "research" && (
