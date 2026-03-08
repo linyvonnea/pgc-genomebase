@@ -83,10 +83,13 @@ export default function QuotationRequestForm() {
       sampleCount: undefined,
       workflowType: undefined,
       individualAssayDetails: "",
+      retailItems: [],
       workflows: [],
       additionalInfo: "",
       projectBackground: "",
       projectBudget: "",
+      molecularServicesBudget: "",
+      plannedSampleCount: "",
       specificTrainingNeed: "",
       targetTrainingDate: "",
       numberOfParticipants: undefined
@@ -114,10 +117,13 @@ export default function QuotationRequestForm() {
     setValue("sampleCount", undefined)
     setValue("workflowType", undefined)
     setValue("individualAssayDetails", "")
+    setValue("retailItems", [])
     setValue("workflows", [])
     setValue("additionalInfo", "")
     setValue("projectBackground", "")
     setValue("projectBudget", "")
+    setValue("molecularServicesBudget", "")
+    setValue("plannedSampleCount", "")
     setValue("specificTrainingNeed", "")
     setValue("targetTrainingDate", "")
     setValue("numberOfParticipants", undefined)
@@ -136,6 +142,17 @@ export default function QuotationRequestForm() {
       ? [...currentWorkflows, workflow as WorkflowOption] 
       : currentWorkflows.filter(w => w !== workflow)
     setValue("workflows", newWorkflows)
+  }
+
+  /**
+   * Handles retail item checkbox changes
+   */
+  const handleRetailItemChange = (item: string, checked: boolean) => {
+    const currentItems = formData.retailItems || []
+    const newItems = checked 
+      ? [...currentItems, item] 
+      : currentItems.filter(i => i !== item)
+    setValue("retailItems", newItems)
   }
 
   /**
@@ -397,8 +414,8 @@ export default function QuotationRequestForm() {
                   )}
                 </div>
 
-                {/* Species Selection - Show for laboratory-type services */}
-                {["laboratory", "bioinformatics", "equipment", "retail"].includes(selectedService) && (
+                {/* Species Selection - Show for services except Retail and Training */}
+                {["laboratory", "bioinformatics", "equipment", "research"].includes(selectedService) && (
                   <div>
                     <Label className="text-sm font-semibold text-slate-700 mb-3 block">
                       Species <span className="text-[#B9273A]">*</span>
@@ -453,8 +470,8 @@ export default function QuotationRequestForm() {
                   </div>
                 )}
 
-                {/* Research Overview - Show for laboratory-type services */}
-                {["laboratory", "bioinformatics", "equipment", "retail"].includes(selectedService) && (
+                {/* Research Overview - Show for lab-type services */}
+                {["laboratory", "bioinformatics", "equipment"].includes(selectedService) && (
                   <div>
                     <Label htmlFor="researchOverview" className="text-sm font-semibold text-slate-700 mb-2 block">
                       Overview of research and objectives. Kindly provide comprehensive details <span className="text-[#B9273A]">*</span>
@@ -582,6 +599,43 @@ export default function QuotationRequestForm() {
                 </div>
               )}
 
+              {/* Retail Sales Fields */}
+              {selectedService === "retail" && (
+                <div className="space-y-6">
+                  <div>
+                    <Label className="text-sm font-semibold text-slate-700 mb-4 block">
+                      Kindly choose which items you will be availing (Choose 1 or more) <span className="text-[#B9273A]">*</span>
+                    </Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {[
+                        "Type 1 (Ultrapure) Milli-Q Water",
+                        "Type 2 (Pure/Elix) Distilled Water",
+                        "Liquid Nitrogen",
+                        "Flake Ice"
+                      ].map((item) => (
+                        <div key={item} className="flex items-center space-x-3 p-3 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={formData.retailItems?.includes(item)}
+                            onChange={(e) => handleRetailItemChange(item, e.target.checked)}
+                            className="h-4 w-4 rounded border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                          />
+                          <Label className="text-sm text-slate-700 font-medium cursor-pointer">
+                            {item}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                    {errors.retailItems && (
+                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                        {errors.retailItems.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Research Service Fields */}
               {selectedService === "research" && (
                 <div className="space-y-6">
@@ -605,8 +659,34 @@ export default function QuotationRequestForm() {
                     )}
                   </div>
 
+                  {/* Research - New specific fields */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label htmlFor="molecularServicesBudget" className="text-sm font-semibold text-slate-700 mb-2 block">
+                        Budget for molecular services
+                      </Label>
+                      <Input
+                        id="molecularServicesBudget"
+                        placeholder="___"
+                        {...register("molecularServicesBudget")}
+                        className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="plannedSampleCount" className="text-sm font-semibold text-slate-700 mb-2 block">
+                        How many samples are you planning to send
+                      </Label>
+                      <Input
+                        id="plannedSampleCount"
+                        placeholder="___"
+                        {...register("plannedSampleCount")}
+                        className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
+                      />
+                    </div>
+                  </div>
+
                   {/* Project Budget - Required for research */}
-                  <div>
+                  <div className="hidden">
                     <Label htmlFor="projectBudget" className="text-sm font-semibold text-slate-700 mb-2 block">
                       Indicate project budget for molecular workflow <span className="text-[#B9273A]">*</span>
                     </Label>
@@ -617,12 +697,6 @@ export default function QuotationRequestForm() {
                       {...register("projectBudget")}
                       className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
                     />
-                    {errors.projectBudget && (
-                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
-                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                        {errors.projectBudget.message}
-                      </p>
-                    )}
                   </div>
                 </div>
               )}
@@ -820,12 +894,22 @@ export default function QuotationRequestForm() {
                       : `Individual Assay: ${pendingData.individualAssayDetails || "Not specified"}`}
                   </div>
                 )}
+                {pendingData.retailItems && pendingData.retailItems.length > 0 && (
+                  <div>
+                    <span className="font-semibold">Retail Items:</span> {pendingData.retailItems.join(", ")}
+                  </div>
+                )}
               </>
             )}
             {pendingData.service === "research" && (
               <>
                 <div><span className="font-semibold">Project Background:</span> {pendingData.projectBackground}</div>
-                <div><span className="font-semibold">Project Budget:</span> {pendingData.projectBudget}</div>
+                {pendingData.molecularServicesBudget && (
+                  <div><span className="font-semibold">Budget for molecular services:</span> {pendingData.molecularServicesBudget}</div>
+                )}
+                {pendingData.plannedSampleCount && (
+                  <div><span className="font-semibold">Planned Sample Count:</span> {pendingData.plannedSampleCount}</div>
+                )}
               </>
             )}
             {pendingData.service === "training" && (
