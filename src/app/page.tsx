@@ -39,10 +39,10 @@ export default function Home() {
       </div>
 
       <div className="w-full max-w-7xl relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-10 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 xl:gap-6 items-center">
           
           {/* Left Section - Logo, Welcome & CTA */}
-          <div className="lg:col-span-7 space-y-5 text-center lg:text-left">
+          <div className="lg:col-span-6 space-y-5 text-center lg:text-left">
             {/* Logo */}
             <div className="text-center lg:text-left">
               <Image
@@ -112,8 +112,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Section - Simple Steps */}
-          <div className="lg:col-span-5 bg-white/80 backdrop-blur-sm rounded-2xl p-5 lg:p-6 shadow-xl border border-white/20">
+          {/* Right Section - Simple Steps (col-start-8 pushes it right, away from buttons) */}
+          <div className="lg:col-span-5 lg:col-start-8 bg-white/80 backdrop-blur-sm rounded-2xl p-5 lg:p-6 shadow-xl border border-white/20">
             <div className="space-y-4 lg:space-y-6">
               <div className="text-center">
                 <h2 className="text-xl lg:text-2xl font-bold text-slate-800 mb-1 lg:mb-2 whitespace-nowrap">How to Get Started</h2>
