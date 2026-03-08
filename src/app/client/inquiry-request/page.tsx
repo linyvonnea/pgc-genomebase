@@ -542,94 +542,113 @@ export default function QuotationRequestForm() {
                 <div className="space-y-6">
                   {/* Sample Count */}
                   <div>
-                    <Label htmlFor="sampleCount" className="text-sm font-semibold text-slate-700 mb-2 block">
-                      How many samples are you planning to send? <span className="text-[#B9273A]">*</span>
-                    </Label>
-                    <Input
-                      id="sampleCount"
-                      type="number"
-                      min="1"
-                      placeholder="Enter number of samples"
-                      {...register("sampleCount", { valueAsNumber: true })}
-                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
-                    />
-                    {errors.sampleCount && (
-                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
-                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                        {errors.sampleCount.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Workflow Selection */}
-                  <div>
-                    <Label className="text-sm font-semibold text-slate-700 mb-3 block">
-                      Kindly choose which workflow you will be availing <span className="text-[#B9273A]">*</span>
-                    </Label>
-                    <div className="space-y-3">
-                      {/* Complete Workflow Option */}
-                      <div className="flex items-start space-x-3 p-4 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
-                        <input
-                          type="radio"
-                          id="workflow-complete"
-                          {...register("workflowType")}
-                          value="complete"
-                          className="mt-1 rounded-full border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
-                        />
-                        <div className="flex-1">
-                          <Label htmlFor="workflow-complete" className="text-sm text-slate-700 font-semibold cursor-pointer block">
-                            Complete workflow
-                          </Label>
-                          <p className="text-xs text-slate-600 mt-1">
-                            DNA Extraction, Quantification, Library Preparation, Sequencing, and Bioinformatics Analysis
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Individual Assay Option */}
-                      <div className="flex items-start space-x-3 p-4 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
-                        <input
-                          type="radio"
-                          id="workflow-individual"
-                          {...register("workflowType")}
-                          value="individual"
-                          className="mt-1 rounded-full border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
-                        />
-                        <div className="flex-1">
-                          <Label htmlFor="workflow-individual" className="text-sm text-slate-700 font-semibold cursor-pointer block">
-                            Individual Assay
-                          </Label>
-                        </div>
-                      </div>
+                      <Label htmlFor="sampleCount" className="text-sm font-semibold text-slate-700 mb-2 block">
+                        How many samples are you planning to send? <span className="text-[#B9273A]">*</span>
+                      </Label>
+                      <Input
+                        id="sampleCount"
+                        type="number"
+                        min="1"
+                        placeholder="Enter number of samples"
+                        {...register("sampleCount", { valueAsNumber: true })}
+                        className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
+                      />
+                      {errors.sampleCount && (
+                        <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                          <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                          {errors.sampleCount.message}
+                        </p>
+                      )}
                     </div>
-                    {errors.workflowType && (
-                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
-                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                        {errors.workflowType.message}
-                      </p>
-                    )}
 
-                    {/* Individual Assay Details - Conditional */}
-                    {formData.workflowType === "individual" && (
-                      <div className="mt-4">
-                        <Label htmlFor="individualAssayDetails" className="text-sm font-semibold text-slate-700 mb-2 block">
-                          Please provide specific services <span className="text-[#B9273A]">*</span>
-                        </Label>
-                        <Textarea
-                          id="individualAssayDetails"
-                          placeholder="e.g., DNA Extraction, PCR, Sequencing, Bioinformatics Analysis etc"
-                          {...register("individualAssayDetails")}
-                          className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[80px] resize-none"
-                          rows={3}
-                        />
-                        {errors.individualAssayDetails && (
-                          <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
-                            <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                            {errors.individualAssayDetails.message}
-                          </p>
-                        )}
+                    {/* Workflow Selection */}
+                    <div>
+                      <Label className="text-sm font-semibold text-slate-700 mb-3 block">
+                        Kindly choose which workflow you will be availing <span className="text-[#B9273A]">*</span>
+                      </Label>
+                      <div className="space-y-3">
+                        {/* Complete Workflow Option */}
+                        <div className="flex items-start space-x-3 p-4 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
+                          <input
+                            type="radio"
+                            id="workflow-complete"
+                            {...register("workflowType")}
+                            value="complete"
+                            className="mt-1 rounded-full border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                          />
+                          <div className="flex-1">
+                            <Label htmlFor="workflow-complete" className="text-sm text-slate-700 font-semibold cursor-pointer block">
+                              Complete workflow
+                            </Label>
+                            <p className="text-xs text-slate-600 mt-1">
+                              DNA Extraction, Quantification, Library Preparation, Sequencing, and Bioinformatics Analysis
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Individual Assay Option */}
+                        <div className="flex items-start space-x-3 p-4 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
+                          <input
+                            type="radio"
+                            id="workflow-individual"
+                            {...register("workflowType")}
+                            value="individual"
+                            className="mt-1 rounded-full border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                          />
+                          <div className="flex-1">
+                            <Label htmlFor="workflow-individual" className="text-sm text-slate-700 font-semibold cursor-pointer block">
+                              Individual Assay
+                            </Label>
+                          </div>
+                        </div>
                       </div>
-                    )}
+                      {errors.workflowType && (
+                        <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                          <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                          {errors.workflowType.message}
+                        </p>
+                      )}
+
+                      {/* Individual Assay Details - Conditional */}
+                      {formData.workflowType === "individual" && (
+                        <div className="mt-4">
+                          <Label htmlFor="individualAssayDetails" className="text-sm font-semibold text-slate-700 mb-2 block">
+                            Please provide specific services <span className="text-[#B9273A]">*</span>
+                          </Label>
+                          <Textarea
+                            id="individualAssayDetails"
+                            placeholder="e.g., DNA Extraction, PCR, Sequencing, Bioinformatics Analysis etc"
+                            {...register("individualAssayDetails")}
+                            className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[80px] resize-none"
+                            rows={3}
+                          />
+                          {errors.individualAssayDetails && (
+                            <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                              <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                              {errors.individualAssayDetails.message}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+              {/* Retail Sales Service Fields */}
+              {selectedService === "retail" && (
+                <div className="space-y-6">
+                  <div>
+                    <Label htmlFor="additionalInfo" className="text-sm font-semibold text-slate-700 mb-2 block">
+                      Additional Information/Specific Requirements
+                    </Label>
+                    <Textarea
+                      id="additionalInfo"
+                      placeholder="Please specify any additional details, preferred pickup time, or specific volume requirements..."
+                      {...register("additionalInfo")}
+                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[120px] resize-none"
+                      rows={5}
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Include any relevant information that might help us process your request faster.</p>
                   </div>
                 </div>
               )}
