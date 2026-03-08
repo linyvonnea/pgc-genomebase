@@ -46,13 +46,12 @@ export default function Home() {
             {/* Logo */}
             <div className="text-center lg:text-left">
               <Image
-                src="/assets/pgc-visayas-logo.png"
-                alt="PGC Visayas Logo"
+                src="/assets/pgc-logo.png"
+                alt="PGC Logo"
                 width={320}
                 height={192}
                 className="object-contain w-auto h-auto mx-auto lg:mx-0"
                 priority
-                unoptimized
               />
             </div>
 
