@@ -538,7 +538,7 @@ export default function QuotationRequestForm() {
               </h2>
               
               {/* Laboratory Service Fields */}
-              {["laboratory", "bioinformatics", "equipment", "retail"].includes(selectedService) && (
+              {["laboratory", "bioinformatics", "equipment"].includes(selectedService) && (
                 <div className="space-y-6">
                   {/* Sample Count */}
                   <div>
