@@ -48,8 +48,8 @@ export default function Home() {
               <Image
                 src="/assets/pgc-logo.png"
                 alt="PGC Logo"
-                width={450}
-                height={270}
+                width={1300}
+                height={700}
                 className="object-contain w-auto h-auto mx-auto lg:mx-0"
                 priority
               />
