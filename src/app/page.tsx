@@ -95,7 +95,7 @@ export default function Home() {
                 </Button>
               </Link>
               <Link href="/portal">
-                <Button size="lg" variant="outline" className="h-12 px-6 bg-white border-2 border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white font-semibold shadow-sm hover:shadow-md transition-all duration-300 text-sm group">
+                <Button size="lg" variant="outline" className="w-[180px] h-12 bg-white border-2 border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white font-semibold shadow-sm hover:shadow-md transition-all duration-300 text-sm group">
                   Login to Client Portal
                   <UserCheck className="w-4 h-4 ml-2 transition-transform group-hover:scale-110" />
                 </Button>
