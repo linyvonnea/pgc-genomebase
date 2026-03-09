@@ -33,14 +33,19 @@ export const columns: ColumnDef<Client>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="hover:bg-accent px-2 text-xs"
+          className="hover:bg-accent px-1 text-[11px] font-semibold"
         >
-          Client ID
+          CID
           <ArrowUpDown className="ml-1 h-3 w-3" />
         </Button>
       )
     },
-    size: 100,
+    size: 70,
+    cell: ({ getValue }) => (
+      <div className="font-mono text-[10px] text-muted-foreground px-1">
+        {getValue() as string}
+      </div>
+    ),
   },
   {
     accessorKey: "name",
@@ -49,26 +54,26 @@ export const columns: ColumnDef<Client>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="hover:bg-accent px-2 text-xs"
+          className="hover:bg-accent px-1 text-[11px] font-semibold"
         >
           Client Name
           <ArrowUpDown className="ml-1 h-3 w-3" />
         </Button>
       )
     },
-    size: 180,
+    size: 160,
     cell: ({ getValue }) => (
-      <div className="max-w-[180px] text-xs font-medium whitespace-normal break-words leading-tight">
+      <div className="max-w-[160px] text-[11px] font-medium whitespace-normal break-words leading-tight px-1 text-slate-900">
         {getValue() as string}
       </div>
     ),
   },
   {
     accessorKey: "email",
-    header: "Email",
-    size: 160,
+    header: () => <div className="px-1 text-[11px] font-semibold">Email</div>,
+    size: 140,
     cell: ({ getValue }) => (
-      <div className="max-w-[160px] truncate text-[11px] text-muted-foreground" title={getValue() as string}>
+      <div className="max-w-[140px] truncate text-[10px] text-slate-500 px-1" title={getValue() as string}>
         {getValue() as string}
       </div>
     ),
@@ -80,25 +85,25 @@ export const columns: ColumnDef<Client>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="hover:bg-accent px-2 text-xs"
+          className="hover:bg-accent px-1 text-[11px] font-semibold"
         >
           Projects
           <ArrowUpDown className="ml-1 h-3 w-3" />
         </Button>
       )
     },
-    size: 120,
+    size: 100,
     cell: ({ row }) => {
       // pid is now an array
       const projects = Array.isArray(row.original.pid) 
         ? row.original.pid 
         : (row.original.pid ? [row.original.pid] : []);
       
-      if (projects.length === 0) return <span className="text-gray-400 text-[10px]">-</span>;
+      if (projects.length === 0) return <span className="text-gray-400 text-[10px] px-1">-</span>;
       
       if (projects.length === 1) {
         return (
-          <div className="px-1.5 py-0.5 bg-blue-50 border border-blue-100 rounded text-[9px] font-mono font-bold text-[#166FB5] w-fit">
+          <div className="px-1.5 py-0.5 bg-blue-50 border border-blue-100 rounded text-[9px] font-mono font-bold text-[#166FB5] w-fit ml-1">
             {projects[0]}
           </div>
         );
@@ -108,7 +113,7 @@ export const columns: ColumnDef<Client>[] = [
       const otherPids = projects.slice(1).join(", ");
       
       return (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 ml-1">
           <div className="px-1.5 py-0.5 bg-blue-50 border border-blue-100 rounded text-[9px] font-mono font-bold text-[#166FB5]">
             {firstPid}
           </div>
@@ -124,38 +129,38 @@ export const columns: ColumnDef<Client>[] = [
   },
   {
     accessorKey: "affiliation",
-    header: "Affiliation",
-    size: 150,
+    header: () => <div className="px-1 text-[11px] font-semibold">Affiliation</div>,
+    size: 140,
     cell: ({ getValue }) => (
-      <div className="max-w-[150px] line-clamp-1 text-[11px] leading-tight" title={getValue() as string}>
+      <div className="max-w-[140px] line-clamp-1 text-[10px] leading-tight text-slate-600 px-1" title={getValue() as string}>
         {getValue() as string}
       </div>
     ),
   },
   {
     accessorKey: "designation",
-    header: "Designation",
-    size: 110,
+    header: () => <div className="px-1 text-[11px] font-semibold">Designation</div>,
+    size: 100,
     cell: ({ getValue }) => (
-      <div className="max-w-[110px] truncate text-[11px]" title={getValue() as string}>
+      <div className="max-w-[100px] truncate text-[10px] text-slate-500 px-1" title={getValue() as string}>
         {getValue() as string}
       </div>
     ),
   },
   {
     accessorKey: "phoneNumber",
-    header: "Phone",
-    size: 100,
+    header: () => <div className="px-1 text-[11px] font-semibold text-right">Phone</div>,
+    size: 90,
     cell: ({ getValue }) => (
-      <div className="text-[11px] whitespace-nowrap">
+      <div className="text-[10px] whitespace-nowrap text-right text-slate-500 px-1">
         {getValue() as string}
       </div>
     ),
   },
   {
     id: "actions",
-    header: "Actions",
-    size: 130,
+    header: () => <div className="px-1 text-[11px] font-semibold text-right">Actions</div>,
+    size: 150,
     cell: (ctx: any) => {
       const { row, meta } = ctx;
       const client = row.original;
@@ -165,7 +170,7 @@ export const columns: ColumnDef<Client>[] = [
       const { canEdit, canCreate } = usePermissions(adminInfo?.role);
 
       return (
-        <div className="flex items-center gap-1.5 justify-end">
+        <div className="flex items-center gap-1 justify-end px-1">
           {canEdit("clients") && (
             <EditClientModal client={client} onSuccess={meta?.onSuccess} />
           )}
@@ -178,9 +183,9 @@ export const columns: ColumnDef<Client>[] = [
               }}
               variant="outline"
               size="sm"
-              className="h-7 text-[10px] px-2 py-0"
+              className="h-7 text-[9px] px-2 py-0 border-blue-200 text-blue-700 hover:bg-blue-50 font-semibold"
             >
-              Slip
+              Charge Slip
             </Button>
           )}
         </div>
