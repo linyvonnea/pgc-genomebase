@@ -8,6 +8,7 @@ import { Project } from "@/types/Project"
 import { projectSchema } from "@/schemas/projectSchema"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import { ArrowUpDown } from "lucide-react"
 import useAuth from "@/hooks/useAuth"
 import { usePermissions } from "@/hooks/usePermissions"
 import {
@@ -32,28 +33,50 @@ const CLIENT_COLORS = [
 export const columns: ColumnDef<Project>[] = [
   {
     accessorKey: "pid",
-    header: () => <div className="px-1 text-[12px] font-semibold">PID</div>,
-    size: 65,
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-accent px-1 text-[11px] font-semibold"
+        >
+          PID
+          <ArrowUpDown className="ml-1 h-3 w-3" />
+        </Button>
+      )
+    },
+    size: 70,
     cell: ({ getValue }) => (
-      <div className="font-mono text-[11px] text-muted-foreground px-1 truncate">
+      <div className="font-mono text-[10px] text-muted-foreground px-1 truncate">
         {getValue() as string}
       </div>
     ),
   },
   {
     accessorKey: "title",
-    header: () => <div className="px-1 text-[12px] font-semibold">Project Title</div>,
-    size: 220,
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-accent px-1 text-[11px] font-semibold"
+        >
+          Project Title
+          <ArrowUpDown className="ml-1 h-3 w-3" />
+        </Button>
+      )
+    },
+    size: 200,
     cell: ({ getValue }) => (
-      <div className="max-w-[220px] text-[12px] font-medium truncate px-1 text-slate-900" title={getValue() as string}>
+      <div className="max-w-[200px] text-[11px] font-medium truncate px-1 text-slate-900" title={getValue() as string}>
         {getValue() as string}
       </div>
     ),
   },
   {
     accessorKey: "clientNames",
-    header: () => <div className="px-1 text-[12px] font-semibold">Clients</div>,
-    size: 130,
+    header: () => <div className="px-1 text-[11px] font-semibold">Clients</div>,
+    size: 110,
     cell: ({ row }) => {
       // Render client names as comma-separated string with truncation and count
       const names = row.original.clientNames || [];
@@ -64,12 +87,12 @@ export const columns: ColumnDef<Project>[] = [
         <TooltipProvider delayDuration={200}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-0.5 max-w-[130px] cursor-help px-1 truncate">
-                <span className="truncate text-[11px] text-slate-600">
+              <div className="flex items-center gap-0.5 max-w-[110px] cursor-help px-1 truncate">
+                <span className="truncate text-[10px] text-slate-600">
                   {displayText}
                 </span>
                 {count > 0 && (
-                  <span className="shrink-0 text-[11px] font-normal text-blue-600">
+                  <span className="shrink-0 text-[10px] font-normal text-blue-600">
                     ({count})
                   </span>
                 )}
@@ -77,19 +100,19 @@ export const columns: ColumnDef<Project>[] = [
             </TooltipTrigger>
             <TooltipContent side="right" className="p-3 bg-white border shadow-xl max-w-xs">
               <div className="space-y-1.5">
-                <div className="text-[11px] font-normal text-gray-400 uppercase tracking-wider mb-2 border-b pb-1">
+                <div className="text-[10px] font-normal text-gray-400 uppercase tracking-wider mb-2 border-b pb-1">
                   Project Members ({count})
                 </div>
                 <div className="flex flex-wrap gap-x-2 gap-y-1">
                   {names.map((name, idx) => (
                     <span 
                       key={idx} 
-                      className={`text-[12px] font-normal ${CLIENT_COLORS[idx % CLIENT_COLORS.length]}`}
+                      className={`text-xs font-normal ${CLIENT_COLORS[idx % CLIENT_COLORS.length]}`}
                     >
                       {name}{idx < names.length - 1 ? "," : ""}
                     </span>
                   ))}
-                  {names.length === 0 && <span className="text-[12px] text-gray-500 italic">No clients assigned</span>}
+                  {names.length === 0 && <span className="text-xs text-gray-500 italic">No clients assigned</span>}
                 </div>
               </div>
             </TooltipContent>
@@ -105,12 +128,12 @@ export const columns: ColumnDef<Project>[] = [
   },
   {
     accessorKey: "lead",
-    header: () => <div className="px-1 text-[12px] font-semibold">Lead</div>,
-    size: 110,
+    header: () => <div className="px-1 text-[11px] font-semibold">Lead</div>,
+    size: 100,
     cell: ({ getValue }) => {
       const lead = getValue() as string || "—";
       return (
-        <div className="max-w-[110px] truncate text-left text-[11px] text-slate-500 px-1" title={lead}>
+        <div className="max-w-[100px] truncate text-left text-[10px] text-slate-500 px-1" title={lead}>
           {lead}
         </div>
       );
@@ -118,12 +141,12 @@ export const columns: ColumnDef<Project>[] = [
   },
   {
     accessorKey: "personnelAssigned",
-    header: () => <div className="px-1 text-[12px] font-semibold">Personnel</div>,
-    size: 110,
+    header: () => <div className="px-1 text-[11px] font-semibold">Personnel</div>,
+    size: 100,
     cell: ({ getValue }) => {
       const personnel = getValue() as string || "—";
       return (
-        <div className="max-w-[110px] truncate text-left text-[11px] text-slate-500 px-1" title={personnel}>
+        <div className="max-w-[100px] truncate text-left text-[10px] text-slate-500 px-1" title={personnel}>
           {personnel}
         </div>
       );
@@ -131,8 +154,8 @@ export const columns: ColumnDef<Project>[] = [
   },
   {
     accessorKey: "status",
-    header: () => <div className="px-1 text-[12px] font-semibold">Status</div>,
-    size: 90,
+    header: () => <div className="px-1 text-[11px] font-semibold">Status</div>,
+    size: 85,
     cell: ({ row }) => {
       // Render status with color-coded badge
       const status = row.original.status;
@@ -160,8 +183,8 @@ export const columns: ColumnDef<Project>[] = [
           label = status || "";
       }
       return (
-        <div className="px-1 flex items-center h-full">
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border whitespace-nowrap ${color}`}>
+        <div className="px-1">
+          <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold border whitespace-nowrap ${color}`}>
             {label}
           </span>
         </div>
@@ -170,8 +193,8 @@ export const columns: ColumnDef<Project>[] = [
   },
   {
     accessorKey: "sendingInstitution",
-    header: () => <div className="px-1 text-[12px] font-semibold">Institution</div>,
-    size: 110,
+    header: () => <div className="px-1 text-[11px] font-semibold">Institution</div>,
+    size: 100,
     cell: ({ row }) => {
       // Render sending institution with color-coded badge
       const value = row.original.sendingInstitution || "—";
@@ -185,8 +208,8 @@ export const columns: ColumnDef<Project>[] = [
         case "N/A": color = "bg-slate-50 text-slate-500 border-slate-100"; break;
       }
       return (
-        <div className="max-w-[110px] truncate px-1 flex items-center h-full" title={value}>
-          <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-medium border whitespace-nowrap ${color}`}>
+        <div className="max-w-[100px] truncate px-1" title={value}>
+          <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-medium border whitespace-nowrap ${color}`}>
             {value}
           </span>
         </div>
@@ -195,10 +218,10 @@ export const columns: ColumnDef<Project>[] = [
   },
   {
     accessorKey: "startDate",
-    header: () => <div className="px-1 text-[12px] font-semibold text-right">Start Date</div>,
+    header: () => <div className="px-1 text-[11px] font-semibold text-right">Start Date</div>,
     size: 85,
     cell: ({ getValue }) => (
-      <div className="text-[11px] text-right text-slate-500 px-1 truncate">
+      <div className="text-[10px] text-right text-slate-500 px-1 truncate">
         {getValue() as string || "—"}
       </div>
     ),
