@@ -219,6 +219,7 @@ export default function ClientPortalPage() {
   // ── Data state ────────────────────────────────────────────────
   const [members, setMembers] = useState<ClientMember[]>([]);
   const [projects, setProjects] = useState<ProjectDetails[]>([]);
+
   const [selectedProjectPid, setSelectedProjectPid] = useState<string | null>(
     null
   );
@@ -2230,7 +2231,10 @@ export default function ClientPortalPage() {
                         onClick={() => handleSelectProject(project)}
                       >
                         <div className="flex flex-col gap-1">
-                          <p className="text-sm text-slate-700 font-medium truncate leading-tight">
+                          <p 
+                            className="text-sm text-slate-700 font-medium truncate leading-tight"
+                            title={project.title || "Untitled Project"}
+                          >
                             {project.title || "Untitled Project"}
                           </p>
                           <Badge className={cn(
