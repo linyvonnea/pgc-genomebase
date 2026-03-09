@@ -11,6 +11,7 @@ import { pdf, PDFViewer } from "@react-pdf/renderer";
 import { Timestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
+import { QuotationRecord } from "@/types/Quotation";
 import { sanitizeObject } from "@/lib/sanitizeObject";
 import { calculateItemTotal } from "@/lib/calculatePrice";
 import { getServiceCatalog } from "@/services/serviceCatalogService";
@@ -151,6 +152,25 @@ function ChargeSlipBuilderInner({
     });
 
     // Reset checkboxes to default state
+    setIsInternal(false);
+    setUseAffiliationAsClientName(false);
+  };
+
+  const handleQuotationSelect = (quote: QuotationRecord) => {
+    const servicesFromQuotation: EditableSelectedService[] = quote.services.map((s) => ({
+      ...s,
+      id: s.id || `quote-${s.name}`,
+      quantity: s.quantity || 1,
+      price: s.price || 0,
+    }));
+    setSelectedServices(servicesFromQuotation);
+    setIsInternal(!!quote.useInternalPrice);
+    setUseAffiliationAsClientName(!!quote.useAffiliationAsClientName);
+    toast.info(`Populated services from ${quote.referenceNumber}`);
+  };
+
+  const handleQuotationDeselect = () => {
+    setSelectedServices([]);
     setIsInternal(false);
     setUseAffiliationAsClientName(false);
   };
@@ -616,7 +636,9 @@ function ChargeSlipBuilderInner({
             <Separator className="my-6" />
             <QuotationHistoryPanel 
               inquiryId={project.iid} 
-              showCheckboxes={false}
+              showCheckboxes={true}
+              onSelectQuotation={handleQuotationSelect}
+              onDeselectQuotation={handleQuotationDeselect}
             />
           </>
         )}
