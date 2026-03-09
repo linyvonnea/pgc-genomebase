@@ -219,6 +219,7 @@ export default function ClientPortalPage() {
   // ── Data state ────────────────────────────────────────────────
   const [members, setMembers] = useState<ClientMember[]>([]);
   const [projects, setProjects] = useState<ProjectDetails[]>([]);
+
   const [selectedProjectPid, setSelectedProjectPid] = useState<string | null>(
     null
   );
