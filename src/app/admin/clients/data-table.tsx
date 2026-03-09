@@ -515,7 +515,7 @@ export function DataTable<TData, TValue>({
                   {headerGroup.headers.map((header) => (
                     <TableHead 
                       key={header.id} 
-                      className="h-9 px-2 text-[11px] font-bold text-slate-700 uppercase tracking-tight"
+                      className="h-9 px-2 text-[11px] font-bold text-slate-700 uppercase tracking-tight border-r last:border-r-0 border-slate-200/60"
                       style={{ width: header.getSize() }}
                     >
                       {header.isPlaceholder

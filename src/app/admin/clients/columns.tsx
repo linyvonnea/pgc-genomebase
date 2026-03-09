@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { ArrowUpDown } from "lucide-react"
 import useAuth from "@/hooks/useAuth"
 import { usePermissions } from "@/hooks/usePermissions"
+import { ChargeSlipButton } from "./ChargeSlipButton"
 
 // Helper to validate client data using Zod schema
 const validateClient = (data: any) => {
