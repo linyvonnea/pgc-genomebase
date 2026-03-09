@@ -57,11 +57,9 @@ import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import useAuth from "@/hooks/useAuth";
 import { GroupedServiceSelector } from "@/components/forms/GroupedServiceSelector";
 
-export type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
+export type EditableSelectedService = Omit<StrictSelectedService, "quantity"  | "price"> & {
   quantity: number | "";
-  samples?: number | "";
-  participants?: number | "";
-  sourceQuotation?: string; // Track which quotation this service came from
+  price: number;
 };
 
 function ChargeSlipBuilderInner({
@@ -149,66 +147,7 @@ function ChargeSlipBuilderInner({
     setSelectedServices((prev) => {
       const exists = prev.find((s) => s.id === id);
       if (exists) return prev.filter((s) => s.id !== id);
-      return [...prev, {
-        ...service,
-        quantity: 1,
-        samples: 0,
-        participants: 0,
-        description: service.description // Preserve description from catalog
-      }];
-    });
-  };
-
-  const handleQuotationSelect = (quotation: any) => {
-    // Import services from selected quotation
-    if (!quotation.services || quotation.services.length === 0) {
-      toast.info("No services found in this quotation");
-      return;
-    }
-
-    // Convert quotation services to EditableSelectedService format
-    const quotationServices: EditableSelectedService[] = quotation.services.map((svc: any) => ({
-      ...svc,
-      quantity: svc.quantity || 1,
-      samples: (svc as any).samples || 0,
-      participants: (svc as any).participants || 0,
-      sourceQuotation: quotation.referenceNumber, // Mark source
-    }));
-
-    // Replace all quotation services with the new selection (keep only manually selected services)
-    setSelectedServices((prev) => {
-      // Keep only manually selected services (those without sourceQuotation)
-      const manuallySelected = prev.filter((s) => !s.sourceQuotation);
-      
-      // Add the new quotation's services
-      const merged = [...manuallySelected, ...quotationServices];
-      
-      const removedCount = prev.length - manuallySelected.length;
-      if (removedCount > 0) {
-        toast.info(`Replaced previous quotation services`);
-      }
-      toast.success(`Loaded ${quotationServices.length} service${quotationServices.length !== 1 ? 's' : ''} from ${quotation.referenceNumber}`);
-      return merged;
-    });
-
-    // Sync checkboxes with quotation settings
-    setIsInternal(quotation.isInternal || false);
-    setUseAffiliationAsClientName(quotation.useAffiliationAsClientName || false);
-  };
-
-  const handleQuotationDeselect = (quotation: any) => {
-    // Remove all services from this quotation
-    setSelectedServices((prev) => {
-      const remaining = prev.filter(
-        (s) => s.sourceQuotation !== quotation.referenceNumber
-      );
-      const removedCount = prev.length - remaining.length;
-      
-      if (removedCount > 0) {
-        toast.info(`Removed ${removedCount} service${removedCount !== 1 ? 's' : ''} from quotation ${quotation.referenceNumber}`);
-      }
-      
-      return remaining;
+      return [...prev, { ...service, quantity: 1, price: service.price }];
     });
 
     // Reset checkboxes to default state
@@ -221,7 +160,8 @@ function ChargeSlipBuilderInner({
       prev.map((svc) => (svc.id === id ? { ...svc, quantity: qty } : svc))
     );
   };
-  const updateSamples = (id: string, samples: number | "") => {
+// for new price textbox
+  const updatePrice = (id: string, price: number | "") => {
     setSelectedServices((prev) =>
       prev.map((svc) => (svc.id === id ? { ...svc, samples } : svc))
     );
@@ -297,107 +237,76 @@ function ChargeSlipBuilderInner({
       }
     }
     return result;
-  }, [search, catalog, showSelectedOnly, selectedServices]);
+  }, [search, catalog]);
 
-  const renderTable = (services: ServiceItem[], serviceType: string) => {
-    const normalizedType = serviceType.toLowerCase();
-    const isBioinformatics = normalizedType === "bioinformatics";
-    const isTraining = normalizedType === "training";
+  const renderTable = (services: ServiceItem[]) => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>✔</TableHead>
+          <TableHead>Service</TableHead>
+          <TableHead>Unit</TableHead>
+          <TableHead>Price</TableHead>
+          <TableHead>Qty</TableHead>
+          <TableHead>Amount</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {services.map((item) => {
+          const isSelected = selectedServices.find((s) => s.id === item.id);
+          const quantity = isSelected?.quantity ?? "";
+          const price = isSelected?.price ?? 0;
+          const amount =
+            isSelected && typeof quantity === "number"
+              ? price * quantity
+              : 0;
+// for new price textbox
+          return (
+            <TableRow key={item.id}>
+              <TableCell>
+                <Checkbox
+                  checked={!!isSelected}
+                  onCheckedChange={() => toggleService(item.id, item)}
+                />
+              </TableCell>
+              <TableCell>{item.name}</TableCell>
+              <TableCell>{item.unit}</TableCell>
 
-    return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[50px] font-semibold">✔</TableHead>
-            <TableHead className="min-w-[250px] font-semibold">Service</TableHead>
-            <TableHead className="w-[100px] text-center">Unit</TableHead>
-            <TableHead className="w-[100px] text-center font-semibold">Price</TableHead>
-            <TableHead className="w-[120px]">
-              <span className={isTraining ? "font-semibold" : "font-normal"}>Participants</span>
-            </TableHead>
-            <TableHead className="w-[150px] text-center font-semibold">Qty</TableHead>
-            <TableHead className="w-[120px] text-right font-semibold">Amount</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {services.map((item) => {
-            const isSelected = selectedServices.find((s) => s.id === item.id);
-            const samples = (isSelected as any)?.samples ?? "";
-            const participants = (isSelected as any)?.participants ?? "";
-            const quantity = isSelected?.quantity ?? "";
-            const price = isSelected?.price ?? 0;
-
-            // Calculate amount based on service type
-            let amount = 0;
-            if (isSelected && typeof quantity === "number") {
-              if (isBioinformatics && typeof samples === "number") {
-                const samplesAmount = calculateItemTotal(samples, price, {
-                  minQuantity: (item as any).minQuantity,
-                  additionalUnitPrice: (item as any).additionalUnitPrice,
-                });
-                amount = samplesAmount * quantity;
-              } else if (isTraining && typeof participants === "number") {
-                const participantsAmount = calculateItemTotal(participants, price, {
-                  minQuantity: (item as any).minParticipants,
-                  additionalUnitPrice: (item as any).additionalParticipantPrice,
-                });
-                amount = participantsAmount * quantity;
-              } else {
-                amount = price * quantity;
-              }
-            }
-
-            return (
-              <TableRow key={item.id}>
-                <TableCell>
-                  <Checkbox
-                    checked={!!isSelected}
-                    onCheckedChange={() => toggleService(item.id, item)}
-                  />
-                </TableCell>
-                <TableCell>{item.name}</TableCell>
-                <TableCell className="text-center pr-6">{item.unit}</TableCell>
-                <TableCell className="text-right">
-                  {item.price.toFixed(2)}
-                </TableCell>
-                <TableCell>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={participants}
-                    onChange={(e) =>
-                      updateParticipants(
-                        item.id,
-                        e.target.value === "" ? "" : +e.target.value
-                      )
-                    }
-                    disabled={!isSelected || !isTraining}
-                    placeholder={isTraining ? "0" : "—"}
-                  />
-                </TableCell>
-                <TableCell className="text-center pr-5">
-                  <Input
-                    type="number"
-                    min={0}
-                    value={quantity}
-                    onChange={(e) =>
-                      updateQuantity(
-                        item.id,
-                        e.target.value === "" ? "" : +e.target.value
-                      )
-                    }
-                    disabled={!isSelected}
-                    className="h-8 w-20 min-w-[3.5rem] text-center"
-                  />
-                </TableCell>
-                <TableCell className="pl-4 font-semibold">{amount > 0 ? `₱${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}</TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    );
-  };
+              <TableCell>
+                <Input
+                  type="number"
+                  min={0}
+                  value={price}
+                  onChange={(e) =>
+                    updatePrice(
+                      item.id,
+                      e.target.value === "" ? "" : +e.target.value
+                    )
+                  }
+                  disabled={!isSelected}
+                />
+              </TableCell>
+              <TableCell>
+                <Input
+                  type="number"
+                  min={0}
+                  value={quantity}
+                  onChange={(e) =>
+                    updateQuantity(
+                      item.id,
+                      e.target.value === "" ? "" : +e.target.value
+                    )
+                  }
+                  disabled={!isSelected}
+                />
+              </TableCell>
+              <TableCell>{amount.toFixed(2)}</TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
+  );
 
   const normalizeCategory = (raw: string): string => {
     const lower = raw.toLowerCase();
