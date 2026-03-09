@@ -176,10 +176,18 @@ export const columns: ColumnDef<Client>[] = [
             <EditClientModal client={client} onSuccess={meta?.onSuccess} />
           )}
           {canCreate("chargeSlips") && (
-            <ChargeSlipButton 
-              clientId={client.cid || ""} 
-              projectIds={Array.isArray(client.pid) ? client.pid : (client.pid ? [client.pid] : [])} 
-            />
+            <Button
+              onClick={() => {
+                const primaryPid = Array.isArray(client.pid) ? client.pid[0] : client.pid;
+                if (!client.cid || !primaryPid) return;
+                router.push(`/admin/charge-slips/new?clientId=${encodeURIComponent(client.cid)}&projectId=${encodeURIComponent(primaryPid)}`);
+              }}
+              variant="outline"
+              size="sm"
+              className="h-7 text-[9px] px-2 py-0 border-blue-200 text-blue-700 hover:bg-blue-50 font-semibold"
+            >
+              Charge Slip
+            </Button>
           )}
         </div>
       );
