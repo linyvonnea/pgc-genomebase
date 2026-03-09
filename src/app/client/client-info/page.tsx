@@ -2475,6 +2475,10 @@ export default function ClientPortalPage() {
                     )}
                   </div>
                 </div>
+                {/* Message widget for project view */}
+                {currentInquiry && (
+                  <FloatingChatWidget inquiryId={currentInquiry.id} role="client" />
+                )}
               </div>
 
               {/* ── Project Details Grid ──────────────────── */}
