@@ -70,7 +70,7 @@ const removeUndefined = (obj: any): any => {
 
 export async function getAllChargeSlips(): Promise<ChargeSlipRecord[]> {
   const snapshot = await getDocs(
-    query(collection(db, CHARGE_SLIPS_COLLECTION), orderBy("chargeSlipNumber", "desc"))
+    query(collection(db, CHARGE_SLIPS_COLLECTION), orderBy("dateIssued", "desc"))
   );
 
   return snapshot.docs.map((docSnap) => {
@@ -151,6 +151,42 @@ export async function saveChargeSlip(slip: ChargeSlipRecord): Promise<string> {
   return slip.chargeSlipNumber;
 }
 
+export async function getChargeSlipsByClientId(clientId: string): Promise<ChargeSlipRecord[]> {
+  // Use top-level "cid" field to avoid requiring a composite Firestore index.
+  // Older records store client ID in both "cid" (top-level) and "client.cid" (nested);
+  // querying the top-level field works for all records without an explicit index.
+  const q = query(
+    collection(db, CHARGE_SLIPS_COLLECTION),
+    where("cid", "==", clientId)
+  );
+
+  const snapshot = await getDocs(q);
+
+  const results = snapshot.docs.map((docSnap) => {
+    const data = docSnap.data() as any;
+    return {
+      ...data,
+      id: docSnap.id,
+      client: {
+        ...data.client,
+        createdAt: convertToDate(data.client?.createdAt),
+      },
+      project: {
+        ...data.project,
+        createdAt: convertToDate(data.project?.createdAt),
+      },
+      dateIssued: convertToDate(data.dateIssued),
+      dateOfOR: convertToDate(data.dateOfOR),
+      createdAt: convertToDate(data.createdAt),
+    };
+  });
+
+  // Sort descending by chargeSlipNumber in JavaScript to avoid composite index
+  return results.sort((a, b) =>
+    (b.chargeSlipNumber ?? "").localeCompare(a.chargeSlipNumber ?? "")
+  );
+}
+
 export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRecord>) {
   const docRef = doc(db, CHARGE_SLIPS_COLLECTION, id);
 
@@ -204,33 +240,41 @@ export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRe
 }
 
 export async function getChargeSlipsByProjectId(projectId: string): Promise<ChargeSlipRecord[]> {
-  const snapshot = await getDocs(
-    query(
-      collection(db, CHARGE_SLIPS_COLLECTION),
-      where("projectId", "==", projectId)
-      //orderBy("dateIssued", "desc")
-    )
-  );
+  // Query both the top-level "projectId" field (newer records) and "project.pid"
+  // nested field (older records) since older charge slips may not have the
+  // top-level field populated.
+  const [snap1, snap2] = await Promise.all([
+    getDocs(query(collection(db, CHARGE_SLIPS_COLLECTION), where("projectId", "==", projectId))),
+    getDocs(query(collection(db, CHARGE_SLIPS_COLLECTION), where("project.pid", "==", projectId))),
+  ]);
 
-  return snapshot.docs.map((docSnap) => {
-    const data = docSnap.data() as any;
+  const seen = new Set<string>();
+  const results: ChargeSlipRecord[] = [];
 
-    return {
-      ...data,
-      id: docSnap.id,
-      client: {
-        ...data.client,
-        createdAt: convertToDate(data.client?.createdAt),
-      },
-      project: {
-        ...data.project,
-        createdAt: convertToDate(data.project?.createdAt),
-      },
-      dateIssued: convertToDate(data.dateIssued),
-      dateOfOR: convertToDate(data.dateOfOR),
-      createdAt: convertToDate(data.createdAt),
-    };
-  });
+  for (const snapshot of [snap1, snap2]) {
+    for (const docSnap of snapshot.docs) {
+      if (seen.has(docSnap.id)) continue;
+      seen.add(docSnap.id);
+      const data = docSnap.data() as any;
+      results.push({
+        ...data,
+        id: docSnap.id,
+        client: {
+          ...data.client,
+          createdAt: convertToDate(data.client?.createdAt),
+        },
+        project: {
+          ...data.project,
+          createdAt: convertToDate(data.project?.createdAt),
+        },
+        dateIssued: convertToDate(data.dateIssued),
+        dateOfOR: convertToDate(data.dateOfOR),
+        createdAt: convertToDate(data.createdAt),
+      });
+    }
+  }
+
+  return results;
 }
 
 /**

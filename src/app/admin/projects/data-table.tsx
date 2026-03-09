@@ -593,7 +593,7 @@ export function DataTable<TData extends Project, TValue>({
                         key={header.id}
                         style={{ width: header.getSize(), minWidth: header.getSize() }}
                         onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                        className={`${canSort ? "cursor-pointer select-none" : ""} h-10 text-xs font-semibold`}
+                        className={`${canSort ? "cursor-pointer select-none" : ""} h-10 text-xs font-semibold border-r last:border-r-0 border-slate-200/60`}
                       >
                         <div className="flex items-center gap-1">
                           {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
@@ -620,7 +620,7 @@ export function DataTable<TData extends Project, TValue>({
                       <TableCell
                         key={cell.id}
                         style={{ width: cell.column.getSize(), minWidth: cell.column.getSize() }}
-                        className="py-2"
+                        className="py-2 border-r last:border-r-0 border-slate-100"
                       >
                         {flexRender(cell.column.columnDef.cell, { ...cell.getContext(), meta })}
                       </TableCell>
