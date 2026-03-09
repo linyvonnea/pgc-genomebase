@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { ArrowUpDown } from "lucide-react"
 import useAuth from "@/hooks/useAuth"
 import { usePermissions } from "@/hooks/usePermissions"
+import { ChargeSlipButton } from "./ChargeSlipButton"
 
 // Helper to validate client data using Zod schema
 const validateClient = (data: any) => {
@@ -175,18 +176,10 @@ export const columns: ColumnDef<Client>[] = [
             <EditClientModal client={client} onSuccess={meta?.onSuccess} />
           )}
           {canCreate("chargeSlips") && (
-            <Button
-              onClick={() => {
-                const primaryPid = Array.isArray(client.pid) ? client.pid[0] : client.pid;
-                if (!client.cid || !primaryPid) return;
-                router.push(`/admin/charge-slips/new?clientId=${encodeURIComponent(client.cid)}&projectId=${encodeURIComponent(primaryPid)}`);
-              }}
-              variant="outline"
-              size="sm"
-              className="h-7 text-[9px] px-2 py-0 border-blue-200 text-blue-700 hover:bg-blue-50 font-semibold"
-            >
-              Charge Slip
-            </Button>
+            <ChargeSlipButton 
+              clientId={client.cid || ""} 
+              projectIds={Array.isArray(client.pid) ? client.pid : (client.pid ? [client.pid] : [])} 
+            />
           )}
         </div>
       );
