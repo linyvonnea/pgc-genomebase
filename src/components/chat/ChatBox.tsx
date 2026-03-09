@@ -199,21 +199,33 @@ export default function ChatBox({
                     className={`flex flex-col max-w-[85%] ${isMe ? "items-end" : "items-start"}`}
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-semibold text-gray-600">
-                        {isMe ? "You" : msg.senderName}
-                      </span>
-                      {msg.senderRole ===
-                        (role === "admin" ? "client" : "admin") && (
-                        <Badge
-                          variant="outline"
-                          className={`ml-1 text-[9px] h-4 py-0 px-1.5 ${
-                            msg.senderRole === "admin"
-                              ? "bg-blue-50 text-blue-700 border-blue-200"
-                              : "bg-green-50 text-green-700 border-green-200"
-                          }`}
-                        >
-                          {msg.senderRole === "admin" ? "Admin" : "Client"}
-                        </Badge>
+                      {/* Check if we should show name or badge first */}
+                      {!isMe && msg.senderRole === "admin" ? (
+                        <>
+                          <Badge
+                            variant="outline"
+                            className="text-[9px] h-4 py-0 px-1.5 bg-blue-50 text-blue-700 border-blue-200"
+                          >
+                            Admin
+                          </Badge>
+                          <span className="text-xs font-semibold text-gray-600">
+                            {msg.senderName}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-xs font-semibold text-gray-600">
+                            {isMe ? "You" : msg.senderName}
+                          </span>
+                          {msg.senderRole === "client" && role === "admin" && (
+                            <Badge
+                              variant="outline"
+                              className="ml-1 text-[9px] h-4 py-0 px-1.5 bg-green-50 text-green-700 border-green-200"
+                            >
+                              Client
+                            </Badge>
+                          )}
+                        </>
                       )}
                       <span className="text-[10px] text-gray-400 flex items-center gap-1 ml-1">
                         <Clock className="w-3 h-3" />
