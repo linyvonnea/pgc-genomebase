@@ -29,6 +29,8 @@ const CLIENT_COLORS = [
 ];
 
 // Column definitions for the projects table
+export const columns: ColumnDef<Project>[] = [
+  {
     accessorKey: "pid",
     header: () => <div className="px-1 text-[12px] font-semibold">PID</div>,
     size: 65,
