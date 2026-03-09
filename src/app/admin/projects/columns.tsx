@@ -8,6 +8,7 @@ import { Project } from "@/types/Project"
 import { projectSchema } from "@/schemas/projectSchema"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import { ArrowUpDown } from "lucide-react"
 import useAuth from "@/hooks/useAuth"
 import { usePermissions } from "@/hooks/usePermissions"
 import {
@@ -30,20 +31,42 @@ const CLIENT_COLORS = [
 
 // Column definitions for the projects table
     accessorKey: "pid",
-    header: () => <div className="px-1 text-[12px] font-semibold">PID</div>,
-    size: 65,
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-accent px-1 text-[11px] font-semibold"
+        >
+          PID
+          <ArrowUpDown className="ml-1 h-3 w-3" />
+        </Button>
+      )
+    },
+    size: 70,
     cell: ({ getValue }) => (
-      <div className="font-mono text-[11px] text-muted-foreground px-1 truncate">
+      <div className="font-mono text-[10px] text-muted-foreground px-1 truncate">
         {getValue() as string}
       </div>
     ),
   },
   {
     accessorKey: "title",
-    header: () => <div className="px-1 text-[12px] font-semibold">Project Title</div>,
-    size: 220,
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-accent px-1 text-[11px] font-semibold"
+        >
+          Project Title
+          <ArrowUpDown className="ml-1 h-3 w-3" />
+        </Button>
+      )
+    },
+    size: 200,
     cell: ({ getValue }) => (
-      <div className="max-w-[220px] text-[12px] font-medium truncate px-1 text-slate-900" title={getValue() as string}>
+      <div className="max-w-[200px] text-[11px] font-medium truncate px-1 text-slate-900" title={getValue() as string}>
         {getValue() as string}
       </div>
     ),
@@ -62,8 +85,8 @@ const CLIENT_COLORS = [
         <TooltipProvider delayDuration={200}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-0.5 max-w-[130px] cursor-help px-1 truncate">
-                <span className="truncate text-[11px] text-slate-600">
+              <div className="flex items-center gap-0.5 max-w-[110px] cursor-help px-1 truncate">
+                <span className="truncate text-[10px] text-slate-600">
                   {displayText}
                 </span>
                 {count > 0 && (
@@ -196,7 +219,7 @@ const CLIENT_COLORS = [
     header: () => <div className="px-1 text-[12px] font-semibold text-right">Start Date</div>,
     size: 85,
     cell: ({ getValue }) => (
-      <div className="text-[11px] text-right text-slate-500 px-1 truncate">
+      <div className="text-[10px] text-right text-slate-500 px-1 truncate">
         {getValue() as string || "—"}
       </div>
     ),
