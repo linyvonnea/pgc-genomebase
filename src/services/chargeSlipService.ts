@@ -151,6 +151,36 @@ export async function saveChargeSlip(slip: ChargeSlipRecord): Promise<string> {
   return slip.chargeSlipNumber;
 }
 
+export async function getChargeSlipsByClientId(clientId: string): Promise<ChargeSlipRecord[]> {
+  const q = query(
+    collection(db, CHARGE_SLIPS_COLLECTION),
+    where("client.cid", "==", clientId),
+    orderBy("chargeSlipNumber", "desc")
+  );
+
+  const snapshot = await getDocs(q);
+  
+  return snapshot.docs.map((docSnap) => {
+    const data = docSnap.data() as any;
+    
+    return {
+      ...data,
+      id: docSnap.id,
+      client: {
+        ...data.client,
+        createdAt: convertToDate(data.client?.createdAt),
+      },
+      project: {
+        ...data.project,
+        createdAt: convertToDate(data.project?.createdAt),
+      },
+      dateIssued: convertToDate(data.dateIssued),
+      dateOfOR: convertToDate(data.dateOfOR),
+      createdAt: convertToDate(data.createdAt),
+    };
+  });
+}
+
 export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRecord>) {
   const docRef = doc(db, CHARGE_SLIPS_COLLECTION, id);
 
