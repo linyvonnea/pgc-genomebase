@@ -197,16 +197,6 @@ export default function ClientPortalPage() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [expandedProjectDocs, setExpandedProjectDocs] = useState<Set<string>>(new Set());
 
-  // Initialize expandedProjectDocs when projects list is updated or pidParam changes
-  useEffect(() => {
-    if (pidParam) {
-      setExpandedProjectDocs(new Set([pidParam]));
-    } else if (projects.length > 0) {
-      // If no specific PID, expand the first one by default if it's not already expanded
-      setExpandedProjectDocs(prev => prev.size === 0 ? new Set([projects[0].pid]) : prev);
-    }
-  }, [pidParam, projects]);
-
   const [projectDocuments, setProjectDocuments] = useState<
     Map<string, { quotations: QuotationRecord[]; chargeSlips: ChargeSlipRecord[]; loading: boolean }>
   >(new Map());
@@ -219,6 +209,16 @@ export default function ClientPortalPage() {
   // ── Data state ────────────────────────────────────────────────
   const [members, setMembers] = useState<ClientMember[]>([]);
   const [projects, setProjects] = useState<ProjectDetails[]>([]);
+
+  // Initialize expandedProjectDocs when projects list is updated or pidParam changes
+  useEffect(() => {
+    if (pidParam) {
+      setExpandedProjectDocs(new Set([pidParam]));
+    } else if (projects.length > 0) {
+      // If no specific PID, expand the first one by default if it's not already expanded
+      setExpandedProjectDocs(prev => prev.size === 0 ? new Set([projects[0].pid]) : prev);
+    }
+  }, [pidParam, projects]);
 
   const [selectedProjectPid, setSelectedProjectPid] = useState<string | null>(
     null
