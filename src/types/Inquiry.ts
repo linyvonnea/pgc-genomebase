@@ -3,8 +3,42 @@ export interface Inquiry {
   createdAt: Date;
   name: string;
   isApproved: boolean;
-  status: 'Pending' | 'Approved Client' | 'Quotation Only';
+  status: 'Pending' | 'Ongoing Quotation' | 'Approved Client' | 'Quotation Only';
   affiliation: string;
   designation: string;
   email?: string;
+  
+  // Service type
+  serviceType?: 'laboratory' | 'bioinformatics' | 'equipment' | 'retail' | 'research' | 'training' | null;
+  
+  // New Service Selection Fields
+  species?: 'human' | 'plant' | 'animal' | 'microbe-prokaryote' | 'microbe-eukaryote' | 'other' | null;
+  otherSpecies?: string | null;
+  researchOverview?: string | null;
+  methodologyFileUrl?: string | null;
+  sampleCount?: number | null;
+  workflowType?: 'complete' | 'individual' | null;
+  individualAssayDetails?: string | null;
+  
+  // Legacy Service-specific fields
+  workflows?: string[];
+  additionalInfo?: string | null;
+  projectBackground?: string | null;
+  projectBudget?: string | null;
+  specificTrainingNeed?: string | null;
+  targetTrainingDate?: string | null;
+  numberOfParticipants?: number | null;
+  
+  // System fields
+  haveSubmitted?: boolean;
+  hasOpenedQuotation?: boolean;
+  hasLoggedIn?: boolean;
+
+  // Message state — denormalized from threadMessages for efficient table display
+  // 'none'       : no messages exist yet
+  // 'admin_only' : admin has sent messages but no client reply
+  // 'has_unread' : client sent message(s) that admin hasn't read
+  // 'all_read'   : all client messages have been read by admin
+  messageState?: 'none' | 'admin_only' | 'has_unread' | 'all_read';
+  unreadMessageCount?: number;
 }

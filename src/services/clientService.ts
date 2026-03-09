@@ -55,20 +55,65 @@ function formatDateToMMDDYYYY(date: Date): string {
 export async function getClients(): Promise<Client[]> {
   try {
     const clientsRef = collection(db, "clients");
-    const clientsQuery = query(clientsRef, orderBy("createdAt", "desc"));
+    const clientsQuery = query(clientsRef);
     const querySnapshot = await getDocs(clientsQuery);
 
     const clients: Client[] = [];
+    let debugLog: any = [];
 
     querySnapshot.forEach((doc) => {
       const data = doc.data();
+      const clientId = data?.cid || doc.id;
 
-      // Convert Firestore Timestamps to JS Dates if present
-      if (data?.createdAt && typeof data.createdAt.toDate === "function") {
-        data.createdAt = data.createdAt.toDate();
+      // DEBUG: Log original createdAt
+      debugLog.push({
+        cid: clientId,
+        originalCreatedAt: data?.createdAt,
+        type: typeof data?.createdAt,
+      });
+
+      // Convert Firestore Timestamps to ISO strings (serializable format)
+      // This is critical because Firestore Timestamp objects can't be transferred to client as-is
+      if (data?.createdAt) {
+        if (typeof data.createdAt.toDate === "function") {
+          try {
+            const jsDate = data.createdAt.toDate();
+            const isoString = jsDate.toISOString();
+            console.log(`✅ ${clientId}: Converted Firestore Timestamp to ISO string:`, isoString);
+            data.createdAt = isoString;
+          } catch (err) {
+            console.warn(`❌ Invalid createdAt for ${clientId}:`, data.createdAt, err);
+            data.createdAt = new Date(0).toISOString();
+          }
+        } else if (typeof data.createdAt === 'string') {
+          // Already a string, keep it
+          console.log(`📝 ${clientId}: createdAt is already string:`, data.createdAt);
+        } else if (typeof data.createdAt === 'object' && data.createdAt?._seconds !== undefined) {
+          // Handle Firestore Timestamp with _seconds property
+          try {
+            const jsDate = new Date(data.createdAt._seconds * 1000 + (data.createdAt._nanoseconds || 0) / 1000000);
+            const isoString = jsDate.toISOString();
+            console.log(`✅ ${clientId}: Converted _seconds Timestamp to ISO string:`, isoString);
+            data.createdAt = isoString;
+          } catch (err) {
+            console.warn(`❌ Failed to parse _seconds for ${clientId}`, err);
+            data.createdAt = new Date().toISOString();
+          }
+        } else {
+          console.warn(`⚠️  Unknown createdAt format for ${clientId}:`, typeof data.createdAt, data.createdAt);
+          data.createdAt = new Date().toISOString();
+        }
+      } else {
+        console.warn(`⚠️  Missing createdAt for ${clientId}, using current date`);
+        data.createdAt = new Date().toISOString();
       }
+
       if (data?.startDate && typeof data.startDate.toDate === "function") {
-        data.startDate = data.startDate.toDate();
+        try {
+          data.startDate = data.startDate.toDate().toISOString();
+        } catch (err) {
+          console.warn(`Error converting startDate for ${clientId}:`, err);
+        }
       }
 
       // Normalize nulls -> undefined for better compatibility with TS types
@@ -86,12 +131,30 @@ export async function getClients(): Promise<Client[]> {
         clients.push(nullsToUndefined(raw));
       } else {
         // Log details for debugging but still include the record (cleaned)
-        console.warn("Client validation failed (including raw candidate):", doc.id, result.error);
+        console.warn("Client validation failed (including raw candidate):", clientId, result.error);
         clients.push(nullsToUndefined(candidate));
       }
     });
 
-    // Visible debug output in browser console to confirm fetch in deployed builds
+    // DEBUG: Summary log
+    console.group('🔍 getClients DEBUG INFO');
+    console.log(`Total clients fetched: ${clients.length}`);
+    console.log('CreatedAt formats after conversion:', debugLog.map((log: any) => ({
+      cid: log.cid,
+      originalType: log.type,
+      originalValue: log.originalCreatedAt
+    })));
+    console.groupEnd();
+
+    // ✅ Sort in memory by client ID in descending order (newest 2026 on top)
+    // Client ID format: CL-YYYY-NNN, so string comparison works correctly
+    // CL-2026-008 > CL-2025-309 > CL-2025-308
+    clients.sort((a, b) => {
+      const cidA = a.cid || "";
+      const cidB = b.cid || "";
+      return cidB.localeCompare(cidA); // descending (newest on top)
+    });
+
     console.log("getClients: fetched count =", clients.length);
     if (clients.length) console.log("getClients: first client sample =", clients[0]);
 
@@ -101,7 +164,6 @@ export async function getClients(): Promise<Client[]> {
     return [];
   }
 }
-
 /**
  * Generate the next available client ID (cid) for a given year.
  * Looks for the highest existing cid for the year and increments it.
@@ -133,4 +195,14 @@ export async function getNextCid(year: number): Promise<string> {
   const padded = String(nextNum).padStart(3, "0");
 
   return `CL-${year}-${padded}`;
+}
+
+/**
+ * Check if a client ID already exists in the database.
+ */
+export async function checkCidExists(cid: string): Promise<boolean> {
+  const clientsRef = collection(db, "clients");
+  const clientsQuery = query(clientsRef, where("cid", "==", cid));
+  const snapshot = await getDocs(clientsQuery);
+  return !snapshot.empty;
 }

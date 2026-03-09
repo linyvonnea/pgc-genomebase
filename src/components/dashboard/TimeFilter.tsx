@@ -18,7 +18,7 @@ import { TimeFilterProps, TimeRange, CustomRange } from "@/types/TimeFilter";
 
 export function TimeFilter({ onFilterChange }: TimeFilterProps) {
   // State for selected time range and custom range values
-  const [timeRange, setTimeRange] = React.useState<TimeRange>("all");
+  const [timeRange, setTimeRange] = React.useState<TimeRange>("custom");
   const [year, setYear] = React.useState(new Date().getFullYear());
   const [startMonth, setStartMonth] = React.useState(0);
   const [endMonth, setEndMonth] = React.useState(11);
@@ -39,12 +39,12 @@ export function TimeFilter({ onFilterChange }: TimeFilterProps) {
     custom: "Custom"
   };
 
-  // Effect: When custom range changes, notify parent
+  // Effect: Apply filter on mount and when custom range changes
   React.useEffect(() => {
     if (timeRange === "custom") {
       onFilterChange({ year, startMonth, endMonth });
     }
-  }, [year, startMonth, endMonth, timeRange]);
+  }, [year, startMonth, endMonth, timeRange, onFilterChange]);
 
   // Helper to trigger filter change for custom range
   const handleRangeChange = () => {

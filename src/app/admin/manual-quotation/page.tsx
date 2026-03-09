@@ -37,13 +37,26 @@ import { getServiceCatalog } from "@/services/serviceCatalogService";
 import { QuotationPDF } from "@/components/quotation/QuotationPDF";
 import { ServiceItem } from "@/types/ServiceItem";
 import { SelectedService as StrictSelectedService } from "@/types/SelectedService";
+import { PermissionGuard } from "@/components/PermissionGuard";
+import { calculateItemTotal } from "@/lib/calculatePrice";
+import { GroupedServiceSelector } from "@/components/forms/GroupedServiceSelector";
 
 // Editable version for input
 type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
   quantity: number | "";
+  samples?: number | "";
+  participants?: number | "";
 };
 
 export default function ManualQuotationPage() {
+  return (
+    <PermissionGuard module="manualQuotation" action="view">
+      <ManualQuotationContent />
+    </PermissionGuard>
+  );
+}
+
+function ManualQuotationContent() {
   const router = useRouter();
   const { user, isAdmin, loading, adminInfo } = useAuth();
 
@@ -55,6 +68,7 @@ export default function ManualQuotationPage() {
   });
   const [selectedServices, setSelectedServices] = useState<EditableSelectedService[]>([]);
   const [search, setSearch] = useState("");
+  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [isInternal, setIsInternal] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState("");
   const [openPreview, setOpenPreview] = useState(false);
@@ -72,7 +86,7 @@ export default function ManualQuotationPage() {
     setSelectedServices((prev) => {
       const exists = prev.find((s) => s.id === id);
       if (exists) return prev.filter((s) => s.id !== id);
-      return [...prev, { ...service, quantity: 1 }];
+      return [...prev, { ...service, quantity: 1, samples: 0, participants: 0, description: service.description }];
     });
   };
 
@@ -82,16 +96,55 @@ export default function ManualQuotationPage() {
     );
   };
 
+  const updateSamples = (id: string, samples: number | "") => {
+    setSelectedServices((prev) =>
+      prev.map((svc) => (svc.id === id ? { ...svc, samples } : svc))
+    );
+  };
+
+  const updateParticipants = (id: string, participants: number | "") => {
+    setSelectedServices((prev) =>
+      prev.map((svc) => (svc.id === id ? { ...svc, participants } : svc))
+    );
+  };
+
   const cleanedServices: StrictSelectedService[] = selectedServices
     .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
     .map((s) => ({ ...s, quantity: s.quantity as number }));
 
-  const subtotal = cleanedServices.reduce((sum, item) => sum + item.quantity * item.price, 0);
+  const subtotal = cleanedServices.reduce((sum, item) => {
+    const serviceType = item.type.toLowerCase();
+    
+    if (serviceType.includes('bioinformatics') || serviceType.includes('bioinfo')) {
+      // Use samples for bioinformatics
+      const samples = (item as any).samples ?? 1;
+      const samplesAmount = calculateItemTotal(samples, item.price, {
+        minQuantity: (item as any).minQuantity,
+        additionalUnitPrice: (item as any).additionalUnitPrice,
+      });
+      return sum + (samplesAmount * item.quantity);
+    } else if (serviceType.includes('training')) {
+      // Use participants for training
+      const participants = (item as any).participants ?? 1;
+      const participantsAmount = calculateItemTotal(participants, item.price, {
+        minQuantity: (item as any).minParticipants,
+        additionalUnitPrice: (item as any).additionalParticipantPrice,
+      });
+      return sum + (participantsAmount * item.quantity);
+    } else {
+      // Default calculation
+      return sum + (item.price * item.quantity);
+    }
+  }, 0);
   const discount = isInternal ? subtotal * 0.12 : 0;
   const total = subtotal - discount;
 
   const groupedByType = catalog.reduce<Record<string, ServiceItem[]>>((acc, item) => {
-    if (!search || item.name.toLowerCase().includes(search.toLowerCase())) {
+    const selectedIds = new Set(selectedServices.map(s => s.id));
+    const matchesSearch = !search || item.name.toLowerCase().includes(search.toLowerCase());
+    const matchesFilter = !showSelectedOnly || selectedIds.has(item.id);
+    
+    if (matchesSearch && matchesFilter) {
       acc[item.type] = acc[item.type] || [];
       acc[item.type].push(item);
     }
@@ -100,156 +153,199 @@ export default function ManualQuotationPage() {
 
   return (
     <div className="p-6 flex gap-6">
-      <div className="flex-1">
-        <div className="mb-4 space-y-2">
-          <h1 className="text-xl font-semibold">Manual Quotation Builder</h1>
-          <Input
-            placeholder="Reference Number"
-            value={referenceNumber}
-            onChange={(e) => setReferenceNumber(e.target.value)}
-          />
-          <Input
-            placeholder="Client Name"
-            value={clientInfo.name}
-            onChange={(e) => setClientInfo({ ...clientInfo, name: e.target.value })}
-          />
-          <Input
-            placeholder="Institution"
-            value={clientInfo.institution}
-            onChange={(e) => setClientInfo({ ...clientInfo, institution: e.target.value })}
-          />
-          <Input
-            placeholder="Designation"
-            value={clientInfo.designation}
-            onChange={(e) => setClientInfo({ ...clientInfo, designation: e.target.value })}
-          />
-          <Input
-            placeholder="Email"
-            value={clientInfo.email}
-            onChange={(e) => setClientInfo({ ...clientInfo, email: e.target.value })}
-          />
-          <div className="flex items-center gap-2 pt-2">
-            <Checkbox
-              checked={isInternal}
-              onCheckedChange={(val) => setIsInternal(!!val)}
-            />
-            <span>Internal Client (Apply 12% discount)</span>
-          </div>
+      <div className="flex-[2] min-w-[520px]">
+        <div className="mb-4">
+          <h1 className="text-xl font-semibold mb-2">Manual Quotation Builder</h1>
+          <Accordion type="single" collapsible defaultValue="">
+            <AccordionItem value="client-info" className="border rounded-lg overflow-hidden shadow-sm">
+              <AccordionTrigger className="px-4 py-3 hover:no-underline bg-white text-base font-semibold">
+                Client Information
+              </AccordionTrigger>
+              <AccordionContent className="px-0 pb-0">
+                <div className="pl-6 pr-4 pb-3">
+                  <table className="w-full text-sm">
+                    <tbody>
+                      <tr>
+                        <td className="py-1 pr-4 text-muted-foreground w-40">Reference Number</td>
+                        <td><Input placeholder="Reference Number" value={referenceNumber} onChange={e => setReferenceNumber(e.target.value)} /></td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 pr-4 text-muted-foreground">Client Name</td>
+                        <td><Input placeholder="Client Name" value={clientInfo.name} onChange={e => setClientInfo({ ...clientInfo, name: e.target.value })} /></td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 pr-4 text-muted-foreground">Institution</td>
+                        <td><Input placeholder="Institution" value={clientInfo.institution} onChange={e => setClientInfo({ ...clientInfo, institution: e.target.value })} /></td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 pr-4 text-muted-foreground">Designation</td>
+                        <td><Input placeholder="Designation" value={clientInfo.designation} onChange={e => setClientInfo({ ...clientInfo, designation: e.target.value })} /></td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 pr-4 text-muted-foreground">Email</td>
+                        <td><Input placeholder="Email" value={clientInfo.email} onChange={e => setClientInfo({ ...clientInfo, email: e.target.value })} /></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div className="flex items-center gap-2 pt-2">
+                    <Checkbox
+                      checked={isInternal}
+                      onCheckedChange={val => setIsInternal(!!val)}
+                    />
+                    <span>Internal Client (Apply 12% discount)</span>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
 
-        <Input
-          placeholder="Search services..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="mb-4"
-        />
+        <div className="flex gap-2 mb-4 items-center">
+          <Input
+            placeholder="Search services..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1"
+          />
+          <Button
+            variant={showSelectedOnly ? "default" : "outline"}
+            onClick={() => setShowSelectedOnly(!showSelectedOnly)}
+            className="whitespace-nowrap"
+          >
+            {showSelectedOnly ? "Show All" : "Show Selected"}
+            {selectedServices.length > 0 && (
+              <span className="ml-2 bg-white text-primary rounded-full px-2 py-0.5 text-xs font-semibold">
+                {selectedServices.length}
+              </span>
+            )}
+          </Button>
+        </div>
 
-        <ScrollArea className="h-[60vh] pr-2">
-          <Accordion type="multiple" className="space-y-4">
-            {Object.entries(groupedByType).map(([type, items]) => (
-              <AccordionItem key={type} value={type}>
-                <AccordionTrigger className="capitalize font-semibold text-md">
-                  {type}
-                </AccordionTrigger>
-                <AccordionContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>✔</TableHead>
-                        <TableHead>Service</TableHead>
-                        <TableHead>Unit</TableHead>
-                        <TableHead>Price</TableHead>
-                        <TableHead>Qty</TableHead>
-                        <TableHead>Amount</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {items.map((item) => {
-                        const isSelected = selectedServices.find((s) => s.id === item.id);
-                        const quantity = isSelected?.quantity ?? "";
-                        const amount =
-                          isSelected && typeof quantity === "number"
-                            ? item.price * quantity
-                            : 0;
-
-                        return (
-                          <TableRow key={item.id}>
-                            <TableCell>
-                              <Checkbox
-                                checked={!!isSelected}
-                                onCheckedChange={() => toggleService(item.id, item)}
-                              />
-                            </TableCell>
-                            <TableCell>{item.name}</TableCell>
-                            <TableCell>{item.unit}</TableCell>
-                            <TableCell>{item.price.toFixed(2)}</TableCell>
-                            <TableCell>
-                              <Input
-                                type="number"
-                                value={quantity}
-                                min={0}
-                                onChange={(e) =>
-                                  updateQuantity(
-                                    item.id,
-                                    e.target.value === "" ? "" : +e.target.value
-                                  )
-                                }
-                                disabled={!isSelected}
-                              />
-                            </TableCell>
-                            <TableCell>{amount.toFixed(2)}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+        <ScrollArea className="h-[60vh] pr-2 w-full">
+          <div className="w-full">
+            <GroupedServiceSelector
+              catalog={catalog}
+              selectedServices={selectedServices}
+              search={search}
+              showSelectedOnly={showSelectedOnly}
+              onToggleService={toggleService}
+              onUpdateQuantity={updateQuantity}
+              onUpdateSamples={updateSamples}
+              onUpdateParticipants={updateParticipants}
+            />
+          </div>
         </ScrollArea>
       </div>
 
-      <div className="w-96 shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
+      <div className="flex-[1] min-w-[320px] max-w-[420px] shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
         <h3 className="text-lg font-bold mb-2">Summary</h3>
-        <Separator className="mb-2" />
-        {cleanedServices.map((item) => (
-          <div key={item.id} className="flex justify-between text-sm mb-1">
-            <span>{item.name} x {item.quantity}</span>
-            <span>₱{(item.price * item.quantity).toFixed(2)}</span>
-          </div>
-        ))}
-        <Separator className="my-2" />
-        <p className="text-sm">Subtotal: ₱{subtotal.toFixed(2)}</p>
-        {isInternal && (
-          <p className="text-sm">Discount (12%): ₱{discount.toFixed(2)}</p>
-        )}
-        <p className="text-base font-semibold text-primary">
-          Total: ₱{total.toFixed(2)}
+        <p className="text-sm text-muted-foreground mb-2">
+          {cleanedServices.length} {cleanedServices.length === 1 ? 'service' : 'services'} selected
         </p>
+        <Separator className="mb-2" />
+        {cleanedServices.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p className="text-sm">No services selected</p>
+            <p className="text-xs mt-1">Select services from the list to continue</p>
+          </div>
+        ) : (
+          <>
+            {Object.entries(
+              cleanedServices.reduce((acc, item) => {
+                const category = item.type || 'Other';
+                if (!acc[category]) acc[category] = [];
+                acc[category].push(item);
+                return acc;
+              }, {} as Record<string, typeof cleanedServices>)
+            ).map(([category, items]) => (
+              <div key={category} className="mb-3">
+                <p className="text-xs font-semibold text-gray-600 uppercase mb-1">
+                  {category} ({items.length})
+                </p>
+                {items.map((item) => {
+                  const serviceType = item.type.toLowerCase();
+                  let totalAmount = 0;
+                  
+                  if (serviceType.includes('bioinformatics') || serviceType.includes('bioinfo')) {
+                    const samples = (item as any).samples ?? 1;
+                    const samplesAmount = calculateItemTotal(samples, item.price, {
+                      minQuantity: (item as any).minQuantity,
+                      additionalUnitPrice: (item as any).additionalUnitPrice,
+                    });
+                    totalAmount = samplesAmount * item.quantity;
+                  } else if (serviceType.includes('training')) {
+                    const participants = (item as any).participants ?? 1;
+                    const participantsAmount = calculateItemTotal(participants, item.price, {
+                      minQuantity: (item as any).minParticipants,
+                      additionalUnitPrice: (item as any).additionalParticipantPrice,
+                    });
+                    totalAmount = participantsAmount * item.quantity;
+                  } else {
+                    totalAmount = item.price * item.quantity;
+                  }
+                  
+                  return (
+                    <div key={item.id} className="flex justify-between text-sm mb-1 pl-2">
+                      <span className="truncate">
+                        {item.name} x {item.quantity}
+                      </span>
+                      <span className="font-medium">₱{totalAmount.toFixed(2)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </>
+        )}
+        <Separator className="my-2" />
+        <div className="space-y-1">
+          <div className="flex justify-between text-sm">
+            <span>Subtotal:</span>
+            <span>₱{subtotal.toFixed(2)}</span>
+          </div>
+          {isInternal && (
+            <div className="flex justify-between text-sm text-green-600">
+              <span>Applied 12% Discount:</span>
+              <span>-₱{discount.toFixed(2)}</span>
+            </div>
+          )}
+        </div>
+        <Separator className="my-2" />
+        <div className="flex justify-between text-lg font-bold text-primary">
+          <span>Total:</span>
+          <span>₱{total.toFixed(2)}</span>
+        </div>
 
         <Dialog open={openPreview} onOpenChange={setOpenPreview}>
           <DialogTrigger asChild>
-            <Button className="mt-4 w-full">Preview Quotation</Button>
+            <Button 
+              className="mt-4 w-full"
+              disabled={cleanedServices.length === 0}
+            >
+              Preview Quotation
+            </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl h-[90vh] overflow-auto">
-            <DialogHeader>
+          <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+            <DialogHeader className="px-6 pt-6">
               <DialogTitle>Preview Quotation PDF</DialogTitle>
             </DialogHeader>
-            <div className="mt-4">
-              <PDFViewer width="100%" height="600">
+            <div className="flex-1 overflow-hidden px-6 pb-6">
+              <PDFViewer width="100%" height="100%" className="border rounded">
                 <QuotationPDF
                   services={cleanedServices}
                   clientInfo={clientInfo}
                   referenceNumber={referenceNumber}
                   useInternalPrice={isInternal}
                   preparedBy={{
-                    name: adminInfo?.name || "Admin",
-                    position: adminInfo?.position || "N/A",
+                    name: adminInfo?.name || "—",
+                    position: adminInfo?.position || "—",
                   }}
+                  dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                 />
               </PDFViewer>
-              <div className="text-right mt-4">
+            </div>
+            <div className="px-6 pb-6 pt-4 border-t">
+              <div className="text-right">
                 <PDFDownloadLink
                   document={
                     <QuotationPDF
@@ -258,15 +354,16 @@ export default function ManualQuotationPage() {
                       referenceNumber={referenceNumber}
                       useInternalPrice={isInternal}
                       preparedBy={{
-                        name: adminInfo?.name || "Admin",
-                        position: adminInfo?.position || "N/A",
+                        name: adminInfo?.name || "—",
+                        position: adminInfo?.position || "—",
                       }}
+                      dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                     />
                   }
                   fileName={`${referenceNumber || "manual-quotation"}.pdf`}
                 >
                   {({ loading }) => (
-                    <Button disabled={loading}>
+                    <Button disabled={loading || cleanedServices.length === 0}>
                       {loading ? "Preparing..." : "Download Quotation PDF"}
                     </Button>
                   )}

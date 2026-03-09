@@ -88,42 +88,36 @@ export const countByTimePeriod = (items: any[], dateKey: string, period: string)
 export const generateChartData = ({
   projectsData,
   clientsData,
-  trainingsData,
   timeRange,
   customRange
 }: StatisticsBarChartProps) => {
   const now = new Date();
   let filteredProjects = [...projectsData];
   let filteredClients = [...clientsData];
-  let filteredTrainings = [...trainingsData];
   
   if (timeRange === "today") {
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     filteredProjects = filteredProjects.filter(p => toDate(p.startDate) >= todayStart);
     filteredClients = filteredClients.filter(c => toDate(c.createdAt) >= todayStart);
-    filteredTrainings = filteredTrainings.filter(t => toDate(t.dateConducted) >= todayStart);
   } 
   else if (timeRange === "weekly") {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     filteredProjects = filteredProjects.filter(p => toDate(p.startDate) >= weekAgo);
     filteredClients = filteredClients.filter(c => toDate(c.createdAt) >= weekAgo);
-    filteredTrainings = filteredTrainings.filter(t => toDate(t.dateConducted) >= weekAgo);
   }
   else if (timeRange === "monthly") {
     const monthAgo = new Date();
     monthAgo.setMonth(monthAgo.getMonth() - 1);
     filteredProjects = filteredProjects.filter(p => toDate(p.startDate) >= monthAgo);
     filteredClients = filteredClients.filter(c => toDate(c.createdAt) >= monthAgo);
-    filteredTrainings = filteredTrainings.filter(t => toDate(t.dateConducted) >= monthAgo);
   }
   else if (timeRange === "yearly") {
     const yearAgo = new Date();
     yearAgo.setFullYear(yearAgo.getFullYear() - 1);
     filteredProjects = filteredProjects.filter(p => toDate(p.startDate) >= yearAgo);
     filteredClients = filteredClients.filter(c => toDate(c.createdAt) >= yearAgo);
-    filteredTrainings = filteredTrainings.filter(t => toDate(t.dateConducted) >= yearAgo);
   }
   else if (timeRange === "custom" && customRange) {
     filteredProjects = filteredProjects.filter(p => {
@@ -142,14 +136,6 @@ export const generateChartData = ({
         date.getMonth() <= customRange.endMonth
       );
     });
-    filteredTrainings = filteredTrainings.filter(t => {
-      const date = toDate(t.dateConducted);
-      return (
-        date.getFullYear() === customRange.year &&
-        date.getMonth() >= customRange.startMonth &&
-        date.getMonth() <= customRange.endMonth
-      );
-    });
   }
 
   switch(timeRange) {
@@ -160,19 +146,16 @@ export const generateChartData = ({
       return [{
         name: "Today",
         projects: filteredProjects.length,
-        clients: filteredClients.length,
-        trainings: filteredTrainings.length
+        clients: filteredClients.length
       }];
       
     case "weekly":
       const dailyProjects = countByTimePeriod(filteredProjects, 'startDate', 'day');
       const dailyClients = countByTimePeriod(filteredClients, 'createdAt', 'day');
-      const dailyTrainings = countByTimePeriod(filteredTrainings, 'dateConducted', 'day');
       return dailyProjects.map((day, i) => ({
         name: day.name,
         projects: day.count,
-        clients: dailyClients[i]?.count || 0,
-        trainings: dailyTrainings[i]?.count || 0
+        clients: dailyClients[i]?.count || 0
       }));
       
     case "monthly": 
@@ -197,10 +180,6 @@ export const generateChartData = ({
           clients: filteredClients.filter(c => {
             const cDate = toDate(c.createdAt);
             return cDate.toDateString() === date.toDateString();
-          }).length,
-          trainings: filteredTrainings.filter(t => {
-            const tDate = toDate(t.dateConducted);
-            return tDate.toDateString() === date.toDateString();
           }).length
         });
       }
@@ -209,23 +188,19 @@ export const generateChartData = ({
     case "yearly":
       const monthlyProjects = countByTimePeriod(filteredProjects, 'startDate', 'month');
       const monthlyClients = countByTimePeriod(filteredClients, 'createdAt', 'month');
-      const monthlyTrainings = countByTimePeriod(filteredTrainings, 'dateConducted', 'month');
       return monthlyProjects.map((month, i) => ({
         name: month.name,
         projects: month.count,
-        clients: monthlyClients[i]?.count || 0,
-        trainings: monthlyTrainings[i]?.count || 0
+        clients: monthlyClients[i]?.count || 0
       }));
       
     case "all":
       const yearlyProjects = countByTimePeriod(filteredProjects, 'startDate', 'year');
       const yearlyClients = countByTimePeriod(filteredClients, 'createdAt', 'year');
-      const yearlyTrainings = countByTimePeriod(filteredTrainings, 'dateConducted', 'year');
       return yearlyProjects.map((year, i) => ({
         name: year.name,
         projects: year.count,
-        clients: yearlyClients[i]?.count || 0,
-        trainings: yearlyTrainings[i]?.count || 0
+        clients: yearlyClients[i]?.count || 0
       }));
       
     case "custom":
@@ -250,13 +225,6 @@ export const generateChartData = ({
             date.getFullYear() === customRange.year &&
             months[date.getMonth()] === month
           );
-        }).length,
-        trainings: filteredTrainings.filter(t => {
-          const date = toDate(t.dateConducted);
-          return (
-            date.getFullYear() === customRange.year &&
-            months[date.getMonth()] === month
-          );
         }).length
       }));
       
@@ -264,8 +232,7 @@ export const generateChartData = ({
       return [{
         name: "Overview",
         projects: filteredProjects.length,
-        clients: filteredClients.length,
-        trainings: filteredTrainings.length
+        clients: filteredClients.length
       }];
   }
 };

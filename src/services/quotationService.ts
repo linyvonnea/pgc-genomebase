@@ -9,22 +9,40 @@ import {
   setDoc,
   getDoc,
   limit,
+  deleteDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { QuotationRecord } from "@/types/Quotation";
 
 /**
- * Get all quotations related to a specific inquiry ID.
+ * Get all quotations related to a specific inquiry ID or a list of inquiry IDs.
  */
 export async function getQuotationsByInquiryId(
-  inquiryId: string
+  inquiryId: string | string[]
 ): Promise<QuotationRecord[]> {
   const quotationsRef = collection(db, "quotations");
-  const q = query(
-    quotationsRef,
-    where("inquiryId", "==", inquiryId),
-    orderBy("dateIssued", "desc")
-  );
+  
+  let q;
+  if (Array.isArray(inquiryId)) {
+    if (inquiryId.length === 0) return [];
+    // Firestore "in" query limited to 30 elements
+    const ids = inquiryId.filter(id => id && id.trim().length > 0);
+    if (ids.length === 0) return [];
+    
+    // For now support up to 30, if more we'd need to chunk
+    q = query(
+      quotationsRef,
+      where("inquiryId", "in", ids.slice(0, 30)),
+      orderBy("dateIssued", "desc")
+    );
+  } else {
+    q = query(
+      quotationsRef,
+      where("inquiryId", "==", inquiryId),
+      orderBy("dateIssued", "desc")
+    );
+  }
 
   const snapshot = await getDocs(q);
 
@@ -52,11 +70,63 @@ export async function getQuotationsByInquiryId(
 }
 
 /**
+ * Get all quotations related to a specific client name.
+ */
+export async function getQuotationsByClientName(
+  clientName: string
+): Promise<QuotationRecord[]> {
+  // Return empty array if clientName is empty or invalid
+  if (!clientName || clientName.trim().length === 0) {
+    console.log("[Firestore] Empty client name provided, returning empty array");
+    return [];
+  }
+
+  const quotationsRef = collection(db, "quotations");
+  const q = query(
+    quotationsRef,
+    where("name", "==", clientName),
+    orderBy("dateIssued", "desc")
+  );
+
+  const snapshot = await getDocs(q);
+
+  console.log(
+    `[Firestore] Found ${snapshot.size} quotations for client: ${clientName}`
+  );
+
+  const records: QuotationRecord[] = [];
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    const { clientInfo = {}, ...rest } = data;
+
+    records.push({
+      ...rest,
+      ...clientInfo, // flatten name, institution, etc
+      id: docSnap.id,
+      dateIssued:
+        typeof data.dateIssued === "string"
+          ? data.dateIssued
+          : data.dateIssued.toDate().toISOString(),
+    } as QuotationRecord);
+  });
+
+  return records;
+}
+
+/**
  * Save or overwrite a quotation using referenceNumber as the document ID.
  */
 export async function saveQuotationToFirestore(quotation: QuotationRecord) {
   const docRef = doc(db, "quotations", quotation.referenceNumber);
   await setDoc(docRef, quotation);
+}
+
+/**
+ * Delete a quotation by its reference number.
+ */
+export async function deleteQuotation(refNumber: string): Promise<void> {
+  const docRef = doc(db, "quotations", refNumber);
+  await deleteDoc(docRef);
 }
 
 /**
@@ -148,4 +218,23 @@ export async function generateNextReferenceNumber(
       : String(nextNumber);
 
   return `${prefixForYear}-${suffix}`;
+}
+
+/**
+ * Marks an inquiry as having its quotation opened/seen by the client.
+ * 
+ * @param inquiryId - The Firestore document ID of the inquiry to update
+ */
+export async function markQuotationAsSeen(inquiryId: string): Promise<void> {
+  if (!inquiryId) return;
+  
+  try {
+    const inquiryRef = doc(db, "inquiries", inquiryId);
+    await updateDoc(inquiryRef, { 
+      hasOpenedQuotation: true 
+    });
+    console.log(`[Firestore] Inquiry ${inquiryId} marked as quotation seen.`);
+  } catch (error) {
+    console.error(`[Firestore] Error marking inquiry ${inquiryId} as seen:`, error);
+  }
 }

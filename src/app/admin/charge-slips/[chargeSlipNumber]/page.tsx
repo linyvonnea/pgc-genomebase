@@ -17,6 +17,10 @@ import {
 import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { Timestamp } from "firebase/firestore";
+import { logActivity } from "@/services/activityLogService";
+import useAuth from "@/hooks/useAuth";
+import { PermissionGuard } from "@/components/PermissionGuard";
+import ChargeSlipPreviewButton from "@/components/charge-slip/ChargeSlipPreviewButton";
 
 // Utility to normalize to string date
 const formatDate = (val: Date | string | Timestamp | null | undefined): string => {
@@ -35,6 +39,15 @@ const isTimestamp = (val: any): val is Timestamp =>
   val?.seconds !== undefined && val?.nanoseconds !== undefined;
 
 export default function ChargeSlipDetailPage() {
+  return (
+    <PermissionGuard module="chargeSlips" action="view">
+      <ChargeSlipDetailContent />
+    </PermissionGuard>
+  );
+}
+
+function ChargeSlipDetailContent() {
+  const { adminInfo } = useAuth();
   const { chargeSlipNumber } = useParams() as { chargeSlipNumber: string };
   const router = useRouter();
 
@@ -62,10 +75,22 @@ export default function ChargeSlipDetailPage() {
       if (isTimestamp(rawDate)) setDateOfOR(rawDate);
       else if (typeof rawDate === "string") setDateOfOR(Timestamp.fromDate(new Date(rawDate)));
 
+      // Log VIEW activity
+      await logActivity({
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
+        action: "VIEW",
+        entityType: "charge_slip",
+        entityId: chargeSlipNumber,
+        entityName: `Charge Slip ${chargeSlipNumber}`,
+        description: `Viewed charge slip: ${chargeSlipNumber}`,
+      });
+
       setLoading(false);
     };
     fetch();
-  }, [chargeSlipNumber]);
+  }, [chargeSlipNumber, adminInfo]);
 
   useEffect(() => {
     if (orNumber.trim() && !dateOfOR) {
@@ -77,12 +102,28 @@ export default function ChargeSlipDetailPage() {
     if (!record?.id) return;
 
     try {
-      await updateChargeSlip(record.id, {
+      const updates = {
         dvNumber,
         orNumber,
         notes,
         status,
         dateOfOR,
+      };
+      
+      await updateChargeSlip(record.id, updates);
+
+      // Log UPDATE activity
+      await logActivity({
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
+        action: "UPDATE",
+        entityType: "charge_slip",
+        entityId: record.referenceNumber || record.chargeSlipNumber,
+        entityName: `Charge Slip ${record.chargeSlipNumber}`,
+        description: `Updated charge slip: ${record.chargeSlipNumber}`,
+        changesAfter: updates,
+        changedFields: Object.keys(updates),
       });
 
       toast.success("Charge slip updated successfully.");
@@ -285,6 +326,17 @@ export default function ChargeSlipDetailPage() {
               className="w-full min-h-[100px]"
             />
           </div>
+        </div>
+
+        {/* Preview Charge Slip Card */}
+        <div className="bg-gradient-to-r from-[#166FB5]/5 via-[#4038AF]/5 to-[#912ABD]/5 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+          <h2 className="text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
+            <div className="w-2 h-2 bg-gradient-to-r from-[#166FB5] to-[#4038AF] rounded-full"></div>
+            Preview Document
+          </h2>
+          <p className="text-sm text-slate-600 mb-4">Preview the charge slip PDF document</p>
+          
+          <ChargeSlipPreviewButton record={record} />
         </div>
 
         {/* Save Changes Card */}

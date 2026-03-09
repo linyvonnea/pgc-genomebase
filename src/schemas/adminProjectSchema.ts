@@ -3,6 +3,7 @@ import { z } from "zod";
 export const adminProjectSchema = z.object({
   year: z.number().optional(),
   pid: z.string().optional(),
+  iid: z.union([z.string(), z.array(z.string())]).optional().or(z.literal("")),
   startDate: z.date().optional(),
   title: z.string().optional(),
   projectTag: z.string().optional(),
@@ -13,9 +14,10 @@ export const adminProjectSchema = z.object({
   lead: z.string().optional(),
   serviceRequested: z.array(z.enum([
     "Laboratory Services",
-    "Retail Services",
+    "Retail Sales",
     "Equipment Use",
-    "Bioinformatics Analysis"
+    "Bioinformatics Analysis",
+    "Training"
   ])).optional().or(z.undefined()),
   personnelAssigned: z.string().optional(),
   notes: z.string().optional(),

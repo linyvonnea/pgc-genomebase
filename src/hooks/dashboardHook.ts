@@ -1,7 +1,7 @@
 // src/hooks/useDashboardData.ts
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Timestamp } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { fetchAllData, fetchFilteredData } from "../services/dashboardUtils";
@@ -15,17 +15,21 @@ const monthNames = [
 
 export function useDashboardData() {
   const [userName, setUserName] = useState("User");
+  const [totalProjects, setTotalProjects] = useState(0);
   const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
   const [filteredClients, setFilteredClients] = useState<any[]>([]);
-  const [filteredTrainings, setFilteredTrainings] = useState<any[]>([]);
   const [filteredChargeSlips, setFilteredChargeSlips] = useState<any[]>([]);
   const [totalIncome, setTotalIncome] = useState(0);
 
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
 
-  const [timeRange, setTimeRange] = useState<TimeRange>("all");
-  const [customRange, setCustomRange] = useState<CustomRange | undefined>();
+  const [timeRange, setTimeRange] = useState<TimeRange>("custom");
+  const [customRange, setCustomRange] = useState<CustomRange | undefined>({
+    year: new Date().getFullYear(),
+    startMonth: 0,
+    endMonth: 11
+  });
 
   useEffect(() => {
     const auth = getAuth();
@@ -37,19 +41,15 @@ export function useDashboardData() {
 
   const fetchAllDataHandler = async () => {
     await fetchAllData({
+      setTotalProjects,
       setFilteredProjects,
       setFilteredClients,
       setFilteredChargeSlips,
-      setFilteredTrainings,
       setTotalIncome
     });
   };
 
-  useEffect(() => {
-    fetchAllDataHandler().then(() => setLoading(false));
-  }, []);
-
-  const handleTimeFilterChange = async (range: TimeRange | CustomRange) => {
+  const handleTimeFilterChange = useCallback(async (range: TimeRange | CustomRange) => {
     setLoading(true);
 
     if (typeof range === "string") {
@@ -86,7 +86,7 @@ export function useDashboardData() {
       const startTS = Timestamp.fromDate(start);
       const endTS = Timestamp.fromDate(new Date());
 
-      await fetchFilteredData(startTS, endTS, { setFilteredProjects, setFilteredClients, setFilteredChargeSlips, setFilteredTrainings, setTotalIncome });
+      await fetchFilteredData(startTS, endTS, { setTotalProjects, setFilteredProjects, setFilteredClients, setFilteredChargeSlips, setTotalIncome });
       setLoading(false);
       return;
     }
@@ -99,9 +99,9 @@ export function useDashboardData() {
     const startTS = Timestamp.fromDate(startDate);
     const endTS = Timestamp.fromDate(endDate);
 
-    await fetchFilteredData(startTS, endTS, { setFilteredProjects, setFilteredClients, setFilteredChargeSlips, setFilteredTrainings, setTotalIncome });
+      await fetchFilteredData(startTS, endTS, { setTotalProjects, setFilteredProjects, setFilteredClients, setFilteredChargeSlips, setTotalIncome });
     setLoading(false);
-  };
+  }, []);
 
   const exportToPDF = async () => {
     setIsExporting(true);
@@ -123,9 +123,9 @@ export function useDashboardData() {
     userName,
     loading,
     isExporting,
+    totalProjects,
     filteredProjects,
     filteredClients,
-    filteredTrainings,
     timeRange,
     customRange,
     totalIncome,

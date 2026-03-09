@@ -3,8 +3,17 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { PermissionGuard } from "@/components/PermissionGuard";
 
 export default function NewChargeSlipPage() {
+  return (
+    <PermissionGuard module="chargeSlips" action="create">
+      <NewChargeSlipContent />
+    </PermissionGuard>
+  );
+}
+
+function NewChargeSlipContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 

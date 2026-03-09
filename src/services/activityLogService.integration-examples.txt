@@ -1,0 +1,196 @@
+// Example: How to integrate activity logging into your services
+// This file demonstrates integration patterns - not meant to be imported
+
+/*
+===========================================
+1. CLIENT SERVICE INTEGRATION EXAMPLE
+===========================================
+*/
+
+// In src/services/clientService.ts or similar
+
+import { logActivity, getUserInfo } from "./activityLogService";
+
+// Example: Log when creating a client
+export async function createClient(clientData: Client, adminInfo: any) {
+  // Create the client
+  const docRef = await addDoc(collection(db, "clients"), clientData);
+  
+  // Log the activity
+  await logActivity({
+    ...getUserInfo(adminInfo),
+    action: "CREATE",
+    entityType: "client",
+    entityId: docRef.id,
+    entityName: clientData.name,
+    description: `Created new client: ${clientData.name}`,
+    changesAfter: clientData,
+  });
+  
+  return docRef.id;
+}
+
+// Example: Log when updating a client
+export async function updateClient(cid: string, updates: Partial<Client>, adminInfo: any, oldData?: Client) {
+  // Get old data if not provided
+  if (!oldData) {
+    const docSnap = await getDoc(doc(db, "clients", cid));
+    oldData = docSnap.data() as Client;
+  }
+  
+  // Update the client
+  await updateDoc(doc(db, "clients", cid), updates);
+  
+  // Log the activity
+  await logActivity({
+    ...getUserInfo(adminInfo),
+    action: "UPDATE",
+    entityType: "client",
+    entityId: cid,
+    entityName: updates.name || oldData.name,
+    description: `Updated client: ${oldData.name}`,
+    changesBefore: oldData,
+    changesAfter: { ...oldData, ...updates },
+    changedFields: Object.keys(updates),
+  });
+}
+
+// Example: Log when deleting a client
+export async function deleteClient(cid: string, adminInfo: any) {
+  // Get client data before deletion
+  const docSnap = await getDoc(doc(db, "clients", cid));
+  const clientData = docSnap.data() as Client;
+  
+  // Delete the client
+  await deleteDoc(doc(db, "clients", cid));
+  
+  // Log the activity
+  await logActivity({
+    ...getUserInfo(adminInfo),
+    action: "DELETE",
+    entityType: "client",
+    entityId: cid,
+    entityName: clientData.name,
+    description: `Deleted client: ${clientData.name}`,
+    changesBefore: clientData,
+  });
+}
+
+/*
+===========================================
+2. MODAL/FORM INTEGRATION EXAMPLE
+===========================================
+*/
+
+// In src/components/forms/EditClientModal.tsx
+
+import { logActivity, getUserInfo } from "@/services/activityLogService";
+import useAuth from "@/hooks/useAuth";
+
+export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
+  const { adminInfo } = useAuth();
+  
+  const onSubmit = async (data: AdminClientData) => {
+    setIsLoading(true);
+    try {
+      // Store old data for logging
+      const oldData = { ...client };
+      
+      // Perform update
+      await updateClientAndProjectName(client.cid!, updateData, client.name, pidChanged ? client.pid : undefined);
+      
+      // Log the activity
+      await logActivity({
+        ...getUserInfo(adminInfo),
+        action: "UPDATE",
+        entityType: "client",
+        entityId: client.cid!,
+        entityName: data.name,
+        description: `Updated client information for ${client.name}`,
+        changesBefore: oldData,
+        changesAfter: data,
+        changedFields: Object.keys(data).filter(key => oldData[key] !== data[key]),
+      });
+      
+      toast.success("Client updated successfully!");
+      setIsOpen(false);
+      onSuccess?.();
+    } catch (error) {
+      console.error("Error updating client:", error);
+      toast.error("Failed to update client. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+}
+
+/*
+===========================================
+3. PDF GENERATION LOGGING EXAMPLE
+===========================================
+*/
+
+// In src/components/quotation/QuotationBuilder.tsx
+
+const handleSaveAndDownload = async () => {
+  try {
+    // ... save logic
+    await saveQuotation(record);
+    
+    // Log the generation
+    await logActivity({
+      ...getUserInfo(adminInfo),
+      action: "GENERATE",
+      entityType: "quotation",
+      entityId: record.referenceNumber,
+      entityName: `Quotation ${record.referenceNumber}`,
+      description: `Generated quotation PDF for ${client?.name}`,
+    });
+    
+    // ... download logic
+  } catch (error) {
+    // handle error
+  }
+};
+
+/*
+===========================================
+4. FIRESTORE RULES FOR LOGS COLLECTION
+===========================================
+Add these rules to your firestore.rules file:
+*/
+
+/*
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Activity Logs - admins can read/write, system can write
+    match /activityLogs/{logId} {
+      // Only admins can read logs
+      allow read: if request.auth != null && 
+                    get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'admin';
+      
+      // Only authenticated users can create logs (no update/delete)
+      allow create: if request.auth != null;
+      
+      // Never allow updates or deletes
+      allow update, delete: if false;
+    }
+  }
+}
+*/
+
+/*
+===========================================
+5. FIRESTORE INDEXES NEEDED
+===========================================
+Create these composite indexes in Firebase Console:
+
+Collection: activityLogs
+Fields:
+1. userId (Ascending), timestamp (Descending)
+2. entityType (Ascending), timestamp (Descending)
+3. entityId (Ascending), timestamp (Descending)
+4. action (Ascending), timestamp (Descending)
+5. entityType (Ascending), entityId (Ascending), timestamp (Descending)
+*/

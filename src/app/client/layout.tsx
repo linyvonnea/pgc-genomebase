@@ -12,9 +12,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (!loading && !user) {
-      // If not logged in, but on /client/client-info, redirect to /verify instead of /login
+      // If not logged in, but on /client/client-info, redirect to /portal instead of /login
       if (typeof window !== 'undefined' && window.location.pathname === '/client/client-info') {
-        router.replace('/verify');
+        router.replace('/portal');
       } else {
         router.replace('/login');
       }
@@ -32,9 +32,9 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
       <Header user={user} onLogout={signOut} />
-      <main className="p-6 flex-1">{children}</main>
+      <main className="flex-1 overflow-y-auto">{children}</main>
     </div>
   );
 }

@@ -2,12 +2,15 @@
 "use client";
 
 import QuotationBuilder from "@/components/quotation/QuotationBuilder";
+import { PermissionGuard } from "@/components/PermissionGuard";
 
 export default function BuilderPage() {
   return (
-    <main className="p-4">
-      <h1 className="text-2xl font-semibold mb-4">Quotation Builder</h1>
-      <QuotationBuilder />
-    </main>
+    <PermissionGuard module="quotations" action="view">
+      <main className="p-4">
+        <h1 className="text-2xl font-semibold mb-4">Quotation Builder</h1>
+        <QuotationBuilder />
+      </main>
+    </PermissionGuard>
   );
 }

@@ -7,12 +7,15 @@ import {
   onAuthStateChanged,
   User,
 } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
+import { logActivity } from "@/services/activityLogService";
+import { UserRole } from "@/types/Permissions";
 
 interface AdminInfo {
   name: string;
   position: string;
-  email: string; 
+  email: string;
+  role?: UserRole;
 }
 
 export default function useAuth() {
@@ -38,43 +41,48 @@ export default function useAuth() {
 
       // Check if admin (from "admins" collection by email)
       const adminRef = doc(db, "admins", email);
-      const adminSnap = await getDoc(adminRef);
+      
+      // Use real-time listener for admin role changes
+      const unsubscribeAdmin = onSnapshot(adminRef, async (adminSnap) => {
+        if (adminSnap.exists()) {
+          const { name, position, role } = adminSnap.data();
+          setIsAdmin(true);
+          setAdminInfo({ name, position, email, role: role || "viewer" });
 
-      if (adminSnap.exists()) {
-        const { name, position } = adminSnap.data();
-        setIsAdmin(true);
-        setAdminInfo({ name, position, email });
-
-        // Save admin in /users if not already
-        const userRef = doc(db, "users", uid);
-        const userSnap = await getDoc(userRef);
-        if (!userSnap.exists()) {
-          await setDoc(userRef, {
-            uid,
-            name,
-            email,
-            photoURL: firebaseUser.photoURL || "",
-            role: "admin",
-            createdAt: new Date().toISOString(),
-          });
+          // Save admin in /users if not already
+          const userRef = doc(db, "users", uid);
+          const userSnap = await getDoc(userRef);
+          if (!userSnap.exists()) {
+            await setDoc(userRef, {
+              uid,
+              name,
+              email,
+              photoURL: firebaseUser.photoURL || "",
+              role: "admin",
+              createdAt: new Date().toISOString(),
+            });
+          }
+        } else {
+          // Save non-admin as client in /users
+          const userRef = doc(db, "users", uid);
+          const userSnap = await getDoc(userRef);
+          if (!userSnap.exists()) {
+            await setDoc(userRef, {
+              uid,
+              name: firebaseUser.displayName || "",
+              email,
+              photoURL: firebaseUser.photoURL || "",
+              role: "client",
+              createdAt: new Date().toISOString(),
+            });
+          }
         }
-      } else {
-        // Save non-admin as client in /users
-        const userRef = doc(db, "users", uid);
-        const userSnap = await getDoc(userRef);
-        if (!userSnap.exists()) {
-          await setDoc(userRef, {
-            uid,
-            name: firebaseUser.displayName || "",
-            email,
-            photoURL: firebaseUser.photoURL || "",
-            role: "client",
-            createdAt: new Date().toISOString(),
-          });
-        }
-      }
 
-      setLoading(false);
+        setLoading(false);
+      });
+      
+      // Store unsubscribe function to clean up later
+      return () => unsubscribeAdmin();
     });
 
     return () => unsubscribe();
@@ -82,13 +90,48 @@ export default function useAuth() {
 
   const signIn = async () => {
     try {
-      await signInWithPopup(auth, googleProvider);
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      
+      // Log the login activity
+      try {
+        await logActivity({
+          userId: user.email || user.uid,
+          userEmail: user.email || "unknown@user.com",
+          userName: user.displayName || "Unknown User",
+          action: "LOGIN",
+          entityType: "user",
+          entityId: user.uid,
+          entityName: user.displayName || user.email || "User",
+          description: `User ${user.displayName || user.email} logged in`,
+        });
+      } catch (logError) {
+        console.error("Failed to log login activity:", logError);
+      }
     } catch (error) {
       console.error("Google sign-in error:", error);
     }
   };
 
   const signOut = async () => {
+    // Log the logout activity before signing out
+    if (user) {
+      try {
+        await logActivity({
+          userId: user.email || user.uid,
+          userEmail: user.email || "unknown@user.com",
+          userName: user.displayName || "Unknown User",
+          action: "LOGOUT",
+          entityType: "user",
+          entityId: user.uid,
+          entityName: user.displayName || user.email || "User",
+          description: `User ${user.displayName || user.email} logged out`,
+        });
+      } catch (logError) {
+        console.error("Failed to log logout activity:", logError);
+      }
+    }
+    
     await firebaseSignOut(auth);
     setUser(null);
     setIsAdmin(false);

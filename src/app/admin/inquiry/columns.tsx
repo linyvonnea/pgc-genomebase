@@ -1,6 +1,6 @@
-/**
+﻿/**
  * Admin Inquiry Table Column Definitions
- * 
+ *
  * This file defines the column structure for the inquiry data table in the admin interface.
  * It uses TanStack Table (React Table) to create a sortable, filterable table with custom cell renderers and actions.
  */
@@ -10,49 +10,49 @@
 import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { Inquiry } from "@/types/Inquiry";
-import { inquirySchema } from "@/schemas/inquirySchema";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { EditInquiryModal } from "@/components/forms/EditInquiryModal";
-
-/**
- * Utility function to validate inquiry data using Zod schema
- * 
- * This function ensures that the inquiry data conforms to the expected structure
- * before rendering. 
- */
-const validateInquiry = (data: any) => {
-  const result = inquirySchema.safeParse(data);
-  return {
-    isValid: result.success,
-    data: result.success ? result.data : null,
-    error: result.success ? null : result.error,
-  };
-};
+import useAuth from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { QuoteButton } from "./QuoteButton";
+import UnreadBadge from "@/components/chat/UnreadBadge";
+import { Copy, User, Eye } from "lucide-react";
+import { toast } from "sonner";
 
 /**
  * Utility function to get appropriate CSS classes for status badges
- * 
+ *
  * Provides consistent color coding across the admin interface:
  * - Green: Approved clients (ready for service)
  * - Blue: Quotation only (pricing information provided)
+ * - Orange: Ongoing quotation (quotation in progress)
  * - Yellow: Pending (awaiting admin review)
- * 
+ *
  */
 const getStatusColor = (status: string) => {
   switch (status) {
     case "Approved Client":
-      return "bg-green-100 text-green-800"; 
+      return "bg-green-100 text-green-800";
     case "Quotation Only":
-      return "bg-blue-100 text-blue-800";   
+      return "bg-blue-100 text-blue-800";
+    case "Ongoing Quotation":
+      return "bg-orange-100 text-orange-800";
     case "Pending":
     default:
-      return "bg-yellow-100 text-yellow-800"; 
+      return "bg-yellow-100 text-yellow-800";
   }
 };
 
 /**
  * Column definitions for the inquiry data table
- * 
+ *
  * Each column defines how data should be displayed, including custom cell renderers
  * for complex data types like dates and status badges. The columns are configured
  * to work with TanStack Table's sorting and filtering features.
@@ -61,87 +61,218 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
     header: "Inquiry ID",
-  },
-  {
-    accessorKey: "name",
-    header: "Name",
-  },
-  {
-    accessorKey: "email",
-    header: "Email",
-  },
-  {
-    accessorKey: "affiliation",
-    header: "Affiliation",
-  },
-  {
-    accessorKey: "designation",
-    header: "Designation",
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    size: 120, 
+    size: 200,
     cell: ({ row }) => {
-      // Custom cell renderer with data validation
-      const { isValid, data } = validateInquiry(row.original);
+      const inquiry = row.original;
 
-      if (!isValid || !data) {
-        return <span className="text-red-500">Invalid data</span>;
-      }
+      // Check if inquiry is within last 24 hours
+      const isRecent = (() => {
+        if (!inquiry.createdAt) return false;
+        const date =
+          inquiry.createdAt instanceof Date
+            ? inquiry.createdAt
+            : new Date(inquiry.createdAt);
+        const now = new Date();
+        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        return date >= oneDayAgo;
+      })();
 
-      // Render status as a colored badge
+      // NEW badge logic:
+      // 1. Show if status is "Pending" (regardless of time)
+      // 2. Show if it's very recent (last 24h) EXCEPT if it's already quoted
+      const isQuoted = [
+        "Ongoing Quotation",
+        "Approved Client",
+        "Quotation Only",
+      ].includes(inquiry.status);
+      const showNew = (inquiry.status === "Pending" || isRecent) && !isQuoted;
+
+      const handleCopy = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+          await navigator.clipboard.writeText(inquiry.id);
+          toast.success("Inquiry ID copied to clipboard");
+        } catch (err) {
+          toast.error("Failed to copy Inquiry ID");
+        }
+      };
+
       return (
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
-            data.status
-          )}`}
-        >
-          {data.status}
-        </span>
+        <div className="flex items-center gap-2">
+          {showNew && (
+            <Badge
+              variant="destructive"
+              className="h-4 px-1 text-[8px] animate-pulse shrink-0"
+            >
+              NEW
+            </Badge>
+          )}
+          <span className="font-mono text-xs truncate" title={inquiry.id}>
+            {inquiry.id}
+          </span>
+          <button
+            onClick={handleCopy}
+            className="p-1 hover:bg-slate-100 rounded shrink-0"
+            title="Copy Inquiry ID"
+          >
+            <Copy className="h-3 w-3 text-slate-500" />
+          </button>
+        </div>
       );
     },
   },
   {
     accessorKey: "createdAt",
     header: "Date",
+    size: 85,
     cell: ({ row }) => {
-      // Custom date formatting with validation
-      const { isValid, data } = validateInquiry(row.original);
-      
-      if (!isValid || !data) {
+      const createdAt = row.original.createdAt;
+
+      if (!createdAt) {
+        return <span className="text-muted-foreground italic">â€”</span>;
+      }
+
+      // Ensure we have a Date object
+      const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
+
+      if (isNaN(date.getTime())) {
         return <span className="text-red-500">Invalid date</span>;
       }
-      // Format date for display (MM/DD/YYYY format)
-      return new Date(data.createdAt).toLocaleDateString();
+
+      // Format date for display (YYYY-MM-DD format for consistency)
+      return date.toLocaleDateString("en-CA");
+    },
+  },
+  {
+    accessorKey: "name",
+    header: "Name",
+    size: 130,
+    cell: ({ getValue }) => {
+      const name = getValue() as string;
+      return (
+        <div className="max-w-[130px] truncate" title={name}>
+          {name}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "email",
+    header: "Email",
+    size: 150,
+    cell: ({ getValue }) => {
+      const email = (getValue() as string) || "â€”";
+      return (
+        <div className="max-w-[150px] truncate" title={email}>
+          {email}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "affiliation",
+    header: "Affiliation",
+    size: 150,
+    cell: ({ getValue }) => {
+      const affiliation = getValue() as string;
+      return (
+        <div className="max-w-[150px] truncate" title={affiliation}>
+          {affiliation}
+        </div>
+      );
+    },
+  },
+  // Designation - Hidden for cleaner view
+  // {
+  //   accessorKey: "designation",
+  //   header: "Designation",
+  // },
+  {
+    accessorKey: "status",
+    header: "Status",
+    size: 200,
+    cell: ({ row }) => {
+      const router = useRouter();
+      const inquiry = row.original;
+      const status = inquiry.status || "Pending";
+      const hasLoggedIn = inquiry.hasLoggedIn;
+      const hasOpenedQuotation = inquiry.hasOpenedQuotation;
+
+      // Render status as a colored badge
+      return (
+        <div className="flex items-center gap-1.5 min-w-[180px]">
+          <span
+            className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
+              status,
+            )}`}
+          >
+            {status}
+          </span>
+          <div className="flex items-center gap-1 shrink-0">
+            {!!hasLoggedIn && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <User className="h-4 w-4 text-green-600 fill-green-600 cursor-default" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs font-semibold">
+                      Client has logged into portal
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {!!hasOpenedQuotation && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Eye
+                      className="h-4 w-4 text-blue-500 cursor-default"
+                      strokeWidth={3}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs font-semibold">
+                      Client has viewed quotation
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            <UnreadBadge
+              inquiryId={inquiry.id}
+              role="admin"
+              senderId={inquiry.email}
+              senderName={inquiry.name}
+            />
+          </div>
+        </div>
+      );
     },
   },
   {
     id: "actions", // Custom column ID since it doesn't map to data
-    header: "Actions",
+    header: () => <div className="text-center w-full">Actions</div>,
+    size: 140,
     cell: ({ row }) => {
       const inquiry = row.original;
       const router = useRouter();
+      const { adminInfo } = useAuth();
+      const { canEdit, canCreate, canView } = usePermissions(adminInfo?.role);
 
       return (
-        <div className="flex items-center gap-2">
-          {/* Edit inquiry modal trigger */}
-          <EditInquiryModal
-            key={inquiry.id} // Force re-render when inquiry changes
-            inquiry={inquiry}
-            onSuccess={() => router.refresh()}
-          />
-          
-          {/* Generate quotation button */}
-          <Button
-            onClick={() =>
-              router.push(`/admin/quotations/new?inquiryId=${inquiry.id}`)
-            }
-            variant="outline"
-            className="text-sm"
-          >
-            Quote
-          </Button>
+        <div className="flex items-center justify-center gap-2">
+          {canCreate("quotations") && <QuoteButton inquiryId={inquiry.id} />}
+
+          {/* Edit inquiry modal trigger - only show if user has edit permission */}
+          {canEdit("inquiries") && (
+            <EditInquiryModal
+              key={inquiry.id} // Force re-render when inquiry changes
+              inquiry={inquiry}
+              onSuccess={() => router.refresh()}
+            />
+          )}
         </div>
       );
     },

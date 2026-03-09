@@ -18,18 +18,20 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp, Timestamp, collection, query, where, getDocs } from "firebase/firestore";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
+import { getNextPid } from "@/services/projectsService";
+import { saveProjectRequest, getProjectRequest, getProjectRequestById, getProjectRequestsByInquiry } from "@/services/projectRequestService";
 
 export default function ProjectForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Get project, client, and inquiry IDs from URL
-  const pid = searchParams.get("pid");
-  const cid = searchParams.get("cid");
+  // Get inquiry ID and email from URL
   const inquiryId = searchParams.get("inquiryId");
+  const email = searchParams.get("email");
+  const [isDraft, setIsDraft] = useState(true); // New projects start as drafts
 
   // Form state
   const [formData, setFormData] = useState<ProjectFormData>({
@@ -46,71 +48,93 @@ export default function ProjectForm() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingData, setPendingData] = useState<ProjectFormData | null>(null);
 
-  // Fetch project data if editing an existing project
+  // Fetch existing project request draft if it exists
   useEffect(() => {
-    async function fetchProject() {
-      if (!pid) {
-        setLoading(false);
-        return;
-      }
+    async function fetchProjectRequest() {
       setLoading(true);
       try {
-        const docRef = doc(db, "projects", pid);
-        const snap = await getDoc(docRef);
-        if (snap.exists()) {
-          const data = snap.data();
-          setFormData({
-            title: data.title || "",
-            projectLead: data.lead || "",
-            startDate: data.startDate?.toDate?.() || new Date(data.startDate),
-            sendingInstitution: data.sendingInstitution || "",
-            fundingInstitution: data.fundingInstitution || "",
-          });
+        if (!inquiryId) {
+          setLoading(false);
+          return;
         }
-      } catch {
+
+        // Check if a draft project request exists
+        const existingRequest = await getProjectRequest(inquiryId);
+
+        if (existingRequest && existingRequest.status === "draft") {
+          console.log("📝 Loading existing draft project request");
+          setFormData({
+            title: existingRequest.title || "",
+            projectLead: existingRequest.projectLead || "",
+            startDate: existingRequest.startDate?.toDate?.() || new Date(),
+            sendingInstitution: (existingRequest.sendingInstitution || "Government") as "UP System" | "SUC/HEI" | "Government" | "Private/Local" | "International" | "N/A",
+            fundingInstitution: existingRequest.fundingInstitution || "",
+          });
+          setIsDraft(true);
+        } else if (existingRequest && existingRequest.status === "pending") {
+          console.log("⏳ Project is pending approval, redirecting to client-info");
+          toast.info("Your project is currently pending approval.");
+          const params = new URLSearchParams();
+          if (email) params.set("email", email);
+          if (inquiryId) params.set("inquiryId", inquiryId);
+          router.push(`/client/client-info?${params.toString()}`);
+          return;
+        } else if (existingRequest && existingRequest.status === "approved" && existingRequest.pid) {
+          // If already has approved project, redirect to client-info
+          console.log("✅ Project already approved, redirecting to client-info");
+          const params = new URLSearchParams();
+          if (email) params.set("email", email);
+          if (inquiryId) params.set("inquiryId", inquiryId);
+          if (existingRequest.pid) params.set("pid", existingRequest.pid);
+          router.push(`/client/client-info?${params.toString()}`);
+          return;
+        } else {
+          console.log("🆕 New project request");
+          setIsDraft(true);
+        }
+      } catch (error) {
+        console.error("Failed to load project request:", error);
         toast.error("Failed to load project data.");
       } finally {
         setLoading(false);
       }
     }
-    fetchProject();
-  }, [pid]);
+    fetchProjectRequest();
+  }, [inquiryId, email, router]);
 
-  // Permission check: Only allow access if user is contact person and client info is submitted
+  // Permission check: Verify email and inquiryId exist and are valid
   useEffect(() => {
     async function checkPermission() {
-      if (!cid) {
-        toast.error("Missing client ID. Please verify first.");
-        router.replace("/verify");
+      // Require email and inquiryId
+      if (!email || !inquiryId) {
+        toast.error("Missing required parameters. Please verify first.");
+        router.replace("/portal");
         return;
       }
-      // Defensive: check both by cid and by contact person's email from inquiry
-      let clientDoc = await getDoc(doc(db, "clients", cid));
-      let clientData = clientDoc.exists() ? clientDoc.data() : null;
-      let inquiryDocSnap = null;
-      let inquiry = null;
-      if (inquiryId) {
-        inquiryDocSnap = await getDoc(doc(db, "inquiries", inquiryId));
-        if (inquiryDocSnap.exists()) {
-          inquiry = inquiryDocSnap.data();
-        }
+      
+      // Verify inquiry exists
+      const inquiryDocSnap = await getDoc(doc(db, "inquiries", inquiryId));
+      if (!inquiryDocSnap.exists()) {
+        toast.error("Invalid inquiry ID.");
+        router.replace("/portal");
+        return;
       }
-      if (!clientData && inquiry) {
-        // Try to get by contact person's email from inquiry
-        const contactDoc = await getDoc(doc(db, "clients", inquiry.email));
-        if (contactDoc.exists()) {
-          clientData = contactDoc.data();
-        }
-      }
-      // Only allow access if isContactPerson is true AND inquiry.haveSubmitted is true
-      if (!clientData || !clientData.isContactPerson || !inquiry?.haveSubmitted) {
-        toast.error("Only the contact person can access the project information form after submitting client info.");
-        router.replace("/client/client-info?email=" + encodeURIComponent(clientData?.email || "") + "&inquiryId=" + encodeURIComponent(inquiryId || ""));
+      
+      const inquiry = inquiryDocSnap.data();
+      
+      // Verify email is associated with this inquiry (contact person or member)
+      const emailLower = email.toLowerCase();
+      const contactEmailLower = inquiry.email?.toLowerCase() || "";
+      const memberEmails = (inquiry.memberEmails || []).map((e: string) => e.toLowerCase());
+      
+      if (emailLower !== contactEmailLower && !memberEmails.includes(emailLower)) {
+        toast.error("You do not have access to this inquiry.");
+        router.replace("/portal");
         return;
       }
     }
     checkPermission();
-  }, [cid, inquiryId, router]);
+  }, [email, inquiryId, router]);
 
   // Handle form field changes
   const handleChange = (field: keyof ProjectFormData, value: any) => {
@@ -135,60 +159,57 @@ export default function ProjectForm() {
     setShowConfirmModal(true); // Show confirmation modal
   };
 
-  // On confirm in modal, save project to Firestore
+  // On confirm in modal, save project request as draft
   const handleConfirmSave = async () => {
     setShowConfirmModal(false);
     try {
       const result = projectFormSchema.safeParse(pendingData);
+      
       if (!result.success) {
         toast.error("Invalid data. Please review your entries.");
         return;
       }
-      const year = result.data.startDate.getFullYear();
-      const docRef = doc(db, "projects", pid!);
-      let clientName = "";
-      if (cid) {
-        const clientDoc = await getDoc(doc(db, "clients", cid));
-        if (clientDoc.exists()) {
-          clientName = clientDoc.data().name || "";
+
+      if (!inquiryId || !email) {
+        toast.error("Missing required parameters.");
+        return;
+      }
+
+      // Get requester name from inquiry
+      let requesterName = email;
+      try {
+        const inquiryDoc = await getDoc(doc(db, "inquiries", inquiryId));
+        if (inquiryDoc.exists()) {
+          requesterName = inquiryDoc.data().name || email;
         }
+      } catch (error) {
+        console.warn("Could not fetch requester name:", error);
       }
-      // Prepare project payload
-      const snap = await getDoc(docRef);
-      let createdAt = serverTimestamp();
-      let existingClientNames: string[] = [];
-      if (snap.exists()) {
-        createdAt = snap.data().createdAt || createdAt;
-        existingClientNames = snap.data().clientNames || [];
-      }
-      const updatedClientNames = clientName && !existingClientNames.includes(clientName) 
-        ? [...existingClientNames, clientName]
-        : existingClientNames;
-      const payload = {
-        pid,
-        iid: inquiryId || "",
-        year,
-        startDate: Timestamp.fromDate(result.data.startDate),
-        createdAt,
-        lead: result.data.projectLead,
-        clientNames: updatedClientNames,
+
+      // Save as draft project request (NO PID yet)
+      const savedId = await saveProjectRequest({
+        inquiryId,
+        requestedBy: email,
+        requestedByName: requesterName,
         title: result.data.title,
-        projectTag: "",
-        status: "",
+        projectLead: result.data.projectLead,
+        startDate: Timestamp.fromDate(result.data.startDate),
         sendingInstitution: result.data.sendingInstitution,
-        fundingCategory: "",
         fundingInstitution: result.data.fundingInstitution,
-        serviceRequested: [],
-        personnelAssigned: "",
-        notes: "",
-      };
-      await setDoc(docRef, payload, { merge: true });
-      toast.success("Project added successfully! Redirecting...");
+        status: "draft",
+      });
+
+      toast.success("Project draft saved! Now add your information as Primary Member.");
+      
       setTimeout(() => {
-        router.push("/client/project-info/submitted");
+        const params = new URLSearchParams();
+        if (email) params.set("email", email);
+        if (inquiryId) params.set("inquiryId", inquiryId);
+        router.push(`/client/client-info?${params.toString()}`);
       }, 1500);
-    } catch {
-      toast.error("Error updating project. Please try again.");
+    } catch (error) {
+      console.error("Error saving project draft:", error);
+      toast.error("Error saving project information. Please try again.");
     }
   };
 
@@ -232,10 +253,18 @@ export default function ProjectForm() {
               <h1 className="text-3xl font-bold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent">
                 Project Information Form
               </h1>
+              {isDraft && (
+                <div className="px-3 py-1 bg-orange-50 border border-orange-200 rounded-full text-xs font-semibold text-orange-600 ml-4">
+                  Draft
+                </div>
+              )}
             </div>
             <div className="p-6 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-              <p className="text-slate-700 leading-relaxed">
+              <p className="text-slate-700 leading-relaxed mb-2">
                 Thank you for partnering with Philippine Genome Center Visayas. To better understand and support your project, please fill out this form.
+              </p>
+              <p className="text-sm text-slate-600 italic">
+                <strong>Note:</strong> This form creates a draft. After saving, you'll add yourself as the Primary Member, then submit for admin approval.
               </p>
             </div>
           </div>
@@ -340,9 +369,8 @@ export default function ProjectForm() {
               <Button
                 type="submit"
                 className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-
               >
-                Submit
+                Save Project Draft
               </Button>
             </div>
           </form>
@@ -354,9 +382,9 @@ export default function ProjectForm() {
         onConfirm={handleConfirmSave}
         onCancel={handleCancelModal}
         loading={false}
-        title="Please double check before saving"
-        description="Review your project information below before confirming. This action cannot be undone."
-        confirmLabel="Confirm & Submit"
+        title="Save Project Draft?"
+        description="Review your project information below. You can edit this later before submitting for approval."
+        confirmLabel="Save Draft"
         cancelLabel="Go Back"
       >
         {pendingData && (

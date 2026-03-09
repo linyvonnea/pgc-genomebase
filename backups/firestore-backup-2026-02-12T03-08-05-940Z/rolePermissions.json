@@ -1,0 +1,396 @@
+[
+  {
+    "id": "Viewer",
+    "data": {
+      "createdAt": {
+        "_seconds": 1769505849,
+        "_nanoseconds": 954000000
+      },
+      "updatedAt": {
+        "_seconds": 1769505849,
+        "_nanoseconds": 954000000
+      }
+    }
+  },
+  {
+    "id": "admin",
+    "data": {
+      "createdAt": {
+        "_seconds": 1769507015,
+        "_nanoseconds": 926000000
+      },
+      "activityLogs": {
+        "view": true,
+        "create": false,
+        "delete": false,
+        "edit": false
+      },
+      "dashboard": {
+        "delete": false,
+        "view": true,
+        "create": false,
+        "edit": false
+      },
+      "updatedBy": "migration-script",
+      "inquiries": {
+        "edit": true,
+        "delete": true,
+        "create": true,
+        "view": true
+      },
+      "clients": {
+        "delete": true,
+        "create": true,
+        "edit": true,
+        "view": true
+      },
+      "projects": {
+        "edit": true,
+        "create": true,
+        "view": true,
+        "delete": true
+      },
+      "chargeSlips": {
+        "create": true,
+        "edit": true,
+        "view": true,
+        "delete": true
+      },
+      "quotations": {
+        "edit": true,
+        "delete": true,
+        "create": true,
+        "view": true
+      },
+      "manualQuotation": {
+        "delete": true,
+        "edit": true,
+        "view": true,
+        "create": true
+      },
+      "catalogSettings": {
+        "delete": false,
+        "create": false,
+        "view": true,
+        "edit": false
+      },
+      "databaseBackup": {
+        "view": true,
+        "create": false,
+        "delete": false,
+        "edit": false
+      },
+      "roleManagement": {
+        "edit": false,
+        "create": false,
+        "delete": false,
+        "view": true
+      },
+      "serviceCatalog": {
+        "edit": false,
+        "view": true,
+        "create": false,
+        "delete": false
+      },
+      "usersPermissions": {
+        "edit": false,
+        "create": false,
+        "delete": false,
+        "view": true
+      },
+      "updatedAt": {
+        "_seconds": 1770704960,
+        "_nanoseconds": 154000000
+      }
+    }
+  },
+  {
+    "id": "moderator",
+    "data": {
+      "dashboard": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "inquiries": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "delete": false
+      },
+      "projects": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "clients": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "quotations": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "delete": false
+      },
+      "chargeSlips": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "delete": false
+      },
+      "serviceCatalog": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "usersPermissions": {
+        "view": false,
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "activityLogs": {
+        "view": false,
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "createdAt": {
+        "_seconds": 1769507124,
+        "_nanoseconds": 585000000
+      },
+      "roleManagement": {
+        "view": false,
+        "edit": false,
+        "create": false,
+        "delete": false
+      },
+      "updatedBy": "migration-script",
+      "manualQuotation": {
+        "delete": false,
+        "create": true,
+        "edit": true,
+        "view": true
+      },
+      "catalogSettings": {
+        "create": false,
+        "delete": false,
+        "view": true,
+        "edit": false
+      },
+      "databaseBackup": {
+        "view": false,
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "updatedAt": {
+        "_seconds": 1770019601,
+        "_nanoseconds": 573000000
+      }
+    }
+  },
+  {
+    "id": "modulator",
+    "data": {
+      "createdAt": {
+        "_seconds": 1769525551,
+        "_nanoseconds": 554000000
+      },
+      "updatedAt": {
+        "_seconds": 1769525551,
+        "_nanoseconds": 554000000
+      }
+    }
+  },
+  {
+    "id": "superadmin",
+    "data": {
+      "inquiries": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "delete": true
+      },
+      "projects": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "delete": true
+      },
+      "clients": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "delete": true
+      },
+      "quotations": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "delete": true
+      },
+      "chargeSlips": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "delete": true
+      },
+      "manualQuotation": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "delete": true
+      },
+      "serviceCatalog": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "delete": true
+      },
+      "catalogSettings": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "delete": true
+      },
+      "usersPermissions": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "delete": true
+      },
+      "createdAt": {
+        "_seconds": 1769505969,
+        "_nanoseconds": 783000000
+      },
+      "updatedBy": "migration-script",
+      "roleManagement": {
+        "delete": true,
+        "edit": true,
+        "create": true,
+        "view": true
+      },
+      "activityLogs": {
+        "view": true,
+        "delete": true,
+        "edit": true,
+        "create": true
+      },
+      "dashboard": {
+        "delete": true,
+        "view": true,
+        "create": true,
+        "edit": true
+      },
+      "databaseBackup": {
+        "view": true,
+        "create": true,
+        "edit": true,
+        "delete": true
+      },
+      "updatedAt": {
+        "_seconds": 1770019316,
+        "_nanoseconds": 445000000
+      }
+    }
+  },
+  {
+    "id": "viewer",
+    "data": {
+      "dashboard": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "inquiries": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "projects": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "clients": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "quotations": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "chargeSlips": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "serviceCatalog": {
+        "view": true,
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "usersPermissions": {
+        "view": false,
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "activityLogs": {
+        "view": false,
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "createdAt": {
+        "_seconds": 1769512416,
+        "_nanoseconds": 719000000
+      },
+      "roleManagement": {
+        "view": false,
+        "edit": false,
+        "create": false,
+        "delete": false
+      },
+      "updatedBy": "migration-script",
+      "catalogSettings": {
+        "view": true,
+        "delete": false,
+        "create": false,
+        "edit": false
+      },
+      "manualQuotation": {
+        "create": false,
+        "delete": false,
+        "edit": false,
+        "view": true
+      },
+      "databaseBackup": {
+        "view": false,
+        "create": false,
+        "edit": false,
+        "delete": false
+      },
+      "updatedAt": {
+        "_seconds": 1770019583,
+        "_nanoseconds": 904000000
+      }
+    }
+  }
+]

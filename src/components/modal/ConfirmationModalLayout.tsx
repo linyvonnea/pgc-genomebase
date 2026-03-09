@@ -16,6 +16,7 @@ interface ConfirmationModalLayoutProps {
   onConfirm: () => void;
   onCancel: () => void;
   loading?: boolean; // Show loading state on confirm button
+  className?: string; // Optional className for the dialog content
 }
 
 export default function ConfirmationModalLayout({
@@ -28,10 +29,11 @@ export default function ConfirmationModalLayout({
   onConfirm,
   onCancel,
   loading = false,
+  className = "max-w-md", // Default width
 }: ConfirmationModalLayoutProps) {
   return (
     <Dialog open={open} onOpenChange={onCancel}>
-      <DialogContent className="max-w-md bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100">
+      <DialogContent className={`bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-100 ${className}`}>
         <DialogHeader>
           <DialogTitle className="text-xl font-bold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent">
             {title}

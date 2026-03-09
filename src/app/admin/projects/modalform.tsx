@@ -3,7 +3,7 @@
 
 'use client'
 
-import { useState } from "react";
+import { useState, useEffect, useRef, ReactNode } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 import { Input } from "@/components/ui/input";
@@ -11,66 +11,192 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { FolderPlus, FileText, Building2, Banknote, Briefcase, Save, X, Search } from "lucide-react";
 import { Project } from "@/types/Project";
 import { projectSchema as baseProjectSchema } from "@/schemas/projectSchema";
 import { collection, addDoc, serverTimestamp, Timestamp, FieldValue, doc, setDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase"; 
+import { db } from "@/lib/firebase";
 import { toast } from "sonner";
-import { getNextPid } from "@/services/projectsService";
+import { getNextPid, checkPidExists } from "@/services/projectsService";
+import { getInquiries } from "@/services/inquiryService";
+import { Inquiry } from "@/types/Inquiry";
+import { logActivity } from "@/services/activityLogService";
+import { getActiveCatalogItems } from "@/services/catalogSettingsService";
+import useAuth from "@/hooks/useAuth";
 
 // Extend the base project schema for form validation
+// All fields are required except for notes.
 const projectSchema = baseProjectSchema.extend({
-  pid: z.string().optional(),
-  iid: z.string().optional(),
-  year: z.coerce.number().int().min(2000),
-  clientNames: z.string().optional().transform((val) => val ? val.split(",").map((v) => v.trim()) : []),
-  projectTag: z.string().optional(),
-  status: z.enum(["Ongoing", "Completed", "Cancelled"]).optional(),
-  fundingCategory: z.enum(["External", "In-House"]).optional(),
-  serviceRequested: z.array(z.string()).optional(),
-  personnelAssigned: z.string().optional(),
+  pid: z.string().min(1, "Project ID is required"),
+  iid: z.array(z.string()).min(1, "Select at least one inquiry ID"),
+  year: z.coerce.number().int().min(2000, "Year is required"),
+  clientNames: z
+    .string()
+    .optional()
+    .transform((val) =>
+      val && val.trim()
+        ? val
+            .split(",")
+            .map((v) => v.trim())
+            .filter(Boolean)
+        : []
+    ),
+  projectTag: z.string().min(1, "Project tag is required"),
+  status: z.string().min(1, "Status is required"),
+  fundingCategory: z.string().min(1, "Funding category is required"),
+  serviceRequested: z
+    .array(z.string())
+    .min(1, "Select at least one service"),
+  personnelAssigned: z
+    .string()
+    .min(1, "Personnel assigned is required"),
+  // Notes are optional by design
   notes: z.string().optional(),
-  startDate: z.string().optional(),
-  lead: z.string().optional(),
-  title: z.string().optional(),
-  sendingInstitution: z.string().optional(),
-  fundingInstitution: z.string().optional(),
+  startDate: z.string().min(1, "Start date is required"),
+  lead: z.string().min(1, "Project lead is required"),
+  title: z.string().min(1, "Project title is required"),
+  sendingInstitution: z.string().min(1, "Sending institution is required"),
+  fundingInstitution: z
+    .string()
+    .min(1, "Funding institution is required"),
 });
 
 type ProjectFormData = z.infer<typeof projectSchema>;
 
+// Form state type with string for clientNames (before transform)
+type ProjectFormState = Omit<ProjectFormData, "clientNames" | "iid"> & {
+  clientNames: string;
+  iid: string[];
+  status: string;
+  fundingCategory: string;
+  sendingInstitution: string;
+};
+
+const RequiredLabel = ({ children }: { children: ReactNode }) => (
+  <Label className="text-xs flex items-center gap-0.5">
+    {children}
+    <span className="text-red-500 ml-0.5">*</span>
+  </Label>
+);
+
 export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => void }) {
+  const { adminInfo } = useAuth();
+  const pidInputRef = useRef<HTMLInputElement>(null);
+  const startDateInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus Start Date when modal opens
+  useEffect(() => {
+    if (startDateInputRef.current) {
+      startDateInputRef.current.focus();
+    }
+  }, []);
+
   // Form state for all project fields
-  const [formData, setFormData] = useState<ProjectFormData>({
+  const [formData, setFormData] = useState<ProjectFormState>({
     pid: "",
-    iid: "",
+    iid: [],
     year: new Date().getFullYear(),
     startDate: new Date().toISOString().substring(0, 10),
     lead: "",
-    clientNames: [],
+    clientNames: "", // Keep as string for the input field
     title: "",
     projectTag: "",
-    status: "Ongoing",
-    sendingInstitution: "Government",
-    fundingCategory: "In-House",
+    status: "",
+    sendingInstitution: "",
+    fundingCategory: "",
     fundingInstitution: "",
     serviceRequested: [],
     personnelAssigned: "",
     notes: "",
   });
   // Error state for validation messages
-  const [errors, setErrors] = useState<Partial<Record<keyof ProjectFormData, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof ProjectFormState, string>>>({});
+
+  // Inquiry dropdown state
+  const [inquiryOptions, setInquiryOptions] = useState<Inquiry[]>([]);
+  const [inquirySearch, setInquirySearch] = useState("");
+
+  // Personnel options from catalog settings
+  const [personnelOptions, setPersonnelOptions] = useState<Array<{ id: string; value: string; position?: string }>>([]);
+
+  // PID validation state
+  const [isPidChecking, setIsPidChecking] = useState(false);
+  const [pidError, setPidError] = useState<string>("");
+
+  // Fetch inquiry options and personnel options
+  useEffect(() => {
+    getInquiries().then((inquiries) => {
+      setInquiryOptions(inquiries);
+    }).catch((error) => {
+      console.error("Error fetching inquiries:", error);
+    });
+
+    getActiveCatalogItems("personnelAssigned").then((personnel) => {
+      console.log("Fetched personnel:", personnel);
+      // Cast to the proper type - should be CatalogItem[] for personnelAssigned
+      const personnelItems = personnel as Array<{ id: string; value: string; position?: string }>;
+      console.log("Personnel items:", personnelItems);
+      setPersonnelOptions(personnelItems);
+    }).catch((error) => {
+      console.error("Error fetching personnel options:", error);
+      setPersonnelOptions([]); // Set empty array as fallback
+    });
+  }, []);
+
+  // Auto-generate PID when year changes
+  useEffect(() => {
+    const generatePid = async () => {
+      if (formData.year) {
+        try {
+          const nextPid = await getNextPid(formData.year);
+          setFormData((prev) => ({ ...prev, pid: nextPid }));
+          setPidError("");
+        } catch (err) {
+          console.error("Failed to generate PID:", err);
+        }
+      }
+    };
+    generatePid();
+  }, [formData.year]);
+
+  // Filter inquiry options by search
+  const filteredInquiryOptions = inquiryOptions.filter(
+    (inq) =>
+      inq.id?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
+      inq.name?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
+      inq.affiliation?.toLowerCase().includes(inquirySearch.toLowerCase())
+  );
 
   // Mutation for adding/updating a project in Firestore
   const mutation = useMutation({
-    mutationFn: async (data: Project) => {
+    mutationFn: async (data: Project & { userInfo?: { name: string; email: string } }) => {
       if (!data.pid) throw new Error("Project ID is required");
       const docRef = doc(db, "projects", data.pid);
-      await setDoc(docRef, {
+      const projectData = {
         ...data,
         startDate: Timestamp.fromDate(new Date(data.startDate ?? "")),
         createdAt: serverTimestamp(),
+      };
+      // Remove userInfo from projectData before saving
+      delete (projectData as any).userInfo;
+
+      await setDoc(docRef, projectData);
+
+      // Log the activity
+      await logActivity({
+        userId: data.userInfo?.email || "system",
+        userEmail: data.userInfo?.email || "system@pgc.admin",
+        userName: data.userInfo?.name || "System",
+        action: "CREATE",
+        entityType: "project",
+        entityId: data.pid,
+        entityName: data.title || data.pid,
+        description: `Created project: ${data.title || data.pid}`,
+        changesAfter: projectData,
       });
+
       return data;
     },
     onSuccess: (data) => {
@@ -86,32 +212,60 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
   // Handle form submission: validate, generate PID, and submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = projectSchema.omit({ pid: true }).safeParse(formData); // omit pid for initial validation
+
+    // Validate PID
+    if (!formData.pid) {
+      setPidError("Project ID is required");
+      return;
+    }
+
+    // Check if PID already exists
+    setIsPidChecking(true);
+    const pidExists = await checkPidExists(formData.pid);
+    setIsPidChecking(false);
+
+    if (pidExists) {
+      setPidError("This Project ID already exists. Please choose a different ID.");
+      // Scroll to the PID field and focus it
+      pidInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      pidInputRef.current?.focus();
+      return;
+    }
+
+    const result = projectSchema.safeParse(formData);
     if (!result.success) {
       // Collect and display validation errors
-      const fieldErrors: Partial<Record<keyof ProjectFormData, string>> = {};
+      const fieldErrors: Partial<Record<keyof ProjectFormState, string>> = {};
       result.error.errors.forEach((err) => {
-        const field = err.path[0] as keyof ProjectFormData;
+        const field = err.path[0] as keyof ProjectFormState;
         fieldErrors[field] = err.message;
       });
       setErrors(fieldErrors);
     } else {
       setErrors({});
       try {
-        // Generate next project ID (PID) for the given year
-        const nextPid = await getNextPid(result.data.year);
         // Prepare clean data for Firestore
         // Exclude any parsed createdAt (which may be a string) so we don't assign an incompatible type;
         // Firestore will set createdAt via serverTimestamp() in the mutation function.
         const { createdAt, ...rest } = result.data as any;
         const cleanData: Project = {
           ...rest,
-          pid: nextPid,
+          pid: formData.pid,
           year: Number(result.data.year),
           clientNames: result.data.clientNames,
           serviceRequested: result.data.serviceRequested,
           lead: result.data.lead,
           notes: result.data.notes || "",
+          status: (
+            ["Pending", "Ongoing", "Completed", "Cancelled"].includes(result.data.status as string)
+              ? result.data.status
+              : "Pending"
+          ) as Project["status"],
+          fundingCategory: (
+            ["External", "In-House"].includes(result.data.fundingCategory as string)
+              ? result.data.fundingCategory
+              : "External"
+          ) as Project["fundingCategory"],
           sendingInstitution: (
             [
               "UP System",
@@ -126,7 +280,8 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
           ) as Project["sendingInstitution"],
           // ensure createdAt matches Project type (Date | undefined); Firestore will populate this server-side
           createdAt: undefined,
-        };
+          userInfo: adminInfo ? { name: adminInfo.name, email: adminInfo.email } : undefined,
+        } as Project & { userInfo?: { name: string; email: string } };
         mutation.mutate(cleanData);
       } catch (err) {
         toast.error("Failed to generate project ID.");
@@ -144,22 +299,28 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
       ...prev,
       [name]: value,
     }));
+
+    // Clear PID error when user edits the PID
+    if (name === "pid") {
+      setPidError("");
+    }
   };
 
   // Handle select dropdown changes
-  const handleSelect = (field: keyof ProjectFormData, value: string) => {
+  const handleSelect = (field: keyof ProjectFormState, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  // Checkbox options for serviceRequested
+  // Dropdown options for serviceRequested
   const serviceOptions = [
     "Laboratory Services",
-    "Retail Services",
+    "Retail Sales",
     "Equipment Use",
-    "Bioinformatics Analysis"
+    "Bioinformatics Analysis",
+    "Training"
   ];
 
   // Handle checkbox changes for serviceRequested
@@ -176,61 +337,175 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
 
   // Render the project form
   return (
-    <form className="grid grid-cols-1 sm:grid-cols-2 gap-6 py-4" onSubmit={handleSubmit}>
-      {/* Year */}
-      <div>
-        <Label>Year</Label>
-        <Input type="number" name="year" value={formData.year} onChange={handleChange} />
-        {errors.year && <p className="text-red-500 text-xs mt-1">{errors.year}</p>}
+    <form className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4" onSubmit={handleSubmit}>
+      <div className="col-span-2 -mt-1">
+        <p className="text-xs text-muted-foreground">
+          All fields marked with <span className="text-red-500">*</span> are required.
+          Use Notes for any additional optional details.
+        </p>
       </div>
-      {/* Start Date */}
-      <div>
-        <Label>Start Date</Label>
-        <Input type="date" name="startDate" value={formData.startDate} onChange={handleChange} />
-        {errors.startDate && <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>}
+      {/* Basic Information Section */}
+      <div className="col-span-2">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="p-1.5 bg-blue-50 rounded-md">
+            <FileText className="h-4 w-4 text-blue-600" />
+          </div>
+          <h3 className="text-sm font-semibold text-gray-700">Basic Information</h3>
+        </div>
+        <Separator className="mb-3" />
       </div>
-      {/* Client Names */}
-      <div>
-        <Label>Client Names</Label>
-        <Input name="clientNames" placeholder="Separate with comma" value={formData.clientNames} onChange={handleChange} />
-        {errors.clientNames && <p className="text-red-500 text-xs mt-1">{errors.clientNames}</p>}
+
+      {/* Year, Project ID, and Start Date in one row */}
+      <div className="col-span-2 grid grid-cols-[100px_1fr_1fr] gap-4">
+        {/* Year */}
+        <div>
+          <RequiredLabel>Year</RequiredLabel>
+          <Input type="number" name="year" value={formData.year} onChange={handleChange} className="h-9" />
+          {errors.year && <p className="text-red-500 text-xs mt-1">{errors.year}</p>}
+        </div>
+        {/* Project ID - Editable */}
+        <div>
+          <RequiredLabel>Project ID</RequiredLabel>
+          <Input
+            ref={pidInputRef}
+            name="pid"
+            value={formData.pid}
+            onChange={handleChange}
+            className="h-9 font-mono bg-blue-50"
+            placeholder="P-2026-001"
+          />
+          {pidError && <p className="text-red-500 text-xs mt-1">{pidError}</p>}
+          {errors.pid && <p className="text-red-500 text-xs mt-1">{errors.pid}</p>}
+          <p className="text-xs text-gray-500 mt-1">Auto-generated, but can be edited</p>
+        </div>
+        {/* Start Date */}
+        <div>
+          <RequiredLabel>Start Date</RequiredLabel>
+          <Input
+            type="date"
+            name="startDate"
+            value={formData.startDate}
+            onChange={handleChange}
+            className="h-9"
+            ref={startDateInputRef}
+          />
+          {errors.startDate && <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>}
+        </div>
       </div>
-      {/* Project Lead */}
-      <div>
-        <Label>Project Lead</Label>
-        <Input name="lead" value={formData.lead} onChange={handleChange} />
-        {errors.lead && <p className="text-red-500 text-xs mt-1">{errors.lead}</p>}
-      </div>
-      {/* Remove Project ID textbox */}
-      {/* <div>
-        <Label>Project ID</Label>
-        <Input name="pid" value={formData.pid} onChange={handleChange} />
-        {errors.pid && <p className="text-red-500 text-xs mt-1">{errors.pid}</p>}
-      </div> */}
-      {/* Inquiry ID */}
-      <div>
-        <Label>Inquiry ID</Label>
-        <Input name="iid" value={formData.iid} onChange={handleChange} />
-        {errors.iid && <p className="text-red-500 text-xs mt-1">{errors.iid}</p>}
-      </div>
-      {/* Project Title */}
-      <div>
-        <Label>Project Title</Label>
-        <Input name="title" value={formData.title} onChange={handleChange} />
+
+      {/* Project Title - Full Width */}
+      <div className="col-span-2">
+        <RequiredLabel>Project Title</RequiredLabel>
+        <Input name="title" value={formData.title} onChange={handleChange} className="h-9" placeholder="Enter project title" />
         {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
       </div>
-      {/* Project Tag */}
+
+      {/* Column 1: Project Lead */}
       <div>
-        <Label>Project Tag</Label>
-        <Input name="projectTag" value={formData.projectTag} onChange={handleChange} />
+        <RequiredLabel>Project Lead</RequiredLabel>
+        <Input name="lead" value={formData.lead} onChange={handleChange} className="h-9" placeholder="Juan dela Cruz" />
+        {errors.lead && <p className="text-red-500 text-xs mt-1">{errors.lead}</p>}
+      </div>
+
+      {/* Column 2: Project Tag */}
+      <div>
+        <RequiredLabel>Project Tag</RequiredLabel>
+        <Input name="projectTag" value={formData.projectTag} onChange={handleChange} className="h-9" placeholder="Enter project tag" />
         {errors.projectTag && <p className="text-red-500 text-xs mt-1">{errors.projectTag}</p>}
       </div>
-      {/* Status dropdown */}
+
+      {/* Column 1: Inquiry ID (Multi-Select) */}
+      <div className="md:col-span-2">
+        <Label className="text-xs flex items-center gap-0.5 mb-1.5">
+          Inquiry ID(s)
+          <span className="text-red-500 ml-0.5">*</span>
+          <Badge variant="outline" className="ml-2 text-[10px] font-normal py-0 px-1.5 h-auto">
+            Select Multiple
+          </Badge>
+        </Label>
+        
+        <div className="space-y-2 border rounded-md p-3 bg-gray-50/50">
+          {/* Display selected IIDs as badges */}
+          <div className="flex flex-wrap gap-1.5 min-h-[32px] items-center">
+            {formData.iid && formData.iid.length > 0 ? (
+              formData.iid.map((id, index) => (
+                <Badge key={index} variant="secondary" className="pl-2 pr-1 py-1 flex items-center gap-1 bg-white border shadow-sm transition-all">
+                  <span className="text-xs font-medium text-gray-700">{id}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newVal = [...formData.iid];
+                      newVal.splice(index, 1);
+                      setFormData(prev => ({ ...prev, iid: newVal }));
+                    }}
+                    className="text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50 p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))
+            ) : (
+              <span className="text-xs text-gray-400 italic">No inquiry IDs selected yet</span>
+            )}
+          </div>
+
+          <Select onValueChange={(val) => {
+            if (!formData.iid.includes(val)) {
+              setFormData(prev => ({ ...prev, iid: [...prev.iid, val] }));
+            }
+          }}>
+            <SelectTrigger className="h-9 bg-white">
+              <SelectValue placeholder="Add an inquiry..." />
+            </SelectTrigger>
+            <SelectContent className="max-h-[300px] w-[500px]">
+              <div className="sticky top-0 bg-white z-10 p-2 border-b flex items-center gap-2 mb-1">
+                <Search className="h-4 w-4 text-gray-400 shrink-0" />
+                <Input
+                  placeholder="Search by ID, Name, or Affiliation..."
+                  value={inquirySearch}
+                  onChange={e => setInquirySearch(e.target.value)}
+                  className="h-8 text-sm border-none shadow-none focus-visible:ring-0 px-0"
+                />
+              </div>
+              <div className="max-h-[240px] overflow-y-auto">
+                {filteredInquiryOptions
+                  .filter(inq => !formData.iid.includes(inq.id || ""))
+                  .length > 0 ? (
+                  filteredInquiryOptions
+                    .filter(inq => !formData.iid.includes(inq.id || ""))
+                    .map((inq) => (
+                    <SelectItem key={inq.id} value={inq.id || ""} className="py-2.5">
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-xs text-blue-700">{inq.id}</span>
+                          <span className="text-[10px] text-gray-400 font-normal">|</span>
+                          <span className="text-[11px] font-medium text-gray-700 truncate max-w-[250px]">{inq.name}</span>
+                        </div>
+                        {inq.affiliation && (
+                          <span className="text-[10px] text-gray-500 truncate">{inq.affiliation}</span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="py-4 text-center text-xs text-gray-500 italic">
+                    {inquirySearch ? "No matching inquiries found" : "All available inquiries selected"}
+                  </div>
+                )}
+              </div>
+            </SelectContent>
+          </Select>
+        </div>
+        {errors.iid && <p className="text-red-500 text-xs mt-1">{errors.iid}</p>}
+      </div>
+
+      {/* Column 2: Status */}
       <div>
-        <Label>Status</Label>
+        <RequiredLabel>Status</RequiredLabel>
         <Select value={formData.status || ""} onValueChange={val => handleSelect("status", val)}>
-          <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
+          <SelectTrigger className="h-9"><SelectValue placeholder="Select Status" /></SelectTrigger>
           <SelectContent>
+            <SelectItem value="Pending">Pending</SelectItem>
             <SelectItem value="Ongoing">Ongoing</SelectItem>
             <SelectItem value="Completed">Completed</SelectItem>
             <SelectItem value="Cancelled">Cancelled</SelectItem>
@@ -238,17 +513,39 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         </Select>
         {errors.status && <p className="text-red-500 text-xs mt-1">{errors.status}</p>}
       </div>
+
+      {/* Funding Section */}
+      <div className="col-span-2 mt-2">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="p-1.5 bg-emerald-50 rounded-md">
+            <Banknote className="h-4 w-4 text-emerald-600" />
+          </div>
+          <h3 className="text-sm font-semibold text-gray-700">Funding & Institution</h3>
+        </div>
+        <Separator className="mb-3" />
+      </div>
+
       {/* Sending Institution */}
       <div>
-        <Label>Sending Institution</Label>
-        <Input name="sendingInstitution" value={formData.sendingInstitution || ""} onChange={handleChange} />
+        <RequiredLabel>Sending Institution</RequiredLabel>
+        <Select value={formData.sendingInstitution || ""} onValueChange={val => handleSelect("sendingInstitution", val)}>
+          <SelectTrigger className="h-9"><SelectValue placeholder="Select Sending Institution" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="UP System">UP System</SelectItem>
+            <SelectItem value="SUC/HEI">SUC/HEI</SelectItem>
+            <SelectItem value="Government">Government</SelectItem>
+            <SelectItem value="Private/Local">Private/Local</SelectItem>
+            <SelectItem value="International">International</SelectItem>
+            <SelectItem value="N/A">N/A</SelectItem>
+          </SelectContent>
+        </Select>
         {errors.sendingInstitution && <p className="text-red-500 text-xs mt-1">{errors.sendingInstitution}</p>}
       </div>
       {/* Funding Category dropdown */}
       <div>
-        <Label>Funding Category</Label>
+        <RequiredLabel>Funding Category</RequiredLabel>
         <Select value={formData.fundingCategory || ""} onValueChange={val => handleSelect("fundingCategory", val)}>
-          <SelectTrigger><SelectValue placeholder="Select funding category" /></SelectTrigger>
+          <SelectTrigger className="h-9"><SelectValue placeholder="Select Funding Category" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="External">External</SelectItem>
             <SelectItem value="In-House">In-House</SelectItem>
@@ -256,22 +553,36 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         </Select>
         {errors.fundingCategory && <p className="text-red-500 text-xs mt-1">{errors.fundingCategory}</p>}
       </div>
-      {/* Funding Institution */}
-      <div>
-        <Label>Funding Institution</Label>
-        <Input name="fundingInstitution" value={formData.fundingInstitution || ""} onChange={handleChange} />
+
+      {/* Funding Institution - Full Width */}
+      <div className="col-span-2">
+        <RequiredLabel>Funding Institution</RequiredLabel>
+        <Input name="fundingInstitution" value={formData.fundingInstitution || ""} onChange={handleChange} className="h-9" placeholder="Enter funding institution" />
         {errors.fundingInstitution && <p className="text-red-500 text-xs mt-1">{errors.fundingInstitution}</p>}
       </div>
-      {/* Service Requested checkboxes */}
-      <div>
-        <Label>Service Requested</Label>
-        <div className="flex flex-col gap-2">
+
+      {/* Services Section */}
+      <div className="col-span-2 mt-2">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="p-1.5 bg-purple-50 rounded-md">
+            <Briefcase className="h-4 w-4 text-purple-600" />
+          </div>
+          <h3 className="text-sm font-semibold text-gray-700">Services & Personnel</h3>
+        </div>
+        <Separator className="mb-3" />
+      </div>
+
+      {/* Service Requested checkboxes - Horizontal layout */}
+      <div className="col-span-2">
+        <RequiredLabel>Service Requested</RequiredLabel>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2">
           {serviceOptions.map((option) => (
-            <label key={option} className="flex items-center gap-2">
+            <label key={option} className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 checked={formData.serviceRequested?.includes(option) || false}
                 onChange={() => handleServiceCheckbox(option)}
+                className="h-4 w-4"
               />
               {option}
             </label>
@@ -279,22 +590,91 @@ export function ProjectFormModal({ onSubmit }: { onSubmit?: (data: Project) => v
         </div>
         {errors.serviceRequested && <p className="text-red-500 text-xs mt-1">{errors.serviceRequested}</p>}
       </div>
-      {/* Personnel Assigned */}
-      <div>
-        <Label>Personnel Assigned</Label>
-        <Input name="personnelAssigned" value={formData.personnelAssigned || ""} onChange={handleChange} />
+
+      {/* Personnel Assigned - Full Width */}
+      <div className="col-span-2">
+        <RequiredLabel>Personnel Assigned</RequiredLabel>
+        <Select value={formData.personnelAssigned || ""} onValueChange={val => handleSelect("personnelAssigned", val)}>
+          <SelectTrigger className="h-9 text-left">
+            <SelectValue placeholder={personnelOptions.length > 0 ? "Select personnel" : "No personnel available"}>
+              {formData.personnelAssigned && personnelOptions.length > 0 ? (
+                <div className="flex flex-col items-start">
+                  <span className="font-medium text-sm">
+                    {personnelOptions.find(p => p.value === formData.personnelAssigned)?.value}
+                  </span>
+                  {personnelOptions.find(p => p.value === formData.personnelAssigned)?.position && (
+                    <span className="text-xs text-gray-500">
+                      {personnelOptions.find(p => p.value === formData.personnelAssigned)?.position}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                formData.personnelAssigned || (personnelOptions.length > 0 ? "Select personnel" : "No personnel available")
+              )}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {personnelOptions.length > 0 ? (
+              personnelOptions.map((person, index) => (
+                <SelectItem key={person.id || `personnel-${index}`} value={person.value} className="py-2">
+                  <div className="flex flex-col">
+                    <span className="font-medium text-sm">{person.value}</span>
+                    {person.position && (
+                      <span className="text-xs text-gray-500">{person.position}</span>
+                    )}
+                  </div>
+                </SelectItem>
+              ))
+            ) : (
+              <div className="p-2 text-sm text-center text-gray-500">
+                No personnel configured. Add personnel in Catalog Settings.
+              </div>
+            )}
+          </SelectContent>
+        </Select>
         {errors.personnelAssigned && <p className="text-red-500 text-xs mt-1">{errors.personnelAssigned}</p>}
       </div>
-      {/* Notes */}
-      <div>
-        <Label>Notes</Label>
-        <Textarea name="notes" value={formData.notes || ""} onChange={handleChange} />
+
+      {/* Notes - Full Width */}
+      <div className="col-span-2">
+        <Label className="text-xs">Notes</Label>
+        <Textarea name="notes" value={formData.notes || ""} onChange={handleChange} rows={3} className="resize-none" placeholder="Enter additional notes" />
         {errors.notes && <p className="text-red-500 text-xs mt-1">{errors.notes}</p>}
       </div>
+
       {/* Submit button */}
-      <div className="col-span-2 flex justify-end mt-4">
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? "Saving..." : "Save"}
+      <div className="col-span-2 flex justify-end gap-3 mt-2 pt-3">
+        <Separator className="mb-4" />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onSubmit ? () => window.location.reload() : undefined}
+          disabled={mutation.isPending || isPidChecking}
+          className="min-w-[100px]"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={mutation.isPending || isPidChecking}
+          className="px-6 min-w-[140px] bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md"
+        >
+          {isPidChecking ? (
+            <>
+              <span className="mr-2">Checking ID...</span>
+              <span className="animate-spin">⏳</span>
+            </>
+          ) : mutation.isPending ? (
+            <>
+              <span className="mr-2">Saving...</span>
+              <span className="animate-spin">⏳</span>
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Save Project
+            </>
+          )}
         </Button>
       </div>
     </form>

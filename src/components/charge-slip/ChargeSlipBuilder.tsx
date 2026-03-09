@@ -1,15 +1,18 @@
 "use client";
 
+import React from "react";
 import { Label } from "@/components/ui/label";
 import { ChargeSlipHistoryPanel } from "./ChargeSlipHistoryPanel";
+import { QuotationHistoryPanel } from "@/components/quotation/QuotationHistoryPanel";
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { pdf, PDFViewer } from "@react-pdf/renderer";
 import { Timestamp } from "firebase/firestore";
+import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { sanitizeObject } from "@/lib/sanitizeObject";
-
+import { calculateItemTotal } from "@/lib/calculatePrice";
 import { getServiceCatalog } from "@/services/serviceCatalogService";
 import {
   getClientById,
@@ -52,13 +55,14 @@ import {
 
 import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import useAuth from "@/hooks/useAuth";
+import { GroupedServiceSelector } from "@/components/forms/GroupedServiceSelector";
 
 export type EditableSelectedService = Omit<StrictSelectedService, "quantity"  | "price"> & {
   quantity: number | "";
   price: number;
 };
 
-export default function ChargeSlipBuilder({
+function ChargeSlipBuilderInner({
   clientId,
   projectId,
   clientData,
@@ -73,15 +77,18 @@ export default function ChargeSlipBuilder({
 }) {
   const [selectedServices, setSelectedServices] = useState<EditableSelectedService[]>([]);
   const [isInternal, setIsInternal] = useState(false);
+  const [useAffiliationAsClientName, setUseAffiliationAsClientName] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
   const [search, setSearch] = useState("");
+  const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [chargeSlipNumber, setChargeSlipNumber] = useState<string>("");
   const [orNumber, setOrNumber] = useState<string>("");
 
   const { adminInfo } = useAuth();
+  const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const effectiveClientId = clientId || searchParams.get("clientId") || "";
-  const effectiveProjectId = projectId || searchParams.get("projectId") || "";
+  const urlProjectId = projectId || searchParams.get("projectId") || "";
 
   const { data: catalog = [] } = useQuery({
     queryKey: ["serviceCatalog"],
@@ -94,14 +101,38 @@ export default function ChargeSlipBuilder({
     enabled: !!effectiveClientId,
   });
 
-  const { data: fetchedProject } = useQuery({
+  // Use primary project (first pid) if no specific projectId provided
+  const client = useMemo(() => sanitizeObject(clientData || fetchedClient || {}), [clientData, fetchedClient]);
+
+  // Get the effective project ID - prioritize URL param, then primary project from client's pid array
+  let effectiveProjectId = urlProjectId;
+
+  // If projectId from URL contains comma-separated values, use only the first one (primary)
+  if (effectiveProjectId && effectiveProjectId.includes(',')) {
+    effectiveProjectId = effectiveProjectId.split(',')[0].trim();
+    console.log("Multiple PIDs detected in URL, using primary:", effectiveProjectId);
+  }
+
+  // If still no projectId, get from client's primary pid
+  if (!effectiveProjectId && client && Array.isArray(client.pid) && client.pid.length > 0) {
+    effectiveProjectId = client.pid[0];
+    console.log("Using primary project ID from client:", effectiveProjectId);
+  }
+
+  const { data: fetchedProject, isLoading: isProjectLoading } = useQuery({
     queryKey: ["project", effectiveProjectId],
-    queryFn: () => getProjectById(effectiveProjectId),
+    queryFn: () => getProjectById(effectiveProjectId!),
     enabled: !!effectiveProjectId,
   });
 
-  const client = sanitizeObject(clientData || fetchedClient || {});
-  const project = sanitizeObject(projectData || fetchedProject || {});
+  const project = projectData || fetchedProject || null;
+
+  // Log warning if client data is missing
+  useEffect(() => {
+    if (effectiveClientId && !client?.name) {
+      console.warn(`Client data not found or incomplete for CID: ${effectiveClientId}`);
+    }
+  }, [effectiveClientId, client]);
 
   useEffect(() => {
     const fetchRef = async () => {
@@ -118,6 +149,10 @@ export default function ChargeSlipBuilder({
       if (exists) return prev.filter((s) => s.id !== id);
       return [...prev, { ...service, quantity: 1, price: service.price }];
     });
+
+    // Reset checkboxes to default state
+    setIsInternal(false);
+    setUseAffiliationAsClientName(false);
   };
 
   const updateQuantity = (id: string, qty: number | "") => {
@@ -128,36 +163,75 @@ export default function ChargeSlipBuilder({
 // for new price textbox
   const updatePrice = (id: string, price: number | "") => {
     setSelectedServices((prev) =>
-      prev.map((svc) =>
-        svc.id === id
-          ? { ...svc, price: price === "" ? 0 : price }
-          : svc
-      )
+      prev.map((svc) => (svc.id === id ? { ...svc, samples } : svc))
     );
   };
 
+  const updateParticipants = (id: string, participants: number | "") => {
+    setSelectedServices((prev) =>
+      prev.map((svc) => (svc.id === id ? { ...svc, participants } : svc))
+    );
+  };
   const cleanedServices: StrictSelectedService[] = selectedServices
     .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
     .map((s) => ({ ...s, quantity: s.quantity as number }));
 
-  const subtotal = cleanedServices.reduce(
-    (sum, item) => sum + item.quantity * item.price,
-    0
-  );
+  // Update the subtotal calculation to use samples or participants based on service type
+  const subtotal = cleanedServices.reduce((sum, item) => {
+    const serviceType = item.type.toLowerCase();
+
+    if (serviceType.includes('bioinformatics') || serviceType.includes('bioinfo')) {
+      // Use samples for bioinformatics
+      const samples = (item as any).samples ?? 1;
+      const samplesAmount = calculateItemTotal(samples, item.price, {
+        minQuantity: (item as any).minQuantity,
+        additionalUnitPrice: (item as any).additionalUnitPrice,
+      });
+      return sum + (samplesAmount * item.quantity);
+    } else if (serviceType.includes('training')) {
+      // Use participants for training
+      const participants = (item as any).participants ?? 1;
+      const participantsAmount = calculateItemTotal(participants, item.price, {
+        minQuantity: (item as any).minParticipants,
+        additionalUnitPrice: (item as any).additionalParticipantPrice,
+      });
+      return sum + (participantsAmount * item.quantity);
+    } else {
+      // Default calculation for other services
+      return sum + (item.price * item.quantity);
+    }
+  }, 0);
   const discount = isInternal ? subtotal * 0.12 : 0;
   const total = subtotal - discount;
 
-  const clientInfo = {
-    name: client?.name || "Unknown",
-    institution: client?.affiliation || "N/A",
-    designation: client?.designation || "N/A",
+
+  const [clientInfo, setClientInfo] = useState({
+    name: client?.name || "Unknown Client",
+    institution: client?.affiliation || "No Institution",
+    designation: client?.designation || "No Designation",
     email: client?.email || "",
-  };
+  });
+
+  useEffect(() => {
+    setClientInfo({
+      name: client?.name || "Unknown Client",
+      institution: client?.affiliation || "No Institution",
+      designation: client?.designation || "No Designation",
+      email: client?.email || "",
+    });
+  }, [client]);
 
   const groupedByType = useMemo(() => {
     const result: Record<string, ServiceItem[]> = {};
+    const selectedIds = new Set(selectedServices.map(s => s.id));
+
     for (const item of catalog) {
-      if (!search || item.name.toLowerCase().includes(search.toLowerCase())) {
+      // Filter by search
+      const matchesSearch = !search || item.name.toLowerCase().includes(search.toLowerCase());
+      // Filter by selected if showSelectedOnly is true
+      const matchesFilter = !showSelectedOnly || selectedIds.has(item.id);
+
+      if (matchesSearch && matchesFilter) {
         if (!result[item.type]) result[item.type] = [];
         result[item.type].push(item);
       }
@@ -238,89 +312,141 @@ export default function ChargeSlipBuilder({
     const lower = raw.toLowerCase();
     if (lower.includes("equipment")) return "equipment";
     if (lower.includes("lab")) return "laboratory";
-    if (lower.includes("bioinfo")) return "bioinformatics";
+    if (lower.includes("bioinformatics") || lower.includes("bioinfo")) return "bioinformatics";
     if (lower.includes("retail")) return "retail";
+    if (lower.includes("training")) return "training";
     return lower; // fallback
   };
   const handleSaveAndDownload = async () => {
-    const rawRecord = {
-      id: chargeSlipNumber,
-      chargeSlipNumber,
-      cid: client?.cid || effectiveClientId,
-      projectId: effectiveProjectId,
-      client,
-      project,
-      services: cleanedServices,
-      orNumber,
-      useInternalPrice: isInternal,
-      preparedBy: {
-        name: adminInfo?.name || "—",
-        position: adminInfo?.position || "—",
-      },
-      approvedBy: {
-        name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
-        position: "AED, PGC Visayas",
-      },
-      referenceNumber: chargeSlipNumber,
-      clientInfo,
-      dateIssued: Timestamp.fromDate(new Date()),
-      subtotal,
-      discount,
-      total,
-      
-      categories: Array.from(new Set(cleanedServices.map((s) => normalizeCategory(s.category)))),
-    };
+    try {
+      const rawRecord = {
+        id: chargeSlipNumber,
+        chargeSlipNumber,
+        cid: client?.cid || effectiveClientId,
+        projectId: effectiveProjectId,
+        client,
+        project,
+        services: cleanedServices,
+        orNumber,
+        useInternalPrice: isInternal,
+        useAffiliationAsClientName,
+        preparedBy: {
+          name: adminInfo?.name || "—",
+          position: adminInfo?.position || "—",
+        },
+        approvedBy: {
+          name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
+          position: "AED, PGC Visayas",
+        },
+        referenceNumber: chargeSlipNumber,
+        clientInfo,
+        dateIssued: Timestamp.fromDate(new Date()),
+        subtotal,
+        discount,
+        total,
 
-    const record = sanitizeObject(rawRecord) as ChargeSlipRecord;
+        categories: Array.from(new Set(cleanedServices.map((s) => normalizeCategory(s.category)))),
+      };
 
-    await saveChargeSlip(record);
+      const record = sanitizeObject(rawRecord) as ChargeSlipRecord;
 
-    const blob = await pdf(
-      <ChargeSlipPDF
-        services={cleanedServices}
-        client={client}
-        project={project}
-        chargeSlipNumber={chargeSlipNumber}
-        orNumber={orNumber}
-        useInternalPrice={isInternal}
-        preparedBy={record.preparedBy}
-        approvedBy={record.approvedBy}
-        referenceNumber={chargeSlipNumber}
-        clientInfo={clientInfo}
-        dateIssued={new Date().toISOString()}
-        subtotal={subtotal}
-        discount={discount}
-        total={total}
-      />
-    ).toBlob();
+      // Save to Firestore first
+      await saveChargeSlip(record);
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${chargeSlipNumber}.pdf`;
-    link.click();
-    URL.revokeObjectURL(url);
+      // Generate PDF after save completes
+      const blob = await pdf(
+        <ChargeSlipPDF
+          services={cleanedServices}
+          client={client}
+          project={project}
+          chargeSlipNumber={chargeSlipNumber}
+          useAffiliationAsClientName={useAffiliationAsClientName}
+          orNumber={orNumber}
+          useInternalPrice={isInternal}
+          preparedBy={record.preparedBy}
+          approvedBy={record.approvedBy}
+          referenceNumber={chargeSlipNumber}
+          clientInfo={clientInfo}
+          dateIssued={new Date().toISOString()}
+          subtotal={subtotal}
+          discount={discount}
+          total={total}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${chargeSlipNumber}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      // Invalidate charge slip history to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["chargeSlipHistory", effectiveProjectId] });
+
+      toast.success("Charge slip saved and downloaded successfully!");
+      onSubmit?.(record);
+    } catch (error) {
+      console.error("Failed to save charge slip:", error);
+      toast.error(`Failed to save charge slip: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   return (
     <div className="p-6 flex gap-6">
       {/* Left Column */}
-      <div className="flex-1">
+      <div className="flex-[2] min-w-[520px]">
         <div className="mb-6">
-          <h1 className="text-xl font-semibold mb-1">Build Charge Slip for:</h1>
-          <p className="text-muted-foreground">
-            {clientInfo.name} – {clientInfo.institution}, {clientInfo.designation}
-          </p>
-        </div>
-
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex gap-4 items-center">
-            <Checkbox
-              checked={isInternal}
-              onCheckedChange={(val: boolean) => setIsInternal(!!val)}
-            />
-            <span>Internal Client (Apply 12% discount)</span>
-          </div>
+          <h1 className="text-xl font-semibold mb-2">Build Charge Slip for:</h1>
+          <Accordion type="single" collapsible defaultValue="client-info">
+            <AccordionItem value="client-info" className="border rounded-lg overflow-hidden shadow-sm">
+              <AccordionTrigger className="px-4 py-3 hover:no-underline bg-white text-base font-semibold">
+                Client Information
+              </AccordionTrigger>
+              <AccordionContent className="px-0 pb-0">
+                <div className="pl-6 pr-4 pb-3">
+                  <table className="w-full text-sm">
+                    <tbody>
+                      <tr>
+                        <td className="py-2 pr-4 text-muted-foreground w-40">Charge Slip Number</td>
+                        <td className="py-2 font-mono font-bold text-slate-700">{chargeSlipNumber}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-4 text-muted-foreground">Client Name</td>
+                        <td className="py-2 font-semibold text-slate-900">{clientInfo.name}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-4 text-muted-foreground">Institution</td>
+                        <td className="py-2 text-slate-700">{clientInfo.institution}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-4 text-muted-foreground">Designation</td>
+                        <td className="py-2 text-slate-700">{clientInfo.designation}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-4 text-muted-foreground">Email</td>
+                        <td className="py-2 text-slate-700">{clientInfo.email || "N/A"}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div className="flex items-center gap-2 pt-2">
+                    <Checkbox
+                      checked={useAffiliationAsClientName}
+                      onCheckedChange={val => setUseAffiliationAsClientName(!!val)}
+                    />
+                    <span className="text-sm">Display affiliation as client name in PDF</span>
+                  </div>
+                  <div className="flex items-center gap-2 pt-2">
+                    <Checkbox
+                      checked={isInternal}
+                      onCheckedChange={val => setIsInternal(!!val)}
+                    />
+                    <span className="text-sm">Internal Client (Apply 12% discount)</span>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
 
         <div className="mb-4">
@@ -333,51 +459,108 @@ export default function ChargeSlipBuilder({
           />
         </div>
 
-        <Input
-          placeholder="Search services..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="mb-4"
-        />
+        <div className="flex gap-2 mb-4 items-center">
+          <Input
+            placeholder="Search services..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1"
+          />
+          <Button
+            variant={showSelectedOnly ? "default" : "outline"}
+            onClick={() => setShowSelectedOnly(!showSelectedOnly)}
+            className="whitespace-nowrap"
+          >
+            {showSelectedOnly ? "Show All" : "Show Selected"}
+            {selectedServices.length > 0 && (
+              <span className="ml-2 bg-white text-primary rounded-full px-2 py-0.5 text-xs font-semibold">
+                {selectedServices.length}
+              </span>
+            )}
+          </Button>
+        </div>
 
-        <ScrollArea className="h-[65vh] pr-2">
-          <Accordion type="multiple" className="space-y-4">
-            {Object.entries(groupedByType).map(([type, items]) => (
-              <AccordionItem key={type} value={type}>
-                <AccordionTrigger className="text-lg font-bold capitalize">
-                  {type}
-                </AccordionTrigger>
-                <AccordionContent>{renderTable(items)}</AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+        <ScrollArea className="h-[65vh] pr-2 w-full">
+          <div className="w-full">
+            <GroupedServiceSelector
+              catalog={catalog}
+              selectedServices={selectedServices}
+              search={search}
+              showSelectedOnly={showSelectedOnly}
+              onToggleService={toggleService}
+              onUpdateQuantity={updateQuantity}
+              onUpdateSamples={updateSamples}
+              onUpdateParticipants={updateParticipants}
+            />
+          </div>
         </ScrollArea>
       </div>
 
       {/* Right Summary Column */}
-      <div className="w-96 shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
+      <div className="flex-[1] min-w-[320px] max-w-[420px] shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
         <h3 className="text-lg font-bold mb-2">Summary</h3>
-        <Separator className="mb-2" />
-        {cleanedServices.map((item) => (
-          <div key={item.id} className="flex justify-between text-sm mb-1">
-            <span>
-              {item.name} x {item.quantity}
-            </span>
-            <span>₱{(item.price * item.quantity).toFixed(2)}</span>
-          </div>
-        ))}
-        <Separator className="my-2" />
-        <p className="text-sm">Subtotal: ₱{subtotal.toFixed(2)}</p>
-        {isInternal && (
-          <p className="text-sm">Discount (12%): ₱{discount.toFixed(2)}</p>
-        )}
-        <p className="text-base font-semibold text-primary">
-          Total: ₱{total.toFixed(2)}
+        <p className="text-sm text-muted-foreground mb-2">
+          {cleanedServices.length} {cleanedServices.length === 1 ? 'service' : 'services'} selected
         </p>
+        <Separator className="mb-2" />
+        {cleanedServices.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p className="text-sm">No services selected</p>
+            <p className="text-xs mt-1">Select services from the list to continue</p>
+          </div>
+        ) : (
+          <>
+            {Object.entries(
+              cleanedServices.reduce((acc, item) => {
+                const category = item.category;
+                if (!acc[category]) acc[category] = [];
+                acc[category].push(item);
+                return acc;
+              }, {} as Record<string, typeof cleanedServices>)
+            ).map(([category, items]) => (
+              <div key={category} className="mb-3">
+                <p className="text-xs font-semibold text-gray-600 uppercase mb-1">
+                  {category} ({items.length})
+                </p>
+                {items.map((item) => (
+                  <div key={item.id} className="flex justify-between text-sm mb-1 pl-2">
+                    <span className="truncate">
+                      {item.name} x {item.quantity}
+                    </span>
+                    <span className="font-medium">₱{(item.price * item.quantity).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </>
+        )}
+        <Separator className="my-2" />
+        <div className="space-y-1">
+          <div className="flex justify-between text-sm">
+            <span>Subtotal:</span>
+            <span>₱{subtotal.toFixed(2)}</span>
+          </div>
+          {isInternal && (
+            <div className="flex justify-between text-sm text-green-600">
+              <span>Discount (12%):</span>
+              <span>-₱{discount.toFixed(2)}</span>
+            </div>
+          )}
+        </div>
+        <Separator className="my-2" />
+        <div className="flex justify-between text-lg font-bold text-primary">
+          <span>Total:</span>
+          <span>₱{total.toFixed(2)}</span>
+        </div>
 
         <Dialog open={openPreview} onOpenChange={setOpenPreview}>
           <DialogTrigger asChild>
-            <Button className="mt-4 w-full">Preview Charge Slip</Button>
+            <Button
+              className="mt-4 w-full"
+              disabled={cleanedServices.length === 0}
+            >
+              Preview Charge Slip
+            </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl h-[90vh] overflow-auto">
             <DialogHeader>
@@ -392,6 +575,7 @@ export default function ChargeSlipBuilder({
                   chargeSlipNumber={chargeSlipNumber}
                   orNumber={orNumber}
                   useInternalPrice={isInternal}
+                  useAffiliationAsClientName={useAffiliationAsClientName}
                   preparedBy={{
                     name: adminInfo?.name || "—",
                     position: adminInfo?.position || "—",
@@ -409,7 +593,10 @@ export default function ChargeSlipBuilder({
                 />
               </PDFViewer>
               <div className="text-right mt-4">
-                <Button onClick={handleSaveAndDownload}>
+                <Button
+                  onClick={handleSaveAndDownload}
+                  disabled={cleanedServices.length === 0}
+                >
                   Generate Final Charge Slip
                 </Button>
               </div>
@@ -418,7 +605,50 @@ export default function ChargeSlipBuilder({
         </Dialog>
         <Separator className="my-6" />
         <ChargeSlipHistoryPanel projectId={effectiveProjectId} />
+        {project?.iid && (
+          <>
+            <Separator className="my-6" />
+            <QuotationHistoryPanel 
+              inquiryId={project.iid} 
+              onSelectQuotation={handleQuotationSelect}
+              onDeselectQuotation={handleQuotationDeselect}
+              showCheckboxes={true}
+            />
+          </>
+        )}
       </div>
     </div>
+  );
+}
+
+class ChargeSlipErrorBoundary extends React.Component<any, { hasError: boolean; error?: any }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: any, info: any) {
+    console.error("ChargeSlipBuilder render error:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6">
+          <h2 className="text-xl font-semibold text-red-600">Failed to load Charge Slip Builder</h2>
+          <pre className="mt-4 text-sm text-gray-700 break-words">{String(this.state.error)}</pre>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function ChargeSlipBuilder(props: any) {
+  return (
+    <ChargeSlipErrorBoundary>
+      <ChargeSlipBuilderInner {...props} />
+    </ChargeSlipErrorBoundary>
   );
 }

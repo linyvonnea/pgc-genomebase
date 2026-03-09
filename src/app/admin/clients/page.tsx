@@ -8,10 +8,14 @@ import { columns } from "./columns";
 import { DataTable } from "./data-table";
 import { Client } from "@/types/Client";
 import { getClients } from "@/services/clientService";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import { Plus, UserPlus } from "lucide-react"
 import { ProjectFormModal } from "@/app/admin/projects/modalform"
 import { ClientFormModal } from "./modalform";
+import useAuth from "@/hooks/useAuth";
+import { usePermissions } from "@/hooks/usePermissions";
 
 // Fetch and validate client data from Firestore
 async function getData(): Promise<Client[]> {
@@ -26,9 +30,23 @@ async function getData(): Promise<Client[]> {
   }
 }
 
+import { PermissionGuard } from "@/components/PermissionGuard";
+
 export default function ClientPage() {
+  return (
+    <PermissionGuard module="clients" action="view">
+      <ClientPageContent />
+    </PermissionGuard>
+  );
+}
+
+function ClientPageContent() {
   // State for client data
   const [data, setData] = useState<Client[]>([]);
+  const [openDialog, setOpenDialog] = useState(false);
+  const { adminInfo } = useAuth();
+  const { canCreate } = usePermissions(adminInfo?.role);
+  
   // Fetch data and update state
   const fetchData = async () => {
     console.log("ClientPage.fetchData: start"); // debug
@@ -42,28 +60,44 @@ export default function ClientPage() {
   }, []);
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="space-y-6">
-        {/* Header and Add New Client Button */}
+    <div className="container mx-auto py-4 space-y-3">
+      <div className="space-y-3">
+        {/* Header with Add New Client Button */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">PGC Clients</h1>
-            <p className="text-muted-foreground">
+          <div className="space-y-1">
+            <h1 className="text-xl font-semibold tracking-tight">PGC Clients</h1>
+            <p className="text-sm text-muted-foreground">
               Manage and review PGC clients submitted to the database.
             </p>
           </div>
           {/* Add New Client Modal */}
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="default">Add New Record</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-[35rem] w-full">
-              <DialogHeader>
-                <DialogTitle>Add New Client</DialogTitle>
+          {canCreate("clients") && (
+            <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all duration-200">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add New Client
+                </Button>
+              </DialogTrigger>
+            <DialogContent className="max-w-[35rem] w-full max-h-[90vh] overflow-y-auto">
+              <DialogHeader className="space-y-3 pb-2">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-50 rounded-lg">
+                    <UserPlus className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-2xl">Add New Client</DialogTitle>
+                    <DialogDescription className="text-sm mt-1">
+                      Create a new client record and link to project
+                    </DialogDescription>
+                  </div>
+                </div>
               </DialogHeader>
-              <ClientFormModal />
+              <Separator />
+              <ClientFormModal onSubmit={fetchData} onClose={() => setOpenDialog(false)} />
             </DialogContent>
           </Dialog>
+          )}
         </div>
 
         {/* Data Table with instant update on add/edit/delete */}

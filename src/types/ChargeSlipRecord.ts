@@ -8,7 +8,7 @@ import { Timestamp } from "firebase/firestore";
 /**
  * Allowed service categories in charge slips.
  */
-export type ValidCategory = "equipment" | "retail" | "bioinformatics" | "laboratory";
+export type ValidCategory = "equipment" | "retail" | "bioinformatics" | "laboratory" | "training";
 
 /**
  * Constant array of valid service categories (for UI/filtering/validation).
@@ -18,6 +18,7 @@ export const VALID_CATEGORIES: ValidCategory[] = [
   "retail",
   "bioinformatics",
   "laboratory",
+  "training",
 ];
 
 export interface ChargeSlipRecord {
@@ -34,6 +35,7 @@ export interface ChargeSlipRecord {
 
   services: SelectedService[];
   useInternalPrice: boolean;
+  useAffiliationAsClientName?: boolean; // Display affiliation instead of name in PDF
 
   preparedBy: AdminInfo;
   approvedBy: {

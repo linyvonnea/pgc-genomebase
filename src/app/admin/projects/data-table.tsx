@@ -1,7 +1,4 @@
-// Admin Projects Data Table
-// Generic, reusable data table for displaying and filtering projects in the admin dashboard.
-
-"use client"
+"use client";
 
 import {
   ColumnDef,
@@ -10,15 +7,13 @@ import {
   useReactTable,
   getSortedRowModel,
   SortingState,
-  getFilteredRowModel,
-  ColumnFiltersState,
   getPaginationRowModel,
-} from "@tanstack/react-table"
-import { useState } from "react"
-import { Project } from "@/types/Project"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
+} from "@tanstack/react-table";
+import { useMemo, useState } from "react";
+import { Project } from "@/types/Project";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -26,189 +21,691 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { ChevronsLeft, ChevronsRight, Filter, X, ChevronDown } from "lucide-react";
+import { Card } from "@/components/ui/card";
 
 // Props for the generic DataTable component
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
-  meta?: { onSuccess?: () => void }
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  meta?: { onSuccess?: () => void };
 }
 
-// Custom global filter: checks if any cell value contains the filter string
-function customGlobalFilterFn<TData extends object>(
-  row: any,
-  columnId: string,
-  filterValue: string
-) {
-  const values = Object.values(row.original).map((v) =>
-    Array.isArray(v) ? v.join(", ") : String(v ?? "")
-  )
-  return values.some((value) =>
-    value.toLowerCase().includes(filterValue.toLowerCase())
-  )
-}
+// Helper to parse the MM-DD-YYYY string into a Date
+const parseDate = (dateStr?: string) => {
+  if (!dateStr) return null;
+  const [m, d, y] = dateStr.split("-").map(Number);
+  if (isNaN(m) || isNaN(d) || isNaN(y)) return null;
+  return new Date(y, m - 1, d);
+};
 
-// Generic DataTable component for displaying tabular data with search, filter, and pagination
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends Project, TValue>({
   columns,
   data,
   meta,
 }: DataTableProps<TData, TValue>) {
-  // State for sorting, column filters, and global search
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const [globalFilter, setGlobalFilter] = useState("")
+  // State for search, cards, and date filters
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("__all");
+  const [institutionFilter, setInstitutionFilter] = useState<string[]>([]);
+  const [serviceRequestedFilter, setServiceRequestedFilter] = useState<string[]>([]);
+  const [fundingCategoryFilter, setFundingCategoryFilter] = useState<string[]>([]);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [yearFilter, setYearFilter] = useState("all");
+  const [monthFilter, setMonthFilter] = useState("all");
+  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(true);
+  const [filterOrder, setFilterOrder] = useState<Array<{type: string, value: string}>>([]);
 
-  // Set up TanStack Table instance
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  // Filter summary label (Laboratory+2026+January style)
+  const filterSummaryLabel = useMemo(() => {
+    const orderedFilters = [];
+    
+    // Add filters in the order they were selected
+    filterOrder.forEach(filter => {
+      if (filter.type === 'status' && statusFilter !== "__all") {
+        orderedFilters.push(statusFilter);
+      } else if (filter.type === 'institution' && institutionFilter.includes(filter.value)) {
+        orderedFilters.push(filter.value);
+      } else if (filter.type === 'service' && serviceRequestedFilter.includes(filter.value)) {
+        orderedFilters.push(filter.value);
+      } else if (filter.type === 'funding' && fundingCategoryFilter.includes(filter.value)) {
+        orderedFilters.push(filter.value);
+      } else if (filter.type === 'search' && globalFilter) {
+        orderedFilters.push(`"${globalFilter}"`);
+      }
+    });
+    
+    // Add Year and Month at the end
+    if (yearFilter !== "all") orderedFilters.push(yearFilter);
+    if (monthFilter !== "all") {
+      const m = monthNames[parseInt(monthFilter) - 1];
+      if (m) orderedFilters.push(m);
+    }
+    
+    return orderedFilters.length > 0 ? orderedFilters.join(" + ") : "No filters applied";
+  }, [statusFilter, institutionFilter, serviceRequestedFilter, fundingCategoryFilter, globalFilter, yearFilter, monthFilter, filterOrder, monthNames]);
+
+  // Derive available years
+  const availableYears = useMemo(() => {
+    const fixedRange = [2020, 2021, 2022, 2023, 2024, 2025];
+    const dataYears = data.map(item => {
+      const d = parseDate(item.startDate);
+      return d ? d.getFullYear() : null;
+    }).filter(Boolean) as number[];
+
+    return Array.from(new Set([...fixedRange, ...dataYears])).sort((a, b) => b - a);
+  }, [data]);
+
+  // Main filtering logic
+  const filteredData = useMemo(() => {
+    return data.filter((item) => {
+      // 1. Text Search
+      const q = globalFilter.trim().toLowerCase();
+      const haystack = `${item.pid || ""} ${item.title || ""} ${item.lead || ""} ${item.personnelAssigned || ""} ${item.sendingInstitution || ""}`.toLowerCase();
+      const matchesSearch = q === "" || haystack.includes(q);
+
+      // 2. Status Filter
+      const matchesStatus = statusFilter === "__all" || item.status === statusFilter;
+
+      // 3. Institution Filter
+      const matchesInstitution =
+        institutionFilter.length === 0 ||
+        institutionFilter.some(f => {
+          if (f === "__blank__") {
+            return !item.sendingInstitution || item.sendingInstitution.trim() === "";
+          }
+          return item.sendingInstitution === f;
+        });
+
+      // 4. Service Requested Filter
+      const matchesServiceRequested =
+        serviceRequestedFilter.length === 0 ||
+        serviceRequestedFilter.some(f => {
+          const services = Array.isArray(item.serviceRequested)
+            ? item.serviceRequested
+            : item.serviceRequested ? [item.serviceRequested] : [];
+          return services.includes(f);
+        });
+
+      // 5. Funding Category Filter
+      const matchesFundingCategory =
+        fundingCategoryFilter.length === 0 ||
+        fundingCategoryFilter.includes(item.fundingCategory || "");
+
+      // 6. Date Filters
+      const date = parseDate(item.startDate);
+      const matchesYear =
+        yearFilter === "all" ||
+        (date && date.getFullYear().toString() === yearFilter) ||
+        (!item.startDate && yearFilter === "all");
+      const matchesMonth =
+        monthFilter === "all" ||
+        (date && (date.getMonth() + 1).toString() === monthFilter) ||
+        (!item.startDate && monthFilter === "all");
+
+      return matchesSearch && matchesStatus && matchesInstitution && matchesServiceRequested && matchesFundingCategory && matchesYear && matchesMonth;
+    });
+  }, [data, globalFilter, statusFilter, institutionFilter, serviceRequestedFilter, fundingCategoryFilter, yearFilter, monthFilter]);
+  // Service Requested and Funding Category card definitions
+  const serviceRequestedOptions = [
+    { id: "Laboratory Services", label: "Laboratory Services", color: "text-blue-600", border: "border-blue-200", bg: "bg-blue-50" },
+    { id: "Retail Sales", label: "Retail Sales", color: "text-green-600", border: "border-green-200", bg: "bg-green-50" },
+    { id: "Equipment Use", label: "Equipment Use", color: "text-purple-600", border: "border-purple-200", bg: "bg-purple-50" },
+    { id: "Bioinformatics Analysis", label: "Bioinformatics Analysis", color: "text-indigo-600", border: "border-indigo-200", bg: "bg-indigo-50" },
+    { id: "Training", label: "Training", color: "text-orange-600", border: "border-orange-200", bg: "bg-orange-50" },
+  ];
+
+  const fundingCategoryOptions = [
+    { id: "In-House", label: "In-House", color: "text-cyan-600", border: "border-cyan-200", bg: "bg-cyan-50" },
+    { id: "External", label: "External", color: "text-emerald-600", border: "border-emerald-200", bg: "bg-emerald-50" },
+  ];
+
+  // Reset to first page when filtering
+  const prevFilterRef = useState({ globalFilter, statusFilter, institutionFilter, yearFilter, monthFilter })[0];
+  if (
+    prevFilterRef.globalFilter !== globalFilter ||
+    prevFilterRef.statusFilter !== statusFilter ||
+    JSON.stringify(prevFilterRef.institutionFilter) !== JSON.stringify(institutionFilter) ||
+    prevFilterRef.yearFilter !== yearFilter ||
+    prevFilterRef.monthFilter !== monthFilter
+  ) {
+    prevFilterRef.globalFilter = globalFilter;
+    prevFilterRef.statusFilter = statusFilter;
+    prevFilterRef.institutionFilter = institutionFilter;
+    prevFilterRef.yearFilter = yearFilter;
+    prevFilterRef.monthFilter = monthFilter;
+    setPagination(p => ({ ...p, pageIndex: 0 }));
+  }
+
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
+    state: { sorting, pagination },
+    onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    globalFilterFn: customGlobalFilterFn,
-    onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: setGlobalFilter,
-    state: {
-      sorting,
-      columnFilters,
-      globalFilter,
-    },
-  })
+    manualPagination: false,
+  });
 
-  // Track which status filter is selected for button highlighting
-  const selectedStatus = table.getColumn("status")?.getFilterValue()
+  // Card Definitions
+  // Dynamic counts from Firestore data
+  const statusCounts = {
+    Pending: data.filter(i => i.status === "Pending").length,
+    Ongoing: data.filter(i => i.status === "Ongoing").length,
+    Completed: data.filter(i => i.status === "Completed").length,
+    Cancelled: data.filter(i => i.status === "Cancelled").length,
+  };
+  const statuses = [
+    { id: "Pending", label: "Pending", color: "text-blue-600", border: "border-blue-200", bg: "bg-blue-50", count: statusCounts.Pending },
+    { id: "Ongoing", label: "Ongoing", color: "text-yellow-600", border: "border-yellow-200", bg: "bg-yellow-50", count: statusCounts.Ongoing },
+    { id: "Completed", label: "Completed", color: "text-green-600", border: "border-green-200", bg: "bg-green-50", count: statusCounts.Completed },
+    { id: "Cancelled", label: "Cancelled", color: "text-red-600", border: "border-red-200", bg: "bg-red-50", count: statusCounts.Cancelled },
+  ];
+
+  const institutions = [
+    { id: "UP System", label: "UP System", color: "text-blue-600", border: "border-blue-200", bg: "bg-blue-50" },
+    { id: "SUC/HEI", label: "SUC/HEI", color: "text-green-600", border: "border-green-200", bg: "bg-green-50" },
+    { id: "Government", label: "Government", color: "text-indigo-600", border: "border-indigo-200", bg: "bg-indigo-50" },
+    { id: "Private/Local", label: "Private/Local", color: "text-purple-600", border: "border-purple-200", bg: "bg-purple-50" },
+    { id: "International", label: "International", color: "text-orange-600", border: "border-orange-200", bg: "bg-orange-50" },
+    { id: "N/A", label: "N/A", color: "text-gray-600", border: "border-gray-200", bg: "bg-gray-50" },
+      // ...existing code...
+  ];
+
+  const activeFiltersCount = [
+    statusFilter !== "__all",
+    institutionFilter.length > 0,
+    serviceRequestedFilter.length > 0,
+    fundingCategoryFilter.length > 0,
+    yearFilter !== "all",
+    monthFilter !== "all",
+    globalFilter !== "",
+  ].filter(Boolean).length;
 
   return (
     <div className="space-y-4">
-      {/* Search and Filter Controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          {/* Global search input */}
-          <Input
-            placeholder="Search projects..."
-            value={globalFilter ?? ""}
-            onChange={(event) => setGlobalFilter(event.target.value)}
-            className="max-w-sm"
-          />
-          {/* Status filter buttons */}
-          <Button
-            variant="outline"
-            onClick={() => table.getColumn("status")?.setFilterValue("Completed")}
-            className={cn(
-              "ml-2",
-              selectedStatus === "Completed" ? "bg-primary text-primary-foreground border-primary" : ""
+      {/* Filters & Overview Section */}
+      <Card className="overflow-hidden">
+        <div 
+          className="flex items-center justify-between px-3 py-2 border-b cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
+        >
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-gray-800">Filters & Overview</h3>
+            {activeFiltersCount > 0 && isFiltersCollapsed && (
+              <Badge variant="secondary" className="h-5 px-2 text-[10px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-100">
+                {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} active
+              </Badge>
             )}
-          >
-            Completed
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => table.getColumn("status")?.setFilterValue("Ongoing")}
-            className={cn(
-              selectedStatus === "Ongoing" ? "bg-primary text-primary-foreground border-primary" : ""
-            )}
-          >
-            Ongoing
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => table.getColumn("status")?.setFilterValue("Cancelled")}
-            className={cn(
-              selectedStatus === "Cancelled" ? "bg-primary text-primary-foreground border-primary" : ""
-            )}
-          >
-            Cancelled
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => table.getColumn("status")?.setFilterValue(undefined)}
-            className={cn(
-              selectedStatus === undefined ? "bg-primary text-primary-foreground border-primary" : ""
-            )}
-          >
-            All
-          </Button>
+          </div>
+          <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? "" : "rotate-180"}`} />
         </div>
-        {/* Row count display */}
-        <div className="text-sm text-muted-foreground">
-          {table.getFilteredRowModel().rows.length} of {table.getCoreRowModel().rows.length} projects
-        </div>
-      </div>
+        
+        {!isFiltersCollapsed && (
+          <div className="bg-white rounded-lg border border-gray-200 p-3 space-y-3">
+            {/* Primary Content Filters Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+              {/* Institution Type */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Institution Type</label>
+                <div className="grid grid-cols-2 gap-1">
+                  {institutions.map((inst) => {
+                    const isActive = institutionFilter.includes(inst.id);
+                    return (
+                      <button
+                        key={inst.id}
+                        onClick={() => {
+                          if (isActive) {
+                            setInstitutionFilter(institutionFilter.filter(i => i !== inst.id));
+                            setFilterOrder(prev => prev.filter(f => !(f.type === 'institution' && f.value === inst.id)));
+                          } else {
+                            setInstitutionFilter([...institutionFilter, inst.id]);
+                            setFilterOrder(prev => [...prev, {type: 'institution', value: inst.id}]);
+                          }
+                        }}
+                        className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                          isActive
+                            ? `${inst.bg} ${inst.border} font-semibold ${inst.color}`
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
+                        {inst.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-      {/* Table */}
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            { ...header.getContext(), meta }
-                          )}
-                    </TableHead>
-                  )
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, { ...cell.getContext(), meta })}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              {/* Service Requested */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Service Requested</label>
+                <div className="grid grid-cols-2 gap-1">
+                  {serviceRequestedOptions.map((service) => {
+                    const isActive = serviceRequestedFilter.includes(service.id);
+                    return (
+                      <button
+                        key={service.id}
+                        onClick={() => {
+                          if (isActive) {
+                            setServiceRequestedFilter(serviceRequestedFilter.filter(s => s !== service.id));
+                            setFilterOrder(prev => prev.filter(f => !(f.type === 'service' && f.value === service.id)));
+                          } else {
+                            setServiceRequestedFilter([...serviceRequestedFilter, service.id]);
+                            setFilterOrder(prev => [...prev, {type: 'service', value: service.id}]);
+                          }
+                        }}
+                        className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm text-left ${
+                          isActive
+                            ? `${service.bg} ${service.border} font-semibold ${service.color}`
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
+                        {service.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
-      {/* Pagination Controls */}
-      <div className="flex items-center justify-between space-x-2">
+              {/* Project Status */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Project Status</label>
+                <div className="grid grid-cols-1 gap-1">
+                  {statuses.map((stat) => {
+                    const isActive = statusFilter === stat.id;
+                    return (
+                      <button
+                        key={stat.id}
+                        onClick={() => {
+                          if (isActive) {
+                            setStatusFilter("__all");
+                            setFilterOrder(prev => prev.filter(f => f.type !== 'status'));
+                          } else {
+                            setStatusFilter(stat.id);
+                            setFilterOrder(prev => [...prev.filter(f => f.type !== 'status'), {type: 'status', value: stat.id}]);
+                          }
+                        }}
+                        className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                          isActive
+                            ? `${stat.bg} ${stat.border} font-semibold ${stat.color}`
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
+                        {stat.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Funding Category */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Funding Category</label>
+                <div className="grid grid-cols-1 gap-1">
+                  {fundingCategoryOptions.map((funding) => {
+                    const isActive = fundingCategoryFilter.includes(funding.id);
+                    return (
+                      <button
+                        key={funding.id}
+                        onClick={() => {
+                          if (isActive) {
+                            setFundingCategoryFilter(fundingCategoryFilter.filter(f => f !== funding.id));
+                            setFilterOrder(prev => prev.filter(f => !(f.type === 'funding' && f.value === funding.id)));
+                          } else {
+                            setFundingCategoryFilter([...fundingCategoryFilter, funding.id]);
+                            setFilterOrder(prev => [...prev, {type: 'funding', value: funding.id}]);
+                          }
+                        }}
+                        className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                          isActive
+                            ? `${funding.bg} ${funding.border} font-semibold ${funding.color}`
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
+                        {funding.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Search Tools & Summary Row */}
+            <div className="flex flex-wrap items-end justify-between gap-3 pt-2 border-t border-gray-100">
+              {/* Search Tools */}
+              <div className="flex items-end gap-3">
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Search</span>
+                  <div className="relative">
+                    <Input
+                      placeholder="Search all fields..."
+                      value={globalFilter}
+                      onChange={(e) => setGlobalFilter(e.target.value)}
+                      className="h-8 w-48 text-xs pl-3"
+                    />
+                    {globalFilter && (
+                      <button
+                        onClick={() => setGlobalFilter("")}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Year</span>
+                  <Select value={yearFilter} onValueChange={(value) => {
+                    setYearFilter(value);
+                    if (value === "all") {
+                      setFilterOrder(prev => prev.filter(f => f.type !== 'year'));
+                    } else {
+                      setFilterOrder(prev => {
+                        const filtered = prev.filter(f => f.type !== 'year');
+                        return [...filtered, {type: 'year', value: value}];
+                      });
+                    }
+                  }}>
+                    <SelectTrigger className="w-24 h-8 text-xs">
+                      <SelectValue placeholder="Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Years</SelectItem>
+                      {availableYears.map(y => (
+                        <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-0.5">
+                  <span className="text-[8px] font-bold uppercase text-muted-foreground ml-1">Month</span>
+                  <Select value={monthFilter} onValueChange={(value) => {
+                    setMonthFilter(value);
+                    if (value === "all") {
+                      setFilterOrder(prev => prev.filter(f => f.type !== 'month'));
+                    } else {
+                      setFilterOrder(prev => {
+                        const filtered = prev.filter(f => f.type !== 'month');
+                        return [...filtered, {type: 'month', value: value}];
+                      });
+                    }
+                  }}>
+                    <SelectTrigger className="w-28 h-8 text-xs">
+                      <SelectValue placeholder="Month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Months</SelectItem>
+                      {monthNames.map((m, idx) => (
+                        <SelectItem key={m} value={(idx + 1).toString()}>{m}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Summary & Clear Filters */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  {/* Search Tools already above */}
+                </div>
+                
+                {/* Summary Card */}
+                <div className="flex items-center gap-3">
+                  <div 
+                    onClick={() => {
+                      if (statusFilter !== "__all" || 
+                          institutionFilter.length > 0 || 
+                          serviceRequestedFilter.length > 0 || 
+                          fundingCategoryFilter.length > 0 || 
+                          globalFilter || 
+                          yearFilter !== "all" || 
+                          monthFilter !== "all") {
+                        setGlobalFilter("");
+                        setStatusFilter("__all");
+                        setInstitutionFilter([]);
+                        setServiceRequestedFilter([]);
+                        setFundingCategoryFilter([]);
+                        setYearFilter("all");
+                        setMonthFilter("all");
+                        setFilterOrder([]);
+                      }
+                    }}
+                    className={`p-3 rounded-lg border transition-all duration-200 ${
+                      (statusFilter !== "__all" || 
+                       institutionFilter.length > 0 || 
+                       serviceRequestedFilter.length > 0 || 
+                       fundingCategoryFilter.length > 0 || 
+                       globalFilter || 
+                       yearFilter !== "all" || 
+                       monthFilter !== "all")
+                        ? "bg-blue-50 border-blue-200 cursor-pointer hover:bg-blue-100"
+                        : "bg-gray-50 border-gray-200"
+                    }`}
+                  >
+                    <div className="text-right">
+                      <div className="text-xs font-medium text-gray-600 mb-1">
+                        {filterSummaryLabel}
+                      </div>
+                      <div className="text-lg font-bold text-gray-800">{filteredData.length} records</div>
+                      {/* Removed 'Click to clear all filters' label */}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
+      
+      {/* Table Header with Record Count and Navigation */}
+      <div className="flex items-center justify-between py-1">
         <div className="text-sm text-muted-foreground">
-          Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+          Showing {filteredData.length > 0 ? (pagination.pageIndex * pagination.pageSize) + 1 : 0} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredData.length)} of {filteredData.length} records
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
+          <Select
+            value={String(pagination.pageSize)}
+            onValueChange={(v) => table.setPageSize(Number(v))}
+          >
+            <SelectTrigger className="w-[70px] h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[10, 20, 50, 100].map((n) => (
+                <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             variant="outline"
             size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => table.setPageIndex(0)}
+            disabled={!table.getCanPreviousPage()}
+          >
+            &laquo;
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 px-2"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
-            Previous
+            Prev
           </Button>
+          <div className="flex items-center justify-center min-w-[80px] text-sm font-medium">
+            {pagination.pageIndex + 1} / {table.getPageCount() || 1}
+          </div>
           <Button
             variant="outline"
             size="sm"
+            className="h-8 px-2"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
             Next
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+            disabled={!table.getCanNextPage()}
+          >
+            &raquo;
+          </Button>
+        </div>
+      </div>
+
+      {/* Compact Table with Sticky Header */}
+      <div className="rounded-md border overflow-hidden">
+        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+          <Table>
+            <TableHeader className="sticky top-0 bg-muted/95 backdrop-blur-sm z-10">
+              {table.getHeaderGroups().map((hg) => (
+                <TableRow key={hg.id}>
+                  {hg.headers.map((header) => {
+                    const canSort = header.column.getCanSort?.();
+                    const sortDir = header.column.getIsSorted?.();
+                    return (
+                      <TableHead
+                        key={header.id}
+                        style={{ width: header.getSize(), minWidth: header.getSize() }}
+                        onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                        className={`${canSort ? "cursor-pointer select-none" : ""} h-10 text-xs font-semibold border-r last:border-r-0 border-slate-200/60`}
+                      >
+                        <div className="flex items-center gap-1">
+                          {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                          {canSort && (
+                            <span className="ml-1 text-xs opacity-60">
+                              {sortDir === "asc" ? "▲" : sortDir === "desc" ? "▼" : ""}
+                            </span>
+                          )}
+                        </div>
+                      </TableHead>
+                    )
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className="hover:bg-muted/50 transition-colors"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        style={{ width: cell.column.getSize(), minWidth: cell.column.getSize() }}
+                        className="py-2 border-r last:border-r-0 border-slate-100"
+                      >
+                        {flexRender(cell.column.columnDef.cell, { ...cell.getContext(), meta })}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="text-center h-24 text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center gap-2 py-4">
+                      <p>No results found for current filters.</p>
+                      <Button variant="link" onClick={() => {
+                        setStatusFilter("__all");
+                        setInstitutionFilter([]);
+                        setGlobalFilter("");
+                        setYearFilter("all");
+                        setMonthFilter("all");
+                      }}>Clear all filters</Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      {/* Bottom Pagination */}
+      <div className="flex items-center justify-end">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
+          <Select
+            value={String(pagination.pageSize)}
+            onValueChange={(v) => table.setPageSize(Number(v))}
+          >
+            <SelectTrigger className="w-[70px] h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[10, 20, 50, 100].map((n) => (
+                <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => table.setPageIndex(0)}
+            disabled={!table.getCanPreviousPage()}
+          >
+            &laquo;
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 px-2"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Prev
+          </Button>
+          <div className="flex items-center justify-center min-w-[80px] text-sm font-medium">
+            {pagination.pageIndex + 1} / {table.getPageCount() || 1}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 px-2"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+            disabled={!table.getCanNextPage()}
+          >
+            &raquo;
+          </Button>
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,0 +1,4799 @@
+[
+  {
+    "id": "P-2019-000",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2019,
+      "fundingCategory": "In-House",
+      "pid": "P-2019-000",
+      "personnelAssigned": "",
+      "title": "PGC VISAYAS SATELLITE FACILITY",
+      "fundingInstitution": "DOST-PCHRD",
+      "lead": "PGC VISAYAS",
+      "serviceRequested": [
+        "N/A"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "PGCV",
+      "id": "P-2019-000",
+      "startDate": {
+        "_seconds": 1551369600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "N/A",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2020-001",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2020,
+      "fundingCategory": "External",
+      "pid": "P-2020-001",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Global Seaweed STAR Project",
+      "fundingInstitution": "UK Research and Innovation - Global Challenges Research Fund (UKRI-GCRF)",
+      "lead": "Rema C. Sibonga",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "GSStar",
+      "id": "P-2020-001",
+      "startDate": {
+        "_seconds": 1584028800,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2020-002",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "External",
+      "pid": "P-2020-002",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Taklong Barcoding Initiative",
+      "fundingInstitution": "N/A",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "TBI",
+      "id": "P-2020-002",
+      "sendingInstitution": "UP System",
+      "status": "Completed",
+      "year": 0,
+      "lead": "Loina Henzel A. Delgado",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2020-003",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2020,
+      "fundingCategory": "External",
+      "pid": "P-2020-003",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Transcriptome and Gut Metagenome Profile of Penaeus vannamei Exposed to Fluctuating Environmental Temperatures",
+      "fundingInstitution": "DOST-PCAARRD",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "TGMPPEFET",
+      "id": "P-2020-003",
+      "sendingInstitution": "UP System",
+      "status": "Completed",
+      "startDate": null,
+      "lead": "Mary Antonette F. Atilano"
+    }
+  },
+  {
+    "id": "P-2020-004",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2020,
+      "fundingCategory": "External",
+      "pid": "P-2020-004",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Transcriptional Response of Selected Genes of the Green Mussel (Perna viridis) Exposed to Heat Stress",
+      "fundingInstitution": "DOST-ASTHRDP",
+      "lead": "Nadelene Faith N. Cartago",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Cartago",
+      "id": "P-2020-004",
+      "startDate": {
+        "_seconds": 1593705600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2020-005",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "External",
+      "pid": "P-2020-005",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Transcriptome and metabolome profiling of seaweeds to elucidate \"ice-ice\" disease and epiphyte infestation mechanisms",
+      "fundingInstitution": "DOST-PCAARRD",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Ice-Ice",
+      "id": "P-2020-005",
+      "sendingInstitution": "UP System",
+      "status": "Ongoing",
+      "year": 0,
+      "lead": "Denise V. Miranda",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2020-006",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2020,
+      "fundingCategory": "External",
+      "pid": "P-2020-006",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Purification and Characterization of Linamarase from Lakan-1 and Java Variety Cassava (Manihot esculenta Crantz)",
+      "fundingInstitution": "UPV In-House Project",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Cuevas",
+      "id": "P-2020-006",
+      "sendingInstitution": "UP System",
+      "status": "Completed",
+      "lead": "Wilson F. Medrocillo",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2020-007",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2020,
+      "fundingCategory": "External",
+      "pid": "P-2020-007",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Instructional videos for Fish 111, Fish 236, Fish 238, Fish 321",
+      "fundingInstitution": "N/A",
+      "lead": "Leonilo F. Endoma",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Endoma",
+      "id": "P-2020-007",
+      "startDate": {
+        "_seconds": 1595433600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Cancelled"
+    }
+  },
+  {
+    "id": "P-2020-008",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2020,
+      "fundingCategory": "External",
+      "pid": "P-2020-008",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Marine Fisheries Assessment of Panay: Building Local Fisheries Information through Research Capability Enhancement on Higher Education Insitutions ",
+      "fundingInstitution": "CHED",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Panay Marfish Project",
+      "id": "P-2020-008",
+      "sendingInstitution": "UP System",
+      "status": "Completed",
+      "lead": "Ma. Novem Grace Ylayron ",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2020-009",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 0,
+      "fundingCategory": "External",
+      "pid": "P-2020-009",
+      "personnelAssigned": "Marj Gem Bunda-Fajunio",
+      "title": "MS in Chemical Engineering ",
+      "fundingInstitution": "N/A",
+      "lead": "Pretty Lee Silva",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Silva",
+      "id": "P-2020-009",
+      "startDate": {
+        "_seconds": 1597766400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Cancelled"
+    }
+  },
+  {
+    "id": "P-2021-010",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2021,
+      "fundingCategory": "External",
+      "pid": "P-2021-010",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "c/o UP Visayas Tacloban College",
+      "fundingInstitution": "N/A",
+      "lead": "Leni G. Yap-Dejeto",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Glycogen",
+      "id": "P-2021-010",
+      "startDate": {
+        "_seconds": 1614009600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2021-011",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2021,
+      "fundingCategory": "External",
+      "pid": "P-2021-011",
+      "personnelAssigned": "",
+      "title": "DNA barcoding of fishes from Western Visayas, Philippines",
+      "fundingInstitution": "CHED",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "DNA Barcoding",
+      "id": "P-2021-011",
+      "sendingInstitution": "UP System",
+      "status": "Completed",
+      "lead": "Roxanne Cabebe",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2021-012",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2021,
+      "fundingCategory": "External",
+      "pid": "P-2021-012",
+      "personnelAssigned": "",
+      "title": "Population Structure of Green Mussel (Perna viridis) in Panay Island, Philippines using D-loop Sequences ",
+      "fundingInstitution": "DOST-ASTHRDP Thesis Grant",
+      "lead": "Albert C. Noblezada",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Noblezada",
+      "id": "P-2021-012",
+      "startDate": {
+        "_seconds": 1618502400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2021-013",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2021,
+      "fundingCategory": "External",
+      "pid": "P-2021-013",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Genetic Characterization of Macrobrachium populations in the Philippines for broodstock development and seed production",
+      "fundingInstitution": "DOST-PCAARRD",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "GeM-PHIL",
+      "id": "P-2021-013",
+      "sendingInstitution": "SUC/HEI",
+      "status": "Ongoing",
+      "startDate": null,
+      "lead": "Jasper D. Pacho"
+    }
+  },
+  {
+    "id": "P-2021-014",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2021,
+      "fundingCategory": "External",
+      "pid": "P-2021-014",
+      "personnelAssigned": "N/A",
+      "title": "Pre-commercialization of Microwave Extracted Pectin from Waste Calamansi Peels",
+      "fundingInstitution": "CHED",
+      "serviceRequested": [
+        "Retail Sales"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Calamansi Project",
+      "id": "P-2021-014",
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed",
+      "lead": "Kristina Samantha Lacson",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2021-015",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2021,
+      "fundingCategory": "",
+      "pid": "P-2021-015",
+      "personnelAssigned": "N/A",
+      "title": "Effect of high temperature treatments on buffalo milk and buffalo bovine milk blends",
+      "fundingInstitution": "N/A",
+      "lead": "Carolyn T. Mejares",
+      "serviceRequested": [],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Mejares",
+      "id": "P-2021-015",
+      "startDate": {
+        "_seconds": 1629993600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Cancelled"
+    }
+  },
+  {
+    "id": "P-2022-016",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "External",
+      "pid": "P-2022-016",
+      "personnelAssigned": "N/A",
+      "title": "Development of immunoactive and growth promoting AquaFeed additive from Ulva seaweed",
+      "fundingInstitution": "DOST-PCAARRD",
+      "lead": "Rowena E. Cadiz",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "AquaFeed",
+      "id": "P-2022-016",
+      "startDate": {
+        "_seconds": 1642435200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Cancelled"
+    }
+  },
+  {
+    "id": "P-2022-017",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "External",
+      "pid": "P-2022-017",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Development of a Water Quality Biological Monitoring Protocol using Genetic, Phylogenetic and Functional Diversity on Freshwater Zooplankton Communitites in Inland Waters of Panay Island, Philippines",
+      "fundingInstitution": "DOST-PCIEERD",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "PFZ",
+      "id": "P-2022-017",
+      "sendingInstitution": "UP System",
+      "status": "Ongoing",
+      "lead": "Shea Kathleen P. Guinto",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2022-018",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "External",
+      "pid": "P-2022-018",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Fishery and Some Aspects on the Biology and Ecology of the Sergestid Shrimp, Acetes, in Miagao, Iloilo",
+      "fundingInstitution": "DOST-ASTHRDP Thesis Grant",
+      "lead": "Rother M. Gaudiel",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "RGaudiel",
+      "id": "P-2022-018",
+      "startDate": {
+        "_seconds": 1646150400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2022-019",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "External",
+      "pid": "P-2022-019",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Genetic Marker Assessment of 12s and 18s of Kappaphycus striatus collected in Palawan",
+      "fundingInstitution": "c/o Global Seaweed STAR Project",
+      "lead": "John Rey F. Rasgo",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "JRRasgo",
+      "id": "P-2022-019",
+      "startDate": {
+        "_seconds": 1646323200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2022-020",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "External",
+      "pid": "P-2022-020",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "ESKAPE Pathogens in Intensive Care Unit from a Tertiary Healthcare Setting",
+      "fundingInstitution": "N/A",
+      "lead": "Luke Dranoel D. Atencio",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "LDAtencio",
+      "id": "P-2022-020",
+      "startDate": {
+        "_seconds": 1646668800,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2022-021",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "External",
+      "pid": "P-2022-021",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Dynamics of the Epibacterial Community Structure and Composition of Kappaphycus alvarezii in Response to Thermal-induced Ice-ice Disease",
+      "fundingInstitution": "c/o Ice-ice Project",
+      "lead": "Whelver N. Surnido",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "WNSurnido",
+      "id": "P-2022-021",
+      "startDate": {
+        "_seconds": 1647187200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2022-022",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "External",
+      "pid": "P-2022-022",
+      "personnelAssigned": "N/A",
+      "title": "Assessment of Anthropogenic Marine Debris and Mangrove Forest Health in Iloilo Strait, Western Visayas, Philippines",
+      "fundingInstitution": "DOST-ASTHRDP Thesis Grant",
+      "lead": "Kingsley John de los Santos",
+      "serviceRequested": [
+        "Retail Sales"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "KDSantos",
+      "id": "P-2022-022",
+      "startDate": {
+        "_seconds": 1648051200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2022-023",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "External",
+      "pid": "P-2022-023",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Assessment of Antimicrobial Activitiy of Selected Fungi from Tilapia Greenwater Technology Against Vibrio parahaemolyticus in Blood Cockle, Anadara granosa",
+      "fundingInstitution": "DOST Thesis Grant",
+      "lead": "Karl C. Abismo",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "KCAbismo",
+      "id": "P-2022-023",
+      "startDate": {
+        "_seconds": 1648137600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2022-024",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "External",
+      "pid": "P-2022-024",
+      "personnelAssigned": "N/A",
+      "title": "Sequencing and Analysis of SARS-CoV-2 genomes in swab specimens collected by subnational / DOH-accredited COVID-19 laboratories in the Philippines from March to October 2020",
+      "fundingInstitution": "PGC Visayas",
+      "lead": "Benedict Maralit",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Retrospective Biosurveillance",
+      "id": "P-2022-024",
+      "startDate": {
+        "_seconds": 1651161600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2022-025",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "In-House",
+      "pid": "P-2022-025",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Molecular detection of Henipa and Coronavirus in Flying Fox (Order Chiroptera: Family Pteropodidae) roost within First Gas Plant Site, Batangas City",
+      "fundingInstitution": "PGC Visayas",
+      "lead": "Philip Alviola",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Bats",
+      "id": "P-2022-025",
+      "startDate": {
+        "_seconds": 1651161600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2022-026",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "In-House",
+      "pid": "P-2022-026",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Whole Genome Sequencing of the Philippine spotted deer  (Rusa alfredi)",
+      "fundingInstitution": "PGC Visayas",
+      "lead": "Persie Persie Mark Sienes",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "PGCV_Deer WGS",
+      "id": "P-2022-026",
+      "startDate": {
+        "_seconds": 1651334400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2022-027",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "External",
+      "pid": "P-2022-027",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Genomic variations among different (meta) populations of oriental angelwing clam (Pholas orientalis) in the\r\nWestern Visayas, Philippines: basis for conservation breeding program",
+      "fundingInstitution": "DOST-NRCP NSTEP",
+      "lead": "Beverly T. Jaspe",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Pholas",
+      "id": "P-2022-027",
+      "startDate": {
+        "_seconds": 1651334400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2022-028",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "External",
+      "pid": "P-2022-028",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Metagenomic Characterization of Oil-degrading Microbial Communities from Slipper-shaped Oyster (Magallana bilineata) in Oil-contaminated Areas along Iloilo Strait, Philippines",
+      "fundingInstitution": "PGC Visayas",
+      "lead": "Camille Rose T. Mueda",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Mueda",
+      "id": "P-2022-028",
+      "startDate": {
+        "_seconds": 1654444800,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2022-029",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "In-House",
+      "pid": "P-2022-029",
+      "personnelAssigned": "kgdatoon@up.edu.ph",
+      "title": "Isolation, Characterization and Phylogenetic identification of Thraustochytrids from mangrove\r\nhabitats around Panay Island, Philippines",
+      "fundingInstitution": "PGC Visayas",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Thrausto",
+      "id": "P-2022-029",
+      "sendingInstitution": "UP System",
+      "status": "Ongoing",
+      "lead": "Kneessa Louie G. Dato-on",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2022-030",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "External",
+      "pid": "P-2022-030",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Marine Fisheries Assessment of Panay: Building Local Fisheries Information through Research Capability Enhancement in HEIs Component 3: Chemical Composition of Marine Fishes – Leverage Research Project (SP20-14)",
+      "fundingInstitution": "CHED",
+      "lead": "Zeth Rodario Bebit",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Bebit",
+      "id": "P-2022-030",
+      "startDate": {
+        "_seconds": 1655395200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2022-031",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "External",
+      "pid": "P-2022-031",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Transcriptome and Gut Metagenome Profile of Penaeus vannamei Exposed to Fluctuating Environmental Temperatures",
+      "fundingInstitution": "DOST-PCAARRD",
+      "lead": "Angel Queenee D. Dequito",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "TGMPPEFET",
+      "id": "P-2022-031",
+      "startDate": {
+        "_seconds": 1657555200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2022-032",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "In-House",
+      "pid": "P-2022-032",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Diversity and screening of culturable cellulytic microorganisms from mangrove forests, natural parks, paddy field, and sugar plantation in Panay Island, Philippines",
+      "fundingInstitution": "UPV Regular In-House Research (RIR)",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Cabulong, (OM,CM)",
+      "id": "P-2022-032",
+      "sendingInstitution": "UP System",
+      "status": "Completed",
+      "lead": "Isabel Grace Gatpatan",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2022-033",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "External",
+      "pid": "P-2022-033",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Development of Novel Antiviral Compounds against Arthropod-borne Viruses",
+      "fundingInstitution": "DOST-DST JRP",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "DeNoVac",
+      "id": "P-2022-033",
+      "sendingInstitution": "UP System",
+      "status": "Ongoing",
+      "lead": "Frenche B. Hechanova",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2022-034",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "External",
+      "pid": "P-2022-034",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Production and evaluation of Dried Microalgal Biomass for improved shelf life and product diversification",
+      "fundingInstitution": "DOST-PCAARD",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Microalgae",
+      "id": "P-2022-034",
+      "sendingInstitution": "UP System",
+      "status": "Completed",
+      "startDate": null,
+      "lead": "Arnel Adrian Rara"
+    }
+  },
+  {
+    "id": "P-2022-035",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "External",
+      "pid": "P-2022-035",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Isolation, Characterization, And Identification of Plastic-Degrading Bacteria From Bago City Landfill, Negros Occidental, Philippines",
+      "fundingInstitution": "N/A",
+      "lead": "Pauline Anne Lamela",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Lamela",
+      "id": "P-2022-035",
+      "startDate": {
+        "_seconds": 1670342400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2022-036",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2022,
+      "fundingCategory": "In-House",
+      "pid": "P-2022-036",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "MS Aqua Fish 219 (Advanced Genetics)",
+      "fundingInstitution": "N/A",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Cabarles et al",
+      "id": "P-2022-036",
+      "sendingInstitution": "UP System",
+      "status": "Completed",
+      "startDate": null,
+      "lead": "Edcel T. Resano"
+    }
+  },
+  {
+    "id": "P-2023-037",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "External",
+      "pid": "P-2023-037",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Amplicon Sequencing of Seaweed",
+      "fundingInstitution": "MSU TCTO",
+      "lead": "Dr. Sitti Zayda Halun",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Halun",
+      "id": "P-2023-037",
+      "startDate": {
+        "_seconds": 1675699200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2023-038",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "In-House",
+      "pid": "P-2023-038",
+      "personnelAssigned": "N/A",
+      "title": "Molecular identification of Dugong (Batch 1)",
+      "fundingInstitution": "PGC Visayas",
+      "lead": "PGC Visayas",
+      "serviceRequested": [
+        "Laboratory Services",
+        "Bioinformatics Analysis"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Dugong - Miagao",
+      "id": "P-2023-038",
+      "startDate": {
+        "_seconds": 1678204800,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2023-039",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "In-House",
+      "pid": "P-2023-039",
+      "personnelAssigned": "N/A",
+      "title": "Fish 258 - Marine Biotechnology: Identification of  Lernaea using 18s primers",
+      "fundingInstitution": "PGC Visayas",
+      "lead": "Elsie Y. Guibone",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Lernaea",
+      "id": "P-2023-039",
+      "startDate": {
+        "_seconds": 1678723200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2023-040",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "In-House",
+      "pid": "P-2023-040",
+      "personnelAssigned": "N/A",
+      "title": "Gut Metabarcoding",
+      "fundingInstitution": "PGC Visayas",
+      "lead": "Claire Samantha Juanico",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Fish Gut",
+      "id": "P-2023-040",
+      "startDate": {
+        "_seconds": 1678723200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2023-041",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "In-House",
+      "pid": "P-2023-041",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Real-time PCR Detection of Foodborne Pathogens in\r\nOyster from local markets in Iloilo",
+      "fundingInstitution": "PGC Visayas",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Lumapan",
+      "id": "P-2023-041",
+      "sendingInstitution": "UP System",
+      "status": "Completed",
+      "year": 0,
+      "lead": "Karmelie Jane Monaya",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2023-042",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "External",
+      "pid": "P-2023-042",
+      "personnelAssigned": "stevenmosura@gmail.com",
+      "title": "Bacterial Biofilm Formation and Inhibition Potential of Wild Macrofungi from Miagao, Iloilo",
+      "fundingInstitution": "N/A",
+      "lead": "Beatrice L. Anacita",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Anacita",
+      "id": "P-2023-042",
+      "startDate": {
+        "_seconds": 1681833600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2023-043",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "External",
+      "pid": "P-2023-043",
+      "personnelAssigned": "stevenmosura@gmail.com",
+      "title": "Prebiotic potential of Beta-glucan extracted from macrofungu found in Miagao, Iloilo",
+      "fundingInstitution": "N/A",
+      "lead": "Kyla Julienne P. Talaman",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Talaman",
+      "id": "P-2023-043",
+      "startDate": {
+        "_seconds": 1681833600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2023-044",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "External",
+      "pid": "P-2023-044",
+      "personnelAssigned": "stevenmosura@gmail.com",
+      "title": "Prebiotic potential of Beta-glucan extracted from macrofungu found in Miagao, Iloilo",
+      "fundingInstitution": "N/A",
+      "lead": "Trisha Marie Santos",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Santos",
+      "id": "P-2023-044",
+      "startDate": {
+        "_seconds": 1681920000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2023-045",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "In-House",
+      "pid": "P-2023-045",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Detection of E. coli and Salmonella using Culture-Independent Methods in Spiked Oyster Ostreidaei",
+      "fundingInstitution": "N/A",
+      "lead": "Trisha Catalya",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Catalya",
+      "id": "P-2023-045",
+      "startDate": {
+        "_seconds": 1683216000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2023-046",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "In-House",
+      "pid": "P-2023-046",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Detection of Vibrio parahaemolyticus and Vibrio cholerae in Oyster using Quantitative Real-Time Polymerase Chain Reaction (qPCR)",
+      "fundingInstitution": "N/A",
+      "lead": "Josie Mar G. Cabalo",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Cabalo",
+      "id": "P-2023-046",
+      "startDate": {
+        "_seconds": 1683216000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2023-047",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "In-House",
+      "pid": "P-2023-047",
+      "personnelAssigned": "alex.cayanan2@gmail.com",
+      "title": "Detection of Vibrio parahaemolyticus and Vibrio cholerae in Oyster using Quantitative Real-Time Polymerase Chain Reaction (qPCR)\r\nCharacterization Of Picophytoplankton Abundance And Distribution In Relation To Varying Environmental Conditions In The Bay Zone Of The Batan Bay Estuary",
+      "fundingInstitution": "N/A",
+      "serviceRequested": [
+        "Retail Sales"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "LN - Gregorio, Sibulan",
+      "id": "P-2023-047",
+      "startDate": {
+        "_seconds": 1684166400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed",
+      "lead": "Elize Margareth C. Sibulan"
+    }
+  },
+  {
+    "id": "P-2023-048",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "External",
+      "pid": "P-2023-048",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Molecular identification of microalgae",
+      "fundingInstitution": "PGC Visayas",
+      "lead": "Ella Marie Kristine Baldove",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Feedmix",
+      "id": "P-2023-048",
+      "startDate": {
+        "_seconds": 1685894400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2023-049",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "External",
+      "pid": "P-2023-049",
+      "personnelAssigned": "alex.cayanan2@gmail.com",
+      "title": "The effect of fermented silage on sperm quality of mixed-breed anglo nubian goats in Romblon",
+      "fundingInstitution": "N/A",
+      "lead": "Abigail F. Padua",
+      "serviceRequested": [
+        "Retail Sales"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "LN - Padua",
+      "id": "P-2023-049",
+      "startDate": {
+        "_seconds": 1685980800,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2023-050",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "In-House",
+      "pid": "P-2023-050",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Molecular identification of Warty Pig and Hawk Eagle",
+      "fundingInstitution": "PGC Visayas",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "DENR",
+      "id": "P-2023-050",
+      "sendingInstitution": "Government",
+      "status": "Completed",
+      "year": 0,
+      "lead": "Jojie P. Gereza",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2023-051",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "External",
+      "pid": "P-2023-051",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Assessing the feasibility of implementing field deployable sequencing applied to dengue virus surveillance in the Philippines",
+      "fundingInstitution": "Medical Research Council - University of Glasgow Centre for Virus Research",
+      "lead": "Ma Jowina Galarion",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Dengue Seq",
+      "id": "P-2023-051",
+      "startDate": {
+        "_seconds": 1686672000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2023-052",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "In-House",
+      "pid": "P-2023-052",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Unraveling the Hidden Diversity of Aquatic Fungi from Panay Island, Philippines Project",
+      "fundingInstitution": "DOST",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "AQFP",
+      "id": "P-2023-052",
+      "sendingInstitution": "UP System",
+      "status": "Ongoing",
+      "year": 0,
+      "startDate": null,
+      "lead": "Jan Felnesh Exe Bagacay"
+    }
+  },
+  {
+    "id": "P-2023-053",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "External",
+      "pid": "P-2023-053",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Molecular identification of Kogiid whale stranded in Sicogon Island, Carles, Iloilo",
+      "fundingInstitution": "PGC Visayas",
+      "lead": "Sheryll Mesa",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "BFAR Sperm Whale",
+      "id": "P-2023-053",
+      "startDate": {
+        "_seconds": 1689609600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "International",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2023-054",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "External",
+      "pid": "P-2023-054",
+      "personnelAssigned": "alex.cayanan2@gmail.com",
+      "title": "Effects of Crown-of-Thorns (Acanthaster planci) Starfish as a Growth Enhacer in White Mice (Mus musculus)",
+      "fundingInstitution": "N/A",
+      "lead": "Krshna Mahakaola A. Dueñas",
+      "serviceRequested": [
+        "Retail Sales"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "LN - Dueñas",
+      "id": "P-2023-054",
+      "startDate": {
+        "_seconds": 1690905600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2023-055",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "In-House",
+      "pid": "P-2023-055",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Inhibitory Activity of Vitex negundo (Lagundi) Leaf Extract Against Biofilm Formation and Quorom Sensing of Vibrio cholerae",
+      "fundingInstitution": "N/A",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "V. cholerae (WVSU)",
+      "id": "P-2023-055",
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed",
+      "year": 0,
+      "startDate": null,
+      "lead": "Stephen G. Sabinay"
+    }
+  },
+  {
+    "id": "P-2023-056",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "External",
+      "pid": "P-2023-056",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Fish Species ID",
+      "fundingInstitution": "N/A",
+      "lead": "Joseph Faisan Jr.",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "SEAFDEC (Eel)",
+      "id": "P-2023-056",
+      "startDate": {
+        "_seconds": 1693238400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "International",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2023-057",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "External",
+      "pid": "P-2023-057",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "The Complete Mitogenome of Placuna placenta and its Phylogenetic Implications",
+      "fundingInstitution": "N/A",
+      "lead": "Nadine Belas",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Kapis",
+      "id": "P-2023-057",
+      "startDate": {
+        "_seconds": 1694361600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2023-058",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "External",
+      "pid": "P-2023-058",
+      "personnelAssigned": "dapenuela@up.edu.ph",
+      "title": "Diversity assessment of freshwater zooplankton and macroinvertebrates towards identification of centers of biodiversity conservation in the Jalaur River Basin, Iloilo, Philippines",
+      "fundingInstitution": "OVPAA Balik PhD",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "DAFZooMacro",
+      "id": "P-2023-058",
+      "sendingInstitution": "UP System",
+      "status": "Ongoing",
+      "year": 0,
+      "lead": "Eric Zeus C. Rizo",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2023-059",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "In-House",
+      "pid": "P-2023-059",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Comparative analyses of genomic DNA extracted from fish tissue preserved in 70% alcohol, LN, and absolute ethanol in different periods of time and temperature",
+      "fundingInstitution": "",
+      "lead": "PGC VISAYAS",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Commercial Alcohol Preservation",
+      "id": "P-2023-059",
+      "startDate": {
+        "_seconds": 1697990400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2023-060",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "N/A",
+      "pid": "P-2023-060",
+      "personnelAssigned": "",
+      "title": "MinSU Bioinfo Analysis",
+      "fundingInstitution": "N/A",
+      "lead": "Viva Princess A. Basa",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "MinSU Bioinfo",
+      "id": "P-2023-060",
+      "startDate": {
+        "_seconds": 1699459200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Cancelled"
+    }
+  },
+  {
+    "id": "P-2023-061",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "In-House",
+      "pid": "P-2023-061",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Integrating early warning systems for community outbreaks using water-based epidemiology during post-COVID-19 pandemic",
+      "fundingInstitution": "UP OVPAA EIDR Cycle 9",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "PIPP - EIDR",
+      "id": "P-2023-061",
+      "sendingInstitution": "UP System",
+      "status": "Completed",
+      "year": 0,
+      "lead": "Christine Teves",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2023-062",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "External",
+      "pid": "P-2023-062",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Development of spawning and hatchery techniques for the blood cockle (Anadara granosa) for sustainable aquaculture",
+      "fundingInstitution": "DOST-PCAARRD",
+      "lead": "LC May C. Gasit",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Blood Cockle Project",
+      "id": "P-2023-062",
+      "startDate": {
+        "_seconds": 1700150400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2023-063",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2023,
+      "fundingCategory": "In-House",
+      "pid": "P-2023-063",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Molecular identification of Snake",
+      "fundingInstitution": "N/A",
+      "lead": "Jojie P. Gereza",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "DENR - Snake",
+      "id": "P-2023-063",
+      "startDate": {
+        "_seconds": 1702310400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "Government",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-064",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-064",
+      "personnelAssigned": "",
+      "title": "Detection of Natural Products Derived from Sediment Microbes in Mangrove",
+      "fundingInstitution": "NRCP-DOST",
+      "lead": "Jonie C. Yee, Ph.D.",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Nat Prod (USC) - Dr. Yee",
+      "id": "P-2024-064",
+      "startDate": {
+        "_seconds": 1706112000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2024-065",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "In-House",
+      "pid": "P-2024-065",
+      "personnelAssigned": "",
+      "title": "Diwal Long Range PCR",
+      "fundingInstitution": "PGC Visayas",
+      "lead": "PGC Visayas",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Diwal WGS",
+      "id": "P-2024-065",
+      "startDate": {
+        "_seconds": 1706544000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-066",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "In-House",
+      "pid": "P-2024-066",
+      "personnelAssigned": "",
+      "title": "Shotgun metagenomic analysis of DNA preserved whale ambergris from Antique",
+      "fundingInstitution": "PGC Visayas",
+      "lead": "PGC Visayas",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Ambergris",
+      "id": "P-2024-066",
+      "startDate": {
+        "_seconds": 1706544000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2024-067",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-067",
+      "personnelAssigned": "alex.cayanan2@gmail.com",
+      "title": "Mango Leaves-derived Biochar for the Removal of Amoxicillin in Aqueous Solution",
+      "fundingInstitution": "N/A",
+      "lead": "Kaylen Yvon K. Jalandoni",
+      "serviceRequested": [
+        "Retail Sales"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Jalandoni - Type II",
+      "id": "P-2024-067",
+      "startDate": {
+        "_seconds": 1707235200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-068",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-068",
+      "personnelAssigned": "alex.cayanan2@gmail.com",
+      "title": "Transesterification of Waste Vegetable Oil from Oil-based Thermal Disinfection Technology using SrO/CaO Bamboo Biochar Composite",
+      "fundingInstitution": "N/A",
+      "lead": "Ram Nikko U. Delegero",
+      "serviceRequested": [
+        "Retail Sales"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Delegero - Type II",
+      "id": "P-2024-068",
+      "startDate": {
+        "_seconds": 1707753600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-069",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "In-House",
+      "pid": "P-2024-069",
+      "personnelAssigned": "dapenuela@up.edu.ph",
+      "title": "Composition  and diversity of gut microbiota of Conomurex luhuanus",
+      "fundingInstitution": "PGC Visayas",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Gastropod (RSU)",
+      "id": "P-2024-069",
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed",
+      "year": 0,
+      "lead": "Jordan F. Dorado",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2024-070",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "In-House",
+      "pid": "P-2024-070",
+      "personnelAssigned": "",
+      "title": "DNA Barcoding and Depuration Protocol of Windowpane oysters (Placuna placenta) from Oton, Iloilo",
+      "fundingInstitution": "N/A",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Capiz Shell (WVSU)",
+      "id": "P-2024-070",
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed",
+      "year": 0,
+      "lead": "Caryl Anne G. Abulencia",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2024-071",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-071",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Development of Probiotics from roselle (Hibiscus sabdariffa), mulberry (Morus alba), and corn (Zea mays)",
+      "fundingInstitution": "CHED-LAKAS",
+      "lead": "Dianne A. Peralta",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "DMMMSU - Amplicon",
+      "id": "P-2024-071",
+      "startDate": {
+        "_seconds": 1709481600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-072",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-072",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Development of Probiotics from roselle (Hibiscus sabdariffa), mulberry (Morus alba), and corn (Zea mays)",
+      "fundingInstitution": "CHED-LAKAS",
+      "lead": "Dianne A. Peralta",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "DMMMSU - 16s",
+      "id": "P-2024-072",
+      "startDate": {
+        "_seconds": 1709481600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-073",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-073",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Thesis",
+      "fundingInstitution": "N/A",
+      "lead": "Dianne A. Peralta",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Sea Cucumber (16s)",
+      "id": "P-2024-073",
+      "startDate": {
+        "_seconds": 1709481600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-074",
+    "data": {
+      "notes": "with Dianne",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "In-House",
+      "pid": "P-2024-074",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Optimization of DNA Extraction and DNA Barcoding of Farmed Eucheumatoid Species in San Dionisio, Iloilo",
+      "fundingInstitution": "PGC Visayas",
+      "lead": "Mae Dell S. Silfavan",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Seaweed (BSF) A",
+      "id": "P-2024-074",
+      "startDate": {
+        "_seconds": 1710259200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-075",
+    "data": {
+      "notes": "with Dianne",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "In-House",
+      "pid": "P-2024-075",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Optimization of Different DNA Extraction Protocols for Ulva spp.",
+      "fundingInstitution": "PGC Visayas",
+      "lead": "Jinelyn D. Kapaw-an",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Seaweed (BSF) B",
+      "id": "P-2024-075",
+      "startDate": {
+        "_seconds": 1710259200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-076",
+    "data": {
+      "notes": "with Dianne",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "In-House",
+      "pid": "P-2024-076",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Optimization of DNA Extraction Protocol and DNA Barcoding of Sargassum sp. found in San Lorenzo, Guimaras",
+      "fundingInstitution": "PGC Visayas",
+      "lead": "Princess Sarah Gabiota",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Seaweed (BSF) C",
+      "id": "P-2024-076",
+      "startDate": {
+        "_seconds": 1710259200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-077",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "In-House",
+      "pid": "P-2024-077",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Microbial Community Assemblage of Heliopora corulea coral in Nogas Island Intertidal Zone.",
+      "fundingInstitution": "CFOS-IMFO",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Corals",
+      "id": "P-2024-077",
+      "sendingInstitution": "UP System",
+      "status": "Completed",
+      "year": 0,
+      "lead": "Kharl Marx Adorado",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2024-078",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "In-House",
+      "pid": "P-2024-078",
+      "personnelAssigned": "",
+      "title": "DNA Barcoding of Marine Microalgae (Tetraselmis sp.)",
+      "fundingInstitution": "CFOS-IMFO",
+      "lead": "-",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Tetraselmis",
+      "id": "P-2024-078",
+      "startDate": {
+        "_seconds": 1710259200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-079",
+    "data": {
+      "notes": "Bioinfo",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-079",
+      "personnelAssigned": "",
+      "title": ".",
+      "fundingInstitution": "PGC Visayas",
+      "lead": "Kristina Casandra Pava",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Pava - Bioinfo",
+      "id": "P-2024-079",
+      "startDate": {
+        "_seconds": 1710259200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-080",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-080",
+      "personnelAssigned": "stevenmosura@gmail.com",
+      "title": "Isolation and characterization of cellulolytic bacteria from decomposing leaf litter",
+      "fundingInstitution": "N/A",
+      "lead": "Marielle B. Chu",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "UPHSI - Chu",
+      "id": "P-2024-080",
+      "startDate": {
+        "_seconds": 1710086400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-081",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-081",
+      "personnelAssigned": "",
+      "title": "Role of Type VI Secretion System During Shrimp Infection of Vibrio spp. - Causing Acute Hepatopancreatic Necrosis Disease (AHPND)",
+      "fundingInstitution": "N/A",
+      "lead": "Clarissa L. Gomez",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Vibrio - Bioinfo",
+      "id": "P-2024-081",
+      "startDate": {
+        "_seconds": 1711468800,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "Government",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-082",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "External",
+      "pid": "P-2024-082",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Effects of pH and Temperature on the  Biofilm Formation  and algD Gene Expression in Pseudomonas aeruginosa Clinical Isolates",
+      "fundingInstitution": "N/A",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "USLS - gene expression",
+      "id": "P-2024-082",
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed",
+      "year": 0,
+      "startDate": null,
+      "lead": "Joshua Miguel Javelosa"
+    }
+  },
+  {
+    "id": "P-2024-083",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "External",
+      "pid": "P-2024-083",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Characterizing the Water Physiochemical Properties and Resident Microalgae Community of Cabaghauan Creek, Bacolod City",
+      "fundingInstitution": "N/A",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "USLS - algae",
+      "id": "P-2024-083",
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed",
+      "year": 0,
+      "lead": "Elizabeth D. Fernandez",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2024-084",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "External",
+      "pid": "P-2024-084",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Improvement of Milkfish Larval Rearing and Nursery Culture through Gut Metagenome, Transcriptome Analysis, and Gut Microbial Community Manipulations",
+      "fundingInstitution": " DOST-PCAARRD",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "MF Gut",
+      "id": "P-2024-084",
+      "sendingInstitution": "UP System",
+      "status": "Ongoing",
+      "year": 0,
+      "lead": "Carmelo del Castillo",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2024-085",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "In-House",
+      "pid": "P-2024-085",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Evaluation on the use of Lachancea spp. and Nannochlopsis occulata paste to improve the yield and quality of rotifer Brachionus rotundiformis",
+      "fundingInstitution": "N/A",
+      "lead": "Angel Ann H. Vargas",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Yeast (BSF)",
+      "id": "P-2024-085",
+      "startDate": {
+        "_seconds": 1713283200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-086",
+    "data": {
+      "notes": "Anne",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-086",
+      "personnelAssigned": "",
+      "title": "Metabarcoding of Goat feces for Gastrointestinal nematode identification",
+      "fundingInstitution": "",
+      "lead": "Anne-Nora N. Sabirin",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Goat (Sabirin, MSU IIT)",
+      "id": "P-2024-086",
+      "startDate": {
+        "_seconds": 1714579200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-087",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "External",
+      "pid": "P-2024-087",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Molecular Guided Techniques for Improvement of Reproduction Performance of Saline-Tolerant Tilapia",
+      "fundingInstitution": " DOST-PCAARRD",
+      "serviceRequested": [
+        "Laboratory Services",
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "RepPer SPIN",
+      "id": "P-2024-087",
+      "sendingInstitution": "UP System",
+      "status": "Ongoing",
+      "year": 0,
+      "startDate": null,
+      "lead": "Clarnic A. Berbegal"
+    }
+  },
+  {
+    "id": "P-2024-088",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-088",
+      "personnelAssigned": "stevenmosura@gmail.com",
+      "title": "Microbes Beneath the Surface: Exploring Diversity and Distribution of Microbial Species on Different Soil Samples in Siargao Island",
+      "fundingInstitution": "N/A",
+      "lead": "Gavin Louie M. Amolo",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Soil 16s (Siargao NHS)",
+      "id": "P-2024-088",
+      "startDate": {
+        "_seconds": 1714924800,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-089",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-089",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Detection of Salmonella in Barn Swallow (Hirundu rustica) in Banga, Aklan",
+      "fundingInstitution": "N/A",
+      "lead": "John Paul Resano",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Salmonella sp.",
+      "id": "P-2024-089",
+      "startDate": {
+        "_seconds": 1715011200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-090",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "External",
+      "pid": "P-2024-090",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Understanding Endophytic Fungi in Medicinal Plants and their Antibacterial Potential on Common and Antibiotic-Resistant Bacteria (ESKAPE pathogens)",
+      "fundingInstitution": "DOST/WVSU Main",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "WVSU_16s Amplicon",
+      "id": "P-2024-090",
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed",
+      "year": 0,
+      "lead": "Dr. Jeannemar Genevive Y. Figueras",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2024-091",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "External",
+      "pid": "P-2024-091",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Marker assisted selection of saline tolerant tilapia for enhanced growth and feed conversion efficiency (del Castillo)",
+      "fundingInstitution": " DOST-PCAARRD",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "CdC_Tilapia Mitogenome",
+      "id": "P-2024-091",
+      "sendingInstitution": "UP System",
+      "status": "Ongoing",
+      "year": 0,
+      "lead": "Carmelo del Castillo",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2024-092",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-092",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Identification of seaweed species using DNA\r\nsequence",
+      "fundingInstitution": "N/A",
+      "lead": "Ryuya Matsuda",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "JIRCAS - Matsuda",
+      "id": "P-2024-092",
+      "startDate": {
+        "_seconds": 1718208000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "International",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-093",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-093",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Development of a LAMP-Based Detection Kit for Tomato Yellow Leaf Curl\r\nVirus (TYLCV) Philippine Strains",
+      "fundingInstitution": "DOST VIP",
+      "lead": "Dencee Jean T. Ledesma",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "DOST VIP_Tomato WGS",
+      "id": "P-2024-093",
+      "startDate": {
+        "_seconds": 1720540800,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "Government",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-094",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-094",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Evaluation of the Reproductive Condition and Environmental DNA of Green Mussel Culture in Samar, Philippines",
+      "fundingInstitution": "DOST-ASTHRDP",
+      "lead": "Noeme D. Pajarillo",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Mussel eDNA",
+      "id": "P-2024-094",
+      "startDate": {
+        "_seconds": 1721232000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-095",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-095",
+      "personnelAssigned": "dapenuela@up.edu.ph",
+      "title": "Extraction of Larvae from VSU",
+      "fundingInstitution": "NA",
+      "lead": "Fermina Genson",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "VSU Larvae",
+      "id": "P-2024-095",
+      "startDate": {
+        "_seconds": 1723564800,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-096",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-096",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Growth Performance and Genetic Characterization of Tilapia Strains in Culasi, Antique, Phiippines",
+      "fundingInstitution": "BFAR",
+      "lead": "Fausto dela Cruz",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "iBest/inbreed",
+      "id": "P-2024-096",
+      "startDate": {
+        "_seconds": 1724688000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-097",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-097",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Validation of Protocol for Enriched Amplicon Sequencing of ASFV",
+      "fundingInstitution": "TBA",
+      "lead": "DA-BAI",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "ASFV",
+      "id": "P-2024-097",
+      "startDate": {
+        "_seconds": 1725379200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "Government",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-098",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-098",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Storage of Samples",
+      "fundingInstitution": "N/A",
+      "lead": "Graziele Ann S. Taclas",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "UltraLow",
+      "id": "P-2024-098",
+      "startDate": {
+        "_seconds": 1725465600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-099",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-099",
+      "personnelAssigned": "dapenuela@up.edu.ph",
+      "title": "Clam WGS and Parasite ID",
+      "fundingInstitution": "N/A",
+      "lead": "Vince Fuertes",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Fuertes",
+      "id": "P-2024-099",
+      "startDate": {
+        "_seconds": 1725897600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2024-100",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-100",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Equipment Use",
+      "fundingInstitution": "N/A",
+      "lead": "Jessa Cortes",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Cortes",
+      "id": "P-2024-100",
+      "startDate": {
+        "_seconds": 1725897600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-101",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-101",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Field Testing of Hatchery & Nursery Production & Development of Broodstock Transport Protocols for the Native Catfish Clarias macrocephalus",
+      "fundingInstitution": "DOST-PCAARD",
+      "lead": "Carmelo del Castillo",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "CdC_Catfish WGS",
+      "id": "P-2024-101",
+      "startDate": {
+        "_seconds": 1726675200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2024-102",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-102",
+      "personnelAssigned": "N/A",
+      "title": "Optimization of Universal Primers for DNA Barcoding per Taxa",
+      "fundingInstitution": "PGCV",
+      "lead": "PGC Visayas",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Universal Primers",
+      "id": "P-2024-102",
+      "startDate": {
+        "_seconds": 1726848000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2024-103",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "In-House",
+      "pid": "P-2024-103",
+      "personnelAssigned": "N/A",
+      "title": "Optimization of Reduced Reagents for Amplicon Sequencing",
+      "fundingInstitution": "PGCV",
+      "lead": "PGC Visayas",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "AmpliSeq Optimization",
+      "id": "P-2024-103",
+      "startDate": {
+        "_seconds": 1727798400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2024-104",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "External",
+      "pid": "P-2024-104",
+      "personnelAssigned": "N/A",
+      "title": "Development of Brackishwater Nursery Culturing Systems for Tropical Anguilid Eel, Anguilla marmorata, in the Philippines",
+      "fundingInstitution": "DOST-PCAARD",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "UPV NEED PROJECT",
+      "id": "P-2024-104",
+      "sendingInstitution": "UP System",
+      "status": "Ongoing",
+      "year": 0,
+      "startDate": null,
+      "lead": "Cedric Jay A. Nantong"
+    }
+  },
+  {
+    "id": "P-2024-105",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-105",
+      "personnelAssigned": "stevenmosura@gmail.com",
+      "title": "",
+      "fundingInstitution": "DOST",
+      "lead": "Jennifer S. Noveda",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Fish Sauce",
+      "id": "P-2024-105",
+      "startDate": {
+        "_seconds": 1731427200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2024-106",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-106",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "",
+      "fundingInstitution": "",
+      "lead": "Albaris Tahiluddin",
+      "serviceRequested": [],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Albaris",
+      "id": "P-2024-106",
+      "startDate": {
+        "_seconds": 1731513600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-107",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "External",
+      "pid": "P-2024-107",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "“Morpho-Functional Traits and eDNA Metabarcoding of Freshwater Fishes and Invertebrate Communities in Panay Island”. ",
+      "fundingInstitution": "DOST-PCAARD",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Panay Metabarcoding",
+      "id": "P-2024-107",
+      "sendingInstitution": "UP System",
+      "status": "Ongoing",
+      "year": 0,
+      "lead": "Eric Zeus C. Rizo",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2024-108",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-108",
+      "personnelAssigned": "N/A",
+      "title": "Molecular Assisted Markers for the Assessment of Reproductive Performance of Saline Tolerant Population of inbred Niloticus",
+      "fundingInstitution": "DOST-PCAARD",
+      "lead": "Cid Jeriko Dadibalos",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "CID",
+      "id": "P-2024-108",
+      "startDate": {
+        "_seconds": 1732204800,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-109",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-109",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Developing insect-based feed using traditional and molecular approaches for sustainable production of Nile Tilapia in the Philippines",
+      "fundingInstitution": "DOST-PCAARD",
+      "lead": "Dr. Mary Jane S. Apines-Amar",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "IBF-Tilapia",
+      "id": "P-2024-109",
+      "startDate": {
+        "_seconds": 1732636800,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2024-110",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-110",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Seasonal Variability of Ingested Microplastics in Stolephorus indicus (van Hasselt,1823) in Tangalan, Aklan Philippines",
+      "fundingInstitution": "DOST-ATHRDP",
+      "lead": "Christian Jay Rosal",
+      "serviceRequested": [
+        "Retail Sales"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Microplastic",
+      "id": "P-2024-110",
+      "startDate": {
+        "_seconds": 1732723200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2024-111",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "In-House",
+      "pid": "P-2024-111",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Elops Transcriptomics",
+      "fundingInstitution": "N/A",
+      "lead": "Yuga Okamoto",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Elops",
+      "id": "P-2024-111",
+      "startDate": {
+        "_seconds": 1733241600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2024-112",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2024,
+      "fundingCategory": "External",
+      "pid": "P-2024-112",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Probiotics Project",
+      "fundingInstitution": "CHED-LAKAS",
+      "lead": "Christian Molina",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Molina_Probiotics",
+      "id": "P-2024-112",
+      "startDate": {
+        "_seconds": 1733932800,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-113",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-113",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Characterization of Abaca cultivars in the Province of Aklan; Morphological, Tensile Strength and genomic analysis",
+      "fundingInstitution": "N/A",
+      "lead": "Gene Seneris",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Abaca",
+      "id": "P-2025-113",
+      "startDate": {
+        "_seconds": 1736179200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2025-114",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-114",
+      "personnelAssigned": "dapenuela@up.edu.ph",
+      "title": "Perlas Diversity Project",
+      "fundingInstitution": "DOST",
+      "lead": "Stephanie Faith Apines",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Perlas",
+      "id": "P-2025-114",
+      "startDate": {
+        "_seconds": 1736352000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-115",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "In-House",
+      "pid": "P-2025-115",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Laboratory and Tank-based Cultivation of Ulva from the Philippines by germling cluster technique",
+      "fundingInstitution": "N/A",
+      "lead": "Eunice Valad-on",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Ulva",
+      "id": "P-2025-115",
+      "startDate": {
+        "_seconds": 1737907200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-116",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "In-House",
+      "pid": "P-2025-116",
+      "personnelAssigned": "",
+      "title": "Species Identification of Fish Fillet from Thaw Dripping",
+      "fundingInstitution": "N/A",
+      "lead": "PGC VISAYAS",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Pangasius",
+      "id": "P-2025-116",
+      "startDate": {
+        "_seconds": 1737993600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2025-117",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "In-House",
+      "pid": "P-2025-117",
+      "personnelAssigned": "Lee Genesis Mabaquiao",
+      "title": "Assessment of the Lilang Fishery in Miagao, Iloilo",
+      "fundingInstitution": "N/A",
+      "lead": "Tiffany Xu",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Xu",
+      "id": "P-2025-117",
+      "startDate": {
+        "_seconds": 1739289600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2025-118",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-118",
+      "personnelAssigned": "",
+      "title": "Metagenomic Sequencing of Yeast sp. from Plant sample",
+      "fundingInstitution": "N/A",
+      "lead": "Honnie Joy Balauro",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Honnie",
+      "id": "P-2025-118",
+      "startDate": {
+        "_seconds": 1739894400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-119",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-119",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Microbial and Meiofaunal Successional Shifts in Biofilm on Pearl Farm Structures",
+      "fundingInstitution": "DOST",
+      "lead": "Ferlyn Legarde",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Meio",
+      "id": "P-2025-119",
+      "startDate": {
+        "_seconds": 1739980800,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-120",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-120",
+      "personnelAssigned": "kgdatoon@up.edu.ph",
+      "title": "Thraustrochytrid Cultivation in Wastewater for Polyunsaturated Fatty Acid Production as Alternative Fish Feed/Ingredient for Fish",
+      "fundingInstitution": "UPLB-DOST",
+      "lead": "Kyle Anthony C. Salinas",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Thraustro",
+      "id": "P-2025-120",
+      "startDate": {
+        "_seconds": 1740326400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2025-121",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-121",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "",
+      "fundingInstitution": "DOST",
+      "lead": "Dr. Mary Jane S. Apines-Amar",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "",
+      "id": "P-2025-121",
+      "startDate": {
+        "_seconds": 1742832000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-122",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "In-House, External",
+      "pid": "P-2025-122",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "DOST - UPV YY Male Project",
+      "fundingInstitution": "DOST",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "YY Male",
+      "id": "P-2025-122",
+      "sendingInstitution": "UP System",
+      "status": "Ongoing",
+      "year": 0,
+      "lead": "Jezel D. Alcantara",
+      "startDate": null
+    }
+  },
+  {
+    "id": "P-2025-123",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-123",
+      "personnelAssigned": "dapenuela@up.edu.ph",
+      "title": "WGS of Pineapple",
+      "fundingInstitution": "N/A",
+      "lead": "Dionie S. Barrientos",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Pine",
+      "id": "P-2025-123",
+      "startDate": {
+        "_seconds": 1742918400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-124",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-124",
+      "personnelAssigned": "Lee Genesis Mabaquiao",
+      "title": "Molecular Identification of Shipworm Species from Different Mangrove Species in Palawan, Philippines",
+      "fundingInstitution": "N/A",
+      "lead": "Mary Claire Gatucao",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Shipworm",
+      "id": "P-2025-124",
+      "startDate": {
+        "_seconds": 1745251200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2025-125",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-125",
+      "personnelAssigned": "stevenmosura@gmail.com",
+      "title": "Unveiling the Microbiome Profile of Muntingia calabura Roots and Bark: Linking Microbial Diversity to Secondary Metabolite Production",
+      "fundingInstitution": "N/A",
+      "lead": "Maria Isabel Layson",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Layson",
+      "id": "P-2025-125",
+      "startDate": {
+        "_seconds": 1745337600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2025-126",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-126",
+      "personnelAssigned": "",
+      "title": "Potential Application of Liquid Fermented Pineapple Silage to Enhance Growth, Gut Microbiota\r\nand Water Quality in Tilapia spp.",
+      "fundingInstitution": "",
+      "lead": "Cheeny A. Honcada",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Honcada",
+      "id": "P-2025-126",
+      "startDate": {
+        "_seconds": 1745424000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Cancelled"
+    }
+  },
+  {
+    "id": "P-2025-127",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-127",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Development of locally-available essential oil as a growth promoting and anti-microbial feed additive for saline tolerant tilapia Oreochromis niloticus",
+      "fundingInstitution": "DOST",
+      "lead": "Kayla Marie F Parreño",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Parreno",
+      "id": "P-2025-127",
+      "startDate": {
+        "_seconds": 1745510400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-128",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-128",
+      "personnelAssigned": "Jasmine Velo",
+      "title": "Zoonotic Potential of Blastocystis among pigs in Oton, Iloilo",
+      "fundingInstitution": "",
+      "lead": "Louie Altamia",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Blastocystis",
+      "id": "P-2025-128",
+      "startDate": {
+        "_seconds": 1747584000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "Private/Local",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2025-129",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-129",
+      "personnelAssigned": "stevenmosura@gmail.com",
+      "title": "Metagenomics Analysis of Microbial Shifts, Functional Pathways and Probiotic-Pathogen Dynamics in Fermented Saccostrea spp. Insights into Microbial Ecology, Metabolism & Food Safety",
+      "fundingInstitution": "Personal",
+      "lead": "Jelly D. Layda",
+      "serviceRequested": [
+        "Laboratory Services",
+        "Bioinformatics Analysis"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Layda",
+      "id": "P-2025-129",
+      "startDate": {
+        "_seconds": 1747670400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Completed"
+    }
+  },
+  {
+    "id": "P-2025-130",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "In-House",
+      "pid": "P-2025-130",
+      "personnelAssigned": "dapenuela@up.edu.ph",
+      "title": "F219 Advanced Fish Genetics/Metabarcoding",
+      "fundingInstitution": "PGCV",
+      "lead": "Ivy S. Arizapa",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Arizapa",
+      "id": "P-2025-130",
+      "startDate": {
+        "_seconds": 1750348800,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-131",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-131",
+      "personnelAssigned": "Lee Genesis Mabaquiao",
+      "title": "Lernea parasitism in Glossobius aureus from Naujan Lake",
+      "fundingInstitution": "DOST-ASTHRDP",
+      "lead": "Elsie Y. Guibone",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Guibone",
+      "id": "P-2025-131",
+      "startDate": {
+        "_seconds": 1750608000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-132",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-132",
+      "personnelAssigned": "Lee Genesis Mabaquiao",
+      "title": "Investigation on the impacts of marble dust to Acropora hyacinthus: A tale of coral ecological resilience",
+      "fundingInstitution": "DOST-ASTHRDP",
+      "lead": "Vincent Jay H. Gado",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Gado",
+      "id": "P-2025-132",
+      "startDate": {
+        "_seconds": 1750608000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-133",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "In-House",
+      "pid": "P-2025-133",
+      "personnelAssigned": "",
+      "title": "Identification and Molecular Characterization of Colletotrichum sp. complex in tomato",
+      "fundingInstitution": "PGCV",
+      "lead": "Pee Jee Jareno",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Jareno",
+      "id": "P-2025-133",
+      "startDate": {
+        "_seconds": 1751904000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-134",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "In-House",
+      "pid": "P-2025-134",
+      "personnelAssigned": "Ma Carmel Javier",
+      "title": "Population Genetics of Blood Cockle (Tegillarca granosa) in the Philippines: A whole Mitochondrial Analysis",
+      "fundingInstitution": "PGCV",
+      "lead": "Allena Esther D. Arteta",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Arteta",
+      "id": "P-2025-134",
+      "startDate": {
+        "_seconds": 1752422400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "N/A",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-135",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "fundingCategory": "External",
+      "pid": "P-2025-135",
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "title": "Environmental Genetic Analysis of Shellfish and Digitization of Harmful Algal Bloom (HAB) Patterns in WV",
+      "fundingInstitution": "BFAR",
+      "serviceRequested": [
+        "Laboratory Services",
+        "Bioinformatics Analysis"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Sedanza",
+      "id": "P-2025-135",
+      "sendingInstitution": "Government",
+      "status": "Ongoing",
+      "year": 0,
+      "startDate": null,
+      "lead": "Kelee Ira B. Noque"
+    }
+  },
+  {
+    "id": "P-2025-136",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-136",
+      "personnelAssigned": "Lee Genesis Mabaquiao",
+      "title": "Diatoms Genetic Analysis Services",
+      "fundingInstitution": "JIRCAS",
+      "lead": "Sanda Tetsuya",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Tetsuya",
+      "id": "P-2025-136",
+      "startDate": {
+        "_seconds": 1756915200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "International",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-137",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-137",
+      "personnelAssigned": "xemenesmeiservidadsecondes@gmail.com",
+      "title": "In-Vitro Characterization, Sequencing & Greenhouse Evaluation of Endophytic Bacteria for Sugarcane Stress Tolerance",
+      "fundingInstitution": "N/A",
+      "lead": "Virgie Celestial",
+      "serviceRequested": [
+        "Laboratory Services",
+        "Bioinformatics Analysis"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Celestial",
+      "id": "P-2025-137",
+      "startDate": {
+        "_seconds": 1757347200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-138",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-138",
+      "personnelAssigned": "",
+      "title": "16s Metagenomics of Sediment Samples",
+      "fundingInstitution": "N/A",
+      "lead": "Joshua Y. Divinagracia",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Divinagracia",
+      "id": "P-2025-138",
+      "startDate": {
+        "_seconds": 1757433600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-139",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "In-House",
+      "pid": "P-2025-139",
+      "personnelAssigned": "",
+      "title": "Molecular Identification of Stranded Whale",
+      "fundingInstitution": "PGCV",
+      "lead": "Kriz Sanchez Delos Reyes",
+      "serviceRequested": [
+        "Laboratory Services",
+        "Bioinformatics Analysis"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "NEMSU",
+      "id": "P-2025-139",
+      "startDate": {
+        "_seconds": 1759075200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-140",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-140",
+      "personnelAssigned": "",
+      "title": "Surveillance of Antimicrobial resistant bacteria and genes in Iloilo River",
+      "fundingInstitution": "0",
+      "lead": "Adrienne Marrie S. Bugayon-Janagap",
+      "serviceRequested": [],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": " ",
+      "id": "P-2025-140",
+      "startDate": {
+        "_seconds": 1759075200,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-141",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-141",
+      "personnelAssigned": "",
+      "title": "Evaluation of Synergistic Effects of the Extracts from Peacock Flowers and Cadena de AMor Leaves for TiO2-Based Dye Sensitized Solar Cell Application",
+      "fundingInstitution": "N/A",
+      "lead": "Joshua Adrian A. Valdez",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Valdez",
+      "id": "P-2025-141",
+      "startDate": {
+        "_seconds": 1760976000,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing",
+      "clientNames": [
+        "Joshua Adrian A. Valdez",
+        "Joshua Ray P. Brillantes"
+      ]
+    }
+  },
+  {
+    "id": "P-2025-142",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-142",
+      "personnelAssigned": "",
+      "title": "AMR and Whole Genome Sequencing of Blood Cockle Pathogens",
+      "fundingInstitution": "DOST-ASTHRDP",
+      "lead": "Ma. Clarissa Tamon",
+      "serviceRequested": [
+        "Laboratory Services",
+        "Bioinformatics Analysis"
+      ],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Tamon",
+      "id": "P-2025-142",
+      "startDate": {
+        "_seconds": 1761580800,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing",
+      "clientNames": [
+        "Ma. Clarissa Tamon"
+      ]
+    }
+  },
+  {
+    "id": "P-2025-143",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-143",
+      "personnelAssigned": "jeeeaquino@up.edu.ph ",
+      "title": "",
+      "fundingInstitution": "DOST-ASTHRDP",
+      "lead": "Eunice Raiza Panagsagan",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Panagsagan",
+      "id": "P-2025-143",
+      "startDate": {
+        "_seconds": 1761753600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-144",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-144",
+      "fundingInstitution": "DOST-NRCP",
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "OSMAC",
+      "id": "P-2025-144",
+      "startDate": {
+        "_seconds": 1762876800,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "clientNames": [
+        "Francis Legario",
+        "Abolais Ampa Jr."
+      ],
+      "personnelAssigned": "",
+      "title": "Biosynthesis of Novel Bioactive Secondary Metabolites from Philippine Terrestrial Actinomycetes Using One Strain Many Compounds (OSMAC) Approach for Biomedical Applications",
+      "status": "Ongoing",
+      "lead": "Francis Legario",
+      "serviceRequested": [
+        "Laboratory Services",
+        "Bioinformatics Analysis"
+      ]
+    }
+  },
+  {
+    "id": "P-2025-145",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-145",
+      "personnelAssigned": "",
+      "title": "DNA METABARCODING ANALYSIS OF PLANT-BASED DIET COMPOSITION IN LONG-TAILED MACAQUES (Macaca fascicularis Raffles, 1821) IN BARANGAY SUMILE, BUTUAN CITY, PHILIPPINES",
+      "fundingInstitution": "N/A",
+      "lead": "Jana Marie P. Dompor",
+      "serviceRequested": [
+        "Laboratory Services",
+        "Bioinformatics Analysis"
+      ],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Dompor",
+      "id": "P-2025-145",
+      "startDate": {
+        "_seconds": 1763913600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Incoming",
+      "clientNames": [
+        "Andoni James Mediodia",
+        "Jana Marie P. Dompor"
+      ]
+    }
+  },
+  {
+    "id": "P-2025-146",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-146",
+      "personnelAssigned": "",
+      "title": "Mangrove Project",
+      "fundingInstitution": "N/A",
+      "lead": "Sealthiel Andrei Malones",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "clientNames": [],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Malones",
+      "id": "P-2025-146",
+      "startDate": {
+        "_seconds": 1764518400,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "UP System",
+      "status": "Ongoing"
+    }
+  },
+  {
+    "id": "P-2025-147",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "External",
+      "pid": "P-2025-147",
+      "personnelAssigned": "",
+      "title": "Microbiota Analysis",
+      "fundingInstitution": "NFRDI",
+      "lead": "Mary Nia M. Santos",
+      "serviceRequested": [
+        "Bioinformatics Analysis"
+      ],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Santos",
+      "id": "P-2025-147",
+      "startDate": null,
+      "sendingInstitution": "Government",
+      "status": "Ongoing",
+      "clientNames": [
+        "Mary Nia M. Santos",
+        "Jenz Contante"
+      ]
+    }
+  },
+  {
+    "id": "P-2025-148",
+    "data": {
+      "notes": "",
+      "iid": "",
+      "year": 2025,
+      "fundingCategory": "N/A",
+      "pid": "P-2025-148",
+      "personnelAssigned": "pvjareno@up.edu.ph",
+      "title": "Investigating the Antifungal Potential of Endophytic Fungi Isolated from Mangifera indica against candida krusei",
+      "fundingInstitution": "N/A",
+      "lead": "Eugene Earl P. Drua",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "createdAt": {
+        "_seconds": 1755187200,
+        "_nanoseconds": 0
+      },
+      "projectTag": "Drua",
+      "id": "P-2025-148",
+      "startDate": {
+        "_seconds": 1765209600,
+        "_nanoseconds": 0
+      },
+      "sendingInstitution": "SUC/HEI",
+      "status": "Ongoing",
+      "clientNames": [
+        "Eugene Earl P. Drua"
+      ]
+    }
+  },
+  {
+    "id": "P-2025-150",
+    "data": {
+      "iid": "",
+      "year": 2025,
+      "startDate": {
+        "_seconds": 1765411200,
+        "_nanoseconds": 0
+      },
+      "lead": "VMENF",
+      "clientNames": [
+        "Rhea R. Abapo",
+        "Justine T. Gevana"
+      ],
+      "title": "Aquaculture Management (Fish 205)",
+      "projectTag": "Fish 205",
+      "status": "Ongoing",
+      "sendingInstitution": "UP System",
+      "fundingCategory": "In-House",
+      "fundingInstitution": "N/A",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "personnelAssigned": "Karl Tenizo",
+      "notes": "",
+      "pid": "P-2025-150",
+      "createdAt": {
+        "_seconds": 1767855243,
+        "_nanoseconds": 505000000
+      }
+    }
+  },
+  {
+    "id": "P-2025-151",
+    "data": {
+      "iid": "",
+      "year": 2025,
+      "startDate": {
+        "_seconds": 1765756800,
+        "_nanoseconds": 0
+      },
+      "lead": "N/A",
+      "clientNames": [
+        "Anne Camacho"
+      ],
+      "title": "Liquid Nitrogen Retail Purchase",
+      "projectTag": "Retail",
+      "status": "Ongoing",
+      "sendingInstitution": "Government",
+      "fundingCategory": "In-House",
+      "fundingInstitution": "N/A",
+      "serviceRequested": [
+        "Retail Services"
+      ],
+      "personnelAssigned": "Alex Cayanan",
+      "notes": "",
+      "pid": "P-2025-151",
+      "createdAt": {
+        "_seconds": 1767855532,
+        "_nanoseconds": 792000000
+      }
+    }
+  },
+  {
+    "id": "P-2025-152",
+    "data": {
+      "iid": "",
+      "year": 2025,
+      "startDate": {
+        "_seconds": 1765411200,
+        "_nanoseconds": 0
+      },
+      "lead": "Lee Genesis S. Mabaquiao",
+      "clientNames": [
+        "Lee Genesis S. Mabaquiao"
+      ],
+      "title": "16s Metagenomics Analysis of Banga Microbiota",
+      "projectTag": "Banga",
+      "status": "Ongoing",
+      "sendingInstitution": "UP System",
+      "fundingCategory": "In-House",
+      "fundingInstitution": "In-House",
+      "serviceRequested": [
+        "Laboratory Services",
+        "Bioinformatics Analysis"
+      ],
+      "personnelAssigned": "Lee Genesis Mabaquiao",
+      "notes": "",
+      "pid": "P-2025-152",
+      "createdAt": {
+        "_seconds": 1767855668,
+        "_nanoseconds": 301000000
+      }
+    }
+  },
+  {
+    "id": "P-2025-153",
+    "data": {
+      "iid": "",
+      "year": 2025,
+      "startDate": {
+        "_seconds": 1765929600,
+        "_nanoseconds": 0
+      },
+      "lead": "Mary Dianne Grace Bahuad",
+      "title": "Isolation, Preservation and Growth Kinetics of Selected Thraustrochytrids from natural mangorve areas in Panay Island",
+      "projectTag": "SEAFDEC",
+      "status": "Ongoing",
+      "sendingInstitution": "Government",
+      "fundingCategory": "External",
+      "fundingInstitution": "External",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "personnelAssigned": "",
+      "notes": "",
+      "pid": "P-2025-153",
+      "createdAt": {
+        "_seconds": 1767855855,
+        "_nanoseconds": 757000000
+      },
+      "clientNames": [
+        "Mary Dianne Grace Bahuad",
+        "Kyle Anthony C. Salinas"
+      ]
+    }
+  },
+  {
+    "id": "P-2026-001",
+    "data": {
+      "iid": "9ySJ4vZOZFAwTi9DmF3R",
+      "year": 2026,
+      "lead": "N/A",
+      "title": "Impacts of Black Soldier Fly Frass on Soil Biota and Functional Ecological Indicators in Urban Soils of Bacolod City",
+      "projectTag": "USLS-David",
+      "status": "Ongoing",
+      "sendingInstitution": "Government",
+      "fundingCategory": "External",
+      "fundingInstitution": "External",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "notes": "",
+      "pid": "P-2026-001",
+      "createdAt": {
+        "_seconds": 1767859511,
+        "_nanoseconds": 917000000
+      },
+      "personnelAssigned": "Xemenes Secondes",
+      "startDate": {
+        "_seconds": 1767801600,
+        "_nanoseconds": 0
+      },
+      "clientNames": [
+        "Leazar James V. David",
+        "Earl Francine A. Vallota",
+        "Deborah Zane G. Suyao",
+        "Eunice Lee O. Maribao"
+      ]
+    }
+  },
+  {
+    "id": "P-2026-002",
+    "data": {
+      "iid": "K5532K7Y4gIFDrjLdCUi",
+      "year": 2026,
+      "lead": "N/A",
+      "title": "Microbial Assessment of Tree Planted Areas and Final Benches of the Solid Earth Development Corporation (SEDC) Mining Site in San Fernando Cebu, Ph",
+      "projectTag": "Saripada",
+      "status": "Ongoing",
+      "sendingInstitution": "SUC/HEI",
+      "fundingCategory": "External",
+      "fundingInstitution": "Taiheiyo",
+      "serviceRequested": [
+        "Laboratory Services",
+        "Bioinformatics Analysis"
+      ],
+      "notes": "",
+      "pid": "P-2026-002",
+      "createdAt": {
+        "_seconds": 1767945676,
+        "_nanoseconds": 477000000
+      },
+      "personnelAssigned": "Xemenes Secondes",
+      "startDate": {
+        "_seconds": 1767888000,
+        "_nanoseconds": 0
+      },
+      "clientNames": [
+        "Rene Jane A. Saripada",
+        "Christine Faye O. Gonzaga"
+      ]
+    }
+  },
+  {
+    "id": "P-2026-003",
+    "data": {
+      "iid": "uSdvzunW8ZvVHdmqscFi",
+      "year": 2026,
+      "lead": "N/A",
+      "title": "Evaluation of the Biological Control Potential of Potential of Phyllosphere Endophytes from Theobroma Cacao against Black Pod Rot Disease caused by Phytophthora palmivora",
+      "projectTag": "USLS-Pilarta",
+      "status": "Ongoing",
+      "sendingInstitution": "SUC/HEI",
+      "fundingCategory": "External",
+      "fundingInstitution": "N/A",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "notes": "",
+      "pid": "P-2026-003",
+      "createdAt": {
+        "_seconds": 1768311513,
+        "_nanoseconds": 107000000
+      },
+      "personnelAssigned": "PJ Jareno",
+      "startDate": {
+        "_seconds": 1768233600,
+        "_nanoseconds": 0
+      },
+      "clientNames": [
+        "Aina Marie Pilarta"
+      ]
+    }
+  },
+  {
+    "id": "P-2026-004",
+    "data": {
+      "iid": "DQIQMsaNSwqciI9Rt2Dh",
+      "year": 2026,
+      "startDate": {
+        "_seconds": 1768348800,
+        "_nanoseconds": 0
+      },
+      "lead": "N/A",
+      "title": "Molecular Characterization of Bamboo Shoots Sold in Marawi City Markets for Food Traceability and Conservation",
+      "projectTag": "Salvador",
+      "status": "Ongoing",
+      "sendingInstitution": "SUC/HEI",
+      "fundingCategory": "External",
+      "fundingInstitution": "N/A",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "personnelAssigned": "",
+      "notes": "",
+      "pid": "P-2026-004",
+      "clientNames": [
+        "Orland Philip Salvador"
+      ]
+    }
+  },
+  {
+    "id": "P-2026-005",
+    "data": {
+      "iid": "8rltwfawIwhYCcXVoL48",
+      "year": 2026,
+      "startDate": {
+        "_seconds": 1768780800,
+        "_nanoseconds": 0
+      },
+      "lead": "N/A",
+      "title": "Identification and Molecular Characterization of Colletotrichum spp. causing Anthracnose in Mangifera spp. in Negros Occidental",
+      "projectTag": "USLS-Pediongco",
+      "status": "Ongoing",
+      "sendingInstitution": "SUC/HEI",
+      "fundingCategory": "External",
+      "fundingInstitution": "N/A",
+      "serviceRequested": [
+        "Laboratory Services"
+      ],
+      "personnelAssigned": "PJ Jareno",
+      "notes": "",
+      "pid": "P-2026-005",
+      "createdAt": {
+        "_seconds": 1768797106,
+        "_nanoseconds": 986000000
+      },
+      "clientNames": [
+        "Roshaine Shawtel T. Medel",
+        "Christine John R. Cayetano",
+        "Sophia Isabel B. Pediongco"
+      ]
+    }
+  },
+  {
+    "id": "P-2026-006",
+    "data": {
+      "iid": "",
+      "year": 2026,
+      "startDate": {
+        "_seconds": 1768867200,
+        "_nanoseconds": 0
+      },
+      "lead": "VMENF",
+      "title": "Seaweeds Barcoding",
+      "projectTag": "Comorro",
+      "status": "Ongoing",
+      "sendingInstitution": "UP System",
+      "fundingCategory": "In-House",
+      "fundingInstitution": "N/A",
+      "serviceRequested": [
+        "Laboratory Services",
+        "Equipment Use"
+      ],
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "notes": "",
+      "pid": "P-2026-006",
+      "createdAt": {
+        "_seconds": 1768870546,
+        "_nanoseconds": 249000000
+      },
+      "clientNames": [
+        "Rose Ann Nellie Comorro"
+      ]
+    }
+  },
+  {
+    "id": "P-2026-007",
+    "data": {
+      "iid": "",
+      "year": 2026,
+      "startDate": {
+        "_seconds": 1768867200,
+        "_nanoseconds": 0
+      },
+      "lead": "VMENF",
+      "title": "Aquaculture Feeds Metabarcoding",
+      "projectTag": "Aquaculture Feeds Metabarcoding",
+      "status": "Ongoing",
+      "sendingInstitution": "UP System",
+      "fundingCategory": "In-House",
+      "fundingInstitution": "In-House",
+      "serviceRequested": [
+        "Laboratory Services",
+        "Bioinformatics Analysis"
+      ],
+      "personnelAssigned": "Nadelene Faith Cartago",
+      "notes": "",
+      "pid": "P-2026-007",
+      "createdAt": {
+        "_seconds": 1768870834,
+        "_nanoseconds": 626000000
+      },
+      "clientNames": [
+        "PGC Visayas",
+        " Khryss Dale Ryve Lumaday"
+      ]
+    }
+  },
+  {
+    "id": "P-2026-008",
+    "data": {
+      "pid": "P-2026-008",
+      "iid": "",
+      "year": 2026,
+      "startDate": {
+        "_seconds": 1769385600,
+        "_nanoseconds": 0
+      },
+      "lead": "Francis Legario",
+      "clientNames": [],
+      "title": " Antimicrobial resistance (AMR) in tilapia and its associated important piscine bacterial pathogens in the Philippines",
+      "projectTag": "ISAT-AMR",
+      "status": "Ongoing",
+      "sendingInstitution": "SUC/HEI",
+      "fundingCategory": "External",
+      "fundingInstitution": "N/A",
+      "serviceRequested": [
+        "Training"
+      ],
+      "personnelAssigned": "",
+      "notes": "",
+      "createdAt": {
+        "_seconds": 1769412014,
+        "_nanoseconds": 572000000
+      }
+    }
+  },
+  {
+    "id": "P-2026-009",
+    "data": {
+      "pid": "P-2026-009",
+      "iid": "m30LRlNekF2zSmjpIZYS",
+      "year": 2026,
+      "startDate": {
+        "_seconds": 1769558400,
+        "_nanoseconds": 0
+      },
+      "lead": "VMENF",
+      "title": "Application optimization of carrageenan processing liquid spent wash as a biostimulant for the micropropagation of Eucheuma denticulatum",
+      "projectTag": "EU-Naria",
+      "status": "Ongoing",
+      "sendingInstitution": "UP System",
+      "fundingCategory": "In-House",
+      "fundingInstitution": "In-House",
+      "serviceRequested": [
+        "Equipment Use"
+      ],
+      "personnelAssigned": "Dr. Victor Marco Emmanuel N. Ferriols",
+      "notes": "",
+      "createdAt": {
+        "_seconds": 1769564565,
+        "_nanoseconds": 102000000
+      },
+      "clientNames": [
+        "Ma. Justine Kate Naria"
+      ]
+    }
+  }
+]

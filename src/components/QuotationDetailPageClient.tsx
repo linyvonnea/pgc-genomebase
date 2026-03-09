@@ -8,8 +8,11 @@ import { notFound } from "next/navigation";
 import DownloadButtonSection from "@/components/pdf/DownloadButtonSection";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { logActivity } from "@/services/activityLogService";
+import useAuth from "@/hooks/useAuth";
 
 export default function QuotationDetailPageClient() {
+  const { adminInfo } = useAuth();
   const { referenceNumber } = useParams();
   const router = useRouter();
   const [quotation, setQuotation] = useState<QuotationRecord | null>(null);
@@ -22,6 +25,18 @@ export default function QuotationDetailPageClient() {
       try {
         const data = await getQuotationByReferenceNumber(referenceNumber);
         setQuotation(data);
+        
+        // Log VIEW activity
+        await logActivity({
+          userId: adminInfo?.email || "system",
+          userEmail: adminInfo?.email || "system@pgc.admin",
+          userName: adminInfo?.name || "System",
+          action: "VIEW",
+          entityType: "quotation",
+          entityId: referenceNumber,
+          entityName: `Quotation ${referenceNumber}`,
+          description: `Viewed quotation: ${referenceNumber}`,
+        });
       } catch (err) {
         console.error("Error loading quotation:", err);
       } finally {

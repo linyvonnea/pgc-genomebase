@@ -1,9 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { UIChargeSlipRecord } from "@/types/UIChargeSlipRecord";
 import { Badge } from "@/components/ui/badge";
 import { ValidCategory } from "@/types/ValidCategory";
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { deleteChargeSlip } from "@/services/chargeSlipService";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 // Badge colors for statuses
 const statusColors: Record<string, string> = {
@@ -18,6 +24,7 @@ const categoryColors: Record<ValidCategory, string> = {
   equipment: "bg-blue-100 text-blue-800",
   bioinformatics: "bg-purple-100 text-purple-800",
   retail: "bg-orange-100 text-orange-800",
+  training: "bg-indigo-100 text-indigo-800",
 };
 
 // normalize to epoch ms for proper numeric sorting
@@ -31,116 +38,199 @@ function toMillis(v: unknown): number {
   return NaN;
 }
 
+const ActionCell = ({ row }: { row: any }) => {
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Avoid triggering any row click navigation
+    if (!window.confirm(`Are you sure you want to delete charge slip ${row.original.chargeSlipNumber}?`)) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await deleteChargeSlip(row.original.chargeSlipNumber);
+      toast.success("Charge slip deleted successfully");
+      router.refresh(); // Tells Next.js to re-fetch Server Components data
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("Failed to delete charge slip");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <div className="flex justify-end pr-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+        onClick={handleDelete}
+        disabled={isDeleting}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+};
+
 export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
   {
     id: "dateIssued",
     header: "Date",
     accessorFn: (row) => toMillis((row as any).dateIssued),
+    size: 90,
     cell: ({ getValue }) => {
       const ms = getValue<number>();
-      return isNaN(ms) ? "—" : new Date(ms).toLocaleDateString("en-CA");
+      return <div className="text-xs">{isNaN(ms) ? "—" : new Date(ms).toLocaleDateString("en-CA")}</div>;
     },
     sortDescFirst: true,
   },
   {
     accessorKey: "chargeSlipNumber",
     header: "Charge Slip No.",
+    size: 130,
+    cell: ({ getValue }) => <div className="font-mono text-xs font-semibold">{getValue()}</div>,
   },
   {
     accessorFn: (row) => row.clientInfo?.name,
     id: "clientInfo.name",
     header: "Client Name",
-    cell: ({ getValue }) => getValue() || "—",
-  },
-  {
-    accessorKey: "total",
-    header: "Amount",
-    cell: ({ row }) => {
-      const value = Number(row.getValue("total") ?? 0);
-      return `₱${value.toLocaleString("en-PH", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`;
-    },
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const raw = String(row.getValue("status") ?? "processing").toLowerCase();
-      const color = statusColors[raw] || "bg-gray-100 text-gray-800";
-      return <Badge className={`capitalize ${color}`}>{raw}</Badge>;
-    },
-  },
-  {
-    accessorKey: "datePaid",
-    header: "Date Paid",
-    cell: ({ row }) => {
-      const raw = row.getValue("datePaid") as Date | string | undefined | null;
-      const date = raw instanceof Date ? raw : new Date(raw || "");
-      return isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-CA");
-    },
-  },
-  {
-    accessorFn: (row) => row.clientInfo?.address,
-    id: "clientInfo.address",
-    header: "Address",
-    cell: ({ getValue }) => getValue() || "—",
-  },
-  {
-    accessorFn: (row) => row.project?.title,
-    id: "project.title",
-    header: "Payment For",
-    cell: ({ getValue }) => getValue() || "—",
-  },
-  {
-    accessorKey: "categories",
-    header: "Service Requested",
-    cell: ({ row }) => {
-      const categories = (row.getValue("categories") as ValidCategory[] | undefined) ?? [];
-      if (!categories.length) return "—";
+    size: 180,
+    cell: ({ getValue }) => {
+      const name = getValue() as string || "—";
       return (
-        <div className="flex flex-wrap gap-1">
-          {categories.map((cat) => (
-            <span
-              key={cat}
-              className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${categoryColors[cat]}`}
-            >
-              {cat}
-            </span>
-          ))}
+        <div className="max-w-[180px] truncate text-xs font-medium" title={name}>
+          {name}
         </div>
       );
     },
   },
   {
-    accessorKey: "dvNumber",
-    header: "DV No.",
-    cell: ({ row }) => row.getValue("dvNumber") || "—",
+    accessorKey: "total",
+    header: () => <div className="text-right">Amount</div>,
+    size: 110,
+    cell: ({ row }) => {
+      const value = Number(row.getValue("total") ?? 0);
+      return (
+        <div className="text-right font-semibold text-xs">
+          ₱{value.toLocaleString("en-PH", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    size: 100,
+    cell: ({ row }) => {
+      const raw = String(row.getValue("status") ?? "processing").toLowerCase();
+      const color = statusColors[raw] || "bg-gray-100 text-gray-800";
+      return <Badge className={`capitalize text-[10px] h-5 px-2 ${color} hover:${color} shadow-none`}>{raw}</Badge>;
+    },
+  },
+  {
+    accessorKey: "categories",
+    header: "Service Requested",
+    size: 180,
+    cell: ({ row }) => {
+      const categories = (row.getValue("categories") as ValidCategory[] | undefined) ?? [];
+      if (!categories.length) return <span className="text-muted-foreground text-xs">—</span>;
+      return (
+        <div className="flex flex-wrap gap-1 max-w-[180px]">
+          {categories.slice(0, 2).map((cat) => (
+            <span
+              key={cat}
+              className={`px-1.5 py-0.5 rounded text-[9px] font-medium border capitalize ${categoryColors[cat] ?? "bg-gray-50 border-gray-200 text-gray-700"}`}
+            >
+              {cat}
+            </span>
+          ))}
+          {categories.length > 2 && (
+            <span className="text-[9px] text-muted-foreground">+{categories.length - 2}</span>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorFn: (row) => row.project?.title,
+    id: "project.title",
+    header: "Payment For",
+    size: 200,
+    cell: ({ getValue }) => {
+      const title = getValue() as string || "—";
+      return (
+        <div className="max-w-[200px] truncate text-xs" title={title}>
+          {title}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "datePaid",
+    header: "Date Paid",
+    size: 90,
+    cell: ({ row }) => {
+      const raw = row.getValue("datePaid") as Date | string | undefined | null;
+      const date = raw instanceof Date ? raw : new Date(raw || "");
+      return <div className="text-muted-foreground text-xs">{isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-CA")}</div>;
+    },
   },
   {
     accessorKey: "orNumber",
     header: "OR No.",
-    cell: ({ row }) => row.getValue("orNumber") || "—",
+    size: 90,
+    cell: ({ row }) => <span className="font-mono text-[10px]">{row.getValue("orNumber") || "—"}</span>,
   },
   {
-    accessorKey: "dateOfOR",
-    header: "Date of OR",
-    cell: ({ row }) => {
-      const raw = row.getValue("dateOfOR") as Date | string | undefined | null;
-      const date = raw instanceof Date ? raw : new Date(raw || "");
-      return isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-CA");
-    },
+    accessorKey: "dvNumber",
+    header: "DV No.",
+    size: 90,
+    cell: ({ row }) => <span className="font-mono text-[10px]">{row.getValue("dvNumber") || "—"}</span>,
   },
-  {
-    accessorKey: "notes",
-    header: "Notes",
-    cell: ({ row }) => row.getValue("notes") || "—",
-  },
+  // Hidden columns - Access via Detail View/Modal
+  // {
+  //   accessorFn: (row) => row.clientInfo?.address,
+  //   id: "clientInfo.address",
+  //   header: "Address",
+  // },
+  // {
+  //   accessorFn: (row) => row.project?.title,
+  //   id: "project.title",
+  //   header: "Payment For",
+  // },
+  // {
+  //   accessorKey: "dateOfOR",
+  //   header: "Date of OR",
+  // },
+  // {
+  //   accessorKey: "notes",
+  //   header: "Notes",
+  // },
   {
     accessorFn: (row) => row.preparedBy?.name,
     id: "preparedBy.name",
     header: "Prepared By",
-    cell: ({ getValue }) => getValue() || "—",
+    size: 140,
+    cell: ({ getValue }) => {
+      const name = getValue() as string || "—";
+      return (
+        <div className="max-w-[140px] truncate text-left text-xs" title={name}>
+          {name}
+        </div>
+      );
+    },
+  },
+  {
+    id: "actions",
+    header: () => <div className="text-right pr-4">Actions</div>,
+    cell: ({ row }) => <ActionCell row={row} />,
+    size: 60,
   },
 ];

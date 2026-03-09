@@ -8,12 +8,15 @@ import { pdf } from "@react-pdf/renderer";
 import { saveChargeSlip } from "@/services/chargeSlipService";
 import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
+import { logActivity } from "@/services/activityLogService";
+import useAuth from "@/hooks/useAuth";
 
 interface Props {
   record: ChargeSlipRecord;
 }
 
 export default function DownloadChargeSlipWrapper({ record }: Props) {
+  const { adminInfo } = useAuth();
   const handleDownload = async () => {
     try {
       // Sanitize before saving to Firestore
@@ -29,6 +32,7 @@ export default function DownloadChargeSlipWrapper({ record }: Props) {
           chargeSlipNumber={sanitizedRecord.chargeSlipNumber}
           orNumber={sanitizedRecord.orNumber ?? ""}
           useInternalPrice={sanitizedRecord.useInternalPrice}
+          useAffiliationAsClientName={sanitizedRecord.useAffiliationAsClientName}
           preparedBy={sanitizedRecord.preparedBy}
           approvedBy={sanitizedRecord.approvedBy}
           referenceNumber={sanitizedRecord.referenceNumber}
@@ -47,6 +51,18 @@ export default function DownloadChargeSlipWrapper({ record }: Props) {
       link.download = `${sanitizedRecord.chargeSlipNumber}.pdf`;
       link.click();
       URL.revokeObjectURL(url);
+      
+      // Log the download activity
+      await logActivity({
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
+        action: "DOWNLOAD",
+        entityType: "charge_slip",
+        entityId: sanitizedRecord.referenceNumber || sanitizedRecord.chargeSlipNumber,
+        entityName: `Charge Slip ${sanitizedRecord.chargeSlipNumber}`,
+        description: `Downloaded charge slip PDF: ${sanitizedRecord.chargeSlipNumber}`,
+      });
     } catch (error) {
       console.error("Failed to generate or download charge slip:", error);
     }

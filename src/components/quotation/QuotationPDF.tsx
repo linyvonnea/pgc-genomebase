@@ -4,12 +4,13 @@
 import { Page, Text, View, Document, StyleSheet, Image } from "@react-pdf/renderer";
 import { SelectedService } from "@/types/Quotation";
 import { pgcLogo, schoolLogo } from "@/assets/logosBase64";
+import { signatureCarmel } from "@/assets/signatures";
 
 const styles = StyleSheet.create({
   page: { padding: 36, fontSize: 10, fontFamily: "Helvetica", lineHeight: 1.4 },
-  logoRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
-  logo: { width: 60, height: 60 },
-  pgcLogo: { width: 200, height: 60, objectFit: "contain" },
+  logoRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  logo: { width: 45, height: 45 },
+  pgcLogo: { width: 150, height: 45, objectFit: "contain" },
   title: { fontSize: 14, fontWeight: "bold", textAlign: "center", marginVertical: 4 },
   subtitle: { fontSize: 10, textAlign: "center", marginBottom: 16 },
   section: { marginBottom: 10 },
@@ -19,10 +20,17 @@ const styles = StyleSheet.create({
   tableHeader: { fontWeight: "bold", backgroundColor: "#eee" },
   headerCell: { flex: 1, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
   cell: { flex: 1, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
+  serviceCell: { flex: 3, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
+  unitCell: { flex: 1, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
+  priceCell: { flex: 1, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
+  qtyCell: { flex: 0.6, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
+  amountCell: { flex: 1.2, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
   categoryHeader: { padding: 4, fontWeight: "bold", backgroundColor: "#f0f0f0", borderBottom: "1pt solid black", fontSize: 10 },
   summary: { marginTop: 12, alignItems: "flex-end", textAlign: "right", gap: 2 },
-  italicNote: { fontStyle: "italic", fontSize: 9, marginTop: 4 },
-  signature: { marginTop: 40, fontSize: 10 },
+  italicNote: { fontStyle: "italic", fontSize: 9, marginTop: 2 },
+  signature: { marginTop: 20, fontSize: 10, marginBottom: 40 },
+  footerSection: { marginTop: 16, marginBottom: 40 },
+  pageNumber: { position: "absolute", fontSize: 10, bottom: 20, left: 0, right: 0, textAlign: "center", color: "#333" },
 });
 
 function formatMoney(num: number) {
@@ -63,6 +71,8 @@ export function QuotationPDF({
   useInternalPrice,
   preparedBy,
   totalsOverride, // <-- NEW (optional)
+  dateOfIssue, // <-- Date when quotation was generated
+  useAffiliationAsClientName, // <-- NEW
 }: {
   services: SelectedService[];
   clientInfo: { name: string; institution: string; designation: string; email: string };
@@ -70,13 +80,20 @@ export function QuotationPDF({
   useInternalPrice: boolean;
   preparedBy: { name: string; position: string };
   totalsOverride?: TotalsOverride;
+  dateOfIssue?: string; // ISO date string or formatted date
+  useAffiliationAsClientName?: boolean;
 }) {
   const safeServices: ServiceLike[] = (services ?? []).filter(
     (s): s is ServiceLike =>
       s != null && typeof (s as any).price === "number" && typeof (s as any).quantity === "number"
   );
-
-  // group by category (fallback to “Uncategorized”)
+  // Debug: Log services with descriptions
+  /*console.log('PDF Services:', safeServices.map(s => ({
+    name: s.name,
+    description: s.description,
+    hasDescription: !!(s as any).description
+  })));*/
+  // group by category (fallback to "Uncategorized")
   const groupedByCategory = safeServices.reduce<Record<string, ServiceLike[]>>((acc, svc) => {
     const key = svc.category && svc.category.trim() ? svc.category : "Uncategorized";
     (acc[key] ||= []).push(svc);
@@ -88,7 +105,7 @@ export function QuotationPDF({
   const computedDiscount = useInternalPrice ? r2(computedSubtotal * 0.12) : 0;
   const computedTotal = r2(computedSubtotal - computedDiscount);
 
-  // ✅ If overrides are provided (migrated quotes), use them
+  // If overrides are provided (migrated quotes), use them
   const subtotal = totalsOverride?.subtotal ?? computedSubtotal;
   const discount = totalsOverride?.discount ?? computedDiscount;
   const total = totalsOverride?.total ?? computedTotal;
@@ -105,11 +122,16 @@ export function QuotationPDF({
 
         <View style={styles.section}>
           <Text><Text style={styles.label}>Reference No:</Text> {referenceNumber}</Text>
-          <Text><Text style={styles.label}>Client Name:</Text> {clientInfo.name}</Text>
-          <Text><Text style={styles.label}>Institution:</Text> {clientInfo.institution}</Text>
+          {dateOfIssue && (
+            <Text><Text style={styles.label}>Date Issued:</Text> {dateOfIssue}</Text>
+          )}
+          <Text><Text style={styles.label}>Client Name:</Text> {useAffiliationAsClientName ? clientInfo.institution : clientInfo.name}</Text>
+          {!useAffiliationAsClientName && (
+            <Text><Text style={styles.label}>Institution:</Text> {clientInfo.institution}</Text>
+          )}
           <Text><Text style={styles.label}>Designation:</Text> {clientInfo.designation}</Text>
           <Text><Text style={styles.label}>Email:</Text> {clientInfo.email}</Text>
-          <Text><Text style={styles.label}>Internal Client:</Text> {useInternalPrice ? "Yes" : "No"}</Text>
+          <Text><Text style={styles.label}>Applied 12% Discount:</Text> {useInternalPrice ? "Yes" : "No"}</Text>
         </View>
 
         <Text style={{ marginBottom: 10 }}>
@@ -119,11 +141,11 @@ export function QuotationPDF({
 
         <View style={styles.table}>
           <View style={[styles.tableRow, styles.tableHeader]}>
-            <Text style={styles.headerCell}>Service</Text>
-            <Text style={styles.headerCell}>Unit</Text>
-            <Text style={styles.headerCell}>Price</Text>
-            <Text style={styles.headerCell}>Qty</Text>
-            <Text style={styles.headerCell}>Amount</Text>
+            <Text style={[styles.headerCell, { flex: 3 }]}>Service</Text>
+            <Text style={[styles.headerCell, { flex: 1 }]}>Unit</Text>
+            <Text style={[styles.headerCell, { flex: 1 }]}>Price</Text>
+            <Text style={[styles.headerCell, { flex: 0.6 }]}>Qty</Text>
+            <Text style={[styles.headerCell, { flex: 1.2 }]}>Amount</Text>
           </View>
 
           {Object.entries(groupedByCategory).map(([category, items]) => (
@@ -132,13 +154,31 @@ export function QuotationPDF({
               {items.map((svc, idx) => {
                 const amount = svc.price * svc.quantity;
                 const key = `${svc.id ?? "custom"}-${svc.name}-${idx}`;
+                const description = svc.description || (svc as any).description;
                 return (
-                  <View style={styles.tableRow} key={key}>
-                    <Text style={styles.cell}>{svc.name}</Text>
-                    <Text style={styles.cell}>{svc.unit}</Text>
-                    <Text style={styles.cell}>{formatMoney(svc.price)}</Text>
-                    <Text style={styles.cell}>{svc.quantity}</Text>
-                    <Text style={styles.cell}>{formatMoney(amount)}</Text>
+                  <View key={key}>
+                    <View style={styles.tableRow}>
+                      <Text style={styles.serviceCell}>{svc.name}</Text>
+                      <Text style={styles.unitCell}>{svc.unit}</Text>
+                      <Text style={styles.priceCell}>{formatMoney(svc.price)}</Text>
+                      <Text style={styles.qtyCell}>{svc.quantity}</Text>
+                      <Text style={styles.amountCell}>{formatMoney(amount)}</Text>
+                    </View>
+                    {description && (
+                      <View style={styles.tableRow}>
+                        <Text style={[styles.serviceCell, {
+                          flex: 5.8,
+                          fontSize: 8,
+                          fontStyle: "italic",
+                          paddingLeft: 12,
+                          color: "#666",
+                          paddingTop: 2,
+                          paddingBottom: 4
+                        }]}>
+                          {description}
+                        </Text>
+                      </View>
+                    )}
                   </View>
                 );
               })}
@@ -149,21 +189,51 @@ export function QuotationPDF({
         <View style={styles.summary}>
           <Text>Subtotal: PHP {formatMoney(subtotal)}</Text>
           {useInternalPrice && discount > 0 ? (
-            <Text>Less 12% discount (Internal Client): -PHP {formatMoney(discount)}</Text>
+            <Text>12% Discount (Internal Client): -PHP {formatMoney(discount)}</Text>
           ) : null}
           <Text style={{ fontWeight: "bold" }}>TOTAL: PHP {formatMoney(total)}</Text>
         </View>
 
-        <Text style={styles.italicNote}>Quote Validity: 30 days</Text>
-        <Text style={styles.italicNote}>
-          Total cost does not include re-runs (if applicable). Prices are subject to change without prior notice.
-        </Text>
+        <View style={styles.footerSection} wrap={false}>
+          <Text style={styles.italicNote}>Quote Validity: 30 days</Text>
+          <Text style={styles.italicNote}>
+            Total cost does not include re-runs (if applicable). Prices are subject to change without prior notice.
+          </Text>
+          <Text style={styles.italicNote}>
+            *12% Discount is applicable only to the following: UP Constituents, Students, and Active PGC Visayas Consortium Members.
+          </Text>
 
-        <View style={styles.signature}>
-          <Text>Sincerely,</Text>
-          <Text style={{ fontWeight: "bold", marginTop: 24 }}>{preparedBy.name}</Text>
-          <Text><Text style={{ fontStyle: "italic" }}>{preparedBy.position}</Text></Text>
+          <View style={styles.signature}>
+            <Text>Sincerely,</Text>
+            {(() => {
+              const name = preparedBy.name.trim().toUpperCase();
+              let signatureSrc = null;
+
+              if (name.includes("CARMEL")) signatureSrc = "/assets/signature_carmel.png";
+              else if (name.includes("ALBERT") && name.includes("NOBLEZADA")) signatureSrc = "/assets/signature_noblezada.png";
+              else if (name.includes("CRISTINE") && name.includes("FLORECE")) signatureSrc = "/assets/signature_florece.png";
+              else if (name.includes("CAMILLE") && name.includes("MUEDA")) signatureSrc = "/assets/signature_mueda.png";
+              else if (name.includes("JASMINE") && (name.includes("VELO") || name.includes("VELO"))) signatureSrc = "/assets/signature_velo.png";
+              else if (name.includes("KARL") && name.includes("TENIZO")) signatureSrc = "/assets/signature_tenizo.png";
+              else if (name.includes("MERLITO") && name.includes("DAYON")) signatureSrc = "/assets/signature_dayon.png";
+              else if (name.includes("MICAH") && name.includes("LOJERA")) signatureSrc = "/assets/signature_lojera.png";
+
+              return (
+                <View>
+                  {signatureSrc ? (
+                    <Image src={signatureSrc} style={{ width: 100, height: 40, marginTop: 5, marginBottom: -15 }} />
+                  ) : null}
+                  <Text style={{ fontWeight: "bold", marginTop: signatureSrc ? 0 : 16 }}>{preparedBy.name}</Text>
+                </View>
+              );
+            })()}
+            <Text><Text style={{ fontStyle: "italic" }}>{preparedBy.position}</Text></Text>
+          </View>
         </View>
+
+        <Text style={styles.pageNumber} fixed render={({ pageNumber, totalPages }) => (
+          `Page ${pageNumber} of ${totalPages}`
+        )} />
       </Page>
     </Document>
   );

@@ -21,6 +21,11 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { ChevronDown } from "lucide-react";
 import {
   Select,
   SelectTrigger,
@@ -41,6 +46,9 @@ export function ChargeSlipTable({ data, columns }: Props) {
   ]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("__all");
+  const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
+
+  const allCategories = ["laboratory", "equipment", "bioinformatics", "retail", "training"];
 
   const table = useReactTable({
     data,
@@ -63,9 +71,14 @@ export function ChargeSlipTable({ data, columns }: Props) {
       const matchesStatus =
         statusFilter === "__all" || status === statusFilter.toLowerCase();
 
-      return matchesSearch && matchesStatus;
+      const rowCategories: string[] = (row.original as any).categories || [];
+      const matchesCategory =
+        categoryFilters.length === 0 ||
+        rowCategories.some((cat) => categoryFilters.includes(cat.toLowerCase()));
+
+      return matchesSearch && matchesStatus && matchesCategory;
     });
-  }, [table, globalFilter, statusFilter]);
+  }, [table, globalFilter, statusFilter, categoryFilters]);
 
   const totalAmount = useMemo(() => {
     return filteredRows.reduce((sum, row) => {
@@ -74,43 +87,160 @@ export function ChargeSlipTable({ data, columns }: Props) {
     }, 0);
   }, [filteredRows]);
 
+  const activeFiltersCount = [
+    statusFilter !== "__all",
+    categoryFilters.length > 0,
+    globalFilter !== "",
+  ].filter(Boolean).length;
+
+  const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(true);
+
   return (
     <div className="space-y-4">
-      {/* Search + Filter */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <Input
-          placeholder="Search client, CS number, etc."
-          value={globalFilter}
-          onChange={(e) => setGlobalFilter(e.target.value)}
-          className="w-72"
-        />
-
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-56">
-            <SelectValue placeholder="Filter by Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__all">All Statuses</SelectItem>
-            <SelectItem value="processing">Processing</SelectItem>
-            <SelectItem value="paid">Paid</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-muted p-4 rounded-lg text-center">
-          <p className="text-xs">Total Filtered (Paid)</p>
-          <p className="text-lg font-bold">
-            ₱{totalAmount.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </p>
+      {/* Filters & Overview Section */}
+      <Card className="overflow-hidden">
+        <div 
+          className="flex items-center justify-between px-3 py-2 border-b cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
+        >
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-gray-800">Filters & Overview</h3>
+            {activeFiltersCount > 0 && isFiltersCollapsed && (
+              <Badge variant="secondary" className="h-5 px-2 text-[10px] font-semibold bg-blue-100 text-blue-700 hover:bg-blue-100">
+                {activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} active
+              </Badge>
+            )}
+          </div>
+          <ChevronDown className={`h-4 w-4 transition-transform ${isFiltersCollapsed ? "" : "rotate-180"}`} />
         </div>
-        <div className="bg-muted p-4 rounded-lg text-center">
-          <p className="text-xs">Total Charge Slips</p>
-          <p className="text-lg font-bold">{filteredRows.length}</p>
-        </div>
-      </div>
+        
+        {!isFiltersCollapsed && (
+          <div className="bg-white rounded-lg border border-gray-200 p-3 space-y-3">
+            {/* Primary Content Filters Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+              {/* Service Categories */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Service Categories</label>
+                <div className="grid grid-cols-2 gap-1">
+                  {allCategories.map((cat) => {
+                    const isActive = categoryFilters.includes(cat);
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => {
+                          if (isActive) {
+                            setCategoryFilters((prev) => prev.filter((c) => c !== cat));
+                          } else {
+                            setCategoryFilters((prev) => [...prev, cat]);
+                          }
+                        }}
+                        className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                          isActive
+                            ? "bg-blue-50 border-blue-200 font-semibold text-blue-600"
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
+                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              {/* Processing Status */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Processing Status</label>
+                <div className="grid grid-cols-2 gap-1">
+                  <button
+                    onClick={() => setStatusFilter(statusFilter === "processing" ? "__all" : "processing")}
+                    className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                      statusFilter === "processing"
+                        ? "bg-yellow-50 border-yellow-200 font-semibold text-yellow-600"
+                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                    }`}
+                  >
+                    Processing
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter(statusFilter === "paid" ? "__all" : "paid")}
+                    className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                      statusFilter === "paid"
+                        ? "bg-green-50 border-green-200 font-semibold text-green-600"
+                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                    }`}
+                  >
+                    Paid
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter(statusFilter === "cancelled" ? "__all" : "cancelled")}
+                    className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                      statusFilter === "cancelled"
+                        ? "bg-red-50 border-red-200 font-semibold text-red-600"
+                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                    }`}
+                  >
+                    Cancelled
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Search Tools & Summary Row */}
+            <div className="flex items-end justify-between pt-2 border-t border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Input
+                    placeholder="Search client, CS number, etc."
+                    value={globalFilter}
+                    onChange={(e) => setGlobalFilter(e.target.value)}
+                    className="w-56 pl-3 pr-8 h-8 text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Summary Card - bottom right */}
+              <div>
+                <div
+                  onClick={() => {
+                    setCategoryFilters([]);
+                    setGlobalFilter("");
+                    setStatusFilter("__all");
+                  }}
+                  className={`rounded-lg border px-2 py-1.5 cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:shadow-sm w-[300px] ${
+                    categoryFilters.length === 0 && 
+                    globalFilter === "" && 
+                    statusFilter === "__all"
+                      ? "ring-1 ring-primary ring-offset-1 bg-slate-50 border-slate-200 shadow-sm"
+                      : "bg-white hover:bg-gray-50 border-gray-200"
+                  }`}
+                >
+                  <div className="space-y-1">
+                    <div className="text-[13px] text-primary font-medium uppercase tracking-wide">
+                      Summary
+                    </div>
+                    <div className="text-lg font-bold text-gray-800">
+                      ₱{totalAmount.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </div>
+                    <div className="flex items-center justify-between gap-2 pt-0.5">
+                      <div className="text-xs text-blue-600 font-semibold">
+                        {filteredRows.length} {filteredRows.length === 1 ? 'result' : 'results'}
+                      </div>
+                      <div className="text-[10px] font-medium text-gray-500 truncate">
+                        {categoryFilters.length === 0 && globalFilter === "" && statusFilter === "__all" 
+                          ? "All Records" 
+                          : [...categoryFilters.map(c => c.charAt(0).toUpperCase() + c.slice(1)), statusFilter !== "__all" ? statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1) : ""].filter(Boolean).join(" + ")}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
 
       {/* Table */}
       <div className="rounded-md border">

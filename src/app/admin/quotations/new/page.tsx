@@ -5,8 +5,17 @@ import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { getInquiryById } from "@/services/inquiryService";
 import QuotationBuilder from "@/components/quotation/QuotationBuilder";
+import { PermissionGuard } from "@/components/PermissionGuard";
 
 export default function NewQuotationPage() {
+  return (
+    <PermissionGuard module="quotations" action="create">
+      <NewQuotationContent />
+    </PermissionGuard>
+  );
+}
+
+function NewQuotationContent() {
   const searchParams = useSearchParams();
   const inquiryId = searchParams.get("inquiryId");
 

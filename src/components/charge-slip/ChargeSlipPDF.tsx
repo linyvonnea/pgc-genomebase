@@ -20,6 +20,7 @@ type Props = {
   chargeSlipNumber: string;
   orNumber: string;
   useInternalPrice: boolean;
+  useAffiliationAsClientName?: boolean;
   preparedBy: AdminInfo;
   referenceNumber: string;
   clientInfo: {
@@ -40,45 +41,45 @@ type Props = {
 
 const styles = StyleSheet.create({
   page: {
-    padding: 36,
+    padding: 28,
     fontSize: 10,
     fontFamily: "Helvetica",
-    lineHeight: 1.4,
+    lineHeight: 1.2,
   },
   logoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 6,
   },
   logo: {
-    width: 60,
-    height: 60,
+    width: 45,
+    height: 45,
   },
   pgcLogo: {
-    width: 200,
-    height: 60,
+    width: 150,
+    height: 45,
     objectFit: "contain",
   },
   title: {
     fontSize: 14,
     fontWeight: "bold",
     textAlign: "center",
-    marginVertical: 4,
+    marginVertical: 2,
   },
   subtitle: {
     fontSize: 10,
     textAlign: "center",
-    marginBottom: 10,
+    marginBottom: 6,
   },
   section: {
-    marginBottom: 12,
+    marginBottom: 8,
   },
   table: {
     width: "100%",
     borderWidth: 1,
     borderColor: "#000",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   tableRow: {
     flexDirection: "row",
@@ -90,20 +91,20 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   cell: {
-    padding: 4,
+    padding: 3,
     borderRightWidth: 1,
     borderColor: "#000",
   },
   noBorder: {
     borderRightWidth: 0,
   },
-  col1: { width: "38%" },
-  col2: { width: "15%" },
-  col3: { width: "15%" },
-  col4: { width: "15%" },
-  col5: { width: "17%" },
+  col1: { width: "42%" },
+  col2: { width: "14%" },
+  col3: { width: "16%" },
+  col4: { width: "10%" },
+  col5: { width: "18%" },
   signatureSection: {
-    marginTop: 24,
+    marginTop: 12,
     fontSize: 10,
   },
   signatureLabel: {
@@ -127,13 +128,13 @@ const styles = StyleSheet.create({
   },
   categoryHeaderCell: {
     flex: 1,
-    padding: 4,
+    padding: 3,
     fontWeight: "bold",
-    textAlign: "center",
+    textAlign: "left",
   },
   italicNote: {
     fontStyle: "italic",
-    marginTop: 4,
+    marginTop: 2,
   },
   bold: {
     fontWeight: "bold",
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   marginTop16: {
-    marginTop: 16,
+    marginTop: 12,
   },
 });
 
@@ -242,6 +243,7 @@ export function ChargeSlipPDF({
   chargeSlipNumber,
   orNumber,
   useInternalPrice,
+  useAffiliationAsClientName,
   preparedBy,
   referenceNumber,
   clientInfo,
@@ -269,26 +271,27 @@ export function ChargeSlipPDF({
           <Image src={pgcLogo} style={styles.pgcLogo} />
         </View>
 
-        <Text style={styles.title}>CHARGE SLIP</Text>
+        <Text style={styles.title}>CHARGE SLIP/BILLING</Text>
         <Text style={styles.subtitle}>VSF-LF-CS / Revision No. 003</Text>
 
         {/* Metadata */}
         <View style={styles.section}>
           <Text>No. {chargeSlipNumber}</Text>
           <Text>
-            Date Issued: {new Date(dateIssued).toLocaleDateString("en-PH", {
+            Date Issued: {dateIssued ? new Date(dateIssued).toLocaleDateString("en-PH", {
               year: "numeric",
               month: "long",
               day: "numeric",
-            })}
+            }) : "N/A"}
           </Text>
+          <Text>PAYEE: UP VISAYAS</Text>
+          <Text>AGENCY: Philippine Genome Center Visayas (PGC Visayas)</Text>
         </View>
 
         {/* Client Info */}
         <View style={styles.section}>
-          <Text style={styles.bold}>CLIENT NAME: {clientInfo.name}</Text>
-          <Text>INCLUSIVE BILLING DATES: N/A</Text>
-          <Text style={styles.bold}>ADDRESS: {client?.affiliationAddress || "—"}</Text>
+          <Text style={styles.bold}>PAYOR: {useAffiliationAsClientName ? (client?.affiliation || clientInfo.name) : clientInfo.name}</Text>
+          <Text style={styles.bold}>ADDRESS: {client?.affiliationAddress || client?.affiliation || "—"}</Text>
           <Text style={styles.bold}>PAYMENT FOR: {project?.title || "—"}</Text>
         </View>
 
@@ -307,29 +310,48 @@ export function ChargeSlipPDF({
               <View style={styles.categoryHeaderRow}>
                 <Text style={styles.categoryHeaderCell}>{category}</Text>
               </View>
-              {items.map((item, idx) => (
-                <View key={idx} style={styles.tableRow}>
-                  <Text style={[styles.cell, styles.col1]}>{item.name}</Text>
-                  <Text style={[styles.cell, styles.col2]}>{item.unit}</Text>
-                  <Text style={[styles.cell, styles.col3]}>PHP {formatMoney(item.price)}</Text>
-                  <Text style={[styles.cell, styles.col4]}>{item.quantity}</Text>
-                  <Text style={[styles.cell, styles.col5, styles.noBorder]}>
-                    PHP {formatMoney(item.price * item.quantity)}
-                  </Text>
-                </View>
-              ))}
+              {items.map((item, idx) => {
+                const description = item.description || (item as any).description || "";
+                return (
+                  <View key={idx}>
+                    <View style={styles.tableRow}>
+                      <Text style={[styles.cell, styles.col1, { textAlign: "left" }]}>{item.name}</Text>
+                      <Text style={[styles.cell, styles.col2]}>{item.unit}</Text>
+                      <Text style={[styles.cell, styles.col3]}>PHP {formatMoney(item.price)}</Text>
+                      <Text style={[styles.cell, styles.col4]}>{item.quantity}</Text>
+                      <Text style={[styles.cell, styles.col5, styles.noBorder]}>
+                        PHP {formatMoney(item.price * item.quantity)}
+                      </Text>
+                    </View>
+                    {description && description.trim() !== "" && (
+                      <View style={[styles.tableRow, { borderBottomWidth: 1 }]}>
+                        <Text style={[styles.cell, styles.noBorder, { 
+                          width: "100%",
+                          fontSize: 8, 
+                          fontStyle: "italic", 
+                          paddingLeft: 12, 
+                          color: "#666", 
+                          paddingTop: 2, 
+                          paddingBottom: 4 
+                        }]}>
+                          {description}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
             </View>
           ))}
         </View>
 
         {/* Summary */}
-        <View style={styles.section}>
-          <Text style={styles.bold}>Subtotal: PHP {formatMoney(subtotal)}</Text>
+        <View style={[styles.section, { alignItems: "flex-end", marginTop: 12, textAlign: "right", gap: 2 }]}>
+          <Text>Subtotal: PHP {formatMoney(subtotal)}</Text>
           {useInternalPrice && (
             <Text>Less 12% Discount: PHP {formatMoney(discount)}</Text>
           )}
-          <Text style={styles.totalText}>TOTAL: PHP {formatMoney(total)}</Text>
-          <Text style={styles.bold}>OR Number: {orNumber || "—"}</Text>
+          <Text style={{ fontWeight: "bold" }}>TOTAL: PHP {formatMoney(total)}</Text>
         </View>
 
         {/* Amount in Words */}
@@ -339,18 +361,49 @@ export function ChargeSlipPDF({
         </View>
 
         {/* Notes */}
-        <View style={styles.section}>
+        <View style={[styles.section, { marginBottom: 8 }]}>
           <Text style={styles.italicNote}>* This charge slip is valid for 30 days from the date of issue.</Text>
           <Text style={styles.italicNote}>* Payment terms: Full payment is required before the release of results.</Text>
+          <Text style={styles.italicNote}>* 12% Discount is applicable only to the following: UP Constituents, Students, and Active PGC Visayas Consortium Members.</Text>
         </View>
 
         {/* Signatures */}
-        <View style={styles.signatureSection}>
+        <View style={[styles.signatureSection, { marginTop: 10 }]}>
           <Text style={styles.signatureLabel}>Prepared By:</Text>
+          {(() => {
+            const name = preparedBy.name.trim().toUpperCase();
+            let signatureSrc = null;
+
+            if (name.includes("CARMEL")) signatureSrc = "/assets/signature_carmel.png";
+            else if (name.includes("ALBERT") && name.includes("NOBLEZADA")) signatureSrc = "/assets/signature_noblezada.png";
+            else if (name.includes("CRISTINE") && name.includes("FLORECE")) signatureSrc = "/assets/signature_florece.png";
+            else if (name.includes("CAMILLE") && name.includes("MUEDA")) signatureSrc = "/assets/signature_mueda.png";
+            else if (name.includes("JASMINE") && name.includes("VELO")) signatureSrc = "/assets/signature_velo.png";
+            else if (name.includes("KARL") && name.includes("TENIZO")) signatureSrc = "/assets/signature_tenizo.png";
+            else if (name.includes("MERLITO") && name.includes("DAYON")) signatureSrc = "/assets/signature_dayon.png";
+            else if (name.includes("MICAH") && name.includes("LOJERA")) signatureSrc = "/assets/signature_lojera.png";
+
+            return signatureSrc ? (
+              <Image 
+                  src={signatureSrc} 
+                  style={{ width: 120, height: 50, marginTop: 6, marginBottom: -25, marginLeft: -10 }} 
+              />
+            ) : (
+              <Text>{"\n"}</Text>
+            );
+          })()}
           <Text style={styles.signatureName}>{preparedBy.name}</Text>
           <Text style={styles.signaturePosition}>{preparedBy.position}</Text>
 
           <Text style={[styles.signatureLabel, styles.marginTop16]}>Approved:</Text>
+          {approvedBy.name.trim().toUpperCase().includes("VICTOR MARCO EMMANUEL N. FERRIOLS") ? (
+             <Image 
+                src="/assets/signature_ferriols.png" 
+                style={{ width: 120, height: 50, marginTop: 6, marginBottom: -25, marginLeft: 55 }} 
+             />
+          ) : (
+             <Text>{"\n"}</Text>
+          )}
           <Text style={styles.signatureName}>{approvedBy.name}</Text>
           <Text style={styles.signaturePosition}>{approvedBy.position}</Text>
         </View>

@@ -32,14 +32,23 @@ export async function getClientById(cid: string): Promise<Client | null> {
 
     const data = snapshot.data();
 
-    // Convert Firestore Timestamp to JS Date
-    if (data.createdAt?.toDate) data.createdAt = data.createdAt.toDate();
+    // Handle createdAt timestamp conversion
+    // Check if it's a Firestore Timestamp with toDate method
+    if (data.createdAt?.toDate) {
+      data.createdAt = data.createdAt.toDate();
+    } 
+    // Handle malformed timestamp stored as plain object with _seconds and _nanoseconds
+    else if (data.createdAt?._seconds !== undefined) {
+      const seconds = data.createdAt._seconds || 0;
+      const nanoseconds = data.createdAt._nanoseconds || 0;
+      data.createdAt = new Date(seconds * 1000 + nanoseconds / 1000000);
+    }
 
     // Validate with Zod schema
     const parsed = clientSchema.safeParse({ id: snapshot.id, ...data });
 
     if (!parsed.success) {
-      console.warn(" Failed to validate client:", parsed.error);
+      console.warn("Failed to validate client:", cid, parsed.error);
       return null;
     }
 
@@ -82,15 +91,29 @@ export async function getProjectById(pid: string): Promise<Project | null> {
 
     const data = snapshot.data();
 
-    // Convert Firestore Timestamps to JS Dates
-    if (data.createdAt?.toDate) data.createdAt = data.createdAt.toDate();
-    if (data.startDate?.toDate) data.startDate = data.startDate.toDate();
+    // Handle createdAt timestamp conversion
+    if (data.createdAt?.toDate) {
+      data.createdAt = data.createdAt.toDate();
+    } else if (data.createdAt?._seconds !== undefined) {
+      const seconds = data.createdAt._seconds || 0;
+      const nanoseconds = data.createdAt._nanoseconds || 0;
+      data.createdAt = new Date(seconds * 1000 + nanoseconds / 1000000);
+    }
+    
+    // Handle startDate timestamp conversion
+    if (data.startDate?.toDate) {
+      data.startDate = data.startDate.toDate();
+    } else if (data.startDate?._seconds !== undefined) {
+      const seconds = data.startDate._seconds || 0;
+      const nanoseconds = data.startDate._nanoseconds || 0;
+      data.startDate = new Date(seconds * 1000 + nanoseconds / 1000000);
+    }
 
     // Validate with Zod schema
     const parsed = projectSchema.safeParse({ id: snapshot.id, ...data });
 
     if (!parsed.success) {
-      console.warn(" Failed to validate project:", parsed.error);
+      console.warn("Failed to validate project:", pid, parsed.error);
       return null;
     }
 

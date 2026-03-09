@@ -3,29 +3,138 @@
 
 "use client"
 
-import { ColumnDef } from "@tanstack/react-table"
+import { ColumnDef, Row } from "@tanstack/react-table"
 import { Project } from "@/types/Project"
-import { projectSchema } from "@/schemas/projectSchema"
 import { Button } from "@/components/ui/button"
-import { useRouter } from "next/navigation"
+import { ArrowUpDown } from "lucide-react"
+import useAuth from "@/hooks/useAuth"
+import { usePermissions } from "@/hooks/usePermissions"
+import { EditProjectModal } from "@/components/forms/EditProjectModal"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+
+// Professional colors for client names in tooltip
+const CLIENT_COLORS = [
+  "text-blue-600",
+  "text-emerald-600",
+  "text-violet-600",
+  "text-amber-600",
+  "text-rose-600",
+  "text-indigo-600",
+  "text-cyan-600",
+];
+
+// Proper React component for the actions cell so hooks are valid
+function ActionCell({ row, meta }: { row: Row<Project>; meta: { onSuccess?: () => void } | undefined }) {
+  const project = row.original;
+  const { adminInfo } = useAuth();
+  const { canEdit } = usePermissions(adminInfo?.role);
+
+  if (!canEdit("projects")) {
+    return null;
+  }
+
+  return (
+    <div className="flex items-center justify-end px-1">
+      <EditProjectModal project={project} onSuccess={meta?.onSuccess} />
+    </div>
+  );
+}
 
 // Column definitions for the projects table
 export const columns: ColumnDef<Project>[] = [
   {
-    accessorKey: "startDate",
-    header: "Start Date",
+    accessorKey: "pid",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-accent px-1 text-[11px] font-semibold"
+        >
+          PID
+          <ArrowUpDown className="ml-1 h-3 w-3" />
+        </Button>
+      )
+    },
+    size: 70,
+    cell: ({ getValue }) => (
+      <div className="font-mono text-[10px] text-muted-foreground px-1 truncate">
+        {getValue() as string}
+      </div>
+    ),
   },
-  // {
-  //   accessorKey: "endDate",
-  //   header: "End Date",
-  // },
+  {
+    accessorKey: "title",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-accent px-1 text-[11px] font-semibold"
+        >
+          Project Title
+          <ArrowUpDown className="ml-1 h-3 w-3" />
+        </Button>
+      )
+    },
+    size: 200,
+    cell: ({ getValue }) => (
+      <div className="max-w-[200px] text-[11px] font-medium truncate px-1 text-slate-900" title={getValue() as string}>
+        {getValue() as string}
+      </div>
+    ),
+  },
   {
     accessorKey: "clientNames",
-    header: "Client Names",
+    header: () => <div className="px-1 text-[12px] font-semibold">Clients</div>,
+    size: 130,
     cell: ({ row }) => {
-      // Render client names as comma-separated string
-      const names = row.original.clientNames;
-      return names && names.length > 0 ? names.join(", ") : "";
+      // Render client names as comma-separated string with truncation and count
+      const names = row.original.clientNames || [];
+      const displayText = names.length > 0 ? names.join(", ") : "—";
+      const count = names.length;
+      
+      return (
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-0.5 max-w-[110px] cursor-help px-1 truncate">
+                <span className="truncate text-[10px] text-slate-600">
+                  {displayText}
+                </span>
+                {count > 0 && (
+                  <span className="shrink-0 text-[11px] font-normal text-blue-600">
+                    ({count})
+                  </span>
+                )}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="p-3 bg-white border shadow-xl max-w-xs">
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-normal text-gray-400 uppercase tracking-wider mb-2 border-b pb-1">
+                  Project Members ({count})
+                </div>
+                <div className="flex flex-wrap gap-x-2 gap-y-1">
+                  {names.map((name, idx) => (
+                    <span 
+                      key={idx} 
+                      className={`text-[12px] font-normal ${CLIENT_COLORS[idx % CLIENT_COLORS.length]}`}
+                    >
+                      {name}{idx < names.length - 1 ? "," : ""}
+                    </span>
+                  ))}
+                  {names.length === 0 && <span className="text-[12px] text-gray-500 italic">No clients assigned</span>}
+                </div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
     },
     // Enables global filtering by converting the array to a string
     filterFn: (row, columnId, filterValue) => {
@@ -35,134 +144,110 @@ export const columns: ColumnDef<Project>[] = [
   },
   {
     accessorKey: "lead",
-    header: "Project Lead",
+    header: () => <div className="px-1 text-[12px] font-semibold">Lead</div>,
+    size: 110,
+    cell: ({ getValue }) => {
+      const lead = getValue() as string || "—";
+      return (
+        <div className="max-w-[110px] truncate text-left text-[11px] text-slate-500 px-1" title={lead}>
+          {lead}
+        </div>
+      );
+    },
   },
   {
-    accessorKey: "pid",
-    header: "Project ID",
-  },
-  {
-    accessorKey: "iid",
-    header: "Inquiry ID",
-    size: 80,
-    cell: ({ row }) => (
-      // Show inquiry ID 
-      <span className="block max-w-[80px] break-words whitespace-normal">{row.original.iid}</span>
-    ),
-  },
-  {
-    accessorKey: "title",
-    header: "Project Title",
-  },
-  {
-    accessorKey: "projectTag",
-    header: "Project Tag",
+    accessorKey: "personnelAssigned",
+    header: () => <div className="px-1 text-[12px] font-semibold">Personnel</div>,
+    size: 110,
+    cell: ({ getValue }) => {
+      const personnel = getValue() as string || "—";
+      return (
+        <div className="max-w-[110px] truncate text-left text-[11px] text-slate-500 px-1" title={personnel}>
+          {personnel}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "status",
-    header: "Status",
+    header: () => <div className="px-1 text-[12px] font-semibold">Status</div>,
+    size: 90,
     cell: ({ row }) => {
       // Render status with color-coded badge
       const status = row.original.status;
       let color = "bg-gray-100 text-gray-800";
       let label: string = status || "";
       switch (status) {
+        case "Pending":
+          color = "bg-blue-50 text-blue-700 border-blue-100";
+          label = "Pending";
+          break;
         case "Ongoing":
-          color = "bg-yellow-100 text-yellow-800";
+          color = "bg-amber-50 text-amber-700 border-amber-100";
           label = "Ongoing";
           break;
         case "Completed":
-          color = "bg-green-100 text-green-800";
+          color = "bg-emerald-50 text-emerald-700 border-emerald-100";
           label = "Completed";
           break;
         case "Cancelled":
-          color = "bg-red-100 text-red-800";
+          color = "bg-rose-50 text-rose-700 border-rose-100";
           label = "Cancelled";
           break;
         default:
-          color = "bg-gray-100 text-gray-800";
+          color = "bg-gray-50 text-gray-700 border-gray-100";
           label = status || "";
       }
       return (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${color}`}>
-          {label}
-        </span>
+        <div className="px-1 flex items-center h-full">
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border whitespace-nowrap ${color}`}>
+            {label}
+          </span>
+        </div>
       );
     },
   },
   {
     accessorKey: "sendingInstitution",
-    header: "Sending Institution",
+    header: () => <div className="px-1 text-[12px] font-semibold">Institution</div>,
+    size: 110,
     cell: ({ row }) => {
       // Render sending institution with color-coded badge
-      const value = row.original.sendingInstitution;
-      let color = "bg-gray-100 text-gray-800";
+      const value = row.original.sendingInstitution || "—";
+      let color = "bg-gray-50 text-gray-700 border-gray-100";
       switch (value) {
-        case "UP System": color = "bg-blue-100 text-blue-800"; break;
-        case "SUC/HEI": color = "bg-green-100 text-green-800"; break;
-        case "Government": color = "bg-yellow-100 text-yellow-800"; break;
-        case "Private/Local": color = "bg-purple-100 text-purple-800"; break;
-        case "International": color = "bg-pink-100 text-pink-800"; break;
-        case "N/A": color = "bg-gray-200 text-gray-600"; break;
+        case "UP System": color = "bg-indigo-50 text-indigo-700 border-indigo-100"; break;
+        case "SUC/HEI": color = "bg-emerald-50 text-emerald-700 border-emerald-100"; break;
+        case "Government": color = "bg-amber-50 text-amber-700 border-amber-100"; break;
+        case "Private/Local": color = "bg-violet-50 text-violet-700 border-violet-100"; break;
+        case "International": color = "bg-rose-50 text-rose-700 border-rose-100"; break;
+        case "N/A": color = "bg-slate-50 text-slate-500 border-slate-100"; break;
       }
       return (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${color}`}>
-          {value}
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: "fundingCategory",
-    header: "Funding Category",
-    cell: ({ row }) => {
-      // Render funding category with color-coded badge
-      const value = row.original.fundingCategory;
-      let color = "bg-gray-100 text-gray-800";
-      if (value === "External") color = "bg-orange-100 text-orange-800";
-      if (value === "In-House") color = "bg-indigo-100 text-indigo-800";
-      return (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${color}`}>
-          {value || ""}
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: "fundingInstitution",
-    header: "Source of Funding",
-  },
-  {
-    accessorKey: "serviceRequested",
-    header: "Service Requested",
-    cell: ({ row }) => {
-      // Render requested services as comma-separated string
-      const services = row.original.serviceRequested
-      return services && services.length > 0 ? services.join(", ") : ""
-    },
-  },
-  {
-    accessorKey: "personnelAssigned",
-    header: "Personnel Assigned",
-  },
-  {
-    accessorKey: "notes",
-    header: "Notes",
-  },
-  {
-    id: "actions",
-    header: "Actions",
-    cell: (ctx: any) => {
-      // Render edit modal for each project row
-      const { row, meta } = ctx;
-      const project = row.original;
-      const EditProjectModal = require("@/components/forms/EditProjectModal").EditProjectModal;
-      const router = useRouter();
-      return (
-        <div className="flex items-center gap-2">
-          <EditProjectModal project={project} onSuccess={meta?.onSuccess} />
+        <div className="max-w-[110px] truncate px-1 flex items-center h-full" title={value}>
+          <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-medium border whitespace-nowrap ${color}`}>
+            {value}
+          </span>
         </div>
       );
     },
+  },
+  {
+    accessorKey: "startDate",
+    header: () => <div className="px-1 text-[12px] font-semibold text-right">Start Date</div>,
+    size: 85,
+    cell: ({ getValue }) => (
+      <div className="text-[10px] text-right text-slate-500 px-1 truncate">
+        {getValue() as string || "—"}
+      </div>
+    ),
+  },
+  {
+    id: "actions",
+    header: () => <div className="px-1 text-[11px] font-semibold text-right">Actions</div>,
+    size: 60,
+    cell: ({ row, table }) => (
+      <ActionCell row={row} meta={(table.options.meta as { onSuccess?: () => void }) ?? undefined} />
+    ),
   },
 ]
