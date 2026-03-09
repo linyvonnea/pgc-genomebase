@@ -3,14 +3,13 @@
 
 "use client"
 
-import { ColumnDef } from "@tanstack/react-table"
+import { ColumnDef, Row } from "@tanstack/react-table"
 import { Project } from "@/types/Project"
-import { projectSchema } from "@/schemas/projectSchema"
 import { Button } from "@/components/ui/button"
-import { useRouter } from "next/navigation"
 import { ArrowUpDown } from "lucide-react"
 import useAuth from "@/hooks/useAuth"
 import { usePermissions } from "@/hooks/usePermissions"
+import { EditProjectModal } from "@/components/forms/EditProjectModal"
 import {
   Tooltip,
   TooltipContent,
@@ -28,6 +27,23 @@ const CLIENT_COLORS = [
   "text-indigo-600",
   "text-cyan-600",
 ];
+
+// Proper React component for the actions cell so hooks are valid
+function ActionCell({ row, meta }: { row: Row<Project>; meta: { onSuccess?: () => void } | undefined }) {
+  const project = row.original;
+  const { adminInfo } = useAuth();
+  const { canEdit } = usePermissions(adminInfo?.role);
+
+  if (!canEdit("projects")) {
+    return null;
+  }
+
+  return (
+    <div className="flex items-center justify-end px-1">
+      <EditProjectModal project={project} onSuccess={meta?.onSuccess} />
+    </div>
+  );
+}
 
 // Column definitions for the projects table
     accessorKey: "pid",
@@ -228,24 +244,8 @@ const CLIENT_COLORS = [
     id: "actions",
     header: () => <div className="px-1 text-[11px] font-semibold text-right">Actions</div>,
     size: 60,
-    cell: (ctx: any) => {
-      // Render edit modal for each project row
-      const { row, meta } = ctx;
-      const project = row.original;
-      const EditProjectModal = require("@/components/forms/EditProjectModal").EditProjectModal;
-      const { adminInfo } = useAuth();
-      const { canEdit } = usePermissions(adminInfo?.role);
-
-      // Only show edit button if user has edit permission
-      if (!canEdit("projects")) {
-        return null;
-      }
-
-      return (
-        <div className="flex items-center justify-end px-1">
-          <EditProjectModal project={project} onSuccess={meta?.onSuccess} />
-        </div>
-      );
-    },
+    cell: ({ row, table }) => (
+      <ActionCell row={row} meta={(table.options.meta as { onSuccess?: () => void }) ?? undefined} />
+    ),
   },
 ]
