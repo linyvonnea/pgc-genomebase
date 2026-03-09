@@ -187,13 +187,13 @@ function ActivityLogsContent() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[180px]">Timestamp</TableHead>
-                <TableHead className="w-[200px]">User</TableHead>
-                <TableHead className="w-[100px]">Action</TableHead>
-                <TableHead className="w-[150px]">Entity Type</TableHead>
-                <TableHead className="w-[150px]">Entity ID</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead className="w-[80px]">Details</TableHead>
+                <TableHead className="w-[120px] px-2 py-3 text-xs uppercase tracking-wider">Timestamp</TableHead>
+                <TableHead className="w-[180px] px-2 py-3 text-xs uppercase tracking-wider">User</TableHead>
+                <TableHead className="w-[80px] px-2 py-3 text-xs uppercase tracking-wider text-center">Action</TableHead>
+                <TableHead className="w-[100px] px-2 py-3 text-xs uppercase tracking-wider text-center">Entity Type</TableHead>
+                <TableHead className="w-[140px] px-2 py-3 text-xs uppercase tracking-wider">Entity ID</TableHead>
+                <TableHead className="px-2 py-3 text-xs uppercase tracking-wider">Description</TableHead>
+                <TableHead className="w-[50px] px-2 py-3 text-xs uppercase tracking-wider text-right">Details</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -222,47 +222,50 @@ function ActivityLogsContent() {
                   
                   return (
                   <TableRow key={log.id} className="hover:bg-muted/50">
-                    <TableCell className="text-sm font-mono">
+                    <TableCell className="text-[11px] font-mono whitespace-nowrap px-2 py-3">
                       {timestamp.toLocaleString("en-US", {
                         month: "short",
                         day: "numeric",
                         hour: "2-digit",
                         minute: "2-digit",
+                        hour12: true
                       })}
                     </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <div className="font-medium">{log.userName || "Unknown"}</div>
-                        <div className="text-muted-foreground text-xs truncate max-w-[180px]">
+                    <TableCell className="px-2 py-3">
+                      <div className="flex flex-col min-w-0">
+                        <div className="text-xs font-semibold text-slate-900 truncate" title={log.userName || "Unknown"}>
+                          {log.userName || "Unknown"}
+                        </div>
+                        <div className="text-[10px] text-muted-foreground truncate max-w-[170px]" title={log.userEmail}>
                           {log.userEmail}
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Badge className={getActionColor(log.action)} variant="secondary">
+                    <TableCell className="text-center px-1 py-3">
+                      <Badge className={`${getActionColor(log.action)} text-[10px] px-1.5 py-0 min-w-[70px] justify-center border-none shadow-none`} variant="secondary">
                         {log.action}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      <span className="text-sm font-medium capitalize">
+                    <TableCell className="text-center px-1 py-3">
+                      <span className="text-[11px] font-medium capitalize text-slate-600">
                         {log.entityType.replace("_", " ")}
                       </span>
                     </TableCell>
-                    <TableCell>
-                      <code className="text-xs bg-muted px-2 py-1 rounded">
+                    <TableCell className="px-2 py-3">
+                      <code className="text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-mono border border-slate-200">
                         {log.entityId}
                       </code>
                     </TableCell>
-                    <TableCell className="max-w-md">
-                      <div className="text-sm truncate" title={log.description || log.entityName}>
+                    <TableCell className="px-2 py-3">
+                      <p className="text-[11px] line-clamp-1 text-slate-700 w-full" title={log.description || log.entityName}>
                         {log.description || log.entityName || "-"}
-                      </div>
+                      </p>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-right px-2 py-3">
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <Eye className="h-4 w-4" />
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 hover:bg-slate-100">
+                            <Eye className="h-3.5 w-3.5 text-slate-500" />
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
