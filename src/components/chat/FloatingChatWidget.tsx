@@ -124,6 +124,23 @@ export default function FloatingChatWidget({
       className={`fixed bottom-6 right-6 z-50 flex flex-col items-end ${className || ""}`}
     >
       <AnimatePresence>
+        {!isOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="mb-2 mr-2 bg-white px-3 py-1.5 rounded-full shadow-lg border border-blue-100 flex items-center gap-2 pointer-events-none"
+          >
+            <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">
+              Talk to us
+            </span>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+          </motion.div>
+        )}
+
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
