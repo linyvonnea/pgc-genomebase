@@ -51,7 +51,7 @@ export function ChargeSlipButton({ clientId, projectIds }: ChargeSlipButtonProps
               {isLoading ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
               ) : count > 0 ? (
-                <span className="flex items-center justify-center bg-slate-100 text-slate-600 rounded-full h-5 min-w-[20px] px-1 text-[10px] font-bold border border-slate-200">
+                <span className="flex items-center justify-center bg-blue-500 text-white rounded-full h-5 min-w-[20px] px-1 text-[10px] font-bold shadow-sm">
                   {count}
                 </span>
               ) : null}
