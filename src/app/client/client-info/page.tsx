@@ -196,6 +196,14 @@ export default function ClientPortalPage() {
   });
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [expandedProjectDocs, setExpandedProjectDocs] = useState<Set<string>>(new Set());
+
+  // Initialize expandedProjectDocs with pidParam if available
+  useEffect(() => {
+    if (pidParam) {
+      setExpandedProjectDocs(new Set([pidParam]));
+    }
+  }, [pidParam]);
+
   const [projectDocuments, setProjectDocuments] = useState<
     Map<string, { quotations: QuotationRecord[]; chargeSlips: ChargeSlipRecord[]; loading: boolean }>
   >(new Map());
