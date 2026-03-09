@@ -163,6 +163,12 @@ function ChargeSlipBuilderInner({
 // for new price textbox
   const updatePrice = (id: string, price: number | "") => {
     setSelectedServices((prev) =>
+      prev.map((svc) => (svc.id === id ? { ...svc, price: price === "" ? 0 : price } : svc))
+    );
+  };
+
+  const updateSamples = (id: string, samples: number | "") => {
+    setSelectedServices((prev) =>
       prev.map((svc) => (svc.id === id ? { ...svc, samples } : svc))
     );
   };
@@ -610,9 +616,7 @@ function ChargeSlipBuilderInner({
             <Separator className="my-6" />
             <QuotationHistoryPanel 
               inquiryId={project.iid} 
-              onSelectQuotation={handleQuotationSelect}
-              onDeselectQuotation={handleQuotationDeselect}
-              showCheckboxes={true}
+              showCheckboxes={false}
             />
           </>
         )}
