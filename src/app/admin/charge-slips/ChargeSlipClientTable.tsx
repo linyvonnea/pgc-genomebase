@@ -79,7 +79,9 @@ interface Props {
 export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props) {
   const router = useRouter();
 
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "chargeSlipNumber", desc: true },
+  ]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("__all");
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
