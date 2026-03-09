@@ -20,6 +20,7 @@ import {
   markMessagesAsRead,
 } from "@/services/quotationThreadService";
 import { format } from "date-fns";
+import { getAdminDisplayName } from "@/lib/chatUtils";
 
 interface ChatBoxProps {
   inquiryId: string;
@@ -95,7 +96,7 @@ export default function ChatBox({
 
       const senderDisplayName =
         role === "admin"
-          ? "Admin (" + (user.email?.split("@")[0] || "Staff") + ")"
+          ? getAdminDisplayName(user.email || user.uid)
           : user.displayName || user.email?.split("@")[0] || "Client";
 
       await addThreadMessage({
