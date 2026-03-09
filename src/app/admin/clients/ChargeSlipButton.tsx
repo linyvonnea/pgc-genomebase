@@ -102,10 +102,6 @@ export function ChargeSlipButton({ clientId, projectIds }: ChargeSlipButtonProps
             </div>
           </TooltipContent>
         )}
-              </div>
-            </div>
-          </TooltipContent>
-        )}
       </Tooltip>
     </TooltipProvider>
   );
