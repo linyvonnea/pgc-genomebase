@@ -46,6 +46,8 @@ function ActionCell({ row, meta }: { row: Row<Project>; meta: { onSuccess?: () =
 }
 
 // Column definitions for the projects table
+export const columns: ColumnDef<Project>[] = [
+  {
     accessorKey: "pid",
     header: ({ column }) => {
       return (
