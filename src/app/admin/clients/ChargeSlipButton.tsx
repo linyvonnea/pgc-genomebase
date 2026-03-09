@@ -44,14 +44,14 @@ export function ChargeSlipButton({ clientId, projectIds }: ChargeSlipButtonProps
             onClick={handleCreateNew}
             variant="outline"
             size="sm"
-            className="whitespace-nowrap h-7 min-w-[90px] px-2 text-[9px] bg-white hover:bg-blue-50 border-blue-200 text-blue-700 font-semibold flex items-center justify-between gap-1"
+            className="whitespace-nowrap h-8 w-[100px] px-2 text-xs bg-white hover:bg-slate-50 border-slate-200 text-slate-700 font-medium flex items-center justify-between"
           >
             <span>Charge Slip</span>
-            <div className="flex items-center justify-center min-w-[16px]">
+            <div className="flex items-center justify-center w-6">
               {isLoading ? (
-                <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                <Loader2 className="h-3 w-3 animate-spin" />
               ) : count > 0 ? (
-                <span className="flex items-center justify-center bg-blue-100 text-blue-600 rounded-full h-4 min-w-[16px] px-1 text-[8px] font-bold border border-blue-200">
+                <span className="flex items-center justify-center bg-slate-100 text-slate-600 rounded-full h-5 min-w-[20px] px-1 text-[10px] font-bold border border-slate-200">
                   {count}
                 </span>
               ) : null}
@@ -63,7 +63,7 @@ export function ChargeSlipButton({ clientId, projectIds }: ChargeSlipButtonProps
           <TooltipContent className="p-0 border-none shadow-lg bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
             <div className="rounded-md border bg-popover text-popover-foreground shadow-md min-w-[220px]">
               <div className="px-3 py-2 border-b bg-muted/50 rounded-t-md">
-                <h4 className="font-semibold text-[10px] text-muted-foreground uppercase tracking-wider">
+                <h4 className="font-semibold text-xs text-muted-foreground uppercase tracking-wider">
                   Existing Charge Slips ({count})
                 </h4>
               </div>
@@ -80,18 +80,18 @@ export function ChargeSlipButton({ clientId, projectIds }: ChargeSlipButtonProps
                       }}
                     >
                       <div className="flex items-center justify-between mb-0.5">
-                        <span className="font-mono text-[10px] font-semibold text-primary group-hover:underline">
+                        <span className="font-mono text-xs font-semibold text-primary group-hover:underline">
                           {cs.chargeSlipNumber}
                         </span>
-                        <span className="text-[9px] text-muted-foreground">
+                        <span className="text-[10px] text-muted-foreground">
                           {dateObj ? dateObj.toLocaleDateString("en-CA") : "N/A"}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-[9px] text-slate-500 truncate max-w-[120px]">
+                        <span className="text-[10px] text-slate-500 truncate max-w-[120px]">
                           {cs.project?.pid || cs.projectId || "No Project"}
                         </span>
-                        <span className="text-[10px] font-medium text-slate-700">
+                        <span className="text-xs font-medium text-slate-700">
                           ₱{(cs.total || 0).toLocaleString()}
                         </span>
                       </div>
