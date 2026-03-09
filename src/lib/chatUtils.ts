@@ -17,13 +17,13 @@ const ADMIN_NAME_MAP: Record<string, string> = {
  */
 const ADMIN_ICON_MAP: Record<string, string> = {
   acnoblezada: "👨‍🔬", // Albert
-  apbernas: "👨‍💻",    // Dan
-  ccflorece: "👩‍💼",    // Tine
-  ctmueda: "👩‍🔬",     // Cams
+  apbernas: "👩‍🎨",    // Dan
+  ccflorece: "👩‍🎨",    // Tine
+  ctmueda: "👩‍🎨",     // Cams
   kptenizo: "👨‍🏫",    // Karl
-  madayon1: "👩‍💻",    // Merl
+  madayon1: "👨‍🔬",    // Merl
   mdlojera: "👩‍🎨",    // Mics
-  mfjavier: "👩‍🔬",    // Carms
+  mfjavier: "👩‍🎨",    // Carms
 };
 
 /**
