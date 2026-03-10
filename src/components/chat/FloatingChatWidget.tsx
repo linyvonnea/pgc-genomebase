@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { MessageCircle, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import ChatBox from "@/components/chat/ChatBox";
 import { MessageSenderRole } from "@/types/QuotationThread";
 import UnreadBadge from "@/components/chat/UnreadBadge";
@@ -15,6 +16,22 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import { subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
+
+function getClientInitials(name?: string | null): string {
+  const normalizedName = name?.trim();
+
+  if (!normalizedName) {
+    return "CL";
+  }
+
+  const parts = normalizedName.split(/\s+/).filter(Boolean);
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
+}
 
 interface FloatingChatWidgetProps {
   inquiryId: string;
@@ -151,13 +168,17 @@ export default function FloatingChatWidget({
           >
             <div className="flex items-center justify-between bg-blue-600 px-4 py-3 text-white">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1.5 shadow-sm border border-blue-500 overflow-hidden">
-                  {role === "admin" && inquiryData?.clientInfo?.logoUrl ? (
-                    <img src={inquiryData.clientInfo.logoUrl} alt="Client Logo" className="w-full h-full object-cover" />
-                  ) : (
+                {role === "admin" ? (
+                  <Avatar className="h-10 w-10 border border-blue-500 bg-white shadow-sm">
+                    <AvatarFallback className="bg-blue-50 text-sm font-semibold tracking-wide text-blue-700">
+                      {getClientInitials(inquiryData?.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1.5 shadow-sm border border-blue-500 overflow-hidden">
                     <img src="/assets/pgc-logo.png" alt="PGC Logo" className="w-full h-full object-contain" />
-                  )}
-                </div>
+                  </div>
+                )}
                 <div className="flex flex-col">
                   <span className="font-bold text-sm tracking-tight leading-tight">
                     {role === "admin" ? (inquiryData?.name || "Client") : "PGC Visayas Support"}
