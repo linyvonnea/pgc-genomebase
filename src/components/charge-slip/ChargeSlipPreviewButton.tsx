@@ -1,7 +1,7 @@
 // src/components/charge-slip/ChargeSlipPreviewButton.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PDFViewer, PDFDownloadLink, pdf } from "@react-pdf/renderer";
+import { PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
 import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { normalizeDate } from "@/lib/formatters";
@@ -40,7 +40,7 @@ export default function ChargeSlipPreviewButton({ record }: Props) {
     });
   };
 
-  const pdfProps = {
+  const pdfProps = useMemo(() => ({
     services: record.services,
     client: record.client,
     project: record.project,
@@ -59,7 +59,9 @@ export default function ChargeSlipPreviewButton({ record }: Props) {
     subtotal: record.subtotal,
     discount: record.discount,
     total: record.total,
-  };
+  }), [record]);
+
+  const pdfDocument = useMemo(() => <ChargeSlipPDF {...pdfProps} />, [pdfProps]);
 
   return (
     <Dialog 
@@ -67,8 +69,8 @@ export default function ChargeSlipPreviewButton({ record }: Props) {
       onOpenChange={(isOpen) => {
         setOpen(isOpen);
         if (isOpen) {
-          // Delay rendering the PDF viewer to keep the dialog open transition smooth
-          setTimeout(() => setShowViewer(true), 100);
+          // Keep delay but we've optimized the props
+          setTimeout(() => setShowViewer(true), 200);
         } else {
           setShowViewer(false);
         }
@@ -93,12 +95,12 @@ export default function ChargeSlipPreviewButton({ record }: Props) {
         <div className="flex-1 overflow-hidden border bg-muted/20 flex items-center justify-center">
           {showViewer ? (
             <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
-              <ChargeSlipPDF {...pdfProps} />
+              {pdfDocument}
             </PDFViewer>
           ) : (
             <div className="flex flex-col items-center gap-2">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-              <p className="text-sm text-muted-foreground font-medium">Loading PDF Preview...</p>
+              <p className="text-sm text-muted-foreground font-medium">Generating PDF Preview...</p>
             </div>
           )}
         </div>
@@ -106,7 +108,7 @@ export default function ChargeSlipPreviewButton({ record }: Props) {
         <div className="pt-4 flex justify-end">
           {showViewer && (
             <PDFDownloadLink
-              document={<ChargeSlipPDF {...pdfProps} />}
+              document={pdfDocument}
               fileName={`ChargeSlip-${record.chargeSlipNumber}.pdf`}
             >
               {({ loading }) => (
