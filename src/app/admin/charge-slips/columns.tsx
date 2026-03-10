@@ -88,10 +88,15 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     id: "dateIssued",
     header: "Date",
     accessorFn: (row) => toMillis((row as any).dateIssued),
-    size: 90,
+    size: 100, // Slightly increased for MM-DD-YYYY
     cell: ({ getValue }) => {
       const ms = getValue<number>();
-      return <div className="text-xs">{isNaN(ms) ? "—" : new Date(ms).toLocaleDateString("en-CA")}</div>;
+      if (isNaN(ms)) return <div className="text-xs text-muted-foreground">—</div>;
+      const date = new Date(ms);
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      const yyyy = date.getFullYear();
+      return <div className="text-xs font-mono tabular-nums">{`${mm}-${dd}-${yyyy}`}</div>;
     },
     sortDescFirst: true,
   },
