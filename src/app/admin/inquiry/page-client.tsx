@@ -74,7 +74,7 @@ export function InquiryPageClient({
   }, [router]);
 
   return (
-    <div className="container mx-auto py-4 space-y-3">
+    <div className="w-full px-4 py-4 space-y-3">
       <div className="space-y-1">
         {/* Page Header */}
         <div className="flex justify-between items-start">
