@@ -2251,7 +2251,7 @@ export default function ClientPortalPage() {
                           toggleProjectDocs(project);
                         }}
                         className={cn(
-                          "flex-shrink-0 px-3 py-3 hover:bg-slate-100 transition-colors border-l border-slate-200 group/chevron",
+                          "flex-shrink-0 px-3 py-4 hover:bg-slate-100 transition-colors border-l border-slate-200 group/chevron h-full",
                           isDocsExpanded && "bg-blue-50"
                         )}
                         title="View documents"
