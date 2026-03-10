@@ -61,7 +61,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
     header: "Inquiry ID",
-    size: 130, // Increased to 130px to make ID fully visible
+    size: 150, // Increased from 130 to accommodate copy button and badge
     cell: ({ row }) => {
       const inquiry = row.original;
 
@@ -97,6 +97,8 @@ export const columns: ColumnDef<Inquiry>[] = [
         }
       };
 
+      const shortId = inquiry.id.slice(0, 8);
+
       return (
         <div className="flex items-center gap-2 w-full">
           {showNew && (
@@ -112,7 +114,7 @@ export const columns: ColumnDef<Inquiry>[] = [
           </span>
           <button
             onClick={handleCopy}
-            className="p-1 hover:bg-slate-100 rounded shrink-0"
+            className="p-0.5 hover:bg-slate-100 rounded shrink-0"
             title="Copy Inquiry ID"
           >
             <Copy className="h-2.5 w-2.5 text-slate-400" />
@@ -124,7 +126,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "createdAt",
     header: "Date",
-    size: 75,
+    size: 90, // Increased from 75 to avoid tight spacing
     cell: ({ row }) => {
       const createdAt = row.original.createdAt;
 
@@ -154,7 +156,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    size: 130, // Adjusted to 130px as requested
+    size: 180, // Increased from 130 to prevent excessive truncation
     cell: ({ getValue }) => {
       const name = getValue() as string;
 
@@ -196,7 +198,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "email",
     header: "Email",
-    size: 120,
+    size: 200, // Increased from 120 to accommodate full email addresses
     cell: ({ getValue }) => {
       const email = (getValue() as string) || "—";
 
@@ -241,7 +243,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "affiliation",
     header: "Affiliation",
-    size: 130, // Balanced
+    size: 200, // Increased from 130 to show more of the organization name
     cell: ({ getValue }) => {
       const affiliation = getValue() as string;
       return (
@@ -254,7 +256,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "serviceType",
     header: "Svc", // Shortened from "Service Type"
-    size: 60, // Reduced from 120
+    size: 70, // Increased slightly from 60
     cell: ({ getValue }) => {
       const serviceType = getValue() as string;
       if (!serviceType) return <span className="text-muted-foreground italic">—</span>;
@@ -287,7 +289,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 140, // Further reduced from 160
+    size: 160, // Increased from 140 to accommodate status and icons
     cell: ({ row }) => {
       const router = useRouter();
       const inquiry = row.original;
@@ -351,7 +353,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     id: "actions", // Custom column ID since it doesn't map to data
     header: () => <div className="text-center w-full">Actions</div>,
-    size: 100, // Further reduced from 110
+    size: 110, // Increased from 100 to fit buttons comfortably
     cell: ({ row }) => {
       const inquiry = row.original;
       const router = useRouter();
