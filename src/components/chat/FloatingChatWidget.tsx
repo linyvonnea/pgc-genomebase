@@ -141,7 +141,7 @@ export default function FloatingChatWidget({
       className={`fixed bottom-6 right-6 z-50 flex flex-col items-end ${className || ""}`}
     >
       <AnimatePresence>
-        {!isOpen && (
+        {!isOpen && role !== "admin" && (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
