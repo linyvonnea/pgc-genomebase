@@ -60,8 +60,8 @@ const getStatusColor = (status: string) => {
 export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
-    header: "ID", // Shortened from "Inquiry ID"
-    size: 100, // Compact size
+    header: "ID",
+    size: 90, // Reduced for one-view layout
     cell: ({ row }) => {
       const inquiry = row.original;
 
@@ -126,7 +126,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "createdAt",
     header: "Date",
-    size: 75, // Compact size
+    size: 70, // Compressed
     cell: ({ row }) => {
       const createdAt = row.original.createdAt;
 
@@ -156,7 +156,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    size: 140, // Balanced to fit screen
+    size: 130, // Tighter width
     cell: ({ getValue }) => {
       const name = getValue() as string;
 
@@ -198,7 +198,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "email",
     header: "Email",
-    size: 140, // Balanced to fit screen
+    size: 130, // Tighter width
     cell: ({ getValue }) => {
       const email = (getValue() as string) || "—";
 
@@ -243,7 +243,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "affiliation",
     header: "Affiliation",
-    size: 130, // Reduced to fit screen
+    size: 110, // Tighter width
     cell: ({ getValue }) => {
       const affiliation = getValue() as string;
       return (
@@ -264,8 +264,8 @@ export const columns: ColumnDef<Inquiry>[] = [
   },
   {
     accessorKey: "serviceType",
-    header: "Svc", // Shortened from "Service Type"
-    size: 50, // Reduced to minimum required
+    header: "Svc",
+    size: 45, // Minimum possible
     cell: ({ getValue }) => {
       const serviceType = getValue() as string;
       if (!serviceType) return <span className="text-muted-foreground italic">—</span>;
@@ -298,7 +298,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 130, // Optimized
+    size: 115, // Tighter for one-view
     cell: ({ row }) => {
       const router = useRouter();
       const inquiry = row.original;
@@ -360,9 +360,9 @@ export const columns: ColumnDef<Inquiry>[] = [
     },
   },
   {
-    id: "actions", // Custom column ID since it doesn't map to data
+    id: "actions",
     header: () => <div className="text-center w-full">Actions</div>,
-    size: 100, // Compact size for buttons
+    size: 90, // Tighter
     cell: ({ row }) => {
       const inquiry = row.original;
       const router = useRouter();
