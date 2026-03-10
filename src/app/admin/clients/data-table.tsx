@@ -240,9 +240,34 @@ export function DataTable<TData, TValue>({
     const result = data.filter((row: any, idx: number) => {
       // Search filter
       const searchQuery = globalFilter.trim().toLowerCase();
+      
+      // Select all relevant fields to search in
+      const searchFields = [
+        row.cid,
+        row.name,
+        row.email,
+        row.pid,
+        Array.isArray(row.pid) ? row.pid.join(" ") : "",
+        row.affiliation,
+        row.affiliationAddress,
+        row.designation,
+        row.phoneNumber,
+        row.institution,
+        row.representative,
+        row.representativeEmail,
+        row.course,
+        row.college,
+        row.adviser,
+        row.adviserEmail,
+        row.sourceOfFunding,
+        row.agency,
+        row.program,
+        row.project,
+        row.notes
+      ].filter(Boolean).map(val => String(val).toLowerCase());
+
       const matchesSearch = searchQuery === "" || 
-        `${row.name || ""} ${row.email || ""} ${row.institution || ""} ${row.designation || ""}`
-          .toLowerCase().includes(searchQuery);
+        searchFields.some(field => field.includes(searchQuery));
       
       // Date filters - handle invalid dates gracefully
       const date = parseClientDate(row.createdAt);
