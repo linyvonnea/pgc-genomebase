@@ -253,9 +253,6 @@ export const columns: ColumnDef<Inquiry>[] = [
       );
     },
   },
-      );
-    },
-  },
   {
     accessorKey: "serviceType",
     header: "Svc", // Shortened from "Service Type"
