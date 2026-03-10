@@ -34,6 +34,11 @@ export interface Inquiry {
   hasOpenedQuotation?: boolean;
   hasLoggedIn?: boolean;
 
+  // Client info for chat/branding
+  clientInfo?: {
+    logoUrl?: string;
+  };
+
   // Message state — denormalized from threadMessages for efficient table display
   // 'none'       : no messages exist yet
   // 'admin_only' : admin has sent messages but no client reply
