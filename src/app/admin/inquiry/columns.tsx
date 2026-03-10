@@ -60,8 +60,8 @@ const getStatusColor = (status: string) => {
 export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
-    header: "Inquiry ID",
-    size: 110, // Further reduced from 140
+    header: "ID",
+    size: 70, // Significantly reduced
     cell: ({ row }) => {
       const inquiry = row.original;
 
@@ -97,25 +97,27 @@ export const columns: ColumnDef<Inquiry>[] = [
         }
       };
 
+      const shortId = inquiry.id.slice(0, 8);
+
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {showNew && (
             <Badge
               variant="destructive"
-              className="h-4 px-1 text-[8px] animate-pulse shrink-0"
+              className="h-3 px-1 text-[7px] animate-pulse shrink-0"
             >
-              NEW
+              N
             </Badge>
           )}
-          <span className="font-mono text-xs truncate" title={inquiry.id}>
-            {inquiry.id}
+          <span className="font-mono text-[10px] truncate" title={inquiry.id}>
+            {shortId}
           </span>
           <button
             onClick={handleCopy}
-            className="p-1 hover:bg-slate-100 rounded shrink-0"
+            className="p-0.5 hover:bg-slate-100 rounded shrink-0"
             title="Copy Inquiry ID"
           >
-            <Copy className="h-3 w-3 text-slate-500" />
+            <Copy className="h-2.5 w-2.5 text-slate-400" />
           </button>
         </div>
       );
@@ -124,7 +126,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "createdAt",
     header: "Date",
-    size: 75, // Reduced from 85
+    size: 75,
     cell: ({ row }) => {
       const createdAt = row.original.createdAt;
 
@@ -136,7 +138,7 @@ export const columns: ColumnDef<Inquiry>[] = [
       const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
 
       if (isNaN(date.getTime())) {
-        return <span className="text-red-500">Invalid date</span>;
+        return <span className="text-red-500 text-[10px]">Invalid</span>;
       }
 
       // Format date for display (MM-DD-YYYY format)
@@ -145,7 +147,7 @@ export const columns: ColumnDef<Inquiry>[] = [
       const day = date.getDate().toString().padStart(2, '0');
       
       return (
-        <span className="text-slate-500 font-medium tabular-nums text-[12px]">
+        <span className="text-slate-500 font-medium tabular-nums text-[11px]">
           {`${month}-${day}-${year}`}
         </span>
       );
@@ -154,7 +156,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    size: 100, // Reduced from 110
+    size: 180, // Increased from 100 for better visibility
     cell: ({ getValue }) => {
       const name = getValue() as string;
 
@@ -172,8 +174,8 @@ export const columns: ColumnDef<Inquiry>[] = [
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-1 group max-w-[100px] cursor-help">
-                <span className="truncate text-[11px] font-medium">
+              <div className="flex items-center gap-1 group max-w-[170px] cursor-help">
+                <span className="truncate text-[11px] font-semibold text-slate-700">
                   {name}
                 </span>
                 <button
@@ -196,7 +198,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "email",
     header: "Email",
-    size: 110, // Reduced from 130
+    size: 120,
     cell: ({ getValue }) => {
       const email = (getValue() as string) || "—";
 
@@ -216,7 +218,7 @@ export const columns: ColumnDef<Inquiry>[] = [
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center gap-1 group max-w-[110px] cursor-help">
-                <span className="truncate text-[11px] text-slate-500">
+                <span className="truncate text-[11px] text-slate-400">
                   {email}
                 </span>
                 {email !== "—" && (
@@ -241,11 +243,11 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "affiliation",
     header: "Affiliation",
-    size: 110, // Reduced from 130
+    size: 130, // Balanced
     cell: ({ getValue }) => {
       const affiliation = getValue() as string;
       return (
-        <div className="max-w-[110px] truncate text-[11px] text-slate-500" title={affiliation}>
+        <div className="max-w-[120px] truncate text-[11px] text-slate-500 font-medium" title={affiliation}>
           {affiliation}
         </div>
       );
