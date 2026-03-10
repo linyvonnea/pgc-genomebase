@@ -562,27 +562,27 @@ export function DataTable<TData, TValue>({
             <TableBody>
               {filteredRows.length ? (
                 filteredRows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    className={cn(
-                      "group hover:bg-blue-50/30 transition-colors cursor-pointer border-b border-slate-100 last:border-0",
-                      unreadInquiryIds.has((row.original as unknown as { id: string }).id)
-                        ? "bg-blue-50/60"
-                        : ""
-                    )}
-                    data-state={row.getIsSelected() && "selected"}
-                    onClick={(e: React.MouseEvent) => handleRowClick(row.original as Inquiry, e)}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell 
-                        key={cell.id} 
-                        className="py-1.5 px-3 text-[13px] text-slate-600 border-r border-slate-50 last:border-r-0 align-middle truncate"
-                        style={{ width: cell.column.columnDef.size }}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
+                    <TableRow
+                      key={row.id}
+                      className={cn(
+                        "group hover:bg-blue-50/30 transition-colors cursor-pointer border-b border-slate-200 last:border-0",
+                        unreadInquiryIds.has((row.original as unknown as { id: string }).id)
+                          ? "bg-blue-50/60"
+                          : ""
+                      )}
+                      data-state={row.getIsSelected() && "selected"}
+                      onClick={(e: React.MouseEvent) => handleRowClick(row.original as Inquiry, e)}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell 
+                          key={cell.id} 
+                          className="py-1.5 px-3 text-[13px] text-slate-600 border-r border-slate-200 last:border-r-0 align-middle truncate"
+                          style={{ width: cell.column.columnDef.size }}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
                 ))
               ) : (
                 <TableRow>

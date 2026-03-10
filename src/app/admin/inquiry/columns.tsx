@@ -60,8 +60,8 @@ const getStatusColor = (status: string) => {
 export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
-    header: "ID",
-    size: 70, // Significantly reduced
+    header: "Inquiry ID",
+    size: 130, // Increased to 130px to make ID fully visible
     cell: ({ row }) => {
       const inquiry = row.original;
 
@@ -97,10 +97,8 @@ export const columns: ColumnDef<Inquiry>[] = [
         }
       };
 
-      const shortId = inquiry.id.slice(0, 8);
-
       return (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           {showNew && (
             <Badge
               variant="destructive"
@@ -109,12 +107,12 @@ export const columns: ColumnDef<Inquiry>[] = [
               N
             </Badge>
           )}
-          <span className="font-mono text-[10px] truncate" title={inquiry.id}>
-            {shortId}
+          <span className="font-mono text-xs truncate" title={inquiry.id}>
+            {inquiry.id}
           </span>
           <button
             onClick={handleCopy}
-            className="p-0.5 hover:bg-slate-100 rounded shrink-0"
+            className="p-1 hover:bg-slate-100 rounded shrink-0"
             title="Copy Inquiry ID"
           >
             <Copy className="h-2.5 w-2.5 text-slate-400" />
@@ -156,7 +154,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    size: 180, // Increased from 100 for better visibility
+    size: 130, // Adjusted to 130px as requested
     cell: ({ getValue }) => {
       const name = getValue() as string;
 
@@ -174,7 +172,7 @@ export const columns: ColumnDef<Inquiry>[] = [
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-1 group max-w-[170px] cursor-help">
+              <div className="flex items-center gap-1 group max-w-[120px] cursor-help">
                 <span className="truncate text-[11px] font-semibold text-slate-700">
                   {name}
                 </span>
