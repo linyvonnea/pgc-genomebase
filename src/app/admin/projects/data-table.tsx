@@ -114,10 +114,29 @@ export function DataTable<TData extends Project, TValue>({
   // Main filtering logic
   const filteredData = useMemo(() => {
     return data.filter((item) => {
-      // 1. Text Search
+      // 1. Text Search - Search across ALL fields
       const q = globalFilter.trim().toLowerCase();
-      const haystack = `${item.pid || ""} ${item.title || ""} ${item.lead || ""} ${item.personnelAssigned || ""} ${item.sendingInstitution || ""}`.toLowerCase();
-      const matchesSearch = q === "" || haystack.includes(q);
+      
+      const searchFields = [
+        item.pid,
+        item.iid,
+        Array.isArray(item.iid) ? item.iid.join(" ") : item.iid,
+        item.title,
+        item.lead,
+        item.personnelAssigned,
+        item.sendingInstitution,
+        item.status,
+        item.fundingCategory,
+        item.fundingInstitution,
+        item.notes,
+        Array.isArray(item.serviceRequested) ? item.serviceRequested.join(" ") : item.serviceRequested,
+        Array.isArray((item as any).clientNames) ? (item as any).clientNames.join(" ") : (item as any).clientNames,
+        (item as any).projectTag,
+        (item as any).serviceRequestedDetails,
+      ].filter(Boolean).map(val => String(val).toLowerCase());
+
+      const matchesSearch = q === "" || 
+        searchFields.some(field => field.includes(q));
 
       // 2. Status Filter
       const matchesStatus = statusFilter === "__all" || item.status === statusFilter;
