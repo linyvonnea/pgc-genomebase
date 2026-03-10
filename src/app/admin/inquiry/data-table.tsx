@@ -85,12 +85,21 @@ export function DataTable<TData, TValue>({
 
   // Handle row click to navigate to detail page
   const handleRowClick = (inquiry: Inquiry, event: React.MouseEvent) => {
-    // Don't navigate if clicking on a button or interactive element
+    // Don't navigate if clicking on interactive elements inside the row.
     const target = event.target as HTMLElement
     if (
-      target.closest('button') || 
+      target.closest('button') ||
       target.closest('[role="button"]') ||
-      target.closest('a')
+      target.closest('a') ||
+      target.closest('input') ||
+      target.closest('textarea') ||
+      target.closest('select') ||
+      target.closest('label') ||
+      target.closest('[role="textbox"]') ||
+      target.closest('[role="combobox"]') ||
+      target.closest('[role="dialog"]') ||
+      target.closest('[contenteditable="true"]') ||
+      target.closest('[data-stop-row-click="true"]')
     ) {
       return
     }
