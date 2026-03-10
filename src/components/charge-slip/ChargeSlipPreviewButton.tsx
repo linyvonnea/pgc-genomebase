@@ -24,6 +24,7 @@ interface Props {
 export default function ChargeSlipPreviewButton({ record }: Props) {
   const { adminInfo } = useAuth();
   const [open, setOpen] = useState(false);
+  const [showViewer, setShowViewer] = useState(false);
 
   const handleDownload = async () => {
     // Log DOWNLOAD activity
@@ -61,7 +62,18 @@ export default function ChargeSlipPreviewButton({ record }: Props) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog 
+      open={open} 
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (isOpen) {
+          // Delay rendering the PDF viewer to keep the dialog open transition smooth
+          setTimeout(() => setShowViewer(true), 100);
+        } else {
+          setShowViewer(false);
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="default">📄 Preview Charge Slip</Button>
       </DialogTrigger>
@@ -78,27 +90,36 @@ export default function ChargeSlipPreviewButton({ record }: Props) {
           <DialogTitle>Charge Slip Preview</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden border">
-          <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
-            <ChargeSlipPDF {...pdfProps} />
-          </PDFViewer>
+        <div className="flex-1 overflow-hidden border bg-muted/20 flex items-center justify-center">
+          {showViewer ? (
+            <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
+              <ChargeSlipPDF {...pdfProps} />
+            </PDFViewer>
+          ) : (
+            <div className="flex flex-col items-center gap-2">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <p className="text-sm text-muted-foreground font-medium">Loading PDF Preview...</p>
+            </div>
+          )}
         </div>
 
         <div className="pt-4 flex justify-end">
-          <PDFDownloadLink
-            document={<ChargeSlipPDF {...pdfProps} />}
-            fileName={`ChargeSlip-${record.chargeSlipNumber}.pdf`}
-          >
-            {({ loading }) => (
-              <Button 
-                disabled={loading} 
-                variant="secondary"
-                onClick={handleDownload}
-              >
-                {loading ? "Preparing..." : "⬇ Download PDF"}
-              </Button>
-            )}
-          </PDFDownloadLink>
+          {showViewer && (
+            <PDFDownloadLink
+              document={<ChargeSlipPDF {...pdfProps} />}
+              fileName={`ChargeSlip-${record.chargeSlipNumber}.pdf`}
+            >
+              {({ loading }) => (
+                <Button 
+                  disabled={loading} 
+                  variant="secondary"
+                  onClick={handleDownload}
+                >
+                  {loading ? "Preparing..." : "⬇ Download PDF"}
+                </Button>
+              )}
+            </PDFDownloadLink>
+          )}
         </div>
       </DialogContent>
     </Dialog>
