@@ -57,7 +57,6 @@ const getStatusColor = (status: string) => {
  * for complex data types like dates and status badges. The columns are configured
  * to work with TanStack Table's sorting and filtering features.
  */
-export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
     header: "ID",
