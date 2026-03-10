@@ -49,6 +49,43 @@ export const columns: ColumnDef<Client>[] = [
     ),
   },
   {
+    accessorKey: "createdAt",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="hover:bg-accent px-1 text-[11px] font-semibold"
+        >
+          Date
+          <ArrowUpDown className="ml-1 h-3 w-3" />
+        </Button>
+      )
+    },
+    size: 90,
+    cell: ({ getValue }) => {
+      const dateValue = getValue();
+      if (!dateValue) return <div className="px-1 text-[10px] text-muted-foreground text-center">—</div>;
+      
+      try {
+        const date = dateValue instanceof Date ? dateValue : (typeof dateValue === 'object' && 'toDate' in (dateValue as any) ? (dateValue as any).toDate() : new Date(dateValue as any));
+        if (isNaN(date.getTime())) return <div className="px-1 text-[10px] text-muted-foreground text-center">—</div>;
+        
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const yyyy = date.getFullYear();
+        
+        return (
+          <div className="font-mono text-[10px] text-slate-500 px-1 text-center tabular-nums font-medium">
+            {`${mm}-${dd}-${yyyy}`}
+          </div>
+        );
+      } catch (e) {
+        return <div className="px-1 text-[10px] text-muted-foreground text-center">—</div>;
+      }
+    },
+  },
+  {
     accessorKey: "name",
     header: ({ column }) => {
       return (
