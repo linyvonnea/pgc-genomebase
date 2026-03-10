@@ -16,22 +16,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import { subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
-
-function getClientInitials(name?: string | null): string {
-  const normalizedName = name?.trim();
-
-  if (!normalizedName) {
-    return "CL";
-  }
-
-  const parts = normalizedName.split(/\s+/).filter(Boolean);
-
-  if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase();
-  }
-
-  return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
-}
+import { getClientInitials } from "@/lib/chatUtils";
 
 interface FloatingChatWidgetProps {
   inquiryId: string;

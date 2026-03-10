@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import useAuth from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Card,
   CardContent,
@@ -20,7 +21,7 @@ import {
   markMessagesAsRead,
 } from "@/services/quotationThreadService";
 import { format } from "date-fns";
-import { getAdminDisplayName } from "@/lib/chatUtils";
+import { getAdminDisplayName, getClientInitials } from "@/lib/chatUtils";
 
 interface ChatBoxProps {
   inquiryId: string;
@@ -203,8 +204,13 @@ export default function ChatBox({
                     className={`flex flex-col max-w-[85%] ${isMe ? "items-end" : "items-start"}`}
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      {/* Check if we should show name or badge first */}
-                      {!isMe && msg.senderRole === "admin" ? (
+                      {!isMe && msg.senderRole === "client" && role === "admin" ? (
+                        <Avatar className="h-5 w-5 border border-slate-200 bg-white shadow-sm">
+                          <AvatarFallback className="bg-blue-50 text-[9px] font-semibold tracking-wide text-blue-700">
+                            {getClientInitials(msg.senderName)}
+                          </AvatarFallback>
+                        </Avatar>
+                      ) : !isMe && msg.senderRole === "admin" ? (
                         <>
                           <Badge
                             variant="outline"
@@ -221,14 +227,6 @@ export default function ChatBox({
                           <span className="text-xs font-semibold text-gray-600">
                             {isMe ? "You" : msg.senderName}
                           </span>
-                          {msg.senderRole === "client" && role === "admin" && (
-                            <Badge
-                              variant="outline"
-                              className="ml-1 text-[9px] h-4 py-0 px-1.5 bg-green-50 text-green-700 border-green-200"
-                            >
-                              Client
-                            </Badge>
-                          )}
                         </>
                       )}
                       <span className="text-[10px] text-gray-400 flex items-center gap-1 ml-1">
