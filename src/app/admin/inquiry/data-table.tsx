@@ -52,6 +52,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { ChevronDown, X, MessageCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -512,12 +513,12 @@ export function DataTable<TData, TValue>({
       </div>
 
       {/* Compact Table with Sticky Header */}
-      <div className="rounded-md border overflow-hidden">
-        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-          <Table className="table-fixed">
-            <TableHeader className="sticky top-0 bg-muted/95 backdrop-blur-sm z-10">
+      <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
+        <div className="overflow-x-auto max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200">
+          <Table className="w-full border-collapse">
+            <TableHeader className="sticky top-0 bg-slate-50/95 backdrop-blur-sm z-10 border-b shadow-sm">
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
+                <TableRow key={headerGroup.id} className="hover:bg-transparent border-0">
                   {headerGroup.headers.map((header) => {
                     const canSort = header.column.getCanSort?.()
                     const sortDir = header.column.getIsSorted?.()
@@ -525,16 +526,22 @@ export function DataTable<TData, TValue>({
                       <TableHead
                         key={header.id}
                         onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                        className={`${canSort ? "cursor-pointer select-none" : ""} h-10 text-xs font-semibold`}
+                        className={cn(
+                          "h-10 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-r border-slate-100 last:border-r-0",
+                          canSort ? "cursor-pointer select-none hover:bg-slate-100/50 transition-colors" : ""
+                        )}
                         style={{ width: header.column.columnDef.size }}
                       >
-                        <div className="flex items-center gap-1">
-                          {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                          {canSort && (
-                            <span className="ml-1 text-xs opacity-60">
-                              {sortDir === "asc" ? "▲" : sortDir === "desc" ? "▼" : ""}
-                            </span>
-                          )}
+                        <div className="flex items-center justify-between px-1">
+                          <div className="flex items-center gap-1.5">
+                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                            {canSort && (
+                              <div className="flex flex-col -gap-0.5 opacity-40">
+                                <span className={cn("text-[8px] leading-none", sortDir === "asc" && "text-blue-600 opacity-100")}>▲</span>
+                                <span className={cn("text-[8px] leading-none", sortDir === "desc" && "text-blue-600 opacity-100")}>▼</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </TableHead>
                     )
@@ -548,18 +555,19 @@ export function DataTable<TData, TValue>({
                 filteredRows.map((row) => (
                   <TableRow
                     key={row.id}
-                    className={`group hover:bg-muted/50 transition-colors cursor-pointer ${
+                    className={cn(
+                      "group hover:bg-blue-50/30 transition-colors cursor-pointer border-b border-slate-100 last:border-0",
                       unreadInquiryIds.has((row.original as unknown as { id: string }).id)
-                        ? "border-l-4 border-l-blue-500 bg-blue-50/40"
+                        ? "bg-blue-50/60"
                         : ""
-                    }`}
+                    )}
                     data-state={row.getIsSelected() && "selected"}
                     onClick={(e: React.MouseEvent) => handleRowClick(row.original as Inquiry, e)}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell 
                         key={cell.id} 
-                        className="py-2"
+                        className="py-1.5 px-3 text-[13px] text-slate-600 border-r border-slate-50 last:border-r-0 align-middle truncate"
                         style={{ width: cell.column.columnDef.size }}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
