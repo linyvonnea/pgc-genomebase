@@ -214,11 +214,9 @@ export default function ClientPortalPage() {
   useEffect(() => {
     if (pidParam) {
       setExpandedProjectDocs(new Set([pidParam]));
-    } else if (projects.length > 0) {
-      // If no specific PID, expand the first one by default if it's not already expanded
-      setExpandedProjectDocs(prev => prev.size === 0 ? new Set([projects[0].pid]) : prev);
     }
-  }, [pidParam, projects]);
+    // Removed auto-expansion of first project to allow projects to be collapsed by default
+  }, [pidParam]);
 
   const [selectedProjectPid, setSelectedProjectPid] = useState<string | null>(
     null
