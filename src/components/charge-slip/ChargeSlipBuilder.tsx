@@ -164,9 +164,9 @@ function ChargeSlipBuilderInner({
       price: s.price || 0,
     }));
     setSelectedServices(servicesFromQuotation);
-    setIsInternal(!!quote.useInternalPrice);
+    setIsInternal(!!quote.useInternalPrice || !!quote.isInternal);
     setUseAffiliationAsClientName(!!quote.useAffiliationAsClientName);
-    toast.info(`Populated services from ${quote.referenceNumber}`);
+    toast.info(`Populated options and services from ${quote.referenceNumber}`);
   };
 
   const handleQuotationDeselect = () => {
