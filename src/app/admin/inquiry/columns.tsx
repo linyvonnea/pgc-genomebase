@@ -61,7 +61,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
     header: "Inquiry ID",
-    size: 200,
+    size: 140, // Reduced from 200
     cell: ({ row }) => {
       const inquiry = row.original;
 
@@ -124,12 +124,12 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "createdAt",
     header: "Date",
-    size: 85,
+    size: 75, // Reduced from 85
     cell: ({ row }) => {
       const createdAt = row.original.createdAt;
 
       if (!createdAt) {
-        return <span className="text-muted-foreground italic">â€”</span>;
+        return <span className="text-muted-foreground italic">—</span>;
       }
 
       // Ensure we have a Date object
@@ -139,14 +139,22 @@ export const columns: ColumnDef<Inquiry>[] = [
         return <span className="text-red-500">Invalid date</span>;
       }
 
-      // Format date for display (YYYY-MM-DD format for consistency)
-      return date.toLocaleDateString("en-CA");
+      // Format date for display (YY-MM-DD format to save space)
+      const year = date.getFullYear().toString().slice(-2);
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      
+      return (
+        <span className="text-slate-500 font-medium tabular-nums text-[12px]">
+          {`${year}-${month}-${day}`}
+        </span>
+      );
     },
   },
   {
     accessorKey: "name",
     header: "Name",
-    size: 130,
+    size: 110, // Reduced from 130
     cell: ({ getValue }) => {
       const name = getValue() as string;
 
@@ -161,8 +169,8 @@ export const columns: ColumnDef<Inquiry>[] = [
       };
 
       return (
-        <div className="flex items-center gap-2 group max-w-[130px]">
-          <span className="truncate" title={name}>
+        <div className="flex items-center gap-1.5 group max-w-[110px]">
+          <span className="truncate text-xs font-medium" title={name}>
             {name}
           </span>
           <button
@@ -170,7 +178,7 @@ export const columns: ColumnDef<Inquiry>[] = [
             className="p-1 hover:bg-slate-100 rounded shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
             title="Copy Name"
           >
-            <Copy className="h-3 w-3 text-slate-500" />
+            <Copy className="h-2.5 w-2.5 text-slate-400" />
           </button>
         </div>
       );
@@ -179,7 +187,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "email",
     header: "Email",
-    size: 150,
+    size: 130, // Reduced from 150
     cell: ({ getValue }) => {
       const email = (getValue() as string) || "—";
 
@@ -195,8 +203,8 @@ export const columns: ColumnDef<Inquiry>[] = [
       };
 
       return (
-        <div className="flex items-center gap-2 group max-w-[150px]">
-          <span className="truncate" title={email}>
+        <div className="flex items-center gap-1.5 group max-w-[130px]">
+          <span className="truncate text-xs text-slate-500" title={email}>
             {email}
           </span>
           {email !== "—" && (
@@ -205,7 +213,7 @@ export const columns: ColumnDef<Inquiry>[] = [
               className="p-1 hover:bg-slate-100 rounded shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
               title="Copy Email"
             >
-              <Copy className="h-3 w-3 text-slate-500" />
+              <Copy className="h-2.5 w-2.5 text-slate-400" />
             </button>
           )}
         </div>
@@ -215,11 +223,11 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "affiliation",
     header: "Affiliation",
-    size: 150,
+    size: 130, // Reduced from 150
     cell: ({ getValue }) => {
       const affiliation = getValue() as string;
       return (
-        <div className="max-w-[150px] truncate" title={affiliation}>
+        <div className="max-w-[130px] truncate text-xs text-slate-500" title={affiliation}>
           {affiliation}
         </div>
       );
@@ -227,15 +235,15 @@ export const columns: ColumnDef<Inquiry>[] = [
   },
   {
     accessorKey: "serviceType",
-    header: "Service Type",
-    size: 120,
+    header: "Service", // Shortened from "Service Type"
+    size: 90, // Reduced from 120
     cell: ({ getValue }) => {
       const serviceType = getValue() as string;
       if (!serviceType) return <span className="text-muted-foreground italic">—</span>;
       
       // Capitalize first letter
       return (
-        <div className="capitalize font-medium text-slate-600">
+        <div className="capitalize font-medium text-slate-600 text-xs">
           {serviceType}
         </div>
       );
@@ -249,7 +257,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 200,
+    size: 160, // Reduced from 200
     cell: ({ row }) => {
       const router = useRouter();
       const inquiry = row.original;
@@ -259,9 +267,9 @@ export const columns: ColumnDef<Inquiry>[] = [
 
       // Render status as a colored badge
       return (
-        <div className="flex items-center gap-1.5 min-w-[180px]">
+        <div className="flex items-center gap-1 min-w-[150px]">
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
+            className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${getStatusColor(
               status,
             )}`}
           >
@@ -313,7 +321,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     id: "actions", // Custom column ID since it doesn't map to data
     header: () => <div className="text-center w-full">Actions</div>,
-    size: 140,
+    size: 110, // Reduced from 140
     cell: ({ row }) => {
       const inquiry = row.original;
       const router = useRouter();
@@ -321,16 +329,22 @@ export const columns: ColumnDef<Inquiry>[] = [
       const { canEdit, canCreate, canView } = usePermissions(adminInfo?.role);
 
       return (
-        <div className="flex items-center justify-center gap-2">
-          {canCreate("quotations") && <QuoteButton inquiryId={inquiry.id} />}
+        <div className="flex items-center justify-center gap-1.5 px-1">
+          {canCreate("quotations") && (
+            <div className="scale-90 origin-center">
+              <QuoteButton inquiryId={inquiry.id} />
+            </div>
+          )}
 
           {/* Edit inquiry modal trigger - only show if user has edit permission */}
           {canEdit("inquiries") && (
-            <EditInquiryModal
-              key={inquiry.id} // Force re-render when inquiry changes
-              inquiry={inquiry}
-              onSuccess={() => router.refresh()}
-            />
+            <div className="scale-90 origin-center">
+              <EditInquiryModal
+                key={inquiry.id} // Force re-render when inquiry changes
+                inquiry={inquiry}
+                onSuccess={() => router.refresh()}
+              />
+            </div>
           )}
         </div>
       );
