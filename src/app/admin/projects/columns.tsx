@@ -69,7 +69,7 @@ export const columns: ColumnDef<Project>[] = [
     ),
   },
   {
-    accessorKey: "startDate",
+    accessorKey: "createdAt",
     header: ({ column }) => {
       return (
         <Button
