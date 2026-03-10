@@ -149,9 +149,29 @@ export const columns: ColumnDef<Inquiry>[] = [
     size: 130,
     cell: ({ getValue }) => {
       const name = getValue() as string;
+
+      const handleCopy = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+          await navigator.clipboard.writeText(name);
+          toast.success("Name copied to clipboard");
+        } catch (err) {
+          toast.error("Failed to copy Name");
+        }
+      };
+
       return (
-        <div className="max-w-[130px] truncate" title={name}>
-          {name}
+        <div className="flex items-center gap-2 group max-w-[130px]">
+          <span className="truncate" title={name}>
+            {name}
+          </span>
+          <button
+            onClick={handleCopy}
+            className="p-1 hover:bg-slate-100 rounded shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            title="Copy Name"
+          >
+            <Copy className="h-3 w-3 text-slate-500" />
+          </button>
         </div>
       );
     },
@@ -161,10 +181,33 @@ export const columns: ColumnDef<Inquiry>[] = [
     header: "Email",
     size: 150,
     cell: ({ getValue }) => {
-      const email = (getValue() as string) || "â€”";
+      const email = (getValue() as string) || "—";
+
+      const handleCopy = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (email === "—") return;
+        try {
+          await navigator.clipboard.writeText(email);
+          toast.success("Email copied to clipboard");
+        } catch (err) {
+          toast.error("Failed to copy Email");
+        }
+      };
+
       return (
-        <div className="max-w-[150px] truncate" title={email}>
-          {email}
+        <div className="flex items-center gap-2 group max-w-[150px]">
+          <span className="truncate" title={email}>
+            {email}
+          </span>
+          {email !== "—" && (
+            <button
+              onClick={handleCopy}
+              className="p-1 hover:bg-slate-100 rounded shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+              title="Copy Email"
+            >
+              <Copy className="h-3 w-3 text-slate-500" />
+            </button>
+          )}
         </div>
       );
     },
@@ -178,6 +221,22 @@ export const columns: ColumnDef<Inquiry>[] = [
       return (
         <div className="max-w-[150px] truncate" title={affiliation}>
           {affiliation}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "serviceType",
+    header: "Service Type",
+    size: 120,
+    cell: ({ getValue }) => {
+      const serviceType = getValue() as string;
+      if (!serviceType) return <span className="text-muted-foreground italic">—</span>;
+      
+      // Capitalize first letter
+      return (
+        <div className="capitalize font-medium text-slate-600">
+          {serviceType}
         </div>
       );
     },
