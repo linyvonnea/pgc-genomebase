@@ -524,7 +524,7 @@ export function DataTable<TData, TValue>({
       {/* Compact Table with Sticky Header */}
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
         <div className="overflow-x-auto max-h-[70vh] scrollbar-none">
-          <Table className="w-full border-collapse table-fixed">
+          <Table className="w-full border-collapse">
             <TableHeader className="sticky top-0 bg-slate-50/95 backdrop-blur-sm z-10 border-b shadow-sm">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="hover:bg-transparent border-0">

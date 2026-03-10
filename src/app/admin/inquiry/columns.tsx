@@ -61,7 +61,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
     header: "Inquiry ID",
-    size: 130, // Increased to 130px to make ID fully visible
+    size: 150, // Increased from 130 to accommodate copy button and badge
     cell: ({ row }) => {
       const inquiry = row.original;
 
@@ -100,7 +100,7 @@ export const columns: ColumnDef<Inquiry>[] = [
       const shortId = inquiry.id.slice(0, 8);
 
       return (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2 w-full">
           {showNew && (
             <Badge
               variant="destructive"
@@ -109,8 +109,8 @@ export const columns: ColumnDef<Inquiry>[] = [
               N
             </Badge>
           )}
-          <span className="font-mono text-[10px] truncate" title={inquiry.id}>
-            {shortId}
+          <span className="font-mono text-xs truncate flex-1" title={inquiry.id}>
+            {inquiry.id}
           </span>
           <button
             onClick={handleCopy}
@@ -126,7 +126,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "createdAt",
     header: "Date",
-    size: 75,
+    size: 90, // Increased from 75 to avoid tight spacing
     cell: ({ row }) => {
       const createdAt = row.original.createdAt;
 
@@ -156,7 +156,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    size: 130, // Adjusted to 130px as requested
+    size: 180, // Increased from 130 to prevent excessive truncation
     cell: ({ getValue }) => {
       const name = getValue() as string;
 
@@ -174,8 +174,8 @@ export const columns: ColumnDef<Inquiry>[] = [
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-1 group max-w-[120px] cursor-help">
-                <span className="truncate text-[11px] font-semibold text-slate-700">
+              <div className="flex items-center gap-1 group w-full cursor-help">
+                <span className="truncate text-[11px] font-semibold text-slate-700 flex-1">
                   {name}
                 </span>
                 <button
@@ -198,7 +198,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "email",
     header: "Email",
-    size: 120,
+    size: 200, // Increased from 120 to accommodate full email addresses
     cell: ({ getValue }) => {
       const email = (getValue() as string) || "—";
 
@@ -217,8 +217,8 @@ export const columns: ColumnDef<Inquiry>[] = [
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-1 group max-w-[110px] cursor-help">
-                <span className="truncate text-[11px] text-slate-400">
+              <div className="flex items-center gap-1 group w-full cursor-help">
+                <span className="truncate text-[11px] text-slate-400 flex-1">
                   {email}
                 </span>
                 {email !== "—" && (
@@ -243,11 +243,11 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "affiliation",
     header: "Affiliation",
-    size: 130, // Balanced
+    size: 200, // Increased from 130 to show more of the organization name
     cell: ({ getValue }) => {
       const affiliation = getValue() as string;
       return (
-        <div className="max-w-[120px] truncate text-[11px] text-slate-500 font-medium" title={affiliation}>
+        <div className="w-full truncate text-[11px] text-slate-500 font-medium" title={affiliation}>
           {affiliation}
         </div>
       );
@@ -256,7 +256,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "serviceType",
     header: "Svc", // Shortened from "Service Type"
-    size: 60, // Reduced from 120
+    size: 70, // Increased slightly from 60
     cell: ({ getValue }) => {
       const serviceType = getValue() as string;
       if (!serviceType) return <span className="text-muted-foreground italic">—</span>;
@@ -289,7 +289,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 140, // Further reduced from 160
+    size: 160, // Increased from 140 to accommodate status and icons
     cell: ({ row }) => {
       const router = useRouter();
       const inquiry = row.original;
@@ -299,15 +299,15 @@ export const columns: ColumnDef<Inquiry>[] = [
 
       // Render status as a colored badge
       return (
-        <div className="flex items-center gap-1 min-w-[130px]">
+        <div className="flex items-center gap-1 w-full">
           <span
-            className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap ${getStatusColor(
+            className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap flex-1 text-center ${getStatusColor(
               status,
             )}`}
           >
             {status}
           </span>
-          <div className="flex items-center gap-0.5 shrink-0">
+          <div className="flex items-center gap-0.5 shrink-0 ml-auto">
             {!!hasLoggedIn && (
               <TooltipProvider>
                 <Tooltip>
@@ -353,7 +353,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     id: "actions", // Custom column ID since it doesn't map to data
     header: () => <div className="text-center w-full">Actions</div>,
-    size: 100, // Further reduced from 110
+    size: 110, // Increased from 100 to fit buttons comfortably
     cell: ({ row }) => {
       const inquiry = row.original;
       const router = useRouter();
