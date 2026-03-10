@@ -169,18 +169,27 @@ export const columns: ColumnDef<Inquiry>[] = [
       };
 
       return (
-        <div className="flex items-center gap-1 group max-w-[100px]">
-          <span className="truncate text-[11px] font-medium" title={name}>
-            {name}
-          </span>
-          <button
-            onClick={handleCopy}
-            className="p-1 hover:bg-slate-100 rounded shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-            title="Copy Name"
-          >
-            <Copy className="h-2.5 w-2.5 text-slate-400" />
-          </button>
-        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1 group max-w-[100px] cursor-help">
+                <span className="truncate text-[11px] font-medium">
+                  {name}
+                </span>
+                <button
+                  onClick={handleCopy}
+                  className="p-1 hover:bg-slate-100 rounded shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Copy Name"
+                >
+                  <Copy className="h-2.5 w-2.5 text-slate-400" />
+                </button>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[300px] break-words">
+              <p className="text-xs font-semibold">{name}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       );
     },
   },
@@ -203,20 +212,29 @@ export const columns: ColumnDef<Inquiry>[] = [
       };
 
       return (
-        <div className="flex items-center gap-1 group max-w-[110px]">
-          <span className="truncate text-[11px] text-slate-500" title={email}>
-            {email}
-          </span>
-          {email !== "—" && (
-            <button
-              onClick={handleCopy}
-              className="p-1 hover:bg-slate-100 rounded shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-              title="Copy Email"
-            >
-              <Copy className="h-2.5 w-2.5 text-slate-400" />
-            </button>
-          )}
-        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1 group max-w-[110px] cursor-help">
+                <span className="truncate text-[11px] text-slate-500">
+                  {email}
+                </span>
+                {email !== "—" && (
+                  <button
+                    onClick={handleCopy}
+                    className="p-1 hover:bg-slate-100 rounded shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Copy Email"
+                  >
+                    <Copy className="h-2.5 w-2.5 text-slate-400" />
+                  </button>
+                )}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[300px] break-words">
+              <p className="text-xs font-semibold">{email}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       );
     },
   },

@@ -168,12 +168,16 @@ export default function ChatBox({
               <p className="text-sm">{error}</p>
             </div>
           ) : messages.length === 0 ? (
-            <div className="flex flex-col justify-center items-center h-full text-center text-gray-500 space-y-2">
-              <MessageCircle className="w-10 h-10 text-gray-200" />
-              <p className="text-sm">No messages yet.</p>
-              <p className="text-xs text-gray-400">
-                Send a message to start communicating.
-              </p>
+            <div className="flex flex-col justify-center items-center h-full text-center text-slate-500 space-y-3 px-6">
+              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-2">
+                <MessageCircle className="w-8 h-8 text-slate-200" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-slate-800">No messages yet.</p>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Have questions about your project? Send us a message and our team will get back to you shortly.
+                </p>
+              </div>
             </div>
           ) : (
             messages.map((msg, idx) => {
