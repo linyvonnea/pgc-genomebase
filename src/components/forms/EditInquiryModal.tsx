@@ -111,11 +111,21 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button variant="ghost" size="sm">
+          <Button
+            variant="ghost"
+            size="sm"
+            data-stop-row-click="true"
+            onClick={(event) => event.stopPropagation()}
+          >
             <Pencil className="h-4 w-4" />
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+        <DialogContent
+          className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto"
+          data-stop-row-click="true"
+          onClick={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
           <DialogHeader className="space-y-3 pb-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-50 rounded-lg">
@@ -137,7 +147,12 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
 
           <Separator className="my-1" />
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-6"
+              data-stop-row-click="true"
+              onClick={(event) => event.stopPropagation()}
+            >
               {/* Contact Information Section */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
