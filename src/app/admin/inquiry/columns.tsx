@@ -97,8 +97,10 @@ export const columns: ColumnDef<Inquiry>[] = [
         }
       };
 
+      const shortId = inquiry.id.slice(0, 8);
+
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {showNew && (
             <Badge
               variant="destructive"
@@ -107,12 +109,12 @@ export const columns: ColumnDef<Inquiry>[] = [
               N
             </Badge>
           )}
-          <span className="font-mono text-xs truncate" title={inquiry.id}>
-            {inquiry.id}
+          <span className="font-mono text-[10px] truncate" title={inquiry.id}>
+            {shortId}
           </span>
           <button
             onClick={handleCopy}
-            className="p-1 hover:bg-slate-100 rounded shrink-0"
+            className="p-0.5 hover:bg-slate-100 rounded shrink-0"
             title="Copy Inquiry ID"
           >
             <Copy className="h-2.5 w-2.5 text-slate-400" />
