@@ -524,7 +524,7 @@ export function DataTable<TData, TValue>({
       {/* Compact Table with Sticky Header */}
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
         <div className="max-h-[70vh] overflow-hidden">
-          <Table className="w-full border-collapse">
+          <Table className="w-full border-collapse table-fixed">
             <TableHeader className="sticky top-0 bg-slate-50/95 backdrop-blur-sm z-10 border-b shadow-sm">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="hover:bg-transparent border-0">
@@ -576,7 +576,7 @@ export function DataTable<TData, TValue>({
                       {row.getVisibleCells().map((cell) => (
                         <TableCell 
                           key={cell.id} 
-                          className="py-1.5 px-3 text-[13px] text-slate-600 border-r border-slate-200 last:border-r-0 align-middle truncate"
+                          className="py-1.5 px-2 text-[13px] text-slate-600 border-r border-slate-200 last:border-r-0 align-middle truncate"
                           style={{ width: cell.column.columnDef.size }}
                         >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
