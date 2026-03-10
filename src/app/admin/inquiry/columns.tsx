@@ -57,11 +57,10 @@ const getStatusColor = (status: string) => {
  * for complex data types like dates and status badges. The columns are configured
  * to work with TanStack Table's sorting and filtering features.
  */
-export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
-    header: "Inquiry ID",
-    size: 110, // Adjusted for full-width layout
+    header: "ID", // Shortened from "Inquiry ID"
+    size: 100, // Compact size
     cell: ({ row }) => {
       const inquiry = row.original;
 
@@ -298,7 +297,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 140, // Balanced size
+    size: 130, // Optimized
     cell: ({ row }) => {
       const router = useRouter();
       const inquiry = row.original;
@@ -308,9 +307,9 @@ export const columns: ColumnDef<Inquiry>[] = [
 
       // Render status as a colored badge
       return (
-        <div className="flex items-center gap-1 w-full">
+        <div className="flex items-center gap-1 w-full overflow-hidden">
           <span
-            className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap flex-1 text-center ${getStatusColor(
+            className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold truncate flex-1 text-center ${getStatusColor(
               status,
             )}`}
           >
@@ -321,11 +320,11 @@ export const columns: ColumnDef<Inquiry>[] = [
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <User className="h-4 w-4 text-green-600 fill-green-600 cursor-default" />
+                    <User className="h-3.5 w-3.5 text-green-600 fill-green-600 cursor-default" />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-xs font-semibold">
-                      Client has logged into portal
+                      Client logged in
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -336,13 +335,13 @@ export const columns: ColumnDef<Inquiry>[] = [
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Eye
-                      className="h-4 w-4 text-blue-500 cursor-default"
+                      className="h-3.5 w-3.5 text-blue-500 cursor-default"
                       strokeWidth={3}
                     />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-xs font-semibold">
-                      Client has viewed quotation
+                      Quotation viewed
                     </p>
                   </TooltipContent>
                 </Tooltip>
