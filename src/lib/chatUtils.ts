@@ -44,3 +44,17 @@ export function getAdminDisplayName(identifier: string | null | undefined): stri
 
   return `${icon} ${displayName}`;
 }
+
+export function getClientInitials(name: string | null | undefined): string {
+  const normalizedName = name?.trim();
+
+  if (!normalizedName) return "CL";
+
+  const parts = normalizedName.split(/\s+/).filter(Boolean);
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
+}

@@ -16,6 +16,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import { subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
+import { getClientInitials } from "@/lib/chatUtils";
 
 function getClientInitials(name?: string | null): string {
   const normalizedName = name?.trim();
