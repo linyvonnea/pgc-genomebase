@@ -61,7 +61,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
     header: "Inquiry ID",
-    size: 150, // Increased from 130 to accommodate copy button and badge
+    size: 110, // Adjusted for full-width layout
     cell: ({ row }) => {
       const inquiry = row.original;
 
@@ -126,7 +126,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "createdAt",
     header: "Date",
-    size: 90, // Increased from 75 to avoid tight spacing
+    size: 75, // Compact size
     cell: ({ row }) => {
       const createdAt = row.original.createdAt;
 
@@ -156,7 +156,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    size: 180, // Increased from 130 to prevent excessive truncation
+    size: 140, // Balanced to fit screen
     cell: ({ getValue }) => {
       const name = getValue() as string;
 
@@ -198,7 +198,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "email",
     header: "Email",
-    size: 200, // Increased from 120 to accommodate full email addresses
+    size: 140, // Balanced to fit screen
     cell: ({ getValue }) => {
       const email = (getValue() as string) || "—";
 
@@ -243,20 +243,29 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "affiliation",
     header: "Affiliation",
-    size: 200, // Increased from 130 to show more of the organization name
+    size: 130, // Reduced to fit screen
     cell: ({ getValue }) => {
       const affiliation = getValue() as string;
       return (
-        <div className="w-full truncate text-[11px] text-slate-500 font-medium" title={affiliation}>
-          {affiliation}
-        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="w-full truncate text-[11px] text-slate-500 font-medium cursor-help">
+                {affiliation}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[300px] break-words">
+              <p className="text-xs font-semibold">{affiliation}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       );
     },
   },
   {
     accessorKey: "serviceType",
     header: "Svc", // Shortened from "Service Type"
-    size: 70, // Increased slightly from 60
+    size: 50, // Reduced to minimum required
     cell: ({ getValue }) => {
       const serviceType = getValue() as string;
       if (!serviceType) return <span className="text-muted-foreground italic">—</span>;
@@ -289,7 +298,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 160, // Increased from 140 to accommodate status and icons
+    size: 140, // Balanced size
     cell: ({ row }) => {
       const router = useRouter();
       const inquiry = row.original;
@@ -353,7 +362,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     id: "actions", // Custom column ID since it doesn't map to data
     header: () => <div className="text-center w-full">Actions</div>,
-    size: 110, // Increased from 100 to fit buttons comfortably
+    size: 100, // Compact size for buttons
     cell: ({ row }) => {
       const inquiry = row.original;
       const router = useRouter();
