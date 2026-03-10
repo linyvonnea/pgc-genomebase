@@ -13,6 +13,7 @@ export interface QuotationRecord {
   email: string;
   services: SelectedService[]; // Each service must include a fixed quantity
   isInternal: boolean;
+  useInternalPrice?: boolean;
   useAffiliationAsClientName?: boolean; // Display affiliation as client name in PDF
   dateIssued: string; // ISO 8601 string
   year: number;
