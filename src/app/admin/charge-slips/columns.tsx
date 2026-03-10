@@ -68,12 +68,6 @@ const ActionCell = ({ row }: { row: any }) => {
 
   return (
     <div className="flex items-center gap-1 justify-end pr-2">
-      {canCreate("chargeSlips") && (
-        <ChargeSlipButton 
-          clientId={row.original.cid || ""} 
-          projectIds={row.original.projectId ? [row.original.projectId] : []} 
-        />
-      )}
       {canDelete("chargeSlips") && (
         <Button
           variant="ghost"
