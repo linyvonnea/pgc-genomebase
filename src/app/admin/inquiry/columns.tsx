@@ -61,7 +61,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
     header: "ID",
-    size: 90, // Reduced for one-view layout
+    size: 85, // Compact to preserve room for trailing columns
     cell: ({ row }) => {
       const inquiry = row.original;
 
@@ -156,7 +156,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    size: 130, // Tighter width
+    size: 110, // Reduced per request; tooltip shows full value
     cell: ({ getValue }) => {
       const name = getValue() as string;
 
@@ -198,7 +198,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "email",
     header: "Email",
-    size: 130, // Tighter width
+    size: 120, // Reduced per request; tooltip shows full value
     cell: ({ getValue }) => {
       const email = (getValue() as string) || "—";
 
@@ -243,7 +243,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "affiliation",
     header: "Affiliation",
-    size: 110, // Tighter width
+    size: 95, // Reduced per request; tooltip shows full value
     cell: ({ getValue }) => {
       const affiliation = getValue() as string;
       return (
@@ -298,7 +298,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 115, // Tighter for one-view
+    size: 130, // Keep status readable and prevent clipping
     cell: ({ row }) => {
       const router = useRouter();
       const inquiry = row.original;
@@ -362,7 +362,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     id: "actions",
     header: () => <div className="text-center w-full">Actions</div>,
-    size: 90, // Tighter
+    size: 110, // Reserve enough space for action controls
     cell: ({ row }) => {
       const inquiry = row.original;
       const router = useRouter();
