@@ -151,16 +151,19 @@ export default function FloatingChatWidget({
           >
             <div className="flex items-center justify-between bg-blue-600 px-4 py-3 text-white">
               <div className="flex items-center gap-3">
-                <MessageCircle className="w-5 h-5 flex-shrink-0" />
+                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1.5 shadow-sm border border-blue-500">
+                  <img src="/assets/pgc-logo.png" alt="PGC Logo" className="w-full h-full object-contain" />
+                </div>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-sm line-clamp-1">
-                    {inquiryData ? inquiryData.name : "Messages"}
+                  <span className="font-bold text-sm tracking-tight leading-tight">
+                    PGC Visayas Support
                   </span>
-                  {inquiryData?.affiliation && (
-                    <span className="text-[10px] text-white/80 line-clamp-1">
-                      {inquiryData.affiliation}
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+                    <span className="text-[10px] font-medium text-blue-100 uppercase tracking-widest">
+                      Online
                     </span>
-                  )}
+                  </div>
                 </div>
               </div>
               <button
