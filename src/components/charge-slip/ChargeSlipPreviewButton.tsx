@@ -104,18 +104,7 @@ export default function ChargeSlipPreviewButton({ record }: Props) {
   };
 
   return (
-    <Dialog 
-      open={open} 
-      onOpenChange={(isOpen) => {
-        setOpen(isOpen);
-        if (isOpen) {
-          // Keep delay but we've optimized the props
-          setTimeout(() => setShowViewer(true), 200);
-        } else {
-          setShowViewer(false);
-        }
-      }}
-    >
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="default">📄 Preview Charge Slip</Button>
       </DialogTrigger>
