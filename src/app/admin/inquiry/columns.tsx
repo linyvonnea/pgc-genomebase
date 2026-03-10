@@ -139,14 +139,14 @@ export const columns: ColumnDef<Inquiry>[] = [
         return <span className="text-red-500">Invalid date</span>;
       }
 
-      // Format date for display (YY-MM-DD format to save space)
-      const year = date.getFullYear().toString().slice(-2);
+      // Format date for display (MM-DD-YYYY format)
+      const year = date.getFullYear();
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
       const day = date.getDate().toString().padStart(2, '0');
       
       return (
         <span className="text-slate-500 font-medium tabular-nums text-[12px]">
-          {`${year}-${month}-${day}`}
+          {`${month}-${day}-${year}`}
         </span>
       );
     },
