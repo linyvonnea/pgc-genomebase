@@ -61,7 +61,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
     header: "Inquiry ID",
-    size: 140, // Reduced from 200
+    size: 110, // Further reduced from 140
     cell: ({ row }) => {
       const inquiry = row.original;
 
@@ -154,7 +154,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "name",
     header: "Name",
-    size: 110, // Reduced from 130
+    size: 100, // Reduced from 110
     cell: ({ getValue }) => {
       const name = getValue() as string;
 
@@ -169,8 +169,8 @@ export const columns: ColumnDef<Inquiry>[] = [
       };
 
       return (
-        <div className="flex items-center gap-1.5 group max-w-[110px]">
-          <span className="truncate text-xs font-medium" title={name}>
+        <div className="flex items-center gap-1 group max-w-[100px]">
+          <span className="truncate text-[11px] font-medium" title={name}>
             {name}
           </span>
           <button
@@ -187,7 +187,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "email",
     header: "Email",
-    size: 130, // Reduced from 150
+    size: 110, // Reduced from 130
     cell: ({ getValue }) => {
       const email = (getValue() as string) || "—";
 
@@ -203,8 +203,8 @@ export const columns: ColumnDef<Inquiry>[] = [
       };
 
       return (
-        <div className="flex items-center gap-1.5 group max-w-[130px]">
-          <span className="truncate text-xs text-slate-500" title={email}>
+        <div className="flex items-center gap-1 group max-w-[110px]">
+          <span className="truncate text-[11px] text-slate-500" title={email}>
             {email}
           </span>
           {email !== "—" && (
@@ -223,11 +223,11 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "affiliation",
     header: "Affiliation",
-    size: 130, // Reduced from 150
+    size: 110, // Reduced from 130
     cell: ({ getValue }) => {
       const affiliation = getValue() as string;
       return (
-        <div className="max-w-[130px] truncate text-xs text-slate-500" title={affiliation}>
+        <div className="max-w-[110px] truncate text-[11px] text-slate-500" title={affiliation}>
           {affiliation}
         </div>
       );
@@ -235,16 +235,28 @@ export const columns: ColumnDef<Inquiry>[] = [
   },
   {
     accessorKey: "serviceType",
-    header: "Service", // Shortened from "Service Type"
-    size: 90, // Reduced from 120
+    header: "Svc", // Shortened from "Service Type"
+    size: 60, // Reduced from 120
     cell: ({ getValue }) => {
       const serviceType = getValue() as string;
       if (!serviceType) return <span className="text-muted-foreground italic">—</span>;
       
-      // Capitalize first letter
+      // Shorten/Capitalize
+      const getShortType = (type: string) => {
+        const map: Record<string, string> = {
+          'laboratory': 'Lab',
+          'bioinformatics': 'Bio',
+          'equipment': 'Equip',
+          'retail': 'Ret',
+          'research': 'Res',
+          'training': 'Trn'
+        };
+        return map[type.toLowerCase()] || type;
+      };
+
       return (
-        <div className="capitalize font-medium text-slate-600 text-xs">
-          {serviceType}
+        <div className="font-semibold text-slate-500 text-[10px] uppercase">
+          {getShortType(serviceType)}
         </div>
       );
     },
@@ -257,7 +269,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 160, // Reduced from 200
+    size: 140, // Further reduced from 160
     cell: ({ row }) => {
       const router = useRouter();
       const inquiry = row.original;
@@ -267,15 +279,15 @@ export const columns: ColumnDef<Inquiry>[] = [
 
       // Render status as a colored badge
       return (
-        <div className="flex items-center gap-1 min-w-[150px]">
+        <div className="flex items-center gap-1 min-w-[130px]">
           <span
-            className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${getStatusColor(
+            className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap ${getStatusColor(
               status,
             )}`}
           >
             {status}
           </span>
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-0.5 shrink-0">
             {!!hasLoggedIn && (
               <TooltipProvider>
                 <Tooltip>
@@ -321,7 +333,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     id: "actions", // Custom column ID since it doesn't map to data
     header: () => <div className="text-center w-full">Actions</div>,
-    size: 110, // Reduced from 140
+    size: 100, // Further reduced from 110
     cell: ({ row }) => {
       const inquiry = row.original;
       const router = useRouter();
@@ -329,16 +341,16 @@ export const columns: ColumnDef<Inquiry>[] = [
       const { canEdit, canCreate, canView } = usePermissions(adminInfo?.role);
 
       return (
-        <div className="flex items-center justify-center gap-1.5 px-1">
+        <div className="flex items-center justify-center gap-1 px-1">
           {canCreate("quotations") && (
-            <div className="scale-90 origin-center">
+            <div className="scale-75 origin-center">
               <QuoteButton inquiryId={inquiry.id} />
             </div>
           )}
 
           {/* Edit inquiry modal trigger - only show if user has edit permission */}
           {canEdit("inquiries") && (
-            <div className="scale-90 origin-center">
+            <div className="scale-75 origin-center">
               <EditInquiryModal
                 key={inquiry.id} // Force re-render when inquiry changes
                 inquiry={inquiry}
