@@ -98,7 +98,7 @@ export const columns: ColumnDef<Inquiry>[] = [
       };
 
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full">
           {showNew && (
             <Badge
               variant="destructive"
@@ -107,7 +107,7 @@ export const columns: ColumnDef<Inquiry>[] = [
               N
             </Badge>
           )}
-          <span className="font-mono text-xs truncate" title={inquiry.id}>
+          <span className="font-mono text-xs truncate flex-1" title={inquiry.id}>
             {inquiry.id}
           </span>
           <button
@@ -172,8 +172,8 @@ export const columns: ColumnDef<Inquiry>[] = [
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-1 group max-w-[120px] cursor-help">
-                <span className="truncate text-[11px] font-semibold text-slate-700">
+              <div className="flex items-center gap-1 group w-full cursor-help">
+                <span className="truncate text-[11px] font-semibold text-slate-700 flex-1">
                   {name}
                 </span>
                 <button
@@ -215,8 +215,8 @@ export const columns: ColumnDef<Inquiry>[] = [
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-1 group max-w-[110px] cursor-help">
-                <span className="truncate text-[11px] text-slate-400">
+              <div className="flex items-center gap-1 group w-full cursor-help">
+                <span className="truncate text-[11px] text-slate-400 flex-1">
                   {email}
                 </span>
                 {email !== "—" && (
@@ -245,7 +245,7 @@ export const columns: ColumnDef<Inquiry>[] = [
     cell: ({ getValue }) => {
       const affiliation = getValue() as string;
       return (
-        <div className="max-w-[120px] truncate text-[11px] text-slate-500 font-medium" title={affiliation}>
+        <div className="w-full truncate text-[11px] text-slate-500 font-medium" title={affiliation}>
           {affiliation}
         </div>
       );
@@ -297,15 +297,15 @@ export const columns: ColumnDef<Inquiry>[] = [
 
       // Render status as a colored badge
       return (
-        <div className="flex items-center gap-1 min-w-[130px]">
+        <div className="flex items-center gap-1 w-full">
           <span
-            className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap ${getStatusColor(
+            className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap flex-1 text-center ${getStatusColor(
               status,
             )}`}
           >
             {status}
           </span>
-          <div className="flex items-center gap-0.5 shrink-0">
+          <div className="flex items-center gap-0.5 shrink-0 ml-auto">
             {!!hasLoggedIn && (
               <TooltipProvider>
                 <Tooltip>
