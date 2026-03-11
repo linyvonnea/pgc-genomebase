@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import useAuth from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Card,
@@ -113,6 +113,16 @@ export default function ChatBox({
       console.error("Failed to send message:", error);
       setError("Failed to send message. Please try again.");
       setNewMessage(messageContent); // Restore on failure
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      const form = (e.currentTarget as any).form;
+      if (form) {
+        form.requestSubmit();
+      }
     }
   };
 
@@ -255,21 +265,23 @@ export default function ChatBox({
       </CardContent>
 
       <CardFooter className="p-3 bg-white border-t rounded-b-lg">
-        <form onSubmit={handleSendMessage} className="flex w-full gap-2">
-          <Input
+        <form onSubmit={handleSendMessage} className="flex w-full gap-2 items-end">
+          <Textarea
             placeholder={
               role === "admin" ? "Message client..." : "Message admin..."
             }
             value={newMessage}
             disabled={loading}
             onChange={(e) => setNewMessage(e.target.value)}
-            className="flex-1 rounded-full px-4 border-gray-300 focus-visible:ring-blue-500"
+            onKeyDown={handleKeyDown}
+            rows={1}
+            className="flex-1 min-h-[40px] max-h-[120px] rounded-xl px-4 py-2 border-gray-300 focus-visible:ring-blue-500 resize-none overflow-y-auto"
           />
           <Button
             type="submit"
             size="icon"
             disabled={!newMessage.trim() || loading}
-            className="rounded-full bg-blue-600 hover:bg-blue-700 transition-colors h-10 w-10 flex-shrink-0"
+            className="rounded-full bg-blue-600 hover:bg-blue-700 transition-colors h-10 w-10 flex-shrink-0 mb-0.5"
           >
             <Send className="w-[18px] h-[18px] ml-0.5" />
           </Button>
