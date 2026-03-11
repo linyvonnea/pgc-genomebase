@@ -274,7 +274,7 @@ export default function ChatBox({
             disabled={loading}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            minRows={3}
+            minRows={2}
             maxRows={10}
             className="flex-1 w-full rounded-xl px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto text-sm transition-all"
           />
