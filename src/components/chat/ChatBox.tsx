@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import useAuth from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import TextareaAutosize from "react-textarea-autosize";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Card,
@@ -266,7 +266,7 @@ export default function ChatBox({
 
       <CardFooter className="p-3 bg-white border-t rounded-b-lg">
         <form onSubmit={handleSendMessage} className="flex w-full gap-2 items-end">
-          <Textarea
+          <TextareaAutosize
             placeholder={
               role === "admin" ? "Message client..." : "Message admin..."
             }
@@ -274,14 +274,15 @@ export default function ChatBox({
             disabled={loading}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            rows={4}
-            className="flex-1 min-h-[100px] max-h-[300px] rounded-xl px-4 py-2 border-gray-300 focus-visible:ring-blue-500 resize-none overflow-y-auto"
+            minRows={3}
+            maxRows={10}
+            className="flex-1 w-full rounded-xl px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto text-sm transition-all"
           />
           <Button
             type="submit"
             size="icon"
             disabled={!newMessage.trim() || loading}
-            className="rounded-full bg-blue-600 hover:bg-blue-700 transition-colors h-10 w-10 flex-shrink-0 mb-0.5"
+            className="rounded-full bg-blue-600 hover:bg-blue-700 transition-colors h-10 w-10 flex-shrink-0 mb-1"
           >
             <Send className="w-[18px] h-[18px] ml-0.5" />
           </Button>
