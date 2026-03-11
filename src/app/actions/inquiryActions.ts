@@ -15,7 +15,7 @@
 
 'use server'
 
-import { collection, addDoc, serverTimestamp, doc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, updateDoc, deleteDoc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { revalidatePath } from "next/cache";
 import { InquiryFormData } from "@/schemas/inquirySchema";
@@ -676,7 +676,7 @@ export async function updateInquiryAction(
     const oldDoc = await getDoc(docRef);
     const oldData = oldDoc.exists() ? oldDoc.data() : null;
     
-    const updateData = {
+    const updateData: any = {
       name: data.name,
       email: data.email,
       affiliation: data.affiliation,
@@ -687,6 +687,37 @@ export async function updateInquiryAction(
     
     // Update only the editable fields
     await updateDoc(docRef, updateData);
+
+    // If "Service Not Offered" and send email is checked, trigger email via Firestore mail collection
+    if (data.status === 'Service Not Offered' && data.sendStatusEmail !== false) {
+      const emailContent = `
+Dear ${data.name},
+
+Thank you for submitting your inquiry to PGC Visayas.
+
+Unfortunately, the requested services are currently unavailable at our facility, and the project requirements fall outside our specific scope of expertise.
+
+If you require additional information, kindly review our FAQs, or you can message us through the client portal chat box. We appreciate your interest in working with us and wish you the best of luck in finding the right facility to support your research needs.
+
+Yours in utilizing OMICS for a better Philippines.
+      `.trim();
+
+      const mailDocRef = doc(collection(db, "mail"));
+      await setDoc(mailDocRef, {
+        to: data.email,
+        message: {
+          subject: "Update Regarding Your Inquiry",
+          text: emailContent,
+          html: emailContent.replace(/\n/g, '<br>'),
+        },
+        metadata: {
+          inquiryId: id,
+          type: "service-not-offered",
+          remarks: data.remarks || ""
+        },
+        createdAt: serverTimestamp(),
+      });
+    }
     
     // Log the activity
     await logActivity({
@@ -697,7 +728,7 @@ export async function updateInquiryAction(
       entityType: "inquiry",
       entityId: id,
       entityName: data.name,
-      description: `Updated inquiry for ${data.name}`,
+      description: `Updated inquiry for ${data.name}${data.status === 'Service Not Offered' ? ' - Service Not Offered' : ''}`,
       changesBefore: oldData || undefined,
       changesAfter: { ...oldData, ...updateData },
       changedFields: Object.keys(updateData),
