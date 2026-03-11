@@ -274,8 +274,8 @@ export default function ChatBox({
             disabled={loading}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            rows={2}
-            className="flex-1 min-h-[50px] max-h-[200px] rounded-xl px-4 py-2 border-gray-300 focus-visible:ring-blue-500 resize-none overflow-y-auto"
+            rows={4}
+            className="flex-1 min-h-[100px] max-h-[300px] rounded-xl px-4 py-2 border-gray-300 focus-visible:ring-blue-500 resize-none overflow-y-auto"
           />
           <Button
             type="submit"
