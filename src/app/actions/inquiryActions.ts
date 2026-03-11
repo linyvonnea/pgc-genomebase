@@ -411,27 +411,43 @@ const emailRecipients = ["sequencing.pgc.upvisayas@up.edu.ph", "madayon1@up.edu.
         
         const clientEmailHtml = `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.6;">
-            <div style="background-color: #f8fafc; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
-              <h2 style="color: #1e40af; margin-top: 0;">Inquiry Received - PGC Visayas</h2>
-              <p>Dear ${inquiryData.name},</p>
-              <p>Thank you for reaching out to PGC Visayas for your research needs. Our team will be reviewing your inquiry and will get back to you as soon as possible.</p>
-              
-              <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border-left: 4px solid #1e40af; margin: 15px 0;">
-                <h3 style="margin-top: 0; color: #1e40af; font-size: 14px; margin-bottom: 8px;">Next Steps</h3>
-                <p style="margin-bottom: 12px; font-size: 14px;">Monitor your request status and view quotations via the Client Portal.</p>
-                <p style="margin: 0;"><a href="https://pgc-genomebase.vercel.app/portal" style="background-color: #1e40af; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 13px;">Access Client Portal</a></p>
+            <div style="background-color: #ffffff; padding: 0; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+              <!-- Header -->
+              <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 30px 20px; text-align: left;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">Inquiry Received - PGC Visayas</h1>
               </div>
 
-              <div style="font-size: 14px; color: #64748b;">
-                <p style="margin-bottom: 8px;"><strong>Temporary Access Credentials:</strong></p>
-                <p style="margin: 4px 0;"><strong>Email:</strong> ${inquiryData.email}</p>
-                <p style="margin: 4px 0;"><strong>Temporary Password:</strong> <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">${docRef.id}</code></p>
+              <div style="padding: 32px 24px;">
+                <p style="margin: 0 0 20px 0; font-size: 16px;">Dear <strong>${inquiryData.name}</strong>,</p>
+                <p style="margin: 0 0 24px 0;">Thank you for reaching out to <strong>PGC Visayas</strong> for your research needs. Our team will be reviewing your inquiry and will get back to you as soon as possible.</p>
+                
+                <!-- Next Steps Card -->
+                <div style="background-color: #f8fafc; padding: 24px; border-radius: 8px; border-left: 4px solid #1e40af; margin: 24px 0;">
+                  <h3 style="margin: 0 0 12px 0; color: #1e40af; font-size: 16px; font-weight: 700;">Next Steps</h3>
+                  <p style="margin: 0 0 20px 0; font-size: 15px; color: #475569;">Monitor your request status and view quotations via the Client Portal.</p>
+                  <p style="margin: 0;"><a href="https://pgc-genomebase.vercel.app/portal" style="background-color: #1e40af; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 14px; transition: background-color 0.2s;">Access Client Portal</a></p>
+                </div>
+
+                <!-- Credentials Info -->
+                <div style="margin: 24px 0; padding: 16px 0; border-top: 1px solid #f1f5f9;">
+                  <h4 style="margin: 0 0 12px 0; color: #64748b; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">Temporary Access Credentials</h4>
+                  <p style="margin: 6px 0; font-size: 15px;"><strong style="color: #475569; width: 80px; display: inline-block;">Email:</strong> <span style="color: #1e40af; text-decoration: none;">${inquiryData.email}</span></p>
+                  <p style="margin: 6px 0; font-size: 15px;"><strong style="color: #475569; width: 80px; display: inline-block;">Password:</strong> <code style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 14px; color: #334155;">${docRef.id}</code></p>
+                </div>
+
+                <p style="margin: 32px 0 24px 0; font-size: 15px;">One of our researchers will contact you shortly if additional information is needed. Should you have any immediate questions, feel free to reply through this email.</p>
+                
+                <!-- Sign-off -->
+                <div style="border-top: 1px solid #f1f5f9; padding-top: 24px; margin-top: 32px;">
+                  <p style="margin: 0; color: #64748b; font-size: 14px;">Yours in utilizing OMICS for a better Philippines,</p>
+                  <p style="margin: 4px 0 0 0; color: #1e40af; font-weight: 700; font-size: 16px;">Philippine Genome Center Visayas</p>
+                </div>
               </div>
 
-              <p style="margin-top: 24px;">One of our researchers will contact you shortly if additional information is needed. Should you have any immediate questions, feel free to reply through this email.</p>
-              
-              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-              <p style="font-size: 13px; color: #94a3b8; margin-bottom: 0;">Yours in utilizing OMICS for a better Philippines,<br /><strong>Philippine Genome Center Visayas</strong></p>
+              <!-- Footer -->
+              <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #f1f5f9;">
+                <p style="margin: 0; color: #94a3b8; font-size: 12px;">This is an automated message. Please do not reply directly to this email.</p>
+              </div>
             </div>
           </div>
         `;
@@ -724,9 +740,8 @@ export async function updateInquiryAction(
             <p style="margin: 0 0 32px 0;">We appreciate your interest in working with us and wish you the best of luck in finding the right facility to support your research needs.</p>
             
             <div style="border-top: 1px solid #f1f5f9; padding-top: 24px;">
-              <p style="margin: 0; color: #64748b; font-size: 14px;">Best regards,</p>
-              <p style="margin: 4px 0 0 0; color: #1e40af; font-weight: 700; font-size: 16px;">PGC Visayas Team</p>
-              <p style="margin: 2px 0 0 0; color: #64748b; font-size: 13px;">Utilizing OMICS for a better Philippines</p>
+              <p style="margin: 0; color: #64748b; font-size: 14px;">Yours in utilizing OMICS for a better Philippines,</p>
+              <p style="margin: 4px 0 0 0; color: #1e40af; font-weight: 700; font-size: 16px;">Philippine Genome Center Visayas</p>
             </div>
           </div>
 
