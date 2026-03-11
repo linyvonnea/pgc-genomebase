@@ -347,11 +347,11 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
                           <FormItem>
                             <FormLabel className="text-xs font-semibold text-gray-700 flex items-center gap-2">
                               <MessageSquare className="h-3 w-3" />
-                              Internal Remarks
+                              Remarks
                             </FormLabel>
                             <FormControl>
                               <Textarea
-                                placeholder="Enter reason or additional internal notes..."
+                                placeholder="Enter reason or additional notes..."
                                 className="min-h-[80px] text-sm resize-none focus-visible:ring-red-500 border-red-100 bg-red-50/10"
                                 {...field}
                               />
