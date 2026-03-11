@@ -123,7 +123,7 @@ export default function FloatingChatWidget({
 
   return (
     <div
-      className={`fixed bottom-6 right-6 z-50 flex flex-col items-end ${className || ""}`}
+      className={`fixed ${role === "admin" ? "bottom-20" : "bottom-6"} right-6 z-50 flex flex-col items-end ${className || ""}`}
     >
       <AnimatePresence>
         {!isOpen && role !== "admin" && (
