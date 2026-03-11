@@ -114,6 +114,7 @@ export function DataTable<TData, TValue>({
       quotationOnly: inquiries.filter(i => i.status === "Quotation Only").length,
       ongoingQuotation: inquiries.filter(i => i.status === "Ongoing Quotation").length,
       pending: inquiries.filter(i => i.status === "Pending").length,
+      serviceNotOffered: inquiries.filter(i => i.status === "Service Not Offered").length,
     }
   }, [data])
 
@@ -302,7 +303,7 @@ export function DataTable<TData, TValue>({
               {/* Processing Status */}
               <div className="space-y-2 lg:col-span-4">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Processing Status</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                   <button
                     onClick={() =>
                       handleStatusFilter(
@@ -315,7 +316,7 @@ export function DataTable<TData, TValue>({
                         : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                     }`}
                   >
-                    Approved Client
+                    Approved Client ({statusCounts.approvedClient})
                   </button>
                   <button
                     onClick={() =>
@@ -329,7 +330,7 @@ export function DataTable<TData, TValue>({
                         : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                     }`}
                   >
-                    Quotation Only
+                    Quotation Only ({statusCounts.quotationOnly})
                   </button>
                   <button
                     onClick={() =>
@@ -343,7 +344,7 @@ export function DataTable<TData, TValue>({
                         : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                     }`}
                   >
-                    Ongoing Quotation
+                    Ongoing Quotation ({statusCounts.ongoingQuotation})
                   </button>
                   <button
                     onClick={() =>
@@ -355,7 +356,19 @@ export function DataTable<TData, TValue>({
                         : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                     }`}
                   >
-                    Pending
+                    Pending ({statusCounts.pending})
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleStatusFilter(activeStatusFilter === "Service Not Offered" ? undefined : "Service Not Offered")
+                    }
+                    className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                      activeStatusFilter === "Service Not Offered"
+                        ? "bg-rose-50 border-rose-200 font-semibold text-rose-600"
+                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                    }`}
+                  >
+                    Service Not Offered ({statusCounts.serviceNotOffered})
                   </button>
                 </div>
               </div>
