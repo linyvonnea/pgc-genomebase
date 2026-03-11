@@ -690,25 +690,59 @@ export async function updateInquiryAction(
 
     // If "Service Not Offered" and send email is checked, trigger email via Firestore mail collection
     if (data.status === 'Service Not Offered' && data.sendStatusEmail !== false) {
-      const emailContent = `
-Dear ${data.name},
+      const emailHtml = `
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <!-- Header with Logo -->
+          <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 30px 20px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.025em;">PGC Visayas</h1>
+            <p style="color: rgba(255, 255, 255, 0.9); margin: 8px 0 0 0; font-size: 14px;">Update Regarding Your Inquiry</p>
+          </div>
 
-Thank you for submitting your inquiry to PGC Visayas.
+          <div style="padding: 32px 24px; color: #334155; line-height: 1.6;">
+            <p style="margin: 0 0 20px 0; font-size: 16px;">Dear <strong>${data.name}</strong>,</p>
+            
+            <p style="margin: 0 0 20px 0;">Thank you for submitting your inquiry to <strong>PGC Visayas</strong>.</p>
+            
+            <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; margin-bottom: 24px; border-radius: 4px;">
+              <p style="margin: 0; color: #991b1b; font-weight: 500;">Status: Service Not Offered</p>
+              <p style="margin: 8px 0 0 0; color: #b91c1c; font-size: 14px;">
+                Unfortunately, the requested services are currently unavailable at our facility, and the project requirements fall outside our specific scope of expertise.
+              </p>
+            </div>
 
-Unfortunately, the requested services are currently unavailable at our facility, and the project requirements fall outside our specific scope of expertise.
+            ${data.remarks ? `
+            <div style="margin-bottom: 24px;">
+              <h3 style="font-size: 14px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; margin: 0 0 8px 0;">Additional Remarks</h3>
+              <div style="background-color: #f8fafc; padding: 16px; border: 1px solid #f1f5f9; border-radius: 8px; color: #475569; font-style: italic;">
+                "${data.remarks}"
+              </div>
+            </div>
+            ` : ''}
 
-If you require additional information, kindly review our FAQs, or you can message us through the client portal chat box. We appreciate your interest in working with us and wish you the best of luck in finding the right facility to support your research needs.
+            <p style="margin: 0 0 20px 0;">If you require additional information, kindly review our <strong><a href="https://pgc-genomebase.vercel.app/faqs" style="color: #2563eb; text-decoration: none;">FAQs</a></strong>, or you can message us through the <strong><a href="https://pgc-genomebase.vercel.app/portal" style="color: #2563eb; text-decoration: none;">client portal chat box</a></strong>.</p>
+            
+            <p style="margin: 0 0 32px 0;">We appreciate your interest in working with us and wish you the best of luck in finding the right facility to support your research needs.</p>
+            
+            <div style="border-top: 1px solid #f1f5f9; padding-top: 24px;">
+              <p style="margin: 0; color: #64748b; font-size: 14px;">Best regards,</p>
+              <p style="margin: 4px 0 0 0; color: #1e40af; font-weight: 700; font-size: 16px;">PGC Visayas Team</p>
+              <p style="margin: 2px 0 0 0; color: #64748b; font-size: 13px;">Utilizing OMICS for a better Philippines</p>
+            </div>
+          </div>
 
-Yours in utilizing OMICS for a better Philippines.
-      `.trim();
+          <!-- Footer -->
+          <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #f1f5f9;">
+            <p style="margin: 0; color: #94a3b8; font-size: 12px;">This is an automated message. Please do not reply directly to this email.</p>
+          </div>
+        </div>
+      `;
 
       const mailDocRef = doc(collection(db, "mail"));
       await setDoc(mailDocRef, {
         to: data.email,
         message: {
           subject: "Update Regarding Your Inquiry",
-          text: emailContent,
-          html: emailContent.replace(/\n/g, '<br>'),
+          html: emailHtml,
         },
         metadata: {
           inquiryId: id,
