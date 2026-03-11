@@ -225,7 +225,7 @@ export default function ChatBox({
                       ) : (
                         <>
                           <span className="text-xs font-semibold text-gray-600">
-                            {isMe ? "You" : msg.senderName}
+                            {isMe ? (role === "admin" ? msg.senderName : "You") : msg.senderName}
                           </span>
                         </>
                       )}
