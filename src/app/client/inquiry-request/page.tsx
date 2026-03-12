@@ -611,12 +611,6 @@ export default function QuotationRequestForm() {
                                     { id: "library-preparation", label: "Library Preparation" },
                                     { id: "sequencing", label: "Sequencing" },
                                     { id: "bioinformatics-analysis", label: "Bioinformatics Analysis" },
-                                    { id: "genome-assembly", label: "Whole Genome Assembly" },
-                                    { id: "metabarcoding", label: "Metabarcoding with Downstream Analysis" },
-                                    { id: "pre-processing", label: "Metabarcoding with Pre-processing only" },
-                                    { id: "transcriptomics", label: "Transcriptomics (QC to Annotation)" },
-                                    { id: "phylogenetics", label: "Phylogenetics (1 marker)" },
-                                    { id: "assembly-annotation", label: "Whole Genome Assembly and Annotation" }
                                   ].map((option) => (
                                     <div key={option.id} className="flex items-center space-x-3 p-2 bg-white rounded-lg border border-slate-100 hover:border-blue-200 transition-all shadow-sm">
                                       <input
@@ -686,11 +680,10 @@ export default function QuotationRequestForm() {
                       {formData.workflowType === "individual" && (
                         <div className="mt-4">
                           <Label htmlFor="individualAssayDetails" className="text-sm font-semibold text-slate-700 mb-2 block">
-                            Please provide specific services <span className="text-[#B9273A]">*</span>
+                            Please specify e.g. DNA Extraction, PCR etc. <span className="text-[#B9273A]">*</span>
                           </Label>
                           <Textarea
                             id="individualAssayDetails"
-                            placeholder="e.g., DNA Extraction, PCR, Sequencing, Bioinformatics Analysis etc"
                             {...register("individualAssayDetails")}
                             className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[80px] resize-none"
                             rows={3}
