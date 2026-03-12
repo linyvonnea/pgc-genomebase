@@ -45,7 +45,7 @@ const getStatusColor = (status: string) => {
     case "Ongoing Quotation":
       return "bg-orange-100 text-orange-800";
     case "Service Not Offered":
-      return "bg-rose-500 text-white border-rose-600 font-bold shadow-sm animate-pulse";
+      return "bg-slate-100 text-slate-500 border-slate-200 opacity-70";
     case "Pending":
     default:
       return "bg-yellow-100 text-yellow-800";
