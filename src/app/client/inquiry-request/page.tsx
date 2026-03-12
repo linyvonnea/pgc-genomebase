@@ -597,9 +597,6 @@ export default function QuotationRequestForm() {
                             <Label htmlFor="workflow-complete-bioinfo" className="text-sm text-slate-700 font-semibold cursor-pointer block">
                               Complete molecular workflow with Bioinformatics Analysis
                             </Label>
-                            <p className="text-xs text-slate-600 mt-1">
-                              DNA Extraction, Quantification, Library Preparation, Sequencing, and Bioinformatics Analysis
-                            </p>
                             
                             {/* Bioinformatics Analysis Dropdown - Shown when this option is selected */}
                             {formData.workflowType === "complete-bioinfo" && (
@@ -609,6 +606,11 @@ export default function QuotationRequestForm() {
                                 </Label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                   {[
+                                    { id: "dna-extraction", label: "DNA Extraction" },
+                                    { id: "quantification", label: "Quantification" },
+                                    { id: "library-preparation", label: "Library Preparation" },
+                                    { id: "sequencing", label: "Sequencing" },
+                                    { id: "bioinformatics-analysis", label: "Bioinformatics Analysis" },
                                     { id: "genome-assembly", label: "Whole Genome Assembly" },
                                     { id: "metabarcoding", label: "Metabarcoding with Downstream Analysis" },
                                     { id: "pre-processing", label: "Metabarcoding with Pre-processing only" },
@@ -974,6 +976,11 @@ export default function QuotationRequestForm() {
                   <div>
                     <span className="font-semibold">Bioinformatics Analysis:</span> {pendingData.bioinfoOptions.map(opt => {
                       const labels: Record<string, string> = {
+                        "dna-extraction": "DNA Extraction",
+                        "quantification": "Quantification",
+                        "library-preparation": "Library Preparation",
+                        "sequencing": "Sequencing",
+                        "bioinformatics-analysis": "Bioinformatics Analysis",
                         "genome-assembly": "Whole Genome Assembly",
                         "metabarcoding": "Metabarcoding with Downstream Analysis",
                         "pre-processing": "Metabarcoding with Pre-processing only",

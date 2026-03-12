@@ -43,6 +43,11 @@ export const inquirySchema = z.object({
   sampleCount: z.number().min(1).optional(), // Number of samples
   workflowType: z.enum(["complete-bioinfo", "complete", "individual"]).optional(), // Workflow selection for laboratory services
   bioinfoOptions: z.array(z.enum([
+    "dna-extraction",
+    "quantification",
+    "library-preparation",
+    "sequencing",
+    "bioinformatics-analysis",
     "genome-assembly",
     "metabarcoding",
     "pre-processing",
