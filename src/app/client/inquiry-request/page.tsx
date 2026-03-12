@@ -615,12 +615,12 @@ export default function QuotationRequestForm() {
                                     { id: "transcriptomics", label: "Transcriptomics (QC to Annotation)" },
                                     { id: "phylogenetics", label: "Phylogenetics (1 marker)" },
                                     { id: "assembly-annotation", label: "Whole Genome Assembly and Annotation" }
-                                  ].map((option) => (
+                                  ] as const).map((option) => (
                                     <div key={option.id} className="flex items-center space-x-3 p-2 bg-white rounded-lg border border-slate-100 hover:border-blue-200 transition-all shadow-sm">
                                       <input
                                         type="checkbox"
                                         id={`bioinfo-${option.id}`}
-                                        checked={(formData.bioinfoOptions || []).includes(option.id)}
+                                        checked={(formData.bioinfoOptions || []).includes(option.id as any)}
                                         onChange={(e) => handleBioinfoOptionChange(option.id, e.target.checked)}
                                         className="rounded border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
                                       />
