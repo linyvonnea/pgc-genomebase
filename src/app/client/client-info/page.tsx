@@ -129,7 +129,42 @@ const formatServiceType = (type: string | null | undefined): string => {
 // Format workflow type for display
 const formatWorkflowType = (type: string | null | undefined): string => {
   if (!type) return "—";
-  return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  if (type === "complete-bioinfo") return "Complete molecular workflow with Bioinformatics Analysis";
+  if (type === "complete") return "Complete Molecular workflow only (DNA Extraction to Sequencing)";
+  if (type === "individual") return "Individual Assay";
+  return type
+    .split(/[-_]/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+const formatBioinfoOption = (option: string): string => {
+  switch (option) {
+    case "dna-extraction":
+      return "DNA Extraction";
+    case "quantification":
+      return "Quantification";
+    case "library-preparation":
+      return "Library Preparation";
+    case "sequencing":
+      return "Sequencing";
+    case "bioinformatics-analysis":
+      return "Bioinformatics Analysis";
+    case "genome-assembly":
+      return "Whole Genome Assembly";
+    case "metabarcoding":
+      return "Metabarcoding with Downstream Analysis";
+    case "pre-processing":
+      return "Metabarcoding with Pre-processing only";
+    case "transcriptomics":
+      return "Transcriptomics (QC to Annotation)";
+    case "phylogenetics":
+      return "Phylogenetics (1 marker)";
+    case "assembly-annotation":
+      return "Whole Genome Assembly and Annotation";
+    default:
+      return option;
+  }
 };
 
 // ────────────────────────────────────────────────────────────────
@@ -2898,6 +2933,24 @@ export default function ClientPortalPage() {
                             </div>
                           )}
 
+                          {/* Bioinformatics Options */}
+                          {currentInquiry.bioinfoOptions && currentInquiry.bioinfoOptions.length > 0 && (
+                            <div className="space-y-2">
+                              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Selected Bioinformatics Analysis</span>
+                              <div className="flex flex-wrap gap-2 p-1">
+                                {currentInquiry.bioinfoOptions.map((option) => (
+                                  <Badge 
+                                    key={option} 
+                                    variant="secondary" 
+                                    className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 transition-colors py-1 px-3 text-[11px] font-bold"
+                                  >
+                                    {formatBioinfoOption(option)}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
                           {/* Specific Needs & Assays */}
                           {currentInquiry.individualAssayDetails && (
                             <div className="space-y-2">
@@ -2919,7 +2972,7 @@ export default function ClientPortalPage() {
                           )}
 
                           {/* Training & Logistics */}
-                          {(currentInquiry.projectBackground || currentInquiry.specificTrainingNeed || currentInquiry.targetTrainingDate) && (
+                          {(currentInquiry.projectBackground || currentInquiry.molecularServicesBudget || currentInquiry.plannedSampleCount || currentInquiry.specificTrainingNeed || currentInquiry.targetTrainingDate || currentInquiry.retailItems) && (
                             <div className="pt-4 border-t border-slate-100 space-y-4">
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {currentInquiry.targetTrainingDate && (
@@ -2936,7 +2989,32 @@ export default function ClientPortalPage() {
                                     <p className="text-sm font-bold text-slate-800">{currentInquiry.numberOfParticipants} pax</p>
                                   </div>
                                 )}
+                                {currentInquiry.molecularServicesBudget && (
+                                  <div className="space-y-1">
+                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Molecular Services Budget</span>
+                                    <p className="text-sm font-bold text-slate-800">{currentInquiry.molecularServicesBudget}</p>
+                                  </div>
+                                )}
+                                {currentInquiry.plannedSampleCount && (
+                                  <div className="space-y-1">
+                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Planned Sample Count</span>
+                                    <p className="text-sm font-bold text-slate-800">{currentInquiry.plannedSampleCount}</p>
+                                  </div>
+                                )}
                               </div>
+
+                              {currentInquiry.retailItems && currentInquiry.retailItems.length > 0 && (
+                                <div className="space-y-2">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Retail Items</span>
+                                  <div className="flex flex-wrap gap-2">
+                                    {currentInquiry.retailItems.map((item, idx) => (
+                                      <Badge key={idx} variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] font-bold">
+                                        {item}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
 
                               {(currentInquiry.projectBackground || currentInquiry.specificTrainingNeed) && (
                                 <div className="space-y-2">
