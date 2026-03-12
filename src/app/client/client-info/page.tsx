@@ -2875,83 +2875,171 @@ export default function ClientPortalPage() {
                         </div>
                         
                         <div className="space-y-6">
-                          {/* Top Section: Quick Stats */}
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                            {/* Service Type */}
-                            <div className="space-y-1.5">
-                              <div className="flex items-center gap-2">
-                                <FlaskConical className="h-4 w-4 text-slate-400" />
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Service Type</span>
-                              </div>
-                              <Badge className="w-fit capitalize bg-blue-50 text-blue-700 border-blue-100 text-xs px-2.5 py-0.5 font-bold">
-                                {formatServiceType(currentInquiry.serviceType)}
-                              </Badge>
-                            </div>
-
-                            {/* Sample Count */}
-                            {currentInquiry.sampleCount && (
-                              <div className="space-y-1.5">
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Quantity</span>
-                                <p className="text-sm font-bold text-slate-900">{currentInquiry.sampleCount} samples</p>
-                              </div>
-                            )}
-
-                            {/* Project Budget */}
-                            {currentInquiry.projectBudget && (
-                              <div className="space-y-1.5">
-                                <div className="flex items-center gap-1.5">
-                                  <DollarSign className="h-4 w-4 text-slate-400" />
-                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Estim. Budget</span>
-                                </div>
-                                <p className="text-sm font-bold text-slate-900">{currentInquiry.projectBudget}</p>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Technical Block */}
-                          {(currentInquiry.species || currentInquiry.workflowType) && (
-                            <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              {currentInquiry.species && (
-                                <div className="space-y-1">
-                                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Species / Organism</span>
-                                  <p className="text-sm font-semibold text-slate-800 capitalize">
-                                    {(currentInquiry.species === 'other' || currentInquiry.species === 'animal') && currentInquiry.otherSpecies
-                                      ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}`
-                                      : currentInquiry.species}
-                                  </p>
-                                </div>
-                              )}
-
-                              {currentInquiry.workflowType && (
-                                <div className="space-y-1">
-                                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Analysis Strategy</span>
-                                  <p className="text-sm font-semibold text-slate-800">
-                                    {formatWorkflowType(currentInquiry.workflowType)}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Bioinformatics Options */}
-                          {currentInquiry.bioinfoOptions && currentInquiry.bioinfoOptions.length > 0 && (
-                            <div className="space-y-2">
-                              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Selected Bioinformatics Analysis</span>
-                              <div className="flex flex-wrap gap-2 p-1">
-                                {currentInquiry.bioinfoOptions.map((option) => (
-                                  <Badge 
-                                    key={option} 
-                                    variant="secondary" 
-                                    className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 transition-colors py-1 px-3 text-[11px] font-bold"
-                                  >
-                                    {formatBioinfoOption(option)}
+                          {/* Laboratory Service Details */}
+                          {currentInquiry.serviceType === "laboratory" ? (
+                            <div className="space-y-6 animate-in fade-in duration-500">
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                                {/* Service Type */}
+                                <div className="space-y-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <FlaskConical className="h-4 w-4 text-slate-400" />
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Service Type</span>
+                                  </div>
+                                  <Badge className="w-fit capitalize bg-blue-50 text-blue-700 border-blue-100 text-xs px-2.5 py-0.5 font-bold">
+                                    Laboratory
                                   </Badge>
-                                ))}
+                                </div>
+
+                                {/* Species */}
+                                <div className="space-y-1.5">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Species</span>
+                                  <p className="text-sm font-bold text-slate-900 capitalize italic">
+                                    {currentInquiry.species === 'other' || currentInquiry.species === 'animal'
+                                      ? (currentInquiry.otherSpecies ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}` : currentInquiry.species)
+                                      : (currentInquiry.species || "—")}
+                                  </p>
+                                </div>
+
+                                {/* Sample Count */}
+                                <div className="space-y-1.5">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Sample Count</span>
+                                  <p className="text-sm font-bold text-slate-900">{currentInquiry.sampleCount || "—"}</p>
+                                </div>
                               </div>
+
+                              {/* Workflow */}
+                              <div className="space-y-2">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Workflow</span>
+                                <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100 text-sm text-slate-800 font-semibold shadow-inner">
+                                  {formatWorkflowType(currentInquiry.workflowType)}
+                                </div>
+                              </div>
+
+                              {/* Bioinformatics Analysis */}
+                              <div className="space-y-2">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Bioinformatics Analysis</span>
+                                {currentInquiry.bioinfoOptions && currentInquiry.bioinfoOptions.length > 0 ? (
+                                  <div className="flex flex-wrap gap-2 p-1">
+                                    {currentInquiry.bioinfoOptions.map((option) => (
+                                      <Badge 
+                                        key={option} 
+                                        variant="secondary" 
+                                        className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 transition-colors py-1 px-3 text-[11px] font-bold"
+                                      >
+                                        {formatBioinfoOption(option)}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-slate-400 px-1 italic">None selected</p>
+                                )}
+                              </div>
+
+                              {/* Research Overview */}
+                              <div className="space-y-2">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Research Overview</span>
+                                <div className="p-4 bg-indigo-50/30 rounded-xl border border-indigo-100/30 text-sm text-slate-800 italic leading-relaxed font-medium">
+                                  {currentInquiry.researchOverview ? `"${currentInquiry.researchOverview}"` : "—"}
+                                </div>
+                              </div>
+
+                              {/* Methodology File if exists */}
+                              {currentInquiry.methodologyFileUrl && (
+                                <div className="flex items-center gap-2 px-1 pt-2">
+                                  <FileText className="h-4 w-4 text-blue-500" />
+                                  <a 
+                                    href={currentInquiry.methodologyFileUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-xs font-bold text-blue-600 hover:underline"
+                                  >
+                                    View Methodology File
+                                  </a>
+                                </div>
+                              )}
                             </div>
+                          ) : (
+                            /* Other Services (Research, Training, Retail, etc.) */
+                            <>
+                              {/* Top Section: Quick Stats */}
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                                {/* Service Type */}
+                                <div className="space-y-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <FlaskConical className="h-4 w-4 text-slate-400" />
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Service Type</span>
+                                  </div>
+                                  <Badge className="w-fit capitalize bg-blue-50 text-blue-700 border-blue-100 text-xs px-2.5 py-0.5 font-bold">
+                                    {formatServiceType(currentInquiry.serviceType)}
+                                  </Badge>
+                                </div>
+
+                                {/* Sample Count */}
+                                {currentInquiry.sampleCount && (
+                                  <div className="space-y-1.5">
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Quantity</span>
+                                    <p className="text-sm font-bold text-slate-900">{currentInquiry.sampleCount} samples</p>
+                                  </div>
+                                )}
+
+                                {/* Project Budget */}
+                                {currentInquiry.projectBudget && (
+                                  <div className="space-y-1.5">
+                                    <div className="flex items-center gap-1.5">
+                                      <DollarSign className="h-4 w-4 text-slate-400" />
+                                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Estim. Budget</span>
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-900">{currentInquiry.projectBudget}</p>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Technical Block */}
+                              {(currentInquiry.species || currentInquiry.workflowType) && (
+                                <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  {currentInquiry.species && (
+                                    <div className="space-y-1">
+                                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Species / Organism</span>
+                                      <p className="text-sm font-semibold text-slate-800 capitalize">
+                                        {(currentInquiry.species === 'other' || currentInquiry.species === 'animal') && currentInquiry.otherSpecies
+                                          ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}`
+                                          : currentInquiry.species}
+                                      </p>
+                                    </div>
+                                  )}
+
+                                  {currentInquiry.workflowType && (
+                                    <div className="space-y-1">
+                                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Analysis Strategy</span>
+                                      <p className="text-sm font-semibold text-slate-800">
+                                        {formatWorkflowType(currentInquiry.workflowType)}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Bioinformatics Options */}
+                              {currentInquiry.bioinfoOptions && currentInquiry.bioinfoOptions.length > 0 && (
+                                <div className="space-y-2">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Selected Bioinformatics Analysis</span>
+                                  <div className="flex flex-wrap gap-2 p-1">
+                                    {currentInquiry.bioinfoOptions.map((option) => (
+                                      <Badge 
+                                        key={option} 
+                                        variant="secondary" 
+                                        className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 transition-colors py-1 px-3 text-[11px] font-bold"
+                                      >
+                                        {formatBioinfoOption(option)}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </>
                           )}
 
-                          {/* Specific Needs & Assays */}
+                          {/* Specific Needs & Assays (Common for all) */}
                           {currentInquiry.individualAssayDetails && (
                             <div className="space-y-2">
                               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Selected Assays</span>
@@ -2961,8 +3049,8 @@ export default function ClientPortalPage() {
                             </div>
                           )}
 
-                          {/* Research Narrative */}
-                          {currentInquiry.researchOverview && (
+                          {/* Research Narrative (Only if not already shown in Laboratory block) */}
+                          {currentInquiry.serviceType !== "laboratory" && currentInquiry.researchOverview && (
                             <div className="space-y-2">
                               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Objectives & Brief Overview</span>
                               <div className="p-4 bg-indigo-50/30 rounded-xl border border-indigo-100/30 text-sm text-slate-800 italic leading-relaxed font-medium">
