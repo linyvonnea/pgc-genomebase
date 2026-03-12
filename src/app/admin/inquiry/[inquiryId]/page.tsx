@@ -360,65 +360,26 @@ function InquiryDetailContent() {
               </div>
             )}
 
-            {/* Research and Collaboration Details Section */}
-            {(inquiry.projectBackground || inquiry.molecularServicesBudget || inquiry.plannedSampleCount || inquiry.projectBudget) && (
-              <div className="pt-4 border-t border-slate-100 space-y-4">
-                <h3 className="text-sm font-semibold text-slate-700">Research & Collaboration Details</h3>
-
-                {inquiry.projectBackground && (
-                  <div className="flex flex-col">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                      Project Background
-                    </span>
-                    <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
-                      {inquiry.projectBackground}
-                    </p>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {inquiry.molecularServicesBudget && (
-                    <div className="flex flex-col">
-                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Molecular Services Budget</span>
-                      <span className="text-sm font-medium text-slate-800 mt-1">{inquiry.molecularServicesBudget}</span>
-                    </div>
-                  )}
-
-                  {inquiry.plannedSampleCount && (
-                    <div className="flex flex-col">
-                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Planned Sample Count</span>
-                      <span className="text-sm font-medium text-slate-800 mt-1">{inquiry.plannedSampleCount}</span>
-                    </div>
-                  )}
-
-                  {inquiry.projectBudget && (
-                    <div className="flex flex-col">
-                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Project Budget</span>
-                      <span className="text-sm font-medium text-slate-800 mt-1">{inquiry.projectBudget}</span>
-                    </div>
-                  )}
-                </div>
+            {/* Additional Information / Project Background */}
+            {(inquiry.additionalInfo || inquiry.projectBackground) && (
+              <div className="pt-4 border-t border-slate-100">
+                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-2">
+                  {inquiry.additionalInfo ? "Additional Information" : "Project Background"}
+                </span>
+                <p className="text-sm text-slate-700 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
+                  {inquiry.additionalInfo || inquiry.projectBackground}
+                </p>
               </div>
             )}
 
-            {/* Retail Sales Details Section */}
-            {inquiry.retailItems && inquiry.retailItems.length > 0 && (
-              <div className="pt-4 border-t border-slate-100 space-y-4">
-                <h3 className="text-sm font-semibold text-slate-700">Retail Sales Details</h3>
-                <div className="flex flex-col">
-                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Selected Items</span>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {inquiry.retailItems.map((item, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="outline" 
-                        className="bg-amber-50 text-amber-700 border-amber-200 py-1 px-3"
-                      >
-                        {item}
-                      </Badge>
-                    ))}
-                  </div>
+            {/* Project Budget */}
+            {inquiry.projectBudget && (
+              <div className="pt-4 border-t border-slate-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <DollarSign className="h-4 w-4 text-slate-400" />
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Project Budget</span>
                 </div>
+                <span className="text-sm font-medium text-slate-800">{inquiry.projectBudget}</span>
               </div>
             )}
 
