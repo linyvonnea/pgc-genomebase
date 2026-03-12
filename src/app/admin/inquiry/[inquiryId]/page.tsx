@@ -28,7 +28,32 @@ const formatServiceType = (type: string | null | undefined): string => {
 // Format workflow type for display
 const formatWorkflowType = (type: string | null | undefined): string => {
   if (!type) return "—";
-  return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  if (type === "complete-bioinfo") return "Complete molecular workflow with Bioinformatics Analysis";
+  if (type === "complete") return "Complete Molecular workflow only (DNA Extraction to Sequencing)";
+  if (type === "individual") return "Individual Assay";
+  return type
+    .split(/[-_]/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+const formatBioinfoOption = (option: string): string => {
+  switch (option) {
+    case "genome-assembly":
+      return "Whole Genome Assembly";
+    case "metabarcoding":
+      return "Metabarcoding with Downstream Analysis";
+    case "pre-processing":
+      return "Metabarcoding with Pre-processing only";
+    case "transcriptomics":
+      return "Transcriptomics (QC to Annotation)";
+    case "phylogenetics":
+      return "Phylogenetics (1 marker)";
+    case "assembly-annotation":
+      return "Whole Genome Assembly and Annotation";
+    default:
+      return option;
+  }
 };
 
 // Get status badge styling
@@ -216,7 +241,7 @@ function InquiryDetailContent() {
             </div>
 
             {/* Research Details Section */}
-            {(inquiry.species || inquiry.researchOverview || inquiry.sampleCount || inquiry.workflowType) && (
+            {(inquiry.species || inquiry.researchOverview || inquiry.sampleCount || inquiry.workflowType || (inquiry.bioinfoOptions && inquiry.bioinfoOptions.length > 0)) && (
               <div className="pt-4 border-t border-slate-100 space-y-4">
                 <h3 className="text-sm font-semibold text-slate-700">Research Details</h3>
 
@@ -224,7 +249,7 @@ function InquiryDetailContent() {
                   <div className="flex flex-col">
                     <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Species</span>
                     <span className="text-sm font-medium text-slate-800 capitalize mt-1">
-                      {(inquiry.species === 'other' || inquiry.species === 'animal') && inquiry.otherSpecies
+                      {inquiry.otherSpecies
                         ? `${inquiry.species}: ${inquiry.otherSpecies}`
                         : inquiry.species}
                     </span>
@@ -243,6 +268,15 @@ function InquiryDetailContent() {
                     <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Workflow Type</span>
                     <span className="text-sm font-medium text-slate-800 mt-1">
                       {formatWorkflowType(inquiry.workflowType)}
+                    </span>
+                  </div>
+                )}
+
+                {inquiry.bioinfoOptions && inquiry.bioinfoOptions.length > 0 && (
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Bioinformatics Analysis</span>
+                    <span className="text-sm font-medium text-slate-800 mt-1">
+                      {inquiry.bioinfoOptions.map(formatBioinfoOption).join(", ")}
                     </span>
                   </div>
                 )}

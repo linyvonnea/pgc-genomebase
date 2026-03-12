@@ -17,7 +17,8 @@ export interface Inquiry {
   researchOverview?: string | null;
   methodologyFileUrl?: string | null;
   sampleCount?: number | null;
-  workflowType?: 'complete' | 'individual' | null;
+  workflowType?: 'complete-bioinfo' | 'complete' | 'individual' | null;
+  bioinfoOptions?: ('genome-assembly' | 'metabarcoding' | 'pre-processing' | 'transcriptomics' | 'phylogenetics' | 'assembly-annotation')[] | null;
   individualAssayDetails?: string | null;
   
   // Legacy Service-specific fields

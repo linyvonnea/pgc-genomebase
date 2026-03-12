@@ -82,6 +82,7 @@ export default function QuotationRequestForm() {
       methodologyFileUrl: "",
       sampleCount: undefined,
       workflowType: undefined,
+      bioinfoOptions: [],
       individualAssayDetails: "",
       retailItems: [],
       workflows: [],
@@ -116,6 +117,7 @@ export default function QuotationRequestForm() {
     setValue("methodologyFileUrl", "")
     setValue("sampleCount", undefined)
     setValue("workflowType", undefined)
+    setValue("bioinfoOptions", [])
     setValue("individualAssayDetails", "")
     setValue("retailItems", [])
     setValue("workflows", [])
@@ -153,6 +155,19 @@ export default function QuotationRequestForm() {
       ? [...currentItems, item] 
       : currentItems.filter(i => i !== item)
     setValue("retailItems", newItems)
+  }
+
+  /**
+   * Handles bioinformatics analysis option changes for the complete-bioinfo workflow.
+   */
+  const handleBioinfoOptionChange = (optionId: string, checked: boolean) => {
+    type BioinfoOption = NonNullable<InquiryFormData["bioinfoOptions"]>[number]
+    const typedOptionId = optionId as BioinfoOption
+    const currentOptions = (formData.bioinfoOptions || []) as BioinfoOption[]
+    const newOptions: BioinfoOption[] = checked
+      ? [...currentOptions, typedOptionId]
+      : currentOptions.filter(option => option !== typedOptionId)
+    setValue("bioinfoOptions", newOptions)
   }
 
   /**
@@ -449,8 +464,8 @@ export default function QuotationRequestForm() {
                   </div>
                 )}
 
-                {/* Species Selection - Show for services except Retail and Training */}
-                {["laboratory", "bioinformatics", "equipment", "research"].includes(selectedService) && (
+                {/* Species Selection - Show for Laboratory Services */}
+                {selectedService === "laboratory" && (
                   <div>
                     <Label className="text-sm font-semibold text-slate-700 mb-3 block">
                       Species <span className="text-[#B9273A]">*</span>
@@ -505,8 +520,8 @@ export default function QuotationRequestForm() {
                   </div>
                 )}
 
-                {/* Research Overview - Show for lab-type services */}
-                {["laboratory", "bioinformatics", "equipment"].includes(selectedService) && (
+                {/* Research Overview - Show for Laboratory Services */}
+                {selectedService === "laboratory" && (
                   <div>
                     <Label htmlFor="researchOverview" className="text-sm font-semibold text-slate-700 mb-2 block">
                       Overview of research and objectives. Kindly provide comprehensive details <span className="text-[#B9273A]">*</span>
@@ -538,7 +553,7 @@ export default function QuotationRequestForm() {
               </h2>
               
               {/* Laboratory Service Fields */}
-              {["laboratory", "bioinformatics", "equipment", "retail"].includes(selectedService) && (
+              {selectedService === "laboratory" && (
                 <div className="space-y-6">
                   {/* Sample Count */}
                   <div>
@@ -783,6 +798,12 @@ export default function QuotationRequestForm() {
                           }
                           initialFocus
                         />
+                        {errors.bioinfoOptions && formData.workflowType === "complete-bioinfo" && (
+                          <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                            <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                            {errors.bioinfoOptions.message}
+                          </p>
+                        )}
                       </PopoverContent>
                     </Popover>
                     {errors.targetTrainingDate && (
@@ -851,14 +872,13 @@ export default function QuotationRequestForm() {
             <div><span className="font-semibold">Service Type:</span> {pendingData.service}</div>
             
             {/* Show service-specific fields based on service type */}
-            {["laboratory", "bioinformatics", "equipment", "retail"].includes(pendingData.service) && (
+            {pendingData.service === "laboratory" && (
               <>
                 {pendingData.species && (
                   <div>
                     <span className="font-semibold">Species:</span>{" "}
-                    {pendingData.species === "other" 
-                      ? `Other (${pendingData.otherSpecies || "Not specified"})` 
-                      : pendingData.species.replace("-", " ").replace(/\b\w/g, l => l.toUpperCase())}
+                    {pendingData.species.replace("-", " ").replace(/\b\w/g, l => l.toUpperCase())}
+                    {pendingData.otherSpecies ? ` (${pendingData.otherSpecies})` : ""}
                   </div>
                 )}
                 {pendingData.researchOverview && (
@@ -887,14 +907,16 @@ export default function QuotationRequestForm() {
                 {pendingData.workflowType && (
                   <div>
                     <span className="font-semibold">Workflow Type:</span>{" "}
-                    {pendingData.workflowType === "complete" 
-                      ? "Complete workflow (DNA Extraction, Quantification, Library Preparation, Sequencing, and Bioinformatics Analysis)" 
-                      : `Individual Assay: ${pendingData.individualAssayDetails || "Not specified"}`}
+                    {pendingData.workflowType === "complete-bioinfo"
+                      ? "Complete molecular workflow with Bioinformatics Analysis"
+                      : pendingData.workflowType === "complete"
+                        ? "Complete Molecular workflow only (DNA Extraction to Sequencing)"
+                        : `Individual Assay: ${pendingData.individualAssayDetails || "Not specified"}`}
                   </div>
                 )}
-                {pendingData.retailItems && pendingData.retailItems.length > 0 && (
+                {pendingData.bioinfoOptions && pendingData.bioinfoOptions.length > 0 && (
                   <div>
-                    <span className="font-semibold">Retail Items:</span> {pendingData.retailItems.join(", ")}
+                    <span className="font-semibold">Bioinformatics Analysis:</span> {pendingData.bioinfoOptions.join(", ")}
                   </div>
                 )}
               </>
@@ -909,6 +931,11 @@ export default function QuotationRequestForm() {
                   <div><span className="font-semibold">Planned Sample Count:</span> {pendingData.plannedSampleCount}</div>
                 )}
               </>
+            )}
+            {pendingData.service === "retail" && pendingData.retailItems && pendingData.retailItems.length > 0 && (
+              <div>
+                <span className="font-semibold">Retail Items:</span> {pendingData.retailItems.join(", ")}
+              </div>
             )}
             {pendingData.service === "training" && (
               <>

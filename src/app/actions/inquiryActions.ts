@@ -149,6 +149,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       methodologyFileUrl: inquiryData.methodologyFileUrl || null,
       sampleCount: inquiryData.sampleCount || null,
       workflowType: inquiryData.workflowType || null,
+      bioinfoOptions: inquiryData.bioinfoOptions || [],
       individualAssayDetails: inquiryData.individualAssayDetails || null,
       
       // Service-specific fields (legacy - will be null for non-applicable services)
@@ -220,6 +221,9 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       templateData.methodologyFileUrl = inquiryData.methodologyFileUrl || '';
       templateData.sampleCount = inquiryData.sampleCount?.toString() || '';
       templateData.workflowType = inquiryData.workflowType || '';
+      templateData.bioinfoOptions = Array.isArray(inquiryData.bioinfoOptions)
+        ? inquiryData.bioinfoOptions.join(', ')
+        : '';
       templateData.individualAssayDetails = inquiryData.individualAssayDetails || '';
       // Legacy fields for backward compatibility
       templateData.workflows = Array.isArray(inquiryData.workflows) 
@@ -282,7 +286,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
               ${inquiryData.species ? `
               <tr>
                 <td style="padding: 4px 0; color: #64748b;">Species:</td>
-                <td style="padding: 4px 0;">${inquiryData.species}${(inquiryData.species === 'other' || inquiryData.species === 'animal') && inquiryData.otherSpecies ? ` (${inquiryData.otherSpecies})` : ''}</td>
+                <td style="padding: 4px 0;">${inquiryData.species}${inquiryData.otherSpecies ? ` (${inquiryData.otherSpecies})` : ''}</td>
               </tr>` : ''}
               ${inquiryData.sampleCount ? `
               <tr>
@@ -292,7 +296,12 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
               ${inquiryData.workflowType ? `
               <tr>
                 <td style="padding: 4px 0; color: #64748b;">Workflow:</td>
-                <td style="padding: 4px 0;">${inquiryData.workflowType === 'complete' ? 'Complete Workflow' : 'Individual Assay'}</td>
+                <td style="padding: 4px 0;">${inquiryData.workflowType === 'complete-bioinfo' ? 'Complete molecular workflow with Bioinformatics Analysis' : inquiryData.workflowType === 'complete' ? 'Complete Molecular workflow only (DNA Extraction to Sequencing)' : 'Individual Assay'}</td>
+              </tr>` : ''}
+              ${inquiryData.bioinfoOptions && inquiryData.bioinfoOptions.length > 0 ? `
+              <tr>
+                <td style="padding: 4px 0; color: #64748b;">Bioinformatics Analysis:</td>
+                <td style="padding: 4px 0;">${inquiryData.bioinfoOptions.join(', ')}</td>
               </tr>` : ''}
             </table>
             

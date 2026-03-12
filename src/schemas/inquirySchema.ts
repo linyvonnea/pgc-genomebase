@@ -41,7 +41,15 @@ export const inquirySchema = z.object({
   researchOverview: z.string().max(3000).optional(), // Brief overview of research, methods, and required services
   methodologyFileUrl: z.string().optional(), // URL to uploaded methodology/concept note
   sampleCount: z.number().min(1).optional(), // Number of samples
-  workflowType: z.enum(["complete", "individual"]).optional(), // Complete workflow or individual assay
+  workflowType: z.enum(["complete-bioinfo", "complete", "individual"]).optional(), // Workflow selection for laboratory services
+  bioinfoOptions: z.array(z.enum([
+    "genome-assembly",
+    "metabarcoding",
+    "pre-processing",
+    "transcriptomics",
+    "phylogenetics",
+    "assembly-annotation",
+  ])).optional(),
   individualAssayDetails: z.string().max(500).optional(), // Details for individual assay
   
   // Retail Sales specific fields
@@ -119,7 +127,7 @@ export const inquiryFormSchema = inquirySchema
   })
   // Conditional validation: Species is required for laboratory services
   .refine((data) => {
-    if (["laboratory", "bioinformatics", "equipment"].includes(data.service)) {
+    if (data.service === "laboratory") {
       return data.species && data.species.length > 0;
     }
     return true;
@@ -139,7 +147,7 @@ export const inquiryFormSchema = inquirySchema
   })
   // Conditional validation: Research overview required for lab services
   .refine((data) => {
-    if (["laboratory", "bioinformatics", "equipment"].includes(data.service)) {
+    if (data.service === "laboratory") {
       return data.researchOverview && data.researchOverview.trim().length > 0;
     }
     return true;
@@ -149,7 +157,7 @@ export const inquiryFormSchema = inquirySchema
   })
   // Conditional validation: Sample count required for lab services
   .refine((data) => {
-    if (["laboratory", "bioinformatics", "equipment"].includes(data.service)) {
+    if (data.service === "laboratory") {
       return data.sampleCount && data.sampleCount > 0;
     }
     return true;
@@ -159,7 +167,7 @@ export const inquiryFormSchema = inquirySchema
   })
   // Conditional validation: Workflow type required for lab services
   .refine((data) => {
-    if (["laboratory", "bioinformatics", "equipment"].includes(data.service)) {
+    if (data.service === "laboratory") {
       return data.workflowType && data.workflowType.length > 0;
     }
     return true;
@@ -186,6 +194,16 @@ export const inquiryFormSchema = inquirySchema
   }, {
     message: "Please specify the individual assay details (e.g., DNA Extraction, PCR, etc.)",
     path: ["individualAssayDetails"],
+  })
+  // Conditional validation: At least one bioinformatics analysis is required for complete-bioinfo workflow
+  .refine((data) => {
+    if (data.workflowType === "complete-bioinfo") {
+      return !!data.bioinfoOptions && data.bioinfoOptions.length > 0;
+    }
+    return true;
+  }, {
+    message: "Please select at least one bioinformatics analysis option",
+    path: ["bioinfoOptions"],
   })
   // Conditional validation: Research service requires project background
   .refine((data) => {
@@ -262,4 +280,4 @@ export type InquiryUpdateData = z.infer<typeof inquiryUpdateSchema>; // Update o
 export type WorkflowOption = "dna-extraction" | "sequencing" | "pcr-amplification" | "bioinformatics" | "quantification" | "complete-workflow";
 export type ServiceType = "laboratory" | "bioinformatics" | "equipment" | "retail" | "research" | "training";
 export type SpeciesType = "human" | "plant" | "animal" | "microbe-prokaryote" | "microbe-eukaryote" | "other";
-export type WorkflowTypeOption = "complete" | "individual";
+export type WorkflowTypeOption = "complete-bioinfo" | "complete" | "individual";
