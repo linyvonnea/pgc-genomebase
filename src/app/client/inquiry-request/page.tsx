@@ -615,7 +615,7 @@ export default function QuotationRequestForm() {
                                     { id: "transcriptomics", label: "Transcriptomics (QC to Annotation)" },
                                     { id: "phylogenetics", label: "Phylogenetics (1 marker)" },
                                     { id: "assembly-annotation", label: "Whole Genome Assembly and Annotation" }
-                                  ].map((option) => (
+                                  ] as const).map((option) => (
                                     <div key={option.id} className="flex items-center space-x-3 p-2 bg-white rounded-lg border border-slate-100 hover:border-blue-200 transition-all shadow-sm">
                                       <input
                                         type="checkbox"
