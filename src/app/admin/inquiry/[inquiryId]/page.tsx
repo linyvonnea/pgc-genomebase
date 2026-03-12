@@ -251,40 +251,34 @@ function InquiryDetailContent() {
             </div>
 
             {/* Research Details Section */}
-            {(inquiry.species || inquiry.researchOverview || inquiry.sampleCount || inquiry.workflowType || (inquiry.bioinfoOptions && inquiry.bioinfoOptions.length > 0)) && (
+            {(inquiry.serviceType === 'laboratory') && (
               <div className="pt-4 border-t border-slate-100 space-y-4">
-                <h3 className="text-sm font-semibold text-slate-700">Research Details</h3>
+                <h3 className="text-sm font-semibold text-slate-700">Laboratory Details</h3>
 
-                {inquiry.species && (
-                  <div className="flex flex-col">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Species</span>
-                    <span className="text-sm font-medium text-slate-800 capitalize mt-1">
-                      {inquiry.otherSpecies
-                        ? `${inquiry.species}: ${inquiry.otherSpecies}`
-                        : inquiry.species}
-                    </span>
-                  </div>
-                )}
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Species</span>
+                  <span className="text-sm font-medium text-slate-800 capitalize mt-1">
+                    {inquiry.species 
+                      ? (inquiry.otherSpecies ? `${inquiry.species}: ${inquiry.otherSpecies}` : inquiry.species)
+                      : "—"}
+                  </span>
+                </div>
 
-                {inquiry.sampleCount && (
-                  <div className="flex flex-col">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Sample Count</span>
-                    <span className="text-sm font-medium text-slate-800 mt-1">{inquiry.sampleCount}</span>
-                  </div>
-                )}
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Sample Count</span>
+                  <span className="text-sm font-medium text-slate-800 mt-1">{inquiry.sampleCount || "—"}</span>
+                </div>
 
-                {inquiry.workflowType && (
-                  <div className="flex flex-col">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Workflow Type</span>
-                    <span className="text-sm font-medium text-slate-800 mt-1">
-                      {formatWorkflowType(inquiry.workflowType)}
-                    </span>
-                  </div>
-                )}
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Workflow</span>
+                  <span className="text-sm font-medium text-slate-800 mt-1">
+                    {inquiry.workflowType ? formatWorkflowType(inquiry.workflowType) : "—"}
+                  </span>
+                </div>
 
-                {inquiry.bioinfoOptions && inquiry.bioinfoOptions.length > 0 && (
-                  <div className="flex flex-col">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Selected Bioinformatics Analysis</span>
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Bioinformatics Analysis</span>
+                  {inquiry.bioinfoOptions && inquiry.bioinfoOptions.length > 0 ? (
                     <div className="flex flex-wrap gap-2 mt-2">
                       {inquiry.bioinfoOptions.map((option) => (
                         <Badge 
@@ -296,8 +290,10 @@ function InquiryDetailContent() {
                         </Badge>
                       ))}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <span className="text-sm font-medium text-slate-800 mt-1">—</span>
+                  )}
+                </div>
 
                 {inquiry.individualAssayDetails && (
                   <div className="flex flex-col">
@@ -310,16 +306,12 @@ function InquiryDetailContent() {
                   </div>
                 )}
 
-                {inquiry.researchOverview && (
-                  <div className="flex flex-col">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                      Research Overview
-                    </span>
-                    <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
-                      {inquiry.researchOverview}
-                    </p>
-                  </div>
-                )}
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Research Overview</span>
+                  <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
+                    {inquiry.researchOverview || "—"}
+                  </p>
+                </div>
 
                 {inquiry.methodologyFileUrl && (
                   <div className="flex flex-col">
@@ -330,7 +322,7 @@ function InquiryDetailContent() {
                       href={inquiry.methodologyFileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-[#166FB5] hover:underline mt-1 flex items-center gap-2"
+                      className="text-sm text-[#166FB5] hover:underline mt-1 flex items-center gap-2 w-fit"
                     >
                       <FileText className="h-4 w-4" />
                       View Uploaded File
