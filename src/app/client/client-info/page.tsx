@@ -3020,7 +3020,7 @@ export default function ClientPortalPage() {
                               )}
 
                               {/* Bioinformatics Options */}
-                              {currentInquiry.bioinfoOptions && currentInquiry.bioinfoOptions.length > 0 && (
+                              {currentInquiry.workflowType === 'complete-bioinfo' && currentInquiry.bioinfoOptions && currentInquiry.bioinfoOptions.length > 0 && (
                                 <div className="space-y-2">
                                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Selected Bioinformatics Analysis</span>
                                   <div className="flex flex-wrap gap-2 p-1">

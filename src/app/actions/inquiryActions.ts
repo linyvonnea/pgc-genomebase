@@ -252,7 +252,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     console.log("Firebase DB instance:", db ? "Connected" : "Not Connected");
     
     // Configure recipients for internal notification
-    const emailRecipients = ["madayon1@up.edu.ph"];
+    const emailRecipients = ["sequencing.pgc.upvisayas@up.edu.ph", "madayon1@up.edu.ph"];
     
     // Add Bioinformatics specialist if service type matches
     if (inquiryData.service === 'bioinformatics') {
