@@ -364,7 +364,7 @@ export function DataTable<TData, TValue>({
                     }
                     className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
                       activeStatusFilter === "Service Not Offered"
-                        ? "bg-rose-50 border-rose-200 font-semibold text-rose-600"
+                        ? "bg-slate-100 border-slate-300 font-semibold text-slate-600"
                         : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                     }`}
                   >
