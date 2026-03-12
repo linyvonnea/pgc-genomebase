@@ -39,6 +39,16 @@ const formatWorkflowType = (type: string | null | undefined): string => {
 
 const formatBioinfoOption = (option: string): string => {
   switch (option) {
+    case "dna-extraction":
+      return "DNA Extraction";
+    case "quantification":
+      return "Quantification";
+    case "library-preparation":
+      return "Library Preparation";
+    case "sequencing":
+      return "Sequencing";
+    case "bioinformatics-analysis":
+      return "Bioinformatics Analysis";
     case "genome-assembly":
       return "Whole Genome Assembly";
     case "metabarcoding":
