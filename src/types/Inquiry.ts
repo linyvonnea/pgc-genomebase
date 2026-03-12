@@ -21,6 +21,13 @@ export interface Inquiry {
   bioinfoOptions?: ('dna-extraction' | 'quantification' | 'library-preparation' | 'sequencing' | 'bioinformatics-analysis' | 'genome-assembly' | 'metabarcoding' | 'pre-processing' | 'transcriptomics' | 'phylogenetics' | 'assembly-annotation')[] | null;
   individualAssayDetails?: string | null;
   
+  // Research and Collaboration - New fields
+  molecularServicesBudget?: string | null;
+  plannedSampleCount?: string | null;
+
+  // Retail Sales specific fields
+  retailItems?: string[] | null;
+  
   // Legacy Service-specific fields
   workflows?: string[];
   additionalInfo?: string | null;

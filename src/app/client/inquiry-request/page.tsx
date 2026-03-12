@@ -988,15 +988,27 @@ export default function QuotationRequestForm() {
               </>
             )}
             {pendingData.service === "research" && (
-              <>
-                <div><span className="font-semibold">Project Background:</span> {pendingData.projectBackground}</div>
-                {pendingData.molecularServicesBudget && (
-                  <div><span className="font-semibold">Budget for molecular services:</span> {pendingData.molecularServicesBudget}</div>
+              <div className="space-y-3">
+                {pendingData.projectBackground && (
+                  <div>
+                    <span className="font-semibold block mb-1">Project Background:</span>
+                    <p className="bg-slate-50 p-3 rounded-lg text-slate-700 whitespace-pre-wrap">
+                      {pendingData.projectBackground}
+                    </p>
+                  </div>
                 )}
-                {pendingData.plannedSampleCount && (
-                  <div><span className="font-semibold">Planned Sample Count:</span> {pendingData.plannedSampleCount}</div>
-                )}
-              </>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {pendingData.molecularServicesBudget && (
+                    <div><span className="font-semibold">Budget for molecular services:</span> {pendingData.molecularServicesBudget}</div>
+                  )}
+                  {pendingData.plannedSampleCount && (
+                    <div><span className="font-semibold">Planned Sample Count:</span> {pendingData.plannedSampleCount}</div>
+                  )}
+                  {pendingData.projectBudget && (
+                    <div><span className="font-semibold">Project Budget:</span> {pendingData.projectBudget}</div>
+                  )}
+                </div>
+              </div>
             )}
             {pendingData.service === "retail" && pendingData.retailItems && pendingData.retailItems.length > 0 && (
               <div>
