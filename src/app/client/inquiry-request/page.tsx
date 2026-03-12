@@ -972,7 +972,17 @@ export default function QuotationRequestForm() {
                 )}
                 {pendingData.bioinfoOptions && pendingData.bioinfoOptions.length > 0 && (
                   <div>
-                    <span className="font-semibold">Bioinformatics Analysis:</span> {pendingData.bioinfoOptions.join(", ")}
+                    <span className="font-semibold">Bioinformatics Analysis:</span> {pendingData.bioinfoOptions.map(opt => {
+                      const labels: Record<string, string> = {
+                        "genome-assembly": "Whole Genome Assembly",
+                        "metabarcoding": "Metabarcoding with Downstream Analysis",
+                        "pre-processing": "Metabarcoding with Pre-processing only",
+                        "transcriptomics": "Transcriptomics (QC to Annotation)",
+                        "phylogenetics": "Phylogenetics (1 marker)",
+                        "assembly-annotation": "Whole Genome Assembly and Annotation"
+                      };
+                      return labels[opt] || opt;
+                    }).join(", ")}
                   </div>
                 )}
               </>

@@ -274,10 +274,18 @@ function InquiryDetailContent() {
 
                 {inquiry.bioinfoOptions && inquiry.bioinfoOptions.length > 0 && (
                   <div className="flex flex-col">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Bioinformatics Analysis</span>
-                    <span className="text-sm font-medium text-slate-800 mt-1">
-                      {inquiry.bioinfoOptions.map(formatBioinfoOption).join(", ")}
-                    </span>
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Selected Bioinformatics Analysis</span>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {inquiry.bioinfoOptions.map((option) => (
+                        <Badge 
+                          key={option} 
+                          variant="secondary" 
+                          className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 transition-colors py-1 px-3"
+                        >
+                          {formatBioinfoOption(option)}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 )}
 
