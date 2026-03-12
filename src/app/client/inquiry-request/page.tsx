@@ -473,24 +473,43 @@ export default function QuotationRequestForm() {
                     </Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {[
-                        { id: "human", label: "Human" },
-                        { id: "plant", label: "Plant" },
-                        { id: "animal", label: "Animal" },
+                        { id: "human", label: "Human", placeholder: "Please specify e.g exosome, whole genome etc." },
+                        { id: "plant", label: "Plant", placeholder: "Please specify plant species and sample type (e.g leaf, fruit, branch etc.)" },
+                        { id: "animal", label: "Animal", placeholder: "Please specify animal species and sample type e.g blood, muscle, fins etc." },
                         { id: "microbe-prokaryote", label: "Microbe (Prokaryote)" },
                         { id: "microbe-eukaryote", label: "Microbe (Eukaryote)" },
-                        { id: "other", label: "Other" }
+                        { id: "other", label: "Other", placeholder: "Please specify species and sample type" }
                       ].map((species) => (
-                        <div key={species.id} className="flex items-center space-x-3 p-3 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
-                          <input
-                            type="radio"
-                            id={`species-${species.id}`}
-                            {...register("species")}
-                            value={species.id}
-                            className="rounded-full border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
-                          />
-                          <Label htmlFor={`species-${species.id}`} className="text-sm text-slate-700 font-medium cursor-pointer flex-1">
-                            {species.label}
-                          </Label>
+                        <div key={species.id} className="flex flex-col space-y-2">
+                          <div className="flex items-center space-x-3 p-3 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
+                            <input
+                              type="radio"
+                              id={`species-${species.id}`}
+                              {...register("species")}
+                              value={species.id}
+                              className="rounded-full border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                            />
+                            <Label htmlFor={`species-${species.id}`} className="text-sm text-slate-700 font-medium cursor-pointer flex-1">
+                              {species.label}
+                            </Label>
+                          </div>
+                          
+                          {/* Species Specific Detail Input */}
+                          {formData.species === species.id && species.placeholder && (
+                            <div className="pl-8 pb-2">
+                              <Input
+                                placeholder={species.placeholder}
+                                {...register("otherSpecies")}
+                                className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-10 text-sm"
+                              />
+                              {errors.otherSpecies && (
+                                <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                                  <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                                  {errors.otherSpecies.message}
+                                </p>
+                              )}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -499,23 +518,6 @@ export default function QuotationRequestForm() {
                         <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
                         {errors.species.message}
                       </p>
-                    )}
-                    
-                    {/* Other Species Specification */}
-                    {(formData.species === "other" || formData.species === "animal") && (
-                      <div className="mt-3">
-                        <Input
-                          placeholder={formData.species === "animal" ? "Please specify animal species" : "Please specify the species"}
-                          {...register("otherSpecies")}
-                          className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
-                        />
-                        {errors.otherSpecies && (
-                          <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
-                            <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                            {errors.otherSpecies.message}
-                          </p>
-                        )}
-                      </div>
                     )}
                   </div>
                 )}
@@ -582,7 +584,58 @@ export default function QuotationRequestForm() {
                         Kindly choose which workflow you will be availing <span className="text-[#B9273A]">*</span>
                       </Label>
                       <div className="space-y-3">
-                        {/* Complete Workflow Option */}
+                        {/* Complete Workflow with Bioinfo Option */}
+                        <div className="flex items-start space-x-3 p-4 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
+                          <input
+                            type="radio"
+                            id="workflow-complete-bioinfo"
+                            {...register("workflowType")}
+                            value="complete-bioinfo"
+                            className="mt-1 rounded-full border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                          />
+                          <div className="flex-1">
+                            <Label htmlFor="workflow-complete-bioinfo" className="text-sm text-slate-700 font-semibold cursor-pointer block">
+                              Complete molecular workflow with Bioinformatics Analysis
+                            </Label>
+                            <p className="text-xs text-slate-600 mt-1">
+                              DNA Extraction, Quantification, Library Preparation, Sequencing, and Bioinformatics Analysis
+                            </p>
+                            
+                            {/* Bioinformatics Analysis Dropdown - Shown when this option is selected */}
+                            {formData.workflowType === "complete-bioinfo" && (
+                              <div className="mt-4 p-4 border border-blue-100 rounded-xl bg-blue-50/50 space-y-3">
+                                <Label className="text-xs font-bold text-blue-700 uppercase tracking-wider block">
+                                  Select from the following Bioinformatics Analysis:
+                                </Label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  {[
+                                    { id: "genome-assembly", label: "Whole Genome Assembly" },
+                                    { id: "metabarcoding", label: "Metabarcoding with Downstream Analysis" },
+                                    { id: "pre-processing", label: "Metabarcoding with Pre-processing only" },
+                                    { id: "transcriptomics", label: "Transcriptomics (QC to Annotation)" },
+                                    { id: "phylogenetics", label: "Phylogenetics (1 marker)" },
+                                    { id: "assembly-annotation", label: "Whole Genome Assembly and Annotation" }
+                                  ].map((option) => (
+                                    <div key={option.id} className="flex items-center space-x-3 p-2 bg-white rounded-lg border border-slate-100 hover:border-blue-200 transition-all shadow-sm">
+                                      <input
+                                        type="checkbox"
+                                        id={`bioinfo-${option.id}`}
+                                        checked={(formData.bioinfoOptions || []).includes(option.id)}
+                                        onChange={(e) => handleBioinfoOptionChange(option.id, e.target.checked)}
+                                        className="rounded border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                                      />
+                                      <Label htmlFor={`bioinfo-${option.id}`} className="text-[11px] font-medium text-slate-700 leading-tight cursor-pointer select-none">
+                                        {option.label}
+                                      </Label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Complete Workflow Only Option */}
                         <div className="flex items-start space-x-3 p-4 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
                           <input
                             type="radio"
@@ -593,10 +646,10 @@ export default function QuotationRequestForm() {
                           />
                           <div className="flex-1">
                             <Label htmlFor="workflow-complete" className="text-sm text-slate-700 font-semibold cursor-pointer block">
-                              Complete workflow
+                              Complete Molecular workflow only
                             </Label>
                             <p className="text-xs text-slate-600 mt-1">
-                              DNA Extraction, Quantification, Library Preparation, Sequencing, and Bioinformatics Analysis
+                              DNA Extraction to Sequencing
                             </p>
                           </div>
                         </div>
@@ -614,6 +667,9 @@ export default function QuotationRequestForm() {
                             <Label htmlFor="workflow-individual" className="text-sm text-slate-700 font-semibold cursor-pointer block">
                               Individual Assay
                             </Label>
+                            <p className="text-xs text-slate-600 mt-1">
+                              e.g. DNA Extraction, PCR etc.
+                            </p>
                           </div>
                         </div>
                       </div>
