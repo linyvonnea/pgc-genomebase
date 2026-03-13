@@ -167,11 +167,7 @@ const formatBioinfoOption = (option: string): string => {
     case "metabarcoding":
       return "Metabarcoding with Downstream Analysis";
     case "pre-processing":
-      return "Metabarcoding with Pre-processing only";
-    case "transcriptomics":
-      return "Transcriptomics (QC to Annotation)";
-    case "phylogenetics":
-      return "Phylogenetics (1 marker)";
+      return "Metabarcoding with Pre-processing Only";
     case "assembly-annotation":
       return "Whole Genome Assembly and Annotation";
     default:

@@ -23,6 +23,65 @@ import { AdminInquiryData } from "@/schemas/adminInquirySchema";
 import { logActivity } from "@/services/activityLogService";
 import { initializeQuotationThread } from "@/services/quotationThreadService";
 
+const BIOINFO_OPTION_LABELS: Record<string, string> = {
+  "whole-genome-assembly": "Whole Genome Assembly",
+  "metabarcoding-downstream": "Metabarcoding with Downstream Analysis",
+  "metabarcoding-preprocessing": "Metabarcoding with Pre-processing Only",
+  "transcriptomics": "Transcriptomics (QC to Annotation)",
+  "phylogenetics": "Phylogenetics (1 Marker)",
+  "whole-genome-assembly-annotation": "Whole Genome Assembly and Annotation",
+  // Legacy support
+  "dna-extraction": "DNA Extraction",
+  "quantification": "Quantification",
+  "library-preparation": "Library Preparation",
+  "sequencing": "Sequencing",
+  "bioinformatics-analysis": "Bioinformatics Analysis",
+  "genome-assembly": "Whole Genome Assembly",
+  "metabarcoding": "Metabarcoding with Downstream Analysis",
+  "pre-processing": "Metabarcoding with Pre-processing Only",
+  "assembly-annotation": "Whole Genome Assembly and Annotation",
+};
+
+const formatBioinfoOption = (option: string): string => {
+  return (
+    BIOINFO_OPTION_LABELS[option] ||
+    option
+      .split(/[-_]/)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ")
+  );
+};
+
+const formatWorkflowType = (workflowType?: string): string => {
+  if (!workflowType) return "";
+  if (workflowType === "complete-bioinfo") {
+    return "Complete molecular workflow with Bioinformatics Analysis";
+  }
+  if (workflowType === "complete") {
+    return "Complete Molecular workflow only (DNA Extraction to Sequencing)";
+  }
+  if (workflowType === "individual") {
+    return "Individual Assay";
+  }
+  return workflowType
+    .split(/[-_]/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
+const formatServiceType = (serviceType: string): string => {
+  return serviceType.charAt(0).toUpperCase() + serviceType.slice(1);
+};
+
+const formatSpecies = (species?: string, otherSpecies?: string): string => {
+  if (!species) return "";
+  const speciesLabel = species
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+  return otherSpecies ? `${speciesLabel} (${otherSpecies})` : speciesLabel;
+};
+
 /**
  * Test function to validate email system configuration
  * This function helps diagnose email delivery issues by creating a simple test email
@@ -220,9 +279,9 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       templateData.researchOverview = inquiryData.researchOverview || '';
       templateData.methodologyFileUrl = inquiryData.methodologyFileUrl || '';
       templateData.sampleCount = inquiryData.sampleCount?.toString() || '';
-      templateData.workflowType = inquiryData.workflowType || '';
+      templateData.workflowType = formatWorkflowType(inquiryData.workflowType) || '';
       templateData.bioinfoOptions = Array.isArray(inquiryData.bioinfoOptions)
-        ? inquiryData.bioinfoOptions.join(', ')
+        ? inquiryData.bioinfoOptions.map(formatBioinfoOption).join(', ')
         : '';
       templateData.individualAssayDetails = inquiryData.individualAssayDetails || '';
       // Legacy fields for backward compatibility
@@ -252,7 +311,12 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     console.log("Firebase DB instance:", db ? "Connected" : "Not Connected");
     
     // Configure recipients for internal notification
-    const emailRecipients = ["madayon1@up.edu.ph"];
+    const emailRecipients = Array.from(
+      new Set([
+        "sequencing.pgc.upvisayas@up.edu.ph",
+        "madayon1@up.edu.ph",
+      ])
+    );
     
     // Add Bioinformatics specialist if service type matches
     if (inquiryData.service === 'bioinformatics') {
@@ -266,7 +330,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.5;">
         <div style="background-color: #f8fafc; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
           <h2 style="color: #1e40af; margin-top: 0; font-size: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
-            New ${inquiryData.service.charAt(0).toUpperCase() + inquiryData.service.slice(1)} Inquiry
+            New ${formatServiceType(inquiryData.service)} Inquiry
           </h2>
           
           <div style="margin: 20px 0;">
@@ -281,12 +345,12 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
             <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
               <tr>
                 <td style="padding: 4px 0; width: 140px; color: #64748b;">Service Type:</td>
-                <td style="padding: 4px 0;">${inquiryData.service}</td>
+                <td style="padding: 4px 0;">${formatServiceType(inquiryData.service)}</td>
               </tr>
               ${inquiryData.species ? `
               <tr>
                 <td style="padding: 4px 0; color: #64748b;">Species:</td>
-                <td style="padding: 4px 0;">${inquiryData.species}${inquiryData.otherSpecies ? ` (${inquiryData.otherSpecies})` : ''}</td>
+                <td style="padding: 4px 0;">${formatSpecies(inquiryData.species, inquiryData.otherSpecies || undefined)}</td>
               </tr>` : ''}
               ${inquiryData.sampleCount ? `
               <tr>
@@ -296,22 +360,12 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
               ${inquiryData.workflowType ? `
               <tr>
                 <td style="padding: 4px 0; color: #64748b;">Workflow:</td>
-                <td style="padding: 4px 0;">${inquiryData.workflowType === 'complete-bioinfo' ? 'Complete molecular workflow with Bioinformatics Analysis' : inquiryData.workflowType === 'complete' ? 'Complete Molecular workflow only (DNA Extraction to Sequencing)' : 'Individual Assay'}</td>
+                <td style="padding: 4px 0;">${formatWorkflowType(inquiryData.workflowType)}</td>
               </tr>` : ''}
               ${inquiryData.bioinfoOptions && inquiryData.bioinfoOptions.length > 0 ? `
               <tr>
                 <td style="padding: 4px 0; color: #64748b;">Bioinformatics Analysis:</td>
-                <td style="padding: 4px 0;">${inquiryData.bioinfoOptions.map(opt => {
-                  switch(opt) {
-                    case "whole-genome-assembly": return "Whole Genome Assembly";
-                    case "metabarcoding-downstream": return "Metabarcoding with Downstream Analysis";
-                    case "metabarcoding-preprocessing": return "Metabarcoding with Pre-processing Only";
-                    case "transcriptomics": return "Transcriptomics (QC to Annotation)";
-                    case "phylogenetics": return "Phylogenetics (1 Marker)";
-                    case "whole-genome-assembly-annotation": return "Whole Genome Assembly and Annotation";
-                    default: return opt.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-                  }
-                }).join(', ')}</td>
+                <td style="padding: 4px 0;">${inquiryData.bioinfoOptions.map(formatBioinfoOption).join(', ')}</td>
               </tr>` : ''}
             </table>
             
@@ -341,7 +395,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     
     // Create email text version
     const emailText = `
-New ${inquiryData.service.charAt(0).toUpperCase() + inquiryData.service.slice(1)} Inquiry
+New ${formatServiceType(inquiryData.service)} Inquiry
 
 Contact Information:
 Name: ${inquiryData.name}
@@ -349,7 +403,14 @@ Email: ${inquiryData.email}
 Affiliation: ${inquiryData.affiliation}
 Designation: ${inquiryData.designation}
 
-Service Type: ${inquiryData.service}
+Service Type: ${formatServiceType(inquiryData.service)}
+${inquiryData.species ? `Species: ${formatSpecies(inquiryData.species, inquiryData.otherSpecies || undefined)}\n` : ''}
+${inquiryData.sampleCount ? `Sample Count: ${inquiryData.sampleCount}\n` : ''}
+${inquiryData.workflowType ? `Workflow: ${formatWorkflowType(inquiryData.workflowType)}\n` : ''}
+${inquiryData.bioinfoOptions && inquiryData.bioinfoOptions.length > 0 ? `Bioinformatics Analysis: ${inquiryData.bioinfoOptions.map(formatBioinfoOption).join(', ')}\n` : ''}
+${inquiryData.researchOverview ? `Research Overview: ${inquiryData.researchOverview}\n` : ''}
+${inquiryData.methodologyFileUrl ? `Methodology File: ${inquiryData.methodologyFileUrl}\n` : ''}
+${inquiryData.individualAssayDetails ? `Individual Assay Details: ${inquiryData.individualAssayDetails}\n` : ''}
 ${inquiryData.workflows && inquiryData.workflows.length > 0 ? `Workflows: ${Array.isArray(inquiryData.workflows) ? inquiryData.workflows.join(', ') : inquiryData.workflows}\n` : ''}
 ${inquiryData.additionalInfo ? `Additional Info: ${inquiryData.additionalInfo}\n` : ''}
 ${inquiryData.projectBackground ? `Project Background: ${inquiryData.projectBackground}\n` : ''}
@@ -407,9 +468,7 @@ Submitted: ${new Date().toLocaleString()}
         messageKeys: Object.keys(emailData.message)
       }, null, 2));
       
-const emailRecipients = ["sequencing.pgc.upvisayas@up.edu.ph", "madayon1@up.edu.ph"];
-    
-    console.log("EMAIL DEBUG: Creating email for recipients:", emailRecipients.join(", "));
+  console.log("EMAIL DEBUG: Creating email for recipients:", emailData.to.join(", "));
     
     // Create the email document
     console.log("EMAIL DEBUG: Calling addDoc...");
