@@ -489,13 +489,15 @@ export async function addThreadMessage(
           "unreadCount.admin": (thread.unreadCount.admin || 0) + 1,
           dismissedByAdmin: false // Reset dismissed flag when client sends a new message
         };
-    
-    await updateDoc(threadRef, {
+
+    const finalUpdate = {
       ...unreadCountUpdate,
       lastMessageAt: serverTimestamp(),
       lastMessageBy: message.senderId,
       updatedAt: serverTimestamp(),
-    });
+    };
+
+    await updateDoc(threadRef, finalUpdate);
 
     // Denormalize message state onto the inquiries document for efficient table display
     const inquiryRef = doc(db, "inquiries", message.threadId);
@@ -504,6 +506,7 @@ export async function addThreadMessage(
       await updateDoc(inquiryRef, {
         messageState: "has_unread",
         unreadMessageCount: newUnread,
+        dismissedByAdmin: false, // Also reset on inquiry if stored there
       }).catch((err) => {
         console.error("Error updating inquiry messageState (client):", err);
       }); 
