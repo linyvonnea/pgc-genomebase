@@ -13,7 +13,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Send, Clock, AlertCircle } from "lucide-react";
+import { MessageCircle, Send, Clock, AlertCircle, Check, CheckCheck } from "lucide-react";
 import { ThreadMessage, MessageSenderRole } from "@/types/QuotationThread";
 import {
   subscribeToThreadMessages,
@@ -253,12 +253,24 @@ export default function ChatBox({
                       }`}
                     >
                       <p className="whitespace-pre-wrap leading-relaxed break-words">
-                        {msg.content}
-                      </p>
+                          {msg.content}
+                        </p>
+                        {isMe && role === "admin" && (
+                          <div className="flex justify-end mt-1.5 -mb-0.5">
+                            {msg.isRead ? (
+                              <div className="flex items-center gap-1 group/seen bg-white/10 rounded-full px-1.5 py-0.5 ml-auto translate-x-1">
+                                <CheckCheck className="w-3 h-3 text-white" strokeWidth={3} />
+                                <span className="text-[8px] font-bold text-white uppercase tracking-tighter">Seen</span>
+                              </div>
+                            ) : (
+                              <Check className="w-3 h-3 text-white/50 ml-auto" strokeWidth={3} />
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
+                );
             })
           )}
         </div>
