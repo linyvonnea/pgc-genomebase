@@ -173,7 +173,7 @@ export function MessageNotificationCenter() {
                         }`}>
                           {n.clientName}
                         </p>
-                        <div className="flex items-center gap-1 shrink-0 -mt-1 -mr-2 relative z-30">
+                        <div className="flex items-center gap-1 shrink-0 -mt-2 -mr-3 relative z-30">
                           {n.unreadCount > 0 && (
                             <span className="flex-shrink-0 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold ring-2 ring-white">
                               {n.unreadCount}
@@ -183,10 +183,10 @@ export function MessageNotificationCenter() {
                             type="button"
                             onClick={(e) => handleDismiss(e, n.inquiryId)}
                             disabled={dismissingId === n.inquiryId}
-                            className="p-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-red-600 transition-all border border-slate-200 shadow-sm"
+                            className="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-red-600 transition-all border border-slate-200 shadow-sm"
                             title="Dismiss notification"
                           >
-                            <X className="h-3 w-3" />
+                            <X className="h-4 w-4" />
                           </button>
                         </div>
                       </div>
@@ -210,12 +210,12 @@ export function MessageNotificationCenter() {
                         )}
 
                         {n.unreadCount === 0 && (
-                          <div className="flex-1 flex justify-end pr-10">
+                          <div className="flex-1 flex justify-end pr-14">
                             <button
                               type="button"
                               onClick={(event) => handleMarkAsUnseen(event, n.inquiryId)}
                               disabled={markingUnseenId === n.inquiryId}
-                              className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-0.5 text-[9px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50 transition-colors shadow-sm"
+                              className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-0.5 text-[9px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50 transition-colors shadow-sm whitespace-nowrap"
                               title="Mark latest seen client message as unseen"
                             >
                               <RotateCcw className="h-2.5 w-2.5" />
