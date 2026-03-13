@@ -9,7 +9,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { MessageCircle, RotateCcw, Users } from "lucide-react";
+import { MessageCircle, RotateCcw, MoreHorizontal, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,6 +17,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useMessageNotifications } from "@/hooks/useMessageNotifications";
@@ -147,11 +153,11 @@ export function MessageNotificationCenter() {
                     <div className="absolute left-0 top-3 bottom-3 w-1 bg-blue-600 rounded-r-full" />
                   )}
 
-                  <div className="flex items-start gap-4">
-                    {/* Client Initials Avatar & Dismiss Button Column */}
-                    <div className="flex flex-col items-center gap-2 mt-0.5">
+                  <div className="flex items-start gap-3">
+                    {/* Client Initials Avatar */}
+                    <div className="flex flex-col items-center mt-0.5">
                       <div 
-                        className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm border ${
+                        className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold shadow-sm border ${
                           n.unreadCount > 0 
                             ? "bg-blue-600 text-white border-blue-500" 
                             : "bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 border-slate-200"
@@ -165,69 +171,78 @@ export function MessageNotificationCenter() {
                             })()
                           : "?"}
                       </div>
-                      
-                      {/* Dismiss button below the logo */}
-                      <button
-                        type="button"
-                        onClick={(e) => handleDismiss(e, n.inquiryId)}
-                        disabled={dismissingId === n.inquiryId}
-                        className="p-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-red-600 transition-all border border-slate-200 shadow-sm relative z-30"
-                        title="Dismiss notification"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
                     </div>
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1">
-                        <p className={`text-sm truncate leading-tight ${
-                          n.unreadCount > 0 ? "font-bold text-slate-900" : "font-semibold text-slate-700"
-                        }`}>
-                          {n.clientName}
-                        </p>
-                        <div className="flex items-center gap-1 shrink-0">
+                      <div className="flex items-start justify-between gap-1">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-baseline gap-x-2">
+                            <p className={`text-sm leading-tight inline ${
+                              n.unreadCount > 0 ? "font-bold text-slate-900" : "font-semibold text-slate-700"
+                            }`}>
+                              {n.clientName}
+                            </p>
+                            {n.lastMessageAt && (
+                              <span className="text-[10px] text-slate-400 whitespace-nowrap">
+                                {formatDistanceToNow(n.lastMessageAt, {
+                                  addSuffix: true,
+                                })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Options Dropdown */}
+                        <div className="flex items-center gap-1 shrink-0 -mt-1">
                           {n.unreadCount > 0 && (
                             <span className="flex-shrink-0 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold ring-2 ring-white">
                               {n.unreadCount}
                             </span>
                           )}
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={(e) => e.stopPropagation()}
+                                className="p-1 rounded-md hover:bg-slate-200 text-slate-400 hover:text-slate-600 transition-all z-20"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-32">
+                              {n.unreadCount === 0 && (
+                                <DropdownMenuItem 
+                                  onClick={(e) => handleMarkAsUnseen(e, n.inquiryId)}
+                                  disabled={markingUnseenId === n.inquiryId}
+                                  className="text-[11px] cursor-pointer"
+                                >
+                                  <RotateCcw className="mr-2 h-3.5 w-3.5" />
+                                  <span>Mark Unseen</span>
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem 
+                                onClick={(e) => handleDismiss(e, n.inquiryId)}
+                                disabled={dismissingId === n.inquiryId}
+                                className="text-[11px] cursor-pointer text-red-600 focus:text-red-700 focus:bg-red-50"
+                              >
+                                <Trash2 className="mr-2 h-3.5 w-3.5" />
+                                <span>Dismiss</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
                       
                       {n.clientAffiliation && (
                         <p 
-                          className="text-[10px] text-slate-500 truncate leading-tight mt-0.5 pr-2"
+                          className="text-[10px] text-slate-500 leading-normal mt-1 line-clamp-2 pr-2"
                           title={n.clientAffiliation}
                         >
                           {n.clientAffiliation}
                         </p>
                       )}
-
-                      <div className="flex items-center justify-between mt-1 gap-2">
-                        {n.lastMessageAt && (
-                          <p className="text-[9px] text-slate-400 shrink-0">
-                            {formatDistanceToNow(n.lastMessageAt, {
-                              addSuffix: true,
-                            })}
-                          </p>
-                        )}
-
-                        {n.unreadCount === 0 && (
-                          <div className="flex-1 flex justify-start pl-2">
-                            <button
-                              type="button"
-                              onClick={(event) => handleMarkAsUnseen(event, n.inquiryId)}
-                              disabled={markingUnseenId === n.inquiryId}
-                              className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-0.5 text-[9px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50 transition-colors shadow-sm whitespace-nowrap"
-                              title="Mark latest seen client message as unseen"
-                            >
-                              <RotateCcw className="h-2.5 w-2.5" />
-                              Mark unseen
-                            </button>
-                          </div>
-                        )}
-                      </div>
                     </div>
 
                     {/* Unread Status Dot */}
@@ -240,6 +255,7 @@ export function MessageNotificationCenter() {
                 </div>
               ))}
             </div>
+
           )}
         </ScrollArea>
       </PopoverContent>
