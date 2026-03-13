@@ -144,7 +144,7 @@ export function MessageNotificationCenter() {
                 >
                   {/* Status Indicator Bar */}
                   {n.unreadCount > 0 && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600" />
+                    <div className="absolute left-0 top-3 bottom-3 w-1 bg-blue-600 rounded-r-full" />
                   )}
 
                   <div className="flex items-start gap-4">
