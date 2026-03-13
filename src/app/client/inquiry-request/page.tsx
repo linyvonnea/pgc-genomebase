@@ -606,19 +606,28 @@ export default function QuotationRequestForm() {
                                 </Label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                   {[
-                                    { id: "dna-extraction", label: "DNA Extraction" },
-                                    { id: "quantification", label: "Quantification" },
-                                    { id: "library-preparation", label: "Library Preparation" },
-                                    { id: "sequencing", label: "Sequencing" },
-                                    { id: "bioinformatics-analysis", label: "Bioinformatics Analysis" },
+                                    { id: "whole-genome-assembly", label: "Whole Genome Assembly" },
+                                    { id: "metabarcoding-downstream", label: "Metabarcoding with Downstream Analysis" },
+                                    { id: "metabarcoding-preprocessing", label: "Metabarcoding with Pre-processing Only" },
+                                    { id: "transcriptomics", label: "Transcriptomics (QC to Annotation)" },
+                                    { id: "phylogenetics", label: "Phylogenetics (1 Marker)" },
+                                    { id: "whole-genome-assembly-annotation", label: "Whole Genome Assembly and Annotation" },
                                   ].map((option) => (
                                     <div key={option.id} className="flex items-center space-x-3 p-2 bg-white rounded-lg border border-slate-100 hover:border-blue-200 transition-all shadow-sm">
                                       <input
-                                        type="checkbox"
+                                        type="radio"
+                                        name="bioinfoOption"
                                         id={`bioinfo-${option.id}`}
                                         checked={(formData.bioinfoOptions || []).includes(option.id as any)}
-                                        onChange={(e) => handleBioinfoOptionChange(option.id, e.target.checked)}
-                                        className="rounded border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                                        onChange={(e) => {
+                                          if (e.target.checked) {
+                                            setValue("bioinfoOptions", [option.id as any], { 
+                                              shouldValidate: true,
+                                              shouldDirty: true 
+                                            });
+                                          }
+                                        }}
+                                        className="rounded-full border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
                                       />
                                       <Label htmlFor={`bioinfo-${option.id}`} className="text-[11px] font-medium text-slate-700 leading-tight cursor-pointer select-none">
                                         {option.label}

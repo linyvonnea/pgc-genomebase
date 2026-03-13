@@ -43,6 +43,13 @@ export const inquirySchema = z.object({
   sampleCount: z.number().min(1).optional(), // Number of samples
   workflowType: z.enum(["complete-bioinfo", "complete", "individual"]).optional(), // Workflow selection for laboratory services
   bioinfoOptions: z.array(z.enum([
+    "whole-genome-assembly",
+    "metabarcoding-downstream",
+    "metabarcoding-preprocessing",
+    "transcriptomics",
+    "phylogenetics",
+    "whole-genome-assembly-annotation",
+    // Legacy support for backward compatibility
     "dna-extraction",
     "quantification",
     "library-preparation",
@@ -51,8 +58,6 @@ export const inquirySchema = z.object({
     "genome-assembly",
     "metabarcoding",
     "pre-processing",
-    "transcriptomics",
-    "phylogenetics",
     "assembly-annotation",
   ])).optional(),
   individualAssayDetails: z.string().max(500).optional(), // Details for individual assay
