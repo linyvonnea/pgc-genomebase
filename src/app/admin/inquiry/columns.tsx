@@ -300,7 +300,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 130, // Keep status readable and prevent clipping
+    size: 140, // Expanded to accommodate label and icons side-by-side
     cell: ({ row }) => {
       const router = useRouter();
       const inquiry = row.original;
@@ -308,22 +308,25 @@ export const columns: ColumnDef<Inquiry>[] = [
       const hasLoggedIn = inquiry.hasLoggedIn;
       const hasOpenedQuotation = inquiry.hasOpenedQuotation;
 
-      // Render status as a colored badge
+      // Render status as a colored badge with fixed width and trailing icons
       return (
-        <div className="flex items-center gap-1 w-full overflow-hidden">
-          <span
-            className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold truncate flex-1 text-center ${getStatusColor(
-              status,
-            )}`}
-          >
-            {status}
-          </span>
-          <div className="flex items-center gap-0.5 shrink-0 ml-auto">
+        <div className="flex items-center gap-2 w-full pr-1">
+          <div className="w-[50%] flex-shrink-0">
+            <span
+              className={`block w-full px-1.5 py-0.5 rounded-full text-[9px] font-bold truncate text-center ${getStatusColor(
+                status,
+              )}`}
+            >
+              {status}
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-1.5 flex-1 justify-start">
             {!!hasLoggedIn && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <User className="h-3.5 w-3.5 text-green-600 fill-green-600 cursor-default" />
+                    <User className="h-3.5 w-3.5 text-green-600 fill-green-600 shrink-0 cursor-default" />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="text-xs font-semibold">
@@ -333,12 +336,13 @@ export const columns: ColumnDef<Inquiry>[] = [
                 </Tooltip>
               </TooltipProvider>
             )}
+            
             {!!hasOpenedQuotation && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Eye
-                      className="h-3.5 w-3.5 text-blue-500 cursor-default"
+                      className="h-3.5 w-3.5 text-blue-500 shrink-0 cursor-default"
                       strokeWidth={3}
                     />
                   </TooltipTrigger>
@@ -350,12 +354,15 @@ export const columns: ColumnDef<Inquiry>[] = [
                 </Tooltip>
               </TooltipProvider>
             )}
-            <UnreadBadge
-              inquiryId={inquiry.id}
-              role="admin"
-              senderId={inquiry.email}
-              senderName={inquiry.name}
-            />
+            
+            <div className="shrink-0 flex items-center">
+              <UnreadBadge
+                inquiryId={inquiry.id}
+                role="admin"
+                senderId={inquiry.email}
+                senderName={inquiry.name}
+              />
+            </div>
           </div>
         </div>
       );
