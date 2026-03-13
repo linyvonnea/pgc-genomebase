@@ -21,7 +21,7 @@ import { revalidatePath } from "next/cache";
 import { InquiryFormData } from "@/schemas/inquirySchema";
 import { AdminInquiryData } from "@/schemas/adminInquirySchema";
 import { logActivity } from "@/services/activityLogService";
-import { initializeQuotationThread } from "@/services/quotationThreadService";
+import { initializeQuotationThread, addThreadMessage } from "@/services/quotationThreadService";
 
 const BIOINFO_OPTION_LABELS: Record<string, string> = {
   "whole-genome-assembly": "Whole Genome Assembly",
@@ -247,6 +247,25 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       description: `New inquiry request submitted by ${inquiryData.name} (${inquiryData.service})`,
       changesAfter: transformedData,
     });
+
+    // Initialize quotation thread for this inquiry and send a welcome message
+    try {
+      await initializeQuotationThread(docRef.id);
+      
+      // Send the automated welcome message from PGC Visayas Admin
+      await addThreadMessage({
+        threadId: docRef.id,
+        content: "Welcome to PGC Visayas! 👋 Your inquiry has been received. You can use this chat to ask questions about your quotation or clarify your research requirements.",
+        senderId: "pgc-admin",
+        senderName: "PGC Visayas Admin",
+        senderRole: "admin",
+        type: "text",
+        isRead: false
+      });
+    } catch (threadError) {
+      console.error(`⚠️ Failed to initialize quotation thread for inquiry ${docRef.id}:`, threadError);
+      // Non-fatal — the thread will be auto-created on first message if this fails
+    }
 
     // Preparation for email notification using Firebase Trigger Email extension
     // Template ID corresponds to service type for different email formats
