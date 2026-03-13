@@ -2902,9 +2902,9 @@ export default function ClientPortalPage() {
                                 <div className="space-y-1.5">
                                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Species</span>
                                   <p className="text-sm font-bold text-slate-900 capitalize italic">
-                                    {currentInquiry.species === 'other' || currentInquiry.species === 'animal'
+                                    {currentInquiry.species 
                                       ? (currentInquiry.otherSpecies ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}` : currentInquiry.species)
-                                      : (currentInquiry.species || "—")}
+                                      : "—"}
                                   </p>
                                 </div>
 
@@ -3009,7 +3009,7 @@ export default function ClientPortalPage() {
                                     <div className="space-y-1">
                                       <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Species / Organism</span>
                                       <p className="text-sm font-semibold text-slate-800 capitalize">
-                                        {(currentInquiry.species === 'other' || currentInquiry.species === 'animal') && currentInquiry.otherSpecies
+                                        {currentInquiry.otherSpecies 
                                           ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}`
                                           : currentInquiry.species}
                                       </p>
