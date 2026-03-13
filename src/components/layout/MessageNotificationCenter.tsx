@@ -256,16 +256,6 @@ export function MessageNotificationCenter() {
               ))}
             </div>
 
-                    {/* Unread Status Dot */}
-                    {n.unreadCount > 0 && (
-                      <div className="flex-shrink-0 self-center">
-                        <div className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
           )}
         </ScrollArea>
       </PopoverContent>
