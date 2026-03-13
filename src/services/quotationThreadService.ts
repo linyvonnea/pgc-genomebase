@@ -485,7 +485,10 @@ export async function addThreadMessage(
 
     const unreadCountUpdate = message.senderRole === "admin"
       ? { "unreadCount.client": (thread.unreadCount.client || 0) + 1 }
-      : { "unreadCount.admin": (thread.unreadCount.admin || 0) + 1 };
+      : { 
+          "unreadCount.admin": (thread.unreadCount.admin || 0) + 1,
+          dismissedByAdmin: false // Reset dismissed flag when client sends a new message
+        };
     
     await updateDoc(threadRef, {
       ...unreadCountUpdate,
