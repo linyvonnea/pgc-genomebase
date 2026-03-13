@@ -9,7 +9,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { MessageCircle, Check, Users, MailQuestion } from "lucide-react";
+import { MessageCircle, Check, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,8 +22,6 @@ import { Separator } from "@/components/ui/separator";
 import { useMessageNotifications } from "@/hooks/useMessageNotifications";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { markMessagesAsUnread } from "@/services/quotationThreadService";
-import { toast } from "sonner";
 
 export function MessageNotificationCenter() {
   const router = useRouter();
@@ -35,17 +33,6 @@ export function MessageNotificationCenter() {
     markViewed(inquiryId);
     setOpen(false);
     router.push(`/admin/inquiry?inquiryId=${inquiryId}&focus=messages`);
-  };
-
-  const handleMarkAsUnread = async (e: React.MouseEvent, inquiryId: string) => {
-    e.stopPropagation();
-    try {
-      await markMessagesAsUnread(inquiryId, "admin");
-      toast.success("Marked as unread");
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to mark as unread");
-    }
   };
 
   const unviewedCount = notifications.filter((n) => !n.viewed).length;
@@ -153,23 +140,12 @@ export function MessageNotificationCenter() {
                       )}
                     </div>
 
-                    {/* Actions / Status Icon */}
-                    <div className="flex-shrink-0 flex items-center gap-2 self-center">
-                      {n.unreadCount === 0 && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => handleMarkAsUnread(e, n.inquiryId)}
-                          title="Mark as unread"
-                        >
-                          <MailQuestion className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {n.unreadCount > 0 && (
+                    {/* Unread Status Icon */}
+                    {n.unreadCount > 0 && (
+                      <div className="flex-shrink-0 self-center">
                         <div className="h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </button>
               ))}
