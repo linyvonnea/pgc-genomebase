@@ -133,6 +133,9 @@ export interface QuotationThread {
     client: number;
   };
   
+  // Visibility
+  dismissedByAdmin?: boolean;
+  
   // Assignment
   assignedTo?: string;         // Admin email/ID
   assignedToName?: string;
