@@ -135,10 +135,10 @@ export function MessageNotificationCenter() {
           ) : (
             <div className="divide-y divide-slate-100">
               {notifications.map((n) => (
-                <button
+                <div
                   key={n.inquiryId}
                   onClick={() => handleNotificationClick(n.inquiryId)}
-                  className={`w-full p-4 text-left hover:bg-slate-50 transition-colors group relative ${
+                  className={`w-full p-4 text-left hover:bg-slate-50 transition-colors group relative cursor-pointer ${
                     n.unreadCount > 0 ? "bg-blue-50/40" : ""
                   }`}
                 >
@@ -159,25 +159,28 @@ export function MessageNotificationCenter() {
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-0.5">
+                      <div className="flex items-center justify-between gap-1 mb-0.5">
                         <p className={`text-sm truncate ${
                           n.unreadCount > 0 ? "font-bold text-slate-900" : "font-medium text-slate-600"
                         }`}>
                           {n.clientName}
                         </p>
-                        {n.unreadCount > 0 && (
-                          <span className="flex-shrink-0 inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold ring-2 ring-white">
-                            {n.unreadCount > 9 ? "9+" : n.unreadCount}
-                          </span>
-                        )}
-                        <button
-                          onClick={(e) => handleDismiss(e, n.inquiryId)}
-                          disabled={dismissingId === n.inquiryId}
-                          className="flex-shrink-0 p-1 hover:bg-slate-200 rounded-md transition-colors text-slate-400 hover:text-red-500 ml-1"
-                          title="Dismiss notification"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {n.unreadCount > 0 && (
+                            <span className="flex-shrink-0 inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold ring-2 ring-white">
+                              {n.unreadCount > 9 ? "9+" : n.unreadCount}
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={(e) => handleDismiss(e, n.inquiryId)}
+                            disabled={dismissingId === n.inquiryId}
+                            className="p-1.5 rounded-full hover:bg-slate-200 text-slate-400 hover:text-red-500 transition-all z-10"
+                            title="Dismiss notification"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
                       {n.clientAffiliation && (
                         <p className="text-xs text-slate-500 truncate">
@@ -215,7 +218,7 @@ export function MessageNotificationCenter() {
                       </div>
                     )}
                   </div>
-                </button>
+                </div>
               ))}
             </div>
           )}
