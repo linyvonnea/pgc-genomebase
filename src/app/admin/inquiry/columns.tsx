@@ -63,7 +63,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
     header: "ID",
-    size: 85, // Compact to preserve room for trailing columns
+    size: 110, // Increased size to display the complete inquiry ID
     cell: ({ row }) => {
       const inquiry = row.original;
 

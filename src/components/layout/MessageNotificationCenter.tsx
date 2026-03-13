@@ -148,21 +148,34 @@ export function MessageNotificationCenter() {
                   )}
 
                   <div className="flex items-start gap-4">
-                    {/* Client Initials Avatar - Smaller */}
-                    <div 
-                      className={`flex-shrink-0 mt-0.5 h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm border ${
-                        n.unreadCount > 0 
-                          ? "bg-blue-600 text-white border-blue-500" 
-                          : "bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 border-slate-200"
-                      }`}
-                    >
-                      {n.clientName
-                        ? (() => {
-                            const words = n.clientName.trim().split(/\s+/);
-                            if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
-                            return (words[0][0] + words[words.length - 1][0]).toUpperCase();
-                          })()
-                        : "?"}
+                    {/* Client Initials Avatar & Dismiss Button Column */}
+                    <div className="flex flex-col items-center gap-2 mt-0.5">
+                      <div 
+                        className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm border ${
+                          n.unreadCount > 0 
+                            ? "bg-blue-600 text-white border-blue-500" 
+                            : "bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 border-slate-200"
+                        }`}
+                      >
+                        {n.clientName
+                          ? (() => {
+                              const words = n.clientName.trim().split(/\s+/);
+                              if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
+                              return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+                            })()
+                          : "?"}
+                      </div>
+                      
+                      {/* Dismiss button below the logo */}
+                      <button
+                        type="button"
+                        onClick={(e) => handleDismiss(e, n.inquiryId)}
+                        disabled={dismissingId === n.inquiryId}
+                        className="p-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-red-600 transition-all border border-slate-200 shadow-sm relative z-30"
+                        title="Dismiss notification"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
                     </div>
 
                     {/* Info */}
@@ -173,21 +186,12 @@ export function MessageNotificationCenter() {
                         }`}>
                           {n.clientName}
                         </p>
-                        <div className="flex items-center gap-1 shrink-0 -mt-2 -mr-3 relative z-30">
+                        <div className="flex items-center gap-1 shrink-0">
                           {n.unreadCount > 0 && (
                             <span className="flex-shrink-0 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold ring-2 ring-white">
                               {n.unreadCount}
                             </span>
                           )}
-                          <button
-                            type="button"
-                            onClick={(e) => handleDismiss(e, n.inquiryId)}
-                            disabled={dismissingId === n.inquiryId}
-                            className="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-red-600 transition-all border border-slate-200 shadow-sm"
-                            title="Dismiss notification"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
                         </div>
                       </div>
                       
