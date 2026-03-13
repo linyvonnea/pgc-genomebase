@@ -473,8 +473,8 @@ export function DataTable<TData, TValue>({
             >
               <MessageCircle className="h-3 w-3" />
               {unreadInquiryIds.size === 1 
-                ? "Received one message from a client" 
-                : `Received ${unreadInquiryIds.size} client messages`}
+                ? "1 client message received" 
+                : `${unreadInquiryIds.size} client messages received`}
             </button>
           )}
         </div>
