@@ -157,7 +157,7 @@ export default function UnreadBadge({
 
   return (
     <div
-      className="relative ml-1 flex h-6 w-6 cursor-pointer items-center justify-center transition-transform hover:scale-110 active:scale-95"
+      className="relative -ml-1 flex h-6 w-6 cursor-pointer items-center justify-center transition-transform hover:scale-110 active:scale-95"
       onClick={handleClick}
       title={tooltipText}
     >
