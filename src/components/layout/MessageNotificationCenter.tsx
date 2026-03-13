@@ -133,24 +133,24 @@ export function MessageNotificationCenter() {
               </p>
             </div>
           ) : (
-            <div className="p-2 space-y-2">
-              {notifications.map((n) => (
+            <div className="flex flex-col">
+              {notifications.map((n, index) => (
                 <div
                   key={n.inquiryId}
                   onClick={() => handleNotificationClick(n.inquiryId)}
-                  className={`w-full p-4 text-left hover:bg-slate-50 transition-all group relative cursor-pointer rounded-xl border border-transparent hover:border-slate-100 hover:shadow-sm ${
-                    n.unreadCount > 0 ? "bg-blue-50/40" : "bg-white"
+                  className={`w-full px-4 py-3 text-left hover:bg-slate-50 transition-all group relative cursor-pointer border-b border-slate-100 last:border-0 ${
+                    n.unreadCount > 0 ? "bg-blue-50/30" : "bg-white"
                   }`}
                 >
                   {/* Status Indicator Bar */}
                   {n.unreadCount > 0 && (
-                    <div className="absolute left-0 top-3 bottom-3 w-1 bg-blue-600 rounded-r-full" />
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600" />
                   )}
 
                   <div className="flex items-start gap-4">
-                    {/* Client Initials Avatar */}
+                    {/* Client Initials Avatar - Smaller */}
                     <div 
-                      className={`flex-shrink-0 mt-0.5 h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm border ${
+                      className={`flex-shrink-0 mt-0.5 h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm border ${
                         n.unreadCount > 0 
                           ? "bg-blue-600 text-white border-blue-500" 
                           : "bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 border-slate-200"
@@ -165,63 +165,65 @@ export function MessageNotificationCenter() {
                     </div>
 
                     {/* Info */}
-                    <div className="flex-1 min-w-0 py-0.5">
-                      <div className="flex items-center justify-between gap-1 mb-1">
-                        <p className={`text-sm truncate leading-none ${
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <p className={`text-sm truncate leading-tight ${
                           n.unreadCount > 0 ? "font-bold text-slate-900" : "font-semibold text-slate-700"
                         }`}>
                           {n.clientName}
                         </p>
-                        <div className="flex items-center gap-1.5 shrink-0">
+                        <div className="flex items-center gap-1 shrink-0 -mt-1 -mr-1">
                           {n.unreadCount > 0 && (
-                            <span className="flex-shrink-0 inline-flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-red-500 text-white text-[10px] font-bold ring-2 ring-white">
-                              {n.unreadCount > 9 ? "9+" : n.unreadCount}
+                            <span className="flex-shrink-0 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[9px] font-bold ring-2 ring-white">
+                              {n.unreadCount}
                             </span>
                           )}
                           <button
                             type="button"
                             onClick={(e) => handleDismiss(e, n.inquiryId)}
                             disabled={dismissingId === n.inquiryId}
-                            className="p-1.5 rounded-full hover:bg-slate-200 text-slate-400 hover:text-red-500 transition-all z-10"
+                            className="p-1.5 rounded-full hover:bg-slate-200 text-slate-400 hover:text-red-500 transition-all relative z-20 bg-white shadow-sm border border-slate-100"
                             title="Dismiss notification"
                           >
-                            <X className="h-3.5 w-3.5" />
+                            <X className="h-3 w-3" />
                           </button>
                         </div>
                       </div>
+                      
                       {n.clientAffiliation && (
-                        <p className="text-xs text-slate-500 truncate">
+                        <p className="text-[10px] text-slate-500 truncate leading-tight mt-0.5">
                           {n.clientAffiliation}
                         </p>
                       )}
-                      {n.lastMessageAt && (
-                        <p className="text-[10px] text-slate-400 mt-1">
-                          {formatDistanceToNow(n.lastMessageAt, {
-                            addSuffix: true,
-                          })}
-                        </p>
-                      )}
 
-                      {n.unreadCount === 0 && (
-                        <div className="mt-2">
+                      <div className="flex items-center justify-between mt-1">
+                        {n.lastMessageAt && (
+                          <p className="text-[9px] text-slate-400">
+                            {formatDistanceToNow(n.lastMessageAt, {
+                              addSuffix: true,
+                            })}
+                          </p>
+                        )}
+
+                        {n.unreadCount === 0 && (
                           <button
                             type="button"
                             onClick={(event) => handleMarkAsUnseen(event, n.inquiryId)}
                             disabled={markingUnseenId === n.inquiryId}
-                            className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[9px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50 transition-colors"
                             title="Mark latest seen client message as unseen"
                           >
-                            <RotateCcw className="h-3 w-3" />
+                            <RotateCcw className="h-2.5 w-2.5" />
                             Mark unseen
                           </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
 
-                    {/* Unread Status Icon */}
+                    {/* Unread Status Dot */}
                     {n.unreadCount > 0 && (
                       <div className="flex-shrink-0 self-center">
-                        <div className="h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
+                        <div className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse" />
                       </div>
                     )}
                   </div>
