@@ -978,16 +978,16 @@ export default function QuotationRequestForm() {
                   <div>
                     <span className="font-semibold">Bioinformatics Analysis:</span> {pendingData.bioinfoOptions.map(opt => {
                       const labels: Record<string, string> = {
-                        "dna-extraction": "DNA Extraction",
-                        "quantification": "Quantification",
-                        "library-preparation": "Library Preparation",
-                        "sequencing": "Sequencing",
-                        "bioinformatics-analysis": "Bioinformatics Analysis",
+                        "whole-genome-assembly": "Whole Genome Assembly",
+                        "metabarcoding-downstream": "Metabarcoding with Downstream Analysis",
+                        "metabarcoding-preprocessing": "Metabarcoding with Pre-processing Only",
+                        "transcriptomics": "Transcriptomics (QC to Annotation)",
+                        "phylogenetics": "Phylogenetics (1 Marker)",
+                        "whole-genome-assembly-annotation": "Whole Genome Assembly and Annotation",
+                        // Legacy values
                         "genome-assembly": "Whole Genome Assembly",
                         "metabarcoding": "Metabarcoding with Downstream Analysis",
-                        "pre-processing": "Metabarcoding with Pre-processing only",
-                        "transcriptomics": "Transcriptomics (QC to Annotation)",
-                        "phylogenetics": "Phylogenetics (1 marker)",
+                        "pre-processing": "Metabarcoding with Pre-processing Only",
                         "assembly-annotation": "Whole Genome Assembly and Annotation"
                       };
                       return labels[opt] || opt;
