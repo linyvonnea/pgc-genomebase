@@ -710,6 +710,37 @@ export async function markLatestClientMessageAsUnseen(
 }
 
 /**
+ * Manually dismiss a thread from the admin's notification list.
+ * This sets the admin unread count to 0 and marks the thread as dismissed.
+ */
+export async function dismissThreadNotification(
+  inquiryId: string,
+): Promise<void> {
+  try {
+    const threadRef = doc(db, THREADS_COLLECTION, inquiryId);
+    
+    // Clear the unread count and add a dismissed flag
+    await updateDoc(threadRef, {
+      "unreadCount.admin": 0,
+      dismissedByAdmin: true,
+      updatedAt: serverTimestamp(),
+    });
+
+    // Also update denormalized inquiry state
+    const inquiryRef = doc(db, "inquiries", inquiryId);
+    await updateDoc(inquiryRef, {
+      unreadMessageCount: 0,
+      messageState: "all_read"
+    }).catch(err => {
+      console.error("Error updating inquiry state on dismiss:", err);
+    });
+  } catch (error) {
+    console.error("Error dismissing thread notification:", error);
+    throw error;
+  }
+}
+
+/**
  * Client approves quotation
  */
 export async function approveQuotation(

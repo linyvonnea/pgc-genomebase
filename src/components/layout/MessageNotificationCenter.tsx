@@ -23,12 +23,17 @@ import { useMessageNotifications } from "@/hooks/useMessageNotifications";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
-import { markLatestClientMessageAsUnseen } from "@/services/quotationThreadService";
+import { 
+  markLatestClientMessageAsUnseen,
+  dismissThreadNotification
+} from "@/services/quotationThreadService";
+import { X } from "lucide-react";
 
 export function MessageNotificationCenter() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [markingUnseenId, setMarkingUnseenId] = useState<string | null>(null);
+  const [dismissingId, setDismissingId] = useState<string | null>(null);
   const { notifications, totalUnread, markViewed, markAllViewed } =
     useMessageNotifications();
 
@@ -36,6 +41,21 @@ export function MessageNotificationCenter() {
     markViewed(inquiryId);
     setOpen(false);
     router.push(`/admin/inquiry?inquiryId=${inquiryId}&focus=messages`);
+  };
+
+  const handleDismiss = async (event: React.MouseEvent, inquiryId: string) => {
+    event.stopPropagation();
+    if (dismissingId) return;
+
+    try {
+      setDismissingId(inquiryId);
+      await dismissThreadNotification(inquiryId);
+      toast.success("Notification dismissed");
+    } catch (error) {
+      toast.error("Failed to dismiss notification");
+    } finally {
+      setDismissingId(null);
+    }
   };
 
   const handleMarkAsUnseen = async (
@@ -150,6 +170,14 @@ export function MessageNotificationCenter() {
                             {n.unreadCount > 9 ? "9+" : n.unreadCount}
                           </span>
                         )}
+                        <button
+                          onClick={(e) => handleDismiss(e, n.inquiryId)}
+                          disabled={dismissingId === n.inquiryId}
+                          className="flex-shrink-0 p-1 hover:bg-slate-200 rounded-md transition-colors text-slate-400 hover:text-red-500 ml-1"
+                          title="Dismiss notification"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
                       </div>
                       {n.clientAffiliation && (
                         <p className="text-xs text-slate-500 truncate">
