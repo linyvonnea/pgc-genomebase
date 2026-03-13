@@ -214,7 +214,7 @@ export function MessageNotificationCenter() {
                         )}
 
                         {n.unreadCount === 0 && (
-                          <div className="flex-1 flex justify-end pr-14">
+                          <div className="flex-1 flex justify-start pl-2">
                             <button
                               type="button"
                               onClick={(event) => handleMarkAsUnseen(event, n.inquiryId)}
