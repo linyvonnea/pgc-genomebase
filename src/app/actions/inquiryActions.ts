@@ -301,7 +301,17 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
               ${inquiryData.bioinfoOptions && inquiryData.bioinfoOptions.length > 0 ? `
               <tr>
                 <td style="padding: 4px 0; color: #64748b;">Bioinformatics Analysis:</td>
-                <td style="padding: 4px 0;">${inquiryData.bioinfoOptions.join(', ')}</td>
+                <td style="padding: 4px 0;">${inquiryData.bioinfoOptions.map(opt => {
+                  switch(opt) {
+                    case "whole-genome-assembly": return "Whole Genome Assembly";
+                    case "metabarcoding-downstream": return "Metabarcoding with Downstream Analysis";
+                    case "metabarcoding-preprocessing": return "Metabarcoding with Pre-processing Only";
+                    case "transcriptomics": return "Transcriptomics (QC to Annotation)";
+                    case "phylogenetics": return "Phylogenetics (1 Marker)";
+                    case "whole-genome-assembly-annotation": return "Whole Genome Assembly and Annotation";
+                    default: return opt.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                  }
+                }).join(', ')}</td>
               </tr>` : ''}
             </table>
             
