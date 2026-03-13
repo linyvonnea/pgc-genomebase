@@ -157,11 +157,12 @@ export function MessageNotificationCenter() {
                       }`}
                     >
                       {n.clientName
-                        ?.split(" ")
-                        .map((word) => word[0])
-                        .join("")
-                        .toUpperCase()
-                        .slice(0, 2) || "?"}
+                        ? (() => {
+                            const words = n.clientName.trim().split(/\s+/);
+                            if (words.length === 1) return words[0].substring(0, 2).toUpperCase();
+                            return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+                          })()
+                        : "?"}
                     </div>
 
                     {/* Info */}
@@ -196,9 +197,9 @@ export function MessageNotificationCenter() {
                         </p>
                       )}
 
-                      <div className="flex items-center justify-between mt-1">
+                      <div className="flex items-center justify-between mt-1 gap-2">
                         {n.lastMessageAt && (
-                          <p className="text-[9px] text-slate-400">
+                          <p className="text-[9px] text-slate-400 shrink-0">
                             {formatDistanceToNow(n.lastMessageAt, {
                               addSuffix: true,
                             })}
@@ -206,16 +207,18 @@ export function MessageNotificationCenter() {
                         )}
 
                         {n.unreadCount === 0 && (
-                          <button
-                            type="button"
-                            onClick={(event) => handleMarkAsUnseen(event, n.inquiryId)}
-                            disabled={markingUnseenId === n.inquiryId}
-                            className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[9px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50 transition-colors"
-                            title="Mark latest seen client message as unseen"
-                          >
-                            <RotateCcw className="h-2.5 w-2.5" />
-                            Mark unseen
-                          </button>
+                          <div className="flex-1 flex justify-end pr-8">
+                            <button
+                              type="button"
+                              onClick={(event) => handleMarkAsUnseen(event, n.inquiryId)}
+                              disabled={markingUnseenId === n.inquiryId}
+                              className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[9px] font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50 transition-colors"
+                              title="Mark latest seen client message as unseen"
+                            >
+                              <RotateCcw className="h-2.5 w-2.5" />
+                              Mark unseen
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
