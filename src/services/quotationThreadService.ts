@@ -652,69 +652,6 @@ export async function markMessagesAsRead(
 }
 
 /**
- * Mark messages as unread
- * 
- * Sets isRead to false for messages from the OTHER party and updates the thread count.
- * This is used to "re-highlight" a thread if an admin wants to revisit it later.
- */
-export async function markMessagesAsUnread(
-  threadId: string,
-  userRole: MessageSenderRole
-): Promise<void> {
-  try {
-    const threadRef = doc(db, THREADS_COLLECTION, threadId);
-    
-    // 1. Get messages to revert
-    const messages = await getThreadMessages(threadId);
-    
-    // 2. Identify messages from the OTHER party to mark as unread
-    // Sort by sentAt desc to get most recent
-    const sortedMessages = [...messages].sort((a, b) => {
-      const timeA = a.sentAt?.seconds || 0;
-      const timeB = b.sentAt?.seconds || 0;
-      return timeB - timeA;
-    });
-
-    const targetMessages = sortedMessages.filter(msg => msg.senderRole !== userRole);
-    
-    if (targetMessages.length === 0) return;
-
-    // We only mark the most recent message as unread to trigger the badge
-    const messageToUpdate = targetMessages[0];
-    
-    const batch = writeBatch(db);
-    
-    if (messageToUpdate.id) {
-      const msgRef = doc(db, MESSAGES_COLLECTION, messageToUpdate.id);
-      batch.update(msgRef, {
-        isRead: false,
-        readAt: null,
-        readBy: null
-      });
-    }
-
-    // 3. Update the thread unread count to 1
-    const unreadCountUpdate = userRole === "admin"
-      ? { "unreadCount.admin": 1 }
-      : { "unreadCount.client": 1 };
-
-    batch.update(threadRef, unreadCountUpdate);
-
-    // 4. Update the inquiry document to show "new_message" state
-    const inquiryRef = doc(db, "inquiries", threadId);
-    batch.update(inquiryRef, {
-      messageState: "new_message",
-      unreadMessageCount: 1
-    });
-
-    await batch.commit();
-  } catch (error) {
-    console.error("Error marking messages as unread:", error);
-    throw error;
-  }
-}
-
-/**
  * Client approves quotation
  */
 export async function approveQuotation(
