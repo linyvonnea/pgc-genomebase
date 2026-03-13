@@ -71,6 +71,7 @@ export async function getInquiries(): Promise<Inquiry[]> {
         methodologyFileUrl: data.methodologyFileUrl || null,
         sampleCount: data.sampleCount || null,
         workflowType: data.workflowType || null,
+        bioinfoOptions: data.bioinfoOptions || null,
         individualAssayDetails: data.individualAssayDetails || null,
         
         // Legacy/Service-specific fields
@@ -146,6 +147,7 @@ export async function getInquiryById(id: string): Promise<Inquiry> {
       methodologyFileUrl: data.methodologyFileUrl || null,
       sampleCount: data.sampleCount || null,
       workflowType: data.workflowType || null,
+      bioinfoOptions: data.bioinfoOptions || null,
       individualAssayDetails: data.individualAssayDetails || null,
       
       // Legacy/Service-specific fields
@@ -209,6 +211,7 @@ export function subscribeToInquiryById(
         methodologyFileUrl: data.methodologyFileUrl || null,
         sampleCount: data.sampleCount || null,
         workflowType: data.workflowType || null,
+        bioinfoOptions: data.bioinfoOptions || null,
         individualAssayDetails: data.individualAssayDetails || null,
         workflows: data.workflows || [],
         additionalInfo: data.additionalInfo || null,
