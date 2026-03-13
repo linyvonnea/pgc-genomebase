@@ -133,35 +133,42 @@ export function MessageNotificationCenter() {
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100">
+            <div className="p-2 space-y-2">
               {notifications.map((n) => (
                 <div
                   key={n.inquiryId}
                   onClick={() => handleNotificationClick(n.inquiryId)}
-                  className={`w-full p-4 text-left hover:bg-slate-50 transition-colors group relative cursor-pointer ${
-                    n.unreadCount > 0 ? "bg-blue-50/40" : ""
+                  className={`w-full p-4 text-left hover:bg-slate-50 transition-all group relative cursor-pointer rounded-xl border border-transparent hover:border-slate-100 hover:shadow-sm ${
+                    n.unreadCount > 0 ? "bg-blue-50/40" : "bg-white"
                   }`}
                 >
                   {/* Status Indicator Bar */}
                   {n.unreadCount > 0 && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600" />
+                    <div className="absolute left-0 top-3 bottom-3 w-1 bg-blue-600 rounded-r-full" />
                   )}
 
-                  <div className="flex items-start gap-3">
-                    {/* Avatar */}
-                    <div className={`flex-shrink-0 mt-0.5 h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
-                      n.unreadCount > 0 
-                        ? "bg-blue-600 text-white" 
-                        : "bg-slate-100 text-slate-500"
-                    }`}>
-                      <Users className="h-4 w-4" />
+                  <div className="flex items-start gap-4">
+                    {/* Client Initials Avatar */}
+                    <div 
+                      className={`flex-shrink-0 mt-0.5 h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm border ${
+                        n.unreadCount > 0 
+                          ? "bg-blue-600 text-white border-blue-500" 
+                          : "bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 border-slate-200"
+                      }`}
+                    >
+                      {n.clientName
+                        ?.split(" ")
+                        .map((word) => word[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2) || "?"}
                     </div>
 
                     {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1 mb-0.5">
-                        <p className={`text-sm truncate ${
-                          n.unreadCount > 0 ? "font-bold text-slate-900" : "font-medium text-slate-600"
+                    <div className="flex-1 min-w-0 py-0.5">
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <p className={`text-sm truncate leading-none ${
+                          n.unreadCount > 0 ? "font-bold text-slate-900" : "font-semibold text-slate-700"
                         }`}>
                           {n.clientName}
                         </p>
