@@ -322,40 +322,46 @@ export const columns: ColumnDef<Inquiry>[] = [
           </div>
           
           <div className="flex items-center gap-1.5 flex-1 justify-start">
-            {!!hasLoggedIn && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <User className="h-3.5 w-3.5 text-green-600 fill-green-600 shrink-0 cursor-default" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs font-semibold">
-                      Client logged in
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+            <div className="flex items-center gap-1.5 min-w-[42px] justify-start shrink-0">
+              {!!hasLoggedIn ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <User className="h-3.5 w-3.5 text-green-600 fill-green-600 shrink-0 cursor-default" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs font-semibold">
+                        Client logged in
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <div className="w-3.5 h-3.5 shrink-0" />
+              )}
+              
+              {!!hasOpenedQuotation ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Eye
+                        className="h-3.5 w-3.5 text-blue-500 shrink-0 cursor-default"
+                        strokeWidth={3}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs font-semibold">
+                        Quotation viewed
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <div className="w-3.5 h-3.5 shrink-0" />
+              )}
+            </div>
             
-            {!!hasOpenedQuotation && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Eye
-                      className="h-3.5 w-3.5 text-blue-500 shrink-0 cursor-default"
-                      strokeWidth={3}
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs font-semibold">
-                      Quotation viewed
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            
-            <div className="shrink-0 flex items-center">
+            <div className="shrink-0 flex items-center ml-auto">
               <UnreadBadge
                 inquiryId={inquiry.id}
                 role="admin"
