@@ -311,7 +311,7 @@ export const columns: ColumnDef<Inquiry>[] = [
       // Render status as a colored badge with fixed width and trailing icons
       return (
         <div className="flex items-center gap-2 w-full pr-1">
-          <div className="w-[50%] flex-shrink-0">
+          <div className="w-[75%] flex-shrink-0">
             <span
               className={`block w-full px-1.5 py-0.5 rounded-full text-[9px] font-bold truncate text-center ${getStatusColor(
                 status,
