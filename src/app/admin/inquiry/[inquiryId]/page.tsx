@@ -284,7 +284,7 @@ function InquiryDetailContent() {
                   </span>
                 </div>
 
-                {inquiry.workflowType === 'complete-bioinfo' && (
+                {inquiry.serviceType === 'laboratory' && (
                   <div className="flex flex-col">
                     <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Bioinformatics Analysis</span>
                     {inquiry.bioinfoOptions && inquiry.bioinfoOptions.length > 0 ? (
