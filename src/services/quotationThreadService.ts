@@ -668,10 +668,10 @@ export async function markMessagesAsUnread(
     const messages = await getThreadMessages(threadId);
     
     // 2. Identify messages from the OTHER party to mark as unread
-    // Sort by sentAt desc to get most recent
+    // Sort by createdAt desc to get most recent
     const sortedMessages = [...messages].sort((a, b) => {
-      const timeA = a.sentAt?.seconds || 0;
-      const timeB = b.sentAt?.seconds || 0;
+      const timeA = a.createdAt?.seconds || 0;
+      const timeB = b.createdAt?.seconds || 0;
       return timeB - timeA;
     });
 
