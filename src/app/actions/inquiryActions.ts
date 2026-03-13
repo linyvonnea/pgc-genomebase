@@ -247,16 +247,8 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       description: `New inquiry request submitted by ${inquiryData.name} (${inquiryData.service})`,
       changesAfter: transformedData,
     });
-    
-    // Initialize quotation thread for this inquiry so the messaging system is ready
-    try {
-      await initializeQuotationThread(docRef.id);
-    } catch (threadError) {
-      console.error(`⚠️ Failed to initialize quotation thread for inquiry ${docRef.id}:`, threadError);
-      // Non-fatal — the thread will be auto-created on first message if this fails
-    }
-    
-    // Prepare email notification using Firebase Trigger Email extension
+
+    // Preparation for email notification using Firebase Trigger Email extension
     // Template ID corresponds to service type for different email formats
     //NOTE: templates for email can be changed in the 'templates' collection in firebase
     const templateId = `inquiry-${inquiryData.service}`;
