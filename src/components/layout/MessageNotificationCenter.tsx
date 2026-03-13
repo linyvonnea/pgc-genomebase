@@ -9,7 +9,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { MessageCircle, Check, Users, MailQuestion } from "lucide-react";
+import { MessageCircle, RotateCcw, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,12 +22,13 @@ import { Separator } from "@/components/ui/separator";
 import { useMessageNotifications } from "@/hooks/useMessageNotifications";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { markMessagesAsUnread } from "@/services/quotationThreadService";
 import { toast } from "sonner";
+import { markLatestClientMessageAsUnseen } from "@/services/quotationThreadService";
 
 export function MessageNotificationCenter() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [markingUnseenId, setMarkingUnseenId] = useState<string | null>(null);
   const { notifications, totalUnread, markViewed, markAllViewed } =
     useMessageNotifications();
 
@@ -37,14 +38,25 @@ export function MessageNotificationCenter() {
     router.push(`/admin/inquiry?inquiryId=${inquiryId}&focus=messages`);
   };
 
-  const handleMarkAsUnread = async (e: React.MouseEvent, inquiryId: string) => {
-    e.stopPropagation();
+  const handleMarkAsUnseen = async (
+    event: React.MouseEvent,
+    inquiryId: string,
+  ) => {
+    event.stopPropagation();
+    if (markingUnseenId === inquiryId) return;
+
     try {
-      await markMessagesAsUnread(inquiryId, "admin");
-      toast.success("Marked as unread");
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to mark as unread");
+      setMarkingUnseenId(inquiryId);
+      const nextUnread = await markLatestClientMessageAsUnseen(inquiryId);
+      if (nextUnread > 0) {
+        toast.success("Marked client message as unseen");
+      } else {
+        toast.info("No seen client message available to mark as unseen");
+      }
+    } catch (error) {
+      toast.error("Failed to mark message as unseen");
+    } finally {
+      setMarkingUnseenId(null);
     }
   };
 
@@ -151,25 +163,29 @@ export function MessageNotificationCenter() {
                           })}
                         </p>
                       )}
+
+                      {n.unreadCount === 0 && (
+                        <div className="mt-2">
+                          <button
+                            type="button"
+                            onClick={(event) => handleMarkAsUnseen(event, n.inquiryId)}
+                            disabled={markingUnseenId === n.inquiryId}
+                            className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Mark latest seen client message as unseen"
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                            Mark unseen
+                          </button>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Actions / Status Icon */}
-                    <div className="flex-shrink-0 flex items-center gap-2 self-center">
-                      {n.unreadCount === 0 && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => handleMarkAsUnread(e, n.inquiryId)}
-                          title="Mark as unread"
-                        >
-                          <MailQuestion className="h-4 w-4" />
-                        </Button>
-                      )}
-                      {n.unreadCount > 0 && (
+                    {/* Unread Status Icon */}
+                    {n.unreadCount > 0 && (
+                      <div className="flex-shrink-0 self-center">
                         <div className="h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </button>
               ))}
