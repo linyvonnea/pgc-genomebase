@@ -39,6 +39,18 @@ const formatWorkflowType = (type: string | null | undefined): string => {
 
 const formatBioinfoOption = (option: string): string => {
   switch (option) {
+    case "whole-genome-assembly":
+      return "Whole Genome Assembly";
+    case "metabarcoding-downstream":
+      return "Metabarcoding with Downstream Analysis";
+    case "metabarcoding-preprocessing":
+      return "Metabarcoding with Pre-processing Only";
+    case "transcriptomics":
+      return "Transcriptomics (QC to Annotation)";
+    case "phylogenetics":
+      return "Phylogenetics (1 Marker)";
+    case "whole-genome-assembly-annotation":
+      return "Whole Genome Assembly and Annotation";
     case "dna-extraction":
       return "DNA Extraction";
     case "quantification":
