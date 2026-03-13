@@ -313,7 +313,6 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     // Configure recipients for internal notification
     const emailRecipients = Array.from(
       new Set([
-        "sequencing.pgc.upvisayas@up.edu.ph",
         "madayon1@up.edu.ph",
       ])
     );
