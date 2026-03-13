@@ -9,7 +9,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { MessageCircle, Check, Users } from "lucide-react";
+import { MessageCircle, RotateCcw, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,10 +22,13 @@ import { Separator } from "@/components/ui/separator";
 import { useMessageNotifications } from "@/hooks/useMessageNotifications";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
+import { markLatestClientMessageAsUnseen } from "@/services/quotationThreadService";
 
 export function MessageNotificationCenter() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [markingUnseenId, setMarkingUnseenId] = useState<string | null>(null);
   const { notifications, totalUnread, markViewed, markAllViewed } =
     useMessageNotifications();
 
@@ -33,6 +36,28 @@ export function MessageNotificationCenter() {
     markViewed(inquiryId);
     setOpen(false);
     router.push(`/admin/inquiry?inquiryId=${inquiryId}&focus=messages`);
+  };
+
+  const handleMarkAsUnseen = async (
+    event: React.MouseEvent,
+    inquiryId: string,
+  ) => {
+    event.stopPropagation();
+    if (markingUnseenId === inquiryId) return;
+
+    try {
+      setMarkingUnseenId(inquiryId);
+      const nextUnread = await markLatestClientMessageAsUnseen(inquiryId);
+      if (nextUnread > 0) {
+        toast.success("Marked client message as unseen");
+      } else {
+        toast.info("No seen client message available to mark as unseen");
+      }
+    } catch (error) {
+      toast.error("Failed to mark message as unseen");
+    } finally {
+      setMarkingUnseenId(null);
+    }
   };
 
   const unviewedCount = notifications.filter((n) => !n.viewed).length;
@@ -137,6 +162,21 @@ export function MessageNotificationCenter() {
                             addSuffix: true,
                           })}
                         </p>
+                      )}
+
+                      {n.unreadCount === 0 && (
+                        <div className="mt-2">
+                          <button
+                            type="button"
+                            onClick={(event) => handleMarkAsUnseen(event, n.inquiryId)}
+                            disabled={markingUnseenId === n.inquiryId}
+                            className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Mark latest seen client message as unseen"
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                            Mark unseen
+                          </button>
+                        </div>
                       )}
                     </div>
 

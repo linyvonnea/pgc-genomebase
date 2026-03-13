@@ -20,6 +20,7 @@ import {
   onSnapshot,
   addDoc,
   writeBatch,
+  deleteField,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
@@ -647,6 +648,63 @@ export async function markMessagesAsRead(
     }); 
   } catch (error) {
     console.error("Error marking messages as read:", error);
+    throw error;
+  }
+}
+
+/**
+ * Mark the latest seen client message as unseen for admins.
+ * This is useful when an admin wants to re-flag a thread for follow-up.
+ */
+export async function markLatestClientMessageAsUnseen(
+  threadId: string,
+): Promise<number> {
+  try {
+    const thread = await getQuotationThread(threadId);
+    if (!thread) return 0;
+
+    const messages = await getThreadMessages(threadId);
+    const latestSeenClientMessage = messages
+      .filter((m) => m.senderRole === "client" && m.isRead)
+      .sort((a, b) => {
+        const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return timeB - timeA;
+      })[0];
+
+    if (!latestSeenClientMessage?.id) {
+      return 0;
+    }
+
+    const messageRef = doc(db, MESSAGES_COLLECTION, latestSeenClientMessage.id);
+    await updateDoc(messageRef, {
+      isRead: false,
+      readAt: deleteField(),
+      readBy: deleteField(),
+    });
+
+    const currentlyUnreadClientMessages = messages.filter(
+      (m) => m.senderRole === "client" && !m.isRead,
+    ).length;
+    const nextUnreadCount = currentlyUnreadClientMessages + 1;
+
+    const threadRef = doc(db, THREADS_COLLECTION, threadId);
+    await updateDoc(threadRef, {
+      "unreadCount.admin": nextUnreadCount,
+      updatedAt: serverTimestamp(),
+    });
+
+    const inquiryRef = doc(db, "inquiries", threadId);
+    await updateDoc(inquiryRef, {
+      messageState: "has_unread",
+      unreadMessageCount: nextUnreadCount,
+    }).catch((err) => {
+      console.error("Error updating inquiry messageState (markUnseen):", err);
+    });
+
+    return nextUnreadCount;
+  } catch (error) {
+    console.error("Error marking latest client message as unseen:", error);
     throw error;
   }
 }
