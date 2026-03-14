@@ -300,7 +300,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 140, // Expanded to accommodate label and icons side-by-side
+    size: 160, // Expanded slightly to provide more breathing room for labels and icons
     cell: ({ row }) => {
       const router = useRouter();
       const inquiry = row.original;
@@ -311,7 +311,7 @@ export const columns: ColumnDef<Inquiry>[] = [
       // Render status as a colored badge with fixed width and trailing icons
       return (
         <div className="flex items-center gap-2 w-full pr-1">
-          <div className="w-[70%] flex-shrink-0">
+          <div className="w-[72%] flex-shrink-0">
             <span
               className={`block w-full px-1.5 py-0.5 rounded-full text-[9px] font-bold truncate text-center ${getStatusColor(
                 status,
@@ -377,7 +377,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     id: "actions",
     header: () => <div className="text-center w-full">Actions</div>,
-    size: 110, // Reserve enough space for action controls
+    size: 90, // Reduced slightly to save space for other columns
     cell: ({ row }) => {
       const inquiry = row.original;
       const router = useRouter();
