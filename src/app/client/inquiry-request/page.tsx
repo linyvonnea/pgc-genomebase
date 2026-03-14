@@ -885,9 +885,6 @@ export default function QuotationRequestForm() {
 
                   {(formData.trainingPrograms || []).includes("others-customized") && (
                     <div>
-                      <Label htmlFor="specificTrainingNeed" className="text-sm font-semibold text-slate-700 mb-2 block">
-                        Others / Customized Training Program
-                      </Label>
                       <Textarea
                         id="specificTrainingNeed"
                         placeholder="Kindly provide specific training needs"
