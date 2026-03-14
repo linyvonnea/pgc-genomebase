@@ -129,6 +129,9 @@ export default function FAQPage() {
   const primerListText = "See the list of available primers for target species";
   const primerListHref = "/assets/pgc-visayas-primer-list.pdf";
 
+  const turnaroundImgTrigger = "Sample quality: Samples needing extra preparation or troubleshooting can extend the timeline.";
+  const turnaroundImgSrc = "/assets/sample-processing-turnaround.png";
+
   return (
     <div className="bg-slate-50 min-h-screen pb-20">
       {/* Header Section */}
@@ -171,7 +174,23 @@ export default function FAQPage() {
                         <div className="whitespace-pre-wrap">
                           {item.a.split(primerListText).map((part, partIdx, arr) => (
                             <React.Fragment key={partIdx}>
-                              {part}
+                              {part.split(turnaroundImgTrigger).map((subPart, subIdx, subArr) => (
+                                <React.Fragment key={subIdx}>
+                                  {subPart}
+                                  {subIdx < subArr.length - 1 && (
+                                    <>
+                                      {turnaroundImgTrigger}
+                                      <div className="mt-4 mb-2 overflow-hidden rounded-lg border border-slate-200">
+                                        <img 
+                                          src={turnaroundImgSrc} 
+                                          alt="Sample Processing Turn Around Time"
+                                          className="w-full h-auto"
+                                        />
+                                      </div>
+                                    </>
+                                  )}
+                                </React.Fragment>
+                              ))}
                               {partIdx < arr.length - 1 && (
                                 <a
                                   href={primerListHref}
