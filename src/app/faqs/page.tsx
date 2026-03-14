@@ -126,6 +126,9 @@ const faqData = [
 ];
 
 export default function FAQPage() {
+  const primerListText = "See the list of available primers for target species";
+  const primerListHref = "/assets/pgc-visayas-primer-list.pdf";
+
   return (
     <div className="bg-slate-50 min-h-screen pb-20">
       {/* Header Section */}
@@ -165,7 +168,23 @@ export default function FAQPage() {
                         {item.q}
                       </AccordionTrigger>
                       <AccordionContent className="text-slate-600 leading-relaxed text-sm pb-6">
-                        <div className="whitespace-pre-wrap">{item.a}</div>
+                        <div className="whitespace-pre-wrap">
+                          {item.a.split(primerListText).map((part, partIdx, arr) => (
+                            <React.Fragment key={partIdx}>
+                              {part}
+                              {partIdx < arr.length - 1 && (
+                                <a
+                                  href={primerListHref}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-700 underline hover:text-blue-900"
+                                >
+                                  {primerListText}
+                                </a>
+                              )}
+                            </React.Fragment>
+                          ))}
+                        </div>
                       </AccordionContent>
                     </AccordionItem>
                   ))}
