@@ -390,21 +390,31 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
                 <td style="padding: 4px 0; width: 140px; color: #64748b;">Service Type:</td>
                 <td style="padding: 4px 0;">${formatServiceType(inquiryData.service)}</td>
               </tr>
-              ${inquiryData.species ? `
               ${inquiryData.service === 'training' && inquiryData.trainingPrograms && inquiryData.trainingPrograms.length > 0 ? `
               <tr>
-                <td style="padding: 4px 0; color: #64748b;">Training Programs:</td>
+                <td style="padding: 4px 0; color: #64748b; vertical-align: top;">Training Programs:</td>
                 <td style="padding: 4px 0;">
-                  <ul style="margin: 0; padding-left: 20px;">
+                  <ul style="margin: 0; padding-left: 18px; color: #334155;">
                     ${inquiryData.trainingPrograms.map(program => `<li style="margin-bottom: 2px;">${formatTrainingProgram(program)}</li>`).join('')}
                   </ul>
                 </td>
               </tr>` : ''}
+              ${inquiryData.service === 'training' && inquiryData.targetTrainingDate ? `
+              <tr>
+                <td style="padding: 4px 0; color: #64748b;">Target Date:</td>
+                <td style="padding: 4px 0;">${inquiryData.targetTrainingDate}</td>
+              </tr>` : ''}
+              ${inquiryData.service === 'training' && inquiryData.numberOfParticipants ? `
+              <tr>
+                <td style="padding: 4px 0; color: #64748b;">No. of Participants:</td>
+                <td style="padding: 4px 0;">${inquiryData.numberOfParticipants}</td>
+              </tr>` : ''}
               ${inquiryData.service === 'training' && inquiryData.specificTrainingNeed ? `
               <tr>
-                <td style="padding: 4px 0; color: #64748b;">Specific Training Needs:</td>
-                <td style="padding: 4px 0;">${inquiryData.specificTrainingNeed}</td>
+                <td style="padding: 4px 0; color: #64748b; vertical-align: top;">Customized Needs:</td>
+                <td style="padding: 4px 0; white-space: pre-wrap;">${inquiryData.specificTrainingNeed}</td>
               </tr>` : ''}
+              ${inquiryData.species ? `
               <tr>
                 <td style="padding: 4px 0; color: #64748b;">Species:</td>
                 <td style="padding: 4px 0;">${formatSpecies(inquiryData.species, inquiryData.otherSpecies || undefined)}</td>
