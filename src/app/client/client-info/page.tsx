@@ -3100,13 +3100,22 @@ export default function ClientPortalPage() {
                               </div>
 
                               {currentInquiry.retailItems && currentInquiry.retailItems.length > 0 && (
-                                <div className="space-y-2">
-                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Retail Items</span>
-                                  <div className="flex flex-wrap gap-2">
+                                <div className="space-y-4 pt-2">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Retail Items & Amounts</span>
+                                  <div className="grid grid-cols-1 gap-3">
                                     {currentInquiry.retailItems.map((item, idx) => (
-                                      <Badge key={idx} variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] font-bold">
-                                        {item}
-                                      </Badge>
+                                      <div key={idx} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-white rounded-xl border border-slate-100 shadow-sm hover:border-blue-100 transition-colors group">
+                                        <div className="flex items-center gap-3">
+                                          <div className="w-1.5 h-1.5 rounded-full bg-blue-400 group-hover:scale-125 transition-transform" />
+                                          <span className="text-sm font-bold text-slate-700">{item}</span>
+                                        </div>
+                                        {currentInquiry.retailItemDetails?.[item] && (
+                                          <div className="mt-2 sm:mt-0 flex items-center gap-2 px-3 py-1 bg-blue-50/50 rounded-lg border border-blue-100/50">
+                                            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-tight">Amount</span>
+                                            <span className="text-sm font-bold text-[#166FB5]">{currentInquiry.retailItemDetails[item]}</span>
+                                          </div>
+                                        )}
+                                      </div>
                                     ))}
                                   </div>
                                 </div>
