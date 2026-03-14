@@ -55,7 +55,7 @@ export default function InquiryThankYouPage() {
               Thank you for reaching out to PGC Visayas for your research needs. Our researchers are currently reviewing your request and will get back to you soon.
             </p>
             <p className="text-sm text-slate-500 italic">
-              You will receive a temporary password through your registered email. Kindly use it together with your registered email to log in to our client portal and check the status of your inquiry.
+              You will receive a password through your registered email. Kindly use it together with your registered email to log in to our client portal and check the status of your inquiry.
             </p>
           </div>
 
