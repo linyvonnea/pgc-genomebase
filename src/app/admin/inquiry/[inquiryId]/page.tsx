@@ -440,27 +440,6 @@ function InquiryDetailContent() {
               </div>
             )}
 
-            {/* Retail Sales Details Section */}
-            {inquiry.retailItems && inquiry.retailItems.length > 0 && (
-              <div className="pt-4 border-t border-slate-100 space-y-4">
-                <h3 className="text-sm font-semibold text-slate-700">Retail Sales Details</h3>
-                <div className="flex flex-col">
-                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Selected Items</span>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {inquiry.retailItems.map((item, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="outline" 
-                        className="bg-amber-50 text-amber-700 border-amber-200 py-1 px-3"
-                      >
-                        {item}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Training Specific Fields */}
             {(inquiry.specificTrainingNeed || inquiry.targetTrainingDate || inquiry.numberOfParticipants) && (
               <div className="pt-4 border-t border-slate-100 space-y-4">
