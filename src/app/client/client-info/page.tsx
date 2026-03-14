@@ -2982,6 +2982,20 @@ export default function ClientPortalPage() {
                                   </Badge>
                                 </div>
 
+                                {/* Retail Quick View */}
+                                {currentInquiry.serviceType === 'retail' && currentInquiry.retailItems && (
+                                  <div className="space-y-1.5 sm:col-span-2">
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Retail Items</span>
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {currentInquiry.retailItems.map((item, idx) => (
+                                        <Badge key={idx} variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] font-bold">
+                                          {item}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
                                 {/* Sample Count */}
                                 {currentInquiry.sampleCount && (
                                   <div className="space-y-1.5">
