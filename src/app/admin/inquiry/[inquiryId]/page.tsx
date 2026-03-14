@@ -441,14 +441,29 @@ function InquiryDetailContent() {
             )}
 
             {/* Training Specific Fields */}
-            {(inquiry.specificTrainingNeed || inquiry.targetTrainingDate || inquiry.numberOfParticipants) && (
+            {((inquiry.trainingPrograms && inquiry.trainingPrograms.length > 0) || inquiry.specificTrainingNeed || inquiry.targetTrainingDate || inquiry.numberOfParticipants) && (
               <div className="pt-4 border-t border-slate-100 space-y-4">
                 <h3 className="text-sm font-semibold text-slate-700">Training Details</h3>
+
+                {inquiry.trainingPrograms && inquiry.trainingPrograms.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                      Selected Training Programs
+                    </span>
+                    <div className="grid grid-cols-1 gap-2">
+                      {inquiry.trainingPrograms.map((program, index) => (
+                        <div key={`${program}-${index}`} className="text-sm text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                          {program === "others-customized" ? "Others / Customized Training Program" : program}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {inquiry.specificTrainingNeed && (
                   <div className="flex flex-col">
                     <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                      Specific Training Need
+                      Others / Customized Training Program Details
                     </span>
                     <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
                       {inquiry.specificTrainingNeed}

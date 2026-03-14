@@ -86,6 +86,7 @@ export async function getInquiries(): Promise<Inquiry[]> {
         molecularServicesBudget: data.molecularServicesBudget || null,
         plannedSampleCount: data.plannedSampleCount || null,
         specificTrainingNeed: data.specificTrainingNeed || null,
+        trainingPrograms: data.trainingPrograms || null,
         targetTrainingDate: data.targetTrainingDate || null,
         numberOfParticipants: data.numberOfParticipants || null,
         
@@ -168,6 +169,7 @@ export async function getInquiryById(id: string): Promise<Inquiry> {
       molecularServicesBudget: data.molecularServicesBudget || null,
       plannedSampleCount: data.plannedSampleCount || null,
       specificTrainingNeed: data.specificTrainingNeed || null,
+      trainingPrograms: data.trainingPrograms || null,
       targetTrainingDate: data.targetTrainingDate || null,
       numberOfParticipants: data.numberOfParticipants || null,
       
@@ -234,6 +236,7 @@ export function subscribeToInquiryById(
         molecularServicesBudget: data.molecularServicesBudget || null,
         plannedSampleCount: data.plannedSampleCount || null,
         specificTrainingNeed: data.specificTrainingNeed || null,
+        trainingPrograms: data.trainingPrograms || null,
         targetTrainingDate: data.targetTrainingDate || null,
         numberOfParticipants: data.numberOfParticipants || null,
         haveSubmitted: data.haveSubmitted || false,
@@ -310,6 +313,7 @@ export function subscribeToInquiries(
           molecularServicesBudget: data.molecularServicesBudget || null,
           plannedSampleCount: data.plannedSampleCount || null,
           specificTrainingNeed: data.specificTrainingNeed || null,
+          trainingPrograms: data.trainingPrograms || null,
           targetTrainingDate: data.targetTrainingDate || null,
           numberOfParticipants: data.numberOfParticipants || null,
           haveSubmitted: data.haveSubmitted || false,

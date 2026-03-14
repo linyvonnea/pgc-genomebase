@@ -82,6 +82,13 @@ const formatSpecies = (species?: string, otherSpecies?: string): string => {
   return otherSpecies ? `${speciesLabel} (${otherSpecies})` : speciesLabel;
 };
 
+const formatTrainingProgram = (program: string): string => {
+  if (program === "others-customized") {
+    return "Others / Customized Training Program";
+  }
+  return program;
+};
+
 /**
  * Test function to validate email system configuration
  * This function helps diagnose email delivery issues by creating a simple test email
@@ -226,6 +233,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       plannedSampleCount: inquiryData.plannedSampleCount || null,
       // Training service specific fields
       specificTrainingNeed: inquiryData.specificTrainingNeed || null,
+      trainingPrograms: inquiryData.trainingPrograms || [],
       targetTrainingDate: inquiryData.targetTrainingDate || null,
       numberOfParticipants: inquiryData.numberOfParticipants || null,
       
@@ -324,6 +332,9 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     } else if (inquiryData.service === 'training') {
       // Training service: include training-specific details
       templateData.specificTrainingNeed = inquiryData.specificTrainingNeed || '';
+      templateData.trainingPrograms = Array.isArray(inquiryData.trainingPrograms)
+        ? inquiryData.trainingPrograms.map(formatTrainingProgram).join(', ')
+        : '';
       templateData.targetTrainingDate = inquiryData.targetTrainingDate || '';
       templateData.numberOfParticipants = inquiryData.numberOfParticipants?.toString() || '';
     }
@@ -380,6 +391,20 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
                 <td style="padding: 4px 0;">${formatServiceType(inquiryData.service)}</td>
               </tr>
               ${inquiryData.species ? `
+              ${inquiryData.service === 'training' && inquiryData.trainingPrograms && inquiryData.trainingPrograms.length > 0 ? `
+              <tr>
+                <td style="padding: 4px 0; color: #64748b;">Training Programs:</td>
+                <td style="padding: 4px 0;">
+                  <ul style="margin: 0; padding-left: 20px;">
+                    ${inquiryData.trainingPrograms.map(program => `<li style="margin-bottom: 2px;">${formatTrainingProgram(program)}</li>`).join('')}
+                  </ul>
+                </td>
+              </tr>` : ''}
+              ${inquiryData.service === 'training' && inquiryData.specificTrainingNeed ? `
+              <tr>
+                <td style="padding: 4px 0; color: #64748b;">Specific Training Needs:</td>
+                <td style="padding: 4px 0;">${inquiryData.specificTrainingNeed}</td>
+              </tr>` : ''}
               <tr>
                 <td style="padding: 4px 0; color: #64748b;">Species:</td>
                 <td style="padding: 4px 0;">${formatSpecies(inquiryData.species, inquiryData.otherSpecies || undefined)}</td>
@@ -477,6 +502,7 @@ ${inquiryData.workflows && inquiryData.workflows.length > 0 ? `Workflows: ${Arra
 ${inquiryData.additionalInfo ? `Additional Info: ${inquiryData.additionalInfo}\n` : ''}
 ${inquiryData.projectBackground ? `Project Background: ${inquiryData.projectBackground}\n` : ''}
 ${inquiryData.projectBudget ? `Project Budget: ${inquiryData.projectBudget}\n` : ''}
+${inquiryData.service === 'training' && inquiryData.trainingPrograms && inquiryData.trainingPrograms.length > 0 ? `Training Programs: ${inquiryData.trainingPrograms.map(formatTrainingProgram).join(', ')}\n` : ''}
 ${inquiryData.specificTrainingNeed ? `Training Need: ${inquiryData.specificTrainingNeed}\n` : ''}
 ${inquiryData.targetTrainingDate ? `Training Date: ${inquiryData.targetTrainingDate}\n` : ''}
 ${inquiryData.numberOfParticipants ? `Participants: ${inquiryData.numberOfParticipants}\n` : ''}

@@ -35,6 +35,7 @@ export interface Inquiry {
   projectBackground?: string | null;
   projectBudget?: string | null;
   specificTrainingNeed?: string | null;
+  trainingPrograms?: string[] | null;
   targetTrainingDate?: string | null;
   numberOfParticipants?: number | null;
   
