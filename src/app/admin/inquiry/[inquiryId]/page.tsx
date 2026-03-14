@@ -263,9 +263,6 @@ function InquiryDetailContent() {
               <div className="pt-4 border-t border-slate-100 space-y-4">
                 <h3 className="text-sm font-semibold text-slate-700">Equipment / Workflow Details</h3>
                 <div className="flex flex-col">
-                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                    Equipment / Workflow Description
-                  </span>
                   <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
                     {inquiry.individualAssayDetails}
                   </p>
