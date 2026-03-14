@@ -2982,20 +2982,6 @@ export default function ClientPortalPage() {
                                   </Badge>
                                 </div>
 
-                                {/* Retail Quick View */}
-                                {currentInquiry.serviceType === 'retail' && currentInquiry.retailItems && (
-                                  <div className="space-y-1.5 sm:col-span-2">
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Retail Items</span>
-                                    <div className="flex flex-wrap gap-1.5">
-                                      {currentInquiry.retailItems.map((item, idx) => (
-                                        <Badge key={idx} variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] font-bold">
-                                          {item} {currentInquiry.retailItemDetails?.[item] ? `(${currentInquiry.retailItemDetails[item]})` : ""}
-                                        </Badge>
-                                      ))}
-                                    </div>
-                                  </div>
-                                )}
-
                                 {/* Sample Count */}
                                 {currentInquiry.sampleCount && (
                                   <div className="space-y-1.5">
@@ -3004,25 +2990,25 @@ export default function ClientPortalPage() {
                                   </div>
                                 )}
 
-                                {/* Retail Item Details (Cards) */}
+                                {/* Retail Sales Details Section */}
                                 {currentInquiry.serviceType === 'retail' && currentInquiry.retailItems && currentInquiry.retailItems.length > 0 && (
-                                  <div className="space-y-3 pt-4 border-t border-slate-100 sm:col-span-3">
-                                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block px-1">Detailed Item List & Amounts</span>
-                                    <div className="grid grid-cols-1 gap-3">
-                                      {currentInquiry.retailItems.map((item, idx) => (
-                                        <div key={idx} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3.5 bg-white rounded-xl border border-slate-100 shadow-sm hover:border-blue-100 transition-all group">
-                                          <div className="flex items-center gap-3">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 group-hover:scale-125 transition-transform" />
-                                            <span className="text-sm font-bold text-slate-800">{item}</span>
+                                  <div className="pt-4 border-t border-slate-100 space-y-4 sm:col-span-3">
+                                    <h3 className="text-sm font-semibold text-slate-700">Retail Sales Details</h3>
+                                    <div className="flex flex-col">
+                                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Requested Items</span>
+                                      <div className="grid grid-cols-1 gap-3 mt-2">
+                                        {currentInquiry.retailItems.map((item, idx) => (
+                                          <div key={`${item}-${idx}`} className="flex flex-col bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                            <span className="text-sm font-semibold text-slate-800">{item}</span>
+                                            {currentInquiry.retailItemDetails?.[item] && (
+                                              <div className="mt-1 flex items-center gap-2">
+                                                <span className="text-xs text-slate-500">Amount:</span>
+                                                <span className="text-sm text-[#166FB5] font-medium">{currentInquiry.retailItemDetails[item]}</span>
+                                              </div>
+                                            )}
                                           </div>
-                                          {currentInquiry.retailItemDetails?.[item] && (
-                                            <div className="mt-2 sm:mt-0 flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg border border-blue-100/50">
-                                              <span className="text-[10px] font-bold text-blue-500 uppercase tracking-tight">Amount</span>
-                                              <span className="text-sm font-bold text-[#166FB5]">{currentInquiry.retailItemDetails[item]}</span>
-                                            </div>
-                                          )}
-                                        </div>
-                                      ))}
+                                        ))}
+                                      </div>
                                     </div>
                                   </div>
                                 )}
