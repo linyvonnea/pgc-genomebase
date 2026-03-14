@@ -12,43 +12,43 @@ import { HelpCircle, Microscope, CreditCard, Droplets, Clock, BarChart4, Globe }
 
 const faqData = [
   {
-    category: "Part 1: General Services & Project Planning",
+    category: "I. General Services & Project Planning",
     icon: <Microscope className="w-5 h-5 text-blue-600" />,
     questions: [
       {
         q: "What services does PGC Visayas offer?",
-        a: "We provide a wide range of genomic-based services to support your research, including:\n\n• DNA and RNA extraction\n• Polymerase Chain Reaction (PCR) & RT-PCR for gene expression and quantification\n• Nucleic Acid Quantification\n• Capillary Sequencing\n• Library preparation for next-generation sequencing (NGS)\n• Whole genome sequencing (WGS)\n• Amplicon sequencing (e.g., 16S, ITS, and targeted genes)\n• Metagenomics/Metabarcoding sequencing using Environmental DNA (eDNA)\n• Transcriptomics (RNA-Seq)\n• Bioinformatics Analysis and Data Interpretation\n• Custom research-based sequencing services\n• Training and workshops (based on specific demand/application)\n• Equipment Use (exclusive to University of the Philippines system researchers)"
+        a: "We provide a wide range of omics-based services to support your research, including:\n\n• DNA and RNA extraction\n• Polymerase Chain Reaction (PCR) & RT-PCR for gene expression and quantification\n• Nucleic Acid Quantification\n• Capillary Sequencing\n• Library preparation for next-generation sequencing (NGS)\n• Whole genome sequencing (WGS)\n• Amplicon sequencing (e.g., 16S, ITS, and targeted genes)\n• See the list of available primers for target species\n• Metagenomics/Metabarcoding sequencing using Environmental DNA (eDNA)\n• Transcriptomics (RNA-Seq)\n• Bioinformatics Analysis and Data Interpretation\n• Custom research-based sequencing services"
       },
       {
         q: "Can you help design and budget our research project?",
-        a: "Yes! We provide technical advice and assistance for experimental design and budgeting completely free of charge. Whether you are planning a small thesis project using targeted molecular assays or tackling a massive genomics application, our team can advise on study design, assay selection, sequencing depth, and analysis pipelines. We highly recommend our free technical consultation for student theses, small molecular projects, grant proposal development, and large-scale genome projects."
+        a: "Yes! We provide technical advice and assistance for experimental design and budgeting completely free of charge. Whether you are planning a small thesis project using targeted molecular assays or tackling a massive genomics application, our team can advise on study design, assay selection, sequencing depth, and analysis pipelines. We highly recommend our free consultation for student theses, small molecular projects, grant proposal development, and large-scale genome projects."
       },
       {
         q: "Do you provide training or workshops?",
-        a: "Yes. PGC Visayas conducts customized training workshops on genomics techniques, sequencing workflows, and bioinformatics analysis based on schedule and demand. You can reach out to us via the client portal to discuss your specific training needs."
+        a: "Yes. PGC Visayas conducts customized training workshops on genomics techniques, sequencing workflows, and bioinformatics analysis based on schedule and demand. You can reach out to us via email to discuss your specific training needs."
       }
     ]
   },
   {
-    category: "Part 2: Inquiries, Pricing & Payment",
+    category: "II. Inquiries, Pricing & Payment",
     icon: <CreditCard className="w-5 h-5 text-blue-600" />,
     questions: [
       {
         q: "How do I avail of your services?",
-        a: "To get started, simply submit your inquiry through the official PGC Visayas Client Portal. Providing comprehensive details about your research objectives and scope of collaboration will allow our team to evaluate your project and cater to your needs much faster."
+        a: "To get started, simply submit your inquiry through the official PGC Visayas Client Portal. Providing comprehensive details about your research and objectives will allow our team to evaluate your project and cater to your needs much faster."
       },
       {
         q: "How much do your services cost?",
-        a: "Because every project is unique, pricing depends on several factors:\n• Service type\n• Number of samples\n• Sequencing platform and depth\n• Bioinformatics requirements\n\nOnce you submit your inquiry through our Client Portal, our team will evaluate your project and issue an official quotation."
+        a: "Because every project is unique, pricing depends on a few factors:\n• Service type\n• Number of samples\n• Sequencing platform and depth\n• Bioinformatics requirements\n\nOnce you submit your inquiry through our Client Portal, our team will evaluate your project and issue an official quotation."
       },
       {
         q: "What are your payment terms and accepted payment options?",
-        a: "We accept payments via Bank Transfer, bank deposits, and LDDAP-ADA (for government agencies). Standard institutional checks may also be accepted. Payment terms typically depend on the project size:\n\n• Standard services: Payment is usually processed upon the issuance of a Statement of Account/Billing.\n• Large or funded projects: Payment milestones can be outlined in a formal Memorandum of Agreement (MOA).\n\nPlease discuss your specific funding or institutional requirements with us during the consultation phase so we can accommodate your procurement process."
+        a: "To ensure a smooth process, please note that all services must be paid in full before your final results and data can be released.\n\nFor your convenience, we offer two flexible payment options:\n• Full Payment: Pay 100% of the total project cost at once.\n• Split Payment: Pay 50% upon the submission of your samples, and the remaining 50% prior to the release of your final results.\n\nAll payments must be made thru the UP Visayas Cash Office, Miagao Iloilo. Kindly refer to our Mode of Payment instructions for payment options."
       }
     ]
   },
   {
-    category: "Part 3: Sample Preparation & Submission",
+    category: "III. Sample Preparation & Submission",
     icon: <Droplets className="w-5 h-5 text-blue-600" />,
     questions: [
       {
@@ -61,16 +61,16 @@ const faqData = [
       },
       {
         q: "How should I package and transport my samples?",
-        a: "Maintaining sample integrity is crucial. Samples must be packed securely and shipped following proper cold-chain protocols (e.g., on dry ice or ice packs, depending on your sample type). Detailed shipping and packaging instructions are included in our Sample Submission Requirements."
+        a: "Samples must be packed securely and shipped following proper cold-chain protocols (e.g., on dry ice or ice packs, depending on your sample type). Detailed shipping and packaging instructions are included in our Sample Submission Requirements."
       },
       {
         q: "Do you handle pathogen or regulated biological samples?",
-        a: "Yes, but we exclusively handle Biosafety Level 2 (BSL-2) biological samples. All sample submissions must strictly comply with national regulations, and you must secure and provide all relevant permits and ethical clearances (e.g. NCBP, PAWB, Institutional Biosafety Committee (IBC), ethics review) prior to submission."
+        a: "Yes, but we exclusively handle Biosafety Level 2 (BSL-2) biological samples. All sample submissions must strictly comply with national regulations, and you must secure and provide all relevant permits and ethical clearances before submission."
       }
     ]
   },
   {
-    category: "Part 4: Laboratory Processing & Timelines",
+    category: "IV. Laboratory Processing & Timelines",
     icon: <Clock className="w-5 h-5 text-blue-600" />,
     questions: [
       {
@@ -88,12 +88,12 @@ const faqData = [
     ]
   },
   {
-    category: "Part 5: Data Delivery, Bioinformatics & Ownership",
+    category: "V. Data Delivery, Bioinformatics & Ownership",
     icon: <BarChart4 className="w-5 h-5 text-blue-600" />,
     questions: [
       {
         q: "Do you provide bioinformatics analysis?",
-        a: "Yes, our team offers comprehensive bioinformatics services, including:\n• Quality filtering and trimming\n• Genome assembly and annotation\n• Variant calling\n• Taxonomic classification (for metagenomics)\n• Phylogenetic analysis\n\n(Custom analysis pipelines can also be discussed during your technical consultation.)"
+        a: "Yes, our team offers comprehensive bioinformatics services, including:\n• Quality filtering and trimming\n• Genome assembly and annotation\n• Variant calling\n• Taxonomic classification (for metagenomics)\n• Phylogenetic analysis\n\nCustom analysis pipelines can also be discussed during your technical consultation."
       },
       {
         q: "What format will the data be delivered in?",
@@ -101,25 +101,25 @@ const faqData = [
       },
       {
         q: "How long do you retain my data?",
-        a: "PGC Visayas retains client data on our servers for a limited time (typically 1 to 3 months) after project completion. We highly encourage clients to download and securely back up all data files immediately upon receipt."
+        a: "PGC Visayas retains client data on our servers one (1) year after project completion. We highly encourage clients to download and securely back up all data files immediately upon receipt."
       },
       {
         q: "Who owns the generated data?",
-        a: "You do! The client retains full ownership of all generated data unless otherwise stated in a formal collaboration agreement. PGC Visayas maintains strict confidentiality and adheres to institutional data governance policies."
+        a: "The client retains full ownership of all generated data unless otherwise stated in a formal collaboration agreement. PGC Visayas maintains strict confidentiality and adheres to institutional data governance policies."
       },
       {
         q: "How do we acknowledge PGC Visayas in publications?",
-        a: "We love seeing your research published! Please ensure PGC Visayas is properly acknowledged in any presentations, reports, or publications resulting from our services.\n\nStandard phrasing: “Sequencing and/or molecular services were provided by the Philippine Genome Center Visayas.”\n\nFor collaborative work: Authorship and specific acknowledgments should be discussed early in the project planning phase."
+        a: "You can acknowledge PGC Visayas in any presentations, reports, or publications resulting from our services using this standard phrasing: \"Sequencing and/or molecular services were provided by the Philippine Genome Center Visayas.\"\n\nFor collaborative work: Authorship and specific acknowledgments should be discussed early in the project planning phase."
       }
     ]
   },
   {
-    category: "Part 6: Collaborations",
+    category: "VI. Collaborations",
     icon: <Globe className="w-5 h-5 text-blue-600" />,
     questions: [
       {
-        q: "Do you accept international collaborations?",
-        a: "Yes! We proudly support both local and international collaborations. These are subject to regulatory compliance, biosafety regulations, and the establishment of Material Transfer Agreements (MTAs) when necessary."
+        q: "Does PGC Visayas engage in research collaborations?",
+        a: "Yes! We actively welcome and support both local and international research collaborations. We believe that partnering with academic institutions, government agencies, and fellow researchers is key to driving scientific innovation. Whether you are looking to co-develop a novel methodology or need a dedicated genomics partner for a large-scale grant, we are open to exploring formal partnerships.\n\nShared Input & Authorship: For projects where our team provides significant intellectual, experimental, or analytical input, co-authorship and project roles should be discussed and agreed upon early in the planning phase.\n\nAgreements: Collaborative partnerships typically require a Memorandum of Agreement (MOA) or a Collaborative Research Agreement to clearly define the scope of work and data ownership."
       }
     ]
   }
@@ -175,50 +175,6 @@ export default function FAQPage() {
           ))}
         </div>
 
-        {/* Contact Footer */}
-        <div className="mt-16 text-center bg-white p-8 rounded-2xl border shadow-sm flex flex-col items-center">
-          <h3 className="text-xl font-bold text-slate-900 mb-4">Still have questions?</h3>
-          <p className="text-slate-600 mb-8 max-w-lg mx-auto leading-relaxed">
-            If you couldn't find the answer you were looking for, our team is here to help. You may contact us through the following channels:
-          </p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl px-4">
-            <div className="flex flex-col p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 transition-all group">
-              <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 mx-auto group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                <Globe className="w-5 h-5" />
-              </div>
-              <h4 className="font-bold text-slate-900 mb-1">Client Portal</h4>
-              <p className="text-xs text-slate-500 mb-4">Official channel for project inquiries and quotations</p>
-              <a 
-                href="/client/inquiry-request" 
-                className="mt-auto bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-all text-sm"
-              >
-                Submit Inquiry
-              </a>
-            </div>
-
-            <div className="flex flex-col p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 transition-all group">
-              <div className="w-10 h-10 bg-slate-200 text-slate-600 rounded-full flex items-center justify-center mb-4 mx-auto group-hover:bg-slate-600 group-hover:text-white transition-colors">
-                <HelpCircle className="w-5 h-5" />
-              </div>
-              <h4 className="font-bold text-slate-900 mb-1">Email Support</h4>
-              <p className="text-xs text-slate-500 mb-4">For general questions and administrative support</p>
-              <a 
-                href="mailto:pgc.upvisayas@up.edu.ph" 
-                className="mt-auto bg-white text-slate-700 border border-slate-200 px-6 py-2.5 rounded-xl font-bold hover:bg-slate-100 transition-all text-sm"
-              >
-                Email Us
-              </a>
-            </div>
-          </div>
-
-          <div className="mt-8 pt-8 border-t border-slate-100 w-full max-w-lg">
-            <p className="text-[11px] text-slate-400 font-medium">
-              Philippine Genome Center Visayas <br/>
-              Regional Research Center, UP Visayas, Miagao, Iloilo
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );
