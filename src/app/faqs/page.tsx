@@ -17,15 +17,15 @@ const faqData = [
     questions: [
       {
         q: "What services does PGC Visayas offer?",
-        a: "We provide a wide range of omics-based services to support your research, including:\n\n• DNA and RNA extraction\n• Polymerase Chain Reaction (PCR) & RT-PCR for gene expression and quantification\n• Nucleic Acid Quantification\n• Capillary Sequencing\n• Library preparation for next-generation sequencing (NGS)\n• Whole genome sequencing (WGS)\n• Amplicon sequencing (e.g., 16S, ITS, and targeted genes)\n• Metagenomics/Metabarcoding sequencing using Environmental DNA (eDNA)\n• Transcriptomics (RNA-Seq)\n• Bioinformatics Analysis and Data Interpretation\n• Custom research-based sequencing services"
+        a: "We provide a wide range of genomic-based services to support your research, including:\n\n• DNA and RNA extraction\n• Polymerase Chain Reaction (PCR) & RT-PCR for gene expression and quantification\n• Nucleic Acid Quantification\n• Capillary Sequencing\n• Library preparation for next-generation sequencing (NGS)\n• Whole genome sequencing (WGS)\n• Amplicon sequencing (e.g., 16S, ITS, and targeted genes)\n• Metagenomics/Metabarcoding sequencing using Environmental DNA (eDNA)\n• Transcriptomics (RNA-Seq)\n• Bioinformatics Analysis and Data Interpretation\n• Custom research-based sequencing services\n• Training and workshops (based on specific demand/application)\n• Equipment Use (exclusive to University of the Philippines system researchers)"
       },
       {
         q: "Can you help design and budget our research project?",
-        a: "Yes! We provide technical advice and assistance for experimental design and budgeting completely free of charge. Whether you are planning a small thesis project using targeted molecular assays or tackling a massive genomics application, our team can advise on study design, assay selection, sequencing depth, and analysis pipelines. We highly recommend our free consultation for student theses, small molecular projects, grant proposal development, and large-scale genome projects."
+        a: "Yes! We provide technical advice and assistance for experimental design and budgeting completely free of charge. Whether you are planning a small thesis project using targeted molecular assays or tackling a massive genomics application, our team can advise on study design, assay selection, sequencing depth, and analysis pipelines. We highly recommend our free technical consultation for student theses, small molecular projects, grant proposal development, and large-scale genome projects."
       },
       {
         q: "Do you provide training or workshops?",
-        a: "Yes. PGC Visayas conducts customized training workshops on genomics techniques, sequencing workflows, and bioinformatics analysis based on schedule and demand. You can reach out to us via email to discuss your specific training needs."
+        a: "Yes. PGC Visayas conducts customized training workshops on genomics techniques, sequencing workflows, and bioinformatics analysis based on schedule and demand. You can reach out to us via the client portal to discuss your specific training needs."
       }
     ]
   },
@@ -35,11 +35,11 @@ const faqData = [
     questions: [
       {
         q: "How do I avail of your services?",
-        a: "To get started, simply submit your inquiry through the official PGC Visayas Client Portal. Providing comprehensive details about your research and objectives will allow our team to evaluate your project and cater to your needs much faster."
+        a: "To get started, simply submit your inquiry through the official PGC Visayas Client Portal. Providing comprehensive details about your research objectives and scope of collaboration will allow our team to evaluate your project and cater to your needs much faster."
       },
       {
         q: "How much do your services cost?",
-        a: "Because every project is unique, pricing depends on a few factors:\n• Service type\n• Number of samples\n• Sequencing platform and depth\n• Bioinformatics requirements\n\nOnce you submit your inquiry through our Client Portal, our team will evaluate your project and issue an official quotation."
+        a: "Because every project is unique, pricing depends on several factors:\n• Service type\n• Number of samples\n• Sequencing platform and depth\n• Bioinformatics requirements\n\nOnce you submit your inquiry through our Client Portal, our team will evaluate your project and issue an official quotation."
       },
       {
         q: "What are your payment terms and accepted payment options?",
@@ -65,7 +65,7 @@ const faqData = [
       },
       {
         q: "Do you handle pathogen or regulated biological samples?",
-        a: "Yes, but we exclusively handle Biosafety Level 2 (BSL-2) biological samples. All sample submissions must strictly comply with national regulations, and you must secure and provide all relevant permits and ethical clearances prior to submission."
+        a: "Yes, but we exclusively handle Biosafety Level 2 (BSL-2) biological samples. All sample submissions must strictly comply with national regulations, and you must secure and provide all relevant permits and ethical clearances (e.g. NCBP, PAWB, Institutional Biosafety Committee (IBC), ethics review) prior to submission."
       }
     ]
   },
@@ -101,7 +101,7 @@ const faqData = [
       },
       {
         q: "How long do you retain my data?",
-        a: "PGC Visayas retains client data on our servers for a limited time (typically 3 to 6 months) after project completion. We highly encourage clients to download and securely back up all data files immediately upon receipt."
+        a: "PGC Visayas retains client data on our servers for a limited time (typically 1 to 3 months) after project completion. We highly encourage clients to download and securely back up all data files immediately upon receipt."
       },
       {
         q: "Who owns the generated data?",
