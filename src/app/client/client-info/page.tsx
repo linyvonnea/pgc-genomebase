@@ -3111,8 +3111,23 @@ export default function ClientPortalPage() {
                           )}
 
                           {/* Training Details */}
-                          {currentInquiry.serviceType === 'training' && (currentInquiry.specificTrainingNeed || currentInquiry.targetTrainingDate || currentInquiry.numberOfParticipants) && (
+                          {currentInquiry.serviceType === 'training' && ((currentInquiry.trainingPrograms && currentInquiry.trainingPrograms.length > 0) || currentInquiry.specificTrainingNeed || currentInquiry.targetTrainingDate || currentInquiry.numberOfParticipants) && (
                             <div className="pt-4 border-t border-slate-100 space-y-4">
+                              {currentInquiry.trainingPrograms && currentInquiry.trainingPrograms.length > 0 && (
+                                <div className="space-y-2">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Selected Training Programs
+                                  </span>
+                                  <div className="grid grid-cols-1 gap-2">
+                                    {currentInquiry.trainingPrograms.map((program, index) => (
+                                      <div key={`${program}-${index}`} className="text-sm text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                                        {program === "others-customized" ? "Others / Customized Training Program" : program}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {currentInquiry.targetTrainingDate && (
                                   <div className="space-y-1">
@@ -3133,7 +3148,7 @@ export default function ClientPortalPage() {
                               {currentInquiry.specificTrainingNeed && (
                                 <div className="space-y-2">
                                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                    Training Scope
+                                    Others / Customized Training Program Details
                                   </span>
                                   <div className="p-3 bg-slate-50/50 rounded-lg text-sm text-slate-700 leading-relaxed border border-slate-100 whitespace-pre-wrap">
                                     {currentInquiry.specificTrainingNeed}

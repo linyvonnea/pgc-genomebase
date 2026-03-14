@@ -99,6 +99,8 @@ export const inquirySchema = z.object({
     .optional(), 
   
   targetTrainingDate: z.string().optional(), 
+
+  trainingPrograms: z.array(z.string()).optional(),
   
   numberOfParticipants: z.number()
     .min(1, "Number of participants must be at least 1")
@@ -236,14 +238,24 @@ export const inquiryFormSchema = inquirySchema
     message: "Please enter numbers only",
     path: ["plannedSampleCount"],
   })
-  // Conditional validation: Training service requires specific training need
+  // Conditional validation: Training service requires at least one program selected
   .refine((data) => {
     if (data.service === "training") {
-      return data.specificTrainingNeed && data.specificTrainingNeed.trim().length > 0;
+      return !!data.trainingPrograms && data.trainingPrograms.length > 0;
     }
     return true;
   }, {
-    message: "Specific training need is required for training service",
+    message: "Please select at least one training program",
+    path: ["trainingPrograms"],
+  })
+  // Conditional validation: Custom details required when Others/Customized is selected
+  .refine((data) => {
+    if (data.service === "training" && data.trainingPrograms?.includes("others-customized")) {
+      return !!data.specificTrainingNeed && data.specificTrainingNeed.trim().length > 0;
+    }
+    return true;
+  }, {
+    message: "Please provide specific training needs",
     path: ["specificTrainingNeed"],
   })
   // Conditional validation: Training service requires target date

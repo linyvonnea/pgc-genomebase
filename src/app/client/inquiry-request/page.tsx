@@ -37,6 +37,16 @@ import useAuth from "@/hooks/useAuth"
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout"
 import { useRouter } from "next/navigation"
 
+const TRAINING_PROGRAM_OPTIONS = [
+  "Basic Molecular Biology Techniques: Applications in Next Generation Sequencing",
+  "Whole Genome Sequencing: Library Preparation and Bioinformatics Analysis",
+  "Amplicon Sequencing: Library Preparation and Bioinformatics Analysis",
+  "Metagenomics/Metabarcoding Sequencing: Library Preparation and Bioinformatics Analysis",
+  "Real-Time PCR Workshop",
+  "Bioinformatics Analysis (Customized depending on the needed application)",
+  "Others / Customized Training Program"
+] as const;
+
 /**
  * Main Quotation Request Form Component
  * 
@@ -92,6 +102,7 @@ export default function QuotationRequestForm() {
       projectBudget: "",
       molecularServicesBudget: "",
       plannedSampleCount: "",
+      trainingPrograms: [],
       specificTrainingNeed: "",
       targetTrainingDate: "",
       numberOfParticipants: undefined
@@ -128,10 +139,24 @@ export default function QuotationRequestForm() {
     setValue("projectBudget", "")
     setValue("molecularServicesBudget", "")
     setValue("plannedSampleCount", "")
+    setValue("trainingPrograms", [])
     setValue("specificTrainingNeed", "")
     setValue("targetTrainingDate", "")
     setValue("numberOfParticipants", undefined)
     setTrainingDate(undefined)
+  }
+
+  const handleTrainingProgramChange = (program: string, checked: boolean) => {
+    const currentPrograms = formData.trainingPrograms || []
+    const newPrograms = checked
+      ? [...currentPrograms, program]
+      : currentPrograms.filter((p) => p !== program)
+
+    setValue("trainingPrograms", newPrograms, { shouldDirty: true, shouldValidate: true })
+
+    if (program === "others-customized" && !checked) {
+      setValue("specificTrainingNeed", "", { shouldDirty: true, shouldValidate: true })
+    }
   }
 
   /**
@@ -829,58 +854,55 @@ export default function QuotationRequestForm() {
               {/* Training Service Fields */}
               {selectedService === "training" && (
                 <div className="space-y-6">
-                  {/* Training Information Section - Informational content */}
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-slate-800 mb-3">PGC Visayas Training Services</h3>
-                        <p className="text-slate-700 mb-3">PGC Visayas offers a range of training services, including:</p>
-                        <ul className="list-disc list-inside space-y-1 text-slate-700 ml-4">
-                          <li>Basic Molecular Techniques (DNA Extraction, PCR, and Quantification)</li>
-                          <li>Library Preparation for Next Generation Sequencing (Amplicon Sequencing, 16s Metabarcoding, Whole Genome Sequencing)</li>
-                          <li>Sequencing (Illumina iSeq 100 and NextSeq 1000)</li>
-                          <li>Bioinformatics Analysis (Customized depending on the needed application)</li>
-                        </ul>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-semibold text-slate-800 mb-2">Training Structure:</h4>
-                        <div className="space-y-2 text-slate-700">
-                          <div>
-                            <span className="font-medium">Lecture and Hands-On Training (4-5 day Training)</span>
-                            <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
-                              <li>Lecture and Hands-On Laboratory Training (2-3 days)</li>
-                              <li>Lecture and Hand-On Bioinformatics Training (1-2 days)</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <p className="text-slate-700 font-medium">
-                        If you are interested, kindly provide us with the following details:
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Specific Training Need - Required field */}
                   <div>
-                    <Label htmlFor="specificTrainingNeed" className="text-sm font-semibold text-slate-700 mb-2 block">
-                      Specific Training Needs <span className="text-[#B9273A]">*</span>
+                    <Label className="text-sm font-semibold text-slate-700 mb-3 block">
+                      Kindly choose from the following PGC Visayas Training Programs <span className="text-[#B9273A]">*</span>
                     </Label>
-                    <Input
-                      id="specificTrainingNeed"
-                      type="text"
-                      placeholder="Describe the specific training you need..."
-                      {...register("specificTrainingNeed")}
-                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
-                    />
-                    {errors.specificTrainingNeed && (
+                    <div className="space-y-2">
+                      {TRAINING_PROGRAM_OPTIONS.map((program) => {
+                        const value = program === "Others / Customized Training Program" ? "others-customized" : program
+                        const isChecked = (formData.trainingPrograms || []).includes(value)
+                        return (
+                          <label key={value} className="flex items-start gap-3 p-3 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => handleTrainingProgramChange(value, e.target.checked)}
+                              className="h-4 w-4 mt-0.5 rounded border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                            />
+                            <span className="text-sm text-slate-700 font-medium leading-snug">{program}</span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                    {errors.trainingPrograms && (
                       <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
                         <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                        {errors.specificTrainingNeed.message}
+                        {errors.trainingPrograms.message}
                       </p>
                     )}
                   </div>
+
+                  {(formData.trainingPrograms || []).includes("others-customized") && (
+                    <div>
+                      <Label htmlFor="specificTrainingNeed" className="text-sm font-semibold text-slate-700 mb-2 block">
+                        Others / Customized Training Program
+                      </Label>
+                      <Textarea
+                        id="specificTrainingNeed"
+                        placeholder="Kindly provide specific training needs"
+                        {...register("specificTrainingNeed")}
+                        className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[100px] resize-none"
+                        rows={4}
+                      />
+                      {errors.specificTrainingNeed && (
+                        <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                          <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                          {errors.specificTrainingNeed.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {/* Target Date for Training with Calendar Picker */}
                   <div>
@@ -929,7 +951,7 @@ export default function QuotationRequestForm() {
                   {/* Number of Participants - Required field with minimum constraint */}
                   <div>
                     <Label htmlFor="numberOfParticipants" className="text-sm font-semibold text-slate-700 mb-2 block">
-                      Number of Participants (Minimum of 6 pax for in-person) <span className="text-[#B9273A]">*</span>
+                      Number of Participants <span className="text-[#B9273A]">*</span>
                     </Label>
                     <Input
                       id="numberOfParticipants"
@@ -1084,7 +1106,14 @@ export default function QuotationRequestForm() {
             )}
             {pendingData.service === "training" && (
               <>
-                <div><span className="font-semibold">Specific Training Need:</span> {pendingData.specificTrainingNeed}</div>
+                {pendingData.trainingPrograms && pendingData.trainingPrograms.length > 0 && (
+                  <div>
+                    <span className="font-semibold">Training Programs:</span> {pendingData.trainingPrograms.map((program) => program === "others-customized" ? "Others / Customized Training Program" : program).join(", ")}
+                  </div>
+                )}
+                {pendingData.specificTrainingNeed && (
+                  <div><span className="font-semibold">Specific Training Needs:</span> {pendingData.specificTrainingNeed}</div>
+                )}
                 <div><span className="font-semibold">Target Training Date:</span> {pendingData.targetTrainingDate}</div>
                 <div><span className="font-semibold">Number of Participants:</span> {pendingData.numberOfParticipants}</div>
               </>
