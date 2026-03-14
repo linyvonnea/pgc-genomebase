@@ -386,12 +386,6 @@ export const columns: ColumnDef<Inquiry>[] = [
 
       return (
         <div className="flex items-center justify-center gap-1 px-1">
-          {canCreate("quotations") && (
-            <div className="scale-75 origin-center">
-              <QuoteButton inquiryId={inquiry.id} />
-            </div>
-          )}
-
           {/* Edit inquiry modal trigger - only show if user has edit permission */}
           {canEdit("inquiries") && (
             <div className="scale-75 origin-center">
@@ -400,6 +394,12 @@ export const columns: ColumnDef<Inquiry>[] = [
                 inquiry={inquiry}
                 onSuccess={() => router.refresh()}
               />
+            </div>
+          )}
+
+          {canCreate("quotations") && (
+            <div className="scale-75 origin-center">
+              <QuoteButton inquiryId={inquiry.id} />
             </div>
           )}
         </div>
