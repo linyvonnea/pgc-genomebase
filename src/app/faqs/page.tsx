@@ -164,8 +164,8 @@ export default function FAQPage() {
                       <AccordionTrigger className="text-left font-semibold text-slate-700 hover:text-blue-600 hover:no-underline py-5 text-base transition-colors">
                         {item.q}
                       </AccordionTrigger>
-                      <AccordionContent className="text-slate-600 leading-relaxed whitespace-pre-line text-sm pb-6">
-                        {item.a}
+                      <AccordionContent className="text-slate-600 leading-relaxed text-sm pb-6">
+                        <div className="whitespace-pre-wrap">{item.a}</div>
                       </AccordionContent>
                     </AccordionItem>
                   ))}
