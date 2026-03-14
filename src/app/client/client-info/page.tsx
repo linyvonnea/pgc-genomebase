@@ -3070,7 +3070,7 @@ export default function ClientPortalPage() {
                           )}
 
                           {/* Research Narrative (Only for non-research, non-laboratory services) */}
-                          {currentInquiry.serviceType !== "research" && currentInquiry.researchOverview && (
+                          {currentInquiry.serviceType !== "research" && currentInquiry.serviceType !== "laboratory" && currentInquiry.researchOverview && (
                             <div className="space-y-2">
                               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Objectives & Brief Overview</span>
                               <div className="p-4 bg-indigo-50/30 rounded-xl border border-indigo-100/30 text-sm text-slate-800 italic leading-relaxed font-medium">
