@@ -2968,7 +2968,7 @@ export default function ClientPortalPage() {
                             </div>
                           ) : (
                             /* Other Services (Research, Training, Retail, etc.) */
-                            <>
+                            <div className="space-y-6 animate-in fade-in duration-500">
                               {/* Top Section: Quick Stats */}
                               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                                 {/* Service Type */}
@@ -3006,7 +3006,7 @@ export default function ClientPortalPage() {
 
                                 {/* Retail Item Details (Cards) */}
                                 {currentInquiry.serviceType === 'retail' && currentInquiry.retailItems && currentInquiry.retailItems.length > 0 && (
-                                  <div className="space-y-3 pt-4 border-t border-slate-100">
+                                  <div className="space-y-3 pt-4 border-t border-slate-100 sm:col-span-3">
                                     <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block px-1">Detailed Item List & Amounts</span>
                                     <div className="grid grid-cols-1 gap-3">
                                       {currentInquiry.retailItems.map((item, idx) => (
@@ -3026,9 +3026,10 @@ export default function ClientPortalPage() {
                                     </div>
                                   </div>
                                 )}
+                              </div>
 
-                                {/* Technical Block */}
-                                {(currentInquiry.species || currentInquiry.workflowType) && (
+                              {/* Technical Block */}
+                              {(currentInquiry.species || currentInquiry.workflowType) && (
                                 <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
                                   {currentInquiry.species && (
                                     <div className="space-y-1">
@@ -3069,7 +3070,7 @@ export default function ClientPortalPage() {
                                   </div>
                                 </div>
                               )}
-                            </>
+                            </div>
                           )}
 
                           {/* Specific Needs & Assays (Common for all) */}
@@ -3083,7 +3084,7 @@ export default function ClientPortalPage() {
                           )}
 
                           {/* Research Narrative (Only if not already shown in Laboratory block) */}
-                          {currentInquiry.serviceType !== "laboratory" && currentInquiry.researchOverview && (
+                          {currentInquiry.serviceType !== "laboratory" && (currentInquiry.serviceType as string) !== "laboratory" && currentInquiry.researchOverview && (
                             <div className="space-y-2">
                               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Objectives & Brief Overview</span>
                               <div className="p-4 bg-indigo-50/30 rounded-xl border border-indigo-100/30 text-sm text-slate-800 italic leading-relaxed font-medium">
