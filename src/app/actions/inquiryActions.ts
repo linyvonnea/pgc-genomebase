@@ -222,6 +222,8 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       // Research service specific fields
       projectBackground: inquiryData.projectBackground || null, 
       projectBudget: inquiryData.projectBudget || null, 
+      molecularServicesBudget: inquiryData.molecularServicesBudget || null,
+      plannedSampleCount: inquiryData.plannedSampleCount || null,
       // Training service specific fields
       specificTrainingNeed: inquiryData.specificTrainingNeed || null,
       targetTrainingDate: inquiryData.targetTrainingDate || null,
@@ -312,7 +314,11 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
         : inquiryData.workflows || '';
       templateData.additionalInfo = inquiryData.additionalInfo || '';
     } else if (inquiryData.service === 'research') {
-      // Research service: include project background and budget
+      // Research service: include collaboration overview and planning fields
+      templateData.researchOverview = inquiryData.researchOverview || '';
+      templateData.molecularServicesBudget = inquiryData.molecularServicesBudget || '';
+      templateData.plannedSampleCount = inquiryData.plannedSampleCount || '';
+      // Legacy fields kept for backward compatibility with old templates
       templateData.projectBackground = inquiryData.projectBackground || '';
       templateData.projectBudget = inquiryData.projectBudget || '';
     } else if (inquiryData.service === 'training') {
@@ -410,6 +416,16 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
                   </ul>
                 </td>
               </tr>` : ''}
+              ${inquiryData.service === 'research' && inquiryData.molecularServicesBudget ? `
+              <tr>
+                <td style="padding: 4px 0; color: #64748b;">Budget for Molecular Services:</td>
+                <td style="padding: 4px 0;">${inquiryData.molecularServicesBudget}</td>
+              </tr>` : ''}
+              ${inquiryData.service === 'research' && inquiryData.plannedSampleCount ? `
+              <tr>
+                <td style="padding: 4px 0; color: #64748b;">Planned Sample Count:</td>
+                <td style="padding: 4px 0;">${inquiryData.plannedSampleCount}</td>
+              </tr>` : ''}
             </table>
             
             ${inquiryData.researchOverview ? `
@@ -452,6 +468,8 @@ ${inquiryData.sampleCount ? `Sample Count: ${inquiryData.sampleCount}\n` : ''}
 ${inquiryData.workflowType ? `Workflow: ${formatWorkflowType(inquiryData.workflowType)}\n` : ''}
 ${inquiryData.bioinfoOptions && inquiryData.bioinfoOptions.length > 0 ? `Bioinformatics Analysis: ${inquiryData.bioinfoOptions.map(formatBioinfoOption).join(', ')}\n` : ''}
 ${inquiryData.researchOverview ? `Research Overview: ${inquiryData.researchOverview}\n` : ''}
+${inquiryData.service === 'research' && inquiryData.molecularServicesBudget ? `Budget for Molecular Services: ${inquiryData.molecularServicesBudget}\n` : ''}
+${inquiryData.service === 'research' && inquiryData.plannedSampleCount ? `Planned Sample Count: ${inquiryData.plannedSampleCount}\n` : ''}
 ${inquiryData.methodologyFileUrl ? `Methodology File: ${inquiryData.methodologyFileUrl}\n` : ''}
 ${inquiryData.individualAssayDetails ? `Individual Assay Details: ${inquiryData.individualAssayDetails}\n` : ''}
 ${inquiryData.service === 'retail' && inquiryData.retailItems && inquiryData.retailItems.length > 0 ? `Retail Items: \n${inquiryData.retailItems.map(item => `- ${item}${inquiryData.retailItemDetails?.[item] ? `: ${inquiryData.retailItemDetails?.[item]}` : ''}`).join('\n')}\n` : ''}

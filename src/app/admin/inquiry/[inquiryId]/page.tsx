@@ -400,17 +400,17 @@ function InquiryDetailContent() {
             )}
 
             {/* Research and Collaboration Details Section */}
-            {(inquiry.projectBackground || inquiry.molecularServicesBudget || inquiry.plannedSampleCount || inquiry.projectBudget) && (
+            {((inquiry.serviceType === 'research') || inquiry.projectBackground || inquiry.projectBudget || inquiry.molecularServicesBudget || inquiry.plannedSampleCount) && (
               <div className="pt-4 border-t border-slate-100 space-y-4">
                 <h3 className="text-sm font-semibold text-slate-700">Research & Collaboration Details</h3>
 
-                {inquiry.projectBackground && (
+                {(inquiry.researchOverview || inquiry.projectBackground) && (
                   <div className="flex flex-col">
                     <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                      Project Background
+                      Overview of Research, Objectives, and Scope of Collaboration
                     </span>
                     <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
-                      {inquiry.projectBackground}
+                      {inquiry.researchOverview || inquiry.projectBackground}
                     </p>
                   </div>
                 )}
@@ -425,7 +425,7 @@ function InquiryDetailContent() {
 
                   {inquiry.plannedSampleCount && (
                     <div className="flex flex-col">
-                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Planned Sample Count</span>
+                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">How Many Samples Are You Planning to Send?</span>
                       <span className="text-sm font-medium text-slate-800 mt-1">{inquiry.plannedSampleCount}</span>
                     </div>
                   )}
