@@ -27,6 +27,7 @@ export interface Inquiry {
 
   // Retail Sales specific fields
   retailItems?: string[] | null;
+  retailItemDetails?: Record<string, string> | null;
   
   // Legacy Service-specific fields
   workflows?: string[];

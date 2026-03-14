@@ -211,6 +211,10 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       bioinfoOptions: inquiryData.bioinfoOptions || [],
       individualAssayDetails: inquiryData.individualAssayDetails || null,
       
+      // Retail Sales specific fields
+      retailItems: inquiryData.retailItems || [],
+      retailItemDetails: inquiryData.retailItemDetails || {},
+      
       // Service-specific fields (legacy - will be null for non-applicable services)
       // Laboratory Service fields
       workflows: inquiryData.workflows || [],
@@ -295,6 +299,13 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
         ? inquiryData.bioinfoOptions.map(formatBioinfoOption).join(', ')
         : '';
       templateData.individualAssayDetails = inquiryData.individualAssayDetails || '';
+      // Retail items formatting for template
+      if (inquiryData.service === 'retail' && inquiryData.retailItems && inquiryData.retailItems.length > 0) {
+        templateData.retailItemsFormatted = inquiryData.retailItems.map(item => {
+          const amount = inquiryData.retailItemDetails?.[item];
+          return amount ? `${item} (${amount})` : item;
+        }).join(', ');
+      }
       // Legacy fields for backward compatibility
       templateData.workflows = Array.isArray(inquiryData.workflows) 
         ? inquiryData.workflows.join(', ') 
@@ -387,6 +398,18 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
                 <td style="padding: 4px 0; color: #64748b;">Equipment/Workflow:</td>
                 <td style="padding: 4px 0;">${inquiryData.individualAssayDetails}</td>
               </tr>` : ''}
+              ${inquiryData.service === 'retail' && inquiryData.retailItems && inquiryData.retailItems.length > 0 ? `
+              <tr>
+                <td style="padding: 4px 0; color: #64748b;">Retail Items:</td>
+                <td style="padding: 4px 0;">
+                  <ul style="margin: 0; padding-left: 20px;">
+                    ${inquiryData.retailItems.map(item => {
+                      const amount = inquiryData.retailItemDetails?.[item];
+                      return `<li style="margin-bottom: 2px;">${item}${amount ? `: <strong>${amount}</strong>` : ''}</li>`;
+                    }).join('')}
+                  </ul>
+                </td>
+              </tr>` : ''}
             </table>
             
             ${inquiryData.researchOverview ? `
@@ -431,6 +454,7 @@ ${inquiryData.bioinfoOptions && inquiryData.bioinfoOptions.length > 0 ? `Bioinfo
 ${inquiryData.researchOverview ? `Research Overview: ${inquiryData.researchOverview}\n` : ''}
 ${inquiryData.methodologyFileUrl ? `Methodology File: ${inquiryData.methodologyFileUrl}\n` : ''}
 ${inquiryData.individualAssayDetails ? `Individual Assay Details: ${inquiryData.individualAssayDetails}\n` : ''}
+${inquiryData.service === 'retail' && inquiryData.retailItems && inquiryData.retailItems.length > 0 ? `Retail Items: \n${inquiryData.retailItems.map(item => `- ${item}${inquiryData.retailItemDetails?.[item] ? `: ${inquiryData.retailItemDetails?.[item]}` : ''}`).join('\n')}\n` : ''}
 ${inquiryData.workflows && inquiryData.workflows.length > 0 ? `Workflows: ${Array.isArray(inquiryData.workflows) ? inquiryData.workflows.join(', ') : inquiryData.workflows}\n` : ''}
 ${inquiryData.additionalInfo ? `Additional Info: ${inquiryData.additionalInfo}\n` : ''}
 ${inquiryData.projectBackground ? `Project Background: ${inquiryData.projectBackground}\n` : ''}

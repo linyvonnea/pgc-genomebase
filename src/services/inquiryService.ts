@@ -74,6 +74,10 @@ export async function getInquiries(): Promise<Inquiry[]> {
         bioinfoOptions: data.bioinfoOptions || null,
         individualAssayDetails: data.individualAssayDetails || null,
         
+        // Retail projects fields
+        retailItems: data.retailItems || null,
+        retailItemDetails: data.retailItemDetails || null,
+        
         // Legacy/Service-specific fields
         workflows: data.workflows || [],
         additionalInfo: data.additionalInfo || null,
@@ -149,6 +153,10 @@ export async function getInquiryById(id: string): Promise<Inquiry> {
       workflowType: data.workflowType || null,
       bioinfoOptions: data.bioinfoOptions || null,
       individualAssayDetails: data.individualAssayDetails || null,
+      
+      // Retail projects fields
+      retailItems: data.retailItems || null,
+      retailItemDetails: data.retailItemDetails || null,
       
       // Legacy/Service-specific fields
       workflows: data.workflows || [],
