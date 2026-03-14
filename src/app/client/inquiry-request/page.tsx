@@ -565,40 +565,6 @@ export default function QuotationRequestForm() {
                     )}
                   </div>
                 )}
-                
-                {/* Equipment Use - Free Text Area */}
-                {selectedService === "equipment" && (
-                  <div className="space-y-4">
-                    <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-100">
-                      <h3 className="text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                        Equipment / Workflow Details
-                      </h3>
-                      <p className="text-slate-700 mb-4 text-sm leading-relaxed">
-                        Please provide details about the equipment you wish to use or the specific workflow you require.
-                      </p>
-                      
-                      <div>
-                        <Label htmlFor="equipmentDetails" className="text-sm font-semibold text-slate-700 mb-2 block">
-                          Equipment / Workflow Description <span className="text-[#B9273A]">*</span>
-                        </Label>
-                        <Textarea
-                          id="equipmentDetails"
-                          placeholder="Describe the equipment or workflow you need..."
-                          {...register("individualAssayDetails")}
-                          className="bg-white border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[150px] resize-none"
-                          rows={6}
-                        />
-                        {errors.individualAssayDetails && (
-                          <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
-                            <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                            {errors.individualAssayDetails.message}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
