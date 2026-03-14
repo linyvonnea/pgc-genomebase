@@ -176,24 +176,47 @@ export default function FAQPage() {
         </div>
 
         {/* Contact Footer */}
-        <div className="mt-16 text-center bg-white p-8 rounded-2xl border shadow-sm">
-          <h3 className="text-xl font-bold text-slate-900 mb-2">Still have questions?</h3>
-          <p className="text-slate-600 mb-6 max-w-md mx-auto">
-            If you couldn't find the answer you were looking for, our team is here to help with your technical inquiries.
+        <div className="mt-16 text-center bg-white p-8 rounded-2xl border shadow-sm flex flex-col items-center">
+          <h3 className="text-xl font-bold text-slate-900 mb-4">Still have questions?</h3>
+          <p className="text-slate-600 mb-8 max-w-lg mx-auto leading-relaxed">
+            If you couldn't find the answer you were looking for, our team is here to help. You may contact us through the following channels:
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a 
-              href="/inquire" 
-              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md shadow-blue-200"
-            >
-              Submit an Inquiry
-            </a>
-            <a 
-              href="mailto:pgcvisayas@up.edu.ph" 
-              className="bg-slate-100 text-slate-700 px-8 py-3 rounded-xl font-bold hover:bg-slate-200 transition-all"
-            >
-              Contact Support
-            </a>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl px-4">
+            <div className="flex flex-col p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 transition-all group">
+              <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4 mx-auto group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <Globe className="w-5 h-5" />
+              </div>
+              <h4 className="font-bold text-slate-900 mb-1">Client Portal</h4>
+              <p className="text-xs text-slate-500 mb-4">Official channel for project inquiries and quotations</p>
+              <a 
+                href="/client/inquiry-request" 
+                className="mt-auto bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-all text-sm"
+              >
+                Submit Inquiry
+              </a>
+            </div>
+
+            <div className="flex flex-col p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-blue-200 transition-all group">
+              <div className="w-10 h-10 bg-slate-200 text-slate-600 rounded-full flex items-center justify-center mb-4 mx-auto group-hover:bg-slate-600 group-hover:text-white transition-colors">
+                <HelpCircle className="w-5 h-5" />
+              </div>
+              <h4 className="font-bold text-slate-900 mb-1">Email Support</h4>
+              <p className="text-xs text-slate-500 mb-4">For general questions and administrative support</p>
+              <a 
+                href="mailto:pgc.upvisayas@up.edu.ph" 
+                className="mt-auto bg-white text-slate-700 border border-slate-200 px-6 py-2.5 rounded-xl font-bold hover:bg-slate-100 transition-all text-sm"
+              >
+                Email Us
+              </a>
+            </div>
+          </div>
+
+          <div className="mt-8 pt-8 border-t border-slate-100 w-full max-w-lg">
+            <p className="text-[11px] text-slate-400 font-medium">
+              Philippine Genome Center Visayas <br/>
+              Regional Research Center, UP Visayas, Miagao, Iloilo
+            </p>
           </div>
         </div>
       </div>
