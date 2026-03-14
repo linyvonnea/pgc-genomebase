@@ -3069,8 +3069,8 @@ export default function ClientPortalPage() {
                             </div>
                           )}
 
-                          {/* Research Narrative (Only if not already shown in Laboratory block) */}
-                          {currentInquiry.serviceType !== "laboratory" && (currentInquiry.serviceType as string) !== "laboratory" && currentInquiry.researchOverview && (
+                          {/* Research Narrative (Only for non-research, non-laboratory services) */}
+                          {currentInquiry.serviceType !== "research" && currentInquiry.researchOverview && (
                             <div className="space-y-2">
                               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Objectives & Brief Overview</span>
                               <div className="p-4 bg-indigo-50/30 rounded-xl border border-indigo-100/30 text-sm text-slate-800 italic leading-relaxed font-medium">
@@ -3079,8 +3079,39 @@ export default function ClientPortalPage() {
                             </div>
                           )}
 
-                          {/* Training & Logistics */}
-                          {(currentInquiry.projectBackground || currentInquiry.molecularServicesBudget || currentInquiry.plannedSampleCount || currentInquiry.specificTrainingNeed || currentInquiry.targetTrainingDate) && (
+                          {/* Research & Collaboration Details */}
+                          {currentInquiry.serviceType === 'research' && (currentInquiry.researchOverview || currentInquiry.projectBackground || currentInquiry.molecularServicesBudget || currentInquiry.plannedSampleCount) && (
+                            <div className="pt-4 border-t border-slate-100 space-y-4">
+                              {(currentInquiry.researchOverview || currentInquiry.projectBackground) && (
+                                <div className="space-y-2">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Overview of Research, Objectives, and Scope of Collaboration
+                                  </span>
+                                  <div className="p-3 bg-slate-50/50 rounded-lg text-sm text-slate-700 leading-relaxed border border-slate-100 whitespace-pre-wrap">
+                                    {currentInquiry.researchOverview || currentInquiry.projectBackground}
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {currentInquiry.molecularServicesBudget && (
+                                  <div className="space-y-1">
+                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Molecular Services Budget</span>
+                                    <p className="text-sm font-bold text-slate-800">{currentInquiry.molecularServicesBudget}</p>
+                                  </div>
+                                )}
+                                {currentInquiry.plannedSampleCount && (
+                                  <div className="space-y-1">
+                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">How Many Samples Are You Planning to Send?</span>
+                                    <p className="text-sm font-bold text-slate-800">{currentInquiry.plannedSampleCount}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Training Details */}
+                          {currentInquiry.serviceType === 'training' && (currentInquiry.specificTrainingNeed || currentInquiry.targetTrainingDate || currentInquiry.numberOfParticipants) && (
                             <div className="pt-4 border-t border-slate-100 space-y-4">
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {currentInquiry.targetTrainingDate && (
@@ -3097,27 +3128,15 @@ export default function ClientPortalPage() {
                                     <p className="text-sm font-bold text-slate-800">{currentInquiry.numberOfParticipants} pax</p>
                                   </div>
                                 )}
-                                {currentInquiry.molecularServicesBudget && (
-                                  <div className="space-y-1">
-                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Molecular Services Budget</span>
-                                    <p className="text-sm font-bold text-slate-800">{currentInquiry.molecularServicesBudget}</p>
-                                  </div>
-                                )}
-                                {currentInquiry.plannedSampleCount && (
-                                  <div className="space-y-1">
-                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Planned Sample Count</span>
-                                    <p className="text-sm font-bold text-slate-800">{currentInquiry.plannedSampleCount}</p>
-                                  </div>
-                                )}
                               </div>
 
-                              {(currentInquiry.projectBackground || currentInquiry.specificTrainingNeed) && (
+                              {currentInquiry.specificTrainingNeed && (
                                 <div className="space-y-2">
                                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                    {currentInquiry.specificTrainingNeed ? "Training Scope" : "Technical Background"}
+                                    Training Scope
                                   </span>
                                   <div className="p-3 bg-slate-50/50 rounded-lg text-sm text-slate-700 leading-relaxed border border-slate-100 whitespace-pre-wrap">
-                                    {currentInquiry.projectBackground || currentInquiry.specificTrainingNeed}
+                                    {currentInquiry.specificTrainingNeed}
                                   </div>
                                 </div>
                               )}

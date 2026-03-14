@@ -80,7 +80,7 @@ export const inquirySchema = z.object({
     .max(1000, "Additional information must be at most 1000 characters")
     .optional(), 
   
-  // Research and Collaboration Service fields
+  // Research and Collaboration Service fields (legacy)
   projectBackground: z.string()
     .max(2000, "Project background must be at most 2000 characters")
     .optional(), 
@@ -90,8 +90,8 @@ export const inquirySchema = z.object({
     .optional(),
 
   // Research and Collaboration - New fields
-  molecularServicesBudget: z.string().max(100).optional(),
-  plannedSampleCount: z.string().max(100).optional(),
+  molecularServicesBudget: z.string().max(200, "Budget must be at most 200 characters").optional(),
+  plannedSampleCount: z.string().regex(/^\d*$/, "Planned sample count must contain numbers only").max(20, "Planned sample count must be at most 20 digits").optional(),
   
   // Training Service specific fields
   specificTrainingNeed: z.string()
@@ -216,15 +216,25 @@ export const inquiryFormSchema = inquirySchema
     message: "Please select at least one bioinformatics analysis option",
     path: ["bioinfoOptions"],
   })
-  // Conditional validation: Research service requires project background
+  // Conditional validation: Research service requires overview/objectives/scope
   .refine((data) => {
     if (data.service === "research") {
-      return data.projectBackground && data.projectBackground.trim().length > 0;
+      return data.researchOverview && data.researchOverview.trim().length > 0;
     }
     return true; // Valid for non-research services
   }, {
-    message: "Project background is required for research collaboration",
-    path: ["projectBackground"], 
+    message: "Overview of research, objectives, and scope of collaboration is required",
+    path: ["researchOverview"], 
+  })
+  // Conditional validation: if planned sample count is provided for research, it must be numeric
+  .refine((data) => {
+    if (data.service === "research" && data.plannedSampleCount) {
+      return /^\d+$/.test(data.plannedSampleCount.trim());
+    }
+    return true;
+  }, {
+    message: "Please enter numbers only",
+    path: ["plannedSampleCount"],
   })
   // Conditional validation: Training service requires specific training need
   .refine((data) => {

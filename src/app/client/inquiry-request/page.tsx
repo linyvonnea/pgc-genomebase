@@ -768,22 +768,22 @@ export default function QuotationRequestForm() {
               {/* Research Service Fields */}
               {selectedService === "research" && (
                 <div className="space-y-6">
-                  {/* Project Background - Required for research */}
+                  {/* Research Overview - Required for research */}
                   <div>
-                    <Label htmlFor="projectBackground" className="text-sm font-semibold text-slate-700 mb-2 block">
-                      Indicate a brief background of the project and required molecular workflow <span className="text-[#B9273A]">*</span>
+                    <Label htmlFor="researchOverview" className="text-sm font-semibold text-slate-700 mb-2 block">
+                      Overview of research, objectives, and scope of collaboration with PGC Visayas. Kindly provide comprehensive details. <span className="text-[#B9273A]">*</span>
                     </Label>
                     <Textarea
-                      id="projectBackground"
-                      placeholder="Enter a description..."
-                      {...register("projectBackground")}
-                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[100px] resize-none"
-                      rows={4}
+                      id="researchOverview"
+                      placeholder="Provide comprehensive details about your research, objectives, and scope of collaboration with PGC Visayas..."
+                      {...register("researchOverview")}
+                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[140px] resize-none"
+                      rows={5}
                     />
-                    {errors.projectBackground && (
+                    {errors.researchOverview && (
                       <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
                         <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                        {errors.projectBackground.message}
+                        {errors.researchOverview.message}
                       </p>
                     )}
                   </div>
@@ -803,29 +803,25 @@ export default function QuotationRequestForm() {
                     </div>
                     <div>
                       <Label htmlFor="plannedSampleCount" className="text-sm font-semibold text-slate-700 mb-2 block">
-                        How many samples are you planning to send
+                        How many samples are you planning to send?
                       </Label>
                       <Input
                         id="plannedSampleCount"
-                        placeholder="___"
+                        type="number"
+                        min="0"
+                        step="1"
+                        inputMode="numeric"
+                        placeholder="Enter number of samples"
                         {...register("plannedSampleCount")}
                         className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
                       />
+                      {errors.plannedSampleCount && (
+                        <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                          <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                          {errors.plannedSampleCount.message}
+                        </p>
+                      )}
                     </div>
-                  </div>
-
-                  {/* Project Budget - Required for research */}
-                  <div className="hidden">
-                    <Label htmlFor="projectBudget" className="text-sm font-semibold text-slate-700 mb-2 block">
-                      Indicate project budget for molecular workflow <span className="text-[#B9273A]">*</span>
-                    </Label>
-                    <Input
-                      id="projectBudget"
-                      type="text"
-                      placeholder="₱"
-                      {...register("projectBudget")}
-                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
-                    />
                   </div>
                 </div>
               )}
@@ -1063,11 +1059,11 @@ export default function QuotationRequestForm() {
             )}
             {pendingData.service === "research" && (
               <div className="space-y-3">
-                {pendingData.projectBackground && (
+                {pendingData.researchOverview && (
                   <div>
-                    <span className="font-semibold block mb-1">Project Background:</span>
+                    <span className="font-semibold block mb-1">Overview of research, objectives, and scope of collaboration:</span>
                     <p className="bg-slate-50 p-3 rounded-lg text-slate-700 whitespace-pre-wrap">
-                      {pendingData.projectBackground}
+                      {pendingData.researchOverview}
                     </p>
                   </div>
                 )}
@@ -1076,10 +1072,7 @@ export default function QuotationRequestForm() {
                     <div><span className="font-semibold">Budget for molecular services:</span> {pendingData.molecularServicesBudget}</div>
                   )}
                   {pendingData.plannedSampleCount && (
-                    <div><span className="font-semibold">Planned Sample Count:</span> {pendingData.plannedSampleCount}</div>
-                  )}
-                  {pendingData.projectBudget && (
-                    <div><span className="font-semibold">Project Budget:</span> {pendingData.projectBudget}</div>
+                    <div><span className="font-semibold">How many samples are you planning to send?</span> {pendingData.plannedSampleCount}</div>
                   )}
                 </div>
               </div>
