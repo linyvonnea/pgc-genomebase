@@ -64,6 +64,7 @@ export const inquirySchema = z.object({
   
   // Retail Sales specific fields
   retailItems: z.array(z.string()).optional(), // List of retail items requested
+  retailItemDetails: z.record(z.string(), z.string()).optional(), // Detailed amounts for each retail item
   
   // Laboratory Service specific fields (legacy - keeping for backward compatibility)
   workflows: z.array(z.enum([

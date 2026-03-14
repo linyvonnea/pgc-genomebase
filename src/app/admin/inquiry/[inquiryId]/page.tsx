@@ -270,6 +270,31 @@ function InquiryDetailContent() {
               </div>
             )}
 
+            {/* Retail Sales Details Section */}
+            {inquiry.serviceType === 'retail' && inquiry.retailItems && (
+              <div className="pt-4 border-t border-slate-100 space-y-4">
+                <h3 className="text-sm font-semibold text-slate-700">Retail Sales Details</h3>
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                    Requested Items
+                  </span>
+                  <div className="grid grid-cols-1 gap-3 mt-2">
+                    {inquiry.retailItems.map((item) => (
+                      <div key={item} className="flex flex-col bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <span className="text-sm font-semibold text-slate-800">{item}</span>
+                        {inquiry.retailItemDetails?.[item] && (
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="text-xs text-slate-500">Amount:</span>
+                            <span className="text-sm text-[#166FB5] font-medium">{inquiry.retailItemDetails[item]}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Research Details Section */}
             {(inquiry.serviceType === 'laboratory') && (
               <div className="pt-4 border-t border-slate-100 space-y-4">

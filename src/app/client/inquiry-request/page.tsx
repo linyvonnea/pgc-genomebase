@@ -85,6 +85,7 @@ export default function QuotationRequestForm() {
       bioinfoOptions: [],
       individualAssayDetails: "",
       retailItems: [],
+      retailItemDetails: {},
       workflows: [],
       additionalInfo: "",
       projectBackground: "",
@@ -120,6 +121,7 @@ export default function QuotationRequestForm() {
     setValue("bioinfoOptions", [])
     setValue("individualAssayDetails", "")
     setValue("retailItems", [])
+    setValue("retailItemDetails", {})
     setValue("workflows", [])
     setValue("additionalInfo", "")
     setValue("projectBackground", "")
@@ -155,6 +157,24 @@ export default function QuotationRequestForm() {
       ? [...currentItems, item] 
       : currentItems.filter(i => i !== item)
     setValue("retailItems", newItems)
+    
+    // Also clear detail if unchecked
+    if (!checked) {
+      const currentDetails = formData.retailItemDetails || {}
+      const { [item]: _, ...newDetails } = currentDetails
+      setValue("retailItemDetails", newDetails)
+    }
+  }
+
+  /**
+   * Handles retail item detail changes
+   */
+  const handleRetailDetailChange = (item: string, amount: string) => {
+    const currentDetails = formData.retailItemDetails || {}
+    setValue("retailItemDetails", {
+      ...currentDetails,
+      [item]: amount
+    })
   }
 
   /**
@@ -458,21 +478,35 @@ export default function QuotationRequestForm() {
                     </Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {[
-                        "Type 1 (Ultrapure) Milli-Q Water",
-                        "Type 2 (Pure/Elix) Distilled Water",
-                        "Liquid Nitrogen",
-                        "Flake Ice"
+                        { label: "Type 1 (Ultrapure) Milli-Q Water", placeholder: "Enter amount in mL or liters" },
+                        { label: "Type 2 (Pure/Elix) Distilled Water", placeholder: "Enter amount in mL or liters" },
+                        { label: "Liquid Nitrogen", placeholder: "Enter amount in mL or liters" },
+                        { label: "Flake Ice", placeholder: "Enter amount in grams or kilograms" }
                       ].map((item) => (
-                        <div key={item} className="flex items-center space-x-3 p-3 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
-                          <input
-                            type="checkbox"
-                            checked={formData.retailItems?.includes(item)}
-                            onChange={(e) => handleRetailItemChange(item, e.target.checked)}
-                            className="h-4 w-4 rounded border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
-                          />
-                          <Label className="text-sm text-slate-700 font-medium cursor-pointer">
-                            {item}
-                          </Label>
+                        <div key={item.label} className="flex flex-col space-y-2 p-3 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
+                          <div className="flex items-center space-x-3">
+                            <input
+                              type="checkbox"
+                              checked={formData.retailItems?.includes(item.label)}
+                              onChange={(e) => handleRetailItemChange(item.label, e.target.checked)}
+                              className="h-4 w-4 rounded border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                            />
+                            <Label className="text-sm text-slate-700 font-medium cursor-pointer">
+                              {item.label}
+                            </Label>
+                          </div>
+                          
+                          {formData.retailItems?.includes(item.label) && (
+                            <div className="pl-7 animate-in fade-in slide-in-from-top-2 duration-300">
+                              <Input
+                                type="text"
+                                placeholder={item.placeholder}
+                                value={formData.retailItemDetails?.[item.label] || ""}
+                                onChange={(e) => handleRetailDetailChange(item.label, e.target.value)}
+                                className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-9 text-xs"
+                              />
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
