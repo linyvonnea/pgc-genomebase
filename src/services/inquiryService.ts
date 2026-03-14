@@ -221,6 +221,8 @@ export function subscribeToInquiryById(
         workflowType: data.workflowType || null,
         bioinfoOptions: data.bioinfoOptions || null,
         individualAssayDetails: data.individualAssayDetails || null,
+        retailItems: data.retailItems || null,
+        retailItemDetails: data.retailItemDetails || null,
         workflows: data.workflows || [],
         additionalInfo: data.additionalInfo || null,
         projectBackground: data.projectBackground || null,
