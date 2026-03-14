@@ -2968,7 +2968,7 @@ export default function ClientPortalPage() {
                             </div>
                           ) : (
                             /* Other Services (Research, Training, Retail, etc.) */
-                            <>
+                            <div className="space-y-6 animate-in fade-in duration-500">
                               {/* Top Section: Quick Stats */}
                               <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                                 {/* Service Type */}
@@ -2989,7 +2989,7 @@ export default function ClientPortalPage() {
                                     <div className="flex flex-wrap gap-1.5">
                                       {currentInquiry.retailItems.map((item, idx) => (
                                         <Badge key={idx} variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] font-bold">
-                                          {item}
+                                          {item} {currentInquiry.retailItemDetails?.[item] ? `(${currentInquiry.retailItemDetails[item]})` : ""}
                                         </Badge>
                                       ))}
                                     </div>
@@ -3004,14 +3004,26 @@ export default function ClientPortalPage() {
                                   </div>
                                 )}
 
-                                {/* Project Budget */}
-                                {currentInquiry.projectBudget && (
-                                  <div className="space-y-1.5">
-                                    <div className="flex items-center gap-1.5">
-                                      <DollarSign className="h-4 w-4 text-slate-400" />
-                                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Estim. Budget</span>
+                                {/* Retail Item Details (Cards) */}
+                                {currentInquiry.serviceType === 'retail' && currentInquiry.retailItems && currentInquiry.retailItems.length > 0 && (
+                                  <div className="space-y-3 pt-4 border-t border-slate-100 sm:col-span-3">
+                                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block px-1">Detailed Item List & Amounts</span>
+                                    <div className="grid grid-cols-1 gap-3">
+                                      {currentInquiry.retailItems.map((item, idx) => (
+                                        <div key={idx} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3.5 bg-white rounded-xl border border-slate-100 shadow-sm hover:border-blue-100 transition-all group">
+                                          <div className="flex items-center gap-3">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 group-hover:scale-125 transition-transform" />
+                                            <span className="text-sm font-bold text-slate-800">{item}</span>
+                                          </div>
+                                          {currentInquiry.retailItemDetails?.[item] && (
+                                            <div className="mt-2 sm:mt-0 flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg border border-blue-100/50">
+                                              <span className="text-[10px] font-bold text-blue-500 uppercase tracking-tight">Amount</span>
+                                              <span className="text-sm font-bold text-[#166FB5]">{currentInquiry.retailItemDetails[item]}</span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
                                     </div>
-                                    <p className="text-sm font-bold text-slate-900">{currentInquiry.projectBudget}</p>
                                   </div>
                                 )}
                               </div>
@@ -3058,7 +3070,7 @@ export default function ClientPortalPage() {
                                   </div>
                                 </div>
                               )}
-                            </>
+                            </div>
                           )}
 
                           {/* Specific Needs & Assays (Common for all) */}
@@ -3072,7 +3084,7 @@ export default function ClientPortalPage() {
                           )}
 
                           {/* Research Narrative (Only if not already shown in Laboratory block) */}
-                          {currentInquiry.serviceType !== "laboratory" && currentInquiry.researchOverview && (
+                          {currentInquiry.serviceType !== "laboratory" && (currentInquiry.serviceType as string) !== "laboratory" && currentInquiry.researchOverview && (
                             <div className="space-y-2">
                               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Objectives & Brief Overview</span>
                               <div className="p-4 bg-indigo-50/30 rounded-xl border border-indigo-100/30 text-sm text-slate-800 italic leading-relaxed font-medium">
@@ -3082,7 +3094,7 @@ export default function ClientPortalPage() {
                           )}
 
                           {/* Training & Logistics */}
-                          {(currentInquiry.projectBackground || currentInquiry.molecularServicesBudget || currentInquiry.plannedSampleCount || currentInquiry.specificTrainingNeed || currentInquiry.targetTrainingDate || currentInquiry.retailItems) && (
+                          {(currentInquiry.projectBackground || currentInquiry.molecularServicesBudget || currentInquiry.plannedSampleCount || currentInquiry.specificTrainingNeed || currentInquiry.targetTrainingDate) && (
                             <div className="pt-4 border-t border-slate-100 space-y-4">
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {currentInquiry.targetTrainingDate && (
@@ -3112,28 +3124,6 @@ export default function ClientPortalPage() {
                                   </div>
                                 )}
                               </div>
-
-                              {currentInquiry.retailItems && currentInquiry.retailItems.length > 0 && (
-                                <div className="space-y-4 pt-2">
-                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Retail Items & Amounts</span>
-                                  <div className="grid grid-cols-1 gap-3">
-                                    {currentInquiry.retailItems.map((item, idx) => (
-                                      <div key={idx} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-white rounded-xl border border-slate-100 shadow-sm hover:border-blue-100 transition-colors group">
-                                        <div className="flex items-center gap-3">
-                                          <div className="w-1.5 h-1.5 rounded-full bg-blue-400 group-hover:scale-125 transition-transform" />
-                                          <span className="text-sm font-bold text-slate-700">{item}</span>
-                                        </div>
-                                        {currentInquiry.retailItemDetails?.[item] && (
-                                          <div className="mt-2 sm:mt-0 flex items-center gap-2 px-3 py-1 bg-blue-50/50 rounded-lg border border-blue-100/50">
-                                            <span className="text-[10px] font-bold text-blue-400 uppercase tracking-tight">Amount</span>
-                                            <span className="text-sm font-bold text-[#166FB5]">{currentInquiry.retailItemDetails[item]}</span>
-                                          </div>
-                                        )}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
 
                               {(currentInquiry.projectBackground || currentInquiry.specificTrainingNeed) && (
                                 <div className="space-y-2">
