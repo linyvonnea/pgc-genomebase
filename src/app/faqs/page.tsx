@@ -17,7 +17,7 @@ const faqData = [
     questions: [
       {
         q: "What services does PGC Visayas offer?",
-        a: "We provide a wide range of omics-based services to support your research, including:\n\n• DNA and RNA extraction\n• Polymerase Chain Reaction (PCR) & RT-PCR for gene expression and quantification\n• Nucleic Acid Quantification\n• Capillary Sequencing\n• Library preparation for next-generation sequencing (NGS)\n  • Whole genome sequencing (WGS)\n  • Amplicon sequencing (e.g., 16S, ITS, and targeted genes)\n  • See the list of available primers for target species\n  • Metagenomics/Metabarcoding sequencing using Environmental DNA (eDNA)\n  • Transcriptomics (RNA-Seq)\n• Bioinformatics Analysis and Data Interpretation\n• Custom research-based sequencing services"
+        a: "We provide a wide range of omics-based services to support your research, including:\n\n• DNA and RNA extraction\n• Polymerase Chain Reaction (PCR) & RT-PCR for gene expression and quantification\n• Nucleic Acid Quantification\n• Capillary Sequencing\n• Library preparation for next-generation sequencing (NGS)\n    • Whole Genome Sequencing (WGS)\n    • Amplicon Sequencing (e.g., 16S, ITS, and targeted genes)\n    • See the list of available primers for target species\n    • Metagenomics/Metabarcoding Sequencing using Environmental DNA (eDNA)\n    • Transcriptomics (RNA-Seq)\n• Bioinformatics Analysis and Data Interpretation\n• Custom research-based sequencing services"
       },
       {
         q: "Can you help design and budget our research project?",
