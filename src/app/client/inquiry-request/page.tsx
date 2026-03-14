@@ -429,6 +429,27 @@ export default function QuotationRequestForm() {
                   )}
                 </div>
 
+                {/* Equipment Use - Free text field */}
+                {selectedService === "equipment" && (
+                  <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+                    <Label htmlFor="individualAssayDetails" className="text-sm font-semibold text-slate-700 mb-2 block">
+                      Equipment / Workflow Details <span className="text-[#B9273A]">*</span>
+                    </Label>
+                    <Textarea
+                      id="individualAssayDetails"
+                      placeholder="Please specify the equipment needed or the molecular workflow you intend to perform (e.g., RT-qPCR, DNA extraction, SDS-PAGE, etc.)."
+                      {...register("individualAssayDetails")}
+                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[120px] resize-none"
+                    />
+                    {errors.individualAssayDetails && (
+                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                        {errors.individualAssayDetails.message}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Retail Item Selection - Moved here */}
                 {selectedService === "retail" && (
                   <div className="animate-in fade-in slide-in-from-top-4 duration-500">
