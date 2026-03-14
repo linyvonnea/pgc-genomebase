@@ -328,6 +328,11 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       ])
     );
     
+    // Add sequencing team and extra recipient for equipment inquiries
+    if (inquiryData.service === 'equipment') {
+      emailRecipients.push("sequencing.pgc.upvisayas@up.edu.ph");
+    }
+    
     // Add Bioinformatics specialist if service type matches
     if (inquiryData.service === 'bioinformatics') {
       emailRecipients.push("bioinfo.pgc.upvisayas@up.edu.ph");
@@ -376,6 +381,11 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
               <tr>
                 <td style="padding: 4px 0; color: #64748b;">Bioinformatics Analysis:</td>
                 <td style="padding: 4px 0;">${inquiryData.bioinfoOptions.map(formatBioinfoOption).join(', ')}</td>
+              </tr>` : ''}
+              ${inquiryData.individualAssayDetails ? `
+              <tr>
+                <td style="padding: 4px 0; color: #64748b;">Equipment/Workflow:</td>
+                <td style="padding: 4px 0;">${inquiryData.individualAssayDetails}</td>
               </tr>` : ''}
             </table>
             
