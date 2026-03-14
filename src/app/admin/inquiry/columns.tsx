@@ -300,7 +300,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 160, // Expanded slightly to provide more breathing room for labels and icons
+    size: 180, // Expanded slightly to provide more breathing room for labels and icons
     cell: ({ row }) => {
       const router = useRouter();
       const inquiry = row.original;
@@ -377,7 +377,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     id: "actions",
     header: () => <div className="text-center w-full">Actions</div>,
-    size: 90, // Reduced slightly to save space for other columns
+    size: 70, // Reduced slightly to save space for other columns
     cell: ({ row }) => {
       const inquiry = row.original;
       const router = useRouter();
