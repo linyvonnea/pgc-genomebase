@@ -603,7 +603,7 @@ export default function QuotationRequestForm() {
             </div>
 
             {/* Dynamic Fields Section - Changes based on selected service */}
-            {selectedService !== "equipment" && (
+            {selectedService !== "equipment" && selectedService !== "retail" && (
               <div className="bg-gradient-to-r from-slate-50 to-blue-50/50 rounded-xl p-6 border border-slate-100">
                 <h2 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-2">
                   <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#4038AF] rounded-full"></div>
