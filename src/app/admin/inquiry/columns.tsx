@@ -200,7 +200,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "email",
     header: "Email",
-    size: 120, // Reduced per request; tooltip shows full value
+    size: 100, // Reduced from 120 per request
     cell: ({ getValue }) => {
       const email = (getValue() as string) || "—";
 
@@ -377,7 +377,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     id: "actions",
     header: () => <div className="text-center w-full">Actions</div>,
-    size: 70, // Reduced slightly to save space for other columns
+    size: 100, // Increased from 70 to provide more breathing room for buttons
     cell: ({ row }) => {
       const inquiry = row.original;
       const router = useRouter();
