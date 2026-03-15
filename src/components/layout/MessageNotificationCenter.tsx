@@ -8,10 +8,11 @@
 
 "use client";
 
-import React, { useState } from "react";
-import { MessageCircle, RotateCcw, MoreHorizontal, Trash2 } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { MessageCircle, RotateCcw, MoreHorizontal, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -24,7 +25,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { useMessageNotifications } from "@/hooks/useMessageNotifications";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
@@ -33,15 +33,31 @@ import {
   markLatestClientMessageAsUnseen,
   dismissThreadNotification
 } from "@/services/quotationThreadService";
-import { X } from "lucide-react";
 
 export function MessageNotificationCenter() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [markingUnseenId, setMarkingUnseenId] = useState<string | null>(null);
   const [dismissingId, setDismissingId] = useState<string | null>(null);
   const { notifications, totalUnread, markViewed, markAllViewed } =
     useMessageNotifications();
+
+  const filteredNotifications = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return notifications;
+
+    return notifications.filter((notification) => {
+      const haystack = [
+        notification.clientName,
+        notification.clientAffiliation,
+        notification.clientEmail,
+      ]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [notifications, searchQuery]);
 
   const handleNotificationClick = (inquiryId: string) => {
     markViewed(inquiryId);
@@ -113,34 +129,69 @@ export function MessageNotificationCenter() {
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-80 p-0" align="end">
+      <PopoverContent className="w-[350px] p-0" align="end">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
-          <div>
-            <h3 className="font-semibold text-slate-900">Client Messages</h3>
-            <p className="text-xs text-slate-500">
-              {totalUnread > 0
-                ? `${totalUnread} unread message${totalUnread !== 1 ? "s" : ""}`
-                : "All caught up!"}
-            </p>
+        <div className="border-b p-4">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div>
+              <h3 className="font-semibold text-slate-900">Client Messages</h3>
+              <p className="text-xs text-slate-500">
+                {totalUnread > 0
+                  ? `${totalUnread} unread message${totalUnread !== 1 ? "s" : ""}`
+                  : "All caught up!"}
+              </p>
+            </div>
+            {notifications.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => markAllViewed()}
+                className="h-7 px-2 text-xs text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+              >
+                Mark all read
+              </Button>
+            )}
+          </div>
+
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+            <Input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search client or affiliation"
+              className="h-8 pr-8 pl-8 text-xs"
+              aria-label="Search client messages"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                aria-label="Clear search"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
           </div>
         </div>
 
         {/* List */}
         <ScrollArea className="h-[360px]">
-          {notifications.length === 0 ? (
+          {filteredNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center px-4">
               <div className="p-3 bg-slate-100 rounded-full mb-3">
                 <MessageCircle className="h-7 w-7 text-slate-400" />
               </div>
-              <p className="text-sm font-medium text-slate-700">No new messages</p>
+              <p className="text-sm font-medium text-slate-700">
+                {searchQuery ? "No matching clients" : "No new messages"}
+              </p>
               <p className="text-xs text-slate-500 mt-1">
-                New client messages will appear here
+                {searchQuery ? "Try a different search keyword" : "New client messages will appear here"}
               </p>
             </div>
           ) : (
             <div className="flex flex-col">
-              {notifications.map((n, index) => (
+              {filteredNotifications.map((n) => (
                 <div
                   key={n.inquiryId}
                   onClick={() => handleNotificationClick(n.inquiryId)}
