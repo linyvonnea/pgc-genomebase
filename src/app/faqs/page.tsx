@@ -8,7 +8,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { HelpCircle, Microscope, CreditCard, Droplets, Clock, BarChart4, Globe } from "lucide-react";
+import { HelpCircle, Microscope, CreditCard, Droplets, Clock, BarChart4, Globe, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const faqData = [
   {
@@ -126,93 +127,110 @@ const faqData = [
 ];
 
 export default function FAQPage() {
+  const [searchQuery, setSearchQuery] = React.useState("");
+  
   const primerListText = "See the list of available primers for target species";
   const primerListHref = "/assets/pgc-visayas-primer-list.pdf";
 
   const turnaroundImgTrigger = "Sample quality: Samples needing extra preparation or troubleshooting can extend the timeline.";
   const turnaroundImgSrc = "/assets/sample-processing-turnaround.png";
 
+  // Filter FAQ data based on search query
+  const filteredFaqData = faqData.map(section => ({
+    ...section,
+    questions: section.questions.filter(item => 
+      item.q.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      item.a.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  })).filter(section => section.questions.length > 0);
+
   return (
     <div className="bg-slate-50 min-h-screen pb-20">
       {/* Header Section */}
-      <div className="bg-blue-600 text-white py-16 mb-12 shadow-inner">
+      <div className="bg-blue-600 text-white py-16 mb-8 shadow-inner">
         <div className="container mx-auto px-4 max-w-5xl text-center">
           <HelpCircle className="w-16 h-16 mx-auto mb-4 opacity-20" />
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight">
             Frequently Asked Questions (FAQs)
           </h1>
+          
+          {/* Search Bar */}
+          <div className="max-w-xl mx-auto relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-300 w-5 h-5 group-focus-within:text-white transition-colors" />
+            <input 
+              type="text"
+              placeholder="Search for questions or keywords..."
+              className="w-full bg-blue-700/50 border border-blue-400/50 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-blue-700/80 transition-all shadow-lg"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
       {/* FAQ Sections */}
       <div className="container mx-auto px-4 max-w-4xl">
-        <div className="grid gap-8">
-          {faqData.map((section, idx) => (
-            <Card key={idx} className="border-none shadow-sm overflow-hidden">
-              <CardHeader className="bg-white border-b border-slate-100 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    {section.icon}
+        {filteredFaqData.length > 0 ? (
+          <div className="grid gap-8">
+            {filteredFaqData.map((section, idx) => (
+              <Card key={idx} className="border-none shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <CardHeader className="bg-white border-b border-slate-100 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 rounded-lg">
+                      {section.icon}
+                    </div>
+                    <CardTitle className="text-xl font-bold text-slate-800">
+                      {section.category}
+                    </CardTitle>
                   </div>
-                  <CardTitle className="text-xl font-bold text-slate-800">
-                    {section.category}
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0 bg-white">
-                <Accordion type="single" collapsible className="w-full">
-                  {section.questions.map((item, qIdx) => (
-                    <AccordionItem 
-                      key={qIdx} 
-                      value={`item-${idx}-${qIdx}`}
-                      className="border-b last:border-0 px-6"
-                    >
-                      <AccordionTrigger className="text-left font-semibold text-slate-700 hover:text-blue-600 hover:no-underline py-5 text-base transition-colors">
-                        {item.q}
-                      </AccordionTrigger>
-                      <AccordionContent className="text-slate-600 leading-relaxed text-sm pb-6">
-                        <div className="whitespace-pre-wrap">
-                          {item.a.split(primerListText).map((part, partIdx, arr) => (
-                            <React.Fragment key={partIdx}>
-                              {part.split(turnaroundImgTrigger).map((subPart, subIdx, subArr) => (
-                                <React.Fragment key={subIdx}>
-                                  {subPart}
-                                  {subIdx < subArr.length - 1 && (
-                                    <>
-                                      {turnaroundImgTrigger}
-                                      <div className="mt-4 mb-2 overflow-hidden rounded-lg border border-slate-200 max-w-2xl mx-auto shadow-sm">
-                                        <img 
-                                          src={turnaroundImgSrc} 
-                                          alt="Sample Processing Turn Around Time"
-                                          className="w-full h-auto transition-transform hover:scale-[1.01]"
-                                        />
-                                      </div>
-                                    </>
-                                  )}
-                                </React.Fragment>
-                              ))}
-                              {partIdx < arr.length - 1 && (
-                                <a
-                                  href={primerListHref}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-700 underline hover:text-blue-900"
-                                >
-                                  {primerListText}
-                                </a>
-                              )}
-                            </React.Fragment>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
+                </CardHeader>
+                <CardContent className="p-0 bg-white">
+                  <Accordion 
+                    type="single" 
+                    collapsible 
+                    className="w-full"
+                    {...(searchQuery ? { value: `item-${idx}-0` } : {})} // Auto-expand first result if searching
+                  >
+                    {section.questions.map((item, qIdx) => (
+                      <AccordionItem 
+                        key={qIdx} 
+                        value={`item-${idx}-${qIdx}`}
+                        className="border-b last:border-0 px-6"
+                      >
+                        <AccordionTrigger className="text-left font-semibold text-slate-700 hover:text-blue-600 hover:no-underline py-5 text-base transition-colors">
+                          {item.q}
+                        </AccordionTrigger>
+                        <AccordionContent className="text-slate-600 leading-relaxed text-sm pb-6">
+/* Lines 160-192 omitted */
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 animate-in fade-in duration-500">
+            <div className="bg-white rounded-2xl p-12 shadow-sm border border-slate-100 max-w-lg mx-auto">
+              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="w-8 h-8 text-slate-300" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-2">No results found</h3>
+              <p className="text-slate-500 leading-relaxed">
+                We couldn't find any FAQs matching "{searchQuery}". <br />
+                Try using different keywords or clearing your search.
+              </p>
+              <Button 
+                variant="outline" 
+                className="mt-6 border-blue-200 text-blue-600 hover:bg-blue-50"
+                onClick={() => setSearchQuery("")}
+              >
+                Clear Search
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
