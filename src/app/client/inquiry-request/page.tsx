@@ -929,18 +929,18 @@ export default function QuotationRequestForm() {
                           }
                           initialFocus
                         />
-                        {errors.bioinfoOptions && formData.workflowType === "complete-bioinfo" && (
-                          <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
-                            <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                            {errors.bioinfoOptions.message}
-                          </p>
-                        )}
                       </PopoverContent>
                     </Popover>
                     {errors.targetTrainingDate && (
                       <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
                         <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
                         {errors.targetTrainingDate.message}
+                      </p>
+                    )}
+                    {errors.bioinfoOptions && formData.workflowType === "complete-bioinfo" && (
+                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                        {errors.bioinfoOptions.message}
                       </p>
                     )}
                   </div>

@@ -201,7 +201,39 @@ export default function FAQPage() {
                           {item.q}
                         </AccordionTrigger>
                         <AccordionContent className="text-slate-600 leading-relaxed text-sm pb-6">
-/* Lines 160-192 omitted */
+                          <div className="whitespace-pre-wrap">
+                            {item.a.split(primerListText).map((part, partIdx, arr) => (
+                              <React.Fragment key={partIdx}>
+                                {part.split(turnaroundImgTrigger).map((subPart, subIdx, subArr) => (
+                                  <React.Fragment key={subIdx}>
+                                    {subPart}
+                                    {subIdx < subArr.length - 1 && (
+                                      <>
+                                        {turnaroundImgTrigger}
+                                        <div className="mt-4 mb-2 overflow-hidden rounded-lg border border-slate-200 max-w-2xl mx-auto shadow-sm">
+                                          <img 
+                                            src={turnaroundImgSrc} 
+                                            alt="Sample Processing Turn Around Time"
+                                            className="w-full h-auto transition-transform hover:scale-[1.01]"
+                                          />
+                                        </div>
+                                      </>
+                                    )}
+                                  </React.Fragment>
+                                ))}
+                                {partIdx < arr.length - 1 && (
+                                  <a
+                                    href={primerListHref}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-700 underline hover:text-blue-900"
+                                  >
+                                    {primerListText}
+                                  </a>
+                                )}
+                              </React.Fragment>
+                            ))}
+                          </div>
                         </AccordionContent>
                       </AccordionItem>
                     ))}
