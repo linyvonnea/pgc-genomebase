@@ -135,6 +135,28 @@ export default function FAQPage() {
   const turnaroundImgTrigger = "Sample quality: Samples needing extra preparation or troubleshooting can extend the timeline.";
   const turnaroundImgSrc = "/assets/sample-processing-turnaround.png";
 
+  // Helper function to highlight text
+  const HighlightText = ({ text, highlight }: { text: string; highlight: string }) => {
+    if (!highlight.trim()) return <>{text}</>;
+    
+    const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+    const parts = text.split(regex);
+    
+    return (
+      <>
+        {parts.map((part, i) => 
+          regex.test(part) ? (
+            <mark key={i} className="bg-yellow-200 text-slate-900 rounded-px px-0.5 font-medium">
+              {part}
+            </mark>
+          ) : (
+            part
+          )
+        )}
+      </>
+    );
+  };
+
   // Filter FAQ data based on search query
   const filteredFaqData = faqData.map(section => ({
     ...section,
@@ -198,7 +220,7 @@ export default function FAQPage() {
                         className="border-b last:border-0 px-6"
                       >
                         <AccordionTrigger className="text-left font-semibold text-slate-700 hover:text-blue-600 hover:no-underline py-5 text-base transition-colors">
-                          {item.q}
+                          <HighlightText text={item.q} highlight={searchQuery} />
                         </AccordionTrigger>
                         <AccordionContent className="text-slate-600 leading-relaxed text-sm pb-6">
                           <div className="whitespace-pre-wrap">
@@ -206,10 +228,10 @@ export default function FAQPage() {
                               <React.Fragment key={partIdx}>
                                 {part.split(turnaroundImgTrigger).map((subPart, subIdx, subArr) => (
                                   <React.Fragment key={subIdx}>
-                                    {subPart}
+                                    <HighlightText text={subPart} highlight={searchQuery} />
                                     {subIdx < subArr.length - 1 && (
                                       <>
-                                        {turnaroundImgTrigger}
+                                        <HighlightText text={turnaroundImgTrigger} highlight={searchQuery} />
                                         <div className="mt-4 mb-2 overflow-hidden rounded-lg border border-slate-200 max-w-2xl mx-auto shadow-sm">
                                           <img 
                                             src={turnaroundImgSrc} 
