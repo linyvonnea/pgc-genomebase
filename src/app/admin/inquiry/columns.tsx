@@ -311,7 +311,7 @@ export const columns: ColumnDef<Inquiry>[] = [
       // Render status as a colored badge with fixed width and trailing icons
       return (
         <div className="flex items-center gap-2 w-full pr-1">
-          <div className="w-[72%] flex-shrink-0">
+          <div className="w-[65%] flex-shrink-0">
             <span
               className={`block w-full px-1.5 py-0.5 rounded-full text-[9px] font-bold truncate text-center ${getStatusColor(
                 status,
@@ -321,13 +321,13 @@ export const columns: ColumnDef<Inquiry>[] = [
             </span>
           </div>
           
-          <div className="flex items-center gap-1.5 flex-1 justify-start">
-            <div className="flex items-center gap-1.5 min-w-[42px] justify-start shrink-0">
+          <div className="flex items-center gap-1 flex-1 justify-start -ml-0.5 mt-0.5">
+            <div className="flex items-center gap-1 min-w-[32px] justify-start shrink-0">
               {!!hasLoggedIn ? (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <User className="h-3.5 w-3.5 text-green-600 fill-green-600 shrink-0 cursor-default" />
+                      <User className="h-3 w-3 text-green-600 fill-green-600 shrink-0 cursor-default" />
                     </TooltipTrigger>
                     <TooltipContent>
                       <p className="text-xs font-semibold">
@@ -337,7 +337,7 @@ export const columns: ColumnDef<Inquiry>[] = [
                   </Tooltip>
                 </TooltipProvider>
               ) : (
-                <div className="w-3.5 h-3.5 shrink-0" />
+                <div className="w-3 h-3 shrink-0" />
               )}
               
               {!!hasOpenedQuotation ? (
@@ -345,8 +345,8 @@ export const columns: ColumnDef<Inquiry>[] = [
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Eye
-                        className="h-3.5 w-3.5 text-blue-500 shrink-0 cursor-default"
-                        strokeWidth={3}
+                        className="h-3 w-3 text-blue-500 shrink-0 cursor-default"
+                        strokeWidth={4}
                       />
                     </TooltipTrigger>
                     <TooltipContent>
@@ -357,11 +357,11 @@ export const columns: ColumnDef<Inquiry>[] = [
                   </Tooltip>
                 </TooltipProvider>
               ) : (
-                <div className="w-3.5 h-3.5 shrink-0" />
+                <div className="w-3 h-3 shrink-0" />
               )}
             </div>
             
-            <div className="shrink-0 flex items-center ml-auto">
+            <div className="shrink-0 flex items-center -ml-1">
               <UnreadBadge
                 inquiryId={inquiry.id}
                 role="admin"
