@@ -385,9 +385,9 @@ export const columns: ColumnDef<Inquiry>[] = [
       const { canEdit, canCreate } = usePermissions(adminInfo?.role);
 
       return (
-        <div className="flex items-center justify-center -space-x-1.5">
+        <div className="flex items-center justify-center -space-x-1 h-9">
           {canCreate("quotations") && (
-            <div className="scale-75 origin-center">
+            <div className="scale-90 origin-center">
               <QuoteButton inquiryId={inquiry.id} />
             </div>
           )}
