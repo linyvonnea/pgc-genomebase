@@ -169,12 +169,17 @@ export default function FAQPage() {
   return (
     <div className="bg-slate-50 min-h-screen pb-20">
       {/* Header Section */}
-      <div className="bg-blue-600 text-white py-16 mb-8 shadow-inner">
-        <div className="container mx-auto px-4 max-w-5xl text-center">
-          <HelpCircle className="w-16 h-16 mx-auto mb-4 opacity-20" />
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight">
-            Frequently Asked Questions (FAQs)
-          </h1>
+      <div className="bg-blue-600 text-white py-12 mb-8 shadow-inner relative overflow-hidden">
+        {/* Background Decoration */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-blue-500 rounded-full opacity-20 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-indigo-500 rounded-full opacity-20 blur-3xl"></div>
+        
+        <div className="container mx-auto px-4 max-w-5xl text-center relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mb-6">
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+              Frequently Asked Questions
+            </h1>
+          </div>
           
           {/* Search Bar */}
           <div className="max-w-xl mx-auto relative group">
