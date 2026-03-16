@@ -102,8 +102,8 @@ export default function ClientVerifyPage() {
         return;
       }
 
-      // Allow login for Pending, Approved Client (isApproved), Quotation Only, and Ongoing Quotation
-      const allowedStatuses = ["Pending", "Approved Client", "Quotation Only", "Ongoing Quotation"];
+      // Allow login for Pending, Approved Client (isApproved), Quotation Only, Ongoing Quotation, and Service Not Offered
+      const allowedStatuses = ["Pending", "Approved Client", "Quotation Only", "Ongoing Quotation", "Service Not Offered"];
       const isAllowed = (inquiry as any).isApproved || allowedStatuses.includes((inquiry as any).status);
       
       if (!isAllowed) {
