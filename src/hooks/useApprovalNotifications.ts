@@ -135,6 +135,7 @@ export function useApprovalNotifications() {
           if (!inquiryToastIdsRef.current[iq.id]) {
             if (!isInitialInquiryLoadRef.current) {
               // New inquiry detected!
+              /* Notification pop-up disabled as requested
               const tId = toast.info("Pending Inquiry", {
                 description: `${iq.name || "Unknown"} from ${iq.affiliation || "Unknown"}`,
                 duration: Infinity, // Does not expire
@@ -146,6 +147,8 @@ export function useApprovalNotifications() {
                 },
               });
               inquiryToastIdsRef.current[iq.id] = tId;
+              */
+              inquiryToastIdsRef.current[iq.id] = "suppressed";
             } else {
               // Mark as tracked during initial load so we don't toast later
               inquiryToastIdsRef.current[iq.id] = "existing";
@@ -187,6 +190,7 @@ export function useApprovalNotifications() {
 
       // Show toast notification for new submissions (only after initial load)
       if (!isInitialLoadRef.current && totalCount > previousCountRef.current) {
+        /* Notification pop-up disabled as requested
         const latestNotification = combined[0];
         toast.info(latestNotification.title, {
           description: latestNotification.message,
@@ -198,6 +202,7 @@ export function useApprovalNotifications() {
             },
           },
         });
+        */
       }
 
       previousCountRef.current = totalCount;
