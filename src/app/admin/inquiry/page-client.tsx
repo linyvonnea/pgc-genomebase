@@ -49,6 +49,7 @@ export function InquiryPageClient({
         // Fire a toast only for inquiry IDs that are newly unread this cycle
         unreadThreads.forEach((thread) => {
           if (!prevUnreadIdsRef.current.has(thread.inquiryId)) {
+            /* Notification pop-up disabled as requested
             toast.info(`New message from ${thread.clientName}`, {
               description: `Inquiry ID: ${thread.inquiryId}`,
               icon: <MessageCircle className="w-4 h-4 text-blue-500" />,
@@ -61,6 +62,7 @@ export function InquiryPageClient({
               },
               duration: 6000,
             });
+            */
           }
         });
       }
