@@ -47,6 +47,16 @@ const TRAINING_PROGRAM_OPTIONS = [
   "Others / Customized Training Program"
 ] as const;
 
+const BIOINFO_SERVICE_TYPE_OPTIONS = [
+  { id: "phylogenetic", label: "Phylogenetic Analysis" },
+  { id: "metabarcoding", label: "Metabarcoding/Metagenomics" },
+  { id: "transcriptomics", label: "Transcriptomics" },
+  { id: "whole-genome-assembly", label: "Whole Genome Assembly" },
+  { id: "others", label: "Others" },
+] as const;
+
+const BIOINFO_DATA_FORMAT_OPTIONS = ["fastq", "fasta", "others"] as const;
+
 /**
  * Main Quotation Request Form Component
  * 
@@ -92,6 +102,11 @@ export default function QuotationRequestForm() {
       methodologyFileUrl: "",
       sampleCount: undefined,
       workflowType: undefined,
+      bioinformaticsDetails: {
+        serviceTypes: [],
+        dataFileFormats: [],
+        dataProvidedByPgc: false,
+      },
       bioinfoOptions: [],
       individualAssayDetails: "",
       retailItems: [],
@@ -129,6 +144,11 @@ export default function QuotationRequestForm() {
     setValue("methodologyFileUrl", "")
     setValue("sampleCount", undefined)
     setValue("workflowType", undefined)
+    setValue("bioinformaticsDetails", {
+      serviceTypes: [],
+      dataFileFormats: [],
+      dataProvidedByPgc: false,
+    })
     setValue("bioinfoOptions", [])
     setValue("individualAssayDetails", "")
     setValue("retailItems", [])
@@ -213,6 +233,34 @@ export default function QuotationRequestForm() {
       ? [...currentOptions, typedOptionId]
       : currentOptions.filter(option => option !== typedOptionId)
     setValue("bioinfoOptions", newOptions)
+  }
+
+  const handleBioinformaticsServiceTypeChange = (optionId: string, checked: boolean) => {
+    const current = Array.isArray(formData.bioinformaticsDetails?.serviceTypes)
+      ? formData.bioinformaticsDetails?.serviceTypes
+      : []
+    const next = checked
+      ? [...current, optionId]
+      : current.filter((item: string) => item !== optionId)
+
+    setValue("bioinformaticsDetails.serviceTypes", next, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+  }
+
+  const handleBioinformaticsDataFormatChange = (formatId: string, checked: boolean) => {
+    const current = Array.isArray(formData.bioinformaticsDetails?.dataFileFormats)
+      ? formData.bioinformaticsDetails?.dataFileFormats
+      : []
+    const next = checked
+      ? [...current, formatId]
+      : current.filter((item: string) => item !== formatId)
+
+    setValue("bioinformaticsDetails.dataFileFormats", next, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
   }
 
   /**
@@ -790,6 +838,246 @@ export default function QuotationRequestForm() {
                   </div>
                 )}
 
+                {selectedService === "bioinformatics" && (
+                  <div className="space-y-6">
+                    <div>
+                      <Label className="text-sm font-semibold text-slate-700 mb-3 block">
+                        Type of bioinformatics service <span className="text-[#B9273A]">*</span>
+                      </Label>
+                      <div className="space-y-3">
+                        {BIOINFO_SERVICE_TYPE_OPTIONS.map((option) => {
+                          const selected = (formData.bioinformaticsDetails?.serviceTypes || []).includes(option.id)
+                          return (
+                            <details key={option.id} className="rounded-lg border border-slate-200 bg-white/60" open={selected}>
+                              <summary className="cursor-pointer list-none px-4 py-3">
+                                <div className="flex items-center gap-3">
+                                  <input
+                                    type="checkbox"
+                                    checked={selected}
+                                    onChange={(e) => handleBioinformaticsServiceTypeChange(option.id, e.target.checked)}
+                                    className="h-4 w-4 rounded border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                                  />
+                                  <span className="text-sm font-semibold text-slate-700">{option.label}</span>
+                                </div>
+                              </summary>
+
+                              {option.id === "phylogenetic" && selected && (
+                                <div className="border-t border-slate-100 px-4 py-3 space-y-3">
+                                  <div>
+                                    <Label className="text-xs font-semibold text-slate-600">No. of markers</Label>
+                                    <Input
+                                      type="number"
+                                      min="1"
+                                      {...register("bioinformaticsDetails.phylogenetic.markerCount", { valueAsNumber: true })}
+                                      className="mt-1 h-10"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs font-semibold text-slate-600">Specify marker(s)</Label>
+                                    <Input
+                                      placeholder="e.g., COI"
+                                      {...register("bioinformaticsDetails.phylogenetic.markers")}
+                                      className="mt-1 h-10"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {option.id === "metabarcoding" && selected && (
+                                <div className="border-t border-slate-100 px-4 py-3 space-y-4">
+                                  <details className="rounded-md border border-slate-100 bg-slate-50/70" open>
+                                    <summary className="px-3 py-2 text-sm font-semibold text-slate-700 cursor-pointer">Study Structure</summary>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 border-t border-slate-100">
+                                      <div><Label className="text-xs">Sample type</Label><Input placeholder="e.g., soil, water" {...register("bioinformaticsDetails.metabarcoding.study.sampleType")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">No. of samples</Label><Input type="number" min="1" {...register("bioinformaticsDetails.metabarcoding.study.sampleCount", { valueAsNumber: true })} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">No. of groups/treatments to study</Label><Input placeholder="NA if not applicable" {...register("bioinformaticsDetails.metabarcoding.study.groupCount")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">No. of replicates per sample</Label><Input placeholder="NA if not applicable" {...register("bioinformaticsDetails.metabarcoding.study.replicatesPerSample")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">Target gene/marker</Label><Input placeholder="e.g., 16s rRNA, ITS (Fungi)" {...register("bioinformaticsDetails.metabarcoding.study.targetGene")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">Target region</Label><Input placeholder="V4" {...register("bioinformaticsDetails.metabarcoding.study.targetRegion")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">Primer set used</Label><Input placeholder="e.g., 515F / 806R" {...register("bioinformaticsDetails.metabarcoding.study.primerSet")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">Expected amplicon size</Label><Input placeholder="e.g., ~250 bp" {...register("bioinformaticsDetails.metabarcoding.study.ampliconSize")} className="mt-1 h-9" /></div>
+                                      <div className="md:col-span-2"><Label className="text-xs">Sequencing type and platform</Label><Input placeholder="e.g., paired-end Illumina iSeq (2 x 150 bp), Data to be generated by PGC Visayas sequencing service" {...register("bioinformaticsDetails.metabarcoding.study.sequencingPlatform")} className="mt-1 h-9" /></div>
+                                    </div>
+                                  </details>
+
+                                  <details className="rounded-md border border-slate-100 bg-slate-50/70" open>
+                                    <summary className="px-3 py-2 text-sm font-semibold text-slate-700 cursor-pointer">Analysis</summary>
+                                    <div className="space-y-3 p-3 border-t border-slate-100">
+                                      <label className="block rounded border border-slate-200 bg-white p-3">
+                                        <div className="flex items-start gap-2">
+                                          <input type="radio" value="general-pipeline" {...register("bioinformaticsDetails.metabarcoding.analysisType")} className="mt-1" />
+                                          <div>
+                                            <p className="text-sm font-semibold text-slate-700">General Pipeline</p>
+                                            <p className="text-xs text-slate-600 mt-1">Includes FastQC, trimming, denoising, and generating the representative sequences, count table, taxonomic information, alpha/beta diversity, and relative abundance plot.</p>
+                                          </div>
+                                        </div>
+                                      </label>
+                                      <label className="block rounded border border-slate-200 bg-white p-3">
+                                        <div className="flex items-start gap-2">
+                                          <input type="radio" value="general-pipeline-downstream" {...register("bioinformaticsDetails.metabarcoding.analysisType")} className="mt-1" />
+                                          <div>
+                                            <p className="text-sm font-semibold text-slate-700">General Pipeline with Downstream Analysis</p>
+                                            <p className="text-xs text-slate-600 mt-1">Pre-processing and downstream analysis results include FastQC, trimming, denoising, and generating the representative sequences, count table, taxonomic information, and relative abundance plot; Alpha diversity indices; Beta diversity indices; Univariate and Multivariate Analysis; Differential Abundance; Function Prediction.</p>
+                                          </div>
+                                        </div>
+                                      </label>
+                                      <label className="block rounded border border-slate-200 bg-white p-3">
+                                        <div className="flex items-start gap-2">
+                                          <input type="radio" value="unsure" {...register("bioinformaticsDetails.metabarcoding.analysisType")} className="mt-1" />
+                                          <div>
+                                            <p className="text-sm font-semibold text-slate-700">Unsure</p>
+                                            <p className="text-xs text-slate-600 mt-1">We will try to provide quotation and/or recommendation based on your target objective/s.</p>
+                                          </div>
+                                        </div>
+                                      </label>
+                                    </div>
+                                  </details>
+                                </div>
+                              )}
+
+                              {option.id === "transcriptomics" && selected && (
+                                <div className="border-t border-slate-100 px-4 py-3 space-y-4">
+                                  <details className="rounded-md border border-slate-100 bg-slate-50/70" open>
+                                    <summary className="px-3 py-2 text-sm font-semibold text-slate-700 cursor-pointer">Study Structure</summary>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 border-t border-slate-100">
+                                      <div><Label className="text-xs">Sample type</Label><Input placeholder="e.g., tissue, organ, organism" {...register("bioinformaticsDetails.transcriptomics.study.sampleType")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">No. of samples</Label><Input type="number" min="1" {...register("bioinformaticsDetails.transcriptomics.study.sampleCount", { valueAsNumber: true })} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">No. of groups/treatments/conditions</Label><Input placeholder="e.g., control vs. treatment" {...register("bioinformaticsDetails.transcriptomics.study.groupCount")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">No. of biological replicates per group</Label><Input {...register("bioinformaticsDetails.transcriptomics.study.biologicalReplicates")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">Sequencing type and platform</Label><Input placeholder="e.g., paired-end Illumina NextSeq (2 x 150 bp)" {...register("bioinformaticsDetails.transcriptomics.study.sequencingPlatform")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">Estimated sequencing depth per sample/library</Label><Input placeholder="e.g., 20-50 Mbp" {...register("bioinformaticsDetails.transcriptomics.study.depth")} className="mt-1 h-9" /></div>
+                                    </div>
+                                  </details>
+
+                                  <details className="rounded-md border border-slate-100 bg-slate-50/70" open>
+                                    <summary className="px-3 py-2 text-sm font-semibold text-slate-700 cursor-pointer">Analysis</summary>
+                                    <div className="space-y-2 p-3 border-t border-slate-100">
+                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3"><input type="checkbox" {...register("bioinformaticsDetails.transcriptomics.analysis.preProcessing")} className="mt-1" /><span className="text-sm">Pre-processing <span className="block text-xs text-slate-600">Includes quality control, k-mer correction, trimming and filtering, rRNA removal (optional)</span></span></label>
+                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3"><input type="checkbox" {...register("bioinformaticsDetails.transcriptomics.analysis.deNovoAssembly")} className="mt-1" /><span className="text-sm">De novo transcriptome assembly pipeline and assembly evaluation <span className="block text-xs text-slate-600">Includes De novo assembly, optional filtering, assembly statistics, alignment rate, BUSCO, quantification</span></span></label>
+                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3"><input type="checkbox" {...register("bioinformaticsDetails.transcriptomics.analysis.referenceBased")} className="mt-1" /><span className="text-sm">Reference-based assembly pipeline <span className="block text-xs text-slate-600">Includes reference-based assembly and quantification. Client must provide .fa and .gtf with accession number.</span></span></label>
+                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3"><input type="checkbox" {...register("bioinformaticsDetails.transcriptomics.analysis.orfPrediction")} className="mt-1" /><span className="text-sm">Open-reading frame prediction <span className="block text-xs text-slate-600">Includes ORF prediction using TransDecoder</span></span></label>
+                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3"><input type="checkbox" {...register("bioinformaticsDetails.transcriptomics.analysis.functionalAnnotation")} className="mt-1" /><span className="text-sm">Functional Annotation <span className="block text-xs text-slate-600">Trinotate (UniProt/SwissProt, Pfam, Eggnog, SignalP, TMHMM, infernal), extracted GO Terms</span></span></label>
+                                    </div>
+                                  </details>
+
+                                  <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3">
+                                    <input type="checkbox" {...register("bioinformaticsDetails.transcriptomics.unsure")} className="mt-1" />
+                                    <span className="text-sm">Unsure <span className="block text-xs text-slate-600">We will try to provide quotation and/or recommendation based on your target objective/s.</span></span>
+                                  </label>
+                                </div>
+                              )}
+
+                              {option.id === "whole-genome-assembly" && selected && (
+                                <div className="border-t border-slate-100 px-4 py-3 space-y-4">
+                                  <details className="rounded-md border border-slate-100 bg-slate-50/70" open>
+                                    <summary className="px-3 py-2 text-sm font-semibold text-slate-700 cursor-pointer">Sample Details</summary>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 border-t border-slate-100">
+                                      <div><Label className="text-xs">Sample Taxonomy</Label><Input placeholder="e.g. E. coli, bacteria, eukaryote, unknown" {...register("bioinformaticsDetails.wholeGenomeAssembly.sampleTaxonomy")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">No. of samples</Label><Input type="number" min="1" {...register("bioinformaticsDetails.wholeGenomeAssembly.sampleCount", { valueAsNumber: true })} className="mt-1 h-9" /></div>
+                                    </div>
+                                  </details>
+
+                                  <details className="rounded-md border border-slate-100 bg-slate-50/70" open>
+                                    <summary className="px-3 py-2 text-sm font-semibold text-slate-700 cursor-pointer">Analysis</summary>
+                                    <div className="space-y-2 p-3 border-t border-slate-100">
+                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3"><input type="checkbox" {...register("bioinformaticsDetails.wholeGenomeAssembly.analysis.assembly")} className="mt-1" /><span className="text-sm">Whole Genome Assembly <span className="block text-xs text-slate-600">Includes FastQC, Trimming, Genome Assembly, and Assembly QC</span></span></label>
+                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3"><input type="checkbox" {...register("bioinformaticsDetails.wholeGenomeAssembly.analysis.assemblyAnnotation")} className="mt-1" /><span className="text-sm">Whole Genome Assembly and Annotation <span className="block text-xs text-slate-600">Includes FastQC, Trimming, Genome Assembly, and Assembly QC and Annotation</span></span></label>
+                                      <div>
+                                        <Label className="text-xs">Additional Downstream Analysis</Label>
+                                        <Input placeholder="Please specify" {...register("bioinformaticsDetails.wholeGenomeAssembly.analysis.additionalDownstream")} className="mt-1 h-9" />
+                                      </div>
+                                    </div>
+                                  </details>
+
+                                  <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3">
+                                    <input type="checkbox" {...register("bioinformaticsDetails.wholeGenomeAssembly.unsure")} className="mt-1" />
+                                    <span className="text-sm">Unsure <span className="block text-xs text-slate-600">We will try to provide quotation and/or recommendation based on your target objective/s.</span></span>
+                                  </label>
+                                </div>
+                              )}
+
+                              {option.id === "others" && selected && (
+                                <div className="border-t border-slate-100 px-4 py-3">
+                                  <Label className="text-xs font-semibold text-slate-600">Please specify</Label>
+                                  <Textarea
+                                    {...register("bioinformaticsDetails.othersSpecify")}
+                                    className="mt-1 min-h-[90px]"
+                                  />
+                                </div>
+                              )}
+                            </details>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    <details className="rounded-lg border border-slate-200 bg-white/60" open>
+                      <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-slate-700">Data</summary>
+                      <div className="space-y-4 border-t border-slate-100 px-4 py-3">
+                        <label className="flex items-center gap-2 text-sm text-slate-700">
+                          <input type="checkbox" {...register("bioinformaticsDetails.dataProvideOwnData")} className="h-4 w-4" />
+                          Provide own data
+                        </label>
+
+                        {formData.bioinformaticsDetails?.dataProvideOwnData && (
+                          <div className="rounded-md border border-slate-100 bg-slate-50/70 p-3 space-y-3">
+                            <Label className="text-xs font-semibold text-slate-600">File Format</Label>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                              {BIOINFO_DATA_FORMAT_OPTIONS.map((formatId) => (
+                                <label key={formatId} className="flex items-center gap-2 text-sm text-slate-700">
+                                  <input
+                                    type="checkbox"
+                                    checked={(formData.bioinformaticsDetails?.dataFileFormats || []).includes(formatId)}
+                                    onChange={(e) => handleBioinformaticsDataFormatChange(formatId, e.target.checked)}
+                                  />
+                                  {formatId === "fastq" ? "Fastq" : formatId === "fasta" ? "Fasta" : "Others"}
+                                </label>
+                              ))}
+                            </div>
+                            {(formData.bioinformaticsDetails?.dataFileFormats || []).includes("others") && (
+                              <Input placeholder="e.g., BAM, GTF" {...register("bioinformaticsDetails.dataOtherFormat")} className="h-9" />
+                            )}
+
+                            <div>
+                              <Label className="text-xs font-semibold text-slate-600">Specify file size for each sample</Label>
+                              <Input placeholder="e.g., 1 Mb, 1 Gb" {...register("bioinformaticsDetails.dataFileSizePerSample")} className="mt-1 h-9" />
+                            </div>
+
+                            <div>
+                              <Label className="text-xs font-semibold text-slate-600">Preferred mode of file transfer</Label>
+                              <Input placeholder="e.g., Google drive" {...register("bioinformaticsDetails.dataTransferMode")} className="mt-1 h-9" />
+                            </div>
+                          </div>
+                        )}
+
+                        <label className="flex items-center gap-2 text-sm text-slate-700">
+                          <input type="checkbox" {...register("bioinformaticsDetails.dataProvidedByPgc")} className="h-4 w-4" />
+                          Data to be generated by PGC Visayas sequencing service
+                        </label>
+                      </div>
+                    </details>
+
+                    <div>
+                      <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+                        Overview of research and objectives <span className="text-[#B9273A]">*</span>
+                      </Label>
+                      <Textarea
+                        {...register("bioinformaticsDetails.overviewObjectives")}
+                        className="min-h-[120px] bg-white/70"
+                        placeholder="To help us provide the appropriate bioinformatics analysis, kindly provide comprehensive details of study objectives and/or why you need the service."
+                      />
+                      {errors.bioinformaticsDetails && (
+                        <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                          <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                          {typeof errors.bioinformaticsDetails.message === "string"
+                            ? errors.bioinformaticsDetails.message
+                            : "Please complete the bioinformatics details."}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
               {/* Research Service Fields */}
               {selectedService === "research" && (
                 <div className="space-y-6">
@@ -1075,6 +1363,51 @@ export default function QuotationRequestForm() {
                   </div>
                 )}
               </>
+            )}
+            {pendingData.service === "bioinformatics" && (
+              <div className="space-y-3">
+                <div>
+                  <span className="font-semibold">Type of bioinformatics service:</span>{" "}
+                  {Array.isArray(pendingData.bioinformaticsDetails?.serviceTypes) && pendingData.bioinformaticsDetails?.serviceTypes.length > 0
+                    ? pendingData.bioinformaticsDetails.serviceTypes.join(", ")
+                    : "—"}
+                </div>
+                <div>
+                  <span className="font-semibold">Data (provide own data):</span>{" "}
+                  {pendingData.bioinformaticsDetails?.dataProvideOwnData ? "Yes" : "No"}
+                </div>
+                {pendingData.bioinformaticsDetails?.dataProvideOwnData && (
+                  <>
+                    <div>
+                      <span className="font-semibold">File format:</span>{" "}
+                      {Array.isArray(pendingData.bioinformaticsDetails?.dataFileFormats) && pendingData.bioinformaticsDetails?.dataFileFormats.length > 0
+                        ? pendingData.bioinformaticsDetails.dataFileFormats.join(", ")
+                        : "—"}
+                    </div>
+                    {pendingData.bioinformaticsDetails?.dataOtherFormat && (
+                      <div><span className="font-semibold">Other file format:</span> {pendingData.bioinformaticsDetails.dataOtherFormat}</div>
+                    )}
+                    {pendingData.bioinformaticsDetails?.dataFileSizePerSample && (
+                      <div><span className="font-semibold">File size per sample:</span> {pendingData.bioinformaticsDetails.dataFileSizePerSample}</div>
+                    )}
+                    {pendingData.bioinformaticsDetails?.dataTransferMode && (
+                      <div><span className="font-semibold">Preferred file transfer mode:</span> {pendingData.bioinformaticsDetails.dataTransferMode}</div>
+                    )}
+                  </>
+                )}
+                <div>
+                  <span className="font-semibold">Data to be generated by PGC Visayas sequencing service:</span>{" "}
+                  {pendingData.bioinformaticsDetails?.dataProvidedByPgc ? "Yes" : "No"}
+                </div>
+                {pendingData.bioinformaticsDetails?.overviewObjectives && (
+                  <div>
+                    <span className="font-semibold block mb-1">Overview of research and objectives:</span>
+                    <p className="bg-slate-50 p-3 rounded-lg text-slate-700 whitespace-pre-wrap">
+                      {pendingData.bioinformaticsDetails.overviewObjectives}
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
             {pendingData.service === "research" && (
               <div className="space-y-3">

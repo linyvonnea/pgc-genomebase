@@ -42,6 +42,8 @@ export const inquirySchema = z.object({
   methodologyFileUrl: z.string().optional(), // URL to uploaded methodology/concept note
   sampleCount: z.number().min(1).optional(), // Number of samples
   workflowType: z.enum(["complete-bioinfo", "complete", "individual"]).optional(), // Workflow selection for laboratory services
+  // Structured details for Bioinformatics Analysis requests
+  bioinformaticsDetails: z.record(z.string(), z.any()).optional(),
   bioinfoOptions: z.array(z.enum([
     "whole-genome-assembly",
     "metabarcoding-downstream",
@@ -167,6 +169,17 @@ export const inquiryFormSchema = inquirySchema
   }, {
     message: "Brief overview of research is required",
     path: ["researchOverview"],
+  })
+  // Conditional validation: Bioinformatics service requires overview/objectives text
+  .refine((data) => {
+    if (data.service === "bioinformatics") {
+      const overview = (data.bioinformaticsDetails as Record<string, unknown> | undefined)?.overviewObjectives;
+      return typeof overview === "string" && overview.trim().length > 0;
+    }
+    return true;
+  }, {
+    message: "Overview of research and objectives is required",
+    path: ["bioinformaticsDetails"],
   })
   // Conditional validation: Sample count required for lab services
   .refine((data) => {
