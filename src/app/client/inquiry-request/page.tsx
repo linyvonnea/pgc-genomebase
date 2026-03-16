@@ -980,17 +980,47 @@ export default function QuotationRequestForm() {
                                   <details className="rounded-md border border-slate-100 bg-slate-50/70" open>
                                     <summary className="px-3 py-2 text-sm font-semibold text-slate-700 cursor-pointer">Analysis</summary>
                                     <div className="space-y-2 p-3 border-t border-slate-100">
-                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3"><input type="checkbox" {...register("bioinformaticsDetails.wholeGenomeAssembly.analysis.assembly")} className="mt-1" /><span className="text-sm">Whole Genome Assembly <span className="block text-xs text-slate-600">Includes FastQC, Trimming, Genome Assembly, and Assembly QC</span></span></label>
-                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3"><input type="checkbox" {...register("bioinformaticsDetails.wholeGenomeAssembly.analysis.assemblyAnnotation")} className="mt-1" /><span className="text-sm">Whole Genome Assembly and Annotation <span className="block text-xs text-slate-600">Includes FastQC, Trimming, Genome Assembly, and Assembly QC and Annotation</span></span></label>
+                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3">
+                                        <input
+                                          type="checkbox"
+                                          {...register("bioinformaticsDetails.wholeGenomeAssembly.analysis.assembly")}
+                                          className="mt-1"
+                                          disabled={formData.bioinformaticsDetails?.wholeGenomeAssembly?.unsure}
+                                        />
+                                        <span className="text-sm">Whole Genome Assembly <span className="block text-xs text-slate-600">Includes FastQC, Trimming, Genome Assembly, and Assembly QC</span></span>
+                                      </label>
+                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3">
+                                        <input
+                                          type="checkbox"
+                                          {...register("bioinformaticsDetails.wholeGenomeAssembly.analysis.assemblyAnnotation")}
+                                          className="mt-1"
+                                          disabled={formData.bioinformaticsDetails?.wholeGenomeAssembly?.unsure}
+                                        />
+                                        <span className="text-sm">Whole Genome Assembly and Annotation <span className="block text-xs text-slate-600">Includes FastQC, Trimming, Genome Assembly, and Assembly QC and Annotation</span></span>
+                                      </label>
                                       <div>
                                         <Label className="text-xs">Additional Downstream Analysis</Label>
-                                        <Input placeholder="Please specify" {...register("bioinformaticsDetails.wholeGenomeAssembly.analysis.additionalDownstream")} className="mt-1 h-9" />
+                                        <Input 
+                                          placeholder="Please specify" 
+                                          {...register("bioinformaticsDetails.wholeGenomeAssembly.analysis.additionalDownstream")} 
+                                          className="mt-1 h-9" 
+                                          disabled={formData.bioinformaticsDetails?.wholeGenomeAssembly?.unsure}
+                                        />
                                       </div>
                                     </div>
                                   </details>
 
                                   <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3">
-                                    <input type="checkbox" {...register("bioinformaticsDetails.wholeGenomeAssembly.unsure")} className="mt-1" />
+                                    <input
+                                      type="checkbox"
+                                      {...register("bioinformaticsDetails.wholeGenomeAssembly.unsure")}
+                                      className="mt-1"
+                                      disabled={
+                                        formData.bioinformaticsDetails?.wholeGenomeAssembly?.analysis?.assembly ||
+                                        formData.bioinformaticsDetails?.wholeGenomeAssembly?.analysis?.assemblyAnnotation ||
+                                        !!formData.bioinformaticsDetails?.wholeGenomeAssembly?.analysis?.additionalDownstream
+                                      }
+                                    />
                                     <span className="text-sm">Unsure <span className="block text-xs text-slate-600">We will try to provide quotation and/or recommendation based on your target objective/s.</span></span>
                                   </label>
                                 </div>
@@ -1015,7 +1045,18 @@ export default function QuotationRequestForm() {
                       <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-slate-700">Data</summary>
                       <div className="space-y-4 border-t border-slate-100 px-4 py-3">
                         <label className="flex items-center gap-2 text-sm text-slate-700">
-                          <input type="checkbox" {...register("bioinformaticsDetails.dataProvideOwnData")} className="h-4 w-4" />
+                          <input
+                            type="radio"
+                            name="bioinfo-data-source"
+                            checked={!!formData.bioinformaticsDetails?.dataProvideOwnData}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setValue("bioinformaticsDetails.dataProvideOwnData", true)
+                                setValue("bioinformaticsDetails.dataProvidedByPgc", false)
+                              }
+                            }}
+                            className="h-4 w-4"
+                          />
                           Provide own data
                         </label>
 
@@ -1051,7 +1092,18 @@ export default function QuotationRequestForm() {
                         )}
 
                         <label className="flex items-center gap-2 text-sm text-slate-700">
-                          <input type="checkbox" {...register("bioinformaticsDetails.dataProvidedByPgc")} className="h-4 w-4" />
+                          <input
+                            type="radio"
+                            name="bioinfo-data-source"
+                            checked={!!formData.bioinformaticsDetails?.dataProvidedByPgc}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setValue("bioinformaticsDetails.dataProvideOwnData", false)
+                                setValue("bioinformaticsDetails.dataProvidedByPgc", true)
+                              }
+                            }}
+                            className="h-4 w-4"
+                          />
                           Data to be generated by PGC Visayas sequencing service
                         </label>
                       </div>
