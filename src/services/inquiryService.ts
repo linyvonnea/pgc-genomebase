@@ -71,6 +71,7 @@ export async function getInquiries(): Promise<Inquiry[]> {
         methodologyFileUrl: data.methodologyFileUrl || null,
         sampleCount: data.sampleCount || null,
         workflowType: data.workflowType || null,
+        bioinformaticsDetails: data.bioinformaticsDetails || null,
         bioinfoOptions: data.bioinfoOptions || null,
         individualAssayDetails: data.individualAssayDetails || null,
         
@@ -154,6 +155,7 @@ export async function getInquiryById(id: string): Promise<Inquiry> {
       methodologyFileUrl: data.methodologyFileUrl || null,
       sampleCount: data.sampleCount || null,
       workflowType: data.workflowType || null,
+      bioinformaticsDetails: data.bioinformaticsDetails || null,
       bioinfoOptions: data.bioinfoOptions || null,
       individualAssayDetails: data.individualAssayDetails || null,
       
@@ -225,6 +227,7 @@ export function subscribeToInquiryById(
         methodologyFileUrl: data.methodologyFileUrl || null,
         sampleCount: data.sampleCount || null,
         workflowType: data.workflowType || null,
+        bioinformaticsDetails: data.bioinformaticsDetails || null,
         bioinfoOptions: data.bioinfoOptions || null,
         individualAssayDetails: data.individualAssayDetails || null,
         retailItems: data.retailItems || null,
@@ -302,6 +305,7 @@ export function subscribeToInquiries(
           methodologyFileUrl: data.methodologyFileUrl || null,
           sampleCount: data.sampleCount || null,
           workflowType: data.workflowType || null,
+          bioinformaticsDetails: data.bioinformaticsDetails || null,
           bioinfoOptions: data.bioinfoOptions || null,
           individualAssayDetails: data.individualAssayDetails || null,
           retailItems: data.retailItems || null,
