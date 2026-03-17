@@ -323,8 +323,15 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
                             </SelectItem>
                             <SelectItem value="Service Not Offered">
                               <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">
                                   Service Not Offered
+                                </Badge>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="Cancelled">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">
+                                  Cancelled
                                 </Badge>
                               </div>
                             </SelectItem>
