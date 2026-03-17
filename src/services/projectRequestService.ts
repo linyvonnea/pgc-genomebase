@@ -18,7 +18,7 @@ import {
 import { db } from "@/lib/firebase";
 import { logActivity } from "@/services/activityLogService";
 
-export type ProjectRequestStatus = "draft" | "pending" | "approved" | "rejected";
+export type ProjectRequestStatus = "draft" | "pending" | "approved" | "rejected" | "cancelled";
 
 export interface PrimaryMemberData {
   name: string;

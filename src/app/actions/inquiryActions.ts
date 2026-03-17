@@ -1120,3 +1120,81 @@ export async function deleteInquiryAction(id: string, userInfo?: { name: string;
     throw new Error('Failed to delete inquiry');
   }
 }
+
+/**
+ * Send an email to the client when their project submission is cancelled.
+ * Matches the style of "Service Not Offered" but with project-specific details.
+ */
+export async function sendProjectCancellationEmail(
+  clientEmail: string,
+  clientName: string,
+  projectName: string,
+  reviewNotes: string,
+  inquiryId: string
+) {
+  try {
+    const { collection, doc, setDoc } = await import("firebase/firestore");
+    const { db } = await import("@/lib/firebase");
+    
+    const emailHtml = `
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+        <!-- Header with Logo -->
+        <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 30px 20px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.025em;">PGC Visayas</h1>
+          <p style="color: rgba(255, 255, 255, 0.9); margin: 8px 0 0 0; font-size: 14px;">Update Regarding Your Project Submission</p>
+        </div>
+
+        <div style="padding: 32px 24px; color: #334155; line-height: 1.6;">
+          <p style="margin: 0 0 20px 0; font-size: 16px;">Dear <strong>${clientName}</strong>,</p>
+          
+          <p style="margin: 0 0 20px 0;">This is an update regarding your project submission: <strong>${projectName}</strong>.</p>
+          
+          <p style="margin: 0 0 24px 0;">After careful review of your project details and team member registration, we regret to inform you that your submission has been <strong>cancelled</strong> for the following reason:</p>
+
+          <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; margin-bottom: 24px; border-radius: 4px;">
+            <h3 style="font-size: 14px; text-transform: uppercase; color: #991b1b; letter-spacing: 0.05em; margin: 0 0 8px 0;">Review Notes</h3>
+            <div style="color: #b91c1c; font-style: italic;">
+              "${reviewNotes}"
+            </div>
+          </div>
+
+          <p style="margin: 0 0 20px 0;">If you wish to resubmit your project, please address the review notes above and complete the submission process again through the <strong><a href="https://pgc-genomebase.vercel.app/portal" style="color: #2563eb; text-decoration: none;">client portal</a></strong>.</p>
+          
+          <p style="margin: 0 0 20px 0;">If you have any questions or require further clarification, you may message us through the <strong>portal chat box</strong> or review our <a href="https://pgc-genomebase.vercel.app/faqs" style="color: #2563eb; text-decoration: none;">FAQs</a>.</p>
+          
+          <div style="border-top: 1px solid #f1f5f9; padding-top: 24px;">
+            <p style="margin: 0; color: #64748b; font-size: 14px;">Yours in utilizing OMICS for a better Philippines,</p>
+            <p style="margin: 4px 0 0 0; color: #1e40af; font-weight: 700; font-size: 16px;">Philippine Genome Center Visayas</p>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #f1f5f9;">
+          <p style="margin: 0; color: #94a3b8; font-size: 12px;">This is an automated message. Please do not reply directly to this email.</p>
+        </div>
+      </div>
+    `;
+
+    const mailDocRef = doc(collection(db, "mail"));
+    await setDoc(mailDocRef, {
+      to: clientEmail,
+      message: {
+        subject: `Update Regarding Your Project Submission: ${projectName}`,
+        html: emailHtml,
+      },
+      metadata: {
+        inquiryId: inquiryId,
+        type: "project-cancellation",
+        projectName: projectName
+      }
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error sending project cancellation email:", error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Unknown error while sending email" 
+    };
+  }
+}
