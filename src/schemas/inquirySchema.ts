@@ -110,7 +110,7 @@ export const inquirySchema = z.object({
   
   // System status fields
   isApproved: z.boolean().default(false),         
-  status: z.enum(['Pending', 'Approved Client', 'Quotation Only']),
+  status: z.enum(['Pending', 'Approved Client', 'Quotation Only', 'Ongoing Quotation', 'Service Not Offered', 'Cancelled']),
   email: z.string().email("Invalid email address").optional(), 
 });
 

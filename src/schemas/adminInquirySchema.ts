@@ -33,7 +33,7 @@ export const adminInquirySchema = z.object({
     .max(100, "Designation must be at most 100 characters"), 
   
   // Administrative workflow status
-  status: z.enum(['Pending', 'Ongoing Quotation', 'Approved Client', 'Quotation Only', 'Service Not Offered'], {
+  status: z.enum(['Pending', 'Ongoing Quotation', 'Approved Client', 'Quotation Only', 'Service Not Offered', 'Cancelled'], {
     required_error: "Status selection is required",
   }), 
   

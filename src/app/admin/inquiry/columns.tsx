@@ -46,6 +46,8 @@ const getStatusColor = (status: string) => {
       return "bg-orange-100 text-orange-800";
     case "Service Not Offered":
       return "bg-slate-100 text-slate-500 border-slate-200 opacity-70";
+    case "Cancelled":
+      return "bg-slate-100 text-slate-700 border-slate-200";
     case "Pending":
     default:
       return "bg-yellow-100 text-yellow-800";
