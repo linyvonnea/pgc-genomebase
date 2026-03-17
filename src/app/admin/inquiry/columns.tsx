@@ -86,6 +86,7 @@ export const columns: ColumnDef<Inquiry>[] = [
         "Ongoing Quotation",
         "Approved Client",
         "Quotation Only",
+        "Service Not Offered",
       ].includes(inquiry.status);
       const showNew = (inquiry.status === "Pending" || isRecent) && !isQuoted;
 

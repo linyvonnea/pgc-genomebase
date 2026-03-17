@@ -218,15 +218,35 @@ export function DataTable<TData, TValue>({
     },
   })
 
-  // Apply date + unread filters
-  const filteredRows = table.getRowModel().rows.filter((row) => {
-    if (!dateFilter(row)) return false
-    if (showUnreadOnly) {
-      const inquiry = row.original as unknown as { id: string }
-      return unreadInquiryIds.has(inquiry.id)
-    }
-    return true
-  })
+  // Sort rows: first by unread status, then by the table's internal sorting
+  const sortedAndFilteredRows = useMemo(() => {
+    // 1. Get filtered & sorted rows from table model
+    const tableRows = table.getRowModel().rows
+
+    // 2. Filter by date and showUnreadOnly
+    const filtered = tableRows.filter((row) => {
+      if (!dateFilter(row)) return false
+      if (showUnreadOnly) {
+        const inquiry = row.original as unknown as { id: string }
+        return unreadInquiryIds.has(inquiry.id)
+      }
+      return true
+    })
+
+    // 3. Move rows with unread messages to the top
+    // We only do this if the user hasn't manually sorted by a specific column
+    // or we can just always prioritize unread if that's the desired permanent behavior
+    return [...filtered].sort((a, b) => {
+      const aId = (a.original as unknown as { id: string }).id
+      const bId = (b.original as unknown as { id: string }).id
+      const aUnread = unreadInquiryIds.has(aId)
+      const bUnread = unreadInquiryIds.has(bId)
+
+      if (aUnread && !bUnread) return -1
+      if (!aUnread && bUnread) return 1
+      return 0 // keep relative order from table's internal sorting
+    })
+  }, [table.getRowModel().rows, selectedYear, selectedMonth, showUnreadOnly, unreadInquiryIds])
 
   const handleStatusFilter = (status: string | undefined) => {
     setActiveStatusFilter(status)
@@ -446,7 +466,7 @@ export function DataTable<TData, TValue>({
                     <div className="text-xs font-medium text-gray-600 mb-1">
                       {filterSummaryLabel}
                     </div>
-                    <div className="text-lg font-bold text-gray-800">{filteredRows.length} records</div>
+                    <div className="text-lg font-bold text-gray-800">{sortedAndFilteredRows.length} records</div>
                     {/* Removed 'Click to clear all filters' label */}
                   </div>
                 </div>
@@ -460,23 +480,8 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center justify-between py-1">
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">
-            Showing {filteredRows.length > 0 ? (table.getState().pagination.pageIndex * table.getState().pagination.pageSize) + 1 : 0} - {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, filteredRows.length)} of {filteredRows.length} records
+            Showing {sortedAndFilteredRows.length > 0 ? (table.getState().pagination.pageIndex * table.getState().pagination.pageSize) + 1 : 0} - {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, sortedAndFilteredRows.length)} of {sortedAndFilteredRows.length} records
           </span>
-          {unreadInquiryIds.size > 0 && (
-            <button
-              onClick={() => setShowUnreadOnly((prev) => !prev)}
-              className={`flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors ${
-                showUnreadOnly
-                  ? "bg-blue-600 text-white"
-                  : "bg-red-500 text-white animate-pulse hover:animate-none hover:bg-red-600"
-              }`}
-            >
-              <MessageCircle className="h-3 w-3" />
-              {unreadInquiryIds.size === 1 
-                ? "1 client message received" 
-                : `${unreadInquiryIds.size} client messages received`}
-            </button>
-          )}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
@@ -575,40 +580,45 @@ export function DataTable<TData, TValue>({
             </TableHeader>
 
             <TableBody>
-              {filteredRows.length ? (
-                filteredRows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      className={cn(
-                        "group hover:bg-blue-50/30 transition-colors cursor-pointer border-b border-slate-200 last:border-0",
-                        unreadInquiryIds.has((row.original as unknown as { id: string }).id)
-                          ? "bg-blue-50/60"
-                          : ""
-                      )}
-                      data-state={row.getIsSelected() && "selected"}
-                      onClick={(e: React.MouseEvent) => handleRowClick(row.original as Inquiry, e)}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell 
-                          key={cell.id} 
-                          className="py-1.5 px-2 text-[13px] text-slate-600 border-r border-slate-200 last:border-r-0 align-middle truncate"
-                          style={{ width: cell.column.columnDef.size }}
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center h-24 text-muted-foreground">
-                    <div className="flex flex-col items-center justify-center gap-2 py-4">
-                      <p>No results found for current filters.</p>
-                      <Button variant="link" onClick={clearAllFilters}>Clear all filters</Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
+              {(() => {
+                const startIndex = table.getState().pagination.pageIndex * table.getState().pagination.pageSize;
+                const paginatedRows = sortedAndFilteredRows.slice(startIndex, startIndex + table.getState().pagination.pageSize);
+                
+                return paginatedRows.length ? (
+                  paginatedRows.map((row) => (
+                      <TableRow
+                        key={row.id}
+                        className={cn(
+                          "group hover:bg-blue-50/30 transition-colors cursor-pointer border-b border-slate-200 last:border-0",
+                          unreadInquiryIds.has((row.original as unknown as { id: string }).id)
+                            ? "bg-blue-50/60"
+                            : ""
+                        )}
+                        data-state={row.getIsSelected() && "selected"}
+                        onClick={(e: React.MouseEvent) => handleRowClick(row.original as Inquiry, e)}
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell 
+                            key={cell.id} 
+                            className="py-1.5 px-2 text-[13px] text-slate-600 border-r border-slate-200 last:border-r-0 align-middle truncate"
+                            style={{ width: cell.column.columnDef.size }}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="text-center h-24 text-muted-foreground">
+                      <div className="flex flex-col items-center justify-center gap-2 py-4">
+                        <p>No results found for current filters.</p>
+                        <Button variant="link" onClick={clearAllFilters}>Clear all filters</Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })()}
             </TableBody>
           </Table>
         </div>
