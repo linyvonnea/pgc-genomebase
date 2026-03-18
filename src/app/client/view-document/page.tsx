@@ -266,7 +266,10 @@ function ViewDocumentContent() {
         <div className="flex items-center gap-2">
           {/* Always show Download button on mobile, as PDFViewer might fail or be hard to use */}
           {type === "sample-form" ? (
-            <PDFDownloadLink document={<SampleFormPrintPDF />} fileName={`sample-form-${ref}.pdf`}>
+            <PDFDownloadLink
+              document={<SampleSubmissionFormPDF form={data} />}
+              fileName={`sample-form-${ref}.pdf`}
+            >
               {({ loading }: { loading: boolean }) => (
                 <Button variant="default" size="sm" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white">
                   {loading ? (
@@ -357,7 +360,10 @@ function ViewDocumentContent() {
                 Direct PDF previews are limited on some mobile browsers. For the best experience, please download the document to view it on your device.
               </p>
               {type === "sample-form" ? (
-                <PDFDownloadLink document={<SampleFormPrintPDF />} fileName={`sample-form-${ref}.pdf`}>
+                <PDFDownloadLink
+                  document={<SampleSubmissionFormPDF form={data} />}
+                  fileName={`sample-form-${ref}.pdf`}
+                >
                   {({ loading }: { loading: boolean }) => (
                     <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl" disabled={loading}>
                       {loading ? (
@@ -446,7 +452,7 @@ function ViewDocumentContent() {
         ) : (
           type === "sample-form" ? (
             <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
-              <SampleFormPrintPDF />
+              <SampleSubmissionFormPDF form={data} />
             </PDFViewer>
           ) : (
             <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
