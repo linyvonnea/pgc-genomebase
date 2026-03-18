@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
       projectTitle,
       submittedByEmail,
       submittedByName,
+      clientId,
       formData,
     } = body || {};
 
@@ -79,6 +80,7 @@ export async function POST(request: NextRequest) {
         projectTitle: projectTitle || null,
         submittedByEmail,
         submittedByName: submittedByName || null,
+        clientId: clientId || null,
         formSequence: nextSequence,
         documentNumber,
         status: "submitted",
