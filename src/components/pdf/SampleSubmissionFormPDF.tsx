@@ -291,7 +291,7 @@ export function SampleSubmissionFormPDF({ form }: Props) {
               <Text>{form.adminReceivedBy || ""}</Text>
             </View>
             <View style={[styles.staffValueCell, { borderRight: 0 }]}>
-              <Text>{form.projectId || ""}</Text>
+              <Text>{form.projectId || ""} / {form.clientId || ""}</Text>
             </View>
           </View>
         </View>
