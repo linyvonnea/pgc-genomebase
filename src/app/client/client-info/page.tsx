@@ -2345,7 +2345,7 @@ export default function ClientPortalPage() {
                 const officialReceiptCount = docs?.officialReceipts?.length || 0;
                 const sampleFormParams = new URLSearchParams();
                 if (emailParam) sampleFormParams.set("email", emailParam);
-                if (inquiryIdParam) sampleFormParams.set("inquiryId", inquiryIdParam);
+                if (project.inquiryId) sampleFormParams.set("inquiryId", project.inquiryId);
                 if (project.pid) sampleFormParams.set("pid", project.pid);
                 if (project.title) sampleFormParams.set("projectTitle", project.title);
                 if (primaryMember?.formData?.name) {

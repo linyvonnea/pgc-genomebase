@@ -12,7 +12,7 @@ async function getAdminDb() {
 }
 
 function buildDocumentNumber(sequence: number): string {
-  return `PGCV-LF-SSF-${String(sequence).padStart(3, "0")}`;
+  return `PGCV-LF-SSF-${String(sequence).padStart(5, "0")}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -48,9 +48,9 @@ export async function POST(request: NextRequest) {
     }
 
     const counterRef = db.collection("counters").doc("sampleForms");
-    const formRef = db.collection("sampleForms").doc();
-
+    
     let nextSequence = 1;
+    let documentNumber = "";
 
     await db.runTransaction(async (transaction) => {
       const counterSnap = await transaction.get(counterRef);
@@ -59,7 +59,8 @@ export async function POST(request: NextRequest) {
         : 0;
 
       nextSequence = currentSequence + 1;
-      const documentNumber = buildDocumentNumber(nextSequence);
+      documentNumber = buildDocumentNumber(nextSequence);
+      const formRef = db.collection("sampleForms").doc(documentNumber);
       const now = admin.firestore.FieldValue.serverTimestamp();
 
       transaction.set(
@@ -93,8 +94,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        id: formRef.id,
-        documentNumber: buildDocumentNumber(nextSequence),
+        id: documentNumber,
+        documentNumber,
         status: "submitted",
       },
       { status: 200 }
