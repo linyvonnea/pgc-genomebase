@@ -39,6 +39,29 @@ const THREADS_COLLECTION = "quotationThreads";
 const MESSAGES_COLLECTION = "threadMessages";
 const QUOTATIONS_COLLECTION = "quotations";
 
+async function triggerPushNotify(
+  threadId: string,
+  senderRole: MessageSenderRole,
+  content: string,
+  unreadCount: number,
+): Promise<void> {
+  try {
+    await fetch("/api/push/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        threadId,
+        senderRole,
+        messagePreview: content,
+        unreadCount,
+      }),
+    });
+  } catch (error) {
+    // Push should not break chat flow.
+    console.error("Push notify trigger failed:", error);
+  }
+}
+
 /**
  * Initialize a quotation thread when an inquiry is submitted
  */
@@ -521,6 +544,20 @@ export async function addThreadMessage(
           console.error("Error updating inquiry messageState (admin):", err);
         });
       }
+    }
+
+    if (message.type !== "system") {
+      const targetUnreadCount =
+        message.senderRole === "admin"
+          ? (thread.unreadCount.client || 0) + 1
+          : (thread.unreadCount.admin || 0) + 1;
+
+      await triggerPushNotify(
+        message.threadId,
+        message.senderRole,
+        message.content,
+        targetUnreadCount,
+      );
     }
     
     return messageRef.id;
