@@ -6,13 +6,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { doc, runTransaction, serverTimestamp } from "firebase/firestore";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Eye, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 
 import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,9 +28,11 @@ import {
   createEmptySampleEntries,
   emptySampleFormData,
   SampleFormData,
+  SampleFormRecord,
 } from "@/types/SampleForm";
 import { sampleFormSchema } from "@/schemas/sampleFormSchema";
 import { getSampleFormById } from "@/services/sampleFormService";
+import { SampleFormPDFViewer } from "@/components/sample-form/SampleFormPDFViewer";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -73,8 +82,24 @@ export default function SampleFormBuilder({
   });
   const [loadingForm, setLoadingForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [validatedData, setValidatedData] = useState<SampleFormData | null>(null);
 
   const isReadOnly = Boolean(formId);
+
+  // Build a preview SampleFormRecord from current form state (no admin-only fields)
+  const previewRecord = useMemo<SampleFormRecord>(() => ({
+    ...formData,
+    id: "preview",
+    documentNumber: "PGCV-LF-SSF-DRAFT",
+    status: "submitted",
+    inquiryId: inquiryId ?? "",
+    projectId: projectId ?? "",
+    projectTitle: projectTitle ?? "",
+    clientId: clientId ?? "",
+    submittedByEmail: email ?? "",
+    submittedByName: submittedByName ?? "",
+  }), [formData, inquiryId, projectId, projectTitle, clientId, email, submittedByName]);
 
   // ── Sync row count with totalNumberOfSamples ──────────────────────────────
   useEffect(() => {
@@ -228,14 +253,23 @@ export default function SampleFormBuilder({
     return documentNumber;
   };
 
-  // ── Submit handler ────────────────────────────────────────────────────────
+  // ── Preview handler — validates then opens the preview dialog ───────────
 
-  const handleSubmit = async () => {
+  const handlePreview = () => {
     const result = sampleFormSchema.safeParse(formData);
     if (!result.success) {
       toast.error(result.error.issues[0]?.message || "Please check your form entries.");
       return;
     }
+    setValidatedData(result.data);
+    setPreviewOpen(true);
+  };
+
+  // ── Confirm-submit handler — called from the preview dialog ───────────────
+
+  const handleConfirmSubmit = async () => {
+    if (!validatedData) return;
+    setPreviewOpen(false);
 
     setSubmitting(true);
     try {
@@ -249,7 +283,7 @@ export default function SampleFormBuilder({
           submittedByEmail: email,
           submittedByName,
           clientId,
-          formData: result.data,
+          formData: validatedData,
         }),
       });
 
@@ -258,7 +292,7 @@ export default function SampleFormBuilder({
         if (response.status >= 500) {
           // API is down — try client-side Firestore fallback
           try {
-            const fallbackDocNum = await submitViaClientFallback(result.data);
+            const fallbackDocNum = await submitViaClientFallback(validatedData!);
             toast.success(`Sample form submitted as ${fallbackDocNum}. Awaiting admin receipt.`);
             openGeneratedPdf(fallbackDocNum);
             router.push(backPath);
@@ -588,7 +622,49 @@ export default function SampleFormBuilder({
         {!isReadOnly && (
           <div className="flex justify-end pb-3">
             <Button
-              onClick={handleSubmit}
+              onClick={handlePreview}
+              disabled={submitting}
+              className="bg-[#166FB5] hover:bg-[#166FB5]/90"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Submitting…
+                </>
+              ) : (
+                <>
+                  <Eye className="h-4 w-4 mr-2" />
+                  Submit Sample Form
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* ── PDF Preview Dialog ─────────────────────────────────────────────── */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-5xl w-full">
+          <DialogHeader>
+            <DialogTitle className="text-slate-800">Preview — Sample Submission Form</DialogTitle>
+          </DialogHeader>
+
+          <p className="text-sm text-slate-500 -mt-2">
+            Review the form below before final submission. The document number will be assigned
+            upon confirmation.
+          </p>
+
+          {/* Live PDF preview built from current form data */}
+          <div className="rounded-lg overflow-hidden border border-slate-200">
+            <SampleFormPDFViewer form={previewRecord} />
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setPreviewOpen(false)}>
+              Back to Edit
+            </Button>
+            <Button
+              onClick={handleConfirmSubmit}
               disabled={submitting}
               className="bg-[#166FB5] hover:bg-[#166FB5]/90"
             >
@@ -600,13 +676,13 @@ export default function SampleFormBuilder({
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  Submit Sample Form
+                  Confirm &amp; Submit
                 </>
               )}
             </Button>
-          </div>
-        )}
-      </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
