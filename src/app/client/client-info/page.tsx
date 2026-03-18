@@ -1739,6 +1739,9 @@ export default function ClientPortalPage() {
       setProjectDocuments((prev) => new Map(prev).set(pid, {
         quotations: [],
         chargeSlips: [],
+        sampleForms: [],
+        serviceReports: [],
+        officialReceipts: [],
         loading: true,
       }));
 
@@ -1754,6 +1757,9 @@ export default function ClientPortalPage() {
         setProjectDocuments((prev) => new Map(prev).set(pid, {
           quotations,
           chargeSlips,
+          sampleForms: [],
+          serviceReports: [],
+          officialReceipts: [],
           loading: false,
         }));
       } catch (error) {
@@ -1762,6 +1768,9 @@ export default function ClientPortalPage() {
         setProjectDocuments((prev) => new Map(prev).set(pid, {
           quotations: [],
           chargeSlips: [],
+          sampleForms: [],
+          serviceReports: [],
+          officialReceipts: [],
           loading: false,
         }));
       }
