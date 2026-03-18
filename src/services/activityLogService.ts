@@ -5,7 +5,7 @@ import { db } from "@/lib/firebase";
 import { collection, addDoc, getDocs, query, where, orderBy, limit, Timestamp } from "firebase/firestore";
 
 export type ActionType = "CREATE" | "UPDATE" | "DELETE" | "VIEW" | "DOWNLOAD" | "GENERATE" | "LOGIN" | "LOGOUT";
-export type EntityType = "client" | "project" | "inquiry" | "quotation" | "charge_slip" | "user" | "member" | "project_request";
+export type EntityType = "client" | "project" | "inquiry" | "quotation" | "charge_slip" | "sample_form" | "user" | "member" | "project_request";
 
 export interface ActivityLog {
   id?: string;

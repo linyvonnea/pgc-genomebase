@@ -1,0 +1,612 @@
+// src/components/sample-form/SampleFormBuilder.tsx
+// Mirrors QuotationBuilder: a self-contained component that owns form state,
+// validation, submission, and opens the generated PDF on success.
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { doc, runTransaction, serverTimestamp } from "firebase/firestore";
+import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { toast } from "sonner";
+
+import { db } from "@/lib/firebase";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+
+import {
+  createEmptySampleEntries,
+  emptySampleFormData,
+  SampleFormData,
+} from "@/types/SampleForm";
+import { sampleFormSchema } from "@/schemas/sampleFormSchema";
+import { getSampleFormById } from "@/services/sampleFormService";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface SampleFormBuilderProps {
+  /** Required when submitting a new form */
+  inquiryId?: string;
+  projectId?: string;
+  email?: string;
+  projectTitle?: string;
+  submittedByName?: string;
+  clientId?: string;
+  /** Path to navigate back to (e.g. /client/client-info) */
+  backPath: string;
+  /** When supplied the form is opened in read-only / view mode */
+  formId?: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+function buildDocumentNumber(sequence: number): string {
+  return `PGCV-LF-SSF-${String(sequence).padStart(5, "0")}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Component
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function SampleFormBuilder({
+  inquiryId,
+  projectId,
+  email,
+  projectTitle,
+  submittedByName,
+  clientId,
+  backPath,
+  formId,
+}: SampleFormBuilderProps) {
+  const router = useRouter();
+
+  const [formData, setFormData] = useState<SampleFormData>({
+    ...emptySampleFormData,
+    entries: createEmptySampleEntries(),
+  });
+  const [loadingForm, setLoadingForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const isReadOnly = Boolean(formId);
+
+  // ── Sync row count with totalNumberOfSamples ──────────────────────────────
+  useEffect(() => {
+    if (formData.totalNumberOfSamples === formData.entries.length) return;
+    setFormData((prev) => {
+      const count = prev.totalNumberOfSamples;
+      const current = prev.entries.length;
+      if (count > current) {
+        const extra = Array.from({ length: count - current }, (_, i) => ({
+          row: current + i + 1,
+          sampleCode: "",
+          concentration: "",
+          volume: "",
+          notes: "",
+        }));
+        return { ...prev, entries: [...prev.entries, ...extra] };
+      }
+      return { ...prev, entries: prev.entries.slice(0, count) };
+    });
+  }, [formData.totalNumberOfSamples, formData.entries.length]);
+
+  // ── Load existing form (read-only) ────────────────────────────────────────
+  useEffect(() => {
+    if (!formId) return;
+    const run = async () => {
+      setLoadingForm(true);
+      try {
+        const record = await getSampleFormById(formId);
+        if (!record) {
+          toast.error("Sample form not found.");
+          router.replace(backPath);
+          return;
+        }
+        setFormData({
+          totalNumberOfSamples: record.totalNumberOfSamples || 1,
+          sampleSource: {
+            fish: !!record.sampleSource?.fish,
+            crustacean: !!record.sampleSource?.crustacean,
+            plant: !!record.sampleSource?.plant,
+            animal: !!record.sampleSource?.animal,
+            others: !!record.sampleSource?.others,
+            othersText: record.sampleSource?.othersText || "",
+          },
+          templateType: {
+            tissue: !!record.templateType?.tissue,
+            blood: !!record.templateType?.blood,
+            bacteria: !!record.templateType?.bacteria,
+            environmentalSample: !!record.templateType?.environmentalSample,
+            environmentalSampleText: record.templateType?.environmentalSampleText || "",
+            genomicDNA: !!record.templateType?.genomicDNA,
+            totalRNA: !!record.templateType?.totalRNA,
+            cDNA: !!record.templateType?.cDNA,
+            pcrProduct: !!record.templateType?.pcrProduct,
+          },
+          ampliconDetails: {
+            targetGenes: record.ampliconDetails?.targetGenes || "",
+            targetGeneSize: record.ampliconDetails?.targetGeneSize || "",
+            forwardPrimerSequence: record.ampliconDetails?.forwardPrimerSequence || "",
+            reversePrimerSequence: record.ampliconDetails?.reversePrimerSequence || "",
+          },
+          entries:
+            record.entries?.length > 0 ? record.entries : createEmptySampleEntries(),
+        });
+      } catch {
+        toast.error("Failed to load sample form.");
+      } finally {
+        setLoadingForm(false);
+      }
+    };
+    run();
+  }, [formId, router, backPath]);
+
+  // ── Field helpers ─────────────────────────────────────────────────────────
+
+  const setSource = (
+    key: keyof SampleFormData["sampleSource"],
+    value: boolean | string
+  ) =>
+    setFormData((prev) => ({
+      ...prev,
+      sampleSource: { ...prev.sampleSource, [key]: value },
+    }));
+
+  const setTemplate = (
+    key: keyof SampleFormData["templateType"],
+    value: boolean | string
+  ) =>
+    setFormData((prev) => ({
+      ...prev,
+      templateType: { ...prev.templateType, [key]: value },
+    }));
+
+  const updateEntry = (
+    idx: number,
+    field: "sampleCode" | "concentration" | "volume" | "notes",
+    value: string
+  ) =>
+    setFormData((prev) => ({
+      ...prev,
+      entries: prev.entries.map((entry, i) =>
+        i === idx ? { ...entry, [field]: value } : entry
+      ),
+    }));
+
+  // ── Navigation helpers ────────────────────────────────────────────────────
+
+  const openGeneratedPdf = (docRef: string) => {
+    const pdfUrl = `/client/view-document?type=sample-form&ref=${encodeURIComponent(docRef)}`;
+    window.open(pdfUrl, "_blank", "noopener,noreferrer");
+  };
+
+  // ── Client-side fallback (mirrors QuotationBuilder's client save) ─────────
+  const submitViaClientFallback = async (validated: SampleFormData): Promise<string> => {
+    if (!inquiryId || !projectId || !email) throw new Error("Missing project context.");
+
+    const counterRef = doc(db, "counters", "sampleForms");
+    let nextSequence = 1;
+    let documentNumber = "";
+
+    await runTransaction(db, async (tx) => {
+      const counterSnap = await tx.get(counterRef);
+      const current = counterSnap.exists()
+        ? Number(counterSnap.data()?.lastSequence || 0)
+        : 0;
+      nextSequence = current + 1;
+      documentNumber = buildDocumentNumber(nextSequence);
+      const formRef = doc(db, "sampleForms", documentNumber);
+      const now = serverTimestamp();
+
+      tx.set(counterRef, { lastSequence: nextSequence, updatedAt: now }, { merge: true });
+      tx.set(formRef, {
+        ...validated,
+        inquiryId,
+        projectId,
+        projectTitle: projectTitle || null,
+        submittedByEmail: email,
+        submittedByName: submittedByName || null,
+        clientId: clientId || null,
+        formSequence: nextSequence,
+        documentNumber,
+        status: "submitted",
+        createdAt: now,
+        updatedAt: now,
+        adminReceivedAt: null,
+        adminReceivedBy: null,
+        reviewedAt: null,
+        reviewedBy: null,
+      });
+    });
+
+    return documentNumber;
+  };
+
+  // ── Submit handler ────────────────────────────────────────────────────────
+
+  const handleSubmit = async () => {
+    const result = sampleFormSchema.safeParse(formData);
+    if (!result.success) {
+      toast.error(result.error.issues[0]?.message || "Please check your form entries.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/sample-forms/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          inquiryId,
+          projectId,
+          projectTitle,
+          submittedByEmail: email,
+          submittedByName,
+          clientId,
+          formData: result.data,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        if (response.status >= 500) {
+          // API is down — try client-side Firestore fallback
+          try {
+            const fallbackDocNum = await submitViaClientFallback(result.data);
+            toast.success(`Sample form submitted as ${fallbackDocNum}. Awaiting admin receipt.`);
+            openGeneratedPdf(fallbackDocNum);
+            router.push(backPath);
+            return;
+          } catch (fallbackError) {
+            console.error("Client fallback failed:", fallbackError);
+          }
+        }
+        const message =
+          typeof err?.error === "string" ? err.error : "Failed to submit sample form.";
+        throw new Error(message);
+      }
+
+      const payload = await response.json();
+      toast.success(`Sample form submitted as ${payload.documentNumber}. Awaiting admin receipt.`);
+      openGeneratedPdf(payload.id || payload.documentNumber);
+      router.push(backPath);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to submit sample form. Please try again."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // ── Loading state ─────────────────────────────────────────────────────────
+
+  if (loadingForm) {
+    return (
+      <div className="min-h-full p-6 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-[#166FB5] mb-2" />
+          <p className="text-slate-600">Loading sample form…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
+
+  return (
+    <div className="min-h-full bg-gradient-to-br from-slate-50/50 to-blue-50/30 p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-4">
+        {/* Page header */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Sample Submission Form</h1>
+            <p className="text-sm text-slate-600">
+              {isReadOnly
+                ? "View-only — this form has already been submitted."
+                : "Complete all required sample details before submission."}
+            </p>
+          </div>
+          <Button variant="outline" onClick={() => router.push(backPath)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Client Portal
+          </Button>
+        </div>
+
+        {/* ── Sample Details ───────────────────────────────────────────────── */}
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base text-slate-800">Sample Details</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            {/* Total count */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label>Total Number of Samples</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={500}
+                  value={formData.totalNumberOfSamples}
+                  disabled={isReadOnly}
+                  onChange={(e) => {
+                    const val = Number(e.target.value || 0);
+                    if (val > 500) { toast.error("Maximum 500 samples allowed."); return; }
+                    setFormData((prev) => ({ ...prev, totalNumberOfSamples: val }));
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {/* Sample Source */}
+              <div className="space-y-3 p-4 rounded-xl border bg-white">
+                <div>
+                  <h2 className="font-semibold text-slate-800">Sample Source</h2>
+                  <p className="text-xs text-slate-500">Select all applicable sources.</p>
+                </div>
+                <div className="space-y-2">
+                  {(
+                    [
+                      ["fish", "Fish"],
+                      ["crustacean", "Crustacean"],
+                      ["plant", "Plant"],
+                      ["animal", "Animal"],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <label key={key} className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={Boolean(formData.sampleSource[key])}
+                        disabled={isReadOnly}
+                        onCheckedChange={(checked) => setSource(key, checked === true)}
+                      />
+                      <span>{label}</span>
+                    </label>
+                  ))}
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={formData.sampleSource.others}
+                        disabled={isReadOnly}
+                        onCheckedChange={(checked) => setSource("others", checked === true)}
+                      />
+                      <span>Others (Please specify)</span>
+                    </label>
+                    <Input
+                      value={formData.sampleSource.othersText}
+                      disabled={isReadOnly}
+                      onChange={(e) => setSource("othersText", e.target.value)}
+                      placeholder="Specify other sample source"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Template Type */}
+              <div className="space-y-3 p-4 rounded-xl border bg-white">
+                <div>
+                  <h2 className="font-semibold text-slate-800">Template Type</h2>
+                  <p className="text-xs text-slate-500">
+                    Choose applicable template type(s) for submitted samples.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  {(
+                    [
+                      ["tissue", "Tissue"],
+                      ["blood", "Blood"],
+                      ["bacteria", "Bacteria"],
+                      ["genomicDNA", "Genomic DNA"],
+                      ["totalRNA", "Total RNA"],
+                      ["cDNA", "cDNA"],
+                      ["pcrProduct", "PCR Product"],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <label key={key} className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={Boolean(formData.templateType[key])}
+                        disabled={isReadOnly}
+                        onCheckedChange={(checked) => setTemplate(key, checked === true)}
+                      />
+                      <span>{label}</span>
+                    </label>
+                  ))}
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={formData.templateType.environmentalSample}
+                        disabled={isReadOnly}
+                        onCheckedChange={(checked) =>
+                          setTemplate("environmentalSample", checked === true)
+                        }
+                      />
+                      <span>Environmental Sample (water, soil, etc.)</span>
+                    </label>
+                    <Input
+                      value={formData.templateType.environmentalSampleText}
+                      disabled={isReadOnly}
+                      onChange={(e) => setTemplate("environmentalSampleText", e.target.value)}
+                      placeholder="Specify environmental sample"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Amplicon Details */}
+            <div className="space-y-3 p-4 rounded-xl border bg-white">
+              <h2 className="font-semibold text-slate-800">
+                For Amplicon Sequencing Services Only
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Target Gene(s)</Label>
+                  <Input
+                    value={formData.ampliconDetails.targetGenes}
+                    disabled={isReadOnly}
+                    placeholder="e.g. 18s, 16s, COI"
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        ampliconDetails: { ...prev.ampliconDetails, targetGenes: e.target.value },
+                      }))
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Target Gene Size</Label>
+                  <Input
+                    value={formData.ampliconDetails.targetGeneSize}
+                    disabled={isReadOnly}
+                    placeholder="e.g. 1500 bp"
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        ampliconDetails: {
+                          ...prev.ampliconDetails,
+                          targetGeneSize: e.target.value,
+                        },
+                      }))
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Forward Primer Sequence</Label>
+                  <Textarea
+                    value={formData.ampliconDetails.forwardPrimerSequence}
+                    disabled={isReadOnly}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        ampliconDetails: {
+                          ...prev.ampliconDetails,
+                          forwardPrimerSequence: e.target.value,
+                        },
+                      }))
+                    }
+                    className="min-h-20"
+                  />
+                </div>
+                <div>
+                  <Label>Reverse Primer Sequence</Label>
+                  <Textarea
+                    value={formData.ampliconDetails.reversePrimerSequence}
+                    disabled={isReadOnly}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        ampliconDetails: {
+                          ...prev.ampliconDetails,
+                          reversePrimerSequence: e.target.value,
+                        },
+                      }))
+                    }
+                    className="min-h-20"
+                  />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Sample Template Matrix ───────────────────────────────────────── */}
+        <Card className="border-slate-200 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base text-slate-800">Sample Template Matrix</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto border rounded-lg">
+              <table className="w-full min-w-[900px] border-collapse text-sm">
+                <thead>
+                  <tr className="bg-sky-50 text-slate-700">
+                    <th className="border px-2 py-2 w-12 text-center">#</th>
+                    <th className="border px-2 py-2 text-left">Sample Code</th>
+                    <th className="border px-2 py-2 text-left">
+                      Concentration (ng/uL or ng)
+                    </th>
+                    <th className="border px-2 py-2 text-left">Volume (uL)</th>
+                    <th className="border px-2 py-2 text-left">Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {formData.entries.map((entry, idx) => (
+                    <tr key={entry.row} className="bg-white">
+                      <td className="border px-2 py-1 text-center text-xs text-slate-500">
+                        {entry.row}
+                      </td>
+                      <td className="border px-2 py-1">
+                        <Input
+                          value={entry.sampleCode}
+                          disabled={isReadOnly}
+                          onChange={(e) => updateEntry(idx, "sampleCode", e.target.value)}
+                          className="h-8 border-0 shadow-none focus-visible:ring-0"
+                          placeholder="Sample code"
+                        />
+                      </td>
+                      <td className="border px-2 py-1">
+                        <Input
+                          value={entry.concentration}
+                          disabled={isReadOnly}
+                          onChange={(e) => updateEntry(idx, "concentration", e.target.value)}
+                          className="h-8 border-0 shadow-none focus-visible:ring-0"
+                          placeholder="Concentration"
+                        />
+                      </td>
+                      <td className="border px-2 py-1">
+                        <Input
+                          value={entry.volume}
+                          disabled={isReadOnly}
+                          onChange={(e) => updateEntry(idx, "volume", e.target.value)}
+                          className="h-8 border-0 shadow-none focus-visible:ring-0"
+                          placeholder="Volume"
+                        />
+                      </td>
+                      <td className="border px-2 py-1">
+                        <Input
+                          value={entry.notes}
+                          disabled={isReadOnly}
+                          onChange={(e) => updateEntry(idx, "notes", e.target.value)}
+                          className="h-8 border-0 shadow-none focus-visible:ring-0"
+                          placeholder="Notes"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Submit ───────────────────────────────────────────────────────── */}
+        {!isReadOnly && (
+          <div className="flex justify-end pb-3">
+            <Button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="bg-[#166FB5] hover:bg-[#166FB5]/90"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Submitting…
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Submit Sample Form
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
