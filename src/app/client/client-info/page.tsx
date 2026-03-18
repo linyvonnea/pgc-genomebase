@@ -2509,7 +2509,7 @@ export default function ClientPortalPage() {
                                   {docs?.sampleForms.map((item) => (
                                     <a
                                       key={item.id}
-                                      href={`/api/sample-forms/pdf?id=${item.id}`}
+                                      href={`/client/view-document?type=sample-form&ref=${item.id}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="block text-xs text-slate-600 hover:text-orange-600 hover:underline truncate"

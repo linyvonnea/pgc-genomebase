@@ -99,6 +99,7 @@ export async function POST(request: NextRequest) {
         success: true,
         id: documentNumber,
         documentNumber,
+        pdfUrl: `/client/view-document?type=sample-form&ref=${encodeURIComponent(documentNumber)}`,
         status: "submitted",
       },
       { status: 200 }
