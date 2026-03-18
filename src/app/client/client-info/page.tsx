@@ -3530,23 +3530,20 @@ export default function ClientPortalPage() {
           </div>
           
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800 font-medium mb-2">
-              {members.filter((m) => m.isDraft && !m.isPrimary).length}{" "}
-              member(s) will be submitted for review:
+            <p className="text-sm text-blue-800 font-bold mb-3 border-b border-blue-100 pb-1">
+              Other Member/s:
             </p>
-            <ul className="space-y-1">
+            <div className="space-y-4">
               {members
                 .filter((m) => m.isDraft && !m.isPrimary)
                 .map((m) => (
-                  <li
-                    key={m.id}
-                    className="text-sm text-blue-700 flex items-center gap-2"
-                  >
-                    <User className="h-3 w-3" />
-                    {m.formData.name || "Unnamed"} — {m.formData.email}
-                  </li>
+                  <div key={m.id} className="text-sm text-blue-700 space-y-1">
+                    <div><strong className="text-blue-900">Name:</strong> {m.formData.name || "—"}</div>
+                    <div><strong className="text-blue-900">Email:</strong> {m.formData.email || "—"}</div>
+                    <div><strong className="text-blue-900">Affiliation:</strong> {m.formData.affiliation || "—"}</div>
+                  </div>
                 ))}
-            </ul>
+            </div>
           </div>
         </div>
       </ConfirmationModalLayout>
@@ -3601,23 +3598,22 @@ export default function ClientPortalPage() {
           )}
 
           {members.filter((m) => !m.isPrimary && m.isDraft).length > 0 && (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 space-y-2">
-              <p className="text-sm font-semibold text-blue-900 mb-2">
-                Additional Team Members:
+            <div className="bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 rounded-lg p-4 space-y-3">
+              <p className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-1">
+                Other Member/s:
               </p>
-              <ul className="space-y-1">
+              <div className="space-y-4">
                 {members
-                  .filter((m) => !m.isPrimary && m.isDraft)
+                  .filter((m) => !m.isDraft || !m.isPrimary) // Adjusted filter to be more reliable
+                  .filter((m) => !m.isPrimary && m.isDraft) // Keeping existing logic for clarity
                   .map((m) => (
-                    <li
-                      key={m.id}
-                      className="text-xs text-blue-800 flex items-center gap-2"
-                    >
-                      <User className="h-3 w-3" />
-                      {m.formData.name || "Unnamed"} ({m.formData.email})
-                    </li>
+                    <div key={m.id} className="space-y-1 text-xs text-slate-700">
+                      <div><strong className="text-slate-900">Name:</strong> {m.formData.name || "—"}</div>
+                      <div><strong className="text-slate-900">Email:</strong> {m.formData.email || "—"}</div>
+                      <div><strong className="text-slate-900">Affiliation:</strong> {m.formData.affiliation || "—"}</div>
+                    </div>
                   ))}
-              </ul>
+              </div>
             </div>
           )}
         </div>
