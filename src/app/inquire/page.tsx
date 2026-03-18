@@ -8,12 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import useAuth from "@/hooks/useAuth";
 import { 
-  UserCheck, 
   Shield,
   ArrowRight,
   Info,
@@ -27,6 +25,7 @@ export default function InquirePage() {
   const [agreed, setAgreed] = useState(false);
   const { signIn, user, isAdmin, loading } = useAuth();
   const router = useRouter();
+  const isLoginDisabled = !agreed || loading;
 
   const handleLogin = async () => {
     if (!agreed) {
@@ -53,11 +52,11 @@ export default function InquirePage() {
   }, [user, isAdmin, loading, router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4 relative overflow-hidden">
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Animated background elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-[#F69122]/10 to-[#912ABD]/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-[#166FB5]/10 to-[#4038AF]/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-[#F69122]/10 to-[#912ABD]/10 rounded-full blur-3xl motion-safe:animate-pulse"></div>
+        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-to-tl from-[#166FB5]/10 to-[#4038AF]/10 rounded-full blur-3xl motion-safe:animate-pulse delay-1000"></div>
       </div>
 
       <div className="w-full max-w-md relative z-10">
@@ -80,6 +79,8 @@ export default function InquirePage() {
                 width={180}
                 height={65}
                 className="object-contain"
+                priority
+                sizes="(max-width: 640px) 160px, 180px"
               />
             </div>
             
@@ -142,7 +143,10 @@ export default function InquirePage() {
             <div className="space-y-4">
               <Button
                 onClick={handleLogin}
-                disabled={!agreed || loading}
+                disabled={isLoginDisabled}
+                aria-disabled={isLoginDisabled}
+                aria-busy={loading}
+                aria-label="Sign in with Google to submit your inquiry"
                 className="w-full h-14 bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#912ABD] hover:from-[#F69122]/90 hover:via-[#B9273A]/90 hover:to-[#912ABD]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-base"
               >
                 {loading ? (
@@ -161,7 +165,7 @@ export default function InquirePage() {
 
               <div className="text-center space-y-2">
                 {loading && (
-                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground" role="status" aria-live="polite">
                     <Skeleton className="h-3 w-3 rounded-full" />
                     <span>Connecting to authentication service...</span>
                   </div>
@@ -181,6 +185,6 @@ export default function InquirePage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </main>
   );
 }
