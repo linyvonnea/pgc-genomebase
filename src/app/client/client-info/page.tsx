@@ -70,9 +70,11 @@ import { getQuotationsByInquiryId } from "@/services/quotationService";
 import { subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { getChargeSlipsByProjectId } from "@/services/chargeSlipService";
+import { getSampleFormsByProjectId } from "@/services/sampleFormService";
 import { QuotationRecord } from "@/types/Quotation";
 import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
+import { SampleFormSummary } from "@/types/SampleForm";
 import { ApprovalStatus } from "@/types/MemberApproval";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
@@ -274,7 +276,7 @@ export default function ClientPortalPage() {
     Map<string, { 
       quotations: QuotationRecord[]; 
       chargeSlips: ChargeSlipRecord[]; 
-      sampleForms: any[];
+      sampleForms: SampleFormSummary[];
       serviceReports: any[];
       officialReceipts: any[];
       loading: boolean 
@@ -1754,10 +1756,15 @@ export default function ClientPortalPage() {
           ? await getChargeSlipsByProjectId(project.pid)
           : [];
 
+        // Fetch sample forms by project ID (client-submitted forms)
+        const sampleForms = project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
+          ? await getSampleFormsByProjectId(project.pid)
+          : [];
+
         setProjectDocuments((prev) => new Map(prev).set(pid, {
           quotations,
           chargeSlips,
-          sampleForms: [],
+          sampleForms,
           serviceReports: [],
           officialReceipts: [],
           loading: false,
@@ -2304,6 +2311,15 @@ export default function ClientPortalPage() {
                 const sampleFormCount = docs?.sampleForms?.length || 0;
                 const serviceReportCount = docs?.serviceReports?.length || 0;
                 const officialReceiptCount = docs?.officialReceipts?.length || 0;
+                const sampleFormParams = new URLSearchParams();
+                if (emailParam) sampleFormParams.set("email", emailParam);
+                if (inquiryIdParam) sampleFormParams.set("inquiryId", inquiryIdParam);
+                if (project.pid) sampleFormParams.set("pid", project.pid);
+                if (project.title) sampleFormParams.set("projectTitle", project.title);
+                if (primaryMember?.formData?.name) {
+                  sampleFormParams.set("name", primaryMember.formData.name);
+                }
+                const sampleFormBaseHref = `/client/sample-form?${sampleFormParams.toString()}`;
                 
                 return (
                   <div key={project.pid} className={cn(
@@ -2432,15 +2448,24 @@ export default function ClientPortalPage() {
                                 </span>
                                 <span className="text-[10px] text-slate-500">({docs?.sampleForms?.length || 0})</span>
                               </div>
+                              <a
+                                href={sampleFormBaseHref}
+                                className="inline-block text-xs text-[#166FB5] hover:underline ml-5 mb-2"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                + Fill out sample submission form
+                              </a>
                               {(docs?.sampleForms?.length || 0) > 0 ? (
                                 <div className="space-y-1 ml-5">
-                                  {docs?.sampleForms.map((item: any) => (
-                                    <div
+                                  {docs?.sampleForms.map((item) => (
+                                    <a
                                       key={item.id}
-                                      className="block text-xs text-slate-600 truncate"
+                                      href={`${sampleFormBaseHref}&formId=${item.id}`}
+                                      className="block text-xs text-slate-600 hover:text-orange-600 hover:underline truncate"
+                                      onClick={(e) => e.stopPropagation()}
                                     >
-                                      • {item.name || item.id}
-                                    </div>
+                                      • Form #{item.id.slice(0, 8)} ({item.totalNumberOfSamples || 0} samples)
+                                    </a>
                                   ))}
                                 </div>
                               ) : (
