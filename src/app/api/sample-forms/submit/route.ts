@@ -4,19 +4,20 @@ import { NextRequest, NextResponse } from "next/server";
 import admin, { adminDb } from "@/lib/firebase-admin";
 import { sampleFormSchema } from "@/schemas/sampleFormSchema";
 
+async function getAdminDb() {
+  if (!adminDb) {
+    throw new Error("Firebase Admin SDK not initialized");
+  }
+  return adminDb;
+}
+
 function buildDocumentNumber(sequence: number): string {
   return `PGCV-LF-SSF-${String(sequence).padStart(3, "0")}`;
 }
 
 export async function POST(request: NextRequest) {
-  if (!adminDb) {
-    return NextResponse.json(
-      { error: "Firebase Admin SDK not initialized." },
-      { status: 500 }
-    );
-  }
-
   try {
+    const db = await getAdminDb();
     const body = await request.json();
 
     const {
@@ -46,12 +47,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const counterRef = adminDb.collection("counters").doc("sampleForms");
-    const formRef = adminDb.collection("sampleForms").doc();
+    const counterRef = db.collection("counters").doc("sampleForms");
+    const formRef = db.collection("sampleForms").doc();
 
     let nextSequence = 1;
 
-    await adminDb.runTransaction(async (transaction) => {
+    await db.runTransaction(async (transaction) => {
       const counterSnap = await transaction.get(counterRef);
       const currentSequence = counterSnap.exists
         ? Number(counterSnap.data()?.lastSequence || 0)

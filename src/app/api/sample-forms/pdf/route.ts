@@ -4,11 +4,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { SampleFormRecord } from "@/types/SampleForm";
 
-export async function GET(request: NextRequest) {
+async function getAdminDb() {
   if (!adminDb) {
-    return new NextResponse("Firebase Admin SDK not initialized", { status: 500 });
+    throw new Error("Firebase Admin SDK not initialized");
   }
+  return adminDb;
+}
 
+export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -17,7 +20,8 @@ export async function GET(request: NextRequest) {
       return new NextResponse("Sample form id is required", { status: 400 });
     }
 
-    const docRef = adminDb.collection("sampleForms").doc(id);
+    const db = await getAdminDb();
+    const docRef = db.collection("sampleForms").doc(id);
     const snapshot = await docRef.get();
 
     if (!snapshot.exists) {
