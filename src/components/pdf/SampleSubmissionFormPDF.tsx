@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const check = (value?: boolean) => (value === true ? "X" : "  ");
+const check = (value?: boolean) => (value === true ? "[X]" : "[  ]");
 
 interface Props {
   form: SampleFormRecord;
@@ -273,6 +273,7 @@ export function SampleSubmissionFormPDF({ form }: Props) {
   return (
     <Document>
       <Page size="A4" orientation="landscape" style={styles.page}>
+        {/* Header Section */}
         <View style={styles.headerCard}>
           <View style={styles.headerLeft}>
             <Text style={styles.mainTitle}>SAMPLE SUBMISSION FORM</Text>
@@ -287,32 +288,22 @@ export function SampleSubmissionFormPDF({ form }: Props) {
             <Text style={styles.rightTitle}>Philippine Genome Center Visayas</Text>
             <Text style={styles.rightSub}>Omics Laboratory</Text>
             <Text style={styles.rightSmall}>
-              Regional Research Center Building, Road 8, New Academic Complex, University of the
-              Philippines Visayas, 5023 Miagao, Iloilo
+              Regional Research Center Building, UP Visayas, Miagao, Iloilo
             </Text>
           </View>
         </View>
 
+        {/* Staff Section */}
         <View style={styles.staffTable}>
           <Text style={styles.sectionTitle}>To be filled out by PGC Visayas Staff</Text>
           <View style={styles.row}>
-            <View style={styles.staffHeaderCell}>
-              <Text>Date Received</Text>
-            </View>
-            <View style={styles.staffHeaderCell}>
-              <Text>Received by</Text>
-            </View>
-            <View style={[styles.staffHeaderCell, { borderRight: 0 }]}>
-              <Text>PROJECT NO. and CLIENT ID NO.</Text>
-            </View>
+            <View style={styles.staffHeaderCell}><Text>Date Received</Text></View>
+            <View style={styles.staffHeaderCell}><Text>Received by</Text></View>
+            <View style={[styles.staffHeaderCell, { borderRight: 0 }]}><Text>PROJECT NO. / CLIENT ID</Text></View>
           </View>
           <View style={styles.row}>
-            <View style={styles.staffValueCell}>
-              <Text>{form.adminReceivedAt ? "Recorded" : ""}</Text>
-            </View>
-            <View style={styles.staffValueCell}>
-              <Text>{form.adminReceivedBy || ""}</Text>
-            </View>
+            <View style={styles.staffValueCell}><Text>{form.adminReceivedAt ? "Recorded" : ""}</Text></View>
+            <View style={styles.staffValueCell}><Text>{form.adminReceivedBy || ""}</Text></View>
             <View style={[styles.staffValueCell, { borderRight: 0 }]}>
               <Text>{form.projectId || ""} / {form.clientId || ""}</Text>
             </View>
@@ -321,100 +312,65 @@ export function SampleSubmissionFormPDF({ form }: Props) {
 
         <Text style={styles.sectionTitle}>To be accomplished by the client</Text>
 
+        {/* Main Content Grid */}
         <View style={styles.contentGrid}>
+          {/* Left Pane: Details & Checkboxes */}
           <View style={styles.leftPane}>
             <View style={[styles.paneHeader, { backgroundColor: "#ede9fe" }]}>
-              <Text style={styles.paneHeaderText}>SAMPLE DETAILS</Text>
+              <Text style={styles.paneHeaderText}>DETAILS & SOURCE</Text>
             </View>
 
             <View style={styles.block}>
-              <Text style={styles.label}>Total Number of Samples</Text>
-              <View style={styles.line}>
-                <Text>{form.totalNumberOfSamples || ""}</Text>
-              </View>
-
-              <Text style={styles.label}>Sample Source (check applicable)</Text>
-              <View style={styles.checkboxRow}>
-                <Text style={styles.checkbox}>{check(form.sampleSource?.fish)}</Text>
-                <Text>Fish</Text>
-              </View>
-              <View style={styles.checkboxRow}>
-                <Text style={styles.checkbox}>{check(form.sampleSource?.crustacean)}</Text>
-                <Text>Crustacean</Text>
-              </View>
-              <View style={styles.checkboxRow}>
-                <Text style={styles.checkbox}>{check(form.sampleSource?.plant)}</Text>
-                <Text>Plant</Text>
-              </View>
-              <View style={styles.checkboxRow}>
-                <Text style={styles.checkbox}>{check(form.sampleSource?.animal)}</Text>
-                <Text>Animal</Text>
-              </View>
-              <View style={styles.checkboxRow}>
-                <Text style={styles.checkbox}>{check(form.sampleSource?.others)}</Text>
-                <Text>Others: {form.sampleSource?.othersText || ""}</Text>
+              <Text style={styles.label}>Total Number of Samples: {form.totalNumberOfSamples || "0"}</Text>
+              
+              <Text style={[styles.label, { marginTop: 6 }]}>Sample Source:</Text>
+              <View style={{ marginLeft: 5 }}>
+                <Text>{check(form.sampleSource?.fish)} Fish</Text>
+                <Text>{check(form.sampleSource?.crustacean)} Crustacean</Text>
+                <Text>{check(form.sampleSource?.plant)} Plant</Text>
+                <Text>{check(form.sampleSource?.animal)} Animal</Text>
+                <Text>{check(form.sampleSource?.others)} Others: {form.sampleSource?.othersText || ""}</Text>
               </View>
             </View>
 
             <View style={styles.block}>
-              <Text style={styles.label}>
-                Template Type (Sample submitted; choose one unless multiple templates are submitted)
-              </Text>
-              <View style={styles.checkboxRow}>
-                <Text style={styles.checkbox}>{check(form.templateType?.tissue)}</Text>
-                <Text>Tissue</Text>
-              </View>
-              <View style={styles.checkboxRow}>
-                <Text style={styles.checkbox}>{check(form.templateType?.blood)}</Text>
-                <Text>Blood</Text>
-              </View>
-              <View style={styles.checkboxRow}>
-                <Text style={styles.checkbox}>{check(form.templateType?.bacteria)}</Text>
-                <Text>Bacteria</Text>
-              </View>
-              <View style={styles.checkboxRow}>
-                <Text style={styles.checkbox}>{check(form.templateType?.environmentalSample)}</Text>
-                <Text>Env. Sample: {form.templateType?.environmentalSampleText || ""}</Text>
-              </View>
-              <View style={styles.checkboxRow}>
-                <Text style={styles.checkbox}>{check(form.templateType?.genomicDNA)}</Text>
-                <Text>Genomic DNA</Text>
-              </View>
-              <View style={styles.checkboxRow}>
-                <Text style={styles.checkbox}>{check(form.templateType?.totalRNA)}</Text>
-                <Text>Total RNA</Text>
-              </View>
-              <View style={styles.checkboxRow}>
-                <Text style={styles.checkbox}>{check(form.templateType?.cDNA)}</Text>
-                <Text>cDNA</Text>
-              </View>
-              <View style={styles.checkboxRow}>
-                <Text style={styles.checkbox}>{check(form.templateType?.pcrProduct)}</Text>
-                <Text>PCR Product</Text>
+              <Text style={styles.label}>Template Type:</Text>
+              <View style={{ marginLeft: 5 }}>
+                <Text>{check(form.templateType?.tissue)} Tissue</Text>
+                <Text>{check(form.templateType?.blood)} Blood</Text>
+                <Text>{check(form.templateType?.bacteria)} Bacteria</Text>
+                <Text>{check(form.templateType?.genomicDNA)} Genomic DNA</Text>
+                <Text>{check(form.templateType?.totalRNA)} Total RNA</Text>
+                <Text>{check(form.templateType?.cDNA)} cDNA</Text>
+                <Text>{check(form.templateType?.pcrProduct)} PCR Product</Text>
+                <Text>{check(form.templateType?.environmentalSample)} Env: {form.templateType?.environmentalSampleText || ""}</Text>
               </View>
             </View>
 
             <View style={styles.block}>
-              <Text style={styles.label}>Amplicon Prep / Notes</Text>
-              <Text wrap={false} style={{ fontSize: 7 }}>Target: {form.ampliconDetails?.targetGenes || ""}</Text>
-              <Text wrap={false} style={{ fontSize: 7 }}>Size: {form.ampliconDetails?.targetGeneSize || ""}</Text>
-              <Text wrap={false} style={{ fontSize: 7 }}>Fwd: {form.ampliconDetails?.forwardPrimerSequence || ""}</Text>
-              <Text wrap={false} style={{ fontSize: 7 }}>Rev: {form.ampliconDetails?.reversePrimerSequence || ""}</Text>
+              <Text style={styles.label}>Amplicon / Notes:</Text>
+              <Text style={{ fontSize: 7 }}>Target: {form.ampliconDetails?.targetGenes || "N/A"}</Text>
+              <Text style={{ fontSize: 7 }}>Size: {form.ampliconDetails?.targetGeneSize || "N/A"}</Text>
             </View>
           </View>
 
+          {/* Right Pane: Table */}
           <View style={styles.rightPane}>
             <View style={[styles.paneHeader, { backgroundColor: "#e0f2fe" }]}>
-              <Text style={styles.paneHeaderText}>TEMPLATE</Text>
+              <Text style={styles.paneHeaderText}>SAMPLE MATRIX</Text>
             </View>
+            
+            {/* Table Header */}
             <View style={styles.tableHead}>
-              <Text style={styles.thIndex}>#</Text>
-              <Text style={styles.thCode}>Sample Code</Text>
-              <Text style={styles.thConc}>Concentration (ng/uL or ng)</Text>
-              <Text style={styles.thVolume}>Volume (uL)</Text>
-              <Text style={styles.thNotes}>Notes</Text>
+              <Text style={[styles.thIndex, { fontSize: 7 }]}>#</Text>
+              <Text style={[styles.thCode, { fontSize: 7 }]}>Sample Code</Text>
+              <Text style={[styles.thConc, { fontSize: 7 }]}>Conc (ng/uL)</Text>
+              <Text style={[styles.thVolume, { fontSize: 7 }]}>Vol (uL)</Text>
+              <Text style={[styles.thNotes, { fontSize: 7 }]}>Notes</Text>
             </View>
-            {entries.map((entry) => (
+
+            {/* Table Rows */}
+            {entries.slice(0, 20).map((entry) => (
               <View style={styles.row} key={entry.row}>
                 <Text style={styles.tdIndex}>{entry.row}</Text>
                 <Text style={styles.tdCode}>{entry.sampleCode || ""}</Text>
@@ -426,10 +382,11 @@ export function SampleSubmissionFormPDF({ form }: Props) {
           </View>
         </View>
 
+        {/* Footer */}
         <View style={styles.footerMeta}>
-          <Text>Document Number: {form.documentNumber || "Draft"}</Text>
-          <Text>Generated: {dateNow.toLocaleDateString("en-PH")}</Text>
-          <Text>Submitted by: {form.submittedByEmail}</Text>
+          <Text>ID: {form.documentNumber || "Draft"}</Text>
+          <Text>Date: {dateNow.toLocaleDateString()}</Text>
+          <Text>Client: {form.submittedByEmail}</Text>
         </View>
       </Page>
     </Document>
