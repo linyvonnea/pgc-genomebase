@@ -8,6 +8,7 @@ import { getChargeSlipById } from "@/services/chargeSlipService";
 import { getSampleFormById } from "@/services/sampleFormService";
 import { QuotationPDF } from "@/components/quotation/QuotationPDF";
 import { ChargeSlipPDF } from "@/components/charge-slip/ChargeSlipPDF";
+import { SampleSubmissionFormPDF } from "@/components/pdf/SampleSubmissionFormPDF";
 import { Loader2, ArrowLeft, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
