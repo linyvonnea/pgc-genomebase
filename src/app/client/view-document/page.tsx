@@ -9,6 +9,7 @@ import { getSampleFormById } from "@/services/sampleFormService";
 import { QuotationPDF } from "@/components/quotation/QuotationPDF";
 import { ChargeSlipPDF } from "@/components/charge-slip/ChargeSlipPDF";
 import { SampleSubmissionFormPDF } from "@/components/pdf/SampleSubmissionFormPDF";
+import { SampleFormPrintPDF } from "@/components/sample-form/SampleFormPrintPDF";
 import { Loader2, ArrowLeft, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -35,10 +36,6 @@ function ViewDocumentContent() {
   
   const type = searchParams.get("type");
   const ref = searchParams.get("ref");
-  const sampleFormPdfUrl =
-    type === "sample-form" && ref
-      ? `/api/sample-forms/pdf?id=${encodeURIComponent(ref)}`
-      : "";
   
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -269,18 +266,18 @@ function ViewDocumentContent() {
         <div className="flex items-center gap-2">
           {/* Always show Download button on mobile, as PDFViewer might fail or be hard to use */}
           {type === "sample-form" ? (
-            <Button
-              variant="default"
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-              onClick={() => {
-                if (!sampleFormPdfUrl) return;
-                window.open(sampleFormPdfUrl, "_blank", "noopener,noreferrer");
-              }}
-            >
-              <Download className="h-4 w-4 mr-1" />
-              {isMobile ? "Download PDF" : "Download"}
-            </Button>
+            <PDFDownloadLink document={<SampleFormPrintPDF />} fileName={`sample-form-${ref}.pdf`}>
+              {({ loading }: { loading: boolean }) => (
+                <Button variant="default" size="sm" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white">
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                  ) : (
+                    <Download className="h-4 w-4 mr-1" />
+                  )}
+                  {isMobile ? "Download PDF" : "Download"}
+                </Button>
+              )}
+            </PDFDownloadLink>
           ) : (
             <PDFDownloadLink
               document={
@@ -360,16 +357,23 @@ function ViewDocumentContent() {
                 Direct PDF previews are limited on some mobile browsers. For the best experience, please download the document to view it on your device.
               </p>
               {type === "sample-form" ? (
-                <Button
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl"
-                  onClick={() => {
-                    if (!sampleFormPdfUrl) return;
-                    window.open(sampleFormPdfUrl, "_blank", "noopener,noreferrer");
-                  }}
-                >
-                  <Download className="h-5 w-5 mr-2" />
-                  Download PDF
-                </Button>
+                <PDFDownloadLink document={<SampleFormPrintPDF />} fileName={`sample-form-${ref}.pdf`}>
+                  {({ loading }: { loading: boolean }) => (
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl" disabled={loading}>
+                      {loading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Preparing Document...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="h-5 w-5 mr-2" />
+                          Download PDF
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </PDFDownloadLink>
               ) : (
                 <PDFDownloadLink
                   document={
@@ -441,11 +445,9 @@ function ViewDocumentContent() {
           </div>
         ) : (
           type === "sample-form" ? (
-            <iframe
-              title={`Sample Form PDF ${ref}`}
-              src={sampleFormPdfUrl}
-              className="w-full h-full border-0"
-            />
+            <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
+              <SampleFormPrintPDF />
+            </PDFViewer>
           ) : (
             <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
               {type === "quotation" ? (
