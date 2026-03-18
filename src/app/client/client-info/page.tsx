@@ -112,6 +112,9 @@ import {
   Briefcase,
   FlaskConical,
   DollarSign,
+  FileSpreadsheet,
+  ShieldEllipsis,
+  Stamp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ClientConformeModal from "@/components/forms/ClientConformeModal";
@@ -268,7 +271,14 @@ export default function ClientPortalPage() {
   const [expandedProjectDocs, setExpandedProjectDocs] = useState<Set<string>>(new Set());
 
   const [projectDocuments, setProjectDocuments] = useState<
-    Map<string, { quotations: QuotationRecord[]; chargeSlips: ChargeSlipRecord[]; loading: boolean }>
+    Map<string, { 
+      quotations: QuotationRecord[]; 
+      chargeSlips: ChargeSlipRecord[]; 
+      sampleForms: any[];
+      serviceReports: any[];
+      officialReceipts: any[];
+      loading: boolean 
+    }>
   >(new Map());
 
   // ── Inquiry context state ─────────────────────────────────────
@@ -2282,6 +2292,9 @@ export default function ClientPortalPage() {
                 const docs = projectDocuments.get(project.pid);
                 const quotationCount = docs?.quotations.length || 0;
                 const chargeSlipCount = docs?.chargeSlips.length || 0;
+                const sampleFormCount = docs?.sampleForms?.length || 0;
+                const serviceReportCount = docs?.serviceReports?.length || 0;
+                const officialReceiptCount = docs?.officialReceipts?.length || 0;
                 
                 return (
                   <div key={project.pid} className={cn(
@@ -2398,6 +2411,81 @@ export default function ClientPortalPage() {
                                 </div>
                               ) : (
                                 <p className="text-xs text-slate-400 ml-5">No charge slips yet</p>
+                              )}
+                            </div>
+
+                            {/* Sample Forms */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <FileSpreadsheet className="h-3 w-3 text-orange-600" />
+                                <span className="text-sm font-semibold text-slate-700">
+                                  Sample Forms
+                                </span>
+                                <span className="text-[10px] text-slate-500">({docs?.sampleForms?.length || 0})</span>
+                              </div>
+                              {(docs?.sampleForms?.length || 0) > 0 ? (
+                                <div className="space-y-1 ml-5">
+                                  {docs?.sampleForms.map((item: any) => (
+                                    <div
+                                      key={item.id}
+                                      className="block text-xs text-slate-600 truncate"
+                                    >
+                                      • {item.name || item.id}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-slate-400 ml-5">No sample forms yet</p>
+                              )}
+                            </div>
+
+                            {/* Service Reports */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <ShieldEllipsis className="h-3 w-3 text-blue-600" />
+                                <span className="text-sm font-semibold text-slate-700">
+                                  Service Reports
+                                </span>
+                                <span className="text-[10px] text-slate-500">({docs?.serviceReports?.length || 0})</span>
+                              </div>
+                              {(docs?.serviceReports?.length || 0) > 0 ? (
+                                <div className="space-y-1 ml-5">
+                                  {docs?.serviceReports.map((item: any) => (
+                                    <div
+                                      key={item.id}
+                                      className="block text-xs text-slate-600 truncate"
+                                    >
+                                      • {item.name || item.id}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-slate-400 ml-5">No service reports yet</p>
+                              )}
+                            </div>
+
+                            {/* Official Receipts */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <Stamp className="h-3 w-3 text-emerald-600" />
+                                <span className="text-sm font-semibold text-slate-700">
+                                  Official Receipts
+                                </span>
+                                <span className="text-[10px] text-slate-500">({docs?.officialReceipts?.length || 0})</span>
+                              </div>
+                              {(docs?.officialReceipts?.length || 0) > 0 ? (
+                                <div className="space-y-1 ml-5">
+                                  {docs?.officialReceipts.map((item: any) => (
+                                    <div
+                                      key={item.id}
+                                      className="block text-xs text-slate-600 truncate"
+                                    >
+                                      • {item.name || item.id}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-slate-400 ml-5">No official receipts yet</p>
                               )}
                             </div>
                           </div>
