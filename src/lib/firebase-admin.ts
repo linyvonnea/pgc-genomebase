@@ -76,4 +76,33 @@ export function getFirestoreDb() {
   return null;
 }
 
+function normalizeBucketName(raw: string): string {
+  return raw.replace(/^gs:\/\//, "").trim();
+}
+
+export function getStorageBucket() {
+  if (admin.apps.length === 0) return null;
+
+  const configuredBucket =
+    process.env.FIREBASE_STORAGE_BUCKET ||
+    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
+    (admin.app().options.storageBucket as string | undefined);
+
+  const bucketName =
+    configuredBucket && configuredBucket.trim()
+      ? normalizeBucketName(configuredBucket)
+      : admin.app().options.projectId
+      ? `${admin.app().options.projectId}.appspot.com`
+      : "";
+
+  if (!bucketName) return null;
+
+  try {
+    return admin.storage().bucket(bucketName);
+  } catch (error) {
+    console.error("❌ Failed to initialize Firebase Storage bucket:", error);
+    return null;
+  }
+}
+
 export default admin;

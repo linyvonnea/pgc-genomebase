@@ -1,7 +1,7 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
-import { getFirestoreDb } from "@/lib/firebase-admin";
+import { getFirestoreDb, getStorageBucket } from "@/lib/firebase-admin";
 import { SampleFormRecord } from "@/types/SampleForm";
 
 async function getAdminDb() {
@@ -35,6 +35,33 @@ export async function GET(request: NextRequest) {
       id: snapshot.id,
     };
 
+    const fileName = `${form.documentNumber || `PGCV-LF-SSF-${snapshot.id}`}.pdf`;
+
+    if (form.pdfStoragePath) {
+      try {
+        const bucket = getStorageBucket();
+        if (bucket) {
+          const file = bucket.file(form.pdfStoragePath);
+          const [exists] = await file.exists();
+
+          if (exists) {
+            const [storedBuffer] = await file.download();
+            return new NextResponse(new Uint8Array(storedBuffer), {
+              status: 200,
+              headers: {
+                "Content-Type": "application/pdf",
+                "Content-Disposition": `inline; filename=\"${fileName}\"`,
+                "Cache-Control": "public, max-age=31536000, immutable",
+                "X-PDF-Source": "firebase-storage-snapshot",
+              },
+            });
+          }
+        }
+      } catch (storageError) {
+        console.error("Error downloading immutable sample form PDF snapshot:", storageError);
+      }
+    }
+
     const { renderToBuffer } = await import("@react-pdf/renderer");
     const { SampleSubmissionFormPDF } = await import("@/components/pdf/SampleSubmissionFormPDF");
     const React = await import("react");
@@ -44,14 +71,13 @@ export async function GET(request: NextRequest) {
     const pdfBuffer = await renderToBuffer(pdfElement as any);
     console.log("PDF Buffer generated, length:", pdfBuffer.length);
 
-    const fileName = `${form.documentNumber || `PGCV-LF-SSF-${snapshot.id}`}.pdf`;
-
     return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename=\"${fileName}\"`,
         "Cache-Control": "no-cache",
+        "X-PDF-Source": "dynamic-render-fallback",
       },
     });
   } catch (error: any) {

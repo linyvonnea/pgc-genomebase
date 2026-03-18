@@ -48,6 +48,10 @@ export interface SampleFormRecord extends SampleFormData {
   id: string;
   formSequence?: number;
   documentNumber?: string;
+  pdfStoragePath?: string;
+  pdfDownloadUrl?: string;
+  pdfVersion?: number;
+  pdfGeneratedAt?: Date | string | Timestamp;
   status?: "submitted" | "received" | "reviewed";
   inquiryId: string;
   projectId: string;
