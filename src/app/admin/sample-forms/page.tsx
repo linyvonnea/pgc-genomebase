@@ -11,8 +11,10 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import useAuth from "@/hooks/useAuth";
 import { markSampleFormAsReceived, markSampleFormAsReviewed } from "@/services/sampleFormService";
-import { CheckCircle2, Eye, FileText, Loader2, Search } from "lucide-react";
+import { CheckCircle2, Download, Eye, FileText, Loader2, Search } from "lucide-react";
 import { PermissionGuard } from "@/components/PermissionGuard";
+import { pdf } from "@react-pdf/renderer";
+import { SampleSubmissionFormPDF } from "@/components/pdf/SampleSubmissionFormPDF";
 
 function toDateLabel(value: any): string {
   if (!value) return "-";
@@ -51,6 +53,7 @@ function AdminSampleFormsContent() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [records, setRecords] = useState<SampleFormRecord[]>([]);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -132,6 +135,27 @@ function AdminSampleFormsContent() {
     }
   };
 
+  const handleDownloadInBrowser = async (item: SampleFormRecord) => {
+    setDownloadingId(item.id);
+    try {
+      const doc = <SampleSubmissionFormPDF form={item} />;
+      const blob = await pdf(doc).toBlob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${item.documentNumber || `PGCV-LF-SSF-${item.id.slice(0, 8)}`}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error generating PDF in browser:", error);
+      toast.error("Failed to generate PDF locally.");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   return (
     <div className="container mx-auto py-4 space-y-4">
       <div>
@@ -197,16 +221,28 @@ function AdminSampleFormsContent() {
                       </div>
 
                       <div className="flex items-center gap-2 flex-wrap">
-                        <a
-                          href={`/api/sample-forms/pdf?id=${item.id}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(`/api/sample-forms/pdf?id=${item.id}`, "_blank")}
                         >
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4 mr-1" />
-                            View PDF
-                          </Button>
-                        </a>
+                          <Eye className="h-4 w-4 mr-1" />
+                          View PDF
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadInBrowser(item)}
+                          disabled={downloadingId === item.id}
+                        >
+                          {downloadingId === item.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                          ) : (
+                            <Download className="h-4 w-4 mr-1" />
+                          )}
+                          Download locally
+                        </Button>
 
                         {item.status === "submitted" && (
                           <Button
