@@ -3,12 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { doc, runTransaction, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { db } from "@/lib/firebase";
 import { toast } from "sonner";
 import {
   createEmptySampleEntries,
@@ -30,6 +32,10 @@ function toClientInfoPath(
 
   const query = params.toString();
   return query ? `/client/client-info?${query}` : "/client/client-info";
+}
+
+function buildDocumentNumber(sequence: number): string {
+  return `PGCV-LF-SSF-${String(sequence).padStart(5, "0")}`;
 }
 
 export default function ClientSampleFormPage() {
@@ -181,6 +187,57 @@ export default function ClientSampleFormPage() {
     }));
   };
 
+  const submitViaClientFallback = async (validated: SampleFormData): Promise<string> => {
+    if (!inquiryId || !projectId || !email) {
+      throw new Error("Missing project context.");
+    }
+
+    const counterRef = doc(db, "counters", "sampleForms");
+    let documentNumber = "";
+
+    await runTransaction(db, async (transaction) => {
+      const counterSnap = await transaction.get(counterRef);
+      const currentSequence = counterSnap.exists()
+        ? Number(counterSnap.data()?.lastSequence || 0)
+        : 0;
+
+      const nextSequence = currentSequence + 1;
+      documentNumber = buildDocumentNumber(nextSequence);
+      const formRef = doc(db, "sampleForms", documentNumber);
+      const now = serverTimestamp();
+
+      transaction.set(
+        counterRef,
+        {
+          lastSequence: nextSequence,
+          updatedAt: now,
+        },
+        { merge: true }
+      );
+
+      transaction.set(formRef, {
+        ...validated,
+        inquiryId,
+        projectId,
+        projectTitle: projectTitle || null,
+        submittedByEmail: email,
+        submittedByName: submittedByName || null,
+        clientId: clientId || null,
+        formSequence: nextSequence,
+        documentNumber,
+        status: "submitted",
+        createdAt: now,
+        updatedAt: now,
+        adminReceivedAt: null,
+        adminReceivedBy: null,
+        reviewedAt: null,
+        reviewedBy: null,
+      });
+    });
+
+    return documentNumber;
+  };
+
   const handleSubmit = async () => {
     if (!inquiryId || !email || !projectId) {
       toast.error("Missing project context. Please open this from Client Portal.");
@@ -214,7 +271,23 @@ export default function ClientSampleFormPage() {
 
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to submit sample form.");
+        const detail = typeof err?.detail === "string" ? err.detail : "";
+        const message = typeof err?.error === "string" ? err.error : "Failed to submit sample form.";
+
+        if (response.status >= 500) {
+          try {
+            const fallbackDocumentNumber = await submitViaClientFallback(result.data);
+            toast.success(
+              `Sample form submitted as ${fallbackDocumentNumber}. Awaiting admin receipt.`
+            );
+            router.push(backPath);
+            return;
+          } catch (fallbackError) {
+            console.error("Client fallback submission failed:", fallbackError);
+          }
+        }
+
+        throw new Error(detail || message);
       }
 
       const payload = await response.json();
@@ -225,7 +298,11 @@ export default function ClientSampleFormPage() {
       router.push(backPath);
     } catch (error) {
       console.error("Error submitting sample form:", error);
-      toast.error("Failed to submit sample form. Please try again.");
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : "Failed to submit sample form. Please try again.";
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }
