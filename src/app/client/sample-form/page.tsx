@@ -53,6 +53,29 @@ export default function ClientSampleFormPage() {
 
   const isReadOnly = Boolean(formId);
 
+  useEffect(() => {
+    if (formData.totalNumberOfSamples !== formData.entries.length) {
+      setFormData((prev) => {
+        const count = prev.totalNumberOfSamples;
+        const current = prev.entries.length;
+
+        if (count > current) {
+          const extra = Array.from({ length: count - current }, (_, i) => ({
+            row: current + i + 1,
+            sampleCode: "",
+            concentration: "",
+            volume: "",
+            notes: "",
+          }));
+          return { ...prev, entries: [...prev.entries, ...extra] };
+        } else if (count < current) {
+          return { ...prev, entries: prev.entries.slice(0, count) };
+        }
+        return prev;
+      });
+    }
+  }, [formData.totalNumberOfSamples]);
+
   const backPath = useMemo(
     () => toClientInfoPath(email, inquiryId, projectId),
     [email, inquiryId, projectId]
@@ -249,12 +272,17 @@ export default function ClientSampleFormPage() {
                   max={500}
                   value={formData.totalNumberOfSamples}
                   disabled={isReadOnly}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const val = Number(e.target.value || 0);
+                    if (val > 500) {
+                      toast.error("Maximum 500 samples allowed.");
+                      return;
+                    }
                     setFormData((prev) => ({
                       ...prev,
-                      totalNumberOfSamples: Number(e.target.value || 0),
-                    }))
-                  }
+                      totalNumberOfSamples: val,
+                    }));
+                  }}
                 />
               </div>
             </div>
