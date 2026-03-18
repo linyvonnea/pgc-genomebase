@@ -344,7 +344,7 @@ function ViewDocumentContent() {
                 }
                 fileName={`${type}-${ref}.pdf`}
               >
-                {({ loading }) => (
+                {({ loading }: { loading: boolean }) => (
                   <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl" disabled={loading}>
                     {loading ? (
                       <>
