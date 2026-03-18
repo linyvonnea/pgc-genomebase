@@ -4,40 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { SampleFormRecord } from "@/types/SampleForm";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import useAuth from "@/hooks/useAuth";
 import { markSampleFormAsReceived, markSampleFormAsReviewed } from "@/services/sampleFormService";
-import { CheckCircle2, Download, Eye, FileText, Loader2, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import { pdf } from "@react-pdf/renderer";
 import { SampleSubmissionFormPDF } from "@/components/pdf/SampleSubmissionFormPDF";
-
-function toDateLabel(value: any): string {
-  if (!value) return "-";
-  const date = value?.toDate?.() || new Date(value);
-  if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleString("en-PH", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function statusBadge(status: SampleFormRecord["status"]) {
-  if (status === "reviewed") {
-    return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">Reviewed</Badge>;
-  }
-  if (status === "received") {
-    return <Badge className="bg-blue-100 text-blue-700 border-blue-200">Received</Badge>;
-  }
-  return <Badge className="bg-amber-100 text-amber-700 border-amber-200">Submitted</Badge>;
-}
+import { SampleFormList } from "@/components/sample-form/SampleFormList";
 
 export default function AdminSampleFormsPage() {
   return (
@@ -73,87 +49,58 @@ function AdminSampleFormsContent() {
     }
   };
 
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return records;
-
-    return records.filter((item) => {
-      return [
-        item.documentNumber,
-        item.submittedByEmail,
-        item.submittedByName,
-        item.projectId,
-        item.projectTitle,
-        item.status,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-        .includes(q);
-    });
+    return records.filter((item) =>
+      [item.documentNumber, item.submittedByEmail, item.submittedByName,
+       item.projectId, item.projectTitle, item.status]
+        .filter(Boolean).join(" ").toLowerCase().includes(q)
+    );
   }, [records, search]);
 
-  const handleReceive = async (formId: string) => {
-    if (!adminInfo?.email) {
-      toast.error("Admin identity missing.");
-      return;
-    }
-
-    setProcessingId(formId);
+  const handleReceive = async (item: SampleFormRecord) => {
+    if (!adminInfo?.email) { toast.error("Admin identity missing."); return; }
+    setProcessingId(item.id);
     try {
-      await markSampleFormAsReceived(formId, adminInfo.email);
+      await markSampleFormAsReceived(item.id, adminInfo.email);
       toast.success("Sample form marked as received.");
       await load();
-    } catch (error) {
-      console.error("Error marking received:", error);
-      toast.error("Failed to update status.");
-    } finally {
-      setProcessingId(null);
-    }
+    } catch { toast.error("Failed to update status."); }
+    finally { setProcessingId(null); }
   };
 
-  const handleReview = async (formId: string) => {
-    if (!adminInfo?.email) {
-      toast.error("Admin identity missing.");
-      return;
-    }
-
-    setProcessingId(formId);
+  const handleReview = async (item: SampleFormRecord) => {
+    if (!adminInfo?.email) { toast.error("Admin identity missing."); return; }
+    setProcessingId(item.id);
     try {
-      await markSampleFormAsReviewed(formId, adminInfo.email);
+      await markSampleFormAsReviewed(item.id, adminInfo.email);
       toast.success("Sample form marked as reviewed.");
       await load();
-    } catch (error) {
-      console.error("Error marking reviewed:", error);
-      toast.error("Failed to update status.");
-    } finally {
-      setProcessingId(null);
-    }
+    } catch { toast.error("Failed to update status."); }
+    finally { setProcessingId(null); }
   };
 
-  const handleDownloadInBrowser = async (item: SampleFormRecord) => {
+  const handleDownload = async (item: SampleFormRecord) => {
     setDownloadingId(item.id);
     try {
-      const doc = <SampleSubmissionFormPDF form={item} />;
-      const blob = await pdf(doc).toBlob();
+      const blob = await pdf(<SampleSubmissionFormPDF form={item} />).toBlob();
       const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${item.documentNumber || `PGCV-LF-SSF-${item.id.slice(0, 8)}`}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${item.documentNumber || `PGCV-LF-SSF-${item.id.slice(0, 8)}`}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Error generating PDF in browser:", error);
-      toast.error("Failed to generate PDF locally.");
-    } finally {
-      setDownloadingId(null);
-    }
+    } catch { toast.error("Failed to generate PDF."); }
+    finally { setDownloadingId(null); }
+  };
+
+  const handleViewPdf = (item: SampleFormRecord) => {
+    window.open(`/api/sample-forms/pdf?id=${item.id}`, "_blank");
   };
 
   return (
@@ -184,96 +131,21 @@ function AdminSampleFormsContent() {
 
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Submitted Forms ({filtered.length})</CardTitle>
+          <CardTitle className="text-base">
+            Submitted Forms ({filtered.length})
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="py-8 text-center text-slate-500">
-              <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
-              Loading sample forms...
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="py-8 text-center text-slate-500">No sample forms found.</div>
-          ) : (
-            <div className="space-y-3">
-              {filtered.map((item) => {
-                const busy = processingId === item.id;
-                return (
-                  <div key={item.id} className="border rounded-lg p-3 bg-white">
-                    <div className="flex items-start justify-between gap-3 flex-wrap">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <FileText className="h-4 w-4 text-[#166FB5]" />
-                          <span className="font-semibold text-sm text-slate-800">
-                            {item.documentNumber || `PGCV-LF-SSF-${item.id.slice(0, 8)}`}
-                          </span>
-                          {statusBadge(item.status)}
-                        </div>
-                        <p className="text-xs text-slate-500">
-                          Project: {item.projectTitle || "Untitled Project"} ({item.projectId})
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          Submitted by: {item.submittedByName || item.submittedByEmail}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          Created: {toDateLabel(item.createdAt)}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => window.open(`/api/sample-forms/pdf?id=${item.id}`, "_blank")}
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          View PDF
-                        </Button>
-
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownloadInBrowser(item)}
-                          disabled={downloadingId === item.id}
-                        >
-                          {downloadingId === item.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                          ) : (
-                            <Download className="h-4 w-4 mr-1" />
-                          )}
-                          Download locally
-                        </Button>
-
-                        {item.status === "submitted" && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleReceive(item.id)}
-                            disabled={busy}
-                            className="bg-blue-600 hover:bg-blue-700"
-                          >
-                            <CheckCircle2 className="h-4 w-4 mr-1" />
-                            Mark Received
-                          </Button>
-                        )}
-
-                        {item.status !== "reviewed" && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleReview(item.id)}
-                            disabled={busy}
-                            variant="secondary"
-                          >
-                            <CheckCircle2 className="h-4 w-4 mr-1" />
-                            Mark Reviewed
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <SampleFormList
+            records={filtered}
+            loading={loading}
+            processingId={processingId}
+            downloadingId={downloadingId}
+            onViewPdf={handleViewPdf}
+            onDownload={handleDownload}
+            onMarkReceived={handleReceive}
+            onMarkReviewed={handleReview}
+          />
         </CardContent>
       </Card>
     </div>
