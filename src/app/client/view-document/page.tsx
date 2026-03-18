@@ -2,7 +2,7 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
-import { PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
+import dynamic from "next/dynamic";
 import { getQuotationByReferenceNumber, markQuotationAsSeen } from "@/services/quotationService";
 import { getChargeSlipById } from "@/services/chargeSlipService";
 import { QuotationPDF } from "@/components/quotation/QuotationPDF";
@@ -14,6 +14,17 @@ import { normalizeDate } from "@/lib/formatters";
 import useAuth from "@/hooks/useAuth";
 import { collection, query, where, getDocs, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+
+// Dynamically import PDF components with SSR disabled
+const PDFViewer = dynamic(
+  () => import("@react-pdf/renderer").then((mod) => mod.PDFViewer),
+  { ssr: false }
+);
+
+const PDFDownloadLink = dynamic(
+  () => import("@react-pdf/renderer").then((mod) => mod.PDFDownloadLink),
+  { ssr: false }
+);
 
 function ViewDocumentContent() {
   const searchParams = useSearchParams();
