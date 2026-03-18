@@ -2491,6 +2491,13 @@ export default function ClientPortalPage() {
                                 <p>Pending admin receipt: {sampleFormSubmittedCount}</p>
                                 <p>Reviewed by admin: {sampleFormReviewedCount}</p>
                               </div>
+                              <a
+                                href={sampleFormBaseHref}
+                                className="inline-block text-xs text-[#166FB5] hover:underline ml-5 mb-2"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                + Fill out sample submission form
+                              </a>
                               {(docs?.sampleForms?.length || 0) > 0 ? (
                                 <div className="space-y-1 ml-5">
                                   {docs?.sampleForms.map((item) => (
