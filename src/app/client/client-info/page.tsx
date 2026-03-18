@@ -70,7 +70,10 @@ import { getQuotationsByInquiryId } from "@/services/quotationService";
 import { subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { getChargeSlipsByProjectId } from "@/services/chargeSlipService";
-import { getSampleFormsByProjectId } from "@/services/sampleFormService";
+import {
+  getSampleFormsByProjectId,
+  getSampleFormMonitoringSummary,
+} from "@/services/sampleFormService";
 import { QuotationRecord } from "@/types/Quotation";
 import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
@@ -277,6 +280,11 @@ export default function ClientPortalPage() {
       quotations: QuotationRecord[]; 
       chargeSlips: ChargeSlipRecord[]; 
       sampleForms: SampleFormSummary[];
+      sampleFormMonitoring: {
+        submittedCount: number;
+        receivedCount: number;
+        reviewedCount: number;
+      };
       serviceReports: any[];
       officialReceipts: any[];
       loading: boolean 
@@ -1742,6 +1750,11 @@ export default function ClientPortalPage() {
         quotations: [],
         chargeSlips: [],
         sampleForms: [],
+        sampleFormMonitoring: {
+          submittedCount: 0,
+          receivedCount: 0,
+          reviewedCount: 0,
+        },
         serviceReports: [],
         officialReceipts: [],
         loading: true,
@@ -1758,13 +1771,25 @@ export default function ClientPortalPage() {
 
         // Fetch sample forms by project ID (client-submitted forms)
         const sampleForms = project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
-          ? await getSampleFormsByProjectId(project.pid)
+          ? await getSampleFormsByProjectId(project.pid, {
+              submittedByEmail: emailParam || undefined,
+              includeStatuses: ["received", "reviewed"],
+            })
           : [];
+
+        const sampleFormMonitoring = project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
+          ? await getSampleFormMonitoringSummary(project.pid, emailParam || undefined)
+          : {
+              submittedCount: 0,
+              receivedCount: 0,
+              reviewedCount: 0,
+            };
 
         setProjectDocuments((prev) => new Map(prev).set(pid, {
           quotations,
           chargeSlips,
           sampleForms,
+          sampleFormMonitoring,
           serviceReports: [],
           officialReceipts: [],
           loading: false,
@@ -1776,6 +1801,11 @@ export default function ClientPortalPage() {
           quotations: [],
           chargeSlips: [],
           sampleForms: [],
+          sampleFormMonitoring: {
+            submittedCount: 0,
+            receivedCount: 0,
+            reviewedCount: 0,
+          },
           serviceReports: [],
           officialReceipts: [],
           loading: false,
@@ -2309,6 +2339,8 @@ export default function ClientPortalPage() {
                 const quotationCount = docs?.quotations.length || 0;
                 const chargeSlipCount = docs?.chargeSlips.length || 0;
                 const sampleFormCount = docs?.sampleForms?.length || 0;
+                const sampleFormSubmittedCount = docs?.sampleFormMonitoring?.submittedCount || 0;
+                const sampleFormReviewedCount = docs?.sampleFormMonitoring?.reviewedCount || 0;
                 const serviceReportCount = docs?.serviceReports?.length || 0;
                 const officialReceiptCount = docs?.officialReceipts?.length || 0;
                 const sampleFormParams = new URLSearchParams();
@@ -2444,9 +2476,20 @@ export default function ClientPortalPage() {
                               <div className="flex items-center gap-2 mb-1.5">
                                 <FileSpreadsheet className="h-3 w-3 text-orange-600" />
                                 <span className="text-sm font-semibold text-slate-700">
-                                  Sample Forms
+                                  Sample Forms Monitoring
                                 </span>
-                                <span className="text-[10px] text-slate-500">({docs?.sampleForms?.length || 0})</span>
+                                <span className="text-[10px] text-slate-500">({sampleFormCount})</span>
+                              </div>
+                              <a
+                                href={sampleFormBaseHref}
+                                className="inline-block text-xs text-[#166FB5] hover:underline ml-5 mb-2"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                + Fill out sample submission form
+                              </a>
+                              <div className="ml-5 mb-2 text-[11px] text-slate-500 space-y-0.5">
+                                <p>Pending admin receipt: {sampleFormSubmittedCount}</p>
+                                <p>Reviewed by admin: {sampleFormReviewedCount}</p>
                               </div>
                               <a
                                 href={sampleFormBaseHref}
@@ -2460,16 +2503,18 @@ export default function ClientPortalPage() {
                                   {docs?.sampleForms.map((item) => (
                                     <a
                                       key={item.id}
-                                      href={`${sampleFormBaseHref}&formId=${item.id}`}
+                                      href={`/api/sample-forms/pdf?id=${item.id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
                                       className="block text-xs text-slate-600 hover:text-orange-600 hover:underline truncate"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      • Form #{item.id.slice(0, 8)} ({item.totalNumberOfSamples || 0} samples)
+                                      • {item.documentNumber || `PGCV-LF-SSF-${item.id.slice(0, 8)}`} ({item.totalNumberOfSamples || 0} samples)
                                     </a>
                                   ))}
                                 </div>
                               ) : (
-                                <p className="text-xs text-slate-400 ml-5">No sample forms yet</p>
+                                <p className="text-xs text-slate-400 ml-5">No received sample forms yet</p>
                               )}
                             </div>
 

@@ -16,7 +16,7 @@ import { toast } from "sonner";
 
 export interface ApprovalNotification {
   id: string;
-  type: "member" | "project" | "inquiry";
+  type: "member" | "project" | "inquiry" | "sampleForm";
   title: string;
   message: string;
   submittedBy: string;
@@ -30,6 +30,7 @@ export function useApprovalNotifications() {
   const [notifications, setNotifications] = useState<ApprovalNotification[]>([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [inquiryCount, setInquiryCount] = useState(0);
+  const [sampleFormCount, setSampleFormCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const previousCountRef = useRef(0);
   const previousInquiryCountRef = useRef(0);
@@ -54,6 +55,12 @@ export function useApprovalNotifications() {
     const inquiriesQuery = query(
       collection(db, "inquiries"),
       where("status", "==", "Pending")
+    );
+
+    // Listen to submitted sample forms awaiting admin receipt
+    const sampleFormsQuery = query(
+      collection(db, "sampleForms"),
+      where("status", "==", "submitted")
     );
 
     const unsubscribeMemberApprovals = onSnapshot(
@@ -103,6 +110,32 @@ export function useApprovalNotifications() {
       },
       (error) => {
         console.error("Error listening to project requests:", error);
+      }
+    );
+
+    const unsubscribeSampleForms = onSnapshot(
+      sampleFormsQuery,
+      (snapshot) => {
+        const sampleFormNotifications: ApprovalNotification[] = snapshot.docs.map((doc) => {
+          const data = doc.data() as any;
+          return {
+            id: doc.id,
+            type: "sampleForm" as const,
+            title: "New Sample Form Submission",
+            message: `${data.documentNumber || "Sample form"} submitted and awaiting receipt`,
+            submittedBy: data.submittedByEmail || "Unknown",
+            submittedByName: data.submittedByName || undefined,
+            submittedAt: data.createdAt?.toDate?.() || new Date(),
+            inquiryId: data.inquiryId || "",
+            read: false,
+          };
+        });
+
+        setSampleFormCount(sampleFormNotifications.length);
+        updateNotifications(sampleFormNotifications, "sampleForm");
+      },
+      (error) => {
+        console.error("Error listening to sample form notifications:", error);
       }
     );
     
@@ -170,11 +203,15 @@ export function useApprovalNotifications() {
       
       unsubscribeMemberApprovals();
       unsubscribeProjectRequests();
+      unsubscribeSampleForms();
       unsubscribeInquiries();
     };
   }, []);
 
-  const updateNotifications = (newNotifications: ApprovalNotification[], type: "member" | "project") => {
+  const updateNotifications = (
+    newNotifications: ApprovalNotification[],
+    type: "member" | "project" | "sampleForm"
+  ) => {
     setNotifications((prev) => {
       // Filter out old notifications of the same type
       const otherTypeNotifications = prev.filter((n) => n.type !== type);
@@ -227,6 +264,7 @@ export function useApprovalNotifications() {
     notifications,
     pendingCount,
     inquiryCount,
+    sampleFormCount,
     unreadCount,
     markAsRead,
     markAllAsRead,
