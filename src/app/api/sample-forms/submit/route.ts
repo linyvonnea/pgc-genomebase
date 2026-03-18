@@ -1,14 +1,15 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
-import admin, { adminDb } from "@/lib/firebase-admin";
+import admin, { getFirestoreDb } from "@/lib/firebase-admin";
 import { sampleFormSchema } from "@/schemas/sampleFormSchema";
 
 async function getAdminDb() {
-  if (!adminDb) {
+  const db = getFirestoreDb();
+  if (!db) {
     throw new Error("Firebase Admin SDK not initialized");
   }
-  return adminDb;
+  return db;
 }
 
 function buildDocumentNumber(sequence: number): string {

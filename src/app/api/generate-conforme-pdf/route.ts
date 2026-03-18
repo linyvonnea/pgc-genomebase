@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ClientConforme } from "@/types/ClientConforme";
-import { adminDb } from "@/lib/firebase-admin";
+import { getFirestoreDb } from "@/lib/firebase-admin";
 
 async function getAdminDb() {
-  if (!adminDb) {
+  const db = getFirestoreDb();
+  if (!db) {
     throw new Error("Firebase Admin not initialized. Check FIREBASE_SERVICE_ACCOUNT env var.");
   }
-  return adminDb;
+  return db;
 }
 
 export async function GET(request: NextRequest) {
