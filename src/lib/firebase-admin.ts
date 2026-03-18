@@ -16,6 +16,7 @@ if (!admin.apps.length) {
     } else {
       // Fallback: load from local file using absolute path based on process.cwd()
       const keyPath = path.join(process.cwd(), "scripts", "serviceAccountKey.json");
+      console.log("🔍 Checking for serviceAccountKey at:", keyPath);
       if (fs.existsSync(keyPath)) {
         const serviceAccount = JSON.parse(fs.readFileSync(keyPath, "utf-8"));
         admin.initializeApp({
@@ -32,4 +33,7 @@ if (!admin.apps.length) {
 }
 
 export const adminDb = admin.apps.length ? admin.firestore() : null;
+if (!adminDb) {
+  console.error("❌ adminDb failed to initialize. admin.apps.length:", admin.apps.length);
+}
 export default admin;
