@@ -285,52 +285,131 @@ function ViewDocumentContent() {
         </div>
       </div>
       <div className="flex-1 overflow-hidden">
-        <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
-          {type === "quotation" ? (
-            <QuotationPDF 
-              services={data.services}
-              clientInfo={{
-                name: data.name,
-                institution: data.institution,
-                designation: data.designation,
-                email: data.email
-              }}
-              referenceNumber={data.referenceNumber}
-              useInternalPrice={data.isInternal}
-              preparedBy={data.preparedBy}
-              totalsOverride={{
-                subtotal: data.subtotal,
-                discount: data.discount,
-                total: data.total
-              }}
-              dateOfIssue={data.dateIssued}
-              useAffiliationAsClientName={data.useAffiliationAsClientName}
-            />
-          ) : (
-            <ChargeSlipPDF 
-              services={data.services}
-              client={data.client}
-              project={data.project}
-              chargeSlipNumber={data.chargeSlipNumber}
-              orNumber={data.orNumber ?? ""}
-              useInternalPrice={data.useInternalPrice}
-              useAffiliationAsClientName={data.useAffiliationAsClientName}
-              preparedBy={data.preparedBy}
-              referenceNumber={data.referenceNumber}
-              clientInfo={data.clientInfo}
-              approvedBy={
-                data.approvedBy || {
-                  name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.",
-                  position: "AED, PGC Visayas",
+        {isMobile ? (
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center text-slate-300 space-y-4">
+            <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl max-w-sm">
+              <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Download className="h-8 w-8 text-blue-400" />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">Mobile PDF Viewing</h2>
+              <p className="text-sm text-slate-400 mb-6">
+                Direct PDF previews are limited on some mobile browsers. For the best experience, please download the document to view it on your device.
+              </p>
+              <PDFDownloadLink
+                document={
+                  type === "quotation" ? (
+                    <QuotationPDF 
+                      services={data.services}
+                      clientInfo={{
+                        name: data.name,
+                        institution: data.institution,
+                        designation: data.designation,
+                        email: data.email
+                      }}
+                      referenceNumber={data.referenceNumber}
+                      useInternalPrice={data.isInternal}
+                      preparedBy={data.preparedBy}
+                      totalsOverride={{
+                        subtotal: data.subtotal,
+                        discount: data.discount,
+                        total: data.total
+                      }}
+                      dateOfIssue={data.dateIssued}
+                      useAffiliationAsClientName={data.useAffiliationAsClientName}
+                    />
+                  ) : (
+                    <ChargeSlipPDF 
+                      services={data.services}
+                      client={data.client}
+                      project={data.project}
+                      chargeSlipNumber={data.chargeSlipNumber}
+                      orNumber={data.orNumber ?? ""}
+                      useInternalPrice={data.useInternalPrice}
+                      useAffiliationAsClientName={data.useAffiliationAsClientName}
+                      preparedBy={data.preparedBy}
+                      referenceNumber={data.referenceNumber}
+                      clientInfo={data.clientInfo}
+                      approvedBy={
+                        data.approvedBy || {
+                          name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.",
+                          position: "AED, PGC Visayas",
+                        }
+                      }
+                      dateIssued={normalizeDate(data.dateIssued ?? "")}
+                      subtotal={data.subtotal}
+                      discount={data.discount}
+                      total={data.total}
+                    />
+                  )
                 }
-              }
-              dateIssued={normalizeDate(data.dateIssued ?? "")}
-              subtotal={data.subtotal}
-              discount={data.discount}
-              total={data.total}
-            />
-          )}
-        </PDFViewer>
+                fileName={`${type}-${ref}.pdf`}
+              >
+                {({ loading }) => (
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl" disabled={loading}>
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        Preparing Document...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-5 w-5 mr-2" />
+                        Download PDF
+                      </>
+                    )}
+                  </Button>
+                )}
+              </PDFDownloadLink>
+            </div>
+          </div>
+        ) : (
+          <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
+            {type === "quotation" ? (
+              <QuotationPDF 
+                services={data.services}
+                clientInfo={{
+                  name: data.name,
+                  institution: data.institution,
+                  designation: data.designation,
+                  email: data.email
+                }}
+                referenceNumber={data.referenceNumber}
+                useInternalPrice={data.isInternal}
+                preparedBy={data.preparedBy}
+                totalsOverride={{
+                  subtotal: data.subtotal,
+                  discount: data.discount,
+                  total: data.total
+                }}
+                dateOfIssue={data.dateIssued}
+                useAffiliationAsClientName={data.useAffiliationAsClientName}
+              />
+            ) : (
+              <ChargeSlipPDF 
+                services={data.services}
+                client={data.client}
+                project={data.project}
+                chargeSlipNumber={data.chargeSlipNumber}
+                orNumber={data.orNumber ?? ""}
+                useInternalPrice={data.useInternalPrice}
+                useAffiliationAsClientName={data.useAffiliationAsClientName}
+                preparedBy={data.preparedBy}
+                referenceNumber={data.referenceNumber}
+                clientInfo={data.clientInfo}
+                approvedBy={
+                  data.approvedBy || {
+                    name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.",
+                    position: "AED, PGC Visayas",
+                  }
+                }
+                dateIssued={normalizeDate(data.dateIssued ?? "")}
+                subtotal={data.subtotal}
+                discount={data.discount}
+                total={data.total}
+              />
+            )}
+          </PDFViewer>
+        )}
       </div>
     </div>
   );
