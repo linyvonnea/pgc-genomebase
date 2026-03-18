@@ -16,13 +16,13 @@ import { collection, query, where, getDocs, doc, getDoc } from "firebase/firesto
 import { db } from "@/lib/firebase";
 
 // Dynamically import PDF components with SSR disabled
-const PDFViewer = dynamic(
-  () => import("@react-pdf/renderer").then((mod) => mod.PDFViewer),
+const PDFViewer = dynamic<any>(
+  () => import("@react-pdf/renderer").then((mod) => (mod as any).PDFViewer),
   { ssr: false }
 );
 
-const PDFDownloadLink = dynamic(
-  () => import("@react-pdf/renderer").then((mod) => mod.PDFDownloadLink),
+const PDFDownloadLink = dynamic<any>(
+  () => import("@react-pdf/renderer").then((mod) => (mod as any).PDFDownloadLink),
   { ssr: false }
 );
 
@@ -267,7 +267,7 @@ function ViewDocumentContent() {
               }
               fileName={`${type}-${ref}.pdf`}
             >
-              {({ loading }) => (
+              {({ loading }: { loading: boolean }) => (
                 <Button variant="default" size="sm" disabled={loading} className="bg-blue-600 hover:bg-blue-700 text-white">
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-1" />

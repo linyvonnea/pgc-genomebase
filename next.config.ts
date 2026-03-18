@@ -4,7 +4,8 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  serverExternalPackages: ["firebase-admin", "@react-pdf/renderer"],
+  serverExternalPackages: ["firebase-admin"],
+  transpilePackages: ["@react-pdf/renderer"],
 };
 
 export default nextConfig;
