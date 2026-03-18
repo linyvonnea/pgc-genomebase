@@ -16,7 +16,7 @@ import {
   SampleFormData,
 } from "@/types/SampleForm";
 import { sampleFormSchema } from "@/schemas/sampleFormSchema";
-import { createSampleForm, getSampleFormById } from "@/services/sampleFormService";
+import { getSampleFormById } from "@/services/sampleFormService";
 
 function toClientInfoPath(
   email: string | null,
@@ -172,16 +172,31 @@ export default function ClientSampleFormPage() {
 
     setSubmitting(true);
     try {
-      await createSampleForm({
-        ...result.data,
-        inquiryId,
-        projectId,
-        projectTitle,
-        submittedByEmail: email,
-        submittedByName,
+      const response = await fetch("/api/sample-forms/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          inquiryId,
+          projectId,
+          projectTitle,
+          submittedByEmail: email,
+          submittedByName,
+          formData: result.data,
+        }),
       });
 
-      toast.success("Sample form submitted successfully.");
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to submit sample form.");
+      }
+
+      const payload = await response.json();
+
+      toast.success(
+        `Sample form submitted as ${payload.documentNumber}. Awaiting admin receipt.`
+      );
       router.push(backPath);
     } catch (error) {
       console.error("Error submitting sample form:", error);

@@ -46,21 +46,37 @@ export interface SampleFormData {
 
 export interface SampleFormRecord extends SampleFormData {
   id: string;
+  formSequence?: number;
+  documentNumber?: string;
+  status?: "submitted" | "received" | "reviewed";
   inquiryId: string;
   projectId: string;
   projectTitle?: string;
   submittedByEmail: string;
   submittedByName?: string;
+  adminReceivedAt?: Date | string | Timestamp;
+  adminReceivedBy?: string;
+  reviewedAt?: Date | string | Timestamp;
+  reviewedBy?: string;
   createdAt?: Date | string | Timestamp;
   updatedAt?: Date | string | Timestamp;
 }
 
 export interface SampleFormSummary {
   id: string;
+  formSequence?: number;
+  documentNumber?: string;
+  status?: "submitted" | "received" | "reviewed";
   projectId: string;
   totalNumberOfSamples: number;
   submittedByEmail: string;
   createdAt?: Date | string | Timestamp;
+}
+
+export interface SampleFormMonitoringSummary {
+  submittedCount: number;
+  receivedCount: number;
+  reviewedCount: number;
 }
 
 export const SAMPLE_FORM_ROW_COUNT = 28;
