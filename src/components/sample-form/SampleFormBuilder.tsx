@@ -654,6 +654,18 @@ export default function SampleFormBuilder({
             upon confirmation.
           </p>
 
+          {/* Explicitly display Project ID and Client ID in the preview dialog */}
+          <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Project ID</p>
+              <p className="text-lg font-bold text-slate-900">{projectId || "—"}</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Client ID (Primary)</p>
+              <p className="text-lg font-bold text-slate-900">{clientId || "—"}</p>
+            </div>
+          </div>
+
           {/* Live PDF preview built from current form data */}
           <div className="rounded-lg overflow-hidden border border-slate-200">
             <SampleFormPDFViewer form={previewRecord} />
