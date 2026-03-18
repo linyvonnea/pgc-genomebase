@@ -18,6 +18,22 @@ import { subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { getClientInitials } from "@/lib/chatUtils";
 
+type NavigatorWithBadge = Navigator & {
+  setAppBadge?: (contents?: number) => Promise<void>;
+  clearAppBadge?: () => Promise<void>;
+};
+
+function base64ToUint8Array(base64: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64.length % 4)) % 4);
+  const normalized = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(normalized);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
 interface FloatingChatWidgetProps {
   inquiryId: string;
   role: MessageSenderRole;
@@ -36,6 +52,7 @@ export default function FloatingChatWidget({
   const pathname = usePathname();
   const { user } = useAuth();
   const [inquiryData, setInquiryData] = useState<Inquiry | null>(null);
+  const [lastNotifiedUnread, setLastNotifiedUnread] = useState(0);
 
   useEffect(() => {
     if (!inquiryId) return;
@@ -99,6 +116,76 @@ export default function FloatingChatWidget({
     return () => unsubscribe();
   }, [inquiryId, role, isOpen, user]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (role !== "client") return;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    if (Notification.permission !== "granted") return;
+
+    const publicKey = process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY;
+    if (!publicKey) return;
+
+    const subscribe = async () => {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const existing = await registration.pushManager.getSubscription();
+        const subscription =
+          existing ||
+          (await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: base64ToUint8Array(publicKey) as unknown as BufferSource,
+          }));
+
+        await fetch("/api/push/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            threadId: inquiryId,
+            role: "client",
+            subscriberId: user?.email || inquiryData?.email || "unknown-client",
+            subscription: subscription.toJSON(),
+          }),
+        });
+      } catch (error) {
+        console.error("Push subscription failed:", error);
+      }
+    };
+
+    subscribe();
+  }, [inquiryData?.email, inquiryId, role, user?.email]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (role !== "client") return;
+
+    const nav = navigator as NavigatorWithBadge;
+    if (typeof nav.setAppBadge === "function" || typeof nav.clearAppBadge === "function") {
+      if (unreadCount > 0 && typeof nav.setAppBadge === "function") {
+        nav.setAppBadge(unreadCount).catch(() => {});
+      }
+      if (unreadCount === 0 && typeof nav.clearAppBadge === "function") {
+        nav.clearAppBadge().catch(() => {});
+      }
+    }
+
+    // Foreground web notification (while app/browser tab is open but hidden).
+    // Background push notifications when app is fully closed still need Web Push setup.
+    if (
+      document.visibilityState === "hidden" &&
+      unreadCount > lastNotifiedUnread &&
+      Notification.permission === "granted"
+    ) {
+      new Notification("New message from PGC Visayas", {
+        body: `You have ${unreadCount} unread message${unreadCount > 1 ? "s" : ""}.`,
+        icon: "/assets/pgc-logo.png",
+        badge: "/assets/pgc-logo.png",
+        tag: `inquiry-${inquiryId}`,
+      });
+    }
+
+    setLastNotifiedUnread(unreadCount);
+  }, [inquiryId, lastNotifiedUnread, role, unreadCount]);
+
   const toggleOpen = () => {
     const newOpenState = !isOpen;
     
@@ -108,6 +195,12 @@ export default function FloatingChatWidget({
     }
     
     setIsOpen(newOpenState);
+
+    if (newOpenState && role === "client" && typeof window !== "undefined") {
+      if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission().catch(() => {});
+      }
+    }
 
     // If opening, mark as read immediately
     if (newOpenState && inquiryId) {
