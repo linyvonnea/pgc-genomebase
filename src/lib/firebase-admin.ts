@@ -46,18 +46,27 @@ if (!admin.apps.length) {
     } else {
       // Fallback: load from local file using absolute path based on process.cwd()
       const keyPath = path.join(process.cwd(), "scripts", "serviceAccountKey.json");
-      console.log("🔍 Checking for serviceAccountKey at:", keyPath);
-      if (fs.existsSync(keyPath)) {
-        const serviceAccount = JSON.parse(fs.readFileSync(keyPath, "utf-8"));
+      console.log("🔍 [Firebase Admin] Checking for serviceAccountKey at:", keyPath);
+      
+      let finalKeyPath = keyPath;
+      if (!fs.existsSync(finalKeyPath)) {
+        // Try relative to current file if process.cwd() is different (e.g. in some serverless environments)
+        finalKeyPath = path.resolve(__dirname, "../../scripts/serviceAccountKey.json");
+        console.log("🔍 [Firebase Admin] Not found at cwd, trying relative:", finalKeyPath);
+      }
+
+      if (fs.existsSync(finalKeyPath)) {
+        console.log("✅ [Firebase Admin] serviceAccountKey.json found at:", finalKeyPath);
+        const serviceAccount = JSON.parse(fs.readFileSync(finalKeyPath, "utf-8"));
         admin.initializeApp({
           credential: admin.credential.cert(serviceAccount),
         });
-        console.log("✅ Firebase Admin initialized via serviceAccountKey.json");
+        console.log("✅ [Firebase Admin] Initialized successfully via serviceAccountKey.json");
       } else {
         console.error(
-          "❌ Firebase Admin credentials not found. Set FIREBASE_SERVICE_ACCOUNT, FIREBASE_SERVICE_ACCOUNT_BASE64, or FIREBASE_PROJECT_ID/FIREBASE_CLIENT_EMAIL/FIREBASE_PRIVATE_KEY."
+          "❌ [Firebase Admin] credentials not found. Set FIREBASE_SERVICE_ACCOUNT or provide scripts/serviceAccountKey.json"
         );
-        console.error("❌ serviceAccountKey.json not found at:", keyPath);
+        console.error("❌ [Firebase Admin] serviceAccountKey.json NOT found. Checked:", keyPath, "and", finalKeyPath);
       }
     }
   } catch (error) {
