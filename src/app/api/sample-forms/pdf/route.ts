@@ -1,14 +1,15 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
+import { getFirestoreDb } from "@/lib/firebase-admin";
 import { SampleFormRecord } from "@/types/SampleForm";
 
 async function getAdminDb() {
-  if (!adminDb) {
+  const db = getFirestoreDb();
+  if (!db) {
     throw new Error("Firebase Admin SDK not initialized");
   }
-  return adminDb;
+  return db;
 }
 
 export async function GET(request: NextRequest) {

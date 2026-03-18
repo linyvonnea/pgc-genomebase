@@ -67,6 +67,13 @@ if (!admin.apps.length) {
 
 export const adminDb = admin.apps.length ? admin.firestore() : null;
 if (!adminDb) {
-  console.error("❌ adminDb failed to initialize. admin.apps.length:", admin.apps.length);
+  console.error("❌ adminDb failed to initialize at module level. admin.apps.length:", admin.apps.length);
 }
+
+export function getFirestoreDb() {
+  if (adminDb) return adminDb;
+  if (admin.apps.length > 0) return admin.firestore();
+  return null;
+}
+
 export default admin;
