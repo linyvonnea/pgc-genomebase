@@ -3599,6 +3599,27 @@ export default function ClientPortalPage() {
               </div>
             </div>
           )}
+
+          {members.filter((m) => !m.isPrimary && m.isDraft).length > 0 && (
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 space-y-2">
+              <p className="text-sm font-semibold text-blue-900 mb-2">
+                Additional Team Members:
+              </p>
+              <ul className="space-y-1">
+                {members
+                  .filter((m) => !m.isPrimary && m.isDraft)
+                  .map((m) => (
+                    <li
+                      key={m.id}
+                      className="text-xs text-blue-800 flex items-center gap-2"
+                    >
+                      <User className="h-3 w-3" />
+                      {m.formData.name || "Unnamed"} ({m.formData.email})
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          )}
         </div>
       </ConfirmationModalLayout>
 
