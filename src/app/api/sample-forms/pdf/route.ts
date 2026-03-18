@@ -38,8 +38,10 @@ export async function GET(request: NextRequest) {
     const { SampleSubmissionFormPDF } = await import("@/components/pdf/SampleSubmissionFormPDF");
     const React = await import("react");
 
+    console.log("Rendering PDF for form:", form.id);
     const pdfElement = React.createElement(SampleSubmissionFormPDF, { form });
     const pdfBuffer = await renderToBuffer(pdfElement as any);
+    console.log("PDF Buffer generated, length:", pdfBuffer.length);
 
     const fileName = `${form.documentNumber || `PGCV-LF-SSF-${snapshot.id}`}.pdf`;
 
@@ -51,8 +53,8 @@ export async function GET(request: NextRequest) {
         "Cache-Control": "no-cache",
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error generating sample form PDF:", error);
-    return new NextResponse("Failed to generate PDF", { status: 500 });
+    return new NextResponse(`Failed to generate PDF: ${error?.message || "Unknown error"}`, { status: 500 });
   }
 }
