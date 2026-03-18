@@ -39,14 +39,19 @@ function ViewDocumentContent() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Check if device is mobile
+    // Check if device is mobile - more robust check including smaller screens
     const checkMobile = () => {
       const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-      if (/android|iphone|ipad|ipod/i.test(userAgent)) {
+      const isMobileAgent = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+      const isSmallScreen = window.innerWidth < 1024;
+      
+      if (isMobileAgent || isSmallScreen) {
         setIsMobile(true);
       }
     };
     checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   useEffect(() => {
