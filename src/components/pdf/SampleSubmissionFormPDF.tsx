@@ -8,6 +8,7 @@ const styles = StyleSheet.create({
     fontSize: 8,
     padding: 20,
     color: "#0f172a",
+    backgroundColor: "#ffffff", // Ensure white background
   },
   headerCard: {
     border: 1,
@@ -246,7 +247,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const check = (value?: boolean) => (value ? "X" : "");
+const check = (value?: boolean) => (value === true ? "X" : "  ");
 
 interface Props {
   form: SampleFormRecord;
