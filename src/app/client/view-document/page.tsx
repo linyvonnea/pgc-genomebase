@@ -5,8 +5,10 @@ import { useEffect, useState, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { getQuotationByReferenceNumber, markQuotationAsSeen } from "@/services/quotationService";
 import { getChargeSlipById } from "@/services/chargeSlipService";
+import { getSampleFormById } from "@/services/sampleFormService";
 import { QuotationPDF } from "@/components/quotation/QuotationPDF";
 import { ChargeSlipPDF } from "@/components/charge-slip/ChargeSlipPDF";
+import { SampleSubmissionFormPDF } from "@/components/pdf/SampleSubmissionFormPDF";
 import { Loader2, ArrowLeft, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -178,6 +180,46 @@ function ViewDocumentContent() {
           } else {
             toast.error("Charge slip not found.");
           }
+        } else if (type === "sample-form") {
+          const sampleForm = await getSampleFormById(ref);
+          if (sampleForm) {
+            if (!isAdmin) {
+              const userEmail = user.email?.toLowerCase();
+              const ownerEmail = sampleForm.submittedByEmail?.toLowerCase();
+
+              let hasAccess = userEmail === ownerEmail;
+
+              if (!hasAccess && sampleForm.inquiryId) {
+                const clientQuery = query(
+                  collection(db, "clients"),
+                  where("inquiryId", "==", sampleForm.inquiryId),
+                  where("email", "==", user.email)
+                );
+                const clientSnap = await getDocs(clientQuery);
+                if (!clientSnap.empty) {
+                  hasAccess = true;
+                } else {
+                  const inquirySnap = await getDoc(doc(db, "inquiries", sampleForm.inquiryId));
+                  if (inquirySnap.exists()) {
+                    const inquiryData = inquirySnap.data();
+                    if (inquiryData.email?.toLowerCase() === userEmail) {
+                      hasAccess = true;
+                    }
+                  }
+                }
+              }
+
+              if (!hasAccess) {
+                toast.error("Access denied. This document does not belong to you.");
+                router.push("/client");
+                return;
+              }
+            }
+
+            setData(sampleForm);
+          } else {
+            toast.error("Sample form not found.");
+          }
         }
       } catch (err) {
         console.error("Error fetching document:", err);
@@ -217,7 +259,7 @@ function ViewDocumentContent() {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-white font-medium">
-            {type === "quotation" ? "Quotation" : "Charge Slip"} - {ref}
+            {type === "quotation" ? "Quotation" : type === "charge-slip" ? "Charge Slip" : "Sample Submission Form"} - {ref}
           </h1>
         </div>
         <div className="flex items-center gap-2">
@@ -245,7 +287,7 @@ function ViewDocumentContent() {
                     dateOfIssue={data.dateIssued}
                     useAffiliationAsClientName={data.useAffiliationAsClientName}
                   />
-                ) : (
+                ) : type === "charge-slip" ? (
                   <ChargeSlipPDF 
                     services={data.services}
                     client={data.client}
@@ -268,6 +310,8 @@ function ViewDocumentContent() {
                     discount={data.discount}
                     total={data.total}
                   />
+                ) : (
+                  <SampleSubmissionFormPDF form={data} />
                 )
               }
               fileName={`${type}-${ref}.pdf`}
@@ -322,7 +366,7 @@ function ViewDocumentContent() {
                       dateOfIssue={data.dateIssued}
                       useAffiliationAsClientName={data.useAffiliationAsClientName}
                     />
-                  ) : (
+                  ) : type === "charge-slip" ? (
                     <ChargeSlipPDF 
                       services={data.services}
                       client={data.client}
@@ -345,6 +389,8 @@ function ViewDocumentContent() {
                       discount={data.discount}
                       total={data.total}
                     />
+                  ) : (
+                    <SampleSubmissionFormPDF form={data} />
                   )
                 }
                 fileName={`${type}-${ref}.pdf`}
@@ -389,7 +435,7 @@ function ViewDocumentContent() {
                 dateOfIssue={data.dateIssued}
                 useAffiliationAsClientName={data.useAffiliationAsClientName}
               />
-            ) : (
+            ) : type === "charge-slip" ? (
               <ChargeSlipPDF 
                 services={data.services}
                 client={data.client}
@@ -412,6 +458,8 @@ function ViewDocumentContent() {
                 discount={data.discount}
                 total={data.total}
               />
+            ) : (
+              <SampleSubmissionFormPDF form={data} />
             )}
           </PDFViewer>
         )}

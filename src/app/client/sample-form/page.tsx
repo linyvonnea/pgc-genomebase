@@ -187,6 +187,12 @@ export default function ClientSampleFormPage() {
     }));
   };
 
+  const openGeneratedPdf = (documentRef: string) => {
+    const safeRef = encodeURIComponent(documentRef);
+    const pdfUrl = `/client/view-document?type=sample-form&ref=${safeRef}`;
+    window.open(pdfUrl, "_blank", "noopener,noreferrer");
+  };
+
   const submitViaClientFallback = async (validated: SampleFormData): Promise<string> => {
     if (!inquiryId || !projectId || !email) {
       throw new Error("Missing project context.");
@@ -280,6 +286,7 @@ export default function ClientSampleFormPage() {
             toast.success(
               `Sample form submitted as ${fallbackDocumentNumber}. Awaiting admin receipt.`
             );
+            openGeneratedPdf(fallbackDocumentNumber);
             router.push(backPath);
             return;
           } catch (fallbackError) {
@@ -295,6 +302,7 @@ export default function ClientSampleFormPage() {
       toast.success(
         `Sample form submitted as ${payload.documentNumber}. Awaiting admin receipt.`
       );
+      openGeneratedPdf(payload.id || payload.documentNumber);
       router.push(backPath);
     } catch (error) {
       console.error("Error submitting sample form:", error);
