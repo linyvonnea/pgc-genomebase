@@ -2348,6 +2348,19 @@ export default function ClientPortalPage() {
                 if (project.inquiryId) sampleFormParams.set("inquiryId", project.inquiryId);
                 if (project.pid) sampleFormParams.set("pid", project.pid);
                 if (project.title) sampleFormParams.set("projectTitle", project.title);
+                
+                // Find primary member CID for this project
+                const projectPrimary = fetchedClients.find((c: any) => {
+                  const isOwner = c.email?.toLowerCase() === emailParam?.toLowerCase();
+                  if (!isOwner) return false;
+                  const pids = Array.isArray(c.pid) ? c.pid : (c.pid ? [c.pid] : []);
+                  return pids.includes(project.pid);
+                });
+                
+                if (projectPrimary?.cid) {
+                  sampleFormParams.set("clientId", projectPrimary.cid);
+                }
+
                 if (primaryMember?.formData?.name) {
                   sampleFormParams.set("name", primaryMember.formData.name);
                 }
