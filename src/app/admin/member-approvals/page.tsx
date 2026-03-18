@@ -25,13 +25,12 @@ import {
 } from "@/services/memberApprovalService";
 import {
   getProjectRequestsByStatus,
-  ProjectRequest,
 } from "@/services/projectRequestService";
 import {
   getClientRequestsByInquiry,
   ClientRequest,
 } from "@/services/clientRequestService";
-import { MemberApproval, ApprovalStatus } from "@/types/MemberApproval";
+import { ApprovalStatus } from "@/types/MemberApproval";
 import useAuth from "@/hooks/useAuth";
 import { toast } from "sonner";
 import {
@@ -666,23 +665,49 @@ export default function MemberApprovalsPage() {
                     </div>
                   </div>
                 )}
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <Users className="h-4 w-4 text-slate-400" />
-                  <span className="font-medium">
-                    {approval.type === "project"
-                      ? `${approval.members?.length || 0} total member(s)`
-                      : `${(approval.members || []).filter((m) => !m.isPrimary).length} member(s)`}
-                  </span>
-                  <span className="text-slate-400">•</span>
-                  <span>
-                    {approval.type === "project"
-                      ? approval.members?.map((m) => m.formData.name || "Unnamed").join(", ")
-                      : (approval.members || [])
-                          .filter((m) => !m.isPrimary)
-                          .map((m) => m.formData.name || "Unnamed")
-                          .join(", ")}
-                  </span>
-                </div>
+                {(() => {
+                  const seenEmails = new Set<string>();
+                  const uniqueMembers = (approval.members || []).filter(member => {
+                    const email = member.formData?.email?.toLowerCase()?.trim();
+                    if (!email) return true;
+                    if (seenEmails.has(email)) return false;
+                    seenEmails.add(email);
+                    return true;
+                  });
+
+                  // For project type, we want to prioritize validated primary members
+                  // If we have both, only keep the validated one
+                  let filteredMembers = uniqueMembers;
+                  if (approval.type === "project") {
+                    const primaryMembers = uniqueMembers.filter(m => m.isPrimary);
+                    if (primaryMembers.length > 1) {
+                        const validatedPrimary = primaryMembers.find(m => m.isValidated);
+                        if (validatedPrimary) {
+                            filteredMembers = uniqueMembers.filter(m => !m.isPrimary || m === validatedPrimary);
+                        }
+                    }
+                  }
+
+                  return (
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <Users className="h-4 w-4 text-slate-400" />
+                      <span className="font-medium">
+                        {approval.type === "project"
+                          ? `${filteredMembers.length || 0} total member(s)`
+                          : `${filteredMembers.filter((m) => !m.isPrimary).length} member(s)`}
+                      </span>
+                      <span className="text-slate-400">•</span>
+                      <span>
+                        {approval.type === "project"
+                          ? filteredMembers.map((m) => m.formData.name || "Unnamed").join(", ")
+                          : filteredMembers
+                              .filter((m) => !m.isPrimary)
+                              .map((m) => m.formData.name || "Unnamed")
+                              .join(", ")}
+                      </span>
+                    </div>
+                  );
+                })()}
                 {approval.reviewedBy && (
                   <div className="mt-2 text-xs text-slate-500">
                     Reviewed by {approval.reviewedByName || approval.reviewedBy} on{" "}
@@ -806,13 +831,41 @@ export default function MemberApprovalsPage() {
                 <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                   <Users className="h-4 w-4" />
                   {selectedApproval.type === "project"
-                    ? `Team Members (${selectedApproval.members?.length || 0})`
-                    : `Team Members (${(selectedApproval.members || []).filter((m) => !m.isPrimary).length})`}
+                    ? `Team Members (${
+                        Array.from(
+                          new Map(
+                            (selectedApproval.members || []).map((m) => [
+                              m.formData?.email?.toLowerCase() || Math.random().toString(),
+                              m,
+                            ])
+                          ).values()
+                        ).length
+                      })`
+                    : `Team Members (${
+                        (selectedApproval.members || []).filter((m) => !m.isPrimary).length
+                      })`}
                 </h3>
-                {(selectedApproval.type === "project"
-                  ? (selectedApproval.members || [])
-                  : (selectedApproval.members || []).filter((m) => !m.isPrimary)
-                ).map((member, idx) => (
+                {(() => {
+                  const items = selectedApproval.type === "project"
+                    ? Array.from(
+                        (selectedApproval.members || []).reduce((acc, member) => {
+                          const email = member.formData?.email?.toLowerCase();
+                          if (!email) {
+                            acc.set(Math.random().toString(), member);
+                            return acc;
+                          }
+
+                          const existing = acc.get(email);
+                          // Prioritize validated members
+                          if (!existing || (!existing.isValidated && member.isValidated)) {
+                            acc.set(email, member);
+                          }
+                          return acc;
+                        }, new Map<string, (typeof selectedApproval.members)[0]>())
+                      ).map(([, member]) => member)
+                    : (selectedApproval.members || []).filter((m) => !m.isPrimary);
+
+                  return items.map((member, idx) => (
                     <Card key={member.tempId || idx} className="border border-slate-200">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
@@ -875,7 +928,8 @@ export default function MemberApprovalsPage() {
                         </div>
                       </CardContent>
                     </Card>
-                  ))}
+                  ));
+                })()}
               </div>
 
               {/* Review Notes */}

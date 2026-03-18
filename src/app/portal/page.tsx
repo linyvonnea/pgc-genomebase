@@ -5,7 +5,6 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,12 +20,27 @@ import { getProjectRequest } from "@/services/projectRequestService";
 import { markInquiryAsLoggedIn } from "@/services/inquiryService";
 import { logActivity } from "@/services/activityLogService";
 import { 
-  UserCheck, 
   Shield,
-  ArrowLeft,
   CheckCircle,
+  AlertTriangle,
   Mail
 } from "lucide-react";
+
+const MASTER_EMAILS = ["madayon1@up.edu.ph", "merlito.dayon@gmail.com"];
+const ALLOWED_INQUIRY_STATUSES = [
+  "Pending",
+  "Approved Client",
+  "Quotation Only",
+  "Ongoing Quotation",
+  "Service Not Offered",
+] as const;
+
+type PortalInquiryRecord = {
+  email?: string;
+  name?: string;
+  isApproved?: boolean;
+  status?: string;
+};
 
 export default function ClientVerifyPage() {
   // State for privacy agreement, inquiry ID, errors, loading, and Google user
@@ -35,12 +49,15 @@ export default function ClientVerifyPage() {
   const [verifyError, setVerifyError] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [googleUser, setGoogleUser] = useState<{ email: string } | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   // Handle Google sign-in and set user
   const handleGoogleSignIn = async () => {
     if (!agreed) {
-      toast.warning("Please agree to the privacy notice before signing in with Google.");
+      const message = "Please agree to the privacy notice before signing in with Google.";
+      setVerifyError(message);
+      toast.warning(message);
       return;
     }
     setVerifyError("");
@@ -51,13 +68,17 @@ export default function ClientVerifyPage() {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       if (!user.email) {
-        toast.error("Google account has no email.");
+        const message = "Google account has no email.";
+        setVerifyError(message);
+        toast.error(message);
         setVerifying(false);
         return;
       }
       setGoogleUser({ email: user.email });
-    } catch (err) {
-      toast.error("Google sign-in failed.");
+    } catch {
+      const message = "Google sign-in failed. Please try again.";
+      setVerifyError(message);
+      toast.error(message);
     } finally {
       setVerifying(false);
     }
@@ -67,47 +88,57 @@ export default function ClientVerifyPage() {
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreed) {
-      toast.warning("Please agree to the privacy notice.");
+      const message = "Please agree to the privacy notice.";
+      setVerifyError(message);
+      toast.warning(message);
       return;
     }
     setVerifyError("");
     setVerifying(true);
     try {
       if (!googleUser?.email) {
-        toast.error("Please sign in with Google first.");
+        const message = "Please sign in with Google first.";
+        setVerifyError(message);
+        toast.error(message);
         setVerifying(false);
         return;
       }
       if (!inquiryId) {
-        toast.error("Please enter your password.");
+        const message = "Please enter your password.";
+        setVerifyError(message);
+        toast.error(message);
         setVerifying(false);
         return;
       }
       // Fetch inquiry document from Firestore
       const inquiryDoc = await getDoc(doc(db, "inquiries", inquiryId));
       if (!inquiryDoc.exists()) {
-        toast.error("Password not found.");
+        const message = "Password not found.";
+        setVerifyError(message);
+        toast.error(message);
         setVerifying(false);
         return;
       }
-      const inquiry = inquiryDoc.data();
+      const inquiry = inquiryDoc.data() as PortalInquiryRecord;
       
       // Verify email matches Google User email (except for master admins)
-      const masterEmails = ["madayon1@up.edu.ph", "merlito.dayon@gmail.com"];
-      const isMasterAdmin = googleUser.email ? masterEmails.includes(googleUser.email) : false;
+      const isMasterAdmin = googleUser.email ? MASTER_EMAILS.includes(googleUser.email) : false;
       
       if (!isMasterAdmin && inquiry.email?.toLowerCase() !== googleUser.email.toLowerCase()) {
-        toast.error("The password provided does not match the email associated with this account.");
+        const message = "The password provided does not match the email associated with this account.";
+        setVerifyError(message);
+        toast.error(message);
         setVerifying(false);
         return;
       }
 
       // Allow login for Pending, Approved Client (isApproved), Quotation Only, Ongoing Quotation, and Service Not Offered
-      const allowedStatuses = ["Pending", "Approved Client", "Quotation Only", "Ongoing Quotation", "Service Not Offered"];
-      const isAllowed = (inquiry as any).isApproved || allowedStatuses.includes((inquiry as any).status);
+      const isAllowed = inquiry.isApproved || ALLOWED_INQUIRY_STATUSES.includes((inquiry.status || "") as (typeof ALLOWED_INQUIRY_STATUSES)[number]);
       
       if (!isAllowed) {
-        toast.error("This inquiry has not been approved yet.");
+        const message = "This inquiry is not currently eligible for portal access.";
+        setVerifyError(message);
+        toast.error(message);
         setVerifying(false);
         return;
       }
@@ -175,8 +206,10 @@ export default function ClientVerifyPage() {
       }
       
       router.push(`/client/client-info?${params.toString()}`);
-    } catch (err) {
-      toast.error("Login failed. Please check your password and Google account.");
+    } catch {
+      const message = "Login failed. Please check your password and Google account.";
+      setVerifyError(message);
+      toast.error(message);
     } finally {
       setVerifying(false);
     }
@@ -200,6 +233,8 @@ export default function ClientVerifyPage() {
                 width={140}
                 height={70}
                 className="h-auto"
+                priority
+                sizes="(max-width: 640px) 120px, 140px"
               />
             </div>
             <CardTitle className="text-lg lg:text-xl font-bold text-gray-800 uppercase tracking-tight">Client Portal Login</CardTitle>
@@ -208,6 +243,17 @@ export default function ClientVerifyPage() {
             </p>
           </CardHeader>
           <CardContent className="space-y-4 pb-8">
+            {verifyError && (
+              <div
+                className="flex items-start gap-2 rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-700"
+                role="alert"
+                aria-live="assertive"
+              >
+                <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <span>{verifyError}</span>
+              </div>
+            )}
+
             {/* Privacy Notice Section */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-widest">
@@ -241,6 +287,7 @@ export default function ClientVerifyPage() {
               <Button
                 onClick={handleGoogleSignIn}
                 disabled={verifying || !!googleUser}
+                aria-label={googleUser ? `Signed in as ${googleUser.email}` : "Sign in with Google"}
                 className="w-full bg-white hover:bg-slate-50 text-slate-700 border-slate-200 shadow-sm transition-all duration-200 h-10 text-sm font-medium"
                 variant="outline"
               >
@@ -265,17 +312,32 @@ export default function ClientVerifyPage() {
                     <Label htmlFor="inquiry-id" className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
                       Password <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                      id="inquiry-id"
-                      type="password"
-                      value={inquiryId}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInquiryId(e.target.value)}
-                      placeholder="Enter your unique password"
-                      required
-                      className="transition-all duration-200 focus:ring-2 focus:ring-blue-500/20 h-10 text-sm border-slate-200"
-                    />
+                    <div className="relative">
+                      <Input
+                        id="inquiry-id"
+                        type={showPassword ? "text" : "password"}
+                        value={inquiryId}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInquiryId(e.target.value.trim())}
+                        placeholder="Enter your unique password"
+                        autoComplete="current-password"
+                        aria-describedby="password-help"
+                        maxLength={80}
+                        required
+                        className="transition-all duration-200 focus:ring-2 focus:ring-blue-500/20 h-10 text-sm border-slate-200 pr-24"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-2 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-100"
+                      >
+                        {showPassword ? "Hide" : "Show"}
+                      </button>
+                    </div>
                     <p className="text-[10px] text-slate-400 leading-tight">
-                      Check the email sent by PGC Visayas for your password.
+                    <span id="password-help">Check the email sent by PGC Visayas for your password.</span>
+                    <br />
+                    
+                      For security, do not share this password.
                     </p>
                   </div>
                   <Button 
