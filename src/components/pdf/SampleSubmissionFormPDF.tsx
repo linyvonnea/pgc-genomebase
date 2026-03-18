@@ -1,5 +1,6 @@
-import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { Document, Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { SampleFormRecord } from "@/types/SampleForm";
+import { pgcLogo, schoolLogo } from "@/assets/logosBase64";
 
 const styles = StyleSheet.create({
   page: {
@@ -27,8 +28,24 @@ const styles = StyleSheet.create({
     padding: 8,
     justifyContent: "center",
   },
+  logoRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 4,
+    gap: 8,
+  },
+  logo: {
+    width: 34,
+    height: 34,
+  },
+  pgcLogo: {
+    width: 95,
+    height: 30,
+    objectFit: "contain",
+  },
   mainTitle: {
-    fontSize: 20,
+    fontSize: 17,
     fontWeight: "bold",
   },
   subtitle: {
@@ -103,7 +120,7 @@ const styles = StyleSheet.create({
     padding: 5,
     borderBottom: 1,
     borderBottomColor: "#1f2937",
-    backgroundColor: "#e0f2fe",
+    backgroundColor: "#dff2ff",
   },
   paneHeaderText: {
     textAlign: "center",
@@ -145,7 +162,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderBottom: 1,
     borderBottomColor: "#1f2937",
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#dff2ff",
   },
   thIndex: {
     width: "8%",
@@ -262,10 +279,15 @@ export function SampleSubmissionFormPDF({ form }: Props) {
             <Text style={styles.subtitle}>Date of Effectivity: January 27, 2025</Text>
           </View>
           <View style={styles.headerRight}>
+            <View style={styles.logoRow}>
+              <Image src={schoolLogo} style={styles.logo} />
+              <Image src={pgcLogo} style={styles.pgcLogo} />
+            </View>
             <Text style={styles.rightTitle}>Philippine Genome Center Visayas</Text>
             <Text style={styles.rightSub}>Omics Laboratory</Text>
             <Text style={styles.rightSmall}>
-              Regional Research Center Building, Road 8 New Academic Complex, UPV Miagao, Iloilo
+              Regional Research Center Building, Road 8, New Academic Complex, University of the
+              Philippines Visayas, 5023 Miagao, Iloilo
             </Text>
           </View>
         </View>
@@ -335,7 +357,7 @@ export function SampleSubmissionFormPDF({ form }: Props) {
 
             <View style={styles.block}>
               <Text style={styles.label}>
-                Template Type (choose applicable)
+                Template Type (Sample submitted; choose one unless multiple templates are submitted)
               </Text>
               <View style={styles.checkboxRow}>
                 <Text style={styles.checkbox}>{check(form.templateType?.tissue)}</Text>
@@ -387,8 +409,8 @@ export function SampleSubmissionFormPDF({ form }: Props) {
             <View style={styles.tableHead}>
               <Text style={styles.thIndex}>#</Text>
               <Text style={styles.thCode}>Sample Code</Text>
-              <Text style={styles.thConc}>Conc (ng/uL)</Text>
-              <Text style={styles.thVolume}>Vol (uL)</Text>
+              <Text style={styles.thConc}>Concentration (ng/uL or ng)</Text>
+              <Text style={styles.thVolume}>Volume (uL)</Text>
               <Text style={styles.thNotes}>Notes</Text>
             </View>
             {entries.map((entry) => (

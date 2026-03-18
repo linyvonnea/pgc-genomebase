@@ -1,8 +1,9 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
-import admin, { getFirestoreDb } from "@/lib/firebase-admin";
+import admin, { getFirestoreDb, getStorageBucket } from "@/lib/firebase-admin";
 import { sampleFormSchema } from "@/schemas/sampleFormSchema";
+import { SampleFormRecord } from "@/types/SampleForm";
 
 async function getAdminDb() {
   const db = getFirestoreDb();
@@ -14,6 +15,49 @@ async function getAdminDb() {
 
 function buildDocumentNumber(sequence: number): string {
   return `PGCV-LF-SSF-${String(sequence).padStart(5, "0")}`;
+}
+
+async function createImmutablePdfSnapshot(form: SampleFormRecord) {
+  const { renderToBuffer } = await import("@react-pdf/renderer");
+  const { SampleSubmissionFormPDF } = await import("@/components/pdf/SampleSubmissionFormPDF");
+  const React = await import("react");
+
+  const pdfElement = React.createElement(SampleSubmissionFormPDF, { form });
+  return renderToBuffer(pdfElement as any);
+}
+
+async function uploadImmutablePdf(documentNumber: string, pdfBuffer: Buffer) {
+  const bucket = getStorageBucket();
+  if (!bucket) {
+    throw new Error("Firebase Storage bucket not configured");
+  }
+
+  const storagePath = `sample-forms/${documentNumber}/v1/${documentNumber}.pdf`;
+  const file = bucket.file(storagePath);
+
+  await file.save(pdfBuffer, {
+    resumable: false,
+    contentType: "application/pdf",
+    metadata: {
+      cacheControl: "public, max-age=31536000, immutable",
+      contentType: "application/pdf",
+      metadata: {
+        documentNumber,
+        entityType: "sample-form",
+        version: "1",
+      },
+    },
+  });
+
+  const [signedUrl] = await file.getSignedUrl({
+    action: "read",
+    expires: "2100-01-01",
+  });
+
+  return {
+    storagePath,
+    signedUrl,
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -94,11 +138,58 @@ export async function POST(request: NextRequest) {
       });
     });
 
+    let pdfStoragePath: string | null = null;
+    let pdfDownloadUrl: string | null = null;
+
+    try {
+      const snapshotRecord: SampleFormRecord = {
+        ...validatedForm.data,
+        id: documentNumber,
+        inquiryId,
+        projectId,
+        projectTitle: projectTitle || undefined,
+        submittedByEmail,
+        submittedByName: submittedByName || undefined,
+        clientId: clientId || undefined,
+        formSequence: nextSequence,
+        documentNumber,
+        status: "submitted",
+      };
+
+      const pdfBuffer = await createImmutablePdfSnapshot(snapshotRecord);
+      const uploaded = await uploadImmutablePdf(documentNumber, pdfBuffer as Buffer);
+      pdfStoragePath = uploaded.storagePath;
+      pdfDownloadUrl = uploaded.signedUrl;
+
+      await db.collection("sampleForms").doc(documentNumber).set(
+        {
+          pdfStoragePath,
+          pdfDownloadUrl,
+          pdfVersion: 1,
+          pdfGeneratedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+    } catch (pdfError) {
+      console.error("Error creating immutable sample form PDF snapshot:", pdfError);
+      await db.collection("sampleForms").doc(documentNumber).set(
+        {
+          pdfGenerationError:
+            pdfError instanceof Error ? pdfError.message : "Unknown PDF generation error",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+    }
+
     return NextResponse.json(
       {
         success: true,
         id: documentNumber,
         documentNumber,
+        pdfStoragePath,
+        pdfDownloadUrl,
         pdfUrl: `/client/view-document?type=sample-form&ref=${encodeURIComponent(documentNumber)}`,
         status: "submitted",
       },

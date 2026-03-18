@@ -35,6 +35,10 @@ function ViewDocumentContent() {
   
   const type = searchParams.get("type");
   const ref = searchParams.get("ref");
+  const sampleFormPdfUrl =
+    type === "sample-form" && ref
+      ? `/api/sample-forms/pdf?id=${encodeURIComponent(ref)}`
+      : "";
   
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -264,7 +268,20 @@ function ViewDocumentContent() {
         </div>
         <div className="flex items-center gap-2">
           {/* Always show Download button on mobile, as PDFViewer might fail or be hard to use */}
-          {true && (
+          {type === "sample-form" ? (
+            <Button
+              variant="default"
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => {
+                if (!sampleFormPdfUrl) return;
+                window.open(sampleFormPdfUrl, "_blank", "noopener,noreferrer");
+              }}
+            >
+              <Download className="h-4 w-4 mr-1" />
+              {isMobile ? "Download PDF" : "Download"}
+            </Button>
+          ) : (
             <PDFDownloadLink
               document={
                 type === "quotation" ? (
@@ -310,9 +327,7 @@ function ViewDocumentContent() {
                     discount={data.discount}
                     total={data.total}
                   />
-                ) : (
-                  <SampleSubmissionFormPDF form={data} />
-                )
+                ) : null
               }
               fileName={`${type}-${ref}.pdf`}
             >
@@ -344,124 +359,141 @@ function ViewDocumentContent() {
               <p className="text-sm text-slate-400 mb-6">
                 Direct PDF previews are limited on some mobile browsers. For the best experience, please download the document to view it on your device.
               </p>
-              <PDFDownloadLink
-                document={
-                  type === "quotation" ? (
-                    <QuotationPDF 
-                      services={data.services}
-                      clientInfo={{
-                        name: data.name,
-                        institution: data.institution,
-                        designation: data.designation,
-                        email: data.email
-                      }}
-                      referenceNumber={data.referenceNumber}
-                      useInternalPrice={data.isInternal}
-                      preparedBy={data.preparedBy}
-                      totalsOverride={{
-                        subtotal: data.subtotal,
-                        discount: data.discount,
-                        total: data.total
-                      }}
-                      dateOfIssue={data.dateIssued}
-                      useAffiliationAsClientName={data.useAffiliationAsClientName}
-                    />
-                  ) : type === "charge-slip" ? (
-                    <ChargeSlipPDF 
-                      services={data.services}
-                      client={data.client}
-                      project={data.project}
-                      chargeSlipNumber={data.chargeSlipNumber}
-                      orNumber={data.orNumber ?? ""}
-                      useInternalPrice={data.useInternalPrice}
-                      useAffiliationAsClientName={data.useAffiliationAsClientName}
-                      preparedBy={data.preparedBy}
-                      referenceNumber={data.referenceNumber}
-                      clientInfo={data.clientInfo}
-                      approvedBy={
-                        data.approvedBy || {
-                          name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.",
-                          position: "AED, PGC Visayas",
-                        }
-                      }
-                      dateIssued={normalizeDate(data.dateIssued ?? "")}
-                      subtotal={data.subtotal}
-                      discount={data.discount}
-                      total={data.total}
-                    />
-                  ) : (
-                    <SampleSubmissionFormPDF form={data} />
-                  )
-                }
-                fileName={`${type}-${ref}.pdf`}
-              >
-                {({ loading }: { loading: boolean }) => (
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl" disabled={loading}>
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Preparing Document...
-                      </>
+              {type === "sample-form" ? (
+                <Button
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl"
+                  onClick={() => {
+                    if (!sampleFormPdfUrl) return;
+                    window.open(sampleFormPdfUrl, "_blank", "noopener,noreferrer");
+                  }}
+                >
+                  <Download className="h-5 w-5 mr-2" />
+                  Download PDF
+                </Button>
+              ) : (
+                <PDFDownloadLink
+                  document={
+                    type === "quotation" ? (
+                      <QuotationPDF 
+                        services={data.services}
+                        clientInfo={{
+                          name: data.name,
+                          institution: data.institution,
+                          designation: data.designation,
+                          email: data.email
+                        }}
+                        referenceNumber={data.referenceNumber}
+                        useInternalPrice={data.isInternal}
+                        preparedBy={data.preparedBy}
+                        totalsOverride={{
+                          subtotal: data.subtotal,
+                          discount: data.discount,
+                          total: data.total
+                        }}
+                        dateOfIssue={data.dateIssued}
+                        useAffiliationAsClientName={data.useAffiliationAsClientName}
+                      />
                     ) : (
-                      <>
-                        <Download className="h-5 w-5 mr-2" />
-                        Download PDF
-                      </>
-                    )}
-                  </Button>
-                )}
-              </PDFDownloadLink>
+                      <ChargeSlipPDF 
+                        services={data.services}
+                        client={data.client}
+                        project={data.project}
+                        chargeSlipNumber={data.chargeSlipNumber}
+                        orNumber={data.orNumber ?? ""}
+                        useInternalPrice={data.useInternalPrice}
+                        useAffiliationAsClientName={data.useAffiliationAsClientName}
+                        preparedBy={data.preparedBy}
+                        referenceNumber={data.referenceNumber}
+                        clientInfo={data.clientInfo}
+                        approvedBy={
+                          data.approvedBy || {
+                            name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.",
+                            position: "AED, PGC Visayas",
+                          }
+                        }
+                        dateIssued={normalizeDate(data.dateIssued ?? "")}
+                        subtotal={data.subtotal}
+                        discount={data.discount}
+                        total={data.total}
+                      />
+                    )
+                  }
+                  fileName={`${type}-${ref}.pdf`}
+                >
+                  {({ loading }: { loading: boolean }) => (
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 rounded-xl" disabled={loading}>
+                      {loading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Preparing Document...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="h-5 w-5 mr-2" />
+                          Download PDF
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </PDFDownloadLink>
+              )}
             </div>
           </div>
         ) : (
-          <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
-            {type === "quotation" ? (
-              <QuotationPDF 
-                services={data.services}
-                clientInfo={{
-                  name: data.name,
-                  institution: data.institution,
-                  designation: data.designation,
-                  email: data.email
-                }}
-                referenceNumber={data.referenceNumber}
-                useInternalPrice={data.isInternal}
-                preparedBy={data.preparedBy}
-                totalsOverride={{
-                  subtotal: data.subtotal,
-                  discount: data.discount,
-                  total: data.total
-                }}
-                dateOfIssue={data.dateIssued}
-                useAffiliationAsClientName={data.useAffiliationAsClientName}
-              />
-            ) : type === "charge-slip" ? (
-              <ChargeSlipPDF 
-                services={data.services}
-                client={data.client}
-                project={data.project}
-                chargeSlipNumber={data.chargeSlipNumber}
-                orNumber={data.orNumber ?? ""}
-                useInternalPrice={data.useInternalPrice}
-                useAffiliationAsClientName={data.useAffiliationAsClientName}
-                preparedBy={data.preparedBy}
-                referenceNumber={data.referenceNumber}
-                clientInfo={data.clientInfo}
-                approvedBy={
-                  data.approvedBy || {
-                    name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.",
-                    position: "AED, PGC Visayas",
+          type === "sample-form" ? (
+            <iframe
+              title={`Sample Form PDF ${ref}`}
+              src={sampleFormPdfUrl}
+              className="w-full h-full border-0"
+            />
+          ) : (
+            <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
+              {type === "quotation" ? (
+                <QuotationPDF 
+                  services={data.services}
+                  clientInfo={{
+                    name: data.name,
+                    institution: data.institution,
+                    designation: data.designation,
+                    email: data.email
+                  }}
+                  referenceNumber={data.referenceNumber}
+                  useInternalPrice={data.isInternal}
+                  preparedBy={data.preparedBy}
+                  totalsOverride={{
+                    subtotal: data.subtotal,
+                    discount: data.discount,
+                    total: data.total
+                  }}
+                  dateOfIssue={data.dateIssued}
+                  useAffiliationAsClientName={data.useAffiliationAsClientName}
+                />
+              ) : (
+                <ChargeSlipPDF 
+                  services={data.services}
+                  client={data.client}
+                  project={data.project}
+                  chargeSlipNumber={data.chargeSlipNumber}
+                  orNumber={data.orNumber ?? ""}
+                  useInternalPrice={data.useInternalPrice}
+                  useAffiliationAsClientName={data.useAffiliationAsClientName}
+                  preparedBy={data.preparedBy}
+                  referenceNumber={data.referenceNumber}
+                  clientInfo={data.clientInfo}
+                  approvedBy={
+                    data.approvedBy || {
+                      name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.",
+                      position: "AED, PGC Visayas",
+                    }
                   }
-                }
-                dateIssued={normalizeDate(data.dateIssued ?? "")}
-                subtotal={data.subtotal}
-                discount={data.discount}
-                total={data.total}
-              />
-            ) : (
-              <SampleSubmissionFormPDF form={data} />
-            )}
-          </PDFViewer>
+                  dateIssued={normalizeDate(data.dateIssued ?? "")}
+                  subtotal={data.subtotal}
+                  discount={data.discount}
+                  total={data.total}
+                />
+              )}
+            </PDFViewer>
+          )
         )}
       </div>
     </div>
