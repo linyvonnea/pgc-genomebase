@@ -3,13 +3,13 @@
 
 import { PDFViewer } from "@react-pdf/renderer";
 import { SampleFormRecord } from "@/types/SampleForm";
-import { SampleFormPrintPDF } from "@/components/sample-form/SampleFormPrintPDF";
+import { SampleSubmissionFormPDF } from "@/components/pdf/SampleSubmissionFormPDF";
 
 export default function SampleFormPDFClient({ form }: { form: SampleFormRecord }) {
   console.log("Rendering SampleFormPDFClient with form:", form);
   return (
     <PDFViewer width="100%" height="700" style={{ border: "none" }}>
-      <SampleFormPrintPDF />
+      <SampleSubmissionFormPDF form={form} />
     </PDFViewer>
   );
 }
