@@ -162,10 +162,9 @@ export default function ClientVerifyPage() {
       // When master admin logs in, impersonate the inquiry's email to see their data accurately
       const activeEmail = isMasterAdmin ? inquiry.email : googleUser.email;
 
-      const params = new URLSearchParams({
-        email: activeEmail,
-        inquiryId: inquiryId,
-      });
+      const params = new URLSearchParams();
+      if (activeEmail) params.set("email", activeEmail);
+      if (inquiryId) params.set("inquiryId", inquiryId);
       
       // Check for any existing project (draft, pending, or approved)
       const projectRequest = await getProjectRequest(inquiryId);
