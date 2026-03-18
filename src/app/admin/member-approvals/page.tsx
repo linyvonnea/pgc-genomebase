@@ -848,7 +848,7 @@ export default function MemberApprovalsPage() {
                 {(() => {
                   const items = selectedApproval.type === "project"
                     ? Array.from(
-                        (selectedApproval.members || []).reduce((acc, member) => {
+                        (selectedApproval.members || []).reduce((acc: Map<string, any>, member: any) => {
                           const email = member.formData?.email?.toLowerCase();
                           if (!email) {
                             acc.set(Math.random().toString(), member);
@@ -861,11 +861,11 @@ export default function MemberApprovalsPage() {
                             acc.set(email, member);
                           }
                           return acc;
-                        }, new Map<string, (typeof selectedApproval.members)[0]>())
-                      ).map(([, member]) => member)
-                    : (selectedApproval.members || []).filter((m) => !m.isPrimary);
+                        }, new Map())
+                      ).map((entry: any) => entry[1])
+                    : (selectedApproval.members || []).filter((m: any) => !m.isPrimary);
 
-                  return items.map((member, idx) => (
+                  return (items as any[]).map((member, idx) => (
                     <Card key={member.tempId || idx} className="border border-slate-200">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
