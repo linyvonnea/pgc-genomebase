@@ -4,7 +4,7 @@ import { SampleFormRecord } from "@/types/SampleForm";
 const styles = StyleSheet.create({
   page: {
     fontFamily: "Helvetica",
-    fontSize: 9,
+    fontSize: 8,
     padding: 20,
     color: "#0f172a",
   },
@@ -16,39 +16,39 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   headerLeft: {
-    width: "58%",
+    width: "60%",
     borderRight: 1,
     borderRightColor: "#1f2937",
-    padding: 10,
+    padding: 8,
     justifyContent: "center",
   },
   headerRight: {
-    width: "42%",
-    padding: 10,
+    width: "40%",
+    padding: 8,
     justifyContent: "center",
   },
   mainTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
   },
   subtitle: {
-    marginTop: 6,
-    fontSize: 11,
+    marginTop: 4,
+    fontSize: 10,
     color: "#334155",
   },
   rightTitle: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "bold",
     textAlign: "center",
   },
   rightSub: {
-    marginTop: 4,
-    fontSize: 10,
+    marginTop: 2,
+    fontSize: 9,
     textAlign: "center",
   },
   rightSmall: {
-    marginTop: 4,
-    fontSize: 8,
+    marginTop: 2,
+    fontSize: 7,
     textAlign: "center",
     color: "#475569",
   },
@@ -68,17 +68,19 @@ const styles = StyleSheet.create({
     borderBottomColor: "#1f2937",
     padding: 4,
     backgroundColor: "#f1f5f9",
+    textAlign: "center",
   },
   staffValueCell: {
     flex: 1,
     borderRight: 1,
     borderRightColor: "#1f2937",
-    padding: 6,
-    minHeight: 24,
+    padding: 4,
+    minHeight: 20,
+    textAlign: "center",
   },
   sectionTitle: {
     textAlign: "center",
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "bold",
     marginBottom: 4,
     fontStyle: "italic",
@@ -87,56 +89,57 @@ const styles = StyleSheet.create({
     border: 1,
     borderColor: "#1f2937",
     flexDirection: "row",
+    minHeight: 380,
   },
   leftPane: {
-    width: "48%",
+    width: "40%",
     borderRight: 1,
     borderRightColor: "#1f2937",
   },
   rightPane: {
-    width: "52%",
+    width: "60%",
   },
   paneHeader: {
-    padding: 6,
+    padding: 5,
     borderBottom: 1,
     borderBottomColor: "#1f2937",
     backgroundColor: "#e0f2fe",
   },
   paneHeaderText: {
     textAlign: "center",
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: "bold",
   },
   block: {
     borderBottom: 1,
     borderBottomColor: "#cbd5e1",
-    padding: 6,
+    padding: 5,
   },
   label: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "bold",
-    marginBottom: 3,
+    marginBottom: 2,
   },
   line: {
     borderBottom: 1,
     borderBottomColor: "#475569",
-    minHeight: 14,
+    minHeight: 12,
     paddingBottom: 2,
     marginBottom: 4,
   },
   checkboxRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 3,
+    marginBottom: 2,
   },
   checkbox: {
-    width: 10,
-    height: 10,
+    width: 9,
+    height: 9,
     border: 1,
     borderColor: "#334155",
-    marginRight: 5,
+    marginRight: 4,
     textAlign: "center",
-    fontSize: 8,
+    fontSize: 7,
   },
   tableHead: {
     flexDirection: "row",
@@ -148,34 +151,34 @@ const styles = StyleSheet.create({
     width: "8%",
     borderRight: 1,
     borderRightColor: "#1f2937",
-    padding: 4,
+    padding: 3,
     fontWeight: "bold",
     textAlign: "center",
   },
   thCode: {
-    width: "28%",
+    width: "30%",
     borderRight: 1,
     borderRightColor: "#1f2937",
-    padding: 4,
+    padding: 3,
     fontWeight: "bold",
   },
   thConc: {
-    width: "24%",
+    width: "25%",
     borderRight: 1,
     borderRightColor: "#1f2937",
-    padding: 4,
+    padding: 3,
     fontWeight: "bold",
   },
   thVolume: {
-    width: "18%",
+    width: "15%",
     borderRight: 1,
     borderRightColor: "#1f2937",
-    padding: 4,
+    padding: 3,
     fontWeight: "bold",
   },
   thNotes: {
     width: "22%",
-    padding: 4,
+    padding: 3,
     fontWeight: "bold",
   },
   tdIndex: {
@@ -184,42 +187,42 @@ const styles = StyleSheet.create({
     borderRightColor: "#cbd5e1",
     borderBottom: 1,
     borderBottomColor: "#e2e8f0",
-    padding: 3,
+    padding: 2,
     textAlign: "center",
   },
   tdCode: {
-    width: "28%",
+    width: "30%",
     borderRight: 1,
     borderRightColor: "#cbd5e1",
     borderBottom: 1,
     borderBottomColor: "#e2e8f0",
-    padding: 3,
+    padding: 2,
   },
   tdConc: {
-    width: "24%",
+    width: "25%",
     borderRight: 1,
     borderRightColor: "#cbd5e1",
     borderBottom: 1,
     borderBottomColor: "#e2e8f0",
-    padding: 3,
+    padding: 2,
   },
   tdVolume: {
-    width: "18%",
+    width: "15%",
     borderRight: 1,
     borderRightColor: "#cbd5e1",
     borderBottom: 1,
     borderBottomColor: "#e2e8f0",
-    padding: 3,
+    padding: 2,
   },
   tdNotes: {
     width: "22%",
     borderBottom: 1,
     borderBottomColor: "#e2e8f0",
-    padding: 3,
+    padding: 2,
   },
   footerMeta: {
-    marginTop: 8,
-    fontSize: 8,
+    marginTop: 6,
+    fontSize: 7,
     color: "#475569",
     flexDirection: "row",
     justifyContent: "space-between",
@@ -233,8 +236,9 @@ interface Props {
 }
 
 export function SampleSubmissionFormPDF({ form }: Props) {
+  // Use SampleEntry row values consistently
   const entries = Array.from({ length: 28 }, (_, index) => {
-    const existing = form.entries?.find((entry) => entry.row === index + 1);
+    const existing = form.entries?.find((entry) => Number(entry.row) === index + 1);
     return (
       existing || {
         row: index + 1,
@@ -331,7 +335,7 @@ export function SampleSubmissionFormPDF({ form }: Props) {
 
             <View style={styles.block}>
               <Text style={styles.label}>
-                Template Type (Sample submitted; choose one unless multiple templates are submitted)
+                Template Type (choose applicable)
               </Text>
               <View style={styles.checkboxRow}>
                 <Text style={styles.checkbox}>{check(form.templateType?.tissue)}</Text>
@@ -347,7 +351,7 @@ export function SampleSubmissionFormPDF({ form }: Props) {
               </View>
               <View style={styles.checkboxRow}>
                 <Text style={styles.checkbox}>{check(form.templateType?.environmentalSample)}</Text>
-                <Text>Environmental Sample: {form.templateType?.environmentalSampleText || ""}</Text>
+                <Text>Env. Sample: {form.templateType?.environmentalSampleText || ""}</Text>
               </View>
               <View style={styles.checkboxRow}>
                 <Text style={styles.checkbox}>{check(form.templateType?.genomicDNA)}</Text>
@@ -368,11 +372,11 @@ export function SampleSubmissionFormPDF({ form }: Props) {
             </View>
 
             <View style={styles.block}>
-              <Text style={styles.label}>For Amplicon Sequencing Services only</Text>
-              <Text>Target Gene(s): {form.ampliconDetails?.targetGenes || ""}</Text>
-              <Text>Target Gene Size: {form.ampliconDetails?.targetGeneSize || ""}</Text>
-              <Text>Forward Primer Sequence: {form.ampliconDetails?.forwardPrimerSequence || ""}</Text>
-              <Text>Reverse Primer Sequence: {form.ampliconDetails?.reversePrimerSequence || ""}</Text>
+              <Text style={styles.label}>Amplicon Prep / Notes</Text>
+              <Text wrap={false} style={{ fontSize: 7 }}>Target: {form.ampliconDetails?.targetGenes || ""}</Text>
+              <Text wrap={false} style={{ fontSize: 7 }}>Size: {form.ampliconDetails?.targetGeneSize || ""}</Text>
+              <Text wrap={false} style={{ fontSize: 7 }}>Fwd: {form.ampliconDetails?.forwardPrimerSequence || ""}</Text>
+              <Text wrap={false} style={{ fontSize: 7 }}>Rev: {form.ampliconDetails?.reversePrimerSequence || ""}</Text>
             </View>
           </View>
 
@@ -383,24 +387,24 @@ export function SampleSubmissionFormPDF({ form }: Props) {
             <View style={styles.tableHead}>
               <Text style={styles.thIndex}>#</Text>
               <Text style={styles.thCode}>Sample Code</Text>
-              <Text style={styles.thConc}>Concentration (ng/uL or ng)</Text>
-              <Text style={styles.thVolume}>Volume (uL)</Text>
+              <Text style={styles.thConc}>Conc (ng/uL)</Text>
+              <Text style={styles.thVolume}>Vol (uL)</Text>
               <Text style={styles.thNotes}>Notes</Text>
             </View>
             {entries.map((entry) => (
               <View style={styles.row} key={entry.row}>
                 <Text style={styles.tdIndex}>{entry.row}</Text>
-                <Text style={styles.tdCode}>{entry.sampleCode}</Text>
-                <Text style={styles.tdConc}>{entry.concentration}</Text>
-                <Text style={styles.tdVolume}>{entry.volume}</Text>
-                <Text style={styles.tdNotes}>{entry.notes}</Text>
+                <Text style={styles.tdCode}>{entry.sampleCode || ""}</Text>
+                <Text style={styles.tdConc}>{entry.concentration || ""}</Text>
+                <Text style={styles.tdVolume}>{entry.volume || ""}</Text>
+                <Text style={styles.tdNotes}>{entry.notes || ""}</Text>
               </View>
             ))}
           </View>
         </View>
 
         <View style={styles.footerMeta}>
-          <Text>Document Number: {form.documentNumber || "PGCV-LF-SSF-"}</Text>
+          <Text>Document Number: {form.documentNumber || "Draft"}</Text>
           <Text>Generated: {dateNow.toLocaleDateString("en-PH")}</Text>
           <Text>Submitted by: {form.submittedByEmail}</Text>
         </View>
