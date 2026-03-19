@@ -164,10 +164,15 @@ function ChargeSlipBuilderInner({
 // for new price textbox
   const updatePrice = (id: string, price: number | "") => {
     setSelectedServices((prev) =>
-      prev.map((svc) => (svc.id === id ? { ...svc, samples } : svc))
+      prev.map((svc) => (svc.id === id ? { ...svc, price } : svc))
     );
   };
 
+  const updateSamples = (id: string, samples: number | "") => {
+    setSelectedServices((prev) =>
+      prev.map((svc) => (svc.id === id ? { ...svc, samples } : svc))
+    );
+  };
   const updateParticipants = (id: string, participants: number | "") => {
     setSelectedServices((prev) =>
       prev.map((svc) => (svc.id === id ? { ...svc, participants } : svc))

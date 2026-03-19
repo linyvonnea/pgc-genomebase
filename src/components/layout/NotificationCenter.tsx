@@ -4,7 +4,7 @@
 "use client";
 
 import React from "react";
-import { Bell, Check, ClipboardList, FileText, Users, X } from "lucide-react";
+import { Bell, Check, FileText, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -29,19 +29,7 @@ export function NotificationCenter() {
   } = useApprovalNotifications();
 
   const handleNotificationClick = (notificationId: string) => {
-    const target = notifications.find((item) => item.id === notificationId);
     markAsRead(notificationId);
-
-    if (target?.type === "sampleForm") {
-      router.push("/admin/sample-forms");
-      return;
-    }
-
-    if (target?.type === "inquiry") {
-      router.push("/admin/inquiry");
-      return;
-    }
-
     router.push("/admin/member-approvals");
   };
 
@@ -49,7 +37,7 @@ export function NotificationCenter() {
     markAllAsRead();
   };
 
-  const getNotificationIcon = (type: "member" | "project" | "inquiry" | "sampleForm") => {
+  const getNotificationIcon = (type: "member" | "project" | "inquiry") => {
     switch (type) {
       case "project":
         return <FileText className="h-4 w-4 text-purple-600" />;
@@ -57,8 +45,6 @@ export function NotificationCenter() {
         return <Users className="h-4 w-4 text-blue-600" />;
       case "inquiry":
         return <Bell className="h-4 w-4 text-green-600" />;
-      case "sampleForm":
-        return <ClipboardList className="h-4 w-4 text-amber-600" />;
       default:
         return <Bell className="h-4 w-4 text-slate-600" />;
     }
@@ -88,7 +74,7 @@ export function NotificationCenter() {
           <div>
             <h3 className="font-semibold text-slate-900">Approval Requests</h3>
             <p className="text-xs text-slate-500">
-              {pendingCount} pending notification{pendingCount !== 1 ? "s" : ""}
+              {pendingCount} pending approval{pendingCount !== 1 ? "s" : ""}
             </p>
           </div>
           {unreadCount > 0 && (
@@ -167,9 +153,9 @@ export function NotificationCenter() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => router.push("/admin/sample-forms")}
+            onClick={() => router.push("/admin/member-approvals")}
           >
-            View Monitoring Modules
+            View All Approvals
           </Button>
         </div>
       </PopoverContent>
