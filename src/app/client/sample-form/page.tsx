@@ -41,6 +41,7 @@ export default function ClientSampleFormPage() {
   const projectId = searchParams.get("pid");
   const projectTitle = searchParams.get("projectTitle") || undefined;
   const submittedByName = searchParams.get("name") || undefined;
+  const clientId = searchParams.get("clientId") || undefined;
   const formId = searchParams.get("formId");
 
   const [formData, setFormData] = useState<SampleFormData>({
@@ -177,6 +178,7 @@ export default function ClientSampleFormPage() {
         inquiryId,
         projectId,
         projectTitle,
+        clientId,
         submittedByEmail: email,
         submittedByName,
       });
