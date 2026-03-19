@@ -165,6 +165,12 @@ function ChargeSlipBuilderInner({
   const updatePrice = (id: string, price: number | "") => {
     const priceValue = typeof price === "number" ? price : 0;
     setSelectedServices((prev) =>
+      prev.map((svc) => (svc.id === id ? { ...svc, price: priceValue } : svc))
+    );
+  };
+
+  const updateSamples = (id: string, samples: number | "") => {
+    setSelectedServices((prev) =>
       prev.map((svc) => (svc.id === id ? { ...svc, samples } : svc))
     );
   };
