@@ -4,8 +4,11 @@ import {
   doc,
   getDoc,
   getDocs,
+  limit,
+  orderBy,
   query,
   serverTimestamp,
+  setDoc,
   where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -13,23 +16,48 @@ import { SampleFormData, SampleFormRecord, SampleFormSummary } from "@/types/Sam
 
 const SAMPLE_FORMS_COLLECTION = "sampleForms";
 
+export async function getNextSampleFormId(): Promise<string> {
+  const ref = collection(db, SAMPLE_FORMS_COLLECTION);
+  const q = query(ref, orderBy("formId", "desc"), limit(1));
+  const snapshot = await getDocs(q);
+
+  let nextNum = 1;
+  if (!snapshot.empty) {
+    const lastDoc = snapshot.docs[0].data();
+    const lastId = lastDoc.formId as string;
+    if (lastId && lastId.startsWith("PGCV-LF-SSF-")) {
+      const numPart = lastId.replace("PGCV-LF-SSF-", "");
+      const lastNum = parseInt(numPart, 10);
+      if (!isNaN(lastNum)) {
+        nextNum = lastNum + 1;
+      }
+    }
+  }
+
+  return `PGCV-LF-SSF-${nextNum}`;
+}
+
 export async function createSampleForm(
   payload: SampleFormData & {
     inquiryId: string;
     projectId: string;
     projectTitle?: string;
+    clientId?: string;
     submittedByEmail: string;
     submittedByName?: string;
   }
 ): Promise<string> {
-  const ref = collection(db, SAMPLE_FORMS_COLLECTION);
-  const result = await addDoc(ref, {
+  const formId = await getNextSampleFormId();
+  const ref = doc(db, SAMPLE_FORMS_COLLECTION, formId);
+  
+  await setDoc(ref, {
     ...payload,
+    formId,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
 
-  return result.id;
+  return formId;
 }
 
 export async function getSampleFormsByProjectId(

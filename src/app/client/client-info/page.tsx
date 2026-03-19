@@ -2319,6 +2319,9 @@ export default function ClientPortalPage() {
                 if (primaryMember?.formData?.name) {
                   sampleFormParams.set("name", primaryMember.formData.name);
                 }
+                if (primaryMember?.cid) {
+                  sampleFormParams.set("clientId", primaryMember.cid);
+                }
                 const sampleFormBaseHref = `/client/sample-form?${sampleFormParams.toString()}`;
                 
                 return (
