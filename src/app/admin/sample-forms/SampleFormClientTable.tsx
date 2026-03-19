@@ -35,10 +35,21 @@ import {
   Search, 
   ChevronLeft, 
   ChevronRight,
-  FilterX
+  FilterX,
+  X,
+  Printer,
+  ExternalLink,
+  Loader2
 } from "lucide-react";
 import { SampleFormRecord } from "@/types/SampleForm";
 import { columns as defaultColumns } from "./columns";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 interface Props {
   data: SampleFormRecord[];
@@ -51,6 +62,13 @@ export function SampleFormClientTable({ data, columns = defaultColumns }: Props)
   ]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+  const [selectedFormId, setSelectedFormId] = useState<string | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const handleViewPDF = (id: string) => {
+    setSelectedFormId(id);
+    setIsPreviewOpen(true);
+  };
 
   const table = useReactTable({
     data,
@@ -67,10 +85,55 @@ export function SampleFormClientTable({ data, columns = defaultColumns }: Props)
       globalFilter,
       pagination,
     },
+    meta: {
+      onViewPDF: handleViewPDF,
+    }
   });
 
   return (
     <Card className="border-slate-200 shadow-sm overflow-hidden bg-white">
+      {/* PDF Preview Modal */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0 overflow-hidden border-none shadow-2xl bg-slate-900/5 backdrop-blur-sm">
+          <DialogHeader className="p-4 bg-white border-b flex-row justify-between items-center shrink-0">
+            <div>
+              <DialogTitle className="text-xl font-bold text-slate-900">Document Preview</DialogTitle>
+              <DialogDescription className="text-slate-500">
+                Previewing Sample Submission Form
+              </DialogDescription>
+            </div>
+            <div className="flex items-center gap-2 pr-8">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-4 gap-2 border-slate-200 text-slate-700 hover:bg-slate-50"
+                onClick={() => window.open(`/api/generate-sample-form-pdf/${selectedFormId}`, '_blank')}
+              >
+                <ExternalLink className="h-4 w-4" />
+                Open in New Tab
+              </Button>
+            </div>
+          </DialogHeader>
+          
+          <div className="flex-1 bg-slate-100/50 p-4 md:p-8 overflow-auto flex justify-center">
+            {selectedFormId ? (
+              <div className="w-full max-w-4xl h-full bg-white shadow-xl rounded-sm overflow-hidden border border-slate-200">
+                <iframe
+                  src={`/api/generate-sample-form-pdf/${selectedFormId}#toolbar=0`}
+                  className="w-full h-full border-none"
+                  title="PDF Preview"
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                <p className="text-sm font-medium">Loading preview...</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="p-4 bg-slate-50/50 border-b border-slate-200">
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
           <div className="relative w-full md:w-96">

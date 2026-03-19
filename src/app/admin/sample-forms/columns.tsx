@@ -20,17 +20,17 @@ export const columns: ColumnDef<SampleFormRecord>[] = [
   {
     accessorKey: "formId",
     header: "ID",
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const id = row.getValue("formId") as string;
+      const meta = table.options.meta as any;
+      
       return (
-        <a 
-          href={`/api/generate-sample-form-pdf/${row.original.id}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="font-medium text-blue-600 hover:text-blue-800 transition-colors"
+        <button 
+          onClick={() => meta?.onViewPDF?.(row.original.id)}
+          className="font-medium text-blue-600 hover:text-blue-800 transition-colors text-left"
         >
           {id || row.original.id}
-        </a>
+        </button>
       );
     },
   },
