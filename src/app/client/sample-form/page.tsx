@@ -207,7 +207,7 @@ export default function ClientSampleFormPage() {
       <div className="max-w-7xl mx-auto space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Sample Submission Form</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Build Sample Submission Form</h1>
             <p className="text-sm text-slate-600">
               Complete all required sample details before submission.
             </p>
