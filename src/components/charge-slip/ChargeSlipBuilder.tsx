@@ -156,25 +156,6 @@ function ChargeSlipBuilderInner({
     setUseAffiliationAsClientName(false);
   };
 
-  const handleQuotationSelect = (quote: QuotationRecord) => {
-    const servicesFromQuotation: EditableSelectedService[] = quote.services.map((s) => ({
-      ...s,
-      id: s.id || `quote-${s.name}`,
-      quantity: s.quantity || 1,
-      price: s.price || 0,
-    }));
-    setSelectedServices(servicesFromQuotation);
-    setIsInternal(!!quote.useInternalPrice || !!quote.isInternal);
-    setUseAffiliationAsClientName(!!quote.useAffiliationAsClientName);
-    toast.info(`Populated options and services from ${quote.referenceNumber}`);
-  };
-
-  const handleQuotationDeselect = () => {
-    setSelectedServices([]);
-    setIsInternal(false);
-    setUseAffiliationAsClientName(false);
-  };
-
   const updateQuantity = (id: string, qty: number | "") => {
     setSelectedServices((prev) =>
       prev.map((svc) => (svc.id === id ? { ...svc, quantity: qty } : svc))
@@ -182,12 +163,6 @@ function ChargeSlipBuilderInner({
   };
 // for new price textbox
   const updatePrice = (id: string, price: number | "") => {
-    setSelectedServices((prev) =>
-      prev.map((svc) => (svc.id === id ? { ...svc, price: price === "" ? 0 : price } : svc))
-    );
-  };
-
-  const updateSamples = (id: string, samples: number | "") => {
     setSelectedServices((prev) =>
       prev.map((svc) => (svc.id === id ? { ...svc, samples } : svc))
     );
