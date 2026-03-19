@@ -33,7 +33,7 @@ import {
   ChevronsLeft, 
   ChevronsRight, 
   Search, 
-  ChevronLeft, 
+  ChevronLeft,
   ChevronRight,
   FilterX
 } from "lucide-react";

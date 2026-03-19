@@ -3,9 +3,9 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import Link from "next/link";
 import { SampleFormRecord } from "@/types/SampleForm";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 export const columns: ColumnDef<SampleFormRecord>[] = [
   {
