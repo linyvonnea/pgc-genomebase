@@ -695,7 +695,7 @@ export default function SampleFormBuilder({
 
           {/* Live PDF preview built from current form data */}
           <div className="rounded-lg overflow-hidden border border-slate-200">
-            <SampleFormPDFViewer form={previewRecord} />
+            {previewOpen && <SampleFormPDFViewer form={previewRecord} />}
           </div>
 
           <DialogFooter className="gap-2">
