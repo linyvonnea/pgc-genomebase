@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+import { sampleFormSchema } from "@/schemas/sampleFormSchema";
 import {
   createEmptySampleEntries,
   emptySampleFormData,
@@ -261,7 +262,7 @@ export default function SampleFormBuilder({
       toast.error(result.error.issues[0]?.message || "Please check your form entries.");
       return;
     }
-    setValidatedData(result.data);
+    setValidatedData(result.data as SampleFormData);
     setPreviewOpen(true);
   };
 
