@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import admin from "firebase-admin";
 import { getFirestoreDb } from "@/lib/firebase-admin";
 
 export const runtime = "nodejs";
@@ -16,7 +17,7 @@ export async function POST(request: Request) {
 
     await db.collection("sampleFormDrafts").doc(inquiryId).set({
       ...data,
-      updatedAt: (db as any).FieldValue ? (db as any).FieldValue.serverTimestamp() : undefined,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
 
     return NextResponse.json({ ok: true });
