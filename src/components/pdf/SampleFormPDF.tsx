@@ -1,264 +1,319 @@
-"use client";
-
-import { 
-  Document, 
-  Page, 
-  Text, 
-  View, 
-  StyleSheet, 
-  Image,
-  Font 
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
 } from "@react-pdf/renderer";
 import { SampleFormRecord } from "@/types/SampleForm";
-import { format } from "date-fns";
 
 const styles = StyleSheet.create({
   page: {
-    padding: 30,
-    fontSize: 10,
     fontFamily: "Helvetica",
-    color: "#333",
+    fontSize: 9,
+    lineHeight: 1.4,
+    padding: 36,
+    backgroundColor: "#ffffff",
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    textAlign: "center",
+    marginBottom: 14,
     paddingBottom: 10,
-  },
-  logoContainer: {
-    width: 100,
-  },
-  headerInfo: {
-    textAlign: "right",
+    borderBottom: 1,
+    borderBottomColor: "#000000",
   },
   title: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 5,
-    color: "#166FB5",
+    fontSize: 13,
+    fontFamily: "Helvetica-Bold",
+    textTransform: "uppercase",
+    letterSpacing: 1,
   },
   subtitle: {
-    fontSize: 10,
-    color: "#666",
+    fontSize: 8,
+    marginTop: 2,
+    color: "#555555",
+    textTransform: "uppercase",
+    letterSpacing: 1.5,
+  },
+  formId: {
+    fontSize: 8,
+    marginTop: 4,
+    color: "#333333",
+  },
+  meta: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+    gap: 10,
+  },
+  metaBlock: {
+    flex: 1,
+  },
+  metaRow: {
+    flexDirection: "row",
+    marginBottom: 3,
+  },
+  metaLabel: {
+    fontFamily: "Helvetica-Bold",
+    width: 90,
+    color: "#444444",
+  },
+  metaValue: {
+    flex: 1,
+    color: "#111111",
   },
   section: {
-    marginBottom: 15,
-  },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: "bold",
-    marginBottom: 8,
-    backgroundColor: "#f8fafc",
-    padding: 5,
-    borderLeftWidth: 3,
-    borderLeftColor: "#166FB5",
-  },
-  grid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
     marginBottom: 10,
   },
-  gridItem: {
-    width: "50%",
+  sectionTitle: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 9,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
     marginBottom: 5,
+    color: "#166FB5",
+    borderBottom: 0.5,
+    borderBottomColor: "#166FB5",
+    paddingBottom: 2,
   },
-  label: {
-    fontWeight: "bold",
-    color: "#64748b",
-    marginBottom: 2,
+  checkRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 2,
   },
-  value: {
-    color: "#1e293b",
+  checkItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+  },
+  checkBox: {
+    width: 9,
+    height: 9,
+    border: 1,
+    borderColor: "#333333",
+  },
+  checkBoxChecked: {
+    width: 9,
+    height: 9,
+    border: 1,
+    borderColor: "#166FB5",
+    backgroundColor: "#166FB5",
+  },
+  checkLabel: {
+    fontSize: 9,
   },
   table: {
-    display: "flex",
-    width: "auto",
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
-    marginTop: 10,
-  },
-  tableRow: {
-    margin: "auto",
-    flexDirection: "row",
+    marginTop: 4,
   },
   tableHeader: {
-    backgroundColor: "#f1f5f9",
-    fontWeight: "bold",
-  },
-  tableCol: {
-    borderStyle: "solid",
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    borderLeftWidth: 0,
-    borderTopWidth: 0,
-    padding: 5,
-  },
-  col1: { width: "10%" },
-  col2: { width: "40%" },
-  col3: { width: "15%" },
-  col4: { width: "15%" },
-  col5: { width: "20%" },
-  footer: {
-    position: "absolute",
-    bottom: 30,
-    left: 30,
-    right: 30,
-    textAlign: "center",
+    flexDirection: "row",
+    backgroundColor: "#166FB5",
+    padding: "4 6",
+    color: "#ffffff",
+    fontFamily: "Helvetica-Bold",
     fontSize: 8,
-    color: "#94a3b8",
-    borderTopWidth: 1,
-    borderTopColor: "#eee",
+  },
+  tableRow: {
+    flexDirection: "row",
+    borderBottom: 0.5,
+    borderBottomColor: "#e2e8f0",
+    padding: "3 6",
+  },
+  tableRowAlt: {
+    flexDirection: "row",
+    borderBottom: 0.5,
+    borderBottomColor: "#e2e8f0",
+    padding: "3 6",
+    backgroundColor: "#f8fafc",
+  },
+  colRow: { width: "8%", fontSize: 8 },
+  colCode: { width: "28%", fontSize: 8 },
+  colConc: { width: "22%", fontSize: 8 },
+  colVol: { width: "18%", fontSize: 8 },
+  colNotes: { width: "24%", fontSize: 8 },
+  footer: {
+    marginTop: 20,
     paddingTop: 10,
+    borderTop: 1,
+    borderTopColor: "#cccccc",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  sigBox: {
+    width: "42%",
+    borderTop: 1,
+    borderTopColor: "#000000",
+    paddingTop: 4,
+    marginTop: 30,
+    fontSize: 8,
+    textAlign: "center",
+    color: "#444444",
+  },
+  footerLabel: {
+    fontSize: 7,
+    color: "#888888",
+    textAlign: "center",
+    marginTop: 10,
   },
 });
 
-export const SampleFormPDF = ({ record }: { record: SampleFormRecord }) => {
-  const formatDate = (date: any) => {
-    if (!date) return "—";
-    try {
-      if (typeof date === "string") return format(new Date(date), "MM-dd-yyyy");
-      if (date?.toDate) return format(date.toDate(), "MM-dd-yyyy");
-      return format(new Date(date), "MM-dd-yyyy");
-    } catch (e) {
-      return "—";
-    }
-  };
+function Checkbox({ checked, label }: { checked: boolean; label: string }) {
+  return (
+    <View style={styles.checkItem}>
+      <View style={checked ? styles.checkBoxChecked : styles.checkBox} />
+      <Text style={styles.checkLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function MetaRow({ label, value }: { label: string; value?: string }) {
+  return (
+    <View style={styles.metaRow}>
+      <Text style={styles.metaLabel}>{label}:</Text>
+      <Text style={styles.metaValue}>{value || "—"}</Text>
+    </View>
+  );
+}
+
+function formatDate(val: any): string {
+  if (!val) return "—";
+  let d: Date;
+  if (val?.toDate) d = val.toDate();
+  else if (val instanceof Date) d = val;
+  else d = new Date(val);
+  if (isNaN(d.getTime())) return "—";
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  return `${mm}-${dd}-${yyyy}`;
+}
+
+export function SampleFormPDF({ record }: { record: SampleFormRecord }) {
+  const src = record.sampleSource;
+  const tpl = record.templateType;
+  const amp = record.ampliconDetails;
+  const entries = record.entries || [];
 
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <Text style={{ fontSize: 14, fontWeight: "bold", color: "#166FB5" }}>PGC VISAYAS</Text>
-            <Text style={{ fontSize: 7 }}>GenomeBase Portal</Text>
+          <Text style={styles.title}>Sample Submission Form</Text>
+          <Text style={styles.subtitle}>
+            Philippine Genome Center Visayas — University of the Philippines Visayas
+          </Text>
+          <Text style={styles.formId}>
+            Form ID: {record.sfid || record.formId || record.id}
+          </Text>
+        </View>
+
+        {/* Meta */}
+        <View style={styles.meta}>
+          <View style={styles.metaBlock}>
+            <MetaRow label="Submitted By" value={record.submittedByName} />
+            <MetaRow label="Email" value={record.submittedByEmail} />
+            <MetaRow label="Client ID" value={record.clientId} />
           </View>
-          <View style={styles.headerInfo}>
-            <Text style={styles.title}>Sample Submission Form</Text>
-            <Text style={styles.subtitle}>Form ID: {record.formId || record.id}</Text>
-            <Text style={styles.subtitle}>Date: {formatDate(record.createdAt)}</Text>
+          <View style={styles.metaBlock}>
+            <MetaRow label="Project" value={record.projectTitle} />
+            <MetaRow label="Project ID" value={record.projectId} />
+            <MetaRow label="Date Submitted" value={formatDate(record.createdAt)} />
+          </View>
+          <View style={styles.metaBlock}>
+            <MetaRow label="Status" value={record.status || "Submitted"} />
+            <MetaRow label="Inquiry ID" value={record.inquiryId} />
+            <MetaRow
+              label="Total Samples"
+              value={String(record.totalNumberOfSamples || "—")}
+            />
           </View>
         </View>
 
-        {/* Client & Project Info */}
+        {/* Sample Source */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>General Information</Text>
-          <View style={styles.grid}>
-            <View style={styles.gridItem}>
-              <Text style={styles.label}>Submitted By</Text>
-              <Text style={styles.value}>{record.submittedByName || "—"}</Text>
-            </View>
-            <View style={styles.gridItem}>
-              <Text style={styles.label}>Email</Text>
-              <Text style={styles.value}>{record.submittedByEmail || "—"}</Text>
-            </View>
-            <View style={styles.gridItem}>
-              <Text style={styles.label}>Project Title</Text>
-              <Text style={styles.value}>{record.projectTitle || "—"}</Text>
-            </View>
-            <View style={styles.gridItem}>
-              <Text style={styles.label}>Total Samples</Text>
-              <Text style={styles.value}>{record.totalNumberOfSamples || 0}</Text>
-            </View>
+          <Text style={styles.sectionTitle}>Sample Source</Text>
+          <View style={styles.checkRow}>
+            <Checkbox checked={!!src?.fish} label="Fish" />
+            <Checkbox checked={!!src?.crustacean} label="Crustacean" />
+            <Checkbox checked={!!src?.plant} label="Plant" />
+            <Checkbox checked={!!src?.animal} label="Animal" />
+            <Checkbox checked={!!src?.others} label={`Others${src?.othersText ? ": " + src.othersText : ""}`} />
           </View>
         </View>
 
-        {/* Source & Template */}
+        {/* Template Type */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Sample Details</Text>
-          <View style={styles.grid}>
-            <View style={styles.gridItem}>
-              <Text style={styles.label}>Sample Source</Text>
-              <Text style={styles.value}>
-                {[
-                  record.sampleSource?.fish && "Fish",
-                  record.sampleSource?.crustacean && "Crustacean",
-                  record.sampleSource?.plant && "Plant",
-                  record.sampleSource?.animal && "Animal",
-                  record.sampleSource?.others && `Others: ${record.sampleSource?.othersText}`,
-                ].filter(Boolean).join(", ") || "None selected"}
-              </Text>
-            </View>
-            <View style={styles.gridItem}>
-              <Text style={styles.label}>Template Type</Text>
-              <Text style={styles.value}>
-                {[
-                  record.templateType?.tissue && "Tissue",
-                  record.templateType?.blood && "Blood",
-                  record.templateType?.bacteria && "Bacteria",
-                  record.templateType?.environmentalSample && `Env: ${record.templateType?.environmentalSampleText}`,
-                  record.templateType?.genomicDNA && "Genomic DNA",
-                  record.templateType?.totalRNA && "Total RNA",
-                  record.templateType?.cDNA && "cDNA",
-                  record.templateType?.pcrProduct && "PCR Product",
-                ].filter(Boolean).join(", ") || "None selected"}
-              </Text>
-            </View>
+          <Text style={styles.sectionTitle}>Template Type</Text>
+          <View style={styles.checkRow}>
+            <Checkbox checked={!!tpl?.tissue} label="Tissue" />
+            <Checkbox checked={!!tpl?.blood} label="Blood" />
+            <Checkbox checked={!!tpl?.bacteria} label="Bacteria" />
+            <Checkbox
+              checked={!!tpl?.environmentalSample}
+              label={`Environmental Sample${tpl?.environmentalSampleText ? ": " + tpl.environmentalSampleText : ""}`}
+            />
+            <Checkbox checked={!!tpl?.genomicDNA} label="Genomic DNA" />
+            <Checkbox checked={!!tpl?.totalRNA} label="Total RNA" />
+            <Checkbox checked={!!tpl?.cDNA} label="cDNA" />
+            <Checkbox checked={!!tpl?.pcrProduct} label="PCR Product" />
           </View>
         </View>
 
-        {/* Amplicon Details if relevant */}
-        {(record.ampliconDetails?.targetGenes || record.ampliconDetails?.targetGeneSize) && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Amplicon Details</Text>
-            <View style={styles.grid}>
-              <View style={styles.gridItem}>
-                <Text style={styles.label}>Target Genes</Text>
-                <Text style={styles.value}>{record.ampliconDetails.targetGenes || "—"}</Text>
-              </View>
-              <View style={styles.gridItem}>
-                <Text style={styles.label}>Target Gene Size</Text>
-                <Text style={styles.value}>{record.ampliconDetails.targetGeneSize || "—"}</Text>
-              </View>
-              <View style={styles.gridItem}>
-                <Text style={styles.label}>Forward Primer</Text>
-                <Text style={styles.value}>{record.ampliconDetails.forwardPrimerSequence || "—"}</Text>
-              </View>
-              <View style={styles.gridItem}>
-                <Text style={styles.label}>Reverse Primer</Text>
-                <Text style={styles.value}>{record.ampliconDetails.reversePrimerSequence || "—"}</Text>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Sample Entries Table */}
+        {/* Amplicon Details */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Sample Manifest</Text>
+          <Text style={styles.sectionTitle}>Amplicon Details</Text>
+          <View style={styles.metaBlock}>
+            <MetaRow label="Target Genes" value={amp?.targetGenes} />
+            <MetaRow label="Target Gene Size" value={amp?.targetGeneSize} />
+            <MetaRow label="Forward Primer" value={amp?.forwardPrimerSequence} />
+            <MetaRow label="Reverse Primer" value={amp?.reversePrimerSequence} />
+          </View>
+        </View>
+
+        {/* Entries Table */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Sample Entries</Text>
           <View style={styles.table}>
-            {/* Table Header */}
-            <View style={[styles.tableRow, styles.tableHeader]}>
-              <View style={[styles.tableCol, styles.col1]}><Text>#</Text></View>
-              <View style={[styles.tableCol, styles.col2]}><Text>Sample Code</Text></View>
-              <View style={[styles.tableCol, styles.col3]}><Text>Conc.</Text></View>
-              <View style={[styles.tableCol, styles.col4]}><Text>Vol.</Text></View>
-              <View style={[styles.tableCol, styles.col5]}><Text>Notes</Text></View>
+            <View style={styles.tableHeader}>
+              <Text style={styles.colRow}>#</Text>
+              <Text style={styles.colCode}>Sample Code</Text>
+              <Text style={styles.colConc}>Concentration</Text>
+              <Text style={styles.colVol}>Volume</Text>
+              <Text style={styles.colNotes}>Notes</Text>
             </View>
-            {/* Table Rows */}
-            {record.entries?.filter(e => e.sampleCode).map((entry, index) => (
-              <View key={index} style={styles.tableRow}>
-                <View style={[styles.tableCol, styles.col1]}><Text>{entry.row}</Text></View>
-                <View style={[styles.tableCol, styles.col2]}><Text>{entry.sampleCode}</Text></View>
-                <View style={[styles.tableCol, styles.col3]}><Text>{entry.concentration || "—"}</Text></View>
-                <View style={[styles.tableCol, styles.col4]}><Text>{entry.volume || "—"}</Text></View>
-                <View style={[styles.tableCol, styles.col5]}><Text>{entry.notes || "—"}</Text></View>
+            {entries.map((entry, idx) => (
+              <View
+                key={idx}
+                style={idx % 2 === 0 ? styles.tableRow : styles.tableRowAlt}
+              >
+                <Text style={styles.colRow}>{entry.row}</Text>
+                <Text style={styles.colCode}>{entry.sampleCode || ""}</Text>
+                <Text style={styles.colConc}>{entry.concentration || ""}</Text>
+                <Text style={styles.colVol}>{entry.volume || ""}</Text>
+                <Text style={styles.colNotes}>{entry.notes || ""}</Text>
               </View>
             ))}
           </View>
         </View>
 
-        {/* Footer */}
+        {/* Signatures */}
         <View style={styles.footer}>
-          <Text>© {new Date().getFullYear()} Philippine Genome Center Visayas. All rights reserved.</Text>
-          <Text>This document was generated automatically by GenomeBase.</Text>
+          <View style={styles.sigBox}>
+            <Text>{record.submittedByName || "Submitted By"}</Text>
+            <Text>Client Signature over Printed Name</Text>
+          </View>
+          <View style={styles.sigBox}>
+            <Text>Received By</Text>
+            <Text>Laboratory Staff Signature over Printed Name</Text>
+          </View>
         </View>
+
+        <Text style={styles.footerLabel}>
+          Generated by PGC Visayas GenomeBase — {formatDate(new Date())}
+        </Text>
       </Page>
     </Document>
   );
-};
+}
