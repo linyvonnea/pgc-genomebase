@@ -20,15 +20,15 @@ export const columns: ColumnDef<SampleFormRecord>[] = [
   {
     accessorKey: "formId",
     header: "ID",
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const id = row.getValue("formId") as string;
       return (
-        <Link 
-          href={`/admin/sample-forms/${row.original.id}`}
-          className="font-medium text-blue-600 hover:text-blue-800 transition-colors"
+        <button 
+          onClick={() => meta?.onViewPDF?.(row.original.id)}
+          className="font-medium text-blue-600 hover:text-blue-800 transition-colors text-left"
         >
           {id || row.original.id}
-        </Link>
+        </button>
       );
     },
   },
