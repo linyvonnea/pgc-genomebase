@@ -50,6 +50,17 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import dynamic from "next/dynamic";
+
+const SampleFormPDFPreview = dynamic(
+  () => import("@/components/pdf/SampleFormPDFPreview"),
+  { 
+    ssr: false, 
+    loading: () => <div className="h-[600px] w-full flex items-center justify-center bg-white rounded-lg border border-slate-200">
+      <Loader2 className="h-10 w-10 animate-spin text-blue-500" />
+    </div> 
+  }
+);
 
 interface Props {
   data: SampleFormRecord[];
@@ -117,12 +128,8 @@ export function SampleFormClientTable({ data, columns = defaultColumns }: Props)
           
           <div className="flex-1 bg-slate-100/50 p-4 md:p-8 overflow-auto flex justify-center">
             {selectedFormId ? (
-              <div className="w-full max-w-4xl h-full bg-white shadow-xl rounded-sm overflow-hidden border border-slate-200">
-                <iframe
-                  src={`/api/generate-sample-form-pdf/${selectedFormId}#toolbar=0`}
-                  className="w-full h-full border-none"
-                  title="PDF Preview"
-                />
+              <div className="w-full max-w-4xl h-full shadow-2xl rounded-sm overflow-hidden bg-white">
+                <SampleFormPDFPreview id={selectedFormId} />
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-3">
