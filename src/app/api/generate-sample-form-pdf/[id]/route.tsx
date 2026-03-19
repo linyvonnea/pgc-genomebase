@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { SampleFormPDF } from "@/components/pdf/SampleFormPDF";
-import { adminDb } from "@/lib/firebase-admin";
+import { getAdminDb } from "@/lib/firebase-admin";
 
 export async function GET(
   request: NextRequest,
@@ -10,12 +10,14 @@ export async function GET(
   const { id } = await params;
 
   try {
-    if (!adminDb) {
+    const db = getAdminDb();
+    if (!db) {
+      console.error("❌ PDF generation: Database unavailable (getAdminDb returned null)");
       return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
     }
 
     // 1. Fetch data from Firestore via Admin SDK
-    const docRef = adminDb.collection("sampleForms").doc(id);
+    const docRef = db.collection("sampleForms").doc(id);
     const docSnap = await docRef.get();
 
     if (!docSnap.exists) {
