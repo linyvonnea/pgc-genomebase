@@ -53,6 +53,7 @@ export async function createSampleForm(
   await setDoc(ref, {
     ...payload,
     formId,
+    sfid: formId,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });

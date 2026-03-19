@@ -48,6 +48,9 @@ export interface SampleFormRecord extends SampleFormData {
   id: string;
   inquiryId: string;
   projectId: string;
+  formId?: string;
+  sfid?: string;
+  clientId?: string;
   projectTitle?: string;
   submittedByEmail: string;
   submittedByName?: string;
