@@ -36,21 +36,24 @@ export function QuotationHistoryPanel({
   showCheckboxes = false 
 }: QuotationHistoryPanelProps) {
   const [selectedQuotationId, setSelectedQuotationId] = useState<string | null>(null);
-  
-  const hasInquiryId = !!(Array.isArray(inquiryId) 
-    ? inquiryId.length > 0 
-    : (inquiryId && typeof inquiryId === 'string' && inquiryId.trim().length > 0));
-  const hasClientName = !!(clientName && typeof clientName === 'string' && clientName.trim().length > 0);
-  const shouldFetch = !!(hasInquiryId || hasClientName);
+
+  const normalizedInquiryId = Array.isArray(inquiryId) ? inquiryId[0] : inquiryId;
+  const hasInquiryId: boolean =
+    typeof normalizedInquiryId === "string" && normalizedInquiryId.trim().length > 0;
+  const hasClientName: boolean =
+    typeof clientName === "string" && clientName.trim().length > 0;
+  const shouldFetch: boolean = hasInquiryId || hasClientName;
   
   // Prioritize inquiryId if available, otherwise use clientName
   const useInquiryId = hasInquiryId;
   
   const { data: history = [], isLoading, error, isFetched } = useQuery<QuotationRecord[]>({
-    queryKey: useInquiryId ? ["quotationHistory", "inquiry", inquiryId] : ["quotationHistory", "client", clientName] as (string | undefined)[],
+    queryKey: useInquiryId
+      ? ["quotationHistory", "inquiry", normalizedInquiryId]
+      : ["quotationHistory", "client", clientName],
     queryFn: () => {
       if (useInquiryId) {
-        return getQuotationsByInquiryId(inquiryId!);
+        return getQuotationsByInquiryId(normalizedInquiryId!);
       } else if (hasClientName) {
         return getQuotationsByClientName(clientName!);
       }
