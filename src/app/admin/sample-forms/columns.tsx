@@ -23,12 +23,14 @@ export const columns: ColumnDef<SampleFormRecord>[] = [
     cell: ({ row }) => {
       const id = row.getValue("formId") as string;
       return (
-        <Link 
-          href={`/admin/sample-forms/${row.original.id}`}
+        <a 
+          href={`/api/generate-sample-form-pdf/${row.original.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
           className="font-medium text-blue-600 hover:text-blue-800 transition-colors"
         >
           {id || row.original.id}
-        </Link>
+        </a>
       );
     },
   },
