@@ -186,6 +186,13 @@ export function DataTable<TData, TValue>({
     return true
   }
 
+  // Sort and Paginate rows manually since we're using a custom sortedAndFilteredRows array
+  // We keep this sync'd with the table state via onPaginationChange
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  })
+
   const table = useReactTable({
     data,
     columns,
@@ -209,13 +216,10 @@ export function DataTable<TData, TValue>({
       sorting,
       columnFilters,
       globalFilter,
+      pagination,
     },
-  })
-
-  // Sort and Paginate rows manually since we're using a custom sortedAndFilteredRows array
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 10,
+    onPaginationChange: setPagination,
+    getPaginationRowModel: getPaginationRowModel(),
   })
 
   // Sort rows: first by unread status, then by the table's internal sorting
@@ -256,18 +260,21 @@ export function DataTable<TData, TValue>({
 
   const setPageSize = (size: number) => {
     setPagination({ pageIndex: 0, pageSize: size })
+    table.setPageSize(size)
   }
 
   const nextPage = () => {
     if (pagination.pageIndex < pageCount - 1) {
       setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex + 1 }))
     }
+    table.nextPage()
   }
 
   const previousPage = () => {
     if (pagination.pageIndex > 0) {
       setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex - 1 }))
     }
+    table.previousPage()
   }
 
   const canNextPage = pagination.pageIndex < pageCount - 1
