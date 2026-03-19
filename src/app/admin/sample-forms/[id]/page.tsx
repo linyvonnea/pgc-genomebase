@@ -1,7 +1,7 @@
 import { getSampleFormById } from "@/services/sampleFormService";
 import { SampleFormRecord } from "@/types/SampleForm";
 import { notFound } from "next/navigation";
-import SampleFormPDFPreview from "@/components/pdf/SampleFormPDFPreview";
+import { SamplePDFViewer } from "@/components/pdf/SamplePDFViewer";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -20,6 +20,20 @@ export default async function SampleFormDetailPage({
   if (!record) {
     notFound();
   }
+
+  // Serialize Firestore Timestamps so the record is safe to pass to client components
+  const serializeDate = (val: any): string | undefined => {
+    if (!val) return undefined;
+    if (typeof val === "string") return val;
+    if (val?.toDate) return val.toDate().toISOString();
+    if (val instanceof Date) return val.toISOString();
+    return String(val);
+  };
+  const safeRecord: SampleFormRecord = {
+    ...record,
+    createdAt: serializeDate(record.createdAt),
+    updatedAt: serializeDate(record.updatedAt),
+  };
 
   const formatDate = (date: any) => {
     if (!date) return "—";
@@ -82,7 +96,7 @@ export default async function SampleFormDetailPage({
         </div>
         <div className="flex-1 bg-slate-100/50 p-4 md:p-8">
           <div className="h-full bg-white shadow-xl rounded-sm overflow-hidden max-w-5xl mx-auto border border-slate-200">
-            <SampleFormPDFPreview id={id} />
+            <SamplePDFViewer record={safeRecord} />
           </div>
         </div>
       </Card>
