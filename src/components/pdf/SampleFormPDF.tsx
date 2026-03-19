@@ -40,6 +40,17 @@ const styles = StyleSheet.create({
     marginTop: 4,
     color: "#333333",
   },
+  headerMeta: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 12,
+    marginTop: 4,
+  },
+  headerMetaText: {
+    fontSize: 8,
+    color: "#222222",
+    fontFamily: "Helvetica-Bold",
+  },
   meta: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -216,6 +227,10 @@ export function SampleFormPDF({ record }: { record: SampleFormRecord }) {
           <Text style={styles.formId}>
             Form ID: {record.sfid || record.formId || record.id}
           </Text>
+          <View style={styles.headerMeta}>
+            <Text style={styles.headerMetaText}>Project ID: {record.projectId || "—"}</Text>
+            <Text style={styles.headerMetaText}>Client ID: {record.clientId || "—"}</Text>
+          </View>
         </View>
 
         {/* Meta */}
