@@ -12,6 +12,7 @@ import {
   FileText,
   Calculator,
   Receipt,
+  FileSpreadsheet,
   ScrollText,
   Settings,
   ShieldCheck,
@@ -40,6 +41,7 @@ const ROUTE_MODULE_MAP: Record<string, keyof RolePermissions> = {
   "/admin/clients": "clients",
   "/admin/quotations": "quotations",
   "/admin/charge-slips": "chargeSlips",
+  "/admin/sample-forms": "sampleForms",
   "/admin/manual-quotation": "manualQuotation",
   "/admin/services": "serviceCatalog",
   "/admin/catalog-settings": "catalogSettings",
@@ -112,7 +114,12 @@ export function AdminSidebar() {
         { 
           href: "/admin/charge-slips", 
           label: "Charge Slips", 
-          icon: Receipt,
+          icon: Receipt, 
+        },
+        { 
+          href: "/admin/sample-forms", 
+          label: "Sample Forms", 
+          icon: FileSpreadsheet, 
         },
         { 
           href: "/admin/manual-quotation", 

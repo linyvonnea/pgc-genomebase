@@ -52,6 +52,7 @@ export interface SampleFormRecord extends SampleFormData {
   sfid?: string;
   clientId?: string;
   projectTitle?: string;
+  status?: "Submitted" | "Reviewed" | "Approved";
   submittedByEmail: string;
   submittedByName?: string;
   createdAt?: Date | string | Timestamp;
