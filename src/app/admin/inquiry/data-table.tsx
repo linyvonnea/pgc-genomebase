@@ -220,13 +220,6 @@ export function DataTable<TData, TValue>({
     },
   })
 
-  // Sort and Paginate rows manually since we're using a custom sortedAndFilteredRows array
-  // We keep this sync'd with the table state via onPaginationChange
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 10,
-  })
-
   // Sort rows: first by unread status, then by the table's internal sorting
   const sortedAndFilteredRows = useMemo(() => {
     // 1. Get filtered & sorted rows from table model
