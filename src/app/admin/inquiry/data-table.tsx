@@ -186,13 +186,19 @@ export function DataTable<TData, TValue>({
     return true
   }
 
+  // Sort and Paginate rows manually since we're using a custom sortedAndFilteredRows array
+  // We keep this sync'd with the table state via onPaginationChange
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  })
+
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
@@ -210,11 +216,7 @@ export function DataTable<TData, TValue>({
       sorting,
       columnFilters,
       globalFilter,
-    },
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
+      pagination,
     },
   })
 
@@ -234,9 +236,7 @@ export function DataTable<TData, TValue>({
     })
 
     // 3. Move rows with unread messages to the top
-    // We only do this if the user hasn't manually sorted by a specific column
-    // or we can just always prioritize unread if that's the desired permanent behavior
-    return [...filtered].sort((a, b) => {
+    const sorted = [...filtered].sort((a, b) => {
       const aId = (a.original as unknown as { id: string }).id
       const bId = (b.original as unknown as { id: string }).id
       const aUnread = unreadInquiryIds.has(aId)
@@ -246,7 +246,37 @@ export function DataTable<TData, TValue>({
       if (!aUnread && bUnread) return 1
       return 0 // keep relative order from table's internal sorting
     })
+
+    return sorted
   }, [table.getRowModel().rows, selectedYear, selectedMonth, showUnreadOnly, unreadInquiryIds])
+
+  const pageCount = Math.ceil(sortedAndFilteredRows.length / pagination.pageSize) || 1
+
+  const setPageIndex = (index: number) => {
+    setPagination(prev => ({ ...prev, pageIndex: Math.max(0, Math.min(index, pageCount - 1)) }))
+  }
+
+  const setPageSize = (size: number) => {
+    setPagination({ pageIndex: 0, pageSize: size })
+    table.setPageSize(size)
+  }
+
+  const nextPage = () => {
+    if (pagination.pageIndex < pageCount - 1) {
+      setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex + 1 }))
+    }
+    table.nextPage()
+  }
+
+  const previousPage = () => {
+    if (pagination.pageIndex > 0) {
+      setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex - 1 }))
+    }
+    table.previousPage()
+  }
+
+  const canNextPage = pagination.pageIndex < pageCount - 1
+  const canPreviousPage = pagination.pageIndex > 0
 
   const handleStatusFilter = (status: string | undefined) => {
     setActiveStatusFilter(status)
@@ -480,14 +510,14 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center justify-between py-1">
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">
-            Showing {sortedAndFilteredRows.length > 0 ? (table.getState().pagination.pageIndex * table.getState().pagination.pageSize) + 1 : 0} - {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, sortedAndFilteredRows.length)} of {sortedAndFilteredRows.length} records
+            Showing {sortedAndFilteredRows.length > 0 ? (pagination.pageIndex * pagination.pageSize) + 1 : 0} - {Math.min((pagination.pageIndex + 1) * pagination.pageSize, sortedAndFilteredRows.length)} of {sortedAndFilteredRows.length} records
           </span>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
           <Select
-            value={table.getState().pagination.pageSize.toString()}
-            onValueChange={(value) => table.setPageSize(Number(value))}
+            value={pagination.pageSize.toString()}
+            onValueChange={(value) => setPageSize(Number(value))}
           >
             <SelectTrigger className="w-[70px] h-8">
               <SelectValue />
@@ -503,8 +533,8 @@ export function DataTable<TData, TValue>({
             variant="outline"
             size="sm"
             className="h-8 w-8 p-0"
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => setPageIndex(0)}
+            disabled={!canPreviousPage}
           >
             &laquo;
           </Button>
@@ -512,20 +542,20 @@ export function DataTable<TData, TValue>({
             variant="outline"
             size="sm"
             className="h-8 px-2"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => previousPage()}
+            disabled={!canPreviousPage}
           >
             Prev
           </Button>
           <div className="flex items-center justify-center min-w-[80px] text-sm font-medium">
-            {table.getState().pagination.pageIndex + 1} / {table.getPageCount() || 1}
+            {pagination.pageIndex + 1} / {pageCount}
           </div>
           <Button
             variant="outline"
             size="sm"
             className="h-8 px-2"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => nextPage()}
+            disabled={!canNextPage}
           >
             Next
           </Button>
@@ -533,8 +563,8 @@ export function DataTable<TData, TValue>({
             variant="outline"
             size="sm"
             className="h-8 w-8 p-0"
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
+            onClick={() => setPageIndex(pageCount - 1)}
+            disabled={!canNextPage}
           >
             &raquo;
           </Button>
@@ -581,8 +611,8 @@ export function DataTable<TData, TValue>({
 
             <TableBody>
               {(() => {
-                const startIndex = table.getState().pagination.pageIndex * table.getState().pagination.pageSize;
-                const paginatedRows = sortedAndFilteredRows.slice(startIndex, startIndex + table.getState().pagination.pageSize);
+                const startIndex = pagination.pageIndex * pagination.pageSize;
+                const paginatedRows = sortedAndFilteredRows.slice(startIndex, startIndex + pagination.pageSize);
                 
                 return paginatedRows.length ? (
                   paginatedRows.map((row) => (
@@ -630,8 +660,8 @@ export function DataTable<TData, TValue>({
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
             <Select
-              value={table.getState().pagination.pageSize.toString()}
-              onValueChange={(value: string) => table.setPageSize(Number(value))}
+              value={pagination.pageSize.toString()}
+              onValueChange={(value: string) => setPageSize(Number(value))}
             >
               <SelectTrigger className="w-[70px] h-8">
                 <SelectValue />
@@ -650,20 +680,20 @@ export function DataTable<TData, TValue>({
               variant="outline"
               size="sm"
               className="h-8 px-2"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
+              onClick={() => previousPage()}
+              disabled={!canPreviousPage}
             >
               Prev
             </Button>
             <div className="flex items-center justify-center min-w-[80px] text-sm font-medium">
-              {table.getState().pagination.pageIndex + 1} / {table.getPageCount() || 1}
+              {pagination.pageIndex + 1} / {pageCount}
             </div>
             <Button
               variant="outline"
               size="sm"
               className="h-8 px-2"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
+              onClick={() => nextPage()}
+              disabled={!canNextPage}
             >
               Next
             </Button>

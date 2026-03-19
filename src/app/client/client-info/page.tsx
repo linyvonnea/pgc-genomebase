@@ -70,10 +70,7 @@ import { getQuotationsByInquiryId } from "@/services/quotationService";
 import { subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { getChargeSlipsByProjectId } from "@/services/chargeSlipService";
-import {
-  getSampleFormsByProjectId,
-  getSampleFormMonitoringSummary,
-} from "@/services/sampleFormService";
+import { getSampleFormsByProjectId } from "@/services/sampleFormService";
 import { QuotationRecord } from "@/types/Quotation";
 import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
@@ -280,11 +277,6 @@ export default function ClientPortalPage() {
       quotations: QuotationRecord[]; 
       chargeSlips: ChargeSlipRecord[]; 
       sampleForms: SampleFormSummary[];
-      sampleFormMonitoring: {
-        submittedCount: number;
-        receivedCount: number;
-        reviewedCount: number;
-      };
       serviceReports: any[];
       officialReceipts: any[];
       loading: boolean 
@@ -1750,11 +1742,6 @@ export default function ClientPortalPage() {
         quotations: [],
         chargeSlips: [],
         sampleForms: [],
-        sampleFormMonitoring: {
-          submittedCount: 0,
-          receivedCount: 0,
-          reviewedCount: 0,
-        },
         serviceReports: [],
         officialReceipts: [],
         loading: true,
@@ -1771,25 +1758,13 @@ export default function ClientPortalPage() {
 
         // Fetch sample forms by project ID (client-submitted forms)
         const sampleForms = project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
-          ? await getSampleFormsByProjectId(project.pid, {
-              submittedByEmail: emailParam || undefined,
-              includeStatuses: ["received", "reviewed"],
-            })
+          ? await getSampleFormsByProjectId(project.pid)
           : [];
-
-        const sampleFormMonitoring = project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
-          ? await getSampleFormMonitoringSummary(project.pid, emailParam || undefined)
-          : {
-              submittedCount: 0,
-              receivedCount: 0,
-              reviewedCount: 0,
-            };
 
         setProjectDocuments((prev) => new Map(prev).set(pid, {
           quotations,
           chargeSlips,
           sampleForms,
-          sampleFormMonitoring,
           serviceReports: [],
           officialReceipts: [],
           loading: false,
@@ -1801,11 +1776,6 @@ export default function ClientPortalPage() {
           quotations: [],
           chargeSlips: [],
           sampleForms: [],
-          sampleFormMonitoring: {
-            submittedCount: 0,
-            receivedCount: 0,
-            reviewedCount: 0,
-          },
           serviceReports: [],
           officialReceipts: [],
           loading: false,
@@ -2339,30 +2309,18 @@ export default function ClientPortalPage() {
                 const quotationCount = docs?.quotations.length || 0;
                 const chargeSlipCount = docs?.chargeSlips.length || 0;
                 const sampleFormCount = docs?.sampleForms?.length || 0;
-                const sampleFormSubmittedCount = docs?.sampleFormMonitoring?.submittedCount || 0;
-                const sampleFormReviewedCount = docs?.sampleFormMonitoring?.reviewedCount || 0;
                 const serviceReportCount = docs?.serviceReports?.length || 0;
                 const officialReceiptCount = docs?.officialReceipts?.length || 0;
                 const sampleFormParams = new URLSearchParams();
                 if (emailParam) sampleFormParams.set("email", emailParam);
-                if (project.inquiryId) sampleFormParams.set("inquiryId", project.inquiryId);
+                if (inquiryIdParam) sampleFormParams.set("inquiryId", inquiryIdParam);
                 if (project.pid) sampleFormParams.set("pid", project.pid);
                 if (project.title) sampleFormParams.set("projectTitle", project.title);
-                
-                // Find primary member CID for this project
-                const projectPrimary = fetchedClients.find((c: any) => {
-                  const isOwner = c.email?.toLowerCase() === emailParam?.toLowerCase();
-                  if (!isOwner) return false;
-                  const pids = Array.isArray(c.pid) ? c.pid : (c.pid ? [c.pid] : []);
-                  return pids.includes(project.pid);
-                });
-                
-                if (projectPrimary?.cid) {
-                  sampleFormParams.set("clientId", projectPrimary.cid);
-                }
-
                 if (primaryMember?.formData?.name) {
                   sampleFormParams.set("name", primaryMember.formData.name);
+                }
+                if (primaryMember?.cid) {
+                  sampleFormParams.set("clientId", primaryMember.cid);
                 }
                 const sampleFormBaseHref = `/client/sample-form?${sampleFormParams.toString()}`;
                 
@@ -2489,9 +2447,9 @@ export default function ClientPortalPage() {
                               <div className="flex items-center gap-2 mb-1.5">
                                 <FileSpreadsheet className="h-3 w-3 text-orange-600" />
                                 <span className="text-sm font-semibold text-slate-700">
-                                  Sample Forms Monitoring
+                                  Sample Forms
                                 </span>
-                                <span className="text-[10px] text-slate-500">({sampleFormCount})</span>
+                                <span className="text-[10px] text-slate-500">({docs?.sampleForms?.length || 0})</span>
                               </div>
                               <a
                                 href={sampleFormBaseHref}
@@ -2500,27 +2458,21 @@ export default function ClientPortalPage() {
                               >
                                 + Fill out sample submission form
                               </a>
-                              <div className="ml-5 mb-2 text-[11px] text-slate-500 space-y-0.5">
-                                <p>Pending admin receipt: {sampleFormSubmittedCount}</p>
-                                <p>Reviewed by admin: {sampleFormReviewedCount}</p>
-                              </div>
                               {(docs?.sampleForms?.length || 0) > 0 ? (
                                 <div className="space-y-1 ml-5">
                                   {docs?.sampleForms.map((item) => (
                                     <a
                                       key={item.id}
-                                      href={`/client/view-document?type=sample-form&ref=${item.id}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
+                                      href={`${sampleFormBaseHref}&formId=${item.id}`}
                                       className="block text-xs text-slate-600 hover:text-orange-600 hover:underline truncate"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      • {item.documentNumber || `PGCV-LF-SSF-${item.id.slice(0, 8)}`} ({item.totalNumberOfSamples || 0} samples)
+                                      • Form #{item.id.slice(0, 8)} ({item.totalNumberOfSamples || 0} samples)
                                     </a>
                                   ))}
                                 </div>
                               ) : (
-                                <p className="text-xs text-slate-400 ml-5">No received sample forms yet</p>
+                                <p className="text-xs text-slate-400 ml-5">No sample forms yet</p>
                               )}
                             </div>
 

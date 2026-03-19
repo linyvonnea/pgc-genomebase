@@ -163,15 +163,29 @@ function ChargeSlipBuilderInner({
   };
 // for new price textbox
   const updatePrice = (id: string, price: number | "") => {
+    const priceValue = typeof price === "number" ? price : 0;
     setSelectedServices((prev) =>
       prev.map((svc) => (svc.id === id ? { ...svc, samples } : svc))
     );
   };
-
   const updateParticipants = (id: string, participants: number | "") => {
     setSelectedServices((prev) =>
       prev.map((svc) => (svc.id === id ? { ...svc, participants } : svc))
     );
+  };
+
+  const handleQuotationSelect = (quote: QuotationRecord) => {
+    setSelectedServices((prev) => {
+      const existingIds = new Set(prev.map((s) => s.id));
+      const additions = quote.services
+        .filter((s) => !existingIds.has(s.id))
+        .map((s) => ({ ...s, quantity: (s.quantity as number) || 1 }));
+      return [...prev, ...additions];
+    });
+  };
+
+  const handleQuotationDeselect = (quote: QuotationRecord) => {
+    setSelectedServices((prev) => prev.filter((s) => !quote.services.some((qs) => qs.id === s.id)));
   };
   const cleanedServices: StrictSelectedService[] = selectedServices
     .filter((s) => typeof s.quantity === "number" && s.quantity > 0)

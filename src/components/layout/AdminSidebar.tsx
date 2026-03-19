@@ -12,6 +12,7 @@ import {
   FileText,
   Calculator,
   Receipt,
+  FileSpreadsheet,
   ScrollText,
   Settings,
   ShieldCheck,
@@ -40,7 +41,7 @@ const ROUTE_MODULE_MAP: Record<string, keyof RolePermissions> = {
   "/admin/clients": "clients",
   "/admin/quotations": "quotations",
   "/admin/charge-slips": "chargeSlips",
-  "/admin/sample-forms": "chargeSlips",
+  "/admin/sample-forms": "sampleForms",
   "/admin/manual-quotation": "manualQuotation",
   "/admin/services": "serviceCatalog",
   "/admin/catalog-settings": "catalogSettings",
@@ -57,7 +58,7 @@ export function AdminSidebar() {
   const { user, signOut, adminInfo } = useAuth();
   const { canView, loading: permissionsLoading } = usePermissions(adminInfo?.role);
   const { openTab, activeTab, isTabOpen, setActiveTab } = useTabContext();
-  const { pendingCount, inquiryCount, sampleFormCount } = useApprovalNotifications();
+  const { pendingCount, inquiryCount } = useApprovalNotifications();
 
   const handleNavClick = (href: string, label: string, icon: React.ElementType) => {
     const tabId = href.replace("/admin/", "");
@@ -113,7 +114,12 @@ export function AdminSidebar() {
         { 
           href: "/admin/charge-slips", 
           label: "Charge Slips", 
-          icon: Receipt,
+          icon: Receipt, 
+        },
+        { 
+          href: "/admin/sample-forms", 
+          label: "Sample Forms", 
+          icon: FileSpreadsheet, 
         },
         { 
           href: "/admin/manual-quotation", 
@@ -129,11 +135,6 @@ export function AdminSidebar() {
           href: "/admin/member-approvals",
           label: "Projects Approval",
           icon: ShieldCheck,
-        },
-        {
-          href: "/admin/sample-forms",
-          label: "Sample Forms",
-          icon: FileText,
         },
       ]
     },
@@ -245,19 +246,8 @@ export function AdminSidebar() {
                         {pendingCount}
                       </span>
                     )}
-
-                    {href === "/admin/sample-forms" && sampleFormCount > 0 && (
-                      <span className={cn(
-                        "min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-bold px-1.5",
-                        isActive(href)
-                          ? "bg-white text-[#166FB5]"
-                          : "bg-red-500 text-white animate-pulse"
-                      )}>
-                        {sampleFormCount}
-                      </span>
-                    )}
                     
-                    {isTabOpen(href.replace("/admin/", "")) && !isActive(href) && href !== "/admin/member-approvals" && href !== "/admin/sample-forms" && href !== "/admin/inquiry" && (
+                    {isTabOpen(href.replace("/admin/", "")) && !isActive(href) && href !== "/admin/member-approvals" && href !== "/admin/inquiry" && (
                       <div className="w-1.5 h-1.5 rounded-full bg-[#166FB5]" />
                     )}
                   </div>
