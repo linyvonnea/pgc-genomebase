@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import SampleFormBuilder from "@/components/sample-form/SampleFormBuilder";
 
-export default function ClientSampleFormPage() {
+function SampleFormContent() {
   const searchParams = useSearchParams();
 
   const inquiryId = searchParams.get("inquiryId") ?? undefined;
@@ -38,5 +38,13 @@ export default function ClientSampleFormPage() {
       backPath={backPath}
       formId={formId}
     />
+  );
+}
+
+export default function ClientSampleFormPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading form parameters...</div>}>
+      <SampleFormContent />
+    </Suspense>
   );
 }
