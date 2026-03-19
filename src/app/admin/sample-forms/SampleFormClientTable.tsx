@@ -33,11 +33,9 @@ import {
   ChevronsLeft, 
   ChevronsRight, 
   Search, 
-  ChevronLeft, 
+  ChevronLeft,
   ChevronRight,
   FilterX,
-  X,
-  Printer,
   ExternalLink,
   Loader2
 } from "lucide-react";
