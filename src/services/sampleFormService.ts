@@ -53,6 +53,8 @@ export async function createSampleForm(
   await setDoc(ref, {
     ...payload,
     formId,
+    sfid: formId,
+    status: "Submitted",
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -99,4 +101,18 @@ export async function getSampleFormById(
     ...data,
     id: snapshot.id,
   };
+}
+
+export async function getAllSampleForms(): Promise<SampleFormRecord[]> {
+  const ref = collection(db, SAMPLE_FORMS_COLLECTION);
+  const q = query(ref, orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+
+  return snapshot.docs.map((record) => {
+    const data = record.data() as any;
+    return {
+      ...data,
+      id: record.id,
+    } as SampleFormRecord;
+  });
 }

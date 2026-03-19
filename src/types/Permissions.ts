@@ -22,6 +22,7 @@ export interface RolePermissions {
   clients: ModulePermission;
   quotations: ModulePermission;
   chargeSlips: ModulePermission;
+  sampleForms: ModulePermission;
   manualQuotation: ModulePermission;
   
   // Configuration
@@ -45,6 +46,7 @@ export const MODULE_LABELS: Record<keyof RolePermissions, string> = {
   clients: "Clients",
   quotations: "Quotations",
   chargeSlips: "Charge Slips",
+  sampleForms: "Sample Forms",
   manualQuotation: "Manual Quotation",
   serviceCatalog: "Service Catalog",
   catalogSettings: "Catalog Settings",
