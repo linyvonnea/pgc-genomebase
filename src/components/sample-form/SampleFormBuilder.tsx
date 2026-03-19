@@ -33,6 +33,7 @@ import {
 } from "@/types/SampleForm";
 import { getSampleFormById } from "@/services/sampleFormService";
 import { SampleFormPDFViewer } from "@/components/sample-form/SampleFormPDFViewer";
+import { saveSampleFormDraft, getSampleFormDraft, deleteSampleFormDraft } from "@/services/sampleFormDraftService";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -123,56 +124,79 @@ export default function SampleFormBuilder({
     });
   }, [formData.totalNumberOfSamples, formData.entries.length]);
 
-  // ── Load existing form (read-only) ────────────────────────────────────────
+  // ── Auto-save draft ───────────────────────────────────────────────────────
   useEffect(() => {
-    if (!formId) return;
+    if (isReadOnly || !inquiryId) return;
+    const timer = setTimeout(() => {
+      saveSampleFormDraft(inquiryId, formData).catch((err) =>
+        console.error("Failed to save draft:", err)
+      );
+    }, 1500); // Debounce saves by 1.5s
+    return () => clearTimeout(timer);
+  }, [formData, inquiryId, isReadOnly]);
+
+  // ── Load existing form or draft ───────────────────────────────────────────
+  useEffect(() => {
     const run = async () => {
-      setLoadingForm(true);
-      try {
-        const record = await getSampleFormById(formId);
-        if (!record) {
-          toast.error("Sample form not found.");
-          router.replace(backPath);
-          return;
+      if (formId) {
+        // Load submitted form (read-only)
+        setLoadingForm(true);
+        try {
+          const record = await getSampleFormById(formId);
+          if (!record) {
+            toast.error("Sample form not found.");
+            router.replace(backPath);
+            return;
+          }
+          setFormData({
+            totalNumberOfSamples: record.totalNumberOfSamples || 1,
+            sampleSource: {
+              fish: !!record.sampleSource?.fish,
+              crustacean: !!record.sampleSource?.crustacean,
+              plant: !!record.sampleSource?.plant,
+              animal: !!record.sampleSource?.animal,
+              others: !!record.sampleSource?.others,
+              othersText: record.sampleSource?.othersText || "",
+            },
+            templateType: {
+              tissue: !!record.templateType?.tissue,
+              blood: !!record.templateType?.blood,
+              bacteria: !!record.templateType?.bacteria,
+              environmentalSample: !!record.templateType?.environmentalSample,
+              environmentalSampleText: record.templateType?.environmentalSampleText || "",
+              genomicDNA: !!record.templateType?.genomicDNA,
+              totalRNA: !!record.templateType?.totalRNA,
+              cDNA: !!record.templateType?.cDNA,
+              pcrProduct: !!record.templateType?.pcrProduct,
+            },
+            ampliconDetails: {
+              targetGenes: record.ampliconDetails?.targetGenes || "",
+              targetGeneSize: record.ampliconDetails?.targetGeneSize || "",
+              forwardPrimerSequence: record.ampliconDetails?.forwardPrimerSequence || "",
+              reversePrimerSequence: record.ampliconDetails?.reversePrimerSequence || "",
+            },
+            entries:
+              record.entries?.length > 0 ? record.entries : createEmptySampleEntries(),
+          });
+        } catch {
+          toast.error("Failed to load sample form.");
+        } finally {
+          setLoadingForm(false);
         }
-        setFormData({
-          totalNumberOfSamples: record.totalNumberOfSamples || 1,
-          sampleSource: {
-            fish: !!record.sampleSource?.fish,
-            crustacean: !!record.sampleSource?.crustacean,
-            plant: !!record.sampleSource?.plant,
-            animal: !!record.sampleSource?.animal,
-            others: !!record.sampleSource?.others,
-            othersText: record.sampleSource?.othersText || "",
-          },
-          templateType: {
-            tissue: !!record.templateType?.tissue,
-            blood: !!record.templateType?.blood,
-            bacteria: !!record.templateType?.bacteria,
-            environmentalSample: !!record.templateType?.environmentalSample,
-            environmentalSampleText: record.templateType?.environmentalSampleText || "",
-            genomicDNA: !!record.templateType?.genomicDNA,
-            totalRNA: !!record.templateType?.totalRNA,
-            cDNA: !!record.templateType?.cDNA,
-            pcrProduct: !!record.templateType?.pcrProduct,
-          },
-          ampliconDetails: {
-            targetGenes: record.ampliconDetails?.targetGenes || "",
-            targetGeneSize: record.ampliconDetails?.targetGeneSize || "",
-            forwardPrimerSequence: record.ampliconDetails?.forwardPrimerSequence || "",
-            reversePrimerSequence: record.ampliconDetails?.reversePrimerSequence || "",
-          },
-          entries:
-            record.entries?.length > 0 ? record.entries : createEmptySampleEntries(),
-        });
-      } catch {
-        toast.error("Failed to load sample form.");
-      } finally {
-        setLoadingForm(false);
+      } else if (inquiryId) {
+        // Check for draft for new forms
+        try {
+          const draft = await getSampleFormDraft(inquiryId);
+          if (draft) {
+            setFormData(draft);
+          }
+        } catch (err) {
+          console.error("Error loading draft:", err);
+        }
       }
     };
     run();
-  }, [formId, router, backPath]);
+  }, [formId, inquiryId, router, backPath]);
 
   // ── Field helpers ─────────────────────────────────────────────────────────
 
@@ -304,6 +328,12 @@ export default function SampleFormBuilder({
       }
 
       const payload = await response.json();
+      
+      // Cleanup draft on successful submission
+      if (inquiryId) {
+        await deleteSampleFormDraft(inquiryId).catch(console.error);
+      }
+
       toast.success(`Sample form submitted as ${payload.documentNumber}. Awaiting admin receipt.`);
       openGeneratedPdf(payload.id || payload.documentNumber);
       router.push(backPath);
