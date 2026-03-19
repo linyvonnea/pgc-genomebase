@@ -5,14 +5,11 @@ import { adminDb } from "@/lib/firebase-admin";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   const { id } = await params;
 
   try {
-    if (!adminDb) {
-      return NextResponse.json({ error: "Firebase Admin not initialized" }, { status: 500 });
-    }
     // 1. Fetch data from Firestore via Admin SDK
     const docRef = adminDb.collection("sampleForms").doc(id);
     const docSnap = await docRef.get();
@@ -27,7 +24,7 @@ export async function GET(
     const buffer = await renderToBuffer(<SampleFormPDF record={data} />);
 
     // 3. Return as PDF response
-    return new NextResponse(buffer as any, {
+    return new NextResponse(buffer, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="sample_form_${data.sfid || data.id}.pdf"`,

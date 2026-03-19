@@ -65,7 +65,6 @@ export const MODULE_SECTIONS = {
     "clients",
     "quotations",
     "chargeSlips",
-    "sampleForms",
     "manualQuotation",
   ],
   configuration: ["serviceCatalog", "catalogSettings"],
