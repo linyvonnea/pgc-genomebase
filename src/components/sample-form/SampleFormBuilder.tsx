@@ -87,9 +87,11 @@ export default function SampleFormBuilder({
 
   const isReadOnly = Boolean(formId);
 
-  // Build a preview SampleFormRecord from current form state (no admin-only fields)
+  const previewData = validatedData ?? formData;
+
+  // Build a preview SampleFormRecord from validated snapshot when available
   const previewRecord = useMemo<SampleFormRecord>(() => ({
-    ...formData,
+    ...previewData,
     id: "preview",
     documentNumber: "PGCV-LF-SSF-DRAFT",
     status: "submitted",
@@ -99,7 +101,7 @@ export default function SampleFormBuilder({
     clientId: clientId ?? "",
     submittedByEmail: email ?? "",
     submittedByName: submittedByName ?? "",
-  }), [formData, inquiryId, projectId, projectTitle, clientId, email, submittedByName]);
+  }), [previewData, inquiryId, projectId, projectTitle, clientId, email, submittedByName]);
 
   // ── Sync row count with totalNumberOfSamples ──────────────────────────────
   useEffect(() => {
@@ -265,12 +267,7 @@ export default function SampleFormBuilder({
     setPreviewOpen(true);
   };
 
-  // ── Confirm-submit handler — called from the preview dialog ───────────────
-
-  const handleConfirmSubmit = async () => {
-    if (!validatedData) return;
-    setPreviewOpen(false);
-
+  const submitFormData = async (data: SampleFormData) => {
     setSubmitting(true);
     try {
       const response = await fetch("/api/sample-forms/submit", {
@@ -283,7 +280,7 @@ export default function SampleFormBuilder({
           submittedByEmail: email,
           submittedByName,
           clientId,
-          formData: validatedData,
+          formData: data,
         }),
       });
 
@@ -292,7 +289,7 @@ export default function SampleFormBuilder({
         if (response.status >= 500) {
           // API is down — try client-side Firestore fallback
           try {
-            const fallbackDocNum = await submitViaClientFallback(validatedData!);
+            const fallbackDocNum = await submitViaClientFallback(data);
             toast.success(`Sample form submitted as ${fallbackDocNum}. Awaiting admin receipt.`);
             openGeneratedPdf(fallbackDocNum);
             router.push(backPath);
@@ -317,6 +314,26 @@ export default function SampleFormBuilder({
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // ── Confirm-submit handler — called from the preview dialog ───────────────
+
+  const handleConfirmSubmit = async () => {
+    if (!validatedData) return;
+    setPreviewOpen(false);
+    await submitFormData(validatedData);
+  };
+
+  const handleDirectSubmit = async () => {
+    const result = sampleFormSchema.safeParse(formData);
+    if (!result.success) {
+      toast.error(result.error.issues[0]?.message || "Please check your form entries.");
+      return;
+    }
+
+    const data = result.data as SampleFormData;
+    setValidatedData(data);
+    await submitFormData(data);
   };
 
   // ── Loading state ─────────────────────────────────────────────────────────
@@ -620,9 +637,19 @@ export default function SampleFormBuilder({
 
         {/* ── Submit ───────────────────────────────────────────────────────── */}
         {!isReadOnly && (
-          <div className="flex justify-end pb-3">
+          <div className="flex justify-end gap-2 pb-3">
             <Button
+              type="button"
+              variant="outline"
               onClick={handlePreview}
+              disabled={submitting}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Preview Sample Form
+            </Button>
+            <Button
+              type="button"
+              onClick={handleDirectSubmit}
               disabled={submitting}
               className="bg-[#166FB5] hover:bg-[#166FB5]/90"
             >
@@ -633,7 +660,7 @@ export default function SampleFormBuilder({
                 </>
               ) : (
                 <>
-                  <Eye className="h-4 w-4 mr-2" />
+                  <Save className="h-4 w-4 mr-2" />
                   Submit Sample Form
                 </>
               )}
