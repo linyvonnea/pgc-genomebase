@@ -33,9 +33,13 @@ export const adminInquirySchema = z.object({
     .max(100, "Designation must be at most 100 characters"), 
   
   // Administrative workflow status
-  status: z.enum(['Pending', 'Ongoing Quotation', 'Approved Client', 'Quotation Only'], {
+  status: z.enum(['Pending', 'Ongoing Quotation', 'Approved Client', 'Quotation Only', 'Service Not Offered', 'Cancelled'], {
     required_error: "Status selection is required",
   }), 
+  
+  // Optional administrative fields
+  remarks: z.string().optional(),
+  sendStatusEmail: z.boolean().default(true).optional(),
 });
 
 export type AdminInquiryData = z.infer<typeof adminInquirySchema>;

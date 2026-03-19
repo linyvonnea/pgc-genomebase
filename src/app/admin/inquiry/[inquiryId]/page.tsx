@@ -28,7 +28,77 @@ const formatServiceType = (type: string | null | undefined): string => {
 // Format workflow type for display
 const formatWorkflowType = (type: string | null | undefined): string => {
   if (!type) return "—";
-  return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  if (type === "complete-bioinfo") return "Complete molecular workflow with Bioinformatics Analysis";
+  if (type === "complete") return "Complete Molecular workflow only (DNA Extraction to Sequencing)";
+  if (type === "individual") return "Individual Assay";
+  return type
+    .split(/[-_]/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+const formatBioinfoOption = (option: string): string => {
+  switch (option) {
+    case "whole-genome-assembly":
+      return "Whole Genome Assembly";
+    case "metabarcoding-downstream":
+      return "Metabarcoding with Downstream Analysis";
+    case "metabarcoding-preprocessing":
+      return "Metabarcoding with Pre-processing Only";
+    case "transcriptomics":
+      return "Transcriptomics (QC to Annotation)";
+    case "phylogenetics":
+      return "Phylogenetics (1 Marker)";
+    case "whole-genome-assembly-annotation":
+      return "Whole Genome Assembly and Annotation";
+    case "dna-extraction":
+      return "DNA Extraction";
+    case "quantification":
+      return "Quantification";
+    case "library-preparation":
+      return "Library Preparation";
+    case "sequencing":
+      return "Sequencing";
+    case "bioinformatics-analysis":
+      return "Bioinformatics Analysis";
+    case "genome-assembly":
+      return "Whole Genome Assembly";
+    case "metabarcoding":
+      return "Metabarcoding with Downstream Analysis";
+    case "pre-processing":
+      return "Metabarcoding with Pre-processing Only";
+    case "assembly-annotation":
+      return "Whole Genome Assembly and Annotation";
+    default:
+      return option;
+  }
+};
+
+const flattenBioinformaticsDetails = (
+  input: Record<string, any> | null | undefined,
+  prefix = ""
+): Array<{ key: string; value: string }> => {
+  if (!input) return [];
+
+  const rows: Array<{ key: string; value: string }> = [];
+  Object.entries(input).forEach(([key, value]) => {
+    if (value === null || value === undefined || value === "") return;
+    const path = prefix ? `${prefix}.${key}` : key;
+
+    if (Array.isArray(value)) {
+      if (value.length > 0) rows.push({ key: path, value: value.join(", ") });
+      return;
+    }
+
+    if (typeof value === "object") {
+      rows.push(...flattenBioinformaticsDetails(value as Record<string, any>, path));
+      return;
+    }
+
+    rows.push({ key: path, value: String(value) });
+  });
+
+  return rows;
 };
 
 // Get status badge styling
@@ -215,35 +285,158 @@ function InquiryDetailContent() {
               </Badge>
             </div>
 
-            {/* Research Details Section */}
-            {(inquiry.species || inquiry.researchOverview || inquiry.sampleCount || inquiry.workflowType) && (
+            {/* Equipment Details Section */}
+            {inquiry.serviceType === 'equipment' && inquiry.individualAssayDetails && (
               <div className="pt-4 border-t border-slate-100 space-y-4">
-                <h3 className="text-sm font-semibold text-slate-700">Research Details</h3>
+                <h3 className="text-sm font-semibold text-slate-700">Equipment / Workflow Details</h3>
+                <div className="flex flex-col">
+                  <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
+                    {inquiry.individualAssayDetails}
+                  </p>
+                </div>
+              </div>
+            )}
 
-                {inquiry.species && (
+            {/* Retail Sales Details Section */}
+            {inquiry.serviceType === 'retail' && inquiry.retailItems && (
+              <div className="pt-4 border-t border-slate-100 space-y-4">
+                <h3 className="text-sm font-semibold text-slate-700">Retail Sales Details</h3>
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                    Requested Items
+                  </span>
+                  <div className="grid grid-cols-1 gap-3 mt-2">
+                    {inquiry.retailItems.map((item) => (
+                      <div key={item} className="flex flex-col bg-slate-50 p-3 rounded-lg border border-slate-100">
+                        <span className="text-sm font-semibold text-slate-800">{item}</span>
+                        {inquiry.retailItemDetails?.[item] && (
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="text-xs text-slate-500">Amount:</span>
+                            <span className="text-sm text-[#166FB5] font-medium">{inquiry.retailItemDetails[item]}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Bioinformatics Details Section */}
+            {inquiry.serviceType === 'bioinformatics' && (
+              <div className="pt-4 border-t border-slate-100 space-y-4">
+                <h3 className="text-sm font-semibold text-slate-700">Bioinformatics Details</h3>
+
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Type of Bioinformatics Service</span>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {(Array.isArray(inquiry.bioinformaticsDetails?.serviceTypes) ? inquiry.bioinformaticsDetails?.serviceTypes : []).length > 0 ? (
+                      (inquiry.bioinformaticsDetails?.serviceTypes as string[]).map((serviceType) => (
+                        <Badge key={serviceType} variant="secondary" className="bg-blue-50 text-blue-700 border-blue-100">
+                          {serviceType}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-sm text-slate-700">—</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Species</span>
-                    <span className="text-sm font-medium text-slate-800 capitalize mt-1">
-                      {(inquiry.species === 'other' || inquiry.species === 'animal') && inquiry.otherSpecies
-                        ? `${inquiry.species}: ${inquiry.otherSpecies}`
-                        : inquiry.species}
-                    </span>
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Provide Own Data</span>
+                    <span className="text-sm font-medium text-slate-800 mt-1">{inquiry.bioinformaticsDetails?.dataProvideOwnData ? "Yes" : "No"}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Data Generated by PGC Visayas</span>
+                    <span className="text-sm font-medium text-slate-800 mt-1">{inquiry.bioinformaticsDetails?.dataProvidedByPgc ? "Yes" : "No"}</span>
+                  </div>
+                </div>
+
+                {inquiry.bioinformaticsDetails?.dataProvideOwnData && (
+                  <div className="space-y-2 rounded-lg border border-slate-100 bg-slate-50 p-3">
+                    <div className="text-xs font-medium text-slate-500 uppercase tracking-wide">Data Details</div>
+                    <div className="text-sm text-slate-700">File formats: {Array.isArray(inquiry.bioinformaticsDetails?.dataFileFormats) && inquiry.bioinformaticsDetails?.dataFileFormats.length > 0 ? inquiry.bioinformaticsDetails.dataFileFormats.join(', ') : '—'}</div>
+                    {inquiry.bioinformaticsDetails?.dataOtherFormat && (
+                      <div className="text-sm text-slate-700">Other format: {inquiry.bioinformaticsDetails.dataOtherFormat}</div>
+                    )}
+                    {inquiry.bioinformaticsDetails?.dataFileSizePerSample && (
+                      <div className="text-sm text-slate-700">File size per sample: {inquiry.bioinformaticsDetails.dataFileSizePerSample}</div>
+                    )}
+                    {inquiry.bioinformaticsDetails?.dataTransferMode && (
+                      <div className="text-sm text-slate-700">Preferred transfer mode: {inquiry.bioinformaticsDetails.dataTransferMode}</div>
+                    )}
                   </div>
                 )}
 
-                {inquiry.sampleCount && (
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Overview of Research and Objectives</span>
+                  <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
+                    {inquiry.bioinformaticsDetails?.overviewObjectives || "—"}
+                  </p>
+                </div>
+
+                {flattenBioinformaticsDetails(inquiry.bioinformaticsDetails).length > 0 && (
                   <div className="flex flex-col">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Sample Count</span>
-                    <span className="text-sm font-medium text-slate-800 mt-1">{inquiry.sampleCount}</span>
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">All Submitted Bioinformatics Entries</span>
+                    <div className="mt-1 rounded-lg border border-slate-100 bg-slate-50 p-3">
+                      <ul className="space-y-1 text-xs text-slate-700">
+                        {flattenBioinformaticsDetails(inquiry.bioinformaticsDetails).map((entry) => (
+                          <li key={`${entry.key}-${entry.value}`}>
+                            <span className="font-semibold text-slate-600">{entry.key}:</span> {entry.value}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
                 )}
+              </div>
+            )}
 
-                {inquiry.workflowType && (
+            {/* Research Details Section */}
+            {(inquiry.serviceType === 'laboratory') && (
+              <div className="pt-4 border-t border-slate-100 space-y-4">
+                <h3 className="text-sm font-semibold text-slate-700">Laboratory Details</h3>
+
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Species</span>
+                  <span className="text-sm font-medium text-slate-800 capitalize mt-1">
+                    {inquiry.species 
+                      ? (inquiry.otherSpecies ? `${inquiry.species}: ${inquiry.otherSpecies}` : inquiry.species)
+                      : "—"}
+                  </span>
+                </div>
+
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Sample Count</span>
+                  <span className="text-sm font-medium text-slate-800 mt-1">{inquiry.sampleCount || "—"}</span>
+                </div>
+
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Workflow</span>
+                  <span className="text-sm font-medium text-slate-800 mt-1">
+                    {inquiry.workflowType ? formatWorkflowType(inquiry.workflowType) : "—"}
+                  </span>
+                </div>
+
+                {inquiry.serviceType === 'laboratory' && (
                   <div className="flex flex-col">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Workflow Type</span>
-                    <span className="text-sm font-medium text-slate-800 mt-1">
-                      {formatWorkflowType(inquiry.workflowType)}
-                    </span>
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Bioinformatics Analysis</span>
+                    {inquiry.bioinfoOptions && inquiry.bioinfoOptions.length > 0 ? (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {inquiry.bioinfoOptions.map((option) => (
+                          <Badge 
+                            key={option} 
+                            variant="secondary" 
+                            className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 transition-colors py-1 px-3"
+                          >
+                            {formatBioinfoOption(option)}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-sm font-medium text-slate-800 mt-1">—</span>
+                    )}
                   </div>
                 )}
 
@@ -258,16 +451,12 @@ function InquiryDetailContent() {
                   </div>
                 )}
 
-                {inquiry.researchOverview && (
-                  <div className="flex flex-col">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                      Research Overview
-                    </span>
-                    <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
-                      {inquiry.researchOverview}
-                    </p>
-                  </div>
-                )}
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Research Overview</span>
+                  <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
+                    {inquiry.researchOverview || "—"}
+                  </p>
+                </div>
 
                 {inquiry.methodologyFileUrl && (
                   <div className="flex flex-col">
@@ -278,7 +467,7 @@ function InquiryDetailContent() {
                       href={inquiry.methodologyFileUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-[#166FB5] hover:underline mt-1 flex items-center gap-2"
+                      className="text-sm text-[#166FB5] hover:underline mt-1 flex items-center gap-2 w-fit"
                     >
                       <FileText className="h-4 w-4" />
                       View Uploaded File
@@ -308,38 +497,71 @@ function InquiryDetailContent() {
               </div>
             )}
 
-            {/* Additional Information / Project Background */}
-            {(inquiry.additionalInfo || inquiry.projectBackground) && (
-              <div className="pt-4 border-t border-slate-100">
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-2">
-                  {inquiry.additionalInfo ? "Additional Information" : "Project Background"}
-                </span>
-                <p className="text-sm text-slate-700 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
-                  {inquiry.additionalInfo || inquiry.projectBackground}
-                </p>
-              </div>
-            )}
+            {/* Research and Collaboration Details Section */}
+            {((inquiry.serviceType === 'research') || inquiry.projectBackground || inquiry.projectBudget || inquiry.molecularServicesBudget || inquiry.plannedSampleCount) && (
+              <div className="pt-4 border-t border-slate-100 space-y-4">
+                <h3 className="text-sm font-semibold text-slate-700">Research & Collaboration Details</h3>
 
-            {/* Project Budget */}
-            {inquiry.projectBudget && (
-              <div className="pt-4 border-t border-slate-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <DollarSign className="h-4 w-4 text-slate-400" />
-                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Project Budget</span>
+                {(inquiry.researchOverview || inquiry.projectBackground) && (
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                      Overview of Research, Objectives, and Scope of Collaboration
+                    </span>
+                    <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
+                      {inquiry.researchOverview || inquiry.projectBackground}
+                    </p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {inquiry.molecularServicesBudget && (
+                    <div className="flex flex-col">
+                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Molecular Services Budget</span>
+                      <span className="text-sm font-medium text-slate-800 mt-1">{inquiry.molecularServicesBudget}</span>
+                    </div>
+                  )}
+
+                  {inquiry.plannedSampleCount && (
+                    <div className="flex flex-col">
+                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">How Many Samples Are You Planning to Send?</span>
+                      <span className="text-sm font-medium text-slate-800 mt-1">{inquiry.plannedSampleCount}</span>
+                    </div>
+                  )}
+
+                  {inquiry.projectBudget && (
+                    <div className="flex flex-col">
+                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Project Budget</span>
+                      <span className="text-sm font-medium text-slate-800 mt-1">{inquiry.projectBudget}</span>
+                    </div>
+                  )}
                 </div>
-                <span className="text-sm font-medium text-slate-800">{inquiry.projectBudget}</span>
               </div>
             )}
 
             {/* Training Specific Fields */}
-            {(inquiry.specificTrainingNeed || inquiry.targetTrainingDate || inquiry.numberOfParticipants) && (
+            {((inquiry.trainingPrograms && inquiry.trainingPrograms.length > 0) || inquiry.specificTrainingNeed || inquiry.targetTrainingDate || inquiry.numberOfParticipants) && (
               <div className="pt-4 border-t border-slate-100 space-y-4">
                 <h3 className="text-sm font-semibold text-slate-700">Training Details</h3>
+
+                {inquiry.trainingPrograms && inquiry.trainingPrograms.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                      Selected Training Programs
+                    </span>
+                    <div className="grid grid-cols-1 gap-2">
+                      {inquiry.trainingPrograms.map((program, index) => (
+                        <div key={`${program}-${index}`} className="text-sm text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                          {program === "others-customized" ? "Others / Customized Training Program" : program}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {inquiry.specificTrainingNeed && (
                   <div className="flex flex-col">
                     <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                      Specific Training Need
+                      Others / Customized Training Program Details
                     </span>
                     <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
                       {inquiry.specificTrainingNeed}
@@ -419,7 +641,7 @@ function InquiryDetailContent() {
 <FloatingChatWidget 
         inquiryId={inquiry.id} 
         role="admin" 
-        className="!bottom-20 mb-2" 
+        className="!bottom-30 mb-2" 
       />
     </div>
   );

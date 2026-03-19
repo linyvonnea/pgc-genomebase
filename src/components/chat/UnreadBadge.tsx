@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Mail } from "lucide-react";
+import { MessageSquareText } from "lucide-react";
 import {
   subscribeToThreadMessages,
   markMessagesAsRead,
@@ -157,11 +157,11 @@ export default function UnreadBadge({
 
   return (
     <div
-      className="relative ml-1 flex h-6 w-6 cursor-pointer items-center justify-center transition-transform hover:scale-110 active:scale-95"
+      className="relative -ml-1 flex h-6 w-6 cursor-pointer items-center justify-center transition-transform hover:scale-110 active:scale-95"
       onClick={handleClick}
       title={tooltipText}
     >
-      <Mail className={`h-4 w-4 transition-all ${envelopeColor}`} strokeWidth={isRed ? 2.5 : 2} />
+      <MessageSquareText className={`h-4 w-4 transition-all ${envelopeColor}`} strokeWidth={isRed ? 2.5 : 2} />
       {isRed && (
         <span className="absolute -top-2 -right-2 min-w-[1rem] h-4 flex items-center justify-center rounded-full bg-red-600 px-1 text-center text-[9px] font-bold leading-none text-white shadow-sm ring-1 ring-white">
           {unreadCount > 9 ? "9+" : unreadCount}

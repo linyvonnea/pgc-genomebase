@@ -10,6 +10,9 @@ import { Button } from "@/components/ui/button";
 import { deleteChargeSlip } from "@/services/chargeSlipService";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { ChargeSlipButton } from "../clients/ChargeSlipButton";
+import { usePermissions } from "@/hooks/usePermissions";
+import useAuth from "@/hooks/useAuth";
 
 // Badge colors for statuses
 const statusColors: Record<string, string> = {
@@ -41,6 +44,8 @@ function toMillis(v: unknown): number {
 const ActionCell = ({ row }: { row: any }) => {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+  const { adminInfo } = useAuth();
+  const { canEdit, canCreate, canDelete } = usePermissions(adminInfo?.role);
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation(); // Avoid triggering any row click navigation
@@ -62,16 +67,18 @@ const ActionCell = ({ row }: { row: any }) => {
   };
 
   return (
-    <div className="flex justify-end pr-2">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-        onClick={handleDelete}
-        disabled={isDeleting}
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+    <div className="flex items-center gap-1 justify-end pr-2">
+      {canDelete("chargeSlips") && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+          onClick={handleDelete}
+          disabled={isDeleting}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 };
@@ -81,10 +88,15 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     id: "dateIssued",
     header: "Date",
     accessorFn: (row) => toMillis((row as any).dateIssued),
-    size: 90,
+    size: 100, // Slightly increased for MM-DD-YYYY
     cell: ({ getValue }) => {
       const ms = getValue<number>();
-      return <div className="text-xs">{isNaN(ms) ? "—" : new Date(ms).toLocaleDateString("en-CA")}</div>;
+      if (isNaN(ms)) return <div className="text-xs text-muted-foreground">—</div>;
+      const date = new Date(ms);
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      const yyyy = date.getFullYear();
+      return <div className="text-xs font-mono tabular-nums">{`${mm}-${dd}-${yyyy}`}</div>;
     },
     sortDescFirst: true,
   },
@@ -229,8 +241,8 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
   },
   {
     id: "actions",
-    header: () => <div className="text-right pr-4">Actions</div>,
+    header: () => <div className="text-right pr-4 tracking-tight">Actions</div>,
     cell: ({ row }) => <ActionCell row={row} />,
-    size: 60,
+    size: 150,
   },
 ];

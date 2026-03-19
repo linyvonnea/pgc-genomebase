@@ -52,6 +52,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { ChevronDown, X, MessageCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -84,12 +85,21 @@ export function DataTable<TData, TValue>({
 
   // Handle row click to navigate to detail page
   const handleRowClick = (inquiry: Inquiry, event: React.MouseEvent) => {
-    // Don't navigate if clicking on a button or interactive element
+    // Don't navigate if clicking on interactive elements inside the row.
     const target = event.target as HTMLElement
     if (
-      target.closest('button') || 
+      target.closest('button') ||
       target.closest('[role="button"]') ||
-      target.closest('a')
+      target.closest('a') ||
+      target.closest('input') ||
+      target.closest('textarea') ||
+      target.closest('select') ||
+      target.closest('label') ||
+      target.closest('[role="textbox"]') ||
+      target.closest('[role="combobox"]') ||
+      target.closest('[role="dialog"]') ||
+      target.closest('[contenteditable="true"]') ||
+      target.closest('[data-stop-row-click="true"]')
     ) {
       return
     }
@@ -104,6 +114,7 @@ export function DataTable<TData, TValue>({
       quotationOnly: inquiries.filter(i => i.status === "Quotation Only").length,
       ongoingQuotation: inquiries.filter(i => i.status === "Ongoing Quotation").length,
       pending: inquiries.filter(i => i.status === "Pending").length,
+      serviceNotOffered: inquiries.filter(i => i.status === "Service Not Offered").length,
     }
   }, [data])
 
@@ -207,15 +218,35 @@ export function DataTable<TData, TValue>({
     },
   })
 
-  // Apply date + unread filters
-  const filteredRows = table.getRowModel().rows.filter((row) => {
-    if (!dateFilter(row)) return false
-    if (showUnreadOnly) {
-      const inquiry = row.original as unknown as { id: string }
-      return unreadInquiryIds.has(inquiry.id)
-    }
-    return true
-  })
+  // Sort rows: first by unread status, then by the table's internal sorting
+  const sortedAndFilteredRows = useMemo(() => {
+    // 1. Get filtered & sorted rows from table model
+    const tableRows = table.getRowModel().rows
+
+    // 2. Filter by date and showUnreadOnly
+    const filtered = tableRows.filter((row) => {
+      if (!dateFilter(row)) return false
+      if (showUnreadOnly) {
+        const inquiry = row.original as unknown as { id: string }
+        return unreadInquiryIds.has(inquiry.id)
+      }
+      return true
+    })
+
+    // 3. Move rows with unread messages to the top
+    // We only do this if the user hasn't manually sorted by a specific column
+    // or we can just always prioritize unread if that's the desired permanent behavior
+    return [...filtered].sort((a, b) => {
+      const aId = (a.original as unknown as { id: string }).id
+      const bId = (b.original as unknown as { id: string }).id
+      const aUnread = unreadInquiryIds.has(aId)
+      const bUnread = unreadInquiryIds.has(bId)
+
+      if (aUnread && !bUnread) return -1
+      if (!aUnread && bUnread) return 1
+      return 0 // keep relative order from table's internal sorting
+    })
+  }, [table.getRowModel().rows, selectedYear, selectedMonth, showUnreadOnly, unreadInquiryIds])
 
   const handleStatusFilter = (status: string | undefined) => {
     setActiveStatusFilter(status)
@@ -292,7 +323,7 @@ export function DataTable<TData, TValue>({
               {/* Processing Status */}
               <div className="space-y-2 lg:col-span-4">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Processing Status</label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                   <button
                     onClick={() =>
                       handleStatusFilter(
@@ -305,7 +336,7 @@ export function DataTable<TData, TValue>({
                         : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                     }`}
                   >
-                    Approved Client
+                    Approved Client ({statusCounts.approvedClient})
                   </button>
                   <button
                     onClick={() =>
@@ -319,7 +350,7 @@ export function DataTable<TData, TValue>({
                         : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                     }`}
                   >
-                    Quotation Only
+                    Quotation Only ({statusCounts.quotationOnly})
                   </button>
                   <button
                     onClick={() =>
@@ -333,7 +364,7 @@ export function DataTable<TData, TValue>({
                         : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                     }`}
                   >
-                    Ongoing Quotation
+                    Ongoing Quotation ({statusCounts.ongoingQuotation})
                   </button>
                   <button
                     onClick={() =>
@@ -345,7 +376,19 @@ export function DataTable<TData, TValue>({
                         : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
                     }`}
                   >
-                    Pending
+                    Pending ({statusCounts.pending})
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleStatusFilter(activeStatusFilter === "Service Not Offered" ? undefined : "Service Not Offered")
+                    }
+                    className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                      activeStatusFilter === "Service Not Offered"
+                        ? "bg-slate-100 border-slate-300 font-semibold text-slate-600"
+                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                    }`}
+                  >
+                    Service Not Offered ({statusCounts.serviceNotOffered})
                   </button>
                 </div>
               </div>
@@ -423,7 +466,7 @@ export function DataTable<TData, TValue>({
                     <div className="text-xs font-medium text-gray-600 mb-1">
                       {filterSummaryLabel}
                     </div>
-                    <div className="text-lg font-bold text-gray-800">{filteredRows.length} records</div>
+                    <div className="text-lg font-bold text-gray-800">{sortedAndFilteredRows.length} records</div>
                     {/* Removed 'Click to clear all filters' label */}
                   </div>
                 </div>
@@ -437,21 +480,8 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center justify-between py-1">
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">
-            Showing {filteredRows.length > 0 ? (table.getState().pagination.pageIndex * table.getState().pagination.pageSize) + 1 : 0} - {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, filteredRows.length)} of {filteredRows.length} records
+            Showing {sortedAndFilteredRows.length > 0 ? (table.getState().pagination.pageIndex * table.getState().pagination.pageSize) + 1 : 0} - {Math.min((table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize, sortedAndFilteredRows.length)} of {sortedAndFilteredRows.length} records
           </span>
-          {unreadInquiryIds.size > 0 && (
-            <button
-              onClick={() => setShowUnreadOnly((prev) => !prev)}
-              className={`flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors ${
-                showUnreadOnly
-                  ? "bg-blue-600 text-white"
-                  : "bg-red-500 text-white animate-pulse hover:animate-none hover:bg-red-600"
-              }`}
-            >
-              <MessageCircle className="h-3 w-3" />
-              Received {unreadInquiryIds.size} client message{unreadInquiryIds.size !== 1 ? "s" : ""}
-            </button>
-          )}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground whitespace-nowrap">Rows:</span>
@@ -512,12 +542,12 @@ export function DataTable<TData, TValue>({
       </div>
 
       {/* Compact Table with Sticky Header */}
-      <div className="rounded-md border overflow-hidden">
-        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-          <Table className="table-fixed">
-            <TableHeader className="sticky top-0 bg-muted/95 backdrop-blur-sm z-10">
+      <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
+        <div className="max-h-[70vh] overflow-hidden">
+          <Table className="w-full border-collapse table-fixed">
+            <TableHeader className="sticky top-0 bg-slate-50/95 backdrop-blur-sm z-10 border-b shadow-sm">
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
+                <TableRow key={headerGroup.id} className="hover:bg-transparent border-0">
                   {headerGroup.headers.map((header) => {
                     const canSort = header.column.getCanSort?.()
                     const sortDir = header.column.getIsSorted?.()
@@ -525,16 +555,22 @@ export function DataTable<TData, TValue>({
                       <TableHead
                         key={header.id}
                         onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
-                        className={`${canSort ? "cursor-pointer select-none" : ""} h-10 text-xs font-semibold`}
+                        className={cn(
+                          "h-10 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-r border-slate-100 last:border-r-0",
+                          canSort ? "cursor-pointer select-none hover:bg-slate-100/50 transition-colors" : ""
+                        )}
                         style={{ width: header.column.columnDef.size }}
                       >
-                        <div className="flex items-center gap-1">
-                          {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                          {canSort && (
-                            <span className="ml-1 text-xs opacity-60">
-                              {sortDir === "asc" ? "▲" : sortDir === "desc" ? "▼" : ""}
-                            </span>
-                          )}
+                        <div className="flex items-center justify-between px-1">
+                          <div className="flex items-center gap-1.5">
+                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                            {canSort && (
+                              <div className="flex flex-col -gap-0.5 opacity-40">
+                                <span className={cn("text-[8px] leading-none", sortDir === "asc" && "text-blue-600 opacity-100")}>▲</span>
+                                <span className={cn("text-[8px] leading-none", sortDir === "desc" && "text-blue-600 opacity-100")}>▼</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </TableHead>
                     )
@@ -544,39 +580,45 @@ export function DataTable<TData, TValue>({
             </TableHeader>
 
             <TableBody>
-              {filteredRows.length ? (
-                filteredRows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    className={`group hover:bg-muted/50 transition-colors cursor-pointer ${
-                      unreadInquiryIds.has((row.original as unknown as { id: string }).id)
-                        ? "border-l-4 border-l-blue-500 bg-blue-50/40"
-                        : ""
-                    }`}
-                    data-state={row.getIsSelected() && "selected"}
-                    onClick={(e: React.MouseEvent) => handleRowClick(row.original as Inquiry, e)}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell 
-                        key={cell.id} 
-                        className="py-2"
-                        style={{ width: cell.column.columnDef.size }}
+              {(() => {
+                const startIndex = table.getState().pagination.pageIndex * table.getState().pagination.pageSize;
+                const paginatedRows = sortedAndFilteredRows.slice(startIndex, startIndex + table.getState().pagination.pageSize);
+                
+                return paginatedRows.length ? (
+                  paginatedRows.map((row) => (
+                      <TableRow
+                        key={row.id}
+                        className={cn(
+                          "group hover:bg-blue-50/30 transition-colors cursor-pointer border-b border-slate-200 last:border-0",
+                          unreadInquiryIds.has((row.original as unknown as { id: string }).id)
+                            ? "bg-blue-50/60"
+                            : ""
+                        )}
+                        data-state={row.getIsSelected() && "selected"}
+                        onClick={(e: React.MouseEvent) => handleRowClick(row.original as Inquiry, e)}
                       >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell 
+                            key={cell.id} 
+                            className="py-1.5 px-2 text-[13px] text-slate-600 border-r border-slate-200 last:border-r-0 align-middle truncate"
+                            style={{ width: cell.column.columnDef.size }}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={columns.length} className="text-center h-24 text-muted-foreground">
+                      <div className="flex flex-col items-center justify-center gap-2 py-4">
+                        <p>No results found for current filters.</p>
+                        <Button variant="link" onClick={clearAllFilters}>Clear all filters</Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="text-center h-24 text-muted-foreground">
-                    <div className="flex flex-col items-center justify-center gap-2 py-4">
-                      <p>No results found for current filters.</p>
-                      <Button variant="link" onClick={clearAllFilters}>Clear all filters</Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
+                );
+              })()}
             </TableBody>
           </Table>
         </div>

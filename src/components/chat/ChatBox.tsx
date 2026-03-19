@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import useAuth from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import TextareaAutosize from "react-textarea-autosize";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Card,
   CardContent,
@@ -12,7 +13,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Send, Clock, AlertCircle } from "lucide-react";
+import { MessageCircle, Send, Clock, AlertCircle, Check, CheckCheck } from "lucide-react";
 import { ThreadMessage, MessageSenderRole } from "@/types/QuotationThread";
 import {
   subscribeToThreadMessages,
@@ -20,7 +21,7 @@ import {
   markMessagesAsRead,
 } from "@/services/quotationThreadService";
 import { format } from "date-fns";
-import { getAdminDisplayName } from "@/lib/chatUtils";
+import { getAdminDisplayName, getClientInitials } from "@/lib/chatUtils";
 
 interface ChatBoxProps {
   inquiryId: string;
@@ -115,6 +116,16 @@ export default function ChatBox({
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      const form = (e.currentTarget as any).form;
+      if (form) {
+        form.requestSubmit();
+      }
+    }
+  };
+
   const formatMessageTime = (msg: any) => {
     try {
       // Support for Firestore Timestamps which have toDate()
@@ -168,12 +179,16 @@ export default function ChatBox({
               <p className="text-sm">{error}</p>
             </div>
           ) : messages.length === 0 ? (
-            <div className="flex flex-col justify-center items-center h-full text-center text-gray-500 space-y-2">
-              <MessageCircle className="w-10 h-10 text-gray-200" />
-              <p className="text-sm">No messages yet.</p>
-              <p className="text-xs text-gray-400">
-                Send a message to start communicating.
-              </p>
+            <div className="flex flex-col justify-center items-center h-full text-center text-slate-500 space-y-3 px-6">
+              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-2">
+                <MessageCircle className="w-8 h-8 text-slate-200" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-slate-800">No messages yet.</p>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Have questions about your project? Send us a message and our team will get back to you shortly.
+                </p>
+              </div>
             </div>
           ) : (
             messages.map((msg, idx) => {
@@ -199,8 +214,13 @@ export default function ChatBox({
                     className={`flex flex-col max-w-[85%] ${isMe ? "items-end" : "items-start"}`}
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      {/* Check if we should show name or badge first */}
-                      {!isMe && msg.senderRole === "admin" ? (
+                      {!isMe && msg.senderRole === "client" && role === "admin" ? (
+                        <Avatar className="h-5 w-5 border border-slate-200 bg-white shadow-sm">
+                          <AvatarFallback className="bg-blue-50 text-[9px] font-semibold tracking-wide text-blue-700">
+                            {getClientInitials(msg.senderName)}
+                          </AvatarFallback>
+                        </Avatar>
+                      ) : !isMe && msg.senderRole === "admin" ? (
                         <>
                           <Badge
                             variant="outline"
@@ -215,16 +235,8 @@ export default function ChatBox({
                       ) : (
                         <>
                           <span className="text-xs font-semibold text-gray-600">
-                            {isMe ? "You" : msg.senderName}
+                            {isMe ? (role === "admin" ? msg.senderName : "You") : msg.senderName}
                           </span>
-                          {msg.senderRole === "client" && role === "admin" && (
-                            <Badge
-                              variant="outline"
-                              className="ml-1 text-[9px] h-4 py-0 px-1.5 bg-green-50 text-green-700 border-green-200"
-                            >
-                              Client
-                            </Badge>
-                          )}
                         </>
                       )}
                       <span className="text-[10px] text-gray-400 flex items-center gap-1 ml-1">
@@ -241,33 +253,48 @@ export default function ChatBox({
                       }`}
                     >
                       <p className="whitespace-pre-wrap leading-relaxed break-words">
-                        {msg.content}
-                      </p>
+                          {msg.content}
+                        </p>
+                        {isMe && role === "admin" && (
+                          <div className="flex justify-end mt-1.5 -mb-0.5">
+                            {msg.isRead ? (
+                              <div className="flex items-center gap-1 group/seen bg-white/10 rounded-full px-1.5 py-0.5 ml-auto translate-x-1">
+                                <CheckCheck className="w-3 h-3 text-white" strokeWidth={3} />
+                                <span className="text-[8px] font-bold text-white uppercase tracking-tighter">Seen</span>
+                              </div>
+                            ) : (
+                              <Check className="w-3 h-3 text-white/50 ml-auto" strokeWidth={3} />
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
+                );
             })
           )}
         </div>
       </CardContent>
 
       <CardFooter className="p-3 bg-white border-t rounded-b-lg">
-        <form onSubmit={handleSendMessage} className="flex w-full gap-2">
-          <Input
+        <form onSubmit={handleSendMessage} className="flex w-full gap-2 items-end">
+          <TextareaAutosize
             placeholder={
               role === "admin" ? "Message client..." : "Message admin..."
             }
             value={newMessage}
             disabled={loading}
             onChange={(e) => setNewMessage(e.target.value)}
-            className="flex-1 rounded-full px-4 border-gray-300 focus-visible:ring-blue-500"
+            onKeyDown={handleKeyDown}
+            minRows={2}
+            maxRows={10}
+            className="flex-1 w-full rounded-xl px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto text-sm transition-all"
           />
           <Button
             type="submit"
             size="icon"
             disabled={!newMessage.trim() || loading}
-            className="rounded-full bg-blue-600 hover:bg-blue-700 transition-colors h-10 w-10 flex-shrink-0"
+            className="rounded-full bg-blue-600 hover:bg-blue-700 transition-colors h-10 w-10 flex-shrink-0 mb-1"
           >
             <Send className="w-[18px] h-[18px] ml-0.5" />
           </Button>

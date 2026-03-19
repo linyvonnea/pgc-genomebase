@@ -14,6 +14,8 @@ export type QuotationRecord = {
   };
   services: SelectedService[];
   isInternal: boolean;
+  useInternalPrice?: boolean;
+  useAffiliationAsClientName?: boolean;
   dateIssued: string;
   preparedBy: {
     name: string;

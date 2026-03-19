@@ -10,7 +10,7 @@ export interface DraftMember {
   formData: ClientFormData;
 }
 
-export type ApprovalStatus = "draft" | "pending" | "approved" | "rejected";
+export type ApprovalStatus = "draft" | "pending" | "approved" | "rejected" | "cancelled";
 
 export interface MemberApproval {
   id?: string; // Firestore doc ID (auto or composite)

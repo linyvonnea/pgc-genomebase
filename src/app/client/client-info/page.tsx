@@ -70,9 +70,14 @@ import { getQuotationsByInquiryId } from "@/services/quotationService";
 import { subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { getChargeSlipsByProjectId } from "@/services/chargeSlipService";
+import {
+  getSampleFormsByProjectId,
+  getSampleFormMonitoringSummary,
+} from "@/services/sampleFormService";
 import { QuotationRecord } from "@/types/Quotation";
 import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
+import { SampleFormSummary } from "@/types/SampleForm";
 import { ApprovalStatus } from "@/types/MemberApproval";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
@@ -112,6 +117,9 @@ import {
   Briefcase,
   FlaskConical,
   DollarSign,
+  FileSpreadsheet,
+  ShieldEllipsis,
+  Stamp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ClientConformeModal from "@/components/forms/ClientConformeModal";
@@ -129,7 +137,77 @@ const formatServiceType = (type: string | null | undefined): string => {
 // Format workflow type for display
 const formatWorkflowType = (type: string | null | undefined): string => {
   if (!type) return "—";
-  return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  if (type === "complete-bioinfo") return "Complete molecular workflow with Bioinformatics Analysis";
+  if (type === "complete") return "Complete Molecular workflow only (DNA Extraction to Sequencing)";
+  if (type === "individual") return "Individual Assay";
+  return type
+    .split(/[-_]/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+const formatBioinfoOption = (option: string): string => {
+  switch (option) {
+    case "whole-genome-assembly":
+      return "Whole Genome Assembly";
+    case "metabarcoding-downstream":
+      return "Metabarcoding with Downstream Analysis";
+    case "metabarcoding-preprocessing":
+      return "Metabarcoding with Pre-processing Only";
+    case "transcriptomics":
+      return "Transcriptomics (QC to Annotation)";
+    case "phylogenetics":
+      return "Phylogenetics (1 Marker)";
+    case "whole-genome-assembly-annotation":
+      return "Whole Genome Assembly and Annotation";
+    case "dna-extraction":
+      return "DNA Extraction";
+    case "quantification":
+      return "Quantification";
+    case "library-preparation":
+      return "Library Preparation";
+    case "sequencing":
+      return "Sequencing";
+    case "bioinformatics-analysis":
+      return "Bioinformatics Analysis";
+    case "genome-assembly":
+      return "Whole Genome Assembly";
+    case "metabarcoding":
+      return "Metabarcoding with Downstream Analysis";
+    case "pre-processing":
+      return "Metabarcoding with Pre-processing Only";
+    case "assembly-annotation":
+      return "Whole Genome Assembly and Annotation";
+    default:
+      return option;
+  }
+};
+
+const flattenBioinformaticsDetails = (
+  input: Record<string, any> | null | undefined,
+  prefix = ""
+): Array<{ key: string; value: string }> => {
+  if (!input) return [];
+
+  const rows: Array<{ key: string; value: string }> = [];
+  Object.entries(input).forEach(([key, value]) => {
+    if (value === null || value === undefined || value === "") return;
+    const path = prefix ? `${prefix}.${key}` : key;
+
+    if (Array.isArray(value)) {
+      if (value.length > 0) rows.push({ key: path, value: value.join(", ") });
+      return;
+    }
+
+    if (typeof value === "object") {
+      rows.push(...flattenBioinformaticsDetails(value as Record<string, any>, path));
+      return;
+    }
+
+    rows.push({ key: path, value: String(value) });
+  });
+
+  return rows;
 };
 
 // ────────────────────────────────────────────────────────────────
@@ -198,7 +276,19 @@ export default function ClientPortalPage() {
   const [expandedProjectDocs, setExpandedProjectDocs] = useState<Set<string>>(new Set());
 
   const [projectDocuments, setProjectDocuments] = useState<
-    Map<string, { quotations: QuotationRecord[]; chargeSlips: ChargeSlipRecord[]; loading: boolean }>
+    Map<string, { 
+      quotations: QuotationRecord[]; 
+      chargeSlips: ChargeSlipRecord[]; 
+      sampleForms: SampleFormSummary[];
+      sampleFormMonitoring: {
+        submittedCount: number;
+        receivedCount: number;
+        reviewedCount: number;
+      };
+      serviceReports: any[];
+      officialReceipts: any[];
+      loading: boolean 
+    }>
   >(new Map());
 
   // ── Inquiry context state ─────────────────────────────────────
@@ -212,13 +302,10 @@ export default function ClientPortalPage() {
 
   // Initialize expandedProjectDocs when projects list is updated or pidParam changes
   useEffect(() => {
-    if (pidParam) {
-      setExpandedProjectDocs(new Set([pidParam]));
-    } else if (projects.length > 0) {
-      // If no specific PID, expand the first one by default if it's not already expanded
-      setExpandedProjectDocs(prev => prev.size === 0 ? new Set([projects[0].pid]) : prev);
-    }
-  }, [pidParam, projects]);
+    // Completely removed auto-expansion logic to ensure projects are always collapsed by default
+    // Even if pidParam is present, we start with empty set to follow user request
+    setExpandedProjectDocs(new Set());
+  }, []);
 
   const [selectedProjectPid, setSelectedProjectPid] = useState<string | null>(
     null
@@ -1662,6 +1749,14 @@ export default function ClientPortalPage() {
       setProjectDocuments((prev) => new Map(prev).set(pid, {
         quotations: [],
         chargeSlips: [],
+        sampleForms: [],
+        sampleFormMonitoring: {
+          submittedCount: 0,
+          receivedCount: 0,
+          reviewedCount: 0,
+        },
+        serviceReports: [],
+        officialReceipts: [],
         loading: true,
       }));
 
@@ -1674,9 +1769,29 @@ export default function ClientPortalPage() {
           ? await getChargeSlipsByProjectId(project.pid)
           : [];
 
+        // Fetch sample forms by project ID (client-submitted forms)
+        const sampleForms = project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
+          ? await getSampleFormsByProjectId(project.pid, {
+              submittedByEmail: emailParam || undefined,
+              includeStatuses: ["received", "reviewed"],
+            })
+          : [];
+
+        const sampleFormMonitoring = project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
+          ? await getSampleFormMonitoringSummary(project.pid, emailParam || undefined)
+          : {
+              submittedCount: 0,
+              receivedCount: 0,
+              reviewedCount: 0,
+            };
+
         setProjectDocuments((prev) => new Map(prev).set(pid, {
           quotations,
           chargeSlips,
+          sampleForms,
+          sampleFormMonitoring,
+          serviceReports: [],
+          officialReceipts: [],
           loading: false,
         }));
       } catch (error) {
@@ -1685,6 +1800,14 @@ export default function ClientPortalPage() {
         setProjectDocuments((prev) => new Map(prev).set(pid, {
           quotations: [],
           chargeSlips: [],
+          sampleForms: [],
+          sampleFormMonitoring: {
+            submittedCount: 0,
+            receivedCount: 0,
+            reviewedCount: 0,
+          },
+          serviceReports: [],
+          officialReceipts: [],
           loading: false,
         }));
       }
@@ -2215,6 +2338,33 @@ export default function ClientPortalPage() {
                 const docs = projectDocuments.get(project.pid);
                 const quotationCount = docs?.quotations.length || 0;
                 const chargeSlipCount = docs?.chargeSlips.length || 0;
+                const sampleFormCount = docs?.sampleForms?.length || 0;
+                const sampleFormSubmittedCount = docs?.sampleFormMonitoring?.submittedCount || 0;
+                const sampleFormReviewedCount = docs?.sampleFormMonitoring?.reviewedCount || 0;
+                const serviceReportCount = docs?.serviceReports?.length || 0;
+                const officialReceiptCount = docs?.officialReceipts?.length || 0;
+                const sampleFormParams = new URLSearchParams();
+                if (emailParam) sampleFormParams.set("email", emailParam);
+                if (project.inquiryId) sampleFormParams.set("inquiryId", project.inquiryId);
+                if (project.pid) sampleFormParams.set("pid", project.pid);
+                if (project.title) sampleFormParams.set("projectTitle", project.title);
+                
+                // Find primary member CID for this project
+                const projectPrimary = fetchedClients.find((c: any) => {
+                  const isOwner = c.email?.toLowerCase() === emailParam?.toLowerCase();
+                  if (!isOwner) return false;
+                  const pids = Array.isArray(c.pid) ? c.pid : (c.pid ? [c.pid] : []);
+                  return pids.includes(project.pid);
+                });
+                
+                if (projectPrimary?.cid) {
+                  sampleFormParams.set("clientId", projectPrimary.cid);
+                }
+
+                if (primaryMember?.formData?.name) {
+                  sampleFormParams.set("name", primaryMember.formData.name);
+                }
+                const sampleFormBaseHref = `/client/sample-form?${sampleFormParams.toString()}`;
                 
                 return (
                   <div key={project.pid} className={cn(
@@ -2253,7 +2403,7 @@ export default function ClientPortalPage() {
                           toggleProjectDocs(project);
                         }}
                         className={cn(
-                          "flex-shrink-0 px-3 py-3 hover:bg-slate-100 transition-colors border-l border-slate-200 group/chevron",
+                          "flex-shrink-0 px-3 py-4 hover:bg-slate-100 transition-colors border-l border-slate-200 group/chevron h-full",
                           isDocsExpanded && "bg-blue-50"
                         )}
                         title="View documents"
@@ -2331,6 +2481,96 @@ export default function ClientPortalPage() {
                                 </div>
                               ) : (
                                 <p className="text-xs text-slate-400 ml-5">No charge slips yet</p>
+                              )}
+                            </div>
+
+                            {/* Sample Forms */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <FileSpreadsheet className="h-3 w-3 text-orange-600" />
+                                <span className="text-sm font-semibold text-slate-700">
+                                  Sample Forms Monitoring
+                                </span>
+                                <span className="text-[10px] text-slate-500">({sampleFormCount})</span>
+                              </div>
+                              <a
+                                href={sampleFormBaseHref}
+                                className="inline-block text-xs text-[#166FB5] hover:underline ml-5 mb-2"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                + Fill out sample submission form
+                              </a>
+                              <div className="ml-5 mb-2 text-[11px] text-slate-500 space-y-0.5">
+                                <p>Pending admin receipt: {sampleFormSubmittedCount}</p>
+                                <p>Reviewed by admin: {sampleFormReviewedCount}</p>
+                              </div>
+                              {(docs?.sampleForms?.length || 0) > 0 ? (
+                                <div className="space-y-1 ml-5">
+                                  {docs?.sampleForms.map((item) => (
+                                    <a
+                                      key={item.id}
+                                      href={`/client/view-document?type=sample-form&ref=${item.id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="block text-xs text-slate-600 hover:text-orange-600 hover:underline truncate"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      • {item.documentNumber || `PGCV-LF-SSF-${item.id.slice(0, 8)}`} ({item.totalNumberOfSamples || 0} samples)
+                                    </a>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-slate-400 ml-5">No received sample forms yet</p>
+                              )}
+                            </div>
+
+                            {/* Service Reports */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <ShieldEllipsis className="h-3 w-3 text-blue-600" />
+                                <span className="text-sm font-semibold text-slate-700">
+                                  Service Reports
+                                </span>
+                                <span className="text-[10px] text-slate-500">({docs?.serviceReports?.length || 0})</span>
+                              </div>
+                              {(docs?.serviceReports?.length || 0) > 0 ? (
+                                <div className="space-y-1 ml-5">
+                                  {docs?.serviceReports.map((item: any) => (
+                                    <div
+                                      key={item.id}
+                                      className="block text-xs text-slate-600 truncate"
+                                    >
+                                      • {item.name || item.id}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-slate-400 ml-5">No service reports yet</p>
+                              )}
+                            </div>
+
+                            {/* Official Receipts */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <Stamp className="h-3 w-3 text-emerald-600" />
+                                <span className="text-sm font-semibold text-slate-700">
+                                  Official Receipts
+                                </span>
+                                <span className="text-[10px] text-slate-500">({docs?.officialReceipts?.length || 0})</span>
+                              </div>
+                              {(docs?.officialReceipts?.length || 0) > 0 ? (
+                                <div className="space-y-1 ml-5">
+                                  {docs?.officialReceipts.map((item: any) => (
+                                    <div
+                                      key={item.id}
+                                      className="block text-xs text-slate-600 truncate"
+                                    >
+                                      • {item.name || item.id}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-slate-400 ml-5">No official receipts yet</p>
                               )}
                             </div>
                           </div>
@@ -2843,65 +3083,257 @@ export default function ClientPortalPage() {
                         </div>
                         
                         <div className="space-y-6">
-                          {/* Top Section: Quick Stats */}
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                            {/* Service Type */}
-                            <div className="space-y-1.5">
-                              <div className="flex items-center gap-2">
-                                <FlaskConical className="h-4 w-4 text-slate-400" />
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Service Type</span>
-                              </div>
-                              <Badge className="w-fit capitalize bg-blue-50 text-blue-700 border-blue-100 text-xs px-2.5 py-0.5 font-bold">
-                                {formatServiceType(currentInquiry.serviceType)}
-                              </Badge>
-                            </div>
-
-                            {/* Sample Count */}
-                            {currentInquiry.sampleCount && (
-                              <div className="space-y-1.5">
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Quantity</span>
-                                <p className="text-sm font-bold text-slate-900">{currentInquiry.sampleCount} samples</p>
-                              </div>
-                            )}
-
-                            {/* Project Budget */}
-                            {currentInquiry.projectBudget && (
-                              <div className="space-y-1.5">
-                                <div className="flex items-center gap-1.5">
-                                  <DollarSign className="h-4 w-4 text-slate-400" />
-                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Estim. Budget</span>
+                          {/* Laboratory Service Details */}
+                          {currentInquiry.serviceType === "laboratory" ? (
+                            <div className="space-y-6 animate-in fade-in duration-500">
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                                {/* Service Type */}
+                                <div className="space-y-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <FlaskConical className="h-4 w-4 text-slate-400" />
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Service Type</span>
+                                  </div>
+                                  <Badge className="w-fit capitalize bg-blue-50 text-blue-700 border-blue-100 text-xs px-2.5 py-0.5 font-bold">
+                                    Laboratory
+                                  </Badge>
                                 </div>
-                                <p className="text-sm font-bold text-slate-900">{currentInquiry.projectBudget}</p>
-                              </div>
-                            )}
-                          </div>
 
-                          {/* Technical Block */}
-                          {(currentInquiry.species || currentInquiry.workflowType) && (
-                            <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              {currentInquiry.species && (
-                                <div className="space-y-1">
-                                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Species / Organism</span>
-                                  <p className="text-sm font-semibold text-slate-800 capitalize">
-                                    {(currentInquiry.species === 'other' || currentInquiry.species === 'animal') && currentInquiry.otherSpecies
-                                      ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}`
-                                      : currentInquiry.species}
+                                {/* Species */}
+                                <div className="space-y-1.5">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Species</span>
+                                  <p className="text-sm font-bold text-slate-900 capitalize italic">
+                                    {currentInquiry.species 
+                                      ? (currentInquiry.otherSpecies ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}` : currentInquiry.species)
+                                      : "—"}
                                   </p>
+                                </div>
+
+                                {/* Sample Count */}
+                                <div className="space-y-1.5">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Sample Count</span>
+                                  <p className="text-sm font-bold text-slate-900">{currentInquiry.sampleCount || "—"}</p>
+                                </div>
+                              </div>
+
+                              {/* Workflow */}
+                              <div className="space-y-2">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Workflow</span>
+                                <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100 text-sm text-slate-800 font-semibold shadow-inner">
+                                  {formatWorkflowType(currentInquiry.workflowType)}
+                                </div>
+                              </div>
+
+                              {/* Bioinformatics Analysis */}
+                              <div className="space-y-2">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Bioinformatics Analysis</span>
+                                {currentInquiry.bioinfoOptions && currentInquiry.bioinfoOptions.length > 0 ? (
+                                  <div className="flex flex-wrap gap-2 p-1">
+                                    {currentInquiry.bioinfoOptions.map((option) => (
+                                      <Badge 
+                                        key={option} 
+                                        variant="secondary" 
+                                        className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 transition-colors py-1 px-3 text-[11px] font-bold"
+                                      >
+                                        {formatBioinfoOption(option)}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-slate-400 px-1 italic">None selected</p>
+                                )}
+                              </div>
+
+                              {/* Research Overview */}
+                              <div className="space-y-2">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Research Overview</span>
+                                <div className="p-4 bg-indigo-50/30 rounded-xl border border-indigo-100/30 text-sm text-slate-800 italic leading-relaxed font-medium">
+                                  {currentInquiry.researchOverview ? `"${currentInquiry.researchOverview}"` : "—"}
+                                </div>
+                              </div>
+
+                              {/* Methodology File if exists */}
+                              {currentInquiry.methodologyFileUrl && (
+                                <div className="flex items-center gap-2 px-1 pt-2">
+                                  <FileText className="h-4 w-4 text-blue-500" />
+                                  <a 
+                                    href={currentInquiry.methodologyFileUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-xs font-bold text-blue-600 hover:underline"
+                                  >
+                                    View Methodology File
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            /* Other Services (Research, Training, Retail, etc.) */
+                            <div className="space-y-6 animate-in fade-in duration-500">
+                              {/* Top Section: Quick Stats */}
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                                {/* Service Type */}
+                                <div className="space-y-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <FlaskConical className="h-4 w-4 text-slate-400" />
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Service Type</span>
+                                  </div>
+                                  <Badge className="w-fit capitalize bg-blue-50 text-blue-700 border-blue-100 text-xs px-2.5 py-0.5 font-bold">
+                                    {formatServiceType(currentInquiry.serviceType)}
+                                  </Badge>
+                                </div>
+
+                                {/* Sample Count */}
+                                {currentInquiry.sampleCount && (
+                                  <div className="space-y-1.5">
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Quantity</span>
+                                    <p className="text-sm font-bold text-slate-900">{currentInquiry.sampleCount} samples</p>
+                                  </div>
+                                )}
+
+                                {/* Retail Sales Details Section */}
+                                {currentInquiry.serviceType === 'retail' && currentInquiry.retailItems && currentInquiry.retailItems.length > 0 && (
+                                  <div className="pt-4 border-t border-slate-100 space-y-4 sm:col-span-3">
+                                    <h3 className="text-sm font-semibold text-slate-700">Retail Sales Details</h3>
+                                    <div className="flex flex-col">
+                                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Requested Items</span>
+                                      <div className="grid grid-cols-1 gap-3 mt-2">
+                                        {currentInquiry.retailItems.map((item, idx) => (
+                                          <div key={`${item}-${idx}`} className="flex flex-col bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                            <span className="text-sm font-semibold text-slate-800">{item}</span>
+                                            {currentInquiry.retailItemDetails?.[item] && (
+                                              <div className="mt-1 flex items-center gap-2">
+                                                <span className="text-xs text-slate-500">Amount:</span>
+                                                <span className="text-sm text-[#166FB5] font-medium">{currentInquiry.retailItemDetails[item]}</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              {currentInquiry.serviceType === 'bioinformatics' && (
+                                <div className="space-y-4">
+                                  <div className="space-y-2">
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Type of Bioinformatics Service</span>
+                                    <div className="flex flex-wrap gap-2 p-1">
+                                      {(Array.isArray(currentInquiry.bioinformaticsDetails?.serviceTypes) ? currentInquiry.bioinformaticsDetails?.serviceTypes : []).length > 0 ? (
+                                        (currentInquiry.bioinformaticsDetails?.serviceTypes as string[]).map((serviceType) => (
+                                          <Badge
+                                            key={serviceType}
+                                            variant="secondary"
+                                            className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 transition-colors py-1 px-3 text-[11px] font-bold"
+                                          >
+                                            {serviceType}
+                                          </Badge>
+                                        ))
+                                      ) : (
+                                        <p className="text-sm text-slate-400 px-1 italic">None selected</p>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Provide Own Data</span>
+                                      <p className="text-sm font-semibold text-slate-800">{currentInquiry.bioinformaticsDetails?.dataProvideOwnData ? "Yes" : "No"}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Data Generated by PGC Visayas</span>
+                                      <p className="text-sm font-semibold text-slate-800">{currentInquiry.bioinformaticsDetails?.dataProvidedByPgc ? "Yes" : "No"}</p>
+                                    </div>
+                                  </div>
+
+                                  {currentInquiry.bioinformaticsDetails?.dataProvideOwnData && (
+                                    <div className="space-y-2">
+                                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Data Details</span>
+                                      <div className="p-3 bg-white rounded-xl border border-slate-100 text-sm text-slate-700 leading-relaxed shadow-sm space-y-1">
+                                        <p>File formats: {Array.isArray(currentInquiry.bioinformaticsDetails?.dataFileFormats) && currentInquiry.bioinformaticsDetails?.dataFileFormats.length > 0 ? currentInquiry.bioinformaticsDetails.dataFileFormats.join(', ') : '—'}</p>
+                                        {currentInquiry.bioinformaticsDetails?.dataOtherFormat && (
+                                          <p>Other format: {currentInquiry.bioinformaticsDetails.dataOtherFormat}</p>
+                                        )}
+                                        {currentInquiry.bioinformaticsDetails?.dataFileSizePerSample && (
+                                          <p>File size per sample: {currentInquiry.bioinformaticsDetails.dataFileSizePerSample}</p>
+                                        )}
+                                        {currentInquiry.bioinformaticsDetails?.dataTransferMode && (
+                                          <p>Preferred transfer mode: {currentInquiry.bioinformaticsDetails.dataTransferMode}</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  <div className="space-y-2">
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Overview of Research and Objectives</span>
+                                    <div className="p-4 bg-indigo-50/30 rounded-xl border border-indigo-100/30 text-sm text-slate-800 leading-relaxed font-medium whitespace-pre-wrap">
+                                      {currentInquiry.bioinformaticsDetails?.overviewObjectives || "—"}
+                                    </div>
+                                  </div>
+
+                                  {flattenBioinformaticsDetails(currentInquiry.bioinformaticsDetails).length > 0 && (
+                                    <div className="space-y-2">
+                                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">All Submitted Bioinformatics Entries</span>
+                                      <div className="p-3 bg-white rounded-xl border border-slate-100 text-sm text-slate-700 leading-relaxed shadow-sm">
+                                        <ul className="space-y-1 text-xs">
+                                          {flattenBioinformaticsDetails(currentInquiry.bioinformaticsDetails).map((entry) => (
+                                            <li key={`${entry.key}-${entry.value}`}>
+                                              <span className="font-semibold text-slate-600">{entry.key}:</span> {entry.value}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               )}
 
-                              {currentInquiry.workflowType && (
-                                <div className="space-y-1">
-                                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Analysis Strategy</span>
-                                  <p className="text-sm font-semibold text-slate-800">
-                                    {formatWorkflowType(currentInquiry.workflowType)}
-                                  </p>
+                              {/* Technical Block */}
+                              {(currentInquiry.species || currentInquiry.workflowType) && (
+                                <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  {currentInquiry.species && (
+                                    <div className="space-y-1">
+                                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Species / Organism</span>
+                                      <p className="text-sm font-semibold text-slate-800 capitalize">
+                                        {currentInquiry.otherSpecies 
+                                          ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}`
+                                          : currentInquiry.species}
+                                      </p>
+                                    </div>
+                                  )}
+
+                                  {currentInquiry.workflowType && (
+                                    <div className="space-y-1">
+                                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Analysis Strategy</span>
+                                      <p className="text-sm font-semibold text-slate-800">
+                                        {formatWorkflowType(currentInquiry.workflowType)}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Bioinformatics Options */}
+                              {currentInquiry.workflowType === 'complete-bioinfo' && currentInquiry.bioinfoOptions && currentInquiry.bioinfoOptions.length > 0 && (
+                                <div className="space-y-2">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Selected Bioinformatics Analysis</span>
+                                  <div className="flex flex-wrap gap-2 p-1">
+                                    {currentInquiry.bioinfoOptions.map((option) => (
+                                      <Badge 
+                                        key={option} 
+                                        variant="secondary" 
+                                        className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 transition-colors py-1 px-3 text-[11px] font-bold"
+                                      >
+                                        {formatBioinfoOption(option)}
+                                      </Badge>
+                                    ))}
+                                  </div>
                                 </div>
                               )}
                             </div>
                           )}
 
-                          {/* Specific Needs & Assays */}
+                          {/* Specific Needs & Assays (Common for all) */}
                           {currentInquiry.individualAssayDetails && (
                             <div className="space-y-2">
                               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Selected Assays</span>
@@ -2911,8 +3343,8 @@ export default function ClientPortalPage() {
                             </div>
                           )}
 
-                          {/* Research Narrative */}
-                          {currentInquiry.researchOverview && (
+                          {/* Research Narrative (Only for non-research, non-laboratory services) */}
+                          {currentInquiry.serviceType !== "research" && currentInquiry.serviceType !== "laboratory" && currentInquiry.researchOverview && (
                             <div className="space-y-2">
                               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Objectives & Brief Overview</span>
                               <div className="p-4 bg-indigo-50/30 rounded-xl border border-indigo-100/30 text-sm text-slate-800 italic leading-relaxed font-medium">
@@ -2921,9 +3353,55 @@ export default function ClientPortalPage() {
                             </div>
                           )}
 
-                          {/* Training & Logistics */}
-                          {(currentInquiry.projectBackground || currentInquiry.specificTrainingNeed || currentInquiry.targetTrainingDate) && (
+                          {/* Research & Collaboration Details */}
+                          {currentInquiry.serviceType === 'research' && (currentInquiry.researchOverview || currentInquiry.projectBackground || currentInquiry.molecularServicesBudget || currentInquiry.plannedSampleCount) && (
                             <div className="pt-4 border-t border-slate-100 space-y-4">
+                              {(currentInquiry.researchOverview || currentInquiry.projectBackground) && (
+                                <div className="space-y-2">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Overview of Research, Objectives, and Scope of Collaboration
+                                  </span>
+                                  <div className="p-3 bg-slate-50/50 rounded-lg text-sm text-slate-700 leading-relaxed border border-slate-100 whitespace-pre-wrap">
+                                    {currentInquiry.researchOverview || currentInquiry.projectBackground}
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {currentInquiry.molecularServicesBudget && (
+                                  <div className="space-y-1">
+                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Molecular Services Budget</span>
+                                    <p className="text-sm font-bold text-slate-800">{currentInquiry.molecularServicesBudget}</p>
+                                  </div>
+                                )}
+                                {currentInquiry.plannedSampleCount && (
+                                  <div className="space-y-1">
+                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">How Many Samples Are You Planning to Send?</span>
+                                    <p className="text-sm font-bold text-slate-800">{currentInquiry.plannedSampleCount}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Training Details */}
+                          {currentInquiry.serviceType === 'training' && ((currentInquiry.trainingPrograms && currentInquiry.trainingPrograms.length > 0) || currentInquiry.specificTrainingNeed || currentInquiry.targetTrainingDate || currentInquiry.numberOfParticipants) && (
+                            <div className="pt-4 border-t border-slate-100 space-y-4">
+                              {currentInquiry.trainingPrograms && currentInquiry.trainingPrograms.length > 0 && (
+                                <div className="space-y-2">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Selected Training Programs
+                                  </span>
+                                  <div className="grid grid-cols-1 gap-2">
+                                    {currentInquiry.trainingPrograms.map((program, index) => (
+                                      <div key={`${program}-${index}`} className="text-sm text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                                        {program === "others-customized" ? "Others / Customized Training Program" : program}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {currentInquiry.targetTrainingDate && (
                                   <div className="space-y-1">
@@ -2941,13 +3419,13 @@ export default function ClientPortalPage() {
                                 )}
                               </div>
 
-                              {(currentInquiry.projectBackground || currentInquiry.specificTrainingNeed) && (
+                              {currentInquiry.specificTrainingNeed && (
                                 <div className="space-y-2">
                                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                    {currentInquiry.specificTrainingNeed ? "Training Scope" : "Technical Background"}
+                                    Others / Customized Training Program Details
                                   </span>
                                   <div className="p-3 bg-slate-50/50 rounded-lg text-sm text-slate-700 leading-relaxed border border-slate-100 whitespace-pre-wrap">
-                                    {currentInquiry.projectBackground || currentInquiry.specificTrainingNeed}
+                                    {currentInquiry.specificTrainingNeed}
                                   </div>
                                 </div>
                               )}
@@ -3225,23 +3703,20 @@ export default function ClientPortalPage() {
           </div>
           
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800 font-medium mb-2">
-              {members.filter((m) => m.isDraft && !m.isPrimary).length}{" "}
-              member(s) will be submitted for review:
+            <p className="text-sm text-blue-800 font-bold mb-3 border-b border-blue-100 pb-1">
+              Other Member/s:
             </p>
-            <ul className="space-y-1">
+            <div className="space-y-4">
               {members
                 .filter((m) => m.isDraft && !m.isPrimary)
                 .map((m) => (
-                  <li
-                    key={m.id}
-                    className="text-sm text-blue-700 flex items-center gap-2"
-                  >
-                    <User className="h-3 w-3" />
-                    {m.formData.name || "Unnamed"} — {m.formData.email}
-                  </li>
+                  <div key={m.id} className="text-sm text-blue-700 space-y-1">
+                    <div><strong className="text-blue-900">Name:</strong> {m.formData.name || "—"}</div>
+                    <div><strong className="text-blue-900">Email:</strong> {m.formData.email || "—"}</div>
+                    <div><strong className="text-blue-900">Affiliation:</strong> {m.formData.affiliation || "—"}</div>
+                  </div>
                 ))}
-            </ul>
+            </div>
           </div>
         </div>
       </ConfirmationModalLayout>
@@ -3291,6 +3766,26 @@ export default function ClientPortalPage() {
                 <div><strong>Name:</strong> {primaryMember.formData.name}</div>
                 <div><strong>Email:</strong> {primaryMember.formData.email}</div>
                 <div><strong>Affiliation:</strong> {primaryMember.formData.affiliation}</div>
+              </div>
+            </div>
+          )}
+
+          {members.filter((m) => !m.isPrimary && m.isDraft).length > 0 && (
+            <div className="bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 rounded-lg p-4 space-y-3">
+              <p className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-1">
+                Other Member/s:
+              </p>
+              <div className="space-y-4">
+                {members
+                  .filter((m) => !m.isDraft || !m.isPrimary) // Adjusted filter to be more reliable
+                  .filter((m) => !m.isPrimary && m.isDraft) // Keeping existing logic for clarity
+                  .map((m) => (
+                    <div key={m.id} className="space-y-1 text-xs text-slate-700">
+                      <div><strong className="text-slate-900">Name:</strong> {m.formData.name || "—"}</div>
+                      <div><strong className="text-slate-900">Email:</strong> {m.formData.email || "—"}</div>
+                      <div><strong className="text-slate-900">Affiliation:</strong> {m.formData.affiliation || "—"}</div>
+                    </div>
+                  ))}
               </div>
             </div>
           )}

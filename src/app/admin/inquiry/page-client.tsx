@@ -49,6 +49,7 @@ export function InquiryPageClient({
         // Fire a toast only for inquiry IDs that are newly unread this cycle
         unreadThreads.forEach((thread) => {
           if (!prevUnreadIdsRef.current.has(thread.inquiryId)) {
+            /* Notification pop-up disabled as requested
             toast.info(`New message from ${thread.clientName}`, {
               description: `Inquiry ID: ${thread.inquiryId}`,
               icon: <MessageCircle className="w-4 h-4 text-blue-500" />,
@@ -61,6 +62,7 @@ export function InquiryPageClient({
               },
               duration: 6000,
             });
+            */
           }
         });
       }
@@ -74,7 +76,7 @@ export function InquiryPageClient({
   }, [router]);
 
   return (
-    <div className="container mx-auto py-4 space-y-3">
+    <div className="w-full px-4 py-4 space-y-3">
       <div className="space-y-1">
         {/* Page Header */}
         <div className="flex justify-between items-start">

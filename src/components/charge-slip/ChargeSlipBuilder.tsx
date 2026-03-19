@@ -11,6 +11,7 @@ import { pdf, PDFViewer } from "@react-pdf/renderer";
 import { Timestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
+import { QuotationRecord } from "@/types/Quotation";
 import { sanitizeObject } from "@/lib/sanitizeObject";
 import { calculateItemTotal } from "@/lib/calculatePrice";
 import { getServiceCatalog } from "@/services/serviceCatalogService";
@@ -610,9 +611,9 @@ function ChargeSlipBuilderInner({
             <Separator className="my-6" />
             <QuotationHistoryPanel 
               inquiryId={project.iid} 
+              showCheckboxes={true}
               onSelectQuotation={handleQuotationSelect}
               onDeselectQuotation={handleQuotationDeselect}
-              showCheckboxes={true}
             />
           </>
         )}

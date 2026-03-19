@@ -20,6 +20,7 @@ import {
   onSnapshot,
   addDoc,
   writeBatch,
+  deleteField,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
@@ -37,6 +38,29 @@ import {
 const THREADS_COLLECTION = "quotationThreads";
 const MESSAGES_COLLECTION = "threadMessages";
 const QUOTATIONS_COLLECTION = "quotations";
+
+async function triggerPushNotify(
+  threadId: string,
+  senderRole: MessageSenderRole,
+  content: string,
+  unreadCount: number,
+): Promise<void> {
+  try {
+    await fetch("/api/push/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        threadId,
+        senderRole,
+        messagePreview: content,
+        unreadCount,
+      }),
+    });
+  } catch (error) {
+    // Push should not break chat flow.
+    console.error("Push notify trigger failed:", error);
+  }
+}
 
 /**
  * Initialize a quotation thread when an inquiry is submitted
@@ -484,14 +508,19 @@ export async function addThreadMessage(
 
     const unreadCountUpdate = message.senderRole === "admin"
       ? { "unreadCount.client": (thread.unreadCount.client || 0) + 1 }
-      : { "unreadCount.admin": (thread.unreadCount.admin || 0) + 1 };
-    
-    await updateDoc(threadRef, {
+      : { 
+          "unreadCount.admin": (thread.unreadCount.admin || 0) + 1,
+          dismissedByAdmin: false // Reset dismissed flag when client sends a new message
+        };
+
+    const finalUpdate = {
       ...unreadCountUpdate,
       lastMessageAt: serverTimestamp(),
       lastMessageBy: message.senderId,
       updatedAt: serverTimestamp(),
-    });
+    };
+
+    await updateDoc(threadRef, finalUpdate);
 
     // Denormalize message state onto the inquiries document for efficient table display
     const inquiryRef = doc(db, "inquiries", message.threadId);
@@ -500,6 +529,7 @@ export async function addThreadMessage(
       await updateDoc(inquiryRef, {
         messageState: "has_unread",
         unreadMessageCount: newUnread,
+        dismissedByAdmin: false, // Also reset on inquiry if stored there
       }).catch((err) => {
         console.error("Error updating inquiry messageState (client):", err);
       }); 
@@ -514,6 +544,20 @@ export async function addThreadMessage(
           console.error("Error updating inquiry messageState (admin):", err);
         });
       }
+    }
+
+    if (message.type !== "system") {
+      const targetUnreadCount =
+        message.senderRole === "admin"
+          ? (thread.unreadCount.client || 0) + 1
+          : (thread.unreadCount.admin || 0) + 1;
+
+      await triggerPushNotify(
+        message.threadId,
+        message.senderRole,
+        message.content,
+        targetUnreadCount,
+      );
     }
     
     return messageRef.id;
@@ -647,6 +691,94 @@ export async function markMessagesAsRead(
     }); 
   } catch (error) {
     console.error("Error marking messages as read:", error);
+    throw error;
+  }
+}
+
+/**
+ * Mark the latest seen client message as unseen for admins.
+ * This is useful when an admin wants to re-flag a thread for follow-up.
+ */
+export async function markLatestClientMessageAsUnseen(
+  threadId: string,
+): Promise<number> {
+  try {
+    const thread = await getQuotationThread(threadId);
+    if (!thread) return 0;
+
+    const messages = await getThreadMessages(threadId);
+    const latestSeenClientMessage = messages
+      .filter((m) => m.senderRole === "client" && m.isRead)
+      .sort((a, b) => {
+        const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return timeB - timeA;
+      })[0];
+
+    if (!latestSeenClientMessage?.id) {
+      return 0;
+    }
+
+    const messageRef = doc(db, MESSAGES_COLLECTION, latestSeenClientMessage.id);
+    await updateDoc(messageRef, {
+      isRead: false,
+      readAt: deleteField(),
+      readBy: deleteField(),
+    });
+
+    const currentlyUnreadClientMessages = messages.filter(
+      (m) => m.senderRole === "client" && !m.isRead,
+    ).length;
+    const nextUnreadCount = currentlyUnreadClientMessages + 1;
+
+    const threadRef = doc(db, THREADS_COLLECTION, threadId);
+    await updateDoc(threadRef, {
+      "unreadCount.admin": nextUnreadCount,
+      updatedAt: serverTimestamp(),
+    });
+
+    const inquiryRef = doc(db, "inquiries", threadId);
+    await updateDoc(inquiryRef, {
+      messageState: "has_unread",
+      unreadMessageCount: nextUnreadCount,
+    }).catch((err) => {
+      console.error("Error updating inquiry messageState (markUnseen):", err);
+    });
+
+    return nextUnreadCount;
+  } catch (error) {
+    console.error("Error marking latest client message as unseen:", error);
+    throw error;
+  }
+}
+
+/**
+ * Manually dismiss a thread from the admin's notification list.
+ * This sets the admin unread count to 0 and marks the thread as dismissed.
+ */
+export async function dismissThreadNotification(
+  inquiryId: string,
+): Promise<void> {
+  try {
+    const threadRef = doc(db, THREADS_COLLECTION, inquiryId);
+    
+    // Clear the unread count and add a dismissed flag
+    await updateDoc(threadRef, {
+      "unreadCount.admin": 0,
+      dismissedByAdmin: true,
+      updatedAt: serverTimestamp(),
+    });
+
+    // Also update denormalized inquiry state
+    const inquiryRef = doc(db, "inquiries", inquiryId);
+    await updateDoc(inquiryRef, {
+      unreadMessageCount: 0,
+      messageState: "all_read"
+    }).catch(err => {
+      console.error("Error updating inquiry state on dismiss:", err);
+    });
+  } catch (error) {
+    console.error("Error dismissing thread notification:", error);
     throw error;
   }
 }

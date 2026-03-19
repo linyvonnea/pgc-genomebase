@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   serverExternalPackages: ["firebase-admin"],
+  transpilePackages: ["@react-pdf/renderer"],
 };
 
 export default nextConfig;

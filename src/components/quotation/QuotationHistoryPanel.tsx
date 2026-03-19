@@ -41,18 +41,18 @@ export function QuotationHistoryPanel({
     ? inquiryId.length > 0 
     : (inquiryId && typeof inquiryId === 'string' && inquiryId.trim().length > 0));
   const hasClientName = !!(clientName && typeof clientName === 'string' && clientName.trim().length > 0);
-  const shouldFetch = Boolean(hasInquiryId || hasClientName);
+  const shouldFetch = !!(hasInquiryId || hasClientName);
   
   // Prioritize inquiryId if available, otherwise use clientName
   const useInquiryId = hasInquiryId;
   
-  const { data: history = [], isLoading, error, isFetched } = useQuery({
-    queryKey: useInquiryId ? ["quotationHistory", "inquiry", inquiryId] : ["quotationHistory", "client", clientName],
+  const { data: history = [], isLoading, error, isFetched } = useQuery<QuotationRecord[]>({
+    queryKey: useInquiryId ? ["quotationHistory", "inquiry", inquiryId] : ["quotationHistory", "client", clientName] as (string | undefined)[],
     queryFn: () => {
       if (useInquiryId) {
         return getQuotationsByInquiryId(inquiryId!);
       } else if (hasClientName) {
-        return getQuotationsByClientName(clientName);
+        return getQuotationsByClientName(clientName!);
       }
       return Promise.resolve([]);
     },

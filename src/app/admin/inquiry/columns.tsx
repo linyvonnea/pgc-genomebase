@@ -44,6 +44,10 @@ const getStatusColor = (status: string) => {
       return "bg-blue-100 text-blue-800";
     case "Ongoing Quotation":
       return "bg-orange-100 text-orange-800";
+    case "Service Not Offered":
+      return "bg-slate-100 text-slate-500 border-slate-200 opacity-70";
+    case "Cancelled":
+      return "bg-slate-100 text-slate-700 border-slate-200";
     case "Pending":
     default:
       return "bg-yellow-100 text-yellow-800";
@@ -60,8 +64,8 @@ const getStatusColor = (status: string) => {
 export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
-    header: "Inquiry ID",
-    size: 200,
+    header: "ID",
+    size: 110, // Increased size to display the complete inquiry ID
     cell: ({ row }) => {
       const inquiry = row.original;
 
@@ -84,6 +88,7 @@ export const columns: ColumnDef<Inquiry>[] = [
         "Ongoing Quotation",
         "Approved Client",
         "Quotation Only",
+        "Service Not Offered",
       ].includes(inquiry.status);
       const showNew = (inquiry.status === "Pending" || isRecent) && !isQuoted;
 
@@ -97,25 +102,27 @@ export const columns: ColumnDef<Inquiry>[] = [
         }
       };
 
+      const shortId = inquiry.id.slice(0, 8);
+
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full">
           {showNew && (
             <Badge
               variant="destructive"
-              className="h-4 px-1 text-[8px] animate-pulse shrink-0"
+              className="h-3 px-1 text-[7px] animate-pulse shrink-0"
             >
-              NEW
+              N
             </Badge>
           )}
-          <span className="font-mono text-xs truncate" title={inquiry.id}>
+          <span className="font-mono text-xs truncate flex-1" title={inquiry.id}>
             {inquiry.id}
           </span>
           <button
             onClick={handleCopy}
-            className="p-1 hover:bg-slate-100 rounded shrink-0"
+            className="p-0.5 hover:bg-slate-100 rounded shrink-0"
             title="Copy Inquiry ID"
           >
-            <Copy className="h-3 w-3 text-slate-500" />
+            <Copy className="h-2.5 w-2.5 text-slate-400" />
           </button>
         </div>
       );
@@ -124,60 +131,166 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "createdAt",
     header: "Date",
-    size: 85,
+    size: 70, // Compressed
     cell: ({ row }) => {
       const createdAt = row.original.createdAt;
 
       if (!createdAt) {
-        return <span className="text-muted-foreground italic">â€”</span>;
+        return <span className="text-muted-foreground italic">—</span>;
       }
 
       // Ensure we have a Date object
       const date = createdAt instanceof Date ? createdAt : new Date(createdAt);
 
       if (isNaN(date.getTime())) {
-        return <span className="text-red-500">Invalid date</span>;
+        return <span className="text-red-500 text-[10px]">Invalid</span>;
       }
 
-      // Format date for display (YYYY-MM-DD format for consistency)
-      return date.toLocaleDateString("en-CA");
+      // Format date for display (MM-DD-YYYY format)
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      
+      return (
+        <span className="text-slate-500 font-medium tabular-nums text-[11px]">
+          {`${month}-${day}-${year}`}
+        </span>
+      );
     },
   },
   {
     accessorKey: "name",
     header: "Name",
-    size: 130,
+    size: 110, // Reduced per request; tooltip shows full value
     cell: ({ getValue }) => {
       const name = getValue() as string;
+
+      const handleCopy = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+          await navigator.clipboard.writeText(name);
+          toast.success("Name copied to clipboard");
+        } catch (err) {
+          toast.error("Failed to copy Name");
+        }
+      };
+
       return (
-        <div className="max-w-[130px] truncate" title={name}>
-          {name}
-        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1 group w-full cursor-help">
+                <span className="truncate text-[11px] font-semibold text-slate-700 flex-1">
+                  {name}
+                </span>
+                <button
+                  onClick={handleCopy}
+                  className="p-1 hover:bg-slate-100 rounded shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Copy Name"
+                >
+                  <Copy className="h-2.5 w-2.5 text-slate-400" />
+                </button>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[300px] break-words">
+              <p className="text-xs font-semibold">{name}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       );
     },
   },
   {
     accessorKey: "email",
     header: "Email",
-    size: 150,
+    size: 100, // Reduced from 120 per request
     cell: ({ getValue }) => {
-      const email = (getValue() as string) || "â€”";
+      const email = (getValue() as string) || "—";
+
+      const handleCopy = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (email === "—") return;
+        try {
+          await navigator.clipboard.writeText(email);
+          toast.success("Email copied to clipboard");
+        } catch (err) {
+          toast.error("Failed to copy Email");
+        }
+      };
+
       return (
-        <div className="max-w-[150px] truncate" title={email}>
-          {email}
-        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1 group w-full cursor-help">
+                <span className="truncate text-[11px] text-slate-400 flex-1">
+                  {email}
+                </span>
+                {email !== "—" && (
+                  <button
+                    onClick={handleCopy}
+                    className="p-1 hover:bg-slate-100 rounded shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Copy Email"
+                  >
+                    <Copy className="h-2.5 w-2.5 text-slate-400" />
+                  </button>
+                )}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[300px] break-words">
+              <p className="text-xs font-semibold">{email}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       );
     },
   },
   {
     accessorKey: "affiliation",
     header: "Affiliation",
-    size: 150,
+    size: 95, // Reduced per request; tooltip shows full value
     cell: ({ getValue }) => {
       const affiliation = getValue() as string;
       return (
-        <div className="max-w-[150px] truncate" title={affiliation}>
-          {affiliation}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="w-full truncate text-[11px] text-slate-500 font-medium cursor-help">
+                {affiliation}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[300px] break-words">
+              <p className="text-xs font-semibold">{affiliation}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    },
+  },
+  {
+    accessorKey: "serviceType",
+    header: "Svc",
+    size: 45, // Minimum possible
+    cell: ({ getValue }) => {
+      const serviceType = getValue() as string;
+      if (!serviceType) return <span className="text-muted-foreground italic">—</span>;
+      
+      // Shorten/Capitalize
+      const getShortType = (type: string) => {
+        const map: Record<string, string> = {
+          'laboratory': 'Lab',
+          'bioinformatics': 'Bio',
+          'equipment': 'Equip',
+          'retail': 'Ret',
+          'research': 'Res',
+          'training': 'Trn'
+        };
+        return map[type.toLowerCase()] || type;
+      };
+
+      return (
+        <div className="font-semibold text-slate-500 text-[10px] uppercase">
+          {getShortType(serviceType)}
         </div>
       );
     },
@@ -190,7 +303,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 200,
+    size: 180, // Expanded slightly to provide more breathing room for labels and icons
     cell: ({ row }) => {
       const router = useRouter();
       const inquiry = row.original;
@@ -198,80 +311,99 @@ export const columns: ColumnDef<Inquiry>[] = [
       const hasLoggedIn = inquiry.hasLoggedIn;
       const hasOpenedQuotation = inquiry.hasOpenedQuotation;
 
-      // Render status as a colored badge
+      // Render status as a colored badge with fixed width and trailing icons
       return (
-        <div className="flex items-center gap-1.5 min-w-[180px]">
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(
-              status,
-            )}`}
-          >
-            {status}
-          </span>
-          <div className="flex items-center gap-1 shrink-0">
-            {!!hasLoggedIn && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <User className="h-4 w-4 text-green-600 fill-green-600 cursor-default" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs font-semibold">
-                      Client has logged into portal
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            {!!hasOpenedQuotation && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Eye
-                      className="h-4 w-4 text-blue-500 cursor-default"
-                      strokeWidth={3}
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs font-semibold">
-                      Client has viewed quotation
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            <UnreadBadge
-              inquiryId={inquiry.id}
-              role="admin"
-              senderId={inquiry.email}
-              senderName={inquiry.name}
-            />
+        <div className="flex items-center gap-2 w-full pr-1">
+          <div className="w-[72%] flex-shrink-0">
+            <span
+              className={`block w-full px-1.5 py-0.5 rounded-full text-[9px] font-bold truncate text-center ${getStatusColor(
+                status,
+              )}`}
+            >
+              {status}
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-1.5 flex-1 justify-start">
+            <div className="flex items-center gap-1.5 min-w-[42px] justify-start shrink-0">
+              {!!hasLoggedIn ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <User className="h-3.5 w-3.5 text-green-600 fill-green-600 shrink-0 cursor-default" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs font-semibold">
+                        Client logged in
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <div className="w-3.5 h-3.5 shrink-0" />
+              )}
+              
+              {!!hasOpenedQuotation ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Eye
+                        className="h-3.5 w-3.5 text-blue-500 shrink-0 cursor-default"
+                        strokeWidth={3}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs font-semibold">
+                        Quotation viewed
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <div className="w-3.5 h-3.5 shrink-0" />
+              )}
+            </div>
+            
+            <div className="shrink-0 flex items-center ml-auto">
+              <UnreadBadge
+                inquiryId={inquiry.id}
+                role="admin"
+                senderId={inquiry.email}
+                senderName={inquiry.name}
+              />
+            </div>
           </div>
         </div>
       );
     },
   },
   {
-    id: "actions", // Custom column ID since it doesn't map to data
+    id: "actions",
     header: () => <div className="text-center w-full">Actions</div>,
-    size: 140,
+    size: 100, // Increased from 70 to provide more breathing room for buttons
     cell: ({ row }) => {
       const inquiry = row.original;
       const router = useRouter();
       const { adminInfo } = useAuth();
-      const { canEdit, canCreate, canView } = usePermissions(adminInfo?.role);
+      const { canEdit, canCreate } = usePermissions(adminInfo?.role);
 
       return (
-        <div className="flex items-center justify-center gap-2">
-          {canCreate("quotations") && <QuoteButton inquiryId={inquiry.id} />}
+        <div className="flex items-center justify-center -space-x-1 h-9">
+          {canCreate("quotations") && (
+            <div className="scale-90 origin-center">
+              <QuoteButton inquiryId={inquiry.id} />
+            </div>
+          )}
 
           {/* Edit inquiry modal trigger - only show if user has edit permission */}
           {canEdit("inquiries") && (
-            <EditInquiryModal
-              key={inquiry.id} // Force re-render when inquiry changes
-              inquiry={inquiry}
-              onSuccess={() => router.refresh()}
-            />
+            <div className="scale-75 origin-center">
+              <EditInquiryModal
+                key={inquiry.id} // Force re-render when inquiry changes
+                inquiry={inquiry}
+                onSuccess={() => router.refresh()}
+              />
+            </div>
           )}
         </div>
       );

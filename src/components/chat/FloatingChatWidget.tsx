@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { MessageCircle, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import ChatBox from "@/components/chat/ChatBox";
 import { MessageSenderRole } from "@/types/QuotationThread";
 import UnreadBadge from "@/components/chat/UnreadBadge";
@@ -15,6 +16,23 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import { subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
+import { getClientInitials } from "@/lib/chatUtils";
+
+type NavigatorWithBadge = Navigator & {
+  setAppBadge?: (contents?: number) => Promise<void>;
+  clearAppBadge?: () => Promise<void>;
+};
+
+function base64ToUint8Array(base64: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64.length % 4)) % 4);
+  const normalized = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(normalized);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
 
 interface FloatingChatWidgetProps {
   inquiryId: string;
@@ -34,6 +52,7 @@ export default function FloatingChatWidget({
   const pathname = usePathname();
   const { user } = useAuth();
   const [inquiryData, setInquiryData] = useState<Inquiry | null>(null);
+  const [lastNotifiedUnread, setLastNotifiedUnread] = useState(0);
 
   useEffect(() => {
     if (!inquiryId) return;
@@ -97,6 +116,76 @@ export default function FloatingChatWidget({
     return () => unsubscribe();
   }, [inquiryId, role, isOpen, user]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (role !== "client") return;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    if (Notification.permission !== "granted") return;
+
+    const publicKey = process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY;
+    if (!publicKey) return;
+
+    const subscribe = async () => {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const existing = await registration.pushManager.getSubscription();
+        const subscription =
+          existing ||
+          (await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: base64ToUint8Array(publicKey) as unknown as BufferSource,
+          }));
+
+        await fetch("/api/push/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            threadId: inquiryId,
+            role: "client",
+            subscriberId: user?.email || inquiryData?.email || "unknown-client",
+            subscription: subscription.toJSON(),
+          }),
+        });
+      } catch (error) {
+        console.error("Push subscription failed:", error);
+      }
+    };
+
+    subscribe();
+  }, [inquiryData?.email, inquiryId, role, user?.email]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (role !== "client") return;
+
+    const nav = navigator as NavigatorWithBadge;
+    if (typeof nav.setAppBadge === "function" || typeof nav.clearAppBadge === "function") {
+      if (unreadCount > 0 && typeof nav.setAppBadge === "function") {
+        nav.setAppBadge(unreadCount).catch(() => {});
+      }
+      if (unreadCount === 0 && typeof nav.clearAppBadge === "function") {
+        nav.clearAppBadge().catch(() => {});
+      }
+    }
+
+    // Foreground web notification (while app/browser tab is open but hidden).
+    // Background push notifications when app is fully closed still need Web Push setup.
+    if (
+      document.visibilityState === "hidden" &&
+      unreadCount > lastNotifiedUnread &&
+      Notification.permission === "granted"
+    ) {
+      new Notification("New message from PGC Visayas", {
+        body: `You have ${unreadCount} unread message${unreadCount > 1 ? "s" : ""}.`,
+        icon: "/assets/pgc-logo.png",
+        badge: "/assets/pgc-logo.png",
+        tag: `inquiry-${inquiryId}`,
+      });
+    }
+
+    setLastNotifiedUnread(unreadCount);
+  }, [inquiryId, lastNotifiedUnread, role, unreadCount]);
+
   const toggleOpen = () => {
     const newOpenState = !isOpen;
     
@@ -106,6 +195,12 @@ export default function FloatingChatWidget({
     }
     
     setIsOpen(newOpenState);
+
+    if (newOpenState && role === "client" && typeof window !== "undefined") {
+      if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission().catch(() => {});
+      }
+    }
 
     // If opening, mark as read immediately
     if (newOpenState && inquiryId) {
@@ -121,10 +216,10 @@ export default function FloatingChatWidget({
 
   return (
     <div
-      className={`fixed bottom-6 right-6 z-50 flex flex-col items-end ${className || ""}`}
+      className={`fixed ${role === "admin" ? "bottom-24" : "bottom-6"} right-6 z-50 flex flex-col items-end ${className || ""}`}
     >
       <AnimatePresence>
-        {!isOpen && (
+        {!isOpen && role !== "admin" && (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -151,16 +246,35 @@ export default function FloatingChatWidget({
           >
             <div className="flex items-center justify-between bg-blue-600 px-4 py-3 text-white">
               <div className="flex items-center gap-3">
-                <MessageCircle className="w-5 h-5 flex-shrink-0" />
+                {role === "admin" ? (
+                  <Avatar className="h-10 w-10 border border-blue-500 bg-white shadow-sm">
+                    <AvatarFallback className="bg-blue-50 text-sm font-semibold tracking-wide text-blue-700">
+                      {getClientInitials(inquiryData?.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                ) : (
+                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center p-1.5 shadow-sm border border-blue-500 overflow-hidden">
+                    <img src="/assets/pgc-logo.png" alt="PGC Logo" className="w-full h-full object-contain" />
+                  </div>
+                )}
                 <div className="flex flex-col">
-                  <span className="font-semibold text-sm line-clamp-1">
-                    {inquiryData ? inquiryData.name : "Messages"}
+                  <span className="font-bold text-sm tracking-tight leading-tight">
+                    {role === "admin" ? (inquiryData?.name || "Client") : "PGC Visayas Support"}
                   </span>
-                  {inquiryData?.affiliation && (
-                    <span className="text-[10px] text-white/80 line-clamp-1">
-                      {inquiryData.affiliation}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    {role === "admin" ? (
+                      <span className="text-[10px] font-medium text-blue-100 uppercase tracking-widest line-clamp-1">
+                        {inquiryData?.affiliation || "Inquiry Request"}
+                      </span>
+                    ) : (
+                      <>
+                        <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
+                        <span className="text-[10px] font-medium text-blue-100 uppercase tracking-widest">
+                          Online
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
               <button

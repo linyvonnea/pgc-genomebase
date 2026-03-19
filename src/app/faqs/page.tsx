@@ -8,47 +8,48 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { HelpCircle, Microscope, CreditCard, Droplets, Clock, BarChart4, Globe } from "lucide-react";
+import { HelpCircle, Microscope, CreditCard, Droplets, Clock, BarChart4, Globe, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const faqData = [
   {
-    category: "Part 1: General Services & Project Planning",
+    category: "I. General Services & Project Planning",
     icon: <Microscope className="w-5 h-5 text-blue-600" />,
     questions: [
       {
         q: "What services does PGC Visayas offer?",
-        a: "We provide a wide range of omics-based services to support your research, including:\n\n• DNA and RNA extraction\n• Polymerase Chain Reaction (PCR) & RT-PCR for gene expression and quantification\n• Nucleic Acid Quantification\n• Capillary Sequencing\n• Library preparation for next-generation sequencing (NGS)\n• Whole genome sequencing (WGS)\n• Amplicon sequencing (e.g., 16S, ITS, and targeted genes)\n• Metagenomics/Metabarcoding sequencing using Environmental DNA (eDNA)\n• Transcriptomics (RNA-Seq)\n• Bioinformatics Analysis and Data Interpretation\n• Custom research-based sequencing services"
+        a: "We provide a wide range of omics-based services to support your research, including:\n\n• DNA and RNA extraction\n• Polymerase Chain Reaction (PCR) & RT-PCR for gene expression and quantification\n• Nucleic Acid Quantification\n• Capillary Sequencing\n• Library preparation for next-generation sequencing (NGS)\n    • Whole Genome Sequencing (WGS)\n    • Amplicon Sequencing (e.g., 16S, ITS, and targeted genes)\n    • See the list of available primers for target species\n    • Metagenomics/Metabarcoding Sequencing using Environmental DNA (eDNA)\n    • Transcriptomics (RNA-Seq)\n• Bioinformatics Analysis and Data Interpretation\n• Custom research-based sequencing services"
       },
       {
         q: "Can you help design and budget our research project?",
-        a: "Yes! We provide technical advice and assistance for experimental design and budgeting completely free of charge. Whether you are planning a small thesis project using targeted molecular assays or tackling a massive genomics application, our team can advise on study design, assay selection, sequencing depth, and analysis pipelines. We highly recommend our free consultation for student theses, small molecular projects, grant proposal development, and large-scale genome projects."
+        a: "Yes! We provide technical advice and assistance for experimental design and budgeting completely free of charge. Whether you are planning a small thesis project using targeted molecular assays or tackling a massive genomics application, our team can advise on study design, assay selection, sequencing depth, and analysis pipelines. We highly recommend our free technical consultation for student theses, small molecular projects, grant proposal development, and large-scale genome projects."
       },
       {
         q: "Do you provide training or workshops?",
-        a: "Yes. PGC Visayas conducts customized training workshops on genomics techniques, sequencing workflows, and bioinformatics analysis based on schedule and demand. You can reach out to us via email to discuss your specific training needs."
+        a: "Yes. PGC Visayas conducts customized training workshops on genomics techniques, sequencing workflows, and bioinformatics analysis based on schedule and demand. You can reach out to us via the client portal to discuss your specific training needs."
       }
     ]
   },
   {
-    category: "Part 2: Inquiries, Pricing & Payment",
+    category: "II. Inquiries, Pricing & Payment",
     icon: <CreditCard className="w-5 h-5 text-blue-600" />,
     questions: [
       {
         q: "How do I avail of your services?",
-        a: "To get started, simply submit your inquiry through the official PGC Visayas Client Portal. Providing comprehensive details about your research and objectives will allow our team to evaluate your project and cater to your needs much faster."
+        a: "To get started, simply submit your inquiry through the official PGC Visayas Client Portal. Providing comprehensive details about your research objectives and scope of collaboration will allow our team to evaluate your project and cater to your needs much faster."
       },
       {
         q: "How much do your services cost?",
-        a: "Because every project is unique, pricing depends on a few factors:\n• Service type\n• Number of samples\n• Sequencing platform and depth\n• Bioinformatics requirements\n\nOnce you submit your inquiry through our Client Portal, our team will evaluate your project and issue an official quotation."
+        a: "Because every project is unique, pricing depends on several factors:\n• Service type\n• Number of samples\n• Sequencing platform and depth\n• Bioinformatics requirements\n\nOnce you submit your inquiry through our Client Portal, our team will evaluate your project and issue an official quotation."
       },
       {
         q: "What are your payment terms and accepted payment options?",
-        a: "We accept payments via Bank Transfer, bank deposits, and LDDAP-ADA (for government agencies). Standard institutional checks may also be accepted. Payment terms typically depend on the project size:\n\n• Standard services: Payment is usually processed upon the issuance of a Statement of Account/Billing.\n• Large or funded projects: Payment milestones can be outlined in a formal Memorandum of Agreement (MOA).\n\nPlease discuss your specific funding or institutional requirements with us during the consultation phase so we can accommodate your procurement process."
+        a: "To ensure a smooth process, please note that all services must be paid in full before your final results and data can be released.\n\nFor your convenience, we offer two flexible payment options:\n• Full Payment: Pay 100% of the total project cost at once.\n• Split Payment: Pay 50% upon the submission of your samples, and the remaining 50% prior to the release of your final results.\n\nAll payments must be made thru the UP Visayas Cash Office, Miagao Iloilo. Kindly refer to our Mode of Payment instructions for payment options."
       }
     ]
   },
   {
-    category: "Part 3: Sample Preparation & Submission",
+    category: "III. Sample Preparation & Submission",
     icon: <Droplets className="w-5 h-5 text-blue-600" />,
     questions: [
       {
@@ -61,16 +62,16 @@ const faqData = [
       },
       {
         q: "How should I package and transport my samples?",
-        a: "Maintaining sample integrity is crucial. Samples must be packed securely and shipped following proper cold-chain protocols (e.g., on dry ice or ice packs, depending on your sample type). Detailed shipping and packaging instructions are included in our Sample Submission Requirements."
+        a: "Samples must be packed securely and shipped following proper cold-chain protocols (e.g., on dry ice or ice packs, depending on your sample type). Detailed shipping and packaging instructions are included in our Sample Submission Requirements."
       },
       {
         q: "Do you handle pathogen or regulated biological samples?",
-        a: "Yes, but we exclusively handle Biosafety Level 2 (BSL-2) biological samples. All sample submissions must strictly comply with national regulations, and you must secure and provide all relevant permits and ethical clearances prior to submission."
+        a: "Yes, but we exclusively handle Biosafety Level 2 (BSL-2) biological samples. All sample submissions must strictly comply with national regulations, and you must secure and provide all relevant permits and ethical clearances before submission."
       }
     ]
   },
   {
-    category: "Part 4: Laboratory Processing & Timelines",
+    category: "IV. Laboratory Processing & Timelines",
     icon: <Clock className="w-5 h-5 text-blue-600" />,
     questions: [
       {
@@ -88,12 +89,12 @@ const faqData = [
     ]
   },
   {
-    category: "Part 5: Data Delivery, Bioinformatics & Ownership",
+    category: "V. Data Delivery, Bioinformatics & Ownership",
     icon: <BarChart4 className="w-5 h-5 text-blue-600" />,
     questions: [
       {
         q: "Do you provide bioinformatics analysis?",
-        a: "Yes, our team offers comprehensive bioinformatics services, including:\n• Quality filtering and trimming\n• Genome assembly and annotation\n• Variant calling\n• Taxonomic classification (for metagenomics)\n• Phylogenetic analysis\n\n(Custom analysis pipelines can also be discussed during your technical consultation.)"
+        a: "Yes, our team offers comprehensive bioinformatics services, including:\n• Quality filtering and trimming\n• Genome assembly and annotation\n• Variant calling\n• Taxonomic classification (for metagenomics)\n• Phylogenetic analysis\n\nCustom analysis pipelines can also be discussed during your technical consultation."
       },
       {
         q: "What format will the data be delivered in?",
@@ -101,101 +102,194 @@ const faqData = [
       },
       {
         q: "How long do you retain my data?",
-        a: "PGC Visayas retains client data on our servers for a limited time (typically 3 to 6 months) after project completion. We highly encourage clients to download and securely back up all data files immediately upon receipt."
+        a: "PGC Visayas retains client data on our servers one (1) year after project completion. We highly encourage clients to download and securely back up all data files immediately upon receipt."
       },
       {
         q: "Who owns the generated data?",
-        a: "You do! The client retains full ownership of all generated data unless otherwise stated in a formal collaboration agreement. PGC Visayas maintains strict confidentiality and adheres to institutional data governance policies."
+        a: "The client retains full ownership of all generated data unless otherwise stated in a formal collaboration agreement. PGC Visayas maintains strict confidentiality and adheres to institutional data governance policies."
       },
       {
         q: "How do we acknowledge PGC Visayas in publications?",
-        a: "We love seeing your research published! Please ensure PGC Visayas is properly acknowledged in any presentations, reports, or publications resulting from our services.\n\nStandard phrasing: “Sequencing and/or molecular services were provided by the Philippine Genome Center Visayas.”\n\nFor collaborative work: Authorship and specific acknowledgments should be discussed early in the project planning phase."
+        a: "You can acknowledge PGC Visayas in any presentations, reports, or publications resulting from our services using this standard phrasing: \"Sequencing and/or molecular services were provided by the Philippine Genome Center Visayas.\"\n\nFor collaborative work: Authorship and specific acknowledgments should be discussed early in the project planning phase."
       }
     ]
   },
   {
-    category: "Part 6: Collaborations",
+    category: "VI. Collaborations",
     icon: <Globe className="w-5 h-5 text-blue-600" />,
     questions: [
       {
-        q: "Do you accept international collaborations?",
-        a: "Yes! We proudly support both local and international collaborations. These are subject to regulatory compliance, biosafety regulations, and the establishment of Material Transfer Agreements (MTAs) when necessary."
+        q: "Does PGC Visayas engage in research collaborations?",
+        a: "Yes! We actively welcome and support both local and international research collaborations. We believe that partnering with academic institutions, government agencies, and fellow researchers is key to driving scientific innovation. Whether you are looking to co-develop a novel methodology or need a dedicated genomics partner for a large-scale grant, we are open to exploring formal partnerships.\n\nShared Input & Authorship: For projects where our team provides significant intellectual, experimental, or analytical input, co-authorship and project roles should be discussed and agreed upon early in the planning phase.\n\nAgreements: Collaborative partnerships typically require a Memorandum of Agreement (MOA) or a Collaborative Research Agreement to clearly define the scope of work and data ownership."
       }
     ]
   }
 ];
 
 export default function FAQPage() {
+  const [searchQuery, setSearchQuery] = React.useState("");
+  
+  const primerListText = "See the list of available primers for target species";
+  const primerListHref = "/assets/pgc-visayas-primer-list.pdf";
+
+  const turnaroundImgTrigger = "Sample quality: Samples needing extra preparation or troubleshooting can extend the timeline.";
+  const turnaroundImgSrc = "/assets/sample-processing-turnaround.png";
+
+  // Helper function to highlight text
+  const HighlightText = ({ text, highlight }: { text: string; highlight: string }) => {
+    if (!highlight.trim()) return <>{text}</>;
+    
+    const regex = new RegExp(`(${highlight.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+    const parts = text.split(regex);
+    
+    return (
+      <>
+        {parts.map((part, i) => 
+          regex.test(part) ? (
+            <mark key={i} className="bg-yellow-200 text-slate-900 rounded-px px-0.5 font-medium">
+              {part}
+            </mark>
+          ) : (
+            part
+          )
+        )}
+      </>
+    );
+  };
+
+  // Filter FAQ data based on search query
+  const filteredFaqData = faqData.map(section => ({
+    ...section,
+    questions: section.questions.filter(item => 
+      item.q.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      item.a.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  })).filter(section => section.questions.length > 0);
+
   return (
     <div className="bg-slate-50 min-h-screen pb-20">
       {/* Header Section */}
-      <div className="bg-blue-600 text-white py-16 mb-12 shadow-inner">
-        <div className="container mx-auto px-4 max-w-5xl text-center">
-          <HelpCircle className="w-16 h-16 mx-auto mb-4 opacity-20" />
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
-            Frequently Asked Questions (FAQs)
-          </h1>
+      <div className="bg-blue-600 text-white py-12 mb-8 shadow-inner relative overflow-hidden">
+        {/* Background Decoration */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-blue-500 rounded-full opacity-20 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-indigo-500 rounded-full opacity-20 blur-3xl"></div>
+        
+        <div className="container mx-auto px-4 max-w-5xl text-center relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mb-6">
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+              Frequently Asked Questions
+            </h1>
+          </div>
+          
+          {/* Search Bar */}
+          <div className="max-w-xl mx-auto relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-300 w-5 h-5 group-focus-within:text-white transition-colors" />
+            <input 
+              type="text"
+              placeholder="Search for questions or keywords..."
+              className="w-full bg-blue-700/50 border border-blue-400/50 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-blue-700/80 transition-all shadow-lg"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
       {/* FAQ Sections */}
       <div className="container mx-auto px-4 max-w-4xl">
-        <div className="grid gap-8">
-          {faqData.map((section, idx) => (
-            <Card key={idx} className="border-none shadow-sm overflow-hidden">
-              <CardHeader className="bg-white border-b border-slate-100 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    {section.icon}
+        {filteredFaqData.length > 0 ? (
+          <div className="grid gap-8">
+            {filteredFaqData.map((section, idx) => (
+              <Card key={idx} className="border-none shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <CardHeader className="bg-white border-b border-slate-100 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 rounded-lg">
+                      {section.icon}
+                    </div>
+                    <CardTitle className="text-xl font-bold text-slate-800">
+                      {section.category}
+                    </CardTitle>
                   </div>
-                  <CardTitle className="text-xl font-bold text-slate-800">
-                    {section.category}
-                  </CardTitle>
-                </div>
-              </CardHeader>
-              <CardContent className="p-0 bg-white">
-                <Accordion type="single" collapsible className="w-full">
-                  {section.questions.map((item, qIdx) => (
-                    <AccordionItem 
-                      key={qIdx} 
-                      value={`item-${idx}-${qIdx}`}
-                      className="border-b last:border-0 px-6"
-                    >
-                      <AccordionTrigger className="text-left font-semibold text-slate-700 hover:text-blue-600 hover:no-underline py-5 text-base transition-colors">
-                        {item.q}
-                      </AccordionTrigger>
-                      <AccordionContent className="text-slate-600 leading-relaxed whitespace-pre-line text-sm pb-6">
-                        {item.a}
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Contact Footer */}
-        <div className="mt-16 text-center bg-white p-8 rounded-2xl border shadow-sm">
-          <h3 className="text-xl font-bold text-slate-900 mb-2">Still have questions?</h3>
-          <p className="text-slate-600 mb-6 max-w-md mx-auto">
-            If you couldn't find the answer you were looking for, our team is here to help with your technical inquiries.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a 
-              href="/inquire" 
-              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md shadow-blue-200"
-            >
-              Submit an Inquiry
-            </a>
-            <a 
-              href="mailto:pgcvisayas@up.edu.ph" 
-              className="bg-slate-100 text-slate-700 px-8 py-3 rounded-xl font-bold hover:bg-slate-200 transition-all"
-            >
-              Contact Support
-            </a>
+                </CardHeader>
+                <CardContent className="p-0 bg-white">
+                  <Accordion 
+                    type="single" 
+                    collapsible 
+                    className="w-full"
+                    {...(searchQuery ? { value: `item-${idx}-0` } : {})} // Auto-expand first result if searching
+                  >
+                    {section.questions.map((item, qIdx) => (
+                      <AccordionItem 
+                        key={qIdx} 
+                        value={`item-${idx}-${qIdx}`}
+                        className="border-b last:border-0 px-6"
+                      >
+                        <AccordionTrigger className="text-left font-semibold text-slate-700 hover:text-blue-600 hover:no-underline py-5 text-base transition-colors">
+                          <HighlightText text={item.q} highlight={searchQuery} />
+                        </AccordionTrigger>
+                        <AccordionContent className="text-slate-600 leading-relaxed text-sm pb-6">
+                          <div className="whitespace-pre-wrap">
+                            {item.a.split(primerListText).map((part, partIdx, arr) => (
+                              <React.Fragment key={partIdx}>
+                                {part.split(turnaroundImgTrigger).map((subPart, subIdx, subArr) => (
+                                  <React.Fragment key={subIdx}>
+                                    <HighlightText text={subPart} highlight={searchQuery} />
+                                    {subIdx < subArr.length - 1 && (
+                                      <>
+                                        <HighlightText text={turnaroundImgTrigger} highlight={searchQuery} />
+                                        <div className="mt-4 mb-2 overflow-hidden rounded-lg border border-slate-200 max-w-2xl mx-auto shadow-sm">
+                                          <img 
+                                            src={turnaroundImgSrc} 
+                                            alt="Sample Processing Turn Around Time"
+                                            className="w-full h-auto transition-transform hover:scale-[1.01]"
+                                          />
+                                        </div>
+                                      </>
+                                    )}
+                                  </React.Fragment>
+                                ))}
+                                {partIdx < arr.length - 1 && (
+                                  <a
+                                    href={primerListHref}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-700 underline hover:text-blue-900"
+                                  >
+                                    {primerListText}
+                                  </a>
+                                )}
+                              </React.Fragment>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </div>
+        ) : (
+          <div className="text-center py-20 animate-in fade-in duration-500">
+            <div className="bg-white rounded-2xl p-12 shadow-sm border border-slate-100 max-w-lg mx-auto">
+              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="w-8 h-8 text-slate-300" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-2">No results found</h3>
+              <p className="text-slate-500 leading-relaxed">
+                We couldn't find any FAQs matching "{searchQuery}". <br />
+                Try using different keywords or clearing your search.
+              </p>
+              <Button 
+                variant="outline" 
+                className="mt-6 border-blue-200 text-blue-600 hover:bg-blue-50"
+                onClick={() => setSearchQuery("")}
+              >
+                Clear Search
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

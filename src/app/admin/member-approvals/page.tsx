@@ -25,13 +25,12 @@ import {
 } from "@/services/memberApprovalService";
 import {
   getProjectRequestsByStatus,
-  ProjectRequest,
 } from "@/services/projectRequestService";
 import {
   getClientRequestsByInquiry,
   ClientRequest,
 } from "@/services/clientRequestService";
-import { MemberApproval, ApprovalStatus } from "@/types/MemberApproval";
+import { ApprovalStatus } from "@/types/MemberApproval";
 import useAuth from "@/hooks/useAuth";
 import { toast } from "sonner";
 import {
@@ -401,14 +400,14 @@ export default function MemberApprovalsPage() {
   const handleReject = async () => {
     if (!selectedApproval?.id) return;
     if (!reviewNotes.trim()) {
-      toast.error("Please provide a reason for rejection");
+      toast.error("Please provide a reason for cancellation");
       return;
     }
     setProcessing(true);
     
     try {
       if (selectedApproval.type === "member") {
-        // Traditional member rejection
+        // Traditional member rejection (now "cancelled")
         await rejectMemberApproval(
           selectedApproval.id,
           user?.email || "",
@@ -416,11 +415,11 @@ export default function MemberApprovalsPage() {
           reviewNotes
         );
       } else if (selectedApproval.type === "project") {
-        // Project rejection
+        // Project rejection (now "cancelled")
         const { updateProjectRequestStatus } = await import("@/services/projectRequestService");
         await updateProjectRequestStatus(
           selectedApproval.inquiryId,
-          "rejected",
+          "cancelled",
           user?.email || "",
           undefined,
           undefined,
@@ -428,14 +427,30 @@ export default function MemberApprovalsPage() {
         );
       }
       
-      toast.success("Submission rejected. The client will be notified.");
+      // Send cancellation email
+      try {
+        const { sendProjectCancellationEmail } = await import("@/app/actions/inquiryActions");
+        await sendProjectCancellationEmail(
+          selectedApproval.submittedBy,
+          selectedApproval.submittedByName || selectedApproval.submittedBy,
+          selectedApproval.projectTitle,
+          reviewNotes,
+          selectedApproval.inquiryId
+        );
+        console.log("✅ Cancellation email sent to", selectedApproval.submittedBy);
+      } catch (emailError) {
+        console.error("Failed to send cancellation email:", emailError);
+        // Don't toast error here, the rejection itself succeeded
+      }
+      
+      toast.success("Submission cancelled. The client has been notified via email.");
       setShowReviewDialog(false);
       setSelectedApproval(null);
       setReviewNotes("");
       fetchApprovals();
     } catch (error) {
-      console.error("Reject error:", error);
-      toast.error("Failed to reject submission");
+      console.error("Cancel error:", error);
+      toast.error("Failed to cancel submission");
     } finally {
       setProcessing(false);
     }
@@ -456,9 +471,10 @@ export default function MemberApprovalsPage() {
           </Badge>
         );
       case "rejected":
+      case "cancelled":
         return (
-          <Badge className="bg-red-100 text-red-700 border-red-200 border">
-            <XCircle className="h-3 w-3 mr-1" /> Rejected
+          <Badge className="bg-slate-100 text-slate-700 border-slate-200 border">
+            <XCircle className="h-3 w-3 mr-1" /> Cancelled
           </Badge>
         );
       case "draft":
@@ -517,7 +533,7 @@ export default function MemberApprovalsPage() {
 
       {/* Filter Tabs */}
       <div className="flex gap-2">
-        {(["pending", "approved", "rejected", "draft", "all"] as FilterStatus[]).map(
+        {(["pending", "approved", "cancelled", "draft", "all"] as FilterStatus[]).map(
           (status) => (
             <Button
               key={status}
@@ -532,10 +548,10 @@ export default function MemberApprovalsPage() {
             >
               {status === "pending" && <Clock className="h-3.5 w-3.5 mr-1.5" />}
               {status === "approved" && <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />}
-              {status === "rejected" && <XCircle className="h-3.5 w-3.5 mr-1.5" />}
+              {(status === "rejected" || status === "cancelled") && <XCircle className="h-3.5 w-3.5 mr-1.5" />}
               {status === "draft" && <AlertCircle className="h-3.5 w-3.5 mr-1.5" />}
               {status === "all" && <Filter className="h-3.5 w-3.5 mr-1.5" />}
-              <span className="capitalize">{status}</span>
+              <span className="capitalize">{status === "rejected" ? "Cancelled" : status}</span>
             </Button>
           )
         )}
@@ -649,23 +665,49 @@ export default function MemberApprovalsPage() {
                     </div>
                   </div>
                 )}
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <Users className="h-4 w-4 text-slate-400" />
-                  <span className="font-medium">
-                    {approval.type === "project"
-                      ? `${approval.members?.length || 0} total member(s)`
-                      : `${(approval.members || []).filter((m) => !m.isPrimary).length} member(s)`}
-                  </span>
-                  <span className="text-slate-400">•</span>
-                  <span>
-                    {approval.type === "project"
-                      ? approval.members?.map((m) => m.formData.name || "Unnamed").join(", ")
-                      : (approval.members || [])
-                          .filter((m) => !m.isPrimary)
-                          .map((m) => m.formData.name || "Unnamed")
-                          .join(", ")}
-                  </span>
-                </div>
+                {(() => {
+                  const seenEmails = new Set<string>();
+                  const uniqueMembers = (approval.members || []).filter(member => {
+                    const email = member.formData?.email?.toLowerCase()?.trim();
+                    if (!email) return true;
+                    if (seenEmails.has(email)) return false;
+                    seenEmails.add(email);
+                    return true;
+                  });
+
+                  // For project type, we want to prioritize validated primary members
+                  // If we have both, only keep the validated one
+                  let filteredMembers = uniqueMembers;
+                  if (approval.type === "project") {
+                    const primaryMembers = uniqueMembers.filter(m => m.isPrimary);
+                    if (primaryMembers.length > 1) {
+                        const validatedPrimary = primaryMembers.find(m => m.isValidated);
+                        if (validatedPrimary) {
+                            filteredMembers = uniqueMembers.filter(m => !m.isPrimary || m === validatedPrimary);
+                        }
+                    }
+                  }
+
+                  return (
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <Users className="h-4 w-4 text-slate-400" />
+                      <span className="font-medium">
+                        {approval.type === "project"
+                          ? `${filteredMembers.length || 0} total member(s)`
+                          : `${filteredMembers.filter((m) => !m.isPrimary).length} member(s)`}
+                      </span>
+                      <span className="text-slate-400">•</span>
+                      <span>
+                        {approval.type === "project"
+                          ? filteredMembers.map((m) => m.formData.name || "Unnamed").join(", ")
+                          : filteredMembers
+                              .filter((m) => !m.isPrimary)
+                              .map((m) => m.formData.name || "Unnamed")
+                              .join(", ")}
+                      </span>
+                    </div>
+                  );
+                })()}
                 {approval.reviewedBy && (
                   <div className="mt-2 text-xs text-slate-500">
                     Reviewed by {approval.reviewedByName || approval.reviewedBy} on{" "}
@@ -789,13 +831,41 @@ export default function MemberApprovalsPage() {
                 <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                   <Users className="h-4 w-4" />
                   {selectedApproval.type === "project"
-                    ? `Team Members (${selectedApproval.members?.length || 0})`
-                    : `Team Members (${(selectedApproval.members || []).filter((m) => !m.isPrimary).length})`}
+                    ? `Team Members (${
+                        Array.from(
+                          new Map(
+                            (selectedApproval.members || []).map((m) => [
+                              m.formData?.email?.toLowerCase() || Math.random().toString(),
+                              m,
+                            ])
+                          ).values()
+                        ).length
+                      })`
+                    : `Team Members (${
+                        (selectedApproval.members || []).filter((m) => !m.isPrimary).length
+                      })`}
                 </h3>
-                {(selectedApproval.type === "project"
-                  ? (selectedApproval.members || [])
-                  : (selectedApproval.members || []).filter((m) => !m.isPrimary)
-                ).map((member, idx) => (
+                {(() => {
+                  const items = selectedApproval.type === "project"
+                    ? Array.from(
+                        (selectedApproval.members || []).reduce((acc: Map<string, any>, member: any) => {
+                          const email = member.formData?.email?.toLowerCase();
+                          if (!email) {
+                            acc.set(Math.random().toString(), member);
+                            return acc;
+                          }
+
+                          const existing = acc.get(email);
+                          // Prioritize validated members
+                          if (!existing || (!existing.isValidated && member.isValidated)) {
+                            acc.set(email, member);
+                          }
+                          return acc;
+                        }, new Map())
+                      ).map((entry: any) => entry[1])
+                    : (selectedApproval.members || []).filter((m: any) => !m.isPrimary);
+
+                  return (items as any[]).map((member, idx) => (
                     <Card key={member.tempId || idx} className="border border-slate-200">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
@@ -858,19 +928,20 @@ export default function MemberApprovalsPage() {
                         </div>
                       </CardContent>
                     </Card>
-                  ))}
+                  ));
+                })()}
               </div>
 
               {/* Review Notes */}
               {selectedApproval.status === "pending" && (
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold text-slate-700">
-                    Review Notes <span className="text-slate-400 font-normal">(required for rejection)</span>
+                    Review Notes <span className="text-slate-400 font-normal">(required for cancellation)</span>
                   </Label>
                   <Textarea
                     value={reviewNotes}
                     onChange={(e) => setReviewNotes(e.target.value)}
-                    placeholder="Add notes about your review decision..."
+                    placeholder="Add notes about why this project is being cancelled..."
                     className="min-h-[80px]"
                   />
                 </div>
@@ -921,7 +992,7 @@ export default function MemberApprovalsPage() {
                   ) : (
                     <XCircle className="h-4 w-4 mr-2" />
                   )}
-                  Reject
+                  Cancel Submission
                 </Button>
                 <Button
                   onClick={handleApprove}

@@ -41,11 +41,32 @@ export const inquirySchema = z.object({
   researchOverview: z.string().max(3000).optional(), // Brief overview of research, methods, and required services
   methodologyFileUrl: z.string().optional(), // URL to uploaded methodology/concept note
   sampleCount: z.number().min(1).optional(), // Number of samples
-  workflowType: z.enum(["complete", "individual"]).optional(), // Complete workflow or individual assay
+  workflowType: z.enum(["complete-bioinfo", "complete", "individual"]).optional(), // Workflow selection for laboratory services
+  // Structured details for Bioinformatics Analysis requests
+  bioinformaticsDetails: z.record(z.string(), z.any()).optional(),
+  bioinfoOptions: z.array(z.enum([
+    "whole-genome-assembly",
+    "metabarcoding-downstream",
+    "metabarcoding-preprocessing",
+    "transcriptomics",
+    "phylogenetics",
+    "whole-genome-assembly-annotation",
+    // Legacy support for backward compatibility
+    "dna-extraction",
+    "quantification",
+    "library-preparation",
+    "sequencing",
+    "bioinformatics-analysis",
+    "genome-assembly",
+    "metabarcoding",
+    "pre-processing",
+    "assembly-annotation",
+  ])).optional(),
   individualAssayDetails: z.string().max(500).optional(), // Details for individual assay
   
   // Retail Sales specific fields
   retailItems: z.array(z.string()).optional(), // List of retail items requested
+  retailItemDetails: z.record(z.string(), z.string()).optional(), // Detailed amounts for each retail item
   
   // Laboratory Service specific fields (legacy - keeping for backward compatibility)
   workflows: z.array(z.enum([
@@ -61,7 +82,7 @@ export const inquirySchema = z.object({
     .max(1000, "Additional information must be at most 1000 characters")
     .optional(), 
   
-  // Research and Collaboration Service fields
+  // Research and Collaboration Service fields (legacy)
   projectBackground: z.string()
     .max(2000, "Project background must be at most 2000 characters")
     .optional(), 
@@ -71,8 +92,8 @@ export const inquirySchema = z.object({
     .optional(),
 
   // Research and Collaboration - New fields
-  molecularServicesBudget: z.string().max(100).optional(),
-  plannedSampleCount: z.string().max(100).optional(),
+  molecularServicesBudget: z.string().max(200, "Budget must be at most 200 characters").optional(),
+  plannedSampleCount: z.string().regex(/^\d*$/, "Planned sample count must contain numbers only").max(20, "Planned sample count must be at most 20 digits").optional(),
   
   // Training Service specific fields
   specificTrainingNeed: z.string()
@@ -80,6 +101,8 @@ export const inquirySchema = z.object({
     .optional(), 
   
   targetTrainingDate: z.string().optional(), 
+
+  trainingPrograms: z.array(z.string()).optional(),
   
   numberOfParticipants: z.number()
     .min(1, "Number of participants must be at least 1")
@@ -87,7 +110,7 @@ export const inquirySchema = z.object({
   
   // System status fields
   isApproved: z.boolean().default(false),         
-  status: z.enum(['Pending', 'Approved Client', 'Quotation Only']),
+  status: z.enum(['Pending', 'Approved Client', 'Quotation Only', 'Ongoing Quotation', 'Service Not Offered', 'Cancelled']),
   email: z.string().email("Invalid email address").optional(), 
 });
 
@@ -119,7 +142,7 @@ export const inquiryFormSchema = inquirySchema
   })
   // Conditional validation: Species is required for laboratory services
   .refine((data) => {
-    if (["laboratory", "bioinformatics", "equipment"].includes(data.service)) {
+    if (data.service === "laboratory") {
       return data.species && data.species.length > 0;
     }
     return true;
@@ -139,7 +162,7 @@ export const inquiryFormSchema = inquirySchema
   })
   // Conditional validation: Research overview required for lab services
   .refine((data) => {
-    if (["laboratory", "bioinformatics", "equipment"].includes(data.service)) {
+    if (data.service === "laboratory") {
       return data.researchOverview && data.researchOverview.trim().length > 0;
     }
     return true;
@@ -147,9 +170,20 @@ export const inquiryFormSchema = inquirySchema
     message: "Brief overview of research is required",
     path: ["researchOverview"],
   })
+  // Conditional validation: Bioinformatics service requires overview/objectives text
+  .refine((data) => {
+    if (data.service === "bioinformatics") {
+      const overview = (data.bioinformaticsDetails as Record<string, unknown> | undefined)?.overviewObjectives;
+      return typeof overview === "string" && overview.trim().length > 0;
+    }
+    return true;
+  }, {
+    message: "Overview of research and objectives is required",
+    path: ["bioinformaticsDetails"],
+  })
   // Conditional validation: Sample count required for lab services
   .refine((data) => {
-    if (["laboratory", "bioinformatics", "equipment"].includes(data.service)) {
+    if (data.service === "laboratory") {
       return data.sampleCount && data.sampleCount > 0;
     }
     return true;
@@ -159,7 +193,7 @@ export const inquiryFormSchema = inquirySchema
   })
   // Conditional validation: Workflow type required for lab services
   .refine((data) => {
-    if (["laboratory", "bioinformatics", "equipment"].includes(data.service)) {
+    if (data.service === "laboratory") {
       return data.workflowType && data.workflowType.length > 0;
     }
     return true;
@@ -187,24 +221,54 @@ export const inquiryFormSchema = inquirySchema
     message: "Please specify the individual assay details (e.g., DNA Extraction, PCR, etc.)",
     path: ["individualAssayDetails"],
   })
-  // Conditional validation: Research service requires project background
+  // Conditional validation: At least one bioinformatics analysis is required for complete-bioinfo workflow
   .refine((data) => {
-    if (data.service === "research") {
-      return data.projectBackground && data.projectBackground.trim().length > 0;
-    }
-    return true; // Valid for non-research services
-  }, {
-    message: "Project background is required for research collaboration",
-    path: ["projectBackground"], 
-  })
-  // Conditional validation: Training service requires specific training need
-  .refine((data) => {
-    if (data.service === "training") {
-      return data.specificTrainingNeed && data.specificTrainingNeed.trim().length > 0;
+    if (data.workflowType === "complete-bioinfo") {
+      return !!data.bioinfoOptions && data.bioinfoOptions.length > 0;
     }
     return true;
   }, {
-    message: "Specific training need is required for training service",
+    message: "Please select at least one bioinformatics analysis option",
+    path: ["bioinfoOptions"],
+  })
+  // Conditional validation: Research service requires overview/objectives/scope
+  .refine((data) => {
+    if (data.service === "research") {
+      return data.researchOverview && data.researchOverview.trim().length > 0;
+    }
+    return true; // Valid for non-research services
+  }, {
+    message: "Overview of research, objectives, and scope of collaboration is required",
+    path: ["researchOverview"], 
+  })
+  // Conditional validation: if planned sample count is provided for research, it must be numeric
+  .refine((data) => {
+    if (data.service === "research" && data.plannedSampleCount) {
+      return /^\d+$/.test(data.plannedSampleCount.trim());
+    }
+    return true;
+  }, {
+    message: "Please enter numbers only",
+    path: ["plannedSampleCount"],
+  })
+  // Conditional validation: Training service requires at least one program selected
+  .refine((data) => {
+    if (data.service === "training") {
+      return !!data.trainingPrograms && data.trainingPrograms.length > 0;
+    }
+    return true;
+  }, {
+    message: "Please select at least one training program",
+    path: ["trainingPrograms"],
+  })
+  // Conditional validation: Custom details required when Others/Customized is selected
+  .refine((data) => {
+    if (data.service === "training" && data.trainingPrograms?.includes("others-customized")) {
+      return !!data.specificTrainingNeed && data.specificTrainingNeed.trim().length > 0;
+    }
+    return true;
+  }, {
+    message: "Please provide specific training needs",
     path: ["specificTrainingNeed"],
   })
   // Conditional validation: Training service requires target date
@@ -262,4 +326,4 @@ export type InquiryUpdateData = z.infer<typeof inquiryUpdateSchema>; // Update o
 export type WorkflowOption = "dna-extraction" | "sequencing" | "pcr-amplification" | "bioinformatics" | "quantification" | "complete-workflow";
 export type ServiceType = "laboratory" | "bioinformatics" | "equipment" | "retail" | "research" | "training";
 export type SpeciesType = "human" | "plant" | "animal" | "microbe-prokaryote" | "microbe-eukaryote" | "other";
-export type WorkflowTypeOption = "complete" | "individual";
+export type WorkflowTypeOption = "complete-bioinfo" | "complete" | "individual";

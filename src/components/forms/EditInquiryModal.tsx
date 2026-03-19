@@ -42,7 +42,10 @@ import {
 } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Pencil, Trash2, Mail, Building2, CheckCircle2, FileEdit } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Pencil, Trash2, Mail, Building2, CheckCircle2, FileEdit, MessageSquare, Send } from "lucide-react";
 import { Inquiry } from "@/types/Inquiry";
 import { updateInquiryAction, deleteInquiryAction } from "@/app/actions/inquiryActions";
 import useAuth from "@/hooks/useAuth";
@@ -70,6 +73,8 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
       affiliation: inquiry.affiliation,
       designation: inquiry.designation,
       status: inquiry.status,
+      remarks: "",
+      sendStatusEmail: true,
     },
   });
 
@@ -111,11 +116,21 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
     <>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
-          <Button variant="ghost" size="sm">
+          <Button
+            variant="ghost"
+            size="sm"
+            data-stop-row-click="true"
+            onClick={(event) => event.stopPropagation()}
+          >
             <Pencil className="h-4 w-4" />
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+        <DialogContent
+          className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto"
+          data-stop-row-click="true"
+          onClick={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
           <DialogHeader className="space-y-3 pb-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-50 rounded-lg">
@@ -137,7 +152,12 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
 
           <Separator className="my-1" />
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-6"
+              data-stop-row-click="true"
+              onClick={(event) => event.stopPropagation()}
+            >
               {/* Contact Information Section */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
@@ -301,6 +321,20 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
                                 </Badge>
                               </div>
                             </SelectItem>
+                            <SelectItem value="Service Not Offered">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">
+                                  Service Not Offered
+                                </Badge>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="Cancelled">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">
+                                  Cancelled
+                                </Badge>
+                              </div>
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <FormDescription className="text-xs text-gray-500">
@@ -310,6 +344,56 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
                       </FormItem>
                     )}
                   />
+
+                  {form.watch("status") === "Service Not Offered" && (
+                    <div className="mt-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <FormField
+                        control={form.control}
+                        name="remarks"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs font-semibold text-gray-700 flex items-center gap-2">
+                              <MessageSquare className="h-3 w-3" />
+                              Remarks
+                            </FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Enter reason or additional notes..."
+                                className="min-h-[80px] text-sm resize-none focus-visible:ring-red-500 border-red-100 bg-red-50/10"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage className="text-xs" />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="sendStatusEmail"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border border-blue-100 bg-blue-50/30 p-3">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel className="text-sm font-medium text-blue-900 flex items-center gap-2 cursor-pointer">
+                                <Send className="h-3 w-3" />
+                                Send update email to client
+                              </FormLabel>
+                              <FormDescription className="text-[11px] text-blue-700/70 italic">
+                                Automatically sends the "Service Not Offered" email template
+                              </FormDescription>
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
               
