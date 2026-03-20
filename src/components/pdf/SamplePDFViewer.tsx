@@ -19,5 +19,33 @@ const SampleQuotationPDFClient = dynamic(
 );
 
 export function SamplePDFViewer({ record }: { record: SampleFormRecord }) {
-  return <SampleQuotationPDFClient record={record} />;
+  const pdfUrl = `/api/generate-sample-form-pdf/${record.sfid || record.formId || record.id}`;
+
+  return (
+    <div className="w-full">
+      <div className="p-3 bg-white border-b border-slate-200 flex items-center justify-end gap-2">
+        <a
+          href={pdfUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center px-3 py-1 rounded bg-blue-600 text-white text-sm"
+        >
+          Open PDF
+        </a>
+        <button
+          className="inline-flex items-center px-3 py-1 rounded border text-sm"
+          onClick={() => {
+            // open raw JSON in new tab for quick inspection
+            const jsonWindow = window.open();
+            if (jsonWindow) {
+              jsonWindow.document.body.innerText = JSON.stringify(record, null, 2);
+            }
+          }}
+        >
+          Show JSON
+        </button>
+      </div>
+      <SampleQuotationPDFClient record={record} />
+    </div>
+  );
 }
