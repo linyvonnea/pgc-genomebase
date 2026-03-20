@@ -127,6 +127,37 @@ export default function ClientSampleFormPage() {
     }));
   };
 
+  // Ensure entries array length matches totalNumberOfSamples
+  const syncEntriesToCount = (count: number) => {
+    setFormData((prev) => {
+      const current = prev.entries || [];
+      const clamped = Math.max(1, Math.min(500, Math.floor(count || 0)));
+      if (current.length === clamped) return { ...prev, totalNumberOfSamples: clamped };
+
+      if (current.length < clamped) {
+        // append empty rows
+        const addCount = clamped - current.length;
+        const startIndex = current.length;
+        const newRows = Array.from({ length: addCount }, (_, i) => ({
+          row: startIndex + i + 1,
+          sampleCode: "",
+          concentration: "",
+          volume: "",
+          notes: "",
+        }));
+        return {
+          ...prev,
+          totalNumberOfSamples: clamped,
+          entries: [...current, ...newRows],
+        };
+      }
+
+      // truncate
+      const truncated = current.slice(0, clamped).map((e, idx) => ({ ...e, row: idx + 1 }));
+      return { ...prev, totalNumberOfSamples: clamped, entries: truncated };
+    });
+  };
+
   const setTemplate = (
     key: keyof SampleFormData["templateType"],
     value: boolean | string
@@ -234,12 +265,10 @@ export default function ClientSampleFormPage() {
                   max={500}
                   value={formData.totalNumberOfSamples}
                   disabled={isReadOnly}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      totalNumberOfSamples: Number(e.target.value || 0),
-                    }))
-                  }
+                  onChange={(e) => {
+                    const val = Number(e.target.value || 0);
+                    syncEntriesToCount(val);
+                  }}
                 />
               </div>
             </div>
