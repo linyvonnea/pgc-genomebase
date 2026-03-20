@@ -3,6 +3,8 @@
 
 import dynamic from "next/dynamic";
 import { SampleFormRecord } from "@/types/SampleForm";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { SampleFormPDF } from "./SampleFormPDF";
 import { Loader2 } from "lucide-react";
 
 // Dynamically imported to prevent SSR — @react-pdf/renderer uses browser APIs
@@ -32,6 +34,16 @@ export function SamplePDFViewer({ record }: { record: SampleFormRecord }) {
         >
           Open PDF
         </a>
+        <PDFDownloadLink
+          document={<SampleFormPDF record={record} />}
+          fileName={`sample_form_${record.sfid || record.formId || record.id}.pdf`}
+        >
+          {({ loading }) => (
+            <button className="inline-flex items-center px-3 py-1 rounded border text-sm" disabled={loading}>
+              {loading ? "Preparing..." : "Download (client)"}
+            </button>
+          )}
+        </PDFDownloadLink>
         <button
           className="inline-flex items-center px-3 py-1 rounded border text-sm"
           onClick={() => {
