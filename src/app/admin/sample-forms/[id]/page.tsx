@@ -8,6 +8,11 @@ import { format } from "date-fns";
 import Link from "next/link";
 import { ChevronLeft, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import dynamic from "next/dynamic";
+
+const SampleDownloadButton = dynamic(() => import("@/components/pdf/SampleDownloadButton"), {
+  ssr: false,
+});
 
 export default async function SampleFormDetailPage({
   params,
@@ -86,6 +91,10 @@ export default async function SampleFormDetailPage({
               Download PDF
             </a>
           </Button>
+          <div className="hidden md:block">
+            {/* Client-side modal preview + download */}
+            <SampleDownloadButton record={safeRecord} />
+          </div>
         </div>
       </div>
 
