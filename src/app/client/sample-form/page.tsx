@@ -131,8 +131,8 @@ export default function ClientSampleFormPage() {
   const syncEntriesToCount = (count: number) => {
     setFormData((prev) => {
       const current = prev.entries || [];
-      const clamped = Math.max(1, Math.min(500, Math.floor(count || 0)));
-      if (current.length === clamped) return { ...prev, totalNumberOfSamples: clamped };
+      const clamped = Math.max(0, Math.min(500, Math.floor(count || 0)));
+      if (current.length === clamped) return { ...prev, totalNumberOfSamples: count };
 
       if (current.length < clamped) {
         // append empty rows
@@ -147,14 +147,14 @@ export default function ClientSampleFormPage() {
         }));
         return {
           ...prev,
-          totalNumberOfSamples: clamped,
+          totalNumberOfSamples: count,
           entries: [...current, ...newRows],
         };
       }
 
       // truncate
       const truncated = current.slice(0, clamped).map((e, idx) => ({ ...e, row: idx + 1 }));
-      return { ...prev, totalNumberOfSamples: clamped, entries: truncated };
+      return { ...prev, totalNumberOfSamples: count, entries: truncated };
     });
   };
 
