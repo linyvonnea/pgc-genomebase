@@ -304,6 +304,97 @@ export default function QuotationBuilder({
                 </div>
               </AccordionContent>
             </AccordionItem>
+
+            <AccordionItem value="quotation-request-details" className="mt-3 border rounded-lg overflow-hidden shadow-sm">
+              <AccordionTrigger className="px-4 py-3 hover:no-underline bg-white text-base font-semibold">
+                Quotation Request Details
+              </AccordionTrigger>
+              <AccordionContent className="px-0 pb-0">
+                <div className="pl-6 pr-4 pb-3 text-sm">
+                  <div className="py-1">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">1. Request Overview</p>
+                  </div>
+                  <table className="w-full text-sm">
+                    <tbody>
+                      <tr>
+                        <td className="py-2 pr-4 text-muted-foreground w-40">Request ID</td>
+                        <td className="py-2 text-slate-700 font-mono">{inquiryData?.id || effectiveInquiryId || "N/A"}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-4 text-muted-foreground">Date Submitted</td>
+                        <td className="py-2 text-slate-700">
+                          {inquiryData?.createdAt
+                            ? new Date(inquiryData.createdAt).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })
+                            : "N/A"}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-4 text-muted-foreground">Status</td>
+                        <td className="py-2 text-slate-700">{inquiryData?.status || "N/A"}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div className="pt-3 pb-1">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">2. Client Inquiry Details</p>
+                  </div>
+                  <table className="w-full text-sm">
+                    <tbody>
+                      <tr>
+                        <td className="py-2 pr-4 text-muted-foreground w-40">Inquiry Type</td>
+                        <td className="py-2 text-slate-700">{inquiryData?.serviceType || "N/A"}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-4 text-muted-foreground align-top">Requested Services</td>
+                        <td className="py-2 text-slate-700">
+                          {[
+                            inquiryData?.serviceType,
+                            ...(inquiryData?.bioinfoOptions || []),
+                            ...(inquiryData?.workflows || []),
+                            ...(inquiryData?.retailItems || []),
+                            ...(inquiryData?.trainingPrograms || []),
+                          ]
+                            .filter(Boolean)
+                            .join(", ") || "N/A"}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-4 text-muted-foreground align-top">Description / Notes</td>
+                        <td className="py-2 text-slate-700 whitespace-pre-wrap break-words">
+                          {inquiryData?.researchOverview || inquiryData?.additionalInfo || inquiryData?.projectBackground || "N/A"}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div className="pt-3 pb-1">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">3. Sample / Project Details</p>
+                  </div>
+                  <table className="w-full text-sm">
+                    <tbody>
+                      <tr>
+                        <td className="py-2 pr-4 text-muted-foreground w-40">Sample Type</td>
+                        <td className="py-2 text-slate-700">{inquiryData?.species || inquiryData?.otherSpecies || "N/A"}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-4 text-muted-foreground">Quantity</td>
+                        <td className="py-2 text-slate-700">
+                          {inquiryData?.sampleCount ?? inquiryData?.plannedSampleCount ?? "N/A"}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 pr-4 text-muted-foreground">Project Title</td>
+                        <td className="py-2 text-slate-700">{inquiryData?.projectBackground || "N/A"}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
           </Accordion>
         </div>
 
