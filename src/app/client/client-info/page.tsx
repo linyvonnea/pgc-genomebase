@@ -3492,6 +3492,11 @@ export default function ClientPortalPage() {
         onCancel={() => {
           setShowConfirmModal(false);
           setPendingMemberId(null);
+          // Re-enable draft button for this member if it was disabled
+          if (pendingMemberId) {
+            savingDraftIdsRef.current.delete(pendingMemberId);
+          }
+          setActiveSavingId(null);
         }}
         loading={submitting}
         title="Confirm Member Information"
