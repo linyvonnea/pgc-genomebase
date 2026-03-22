@@ -47,6 +47,8 @@ export default function ProjectForm() {
   // Confirmation modal state
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingData, setPendingData] = useState<ProjectFormData | null>(null);
+  const [isDraftSaveLocked, setIsDraftSaveLocked] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
 
   // Fetch existing project request draft if it exists
   useEffect(() => {
@@ -144,6 +146,8 @@ export default function ProjectForm() {
   // On form submit, validate and show confirmation modal
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isDraftSaveLocked || isSavingDraft) return;
+
     const result = projectFormSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors: Partial<Record<keyof ProjectFormData, string>> = {};
@@ -154,6 +158,8 @@ export default function ProjectForm() {
       setErrors(fieldErrors);
       return;
     }
+
+    setIsDraftSaveLocked(true);
     setErrors({});
     setPendingData(formData); // Store data for modal
     setShowConfirmModal(true); // Show confirmation modal
@@ -161,17 +167,23 @@ export default function ProjectForm() {
 
   // On confirm in modal, save project request as draft
   const handleConfirmSave = async () => {
+    if (isSavingDraft) return;
+
     setShowConfirmModal(false);
+    setIsSavingDraft(true);
+
     try {
       const result = projectFormSchema.safeParse(pendingData);
       
       if (!result.success) {
         toast.error("Invalid data. Please review your entries.");
+        setIsDraftSaveLocked(false);
         return;
       }
 
       if (!inquiryId || !email) {
         toast.error("Missing required parameters.");
+        setIsDraftSaveLocked(false);
         return;
       }
 
@@ -210,6 +222,9 @@ export default function ProjectForm() {
     } catch (error) {
       console.error("Error saving project draft:", error);
       toast.error("Error saving project information. Please try again.");
+      setIsDraftSaveLocked(false);
+    } finally {
+      setIsSavingDraft(false);
     }
   };
 
@@ -217,6 +232,8 @@ export default function ProjectForm() {
   const handleCancelModal = () => {
     setShowConfirmModal(false);
     setPendingData(null);
+    setIsDraftSaveLocked(false);
+    setIsSavingDraft(false);
   };
 
   // Format date for display
@@ -368,6 +385,7 @@ export default function ProjectForm() {
             <div className="flex justify-end pt-6 border-t border-slate-100">
               <Button
                 type="submit"
+                disabled={isDraftSaveLocked || isSavingDraft}
                 className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 Save Project Draft
@@ -381,7 +399,7 @@ export default function ProjectForm() {
         open={showConfirmModal}
         onConfirm={handleConfirmSave}
         onCancel={handleCancelModal}
-        loading={false}
+        loading={isSavingDraft}
         title="Save Project Draft?"
         description="Review your project information below. You can edit this later before submitting for approval."
         confirmLabel="Save Draft"
