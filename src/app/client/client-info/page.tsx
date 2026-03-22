@@ -4,7 +4,7 @@
 // Left pane (1/4): Projects navigation sidebar
 // Right pane (3/4): Selected project details + team member management
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import {
@@ -312,6 +312,7 @@ export default function ClientPortalPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [activeSavingId, setActiveSavingId] = useState<string | null>(null);
+  const savingDraftIdsRef = useRef<Set<string>>(new Set());
 
   // ── Modal state ───────────────────────────────────────────────
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -1266,6 +1267,8 @@ export default function ClientPortalPage() {
   };
 
   const handleSaveDraft = async (memberId: string) => {
+    if (savingDraftIdsRef.current.has(memberId)) return;
+
     const member = members.find((m) => m.id === memberId);
     if (!member) return;
 
@@ -1281,6 +1284,7 @@ export default function ClientPortalPage() {
       return;
     }
 
+    savingDraftIdsRef.current.add(memberId);
     setSubmitting(true);
     setActiveSavingId(memberId);
     try {
@@ -1412,6 +1416,7 @@ export default function ClientPortalPage() {
       console.error("Draft save error:", error);
       toast.error("Failed to save draft");
     } finally {
+      savingDraftIdsRef.current.delete(memberId);
       setSubmitting(false);
       setActiveSavingId(null);
     }
@@ -2103,6 +2108,7 @@ export default function ClientPortalPage() {
           onClick={() => handleSaveDraft(member.id)}
           disabled={
             member.isSubmitted ||
+            activeSavingId === member.id ||
             submitting ||
             projectDetails?.status === "Completed" ||
             projectDetails?.status === "Pending Approval"
