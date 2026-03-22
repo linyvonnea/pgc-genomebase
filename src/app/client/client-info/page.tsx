@@ -311,6 +311,7 @@ export default function ClientPortalPage() {
   const [currentProjectRequestId, setCurrentProjectRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [activeSavingId, setActiveSavingId] = useState<string | null>(null);
 
   // ── Modal state ───────────────────────────────────────────────
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -1281,6 +1282,7 @@ export default function ClientPortalPage() {
     }
 
     setSubmitting(true);
+    setActiveSavingId(memberId);
     try {
       // Check if this is a draft project
       const isDraftProject = projectDetails?.isDraft || projectDetails?.pid === "DRAFT";
@@ -1411,6 +1413,7 @@ export default function ClientPortalPage() {
       toast.error("Failed to save draft");
     } finally {
       setSubmitting(false);
+      setActiveSavingId(null);
     }
   };
 
@@ -2107,8 +2110,17 @@ export default function ClientPortalPage() {
           variant="outline"
           className="h-10 px-6 border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold disabled:opacity-50"
         >
-          <Save className="h-4 w-4 mr-2" />
-          Save Draft
+          {activeSavingId === member.id ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Save Draft
+            </>
+          )}
         </Button>
         <Button
           type="submit"
