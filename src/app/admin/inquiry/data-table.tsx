@@ -259,21 +259,22 @@ export function DataTable<TData, TValue>({
 
   const setPageSize = (size: number) => {
     setPagination({ pageIndex: 0, pageSize: size })
-    table.setPageSize(size)
+    // No need to call table.setPageSize(size) here since we manually slice the rows
+    // based on our own pagination state.
   }
 
   const nextPage = () => {
     if (pagination.pageIndex < pageCount - 1) {
       setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex + 1 }))
     }
-    table.nextPage()
+    // No need to call table.nextPage() here
   }
 
   const previousPage = () => {
     if (pagination.pageIndex > 0) {
       setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex - 1 }))
     }
-    table.previousPage()
+    // No need to call table.previousPage() here
   }
 
   const canNextPage = pagination.pageIndex < pageCount - 1
