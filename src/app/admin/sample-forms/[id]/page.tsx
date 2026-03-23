@@ -75,28 +75,15 @@ export default async function SampleFormDetailPage({
   return (
     <div className="container mx-auto p-4 md:p-8 space-y-6">
       {/* Back navigation */}
-      <Link 
-        href="/admin/sample-forms" 
-        className="inline-flex items-center text-sm text-slate-500 hover:text-blue-600 transition-colors gap-1 mb-2"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        Back to Sample Forms List
-      </Link>
-
-      {/* Header section with actions */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900">{record.formId || record.id}</h1>
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-              {record.status || "Submitted"}
-            </Badge>
-          </div>
-          <p className="text-slate-500 text-sm">
-            Submitted on {formatDate(record.createdAt)} by {record.submittedByName}
-          </p>
-        </div>
-        <div className="flex items-center gap-3 w-full md:w-auto">
+      <div className="flex items-center justify-between gap-4">
+        <Link 
+          href="/admin/sample-forms" 
+          className="inline-flex items-center text-sm text-slate-500 hover:text-blue-600 transition-colors gap-1"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Back to Sample Forms List
+        </Link>
+        <div className="flex items-center gap-3">
           <Button
             variant="outline"
             className="flex-1 md:flex-none border-slate-200"
@@ -268,17 +255,23 @@ export default async function SampleFormDetailPage({
               </tbody>
             </table>
           </div>
-        </div>
-      </Card>
-
-      {/* Main content - PDF Preview */}
-      <Card id="pdf-preview" className="border-slate-200 shadow-sm overflow-hidden min-h-[800px] flex flex-col scroll-mt-24">
-        <div className="bg-slate-50/50 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-          <h2 className="font-semibold text-slate-800">Document Preview</h2>
-        </div>
-        <div className="flex-1 bg-slate-100/50 p-4 md:p-8">
-          <div className="h-full bg-white shadow-xl rounded-sm overflow-hidden max-w-5xl mx-auto border border-slate-200">
-            <SamplePDFViewer record={safeRecord} />
+          <div className="px-4 py-3 border-t border-slate-200 bg-slate-50/30 flex justify-end">
+             <Button
+                variant="outline"
+                size="sm"
+                className="bg-white hover:bg-slate-50 text-[#166FB5] border-slate-200 shadow-sm"
+                asChild
+              >
+                <a 
+                  href={`/api/generate-sample-form-pdf/${id}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Preview PDF
+                </a>
+              </Button>
           </div>
         </div>
       </Card>
