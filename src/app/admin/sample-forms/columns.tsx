@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { SampleFormRecord } from "@/types/SampleForm";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export const columns: ColumnDef<SampleFormRecord>[] = [
   {
@@ -70,6 +71,25 @@ export const columns: ColumnDef<SampleFormRecord>[] = [
         >
           {status}
         </Badge>
+      );
+    },
+  },
+  {
+    id: "action",
+    header: "Action",
+    cell: ({ row }) => {
+      const recordId = row.original.id;
+      return (
+        <Button variant="outline" size="sm" asChild>
+          <a
+            href={`/api/generate-sample-form-pdf/${recordId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-700 border-blue-200 hover:bg-blue-50"
+          >
+            Preview PDF
+          </a>
+        </Button>
       );
     },
   },
