@@ -7,6 +7,7 @@ import { SampleFormRecord } from "@/types/SampleForm";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export const columns: ColumnDef<SampleFormRecord>[] = [
   {
@@ -79,14 +80,16 @@ export const columns: ColumnDef<SampleFormRecord>[] = [
     header: "Action",
     cell: ({ row }) => {
       const recordId = row.original.id;
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const router = useRouter();
       return (
-        <Button variant="outline" size="sm" asChild>
-          <Link
-            href={`/admin/sample-forms/${recordId}#pdf-preview`}
-            className="text-blue-700 border-blue-200 hover:bg-blue-50"
-          >
-            Preview PDF
-          </Link>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-blue-700 border-blue-200 hover:bg-blue-50"
+          onClick={() => router.push(`/admin/sample-forms/new?formId=${encodeURIComponent(recordId)}`)}
+        >
+          Preview PDF
         </Button>
       );
     },
