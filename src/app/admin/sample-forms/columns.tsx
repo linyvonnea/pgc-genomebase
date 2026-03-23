@@ -81,14 +81,12 @@ export const columns: ColumnDef<SampleFormRecord>[] = [
       const recordId = row.original.id;
       return (
         <Button variant="outline" size="sm" asChild>
-          <a
-            href={`/api/generate-sample-form-pdf/${recordId}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href={`/admin/sample-forms/${recordId}#pdf-preview`}
             className="text-blue-700 border-blue-200 hover:bg-blue-50"
           >
             Preview PDF
-          </a>
+          </Link>
         </Button>
       );
     },
