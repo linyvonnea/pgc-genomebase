@@ -1091,8 +1091,10 @@ export default function ClientPortalPage() {
     const member = members.find((m) => m.id === pendingMemberId);
     if (!member) return;
 
-    setShowConfirmModal(false);
+    // Start loading and set as saving to disable the background button
     setSubmitting(true);
+    savingDraftIdsRef.current.add(pendingMemberId);
+    setActiveSavingId(pendingMemberId);
 
     try {
       const result = clientFormSchema.safeParse(member.formData);
@@ -1261,7 +1263,10 @@ export default function ClientPortalPage() {
       const msg = error instanceof Error ? error.message : "Failed to save information";
       toast.error(msg);
     } finally {
+      setShowConfirmModal(false);
       setSubmitting(false);
+      savingDraftIdsRef.current.delete(pendingMemberId);
+      setActiveSavingId(null);
       setPendingMemberId(null);
     }
   };
@@ -1284,14 +1289,20 @@ export default function ClientPortalPage() {
       return;
     }
 
+    // For approved projects, we show a confirmation modal first
+    const isDraftProject = projectDetails?.isDraft || projectDetails?.pid === "DRAFT";
+    if (!isDraftProject) {
+      setPendingMemberId(memberId);
+      setShowConfirmModal(true);
+      // We don't disable yet, it will be disabled when handleConfirmSave is called
+      return;
+    }
+
     savingDraftIdsRef.current.add(memberId);
     setSubmitting(true);
     setActiveSavingId(memberId);
     try {
-      // Check if this is a draft project
-      const isDraftProject = projectDetails?.isDraft || projectDetails?.pid === "DRAFT";
-
-      if (isDraftProject && inquiryIdParam) {
+      if (inquiryIdParam) {
         // For draft projects, save to clientRequests collection (without validation)
         const savedId = await saveClientRequest({
           inquiryId: inquiryIdParam,
