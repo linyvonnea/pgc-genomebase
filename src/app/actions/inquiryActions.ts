@@ -22,6 +22,7 @@ import { InquiryFormData } from "@/schemas/inquirySchema";
 import { AdminInquiryData } from "@/schemas/adminInquirySchema";
 import { logActivity } from "@/services/activityLogService";
 import { initializeQuotationThread, addThreadMessage } from "@/services/quotationThreadService";
+import { pgcLogo, schoolLogo } from "@/assets/logosBase64";
 
 const BIOINFO_OPTION_LABELS: Record<string, string> = {
   "whole-genome-assembly": "Whole Genome Assembly",
@@ -454,7 +455,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     }
     
     // Add Bioinformatics specialist if service type matches
-    if (inquiryData.service === 'bioinformatics') {
+    if (inquiryData.service === 'bioinformatics' || inquiryData.service === 'training') {
       emailRecipients.push("bioinfo.pgc.upvisayas@up.edu.ph");
     }
     
@@ -463,7 +464,13 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     // Create a comprehensive HTML email body
     const emailHtml = `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.5;">
-        <div style="background-color: #f8fafc; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <div style="background-color: #f8fafc; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px;">
+          <!-- Header with Logos -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #e2e8f0;">
+            <img src="${schoolLogo}" alt="School Logo" style="height: 60px; width: auto;" />
+            <img src="${pgcLogo}" alt="PGC Logo" style="height: 60px; width: auto;" />
+          </div>
+
           <h2 style="color: #1e40af; margin-top: 0; font-size: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
             New ${formatServiceType(inquiryData.service)} Inquiry
           </h2>
@@ -698,6 +705,12 @@ Submitted: ${new Date().toLocaleString()}
         const clientEmailHtml = `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.6;">
             <div style="background-color: #ffffff; padding: 0; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+              <!-- Logo Header -->
+              <div style="padding: 20px; display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; border-bottom: 1px solid #f1f5f9;">
+                <img src="${schoolLogo}" alt="School Logo" style="height: 50px; width: auto;" />
+                <img src="${pgcLogo}" alt="PGC Logo" style="height: 50px; width: auto;" />
+              </div>
+              
               <!-- Header -->
               <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 30px 20px; text-align: left;">
                 <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">Inquiry Received - PGC Visayas</h1>
@@ -994,6 +1007,12 @@ export async function updateInquiryAction(
     if (data.status === 'Service Not Offered' && data.sendStatusEmail !== false) {
       const emailHtml = `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          <!-- Logos Header -->
+          <div style="padding: 20px; display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; border-bottom: 1px solid #f1f5f9;">
+            <img src="${schoolLogo}" alt="School Logo" style="height: 50px; width: auto;" />
+            <img src="${pgcLogo}" alt="PGC Logo" style="height: 50px; width: auto;" />
+          </div>
+
           <!-- Header with Logo -->
           <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 30px 20px; text-align: center;">
             <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.025em;">PGC Visayas</h1>
@@ -1138,6 +1157,12 @@ export async function sendProjectCancellationEmail(
     
     const emailHtml = `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+        <!-- Logo Header -->
+        <div style="padding: 20px; display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; border-bottom: 1px solid #f1f5f9;">
+          <img src="${schoolLogo}" alt="School Logo" style="height: 50px; width: auto;" />
+          <img src="${pgcLogo}" alt="PGC Logo" style="height: 50px; width: auto;" />
+        </div>
+        
         <!-- Header with Logo -->
         <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 30px 20px; text-align: center;">
           <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.025em;">PGC Visayas</h1>
