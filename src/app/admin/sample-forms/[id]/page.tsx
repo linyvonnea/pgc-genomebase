@@ -272,7 +272,7 @@ export default async function SampleFormDetailPage({
       </Card>
 
       {/* Main content - PDF Preview */}
-      <Card className="border-slate-200 shadow-sm overflow-hidden min-h-[800px] flex flex-col">
+      <Card id="pdf-preview" className="border-slate-200 shadow-sm overflow-hidden min-h-[800px] flex flex-col scroll-mt-24">
         <div className="bg-slate-50/50 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
           <h2 className="font-semibold text-slate-800">Document Preview</h2>
         </div>
