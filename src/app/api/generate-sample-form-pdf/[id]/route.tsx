@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { SampleFormPDF } from "@/components/pdf/SampleFormPDF";
 import { getAdminDb } from "@/lib/firebase-admin";
+import { getSampleFormById as getSampleFormByIdClient } from "@/services/sampleFormService";
 
 export async function GET(
   request: NextRequest,
@@ -10,21 +11,39 @@ export async function GET(
   const { id } = await params;
 
   try {
+    // Prefer Admin SDK for server-side access when available
+    let data: any = null;
     const db = getAdminDb();
-    if (!db) {
-      console.error("❌ PDF generation: Database unavailable (getAdminDb returned null)");
-      return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
+    if (db) {
+      try {
+        const docRef = db.collection("sampleForms").doc(id);
+        const docSnap = await docRef.get();
+        if (docSnap && docSnap.exists) {
+          data = { id: docSnap.id, ...docSnap.data() } as any;
+        }
+      } catch (err) {
+        console.error("❌ PDF generation (admin read) error:", err);
+        // continue to fallback
+      }
+    } else {
+      console.warn("⚠️ Firebase Admin not initialized; falling back to client service for reading sample form.");
     }
 
-    // 1. Fetch data from Firestore via Admin SDK
-    const docRef = db.collection("sampleForms").doc(id);
-    const docSnap = await docRef.get();
-
-    if (!docSnap.exists) {
-      return NextResponse.json({ error: "Sample form not found" }, { status: 404 });
+    // Fallback: try client-side service (uses the firebase client config). This helps when Admin SDK
+    // cannot be initialized in the runtime (e.g., missing service account in environment).
+    if (!data) {
+      try {
+        const clientRecord = await getSampleFormByIdClient(id);
+        if (clientRecord) data = { id: clientRecord.id, ...(clientRecord as any) };
+      } catch (err) {
+        console.error("❌ PDF generation (client read) error:", err);
+      }
     }
 
-    const data = { id: docSnap.id, ...docSnap.data() } as any;
+    if (!data) {
+      console.error("❌ PDF generation: Sample form not found or database unavailable for id:", id);
+      return NextResponse.json({ error: "Sample form not found or database unavailable" }, { status: 503 });
+    }
 
     // 2. Render PDF to Buffer
     const buffer = await renderToBuffer(<SampleFormPDF record={data} />);
