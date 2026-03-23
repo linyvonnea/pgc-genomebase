@@ -205,6 +205,13 @@ export default function ClientSampleFormPage() {
 
     setSubmitting(true);
     try {
+      console.log("Submitting sample form with context:", {
+        inquiryId,
+        projectId,
+        clientId,
+        email,
+      });
+
       await createSampleForm({
         ...result.data,
         inquiryId,
