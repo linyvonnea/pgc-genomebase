@@ -27,7 +27,6 @@ import {
   SortingState,
   getFilteredRowModel,
   ColumnFiltersState,
-  getPaginationRowModel,
 } from "@tanstack/react-table"
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
@@ -199,7 +198,6 @@ export function DataTable<TData, TValue>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
@@ -217,7 +215,6 @@ export function DataTable<TData, TValue>({
       sorting,
       columnFilters,
       globalFilter,
-      pagination,
     },
   })
 
