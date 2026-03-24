@@ -454,7 +454,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     }
     
     // Add Bioinformatics specialist if service type matches
-    if (inquiryData.service === 'bioinformatics' | 'training') {
+    if (inquiryData.service === 'bioinformatics' | inquiryData.service === 'training') {
       //emailRecipients.push("bioinfo.pgc.upvisayas@up.edu.ph");
         emailRecipients.push("madayon1@up.edu.ph");
     }
