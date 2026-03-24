@@ -439,7 +439,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     // Configure recipients for internal notification
     const emailRecipients = Array.from(
       new Set([
-        //"sequencing.pgc.upvisayas@up.edu.ph",
+        "sequencing.pgc.upvisayas@up.edu.ph",
         "madayon1@up.edu.ph",
       ])
     );
@@ -454,7 +454,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     }
     
     // Add Bioinformatics specialist if service type matches
-    if (inquiryData.service === 'bioinformatics') {
+    if (inquiryData.service === 'bioinformatics' || inquiryData.service === 'training') {
       emailRecipients.push("madayon1@up.edu.ph");
     }
     
