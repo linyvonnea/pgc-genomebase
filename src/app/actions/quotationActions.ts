@@ -8,6 +8,7 @@ import { logActivity } from "@/services/activityLogService";
 import { sanitizeObject } from "@/lib/sanitizeObject";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { pgcLogo, schoolLogo } from "@/assets/logosBase64";
 
 export async function saveQuotationAction(
   quotation: QuotationRecord,
@@ -30,6 +31,12 @@ export async function saveQuotationAction(
           const clientEmailHtml = `
             <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.6;">
               <div style="background-color: #f1f5f9; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <!-- Header with Logos -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #e2e8f0;">
+                  <img src="${schoolLogo}" alt="School Logo" style="height: 50px; width: auto;" />
+                  <img src="${pgcLogo}" alt="PGC Logo" style="height: 50px; width: auto;" />
+                </div>
+                
                 <h2 style="color: #1e3a8a; margin-top: 0;">Quotation Available - PGC Visayas</h2>
                 <p>Dear ${inquiry.name},</p>
                 <p>Your quotation is now available in your client portal. <strong>Please note that the quotation does not include re-runs for unsuccessful samples.</strong> Make sure to read our FAQs for details about turnaround time, sample submission, and payment details.</p>
