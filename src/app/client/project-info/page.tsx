@@ -273,12 +273,12 @@ export default function ProjectForm() {
       if (!confirmLeave) return;
     }
 
-    // Redirect back to Client Portal welcome workspace with session parameters
+    // Redirect back to Client info with session parameters
     const params = new URLSearchParams();
     if (email) params.set("email", email);
     if (inquiryId) params.set("inquiryId", inquiryId);
     
-    router.push(`/portal?${params.toString()}`);
+    router.push(`/client/client-info?${params.toString()}`);
   };
 
   // Format date for display
