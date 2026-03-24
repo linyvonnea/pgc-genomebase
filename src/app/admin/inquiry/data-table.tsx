@@ -189,7 +189,7 @@ export function DataTable<TData, TValue>({
   // We keep this sync'd with the table state via onPaginationChange
   const [pagination, setPagination] = useState({
     pageIndex: 0,
-    pageSize: 10,
+    pageSize: 20,
   })
 
   const table = useReactTable({
@@ -572,7 +572,7 @@ export function DataTable<TData, TValue>({
 
       {/* Compact Table with Sticky Header */}
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
-        <div className="max-h-[70vh] overflow-hidden">
+        <div className="max-h-[70vh] overflow-y-auto overflow-x-hidden transition-all duration-300">
           <Table className="w-full border-collapse table-fixed">
             <TableHeader className="sticky top-0 bg-slate-50/95 backdrop-blur-sm z-10 border-b shadow-sm">
               {table.getHeaderGroups().map((headerGroup) => (
