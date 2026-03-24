@@ -3,7 +3,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { z } from "zod";
 import { projectFormSchema, ProjectFormData } from "@/schemas/projectSchema"; 
@@ -49,6 +49,7 @@ export default function ProjectForm() {
   const [pendingData, setPendingData] = useState<ProjectFormData | null>(null);
   const [isDraftSaveLocked, setIsDraftSaveLocked] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const initialFormRef = useRef<ProjectFormData | null>(null);
 
   // Fetch existing project request draft if it exists
   useEffect(() => {
@@ -103,6 +104,19 @@ export default function ProjectForm() {
     }
     fetchProjectRequest();
   }, [inquiryId, email, router]);
+
+  // Capture initial form state after load to detect unsaved changes
+  useEffect(() => {
+    if (!loading && !initialFormRef.current) {
+      initialFormRef.current = {
+        title: formData.title,
+        projectLead: formData.projectLead,
+        startDate: formData.startDate,
+        sendingInstitution: formData.sendingInstitution,
+        fundingInstitution: formData.fundingInstitution,
+      };
+    }
+  }, [loading]);
 
   // Permission check: Verify email and inquiryId exist and are valid
   useEffect(() => {
@@ -234,6 +248,33 @@ export default function ProjectForm() {
     setPendingData(null);
     setIsDraftSaveLocked(false);
     setIsSavingDraft(false);
+  };
+
+  // Helper to serialize form for dirty check
+  const serializeForm = (d: ProjectFormData | null) => {
+    if (!d) return "";
+    return JSON.stringify({
+      title: d.title || "",
+      projectLead: d.projectLead || "",
+      startDate: d.startDate ? new Date(d.startDate).toISOString() : null,
+      sendingInstitution: d.sendingInstitution || "",
+      fundingInstitution: d.fundingInstitution || "",
+    });
+  };
+
+  // Cancel / Go Back button handler
+  const handleCancelClick = () => {
+    const initialSerialized = serializeForm(initialFormRef.current);
+    const currentSerialized = serializeForm(formData as ProjectFormData);
+    if (initialSerialized !== currentSerialized) {
+      const confirmLeave = window.confirm(
+        "You have unsaved changes. Are you sure you want to leave? All unsaved changes will be lost."
+      );
+      if (!confirmLeave) return;
+    }
+
+    // Redirect back to Client Portal welcome workspace
+    router.push(`/portal`);
   };
 
   // Format date for display
@@ -383,6 +424,13 @@ export default function ProjectForm() {
 
             {/* Submit Button */}
             <div className="flex justify-end pt-6 border-t border-slate-100">
+              <Button
+                type="button"
+                onClick={handleCancelClick}
+                className="h-12 px-6 mr-3 bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition"
+              >
+                Cancel
+              </Button>
               <Button
                 type="submit"
                 disabled={isDraftSaveLocked || isSavingDraft}
