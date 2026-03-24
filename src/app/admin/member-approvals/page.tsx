@@ -688,21 +688,28 @@ export default function MemberApprovalsPage() {
                     }
                   }
 
+                  // If member count is still 0 for an approved project, check if we have data in clientRequests
+                  const displayMembers = filteredMembers.length > 0 
+                    ? filteredMembers 
+                    : (approval.clientRequests || []).map(cr => ({
+                        formData: { name: cr.name || "Unnamed", email: cr.email }
+                      }));
+
                   return (
                     <div className="flex items-center gap-2 text-sm text-slate-600">
                       <Users className="h-4 w-4 text-slate-400" />
                       <span className="font-medium">
                         {approval.type === "project"
-                          ? `${filteredMembers.length || 0} total member(s)`
-                          : `${filteredMembers.filter((m) => !m.isPrimary).length} member(s)`}
+                          ? `${displayMembers.length || 0} total member(s)`
+                          : `${displayMembers.filter((m: any) => !m.isPrimary).length} member(s)`}
                       </span>
                       <span className="text-slate-400">•</span>
                       <span>
                         {approval.type === "project"
-                          ? filteredMembers.map((m) => m.formData.name || "Unnamed").join(", ")
-                          : filteredMembers
-                              .filter((m) => !m.isPrimary)
-                              .map((m) => m.formData.name || "Unnamed")
+                          ? displayMembers.map((m: any) => m.formData.name || "Unnamed").join(", ")
+                          : displayMembers
+                              .filter((m: any) => !m.isPrimary)
+                              .map((m: any) => m.formData.name || "Unnamed")
                               .join(", ")}
                       </span>
                     </div>
