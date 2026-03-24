@@ -263,7 +263,7 @@ export default function ProjectForm() {
   };
 
   // Cancel / Go Back button handler
-  const handleCancelClick = () => {
+  const handleGoBack = () => {
     const initialSerialized = serializeForm(initialFormRef.current);
     const currentSerialized = serializeForm(formData as ProjectFormData);
     if (initialSerialized !== currentSerialized) {
@@ -273,8 +273,12 @@ export default function ProjectForm() {
       if (!confirmLeave) return;
     }
 
-    // Redirect back to Client Portal welcome workspace
-    router.push(`/portal`);
+    // Redirect back to Client Portal welcome workspace with session parameters
+    const params = new URLSearchParams();
+    if (email) params.set("email", email);
+    if (inquiryId) params.set("inquiryId", inquiryId);
+    
+    router.push(`/portal?${params.toString()}`);
   };
 
   // Format date for display
@@ -426,10 +430,10 @@ export default function ProjectForm() {
             <div className="flex justify-end pt-6 border-t border-slate-100">
               <Button
                 type="button"
-                onClick={handleCancelClick}
+                onClick={handleGoBack}
                 className="h-12 px-6 mr-3 bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition"
               >
-                Cancel
+                Go Back
               </Button>
               <Button
                 type="submit"
