@@ -220,6 +220,7 @@ interface ClientMember {
   isSubmitted: boolean;
   isPrimary: boolean;
   isDraft?: boolean;
+  status?: string;
 }
 
 interface ProjectDetails {
@@ -616,11 +617,17 @@ export default function ClientPortalPage() {
              const emailMatch = r.email.toLowerCase() === emailParam?.toLowerCase();
              if (!emailMatch) return false;
              
-             if (currentProjectRequestId) {
-                 return r.projectRequestId === currentProjectRequestId;
+             // If we have current project request ID, match it
+             if (currentProjectRequestId && r.projectRequestId === currentProjectRequestId) {
+                 return true;
              }
-             // If no project ID yet, take the most recent draft or specific one? 
-             // Without project ID, we might match wrong draft, but usually this happens during creation
+             
+             // If we have a selected project PID (for approved projects but still in request phase)
+             if (selectedProjectPid && r.projectRequestId === selectedProjectPid) {
+                 return true;
+             }
+
+             // Fallback to inquiry match if no specific project link found
              return true; 
         });
         
@@ -650,6 +657,7 @@ export default function ClientPortalPage() {
                 isSubmitted: !!primaryDraftRequest.isValidated,
                 isPrimary: true,
                 isDraft: true,
+                status: primaryDraftRequest.status // Injecting real status from Firestore
             };
         }
     }
@@ -1810,11 +1818,19 @@ export default function ClientPortalPage() {
   // ────────────────────────────────────────────────────────────────
 
   const getMemberStatus = (member: ClientMember) => {
-    // Check global project status first
+    // 1. Explicit Firestore status from member model (set during merging)
+    if (member.status === "pending" || member.status === "Pending Approval") {
+        return {
+          label: "Pending Approval",
+          color: "bg-blue-500", 
+        };
+    }
+    
+    // 2. Global project or specific approval status
     if ((projectDetails?.status === "Pending Approval" || approvalStatus === "pending") && member.isDraft) {
         return {
           label: "Pending Approval",
-          color: "bg-blue-500", // Blue to indicate info/waiting state rather than warning
+          color: "bg-blue-500", 
         };
     }
     
