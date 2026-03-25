@@ -9,7 +9,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { MessageCircle, RotateCcw, MoreHorizontal, Search, Trash2, X } from "lucide-react";
+import { MessageCircle, RotateCcw, MoreHorizontal, Search, Trash2, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -141,16 +141,7 @@ export function MessageNotificationCenter() {
                   : "All caught up!"}
               </p>
             </div>
-            {notifications.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => markAllViewed()}
-                className="h-7 px-2 text-xs text-blue-600 hover:bg-blue-50 hover:text-blue-700"
-              >
-                Mark all read
-              </Button>
-            )}
+            {/* "Mark all read" removed for client messages header */}
           </div>
 
           <div className="relative">
