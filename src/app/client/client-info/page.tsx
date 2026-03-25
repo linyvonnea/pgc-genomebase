@@ -1122,7 +1122,7 @@ export default function ClientPortalPage() {
           affiliationAddress: result.data.affiliationAddress,
           isPrimary: member.isPrimary,
           isValidated: true,
-          status: "draft",
+          status: (member.isPrimary || isDraftProject) ? "draft" : "pending",
           ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
         });
 
@@ -1227,7 +1227,7 @@ export default function ClientPortalPage() {
             affiliationAddress: result.data.affiliationAddress,
             isPrimary: false,
             isValidated: true,
-            status: "draft",
+            status: "pending",
             ...(selectedProjectPid && { projectRequestId: selectedProjectPid }),
           });
 
@@ -1546,12 +1546,14 @@ export default function ClientPortalPage() {
         projectDetails?.title || "",
         emailParam || "",
         members.find((m) => m.isPrimary)?.formData.name || "",
-        draftMembers.map((m) => ({
-          tempId: m.id,
-          isPrimary: false,
-          isValidated: true,
-          formData: m.formData,
-        }))
+        members
+          .filter((m) => m.isSubmitted || m.isDraft) // Include both primary and team members if they are submitted/draft
+          .map((m) => ({
+            tempId: m.id,
+            isPrimary: m.isPrimary,
+            isValidated: m.isSubmitted,
+            formData: m.formData,
+          }))
       );
 
       setApprovalStatus("pending");
