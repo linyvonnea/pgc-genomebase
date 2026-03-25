@@ -263,24 +263,46 @@ export function MessageNotificationCenter() {
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-32">
-                              {n.unreadCount === 0 && (
-                                <DropdownMenuItem 
-                                  onClick={(e) => handleMarkAsUnseen(e, n.inquiryId)}
-                                  disabled={markingUnseenId === n.inquiryId}
-                                  className="text-[11px] cursor-pointer"
-                                >
-                                  <RotateCcw className="mr-2 h-3.5 w-3.5" />
-                                  <span>Mark Unseen</span>
-                                </DropdownMenuItem>
+                              {n.unreadCount > 0 ? (
+                                <>
+                                  <DropdownMenuItem 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      markViewed(n.inquiryId);
+                                    }}
+                                    className="text-[11px] cursor-pointer"
+                                  >
+                                    <MessageCircle className="mr-2 h-3.5 w-3.5" />
+                                    <span>Mark as read</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    disabled
+                                    className="text-[11px] opacity-50 cursor-not-allowed text-red-600"
+                                  >
+                                    <Trash2 className="mr-2 h-3.5 w-3.5" />
+                                    <span>Dismiss</span>
+                                  </DropdownMenuItem>
+                                </>
+                              ) : (
+                                <>
+                                  <DropdownMenuItem 
+                                    onClick={(e) => handleMarkAsUnseen(e, n.inquiryId)}
+                                    disabled={markingUnseenId === n.inquiryId}
+                                    className="text-[11px] cursor-pointer"
+                                  >
+                                    <RotateCcw className="mr-2 h-3.5 w-3.5" />
+                                    <span>Mark as unseen</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={(e) => handleDismiss(e, n.inquiryId)}
+                                    disabled={dismissingId === n.inquiryId}
+                                    className="text-[11px] cursor-pointer text-red-600 focus:text-red-700 focus:bg-red-50"
+                                  >
+                                    <Trash2 className="mr-2 h-3.5 w-3.5" />
+                                    <span>Dismiss</span>
+                                  </DropdownMenuItem>
+                                </>
                               )}
-                              <DropdownMenuItem 
-                                onClick={(e) => handleDismiss(e, n.inquiryId)}
-                                disabled={dismissingId === n.inquiryId}
-                                className="text-[11px] cursor-pointer text-red-600 focus:text-red-700 focus:bg-red-50"
-                              >
-                                <Trash2 className="mr-2 h-3.5 w-3.5" />
-                                <span>Dismiss</span>
-                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
