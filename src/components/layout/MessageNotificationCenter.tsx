@@ -9,7 +9,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { MessageCircle, RotateCcw, MoreHorizontal, Search, Trash2, X, Check } from "lucide-react";
+import { MessageCircle, RotateCcw, MoreHorizontal, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -141,7 +141,16 @@ export function MessageNotificationCenter() {
                   : "All caught up!"}
               </p>
             </div>
-            {/* "Mark all read" removed for client messages header */}
+            {notifications.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => markAllViewed()}
+                className="h-7 px-2 text-xs text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+              >
+                Mark all read
+              </Button>
+            )}
           </div>
 
           <div className="relative">
@@ -254,19 +263,6 @@ export function MessageNotificationCenter() {
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-32">
-                              {n.unreadCount > 0 && (
-                                <DropdownMenuItem 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    markViewed(n.inquiryId);
-                                    toast.success("Marked as read");
-                                  }}
-                                  className="text-[11px] cursor-pointer"
-                                >
-                                  <Check className="mr-2 h-3.5 w-3.5" />
-                                  <span>Mark as read</span>
-                                </DropdownMenuItem>
-                              )}
                               {n.unreadCount === 0 && (
                                 <DropdownMenuItem 
                                   onClick={(e) => handleMarkAsUnseen(e, n.inquiryId)}
