@@ -141,7 +141,16 @@ export function MessageNotificationCenter() {
                   : "All caught up!"}
               </p>
             </div>
-            {/* "Mark all read" removed for client messages header */}
+            {notifications.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => markAllViewed()}
+                className="h-7 px-2 text-xs text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+              >
+                Mark all read
+              </Button>
+            )}
           </div>
 
           <div className="relative">
