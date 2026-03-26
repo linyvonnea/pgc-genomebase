@@ -22,21 +22,25 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
     try {
       validateFile(f, 10, ["application/pdf", "image/png", "image/jpeg"]);
     } catch (err: any) {
+      setFile(null);
       toast.error(err?.message || "Invalid file");
-      return;
     }
+  };
+
+  const handleUpload = async () => {
+    if (!file) return toast.error("Select a file first");
 
     setUploading(true);
     try {
       const folder = `receipts/${projectId}`;
-      const downloadURL = await uploadFile(f, folder);
+      const downloadURL = await uploadFile(file, folder);
 
       // Save metadata to Firestore under projects/{projectId}/officialReceipts
       const receiptsCol = collection(db, "projects", projectId, "officialReceipts");
       await addDoc(receiptsCol, {
-        fileName: f.name,
-        contentType: f.type,
-        size: f.size,
+        fileName: file.name,
+        contentType: file.type,
+        size: file.size,
         downloadURL,
         uploadedBy: user?.email || "anonymous",
         uploadedAt: serverTimestamp(),
@@ -53,7 +57,7 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
   };
 
   return (
-    <div className="mt-2 ml-5">
+    <div className="mt-2 ml-5 space-y-2">
       <div className="flex items-center gap-2">
         <input
           id={`receipt-upload-${projectId}`}
@@ -67,6 +71,11 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
           {uploading ? "Uploading…" : file ? `Selected: ${file.name}` : "No file selected"}
         </div>
       </div>
+      {file && !uploading && (
+        <Button size="sm" onClick={handleUpload}>
+          Upload Receipt
+        </Button>
+      )}
     </div>
   );
 }
