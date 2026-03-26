@@ -120,6 +120,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ClientConformeModal from "@/components/forms/ClientConformeModal";
+import UploadReceipt from "@/components/client/UploadReceipt";
 
 // ────────────────────────────────────────────────────────────────
 //  Formatting Helpers
@@ -2571,6 +2572,8 @@ export default function ClientPortalPage() {
                               ) : (
                                 <p className="text-xs text-slate-400 ml-5">No official receipts yet</p>
                               )}
+                              {/* Upload UI for Official Receipts (client) */}
+                              <UploadReceipt projectId={project.pid} />
                             </div>
                           </div>
                         )}
