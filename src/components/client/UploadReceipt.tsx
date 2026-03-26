@@ -16,16 +16,19 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] || null;
     setFile(f);
+
+    if (!f) return;
+
+    try {
+      validateFile(f, 10, ["application/pdf", "image/png", "image/jpeg"]);
+    } catch (err: any) {
+      setFile(null);
+      toast.error(err?.message || "Invalid file");
+    }
   };
 
   const handleUpload = async () => {
     if (!file) return toast.error("Select a file first");
-
-    try {
-      validateFile(file, 10, ["application/pdf", "image/png", "image/jpeg"]);
-    } catch (err: any) {
-      return toast.error(err?.message || "Invalid file");
-    }
 
     setUploading(true);
     try {
@@ -54,7 +57,7 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
   };
 
   return (
-    <div className="mt-2 ml-5">
+    <div className="mt-2 ml-5 space-y-2">
       <div className="flex items-center gap-2">
         <input
           id={`receipt-upload-${projectId}`}
@@ -62,12 +65,17 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
           accept=".pdf,image/*"
           onChange={handleFileChange}
           className="text-xs"
+          disabled={uploading}
         />
-        <Button size="sm" onClick={handleUpload} disabled={!file || uploading}>
-          {uploading ? "Uploading…" : "Upload Receipt"}
-        </Button>
+        <div className="text-xs text-slate-500">
+          {uploading ? "Uploading…" : file ? `Selected: ${file.name}` : "No file selected"}
+        </div>
       </div>
-      {file && <div className="text-xs text-slate-500 mt-1">Selected: {file.name}</div>}
+      {file && !uploading && (
+        <Button size="sm" onClick={handleUpload}>
+          Upload Receipt
+        </Button>
+      )}
     </div>
   );
 }
