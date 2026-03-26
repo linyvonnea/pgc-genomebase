@@ -16,28 +16,27 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] || null;
     setFile(f);
-  };
 
-  const handleUpload = async () => {
-    if (!file) return toast.error("Select a file first");
+    if (!f) return;
 
     try {
-      validateFile(file, 10, ["application/pdf", "image/png", "image/jpeg"]);
+      validateFile(f, 10, ["application/pdf", "image/png", "image/jpeg"]);
     } catch (err: any) {
-      return toast.error(err?.message || "Invalid file");
+      toast.error(err?.message || "Invalid file");
+      return;
     }
 
     setUploading(true);
     try {
       const folder = `receipts/${projectId}`;
-      const downloadURL = await uploadFile(file, folder);
+      const downloadURL = await uploadFile(f, folder);
 
       // Save metadata to Firestore under projects/{projectId}/officialReceipts
       const receiptsCol = collection(db, "projects", projectId, "officialReceipts");
       await addDoc(receiptsCol, {
-        fileName: file.name,
-        contentType: file.type,
-        size: file.size,
+        fileName: f.name,
+        contentType: f.type,
+        size: f.size,
         downloadURL,
         uploadedBy: user?.email || "anonymous",
         uploadedAt: serverTimestamp(),
@@ -62,12 +61,12 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
           accept=".pdf,image/*"
           onChange={handleFileChange}
           className="text-xs"
+          disabled={uploading}
         />
-        <Button size="sm" onClick={handleUpload} disabled={!file || uploading}>
-          {uploading ? "Uploading…" : "Upload Receipt"}
-        </Button>
+        <div className="text-xs text-slate-500">
+          {uploading ? "Uploading…" : file ? `Selected: ${file.name}` : "No file selected"}
+        </div>
       </div>
-      {file && <div className="text-xs text-slate-500 mt-1">Selected: {file.name}</div>}
     </div>
   );
 }
