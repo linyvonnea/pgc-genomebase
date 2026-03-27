@@ -110,10 +110,12 @@ export default function MemberApprovalsPage() {
       // For each project request, fetch associated client requests
       const projectApprovalsPromises = projectRequests.map(async (pr) => {
         try {
+          // Map UI filter 'cancelled' to clientRequests 'rejected' status
+          const clientStatus = filterStatus === "all" ? undefined : (filterStatus === "cancelled" ? "rejected" : filterStatus as any);
           // Get client requests matching the project request status (or all if filtering for all)
           const clientRequests = await getClientRequestsByInquiry(
-            pr.inquiryId, 
-            filterStatus === "all" ? undefined : filterStatus as any
+            pr.inquiryId,
+            clientStatus
           );
           
           return {
