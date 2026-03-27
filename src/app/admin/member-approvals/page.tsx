@@ -292,7 +292,7 @@ export default function MemberApprovalsPage() {
     const { getNextPid } = await import("@/services/projectsService");
     const { getNextCid } = await import("@/services/clientService");
     const { updateProjectRequestStatus } = await import("@/services/projectRequestService");
-    const { approveClientRequest } = await import("@/services/clientRequestService");
+    const { approveClientRequest, approveAllClientRequestsByInquiry } = await import("@/services/clientRequestService");
     const { doc, setDoc, updateDoc, serverTimestamp, Timestamp } = await import("firebase/firestore");
     const { db } = await import("@/lib/firebase");
 
@@ -386,6 +386,17 @@ export default function MemberApprovalsPage() {
       }
     } catch (inquiryError) {
       console.error("Error updating inquiry status:", inquiryError);
+      // Non-critical error, don't throw
+    }
+
+    // Ensure all pending clientRequests for this inquiry are approved
+    try {
+      if (approval.inquiryId) {
+        await approveAllClientRequestsByInquiry(approval.inquiryId, user?.email || "");
+        console.log(`✅ clientRequests for inquiry ${approval.inquiryId} updated to approved`);
+      }
+    } catch (clientReqError) {
+      console.error("Error updating clientRequests status:", clientReqError);
       // Non-critical error, don't throw
     }
 
