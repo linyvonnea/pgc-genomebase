@@ -281,6 +281,38 @@ export default function MemberApprovalsPage() {
     }
   };
 
+  // Open review dialog and ensure we have up-to-date clientRequests/members
+  const handleOpenReview = async (approval: CombinedApproval) => {
+    try {
+      // Map 'cancelled' UI status to clientRequests 'rejected'
+      const clientStatus = approval.status === "cancelled" ? "rejected" : undefined;
+      const clientRequests = await getClientRequestsByInquiry(approval.inquiryId, clientStatus as any);
+
+      // Map clientRequests into members array for display
+      const members = clientRequests.map((cr) => ({
+        tempId: cr.id,
+        isPrimary: cr.isPrimary,
+        isValidated: cr.isValidated,
+        formData: {
+          name: cr.name,
+          email: cr.email,
+          affiliation: cr.affiliation,
+          designation: cr.designation,
+          sex: cr.sex,
+          phoneNumber: cr.phoneNumber,
+          affiliationAddress: cr.affiliationAddress,
+        },
+      }));
+
+      setSelectedApproval({ ...approval, clientRequests, members });
+      setReviewNotes(approval.reviewNotes || "");
+      setShowReviewDialog(true);
+    } catch (error) {
+      console.error("Failed to load client requests for review:", error);
+      toast.error("Failed to load member details for this submission");
+    }
+  };
+
   const approveProjectRequest = async (approval: CombinedApproval) => {
     if (!approval.projectData || !approval.clientRequests) {
       throw new Error("Missing project data or client requests");
@@ -640,11 +672,7 @@ export default function MemberApprovalsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        setSelectedApproval(approval);
-                        setReviewNotes("");
-                        setShowReviewDialog(true);
-                      }}
+                      onClick={() => handleOpenReview(approval)}
                       className="text-[#166FB5] border-[#166FB5] hover:bg-[#166FB5] hover:text-white"
                     >
                       <Eye className="h-4 w-4 mr-1.5" />
