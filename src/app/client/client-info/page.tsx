@@ -1395,7 +1395,7 @@ export default function ClientPortalPage() {
             m.id === memberId
               ? {
                   ...m,
-                  id: savedId,
+                  id: savedIdDraft,
                   isDraft: true,
                   cid: "draft",
                   initialData: { ...m.formData },
