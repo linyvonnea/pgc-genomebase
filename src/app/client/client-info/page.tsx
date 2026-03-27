@@ -1791,12 +1791,24 @@ export default function ClientPortalPage() {
           ? await getSampleFormsByProjectId(project.pid)
           : [];
 
+        // Fetch official receipts from Firestore subcollection (if any)
+        let officialReceipts: any[] = [];
+        try {
+          if (project.pid && project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")) {
+            const receiptsSnapshot = await getDocs(collection(db, "projects", project.pid, "officialReceipts"));
+            officialReceipts = receiptsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          }
+        } catch (fetchReceiptError) {
+          console.warn(`Failed to load official receipts for project ${project.pid}:`, fetchReceiptError);
+          officialReceipts = [];
+        }
+
         setProjectDocuments((prev) => new Map(prev).set(pid, {
           quotations,
           chargeSlips,
           sampleForms,
           serviceReports: [],
-          officialReceipts: [],
+          officialReceipts,
           loading: false,
         }));
       } catch (error) {
