@@ -1118,30 +1118,56 @@ export default function ClientPortalPage() {
 
       if (isDraftProject && inquiryIdParam) {
         // For draft projects, save ALL members to clientRequests collection
-        const savedId = await saveClientRequest({
-          inquiryId: inquiryIdParam,
-          requestedBy: emailParam || "",
-          requestedByName: members.find((m) => m.isPrimary)?.formData.name || result.data.name,
-          name: result.data.name,
-          email: result.data.email,
-          affiliation: result.data.affiliation,
-          designation: result.data.designation,
-          sex: result.data.sex,
-          phoneNumber: result.data.phoneNumber,
-          affiliationAddress: result.data.affiliationAddress,
-          isPrimary: member.isPrimary,
-          isValidated: true,
-          status: (member.isPrimary || isDraftProject) ? "draft" : "pending",
-          ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
-        });
+        // Primary member: if an existing clientRequests doc exists (member.id), update it instead of creating a new doc
+        let savedId: string;
+        if (member.isPrimary && pendingMemberId && !pendingMemberId.startsWith("draft-") && !pendingMemberId.startsWith("request-")) {
+          // Update existing clientRequests document
+          const docRef = doc(db, "clientRequests", pendingMemberId);
+          await setDoc(docRef, {
+            inquiryId: inquiryIdParam,
+            requestedBy: emailParam || "",
+            requestedByName: members.find((m) => m.isPrimary)?.formData.name || result.data.name,
+            name: result.data.name,
+            email: result.data.email,
+            affiliation: result.data.affiliation,
+            designation: result.data.designation,
+            sex: result.data.sex,
+            phoneNumber: result.data.phoneNumber,
+            affiliationAddress: result.data.affiliationAddress,
+            isPrimary: member.isPrimary,
+            isValidated: true,
+            status: "draft",
+            ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
+            updatedAt: serverTimestamp(),
+          }, { merge: true });
+          savedId = pendingMemberId;
+        } else {
+          // Create or update via saveClientRequest (uses inquiryId + email-based ID)
+          savedId = await saveClientRequest({
+            inquiryId: inquiryIdParam,
+            requestedBy: emailParam || "",
+            requestedByName: members.find((m) => m.isPrimary)?.formData.name || result.data.name,
+            name: result.data.name,
+            email: result.data.email,
+            affiliation: result.data.affiliation,
+            designation: result.data.designation,
+            sex: result.data.sex,
+            phoneNumber: result.data.phoneNumber,
+            affiliationAddress: result.data.affiliationAddress,
+            isPrimary: member.isPrimary,
+            isValidated: true,
+            status: (member.isPrimary || isDraftProject) ? "draft" : "pending",
+            ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
+          });
 
-        // Delete old draft if ID changed (e.g. from dummy email to real email)
-        if (pendingMemberId && pendingMemberId !== savedId && !pendingMemberId.startsWith("draft-") && !pendingMemberId.startsWith("request-")) {
-          try {
-            await deleteDoc(doc(db, "clientRequests", pendingMemberId));
-            console.log("Deleted old member draft record:", pendingMemberId);
-          } catch (delError) {
-            console.warn("Failed to delete old draft document (might not exist):", delError);
+          // Delete old draft if ID changed (e.g. from dummy email to real email)
+          if (pendingMemberId && pendingMemberId !== savedId && !pendingMemberId.startsWith("draft-") && !pendingMemberId.startsWith("request-")) {
+            try {
+              await deleteDoc(doc(db, "clientRequests", pendingMemberId));
+              console.log("Deleted old member draft record:", pendingMemberId);
+            } catch (delError) {
+              console.warn("Failed to delete old draft document (might not exist):", delError);
+            }
           }
         }
 
@@ -1313,30 +1339,54 @@ export default function ClientPortalPage() {
     try {
       if (inquiryIdParam) {
         // For draft projects, save to clientRequests collection (without validation)
-        const savedId = await saveClientRequest({
-          inquiryId: inquiryIdParam,
-          requestedBy: emailParam || "",
-          requestedByName: members.find((m) => m.isPrimary)?.formData.name || member.formData.name || "",
-          name: member.formData.name,
-          email: member.formData.email,
-          affiliation: member.formData.affiliation,
-          designation: member.formData.designation,
-          sex: member.formData.sex,
-          phoneNumber: member.formData.phoneNumber,
-          affiliationAddress: member.formData.affiliationAddress,
-          isPrimary: member.isPrimary,
-          isValidated: false,
-          status: "draft",
-          ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
-        });
+        // Primary member: if existing clientRequests doc exists, update it instead of creating new
+        let savedIdDraft: string;
+        if (member.isPrimary && memberId && !memberId.startsWith("draft-") && !memberId.startsWith("request-")) {
+          const docRef = doc(db, "clientRequests", memberId);
+          await setDoc(docRef, {
+            inquiryId: inquiryIdParam,
+            requestedBy: emailParam || "",
+            requestedByName: members.find((m) => m.isPrimary)?.formData.name || member.formData.name || "",
+            name: member.formData.name,
+            email: member.formData.email,
+            affiliation: member.formData.affiliation,
+            designation: member.formData.designation,
+            sex: member.formData.sex,
+            phoneNumber: member.formData.phoneNumber,
+            affiliationAddress: member.formData.affiliationAddress,
+            isPrimary: member.isPrimary,
+            isValidated: false,
+            status: "draft",
+            ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
+            updatedAt: serverTimestamp(),
+          }, { merge: true });
+          savedIdDraft = memberId;
+        } else {
+          savedIdDraft = await saveClientRequest({
+            inquiryId: inquiryIdParam,
+            requestedBy: emailParam || "",
+            requestedByName: members.find((m) => m.isPrimary)?.formData.name || member.formData.name || "",
+            name: member.formData.name,
+            email: member.formData.email,
+            affiliation: member.formData.affiliation,
+            designation: member.formData.designation,
+            sex: member.formData.sex,
+            phoneNumber: member.formData.phoneNumber,
+            affiliationAddress: member.formData.affiliationAddress,
+            isPrimary: member.isPrimary,
+            isValidated: false,
+            status: "draft",
+            ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
+          });
 
-        // Delete old draft if ID changed (e.g. from dummy email to real email)
-        if (memberId && memberId !== savedId && !memberId.startsWith("draft-") && !memberId.startsWith("request-")) {
-          try {
-            await deleteDoc(doc(db, "clientRequests", memberId));
-            console.log("Deleted old member draft record:", memberId);
-          } catch (delError) {
-            console.warn("Failed to delete old draft (might not exist):", delError);
+          // Delete old draft if ID changed
+          if (memberId && memberId !== savedIdDraft && !memberId.startsWith("draft-") && !memberId.startsWith("request-")) {
+            try {
+              await deleteDoc(doc(db, "clientRequests", memberId));
+              console.log("Deleted old member draft record:", memberId);
+            } catch (delError) {
+              console.warn("Failed to delete old draft (might not exist):", delError);
+            }
           }
         }
 
@@ -1345,7 +1395,7 @@ export default function ClientPortalPage() {
             m.id === memberId
               ? {
                   ...m,
-                  id: savedId,
+                  id: savedIdDraft,
                   isDraft: true,
                   cid: "draft",
                   initialData: { ...m.formData },
