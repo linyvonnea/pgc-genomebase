@@ -19,7 +19,7 @@ import {
 import { db } from "@/lib/firebase";
 import { logActivity } from "@/services/activityLogService";
 
-export type ClientRequestStatus = "draft" | "pending" | "approved" | "rejected";
+export type ClientRequestStatus = "draft" | "pending" | "approved" | "rejected" | "cancelled";
 
 export interface ClientRequestData {
   name: string;

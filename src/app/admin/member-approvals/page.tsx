@@ -111,7 +111,7 @@ export default function MemberApprovalsPage() {
       const projectApprovalsPromises = projectRequests.map(async (pr) => {
         try {
           // Map UI filter 'cancelled' to clientRequests 'rejected' status
-          const clientStatus = filterStatus === "all" ? undefined : (filterStatus === "cancelled" ? "rejected" : filterStatus as any);
+          const clientStatus = filterStatus === "all" ? undefined : (filterStatus === "cancelled" ? "cancelled" : filterStatus as any);
           // Get client requests matching the project request status (or all if filtering for all)
           const clientRequests = await getClientRequestsByInquiry(
             pr.inquiryId,
@@ -284,8 +284,8 @@ export default function MemberApprovalsPage() {
   // Open review dialog and ensure we have up-to-date clientRequests/members
   const handleOpenReview = async (approval: CombinedApproval) => {
     try {
-      // Map 'cancelled' UI status to clientRequests 'rejected'
-      const clientStatus = approval.status === "cancelled" ? "rejected" : undefined;
+      // Map 'cancelled' UI status to clientRequests 'cancelled'
+      const clientStatus = approval.status === "cancelled" ? "cancelled" : undefined;
       const clientRequests = await getClientRequestsByInquiry(approval.inquiryId, clientStatus as any);
 
       // Map clientRequests into members array for display
