@@ -470,6 +470,14 @@ export default function MemberApprovalsPage() {
           undefined,
           reviewNotes
         );
+
+        // Cancel all pending client requests for this inquiry
+        const { cancelAllClientRequestsByInquiry } = await import("@/services/clientRequestService");
+        await cancelAllClientRequestsByInquiry(
+          selectedApproval.inquiryId,
+          user?.email || "",
+          reviewNotes
+        );
       }
       
       // Send cancellation email

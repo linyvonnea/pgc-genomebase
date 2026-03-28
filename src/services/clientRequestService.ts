@@ -314,7 +314,7 @@ export async function rejectClientRequest(
   await setDoc(
     docRef,
     {
-      status: "rejected",
+      status: "cancelled",
       rejectionReason: reason,
       reviewedBy,
       reviewedAt: serverTimestamp(),
@@ -322,6 +322,38 @@ export async function rejectClientRequest(
     },
     { merge: true }
   );
+}
+
+/**
+ * Cancel all pending client requests for a given inquiry ID.
+ * Used when project submission is cancelled/rejected at the project level.
+ */
+export async function cancelAllClientRequestsByInquiry(
+  inquiryId: string,
+  reviewedBy: string,
+  reason: string
+): Promise<void> {
+  const q = query(
+    collection(db, COLLECTION),
+    where("inquiryId", "==", inquiryId),
+    where("status", "==", "pending")
+  );
+
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) return;
+
+  const batch = writeBatch(db);
+  snapshot.docs.forEach((docSnap) => {
+    batch.update(docSnap.ref, {
+      status: "cancelled",
+      rejectionReason: reason,
+      reviewedBy,
+      reviewedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  });
+
+  await batch.commit();
 }
 
 /**
