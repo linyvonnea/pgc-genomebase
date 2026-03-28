@@ -19,7 +19,7 @@ import {
 import { db } from "@/lib/firebase";
 import { logActivity } from "@/services/activityLogService";
 
-export type ClientRequestStatus = "draft" | "pending" | "approved" | "rejected";
+export type ClientRequestStatus = "draft" | "pending" | "approved" | "cancelled" | "rejected";
 
 export interface ClientRequestData {
   name: string;
@@ -314,7 +314,7 @@ export async function rejectClientRequest(
   await setDoc(
     docRef,
     {
-      status: "rejected",
+      status: "cancelled",
       rejectionReason: reason,
       reviewedBy,
       reviewedAt: serverTimestamp(),
