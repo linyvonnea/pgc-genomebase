@@ -19,7 +19,7 @@ import { ServiceItem } from "@/types/ServiceItem";
 import { Inquiry } from "@/types/Inquiry";
 
 import { Badge } from "@/components/ui/badge";
-import { FlaskConical } from "lucide-react";
+import { FlaskConical, Calendar } from "lucide-react";
 
 import { saveQuotationToFirestore, generateNextReferenceNumber } from "@/services/quotationService";
 import {
@@ -187,7 +187,7 @@ export default function QuotationBuilder({
   const { data: inquiryData } = useQuery<Inquiry | undefined>({
     queryKey: ["inquiry", effectiveInquiryId],
     queryFn: () => getInquiryById(effectiveInquiryId),
-    enabled: !!effectiveInquiryId && !initialClientInfo,
+    enabled: !!effectiveInquiryId,
   });
 
   // Sync clientInfo state with fetched inquiry data or initial props
@@ -504,6 +504,53 @@ export default function QuotationBuilder({
                       </div>
                     )}
 
+                    {/* Research & Collaboration Details Section */}
+                    {(
+                      inquiryData?.serviceType === 'research' ||
+                      inquiryData?.projectBackground ||
+                      inquiryData?.projectBudget ||
+                      inquiryData?.molecularServicesBudget ||
+                      inquiryData?.plannedSampleCount
+                    ) && (
+                      <div className="pt-4 border-t border-slate-100 space-y-4">
+                        <h3 className="text-sm font-semibold text-slate-700">Research & Collaboration Details</h3>
+
+                        {(inquiryData?.researchOverview || inquiryData?.projectBackground) && (
+                          <div className="flex flex-col">
+                            <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                              Overview of Research, Objectives, and Scope of Collaboration
+                            </span>
+                            <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
+                              {inquiryData?.researchOverview || inquiryData?.projectBackground}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {inquiryData?.molecularServicesBudget && (
+                            <div className="flex flex-col">
+                              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Molecular Services Budget</span>
+                              <span className="text-sm font-medium text-slate-800 mt-1">{inquiryData?.molecularServicesBudget}</span>
+                            </div>
+                          )}
+
+                          {inquiryData?.plannedSampleCount && (
+                            <div className="flex flex-col">
+                              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">How Many Samples Are You Planning to Send?</span>
+                              <span className="text-sm font-medium text-slate-800 mt-1">{inquiryData?.plannedSampleCount}</span>
+                            </div>
+                          )}
+
+                          {inquiryData?.projectBudget && (
+                            <div className="flex flex-col">
+                              <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Project Budget</span>
+                              <span className="text-sm font-medium text-slate-800 mt-1">{inquiryData?.projectBudget}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Laboratory Details Section */}
                     {inquiryData?.serviceType === 'laboratory' && (
                       <div className="pt-4 border-t border-slate-100 space-y-4">
@@ -557,6 +604,50 @@ export default function QuotationBuilder({
                             <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
                               {inquiryData.individualAssayDetails}
                             </p>
+                          </div>
+                        )}
+                
+                        {/* Training Specific Fields (also relevant for some inquiries) */}
+                        {((inquiryData.trainingPrograms && inquiryData.trainingPrograms.length > 0) || inquiryData.specificTrainingNeed || inquiryData.targetTrainingDate || inquiryData.numberOfParticipants) && (
+                          <div className="pt-4 border-t border-slate-100 space-y-4">
+                            <h3 className="text-sm font-semibold text-slate-700">Training Details</h3>
+
+                            {inquiryData.trainingPrograms && inquiryData.trainingPrograms.length > 0 && (
+                              <div className="space-y-2">
+                                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Selected Training Programs</span>
+                                <div className="grid grid-cols-1 gap-2">
+                                  {inquiryData.trainingPrograms.map((program: string, index: number) => (
+                                    <div key={`${program}-${index}`} className="text-sm text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                                      {program === "others-customized" ? "Others / Customized Training Program" : program}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {inquiryData.specificTrainingNeed && (
+                              <div className="flex flex-col">
+                                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Others / Customized Training Program Details</span>
+                                <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">{inquiryData.specificTrainingNeed}</p>
+                              </div>
+                            )}
+
+                            {inquiryData.targetTrainingDate && (
+                              <div className="flex flex-col">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Calendar className="h-4 w-4 text-slate-400" />
+                                  <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Target Training Date</span>
+                                </div>
+                                <span className="text-sm font-medium text-slate-800">{inquiryData.targetTrainingDate}</span>
+                              </div>
+                            )}
+
+                            {inquiryData.numberOfParticipants && (
+                              <div className="flex flex-col">
+                                <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Number of Participants</span>
+                                <span className="text-sm font-medium text-slate-800 mt-1">{inquiryData.numberOfParticipants}</span>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
