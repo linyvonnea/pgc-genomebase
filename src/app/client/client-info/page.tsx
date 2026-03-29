@@ -2577,7 +2577,7 @@ export default function ClientPortalPage() {
                                       className="block text-xs text-slate-600 hover:text-orange-600 hover:underline truncate"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      • Form #{item.id.slice(0, 8)} ({item.totalNumberOfSamples || 0} samples)
+                                      • {item.id} ({item.totalNumberOfSamples || 0} samples)
                                     </a>
                                   ))}
                                 </div>
