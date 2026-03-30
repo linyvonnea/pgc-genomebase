@@ -102,8 +102,6 @@ export interface ThreadMessage {
   
   // Metadata
   isRead: boolean;
-  // Reactions: mapping from emoji string to array of userIds/emails who reacted
-  reactions?: Record<string, string[]>;
   readAt?: Timestamp;
   readBy?: string;
   

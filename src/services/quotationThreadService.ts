@@ -21,9 +21,6 @@ import {
   addDoc,
   writeBatch,
   deleteField,
-  runTransaction,
-  arrayUnion,
-  arrayRemove,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
@@ -566,42 +563,6 @@ export async function addThreadMessage(
     return messageRef.id;
   } catch (error) {
     console.error("Error adding thread message:", error);
-    throw error;
-  }
-}
-
-/**
- * Toggle a reaction for a given message.
- * If user already reacted with the emoji, remove their reaction; otherwise add it.
- */
-export async function toggleReaction(
-  messageId: string,
-  emoji: string,
-  userId: string,
-): Promise<void> {
-  try {
-    const msgRef = doc(db, MESSAGES_COLLECTION, messageId);
-
-    await runTransaction(db, async (tx) => {
-      const snap = await tx.get(msgRef);
-      if (!snap.exists()) throw new Error("Message not found");
-
-      const data = snap.data() as any;
-      const reactions = (data.reactions && data.reactions[emoji]) || [];
-      const hasReacted = reactions.includes(userId);
-
-      if (hasReacted) {
-        tx.update(msgRef, {
-          [`reactions.${emoji}`]: arrayRemove(userId),
-        });
-      } else {
-        tx.update(msgRef, {
-          [`reactions.${emoji}`]: arrayUnion(userId),
-        });
-      }
-    });
-  } catch (error) {
-    console.error("Error toggling reaction:", error);
     throw error;
   }
 }
