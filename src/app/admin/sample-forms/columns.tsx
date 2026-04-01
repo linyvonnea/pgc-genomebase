@@ -74,7 +74,7 @@ export const columns: ColumnDef<SampleFormRecord>[] = [
       const id = row.getValue("formId") as string;
       return (
         <Link
-          href={`/admin/sample-forms/${row.original.id}`}
+          href={`/admin/sample-forms/new?formId=${encodeURIComponent(id || row.original.id)}`}
           className="font-medium text-blue-600 hover:text-blue-800 transition-colors"
         >
           {id || row.original.id}
