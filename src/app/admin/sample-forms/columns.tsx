@@ -126,6 +126,6 @@ export const columns: ColumnDef<SampleFormRecord>[] = [
   {
     id: "action",
     header: "Action",
-    cell: ({ row }) => <PreviewPDFCell record={row.original} />,
+    cell: ({ row }) => <SampleFormPreviewButton record={row.original} />,
   },
 ];
