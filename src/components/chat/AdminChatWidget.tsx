@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import TextareaAutosize from "react-textarea-autosize";
 import { format } from "date-fns";
-import { EmojiPicker } from "./EmojiPicker";
+import EmojiPicker from "./EmojiPicker";
 import useAuth from "@/hooks/useAuth";
 import { getAllAdmins, Admin } from "@/services/adminService";
 import {

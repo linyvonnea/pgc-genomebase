@@ -23,7 +23,7 @@ import {
 } from "@/services/quotationThreadService";
 import { format } from "date-fns";
 import { getAdminDisplayName, getClientInitials } from "@/lib/chatUtils";
-import { EmojiPicker } from "./EmojiPicker";
+import EmojiPicker from "./EmojiPicker";
 
 interface ChatBoxProps {
   inquiryId: string;
