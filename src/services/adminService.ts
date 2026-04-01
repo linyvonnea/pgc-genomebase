@@ -14,8 +14,6 @@ export interface Admin {
   photoURL?: string;
   createdAt?: Date | any;
   lastLogin?: Date | any;
-  online?: boolean;
-  lastSeen?: any;
 }
 
 export const ADMIN_ROLES: { value: AdminRole; label: string; description: string }[] = [
@@ -63,8 +61,6 @@ export async function getAllAdmins(): Promise<Admin[]> {
       photoURL: data.photoURL || undefined,
       createdAt: data.createdAt,
       lastLogin: data.lastLogin,
-      online: data.online || false,
-      lastSeen: data.lastSeen,
     } as Admin;
   });
   
@@ -88,8 +84,6 @@ export async function getAdminByEmail(email: string): Promise<Admin | null> {
     photoURL: data.photoURL,
     createdAt: data.createdAt,
     lastLogin: data.lastLogin,
-    online: data.online || false,
-    lastSeen: data.lastSeen,
   };
 }
 

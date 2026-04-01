@@ -7,7 +7,7 @@ import {
   onAuthStateChanged,
   User,
 } from "firebase/auth";
-import { doc, getDoc, setDoc, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 import { logActivity } from "@/services/activityLogService";
 import { UserRole } from "@/types/Permissions";
 
@@ -23,61 +23,6 @@ export default function useAuth() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminInfo, setAdminInfo] = useState<AdminInfo | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Track user presence
-  useEffect(() => {
-    if (!user) return;
-    
-    const email = user.email!;
-    const uid = user.uid;
-    
-    // Determine which collection to update
-    const updatePresence = async (isOnline: boolean) => {
-      try {
-        const timestamp = serverTimestamp();
-        
-        // Update /users collection (all users)
-        const userRef = doc(db, "users", uid);
-        await updateDoc(userRef, {
-          online: isOnline,
-          lastSeen: timestamp
-        }).catch(err => console.debug("Silent role mismatch in /users presence:", err));
-
-        // If user is admin, also update /admins collection
-        const adminRef = doc(db, "admins", email);
-        const adminSnap = await getDoc(adminRef);
-        if (adminSnap.exists()) {
-          await updateDoc(adminRef, {
-            online: isOnline,
-            lastSeen: timestamp
-          });
-        }
-      } catch (err) {
-        console.error("Error updating presence:", err);
-      }
-    };
-
-    // Initially online
-    updatePresence(true);
-
-    // Heartbeat every 5 minutes while active
-    const interval = setInterval(() => updatePresence(true), 5 * 60 * 1000);
-
-    // Set offline on unmount/tab close
-    const handleUnload = () => {
-      // Note: navigator.sendBeacon or a robust presence system like Realtime Database 
-      // is usually better for "offline" events, but for Firestore we do our best.
-      updatePresence(false);
-    };
-
-    window.addEventListener("beforeunload", handleUnload);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("beforeunload", handleUnload);
-      updatePresence(false);
-    };
-  }, [user]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
