@@ -28,13 +28,13 @@ export default function PresenceIndicator({
   className = "",
 }: PresenceIndicatorProps) {
   const lastSeenText = React.useMemo(() => {
-    if (offlineLabel) return offlineLabel;
-    if (!lastSeen) return "Offline";
+    if (!lastSeen) return offlineLabel || "Offline";
     try {
       const date = lastSeen.toDate ? lastSeen.toDate() : new Date(lastSeen as any);
-      return `Active ${formatDistanceToNow(date, { addSuffix: true })}`;
+      const ago = formatDistanceToNow(date, { addSuffix: true });
+      return offlineLabel ? `${offlineLabel} • ${ago}` : `Active ${ago}`;
     } catch {
-      return "Offline";
+      return offlineLabel || "Offline";
     }
   }, [lastSeen, offlineLabel]);
 
