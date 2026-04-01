@@ -13,6 +13,7 @@ import { ArrowUpDown } from "lucide-react"
 import useAuth from "@/hooks/useAuth"
 import { usePermissions } from "@/hooks/usePermissions"
 import { ChargeSlipButton } from "./ChargeSlipButton"
+import { EditClientModal } from "@/components/forms/EditClientModal"
 
 // Helper to validate client data using Zod schema
 const validateClient = (data: any) => {
@@ -202,7 +203,6 @@ export const columns: ColumnDef<Client>[] = [
     cell: (ctx: any) => {
       const { row, meta } = ctx;
       const client = row.original;
-      const EditClientModal = require("@/components/forms/EditClientModal").EditClientModal;
       const router = useRouter();
       const { adminInfo } = useAuth();
       const { canEdit, canCreate } = usePermissions(adminInfo?.role);
