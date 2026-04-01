@@ -17,6 +17,7 @@ import useAuth from "@/hooks/useAuth";
 import { subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { getClientInitials } from "@/lib/chatUtils";
+import { formatDistanceToNow } from "date-fns";
 
 type NavigatorWithBadge = Navigator & {
   setAppBadge?: (contents?: number) => Promise<void>;
@@ -263,9 +264,12 @@ export default function FloatingChatWidget({
                   </span>
                   <div className="flex items-center gap-1.5">
                     {role === "admin" ? (
-                      <span className="text-[10px] font-medium text-blue-100 uppercase tracking-widest line-clamp-1">
-                        {inquiryData?.affiliation || "Inquiry Request"}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <div className={`w-1.5 h-1.5 rounded-full ${inquiryData?.online ? 'bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 'bg-slate-400'}`}></div>
+                        <span className="text-[10px] font-medium text-blue-100 uppercase tracking-widest line-clamp-1">
+                          {inquiryData?.online ? "Online" : (inquiryData?.lastSeen ? `${formatDistanceToNow(inquiryData.lastSeen.toDate ? inquiryData.lastSeen.toDate() : new Date(inquiryData.lastSeen))} ago` : (inquiryData?.affiliation || "Offline"))}
+                        </span>
+                      </div>
                     ) : (
                       <>
                         <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
