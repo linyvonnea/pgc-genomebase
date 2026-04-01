@@ -26,19 +26,19 @@ import { format } from "date-fns";
 import EmojiPicker from "./EmojiPicker";
 import useAuth from "@/hooks/useAuth";
 import { getAllAdmins, Admin } from "@/services/adminService";
-import {
-  getOrCreateDMChannel,
-  sendAdminMessage,
-  subscribeToAdminChannels,
-  subscribeToAdminMessages,
-  markAdminMessagesRead,
-  emailToKey,
-} from "@/services/adminChatService";
+import { getOrCreateDMChannel, sendAdminMessage, subscribeToAdminChannels, subscribeToAdminMessages, markAdminMessagesRead, emailToKey } from "@/services/adminChatService";
 import { AdminChannel, AdminMessage } from "@/types/AdminChat";
+import { formatDistanceToNow } from "date-fns";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+function formatLastActive(lastSeen: any): string {
+  if (!lastSeen) return "";
+  const date = lastSeen.toDate ? lastSeen.toDate() : new Date(lastSeen);
+  return `Last active ${formatDistanceToNow(date)} ago`;
+}
 
 function getInitials(name: string): string {
   return name
@@ -254,17 +254,20 @@ export default function AdminChatWidget() {
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
-                    <Avatar className="h-8 w-8 border border-white/30 bg-white/10 flex-shrink-0">
-                      <AvatarFallback className="bg-white/20 text-white text-xs font-bold">
+                    <Avatar className="h-8 w-8 border border-white/30 bg-white/10 flex-shrink-0 relative overflow-visible">
+                      <AvatarFallback className="bg-white/20 text-white text-xs font-bold w-full h-full rounded-full">
                         {getInitials(selectedAdmin.name)}
                       </AvatarFallback>
+                      {selectedAdmin.online && (
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#166FB5] rounded-full z-10" title="Online" />
+                      )}
                     </Avatar>
                     <div className="min-w-0">
                       <p className="text-sm font-semibold leading-tight truncate">
                         {selectedAdmin.name}
                       </p>
-                      <p className="text-[10px] text-white/70 uppercase tracking-wider leading-tight truncate">
-                        {selectedAdmin.position}
+                      <p className="text-[10px] text-white/70 tracking-wider leading-tight truncate">
+                        {selectedAdmin.online ? "Online now" : formatLastActive(selectedAdmin.lastSeen)}
                       </p>
                     </div>
                   </>
@@ -272,11 +275,6 @@ export default function AdminChatWidget() {
                   <>
                     <Users className="w-4 h-4 text-white/80 flex-shrink-0" />
                     <span className="font-bold text-sm">Team Chat</span>
-                    {totalUnread > 0 && (
-                      <Badge className="bg-red-500 text-white text-[10px] h-5 px-1.5 font-bold border-0">
-                        {totalUnread}
-                      </Badge>
-                    )}
                   </>
                 )}
               </div>
@@ -433,16 +431,26 @@ export default function AdminChatWidget() {
                         onClick={() => handleSelectAdmin(admin)}
                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 text-left"
                       >
-                        <Avatar className="h-10 w-10 border border-slate-200 flex-shrink-0">
-                          <AvatarFallback className="bg-[#166FB5]/10 text-[#166FB5] text-sm font-bold">
-                            {getInitials(admin.name)}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="relative flex-shrink-0">
+                          <Avatar className="h-10 w-10 border border-slate-200">
+                            <AvatarFallback className="bg-[#166FB5]/10 text-[#166FB5] text-sm font-bold">
+                              {getInitials(admin.name)}
+                            </AvatarFallback>
+                          </Avatar>
+                          {admin.online && (
+                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" title="Online" />
+                          )}
+                        </div>
 
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-slate-800 truncate">
-                            {admin.name}
-                          </p>
+                          <div className="flex items-center justify-between gap-2">
+                             <p className="text-sm font-semibold text-slate-800 truncate">
+                              {admin.name}
+                            </p>
+                            <span className="text-[10px] text-slate-400 whitespace-nowrap">
+                              {admin.online ? "Online" : formatLastActive(admin.lastSeen).replace("Last active ", "").replace(" ago", "")}
+                            </span>
+                          </div>
                           <p className="text-[11px] text-slate-400 truncate">
                             {preview}
                           </p>
