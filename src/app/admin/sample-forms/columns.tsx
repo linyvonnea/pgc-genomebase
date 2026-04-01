@@ -1,61 +1,17 @@
 "use client";
 
-import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { SampleFormRecord } from "@/types/SampleForm";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 
-function PreviewPDFCell({ record }: { record: SampleFormRecord }) {
-  const [open, setOpen] = useState(false);
-  const formId = record.formId || record.sfid || record.id;
-  const pdfUrl = `/api/generate-sample-form-pdf/${encodeURIComponent(formId)}`;
-
-  return (
-    <>
-      <Button
-        variant="outline"
-        size="sm"
-        className="text-blue-700 border-blue-200 hover:bg-blue-50"
-        onClick={() => setOpen(true)}
-      >
-        Preview PDF
-      </Button>
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent
-          className="max-w-5xl w-full h-[90vh] flex flex-col p-0 gap-0"
-          aria-describedby="sample-form-pdf-desc"
-        >
-          <div id="sample-form-pdf-desc" className="sr-only">
-            PDF preview of sample submission form {formId}.
-          </div>
-          <DialogHeader className="px-6 py-4 border-b shrink-0">
-            <DialogTitle className="text-base font-semibold">
-              {formId}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 overflow-hidden">
-            <iframe
-              src={pdfUrl}
-              style={{ width: "100%", height: "100%", border: "none" }}
-              title={`Sample Form PDF — ${formId}`}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
+const SampleFormPreviewButton = dynamic(
+  () => import("@/components/pdf/SampleFormPreviewButton"),
+  { ssr: false }
+);
 
 export const columns: ColumnDef<SampleFormRecord>[] = [
   {
@@ -126,6 +82,6 @@ export const columns: ColumnDef<SampleFormRecord>[] = [
   {
     id: "action",
     header: "Action",
-    cell: ({ row }) => <PreviewPDFCell record={row.original} />,
+    cell: ({ row }) => <SampleFormPreviewButton record={row.original} />,
   },
 ];
