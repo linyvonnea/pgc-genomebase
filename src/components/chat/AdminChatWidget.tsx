@@ -15,8 +15,8 @@
  *   5. "Seen" indicator under sent messages when peer has read them.
  */
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { X, ChevronLeft, Send, Users, Check, CheckCheck, MessageSquare } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { X, ChevronLeft, Send, Users, Check, CheckCheck, MessageSquare, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -75,6 +75,7 @@ export default function AdminChatWidget() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // ------------------------------------------------------------------
@@ -128,7 +129,34 @@ export default function AdminChatWidget() {
   // ------------------------------------------------------------------
 
   const myEmail = user?.email ?? "";
-  const otherAdmins = admins.filter((a) => a.email !== myEmail);
+
+  // Sort admins by most recent channel activity; admins with no channel go to the end
+  const otherAdmins = useMemo(() => {
+    const others = admins.filter((a) => a.email !== myEmail);
+    return others.sort((a, b) => {
+      const chA = channels.find(
+        (c) => c.participants.includes(a.email) && c.participants.includes(myEmail),
+      );
+      const chB = channels.find(
+        (c) => c.participants.includes(b.email) && c.participants.includes(myEmail),
+      );
+      const tA = chA?.lastMessageAt?.toMillis?.() ?? chA?.createdAt?.toMillis?.() ?? 0;
+      const tB = chB?.lastMessageAt?.toMillis?.() ?? chB?.createdAt?.toMillis?.() ?? 0;
+      return tB - tA;
+    });
+  }, [admins, channels, myEmail]);
+
+  // Filtered admin list based on search query
+  const filteredAdmins = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return otherAdmins;
+    return otherAdmins.filter(
+      (a) =>
+        a.name.toLowerCase().includes(q) ||
+        a.email.toLowerCase().includes(q) ||
+        a.position.toLowerCase().includes(q),
+    );
+  }, [otherAdmins, searchQuery]);
 
   const totalUnread = channels.reduce((sum, ch) => {
     const key = emailToKey(myEmail);
@@ -261,6 +289,22 @@ export default function AdminChatWidget() {
               </button>
             </div>
 
+            {/* ---- Search bar (admin list only) ---- */}
+            {!selectedAdmin && (
+              <div className="px-3 py-2 border-b border-slate-100 bg-white">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search admins…"
+                    className="w-full text-sm pl-8 pr-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* ---- Body ---- */}
             {selectedAdmin ? (
               /* DM Thread */
@@ -366,12 +410,12 @@ export default function AdminChatWidget() {
             ) : (
               /* Admin List */
               <div className="max-h-[400px] overflow-y-auto">
-                {otherAdmins.length === 0 ? (
+                {filteredAdmins.length === 0 ? (
                   <div className="p-8 text-center text-slate-400 text-sm">
-                    No other admins found.
+                    {searchQuery.trim() ? "No admins match your search." : "No other admins found."}
                   </div>
                 ) : (
-                  otherAdmins.map((admin) => {
+                  filteredAdmins.map((admin) => {
                     const channel = getChannelFor(admin.email);
                     const unread = channel?.unreadCounts?.[emailToKey(myEmail)] ?? 0;
                     const preview =
