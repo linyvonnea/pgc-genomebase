@@ -7,6 +7,7 @@ import { TabContent } from "@/components/layout/TabContent";
 import { NotificationCenter } from "@/components/layout/NotificationCenter";
 import { MessageNotificationCenter } from "@/components/layout/MessageNotificationCenter";
 import GlobalChatWidget from "@/components/chat/GlobalChatWidget";
+import AdminChatWidget from "@/components/chat/AdminChatWidget";
 import { TabProvider } from "@/contexts/TabContext";
 import { Toaster } from "@/components/ui/sonner";
 import useAuth from "@/hooks/useAuth";
@@ -146,6 +147,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </div>
         <GlobalChatWidget />
+        <AdminChatWidget />
         <Toaster />
       </div>
     </TabProvider>
