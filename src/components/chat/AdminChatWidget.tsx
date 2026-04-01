@@ -275,11 +275,6 @@ export default function AdminChatWidget() {
                   <>
                     <Users className="w-4 h-4 text-white/80 flex-shrink-0" />
                     <span className="font-bold text-sm">Team Chat</span>
-                    {totalUnread > 0 && (
-                      <Badge className="bg-red-500 text-white text-[10px] h-5 px-1.5 font-bold border-0">
-                        {totalUnread}
-                      </Badge>
-                    )}
                   </>
                 )}
               </div>
