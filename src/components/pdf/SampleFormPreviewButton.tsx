@@ -1,7 +1,7 @@
 // src/components/pdf/SampleFormPreviewButton.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,7 +10,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { pdf } from "@react-pdf/renderer";
+import { SampleFormPDF } from "./SampleFormPDF";
 import { SampleFormRecord } from "@/types/SampleForm";
+import { Loader2 } from "lucide-react";
 
 interface Props {
   record: SampleFormRecord;
