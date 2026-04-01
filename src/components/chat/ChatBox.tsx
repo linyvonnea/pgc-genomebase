@@ -268,39 +268,6 @@ export default function ChatBox({
                           {msg.content}
                         </p>
 
-                        {/* Reactions display */}
-                        <div className="flex gap-2 mt-2 items-center">
-                          {DEFAULT_REACTIONS.map((emoji) => {
-                            const users = (msg.reactions && msg.reactions[emoji]) || [];
-                            const count = users.length;
-                            const reacted = user && users.includes(user.email || user.uid);
-                            return (
-                              <button
-                                key={emoji}
-                                onClick={() => handleToggleReaction(msg.id, emoji)}
-                                type="button"
-                                className={`flex items-center gap-1 px-2 py-1 rounded-full text-sm ${
-                                  reacted ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-800"
-                                }`}
-                              >
-                                <span>{emoji}</span>
-                                {count > 0 && <span className="text-[11px] font-semibold">{count}</span>}
-                              </button>
-                            );
-                          })}
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const custom = prompt("Add emoji reaction (paste emoji):");
-                              if (custom) handleToggleReaction(msg.id, custom);
-                            }}
-                            className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-700"
-                          >
-                            +
-                          </button>
-                        </div>
-
                         {isMe && (
                           <div className="flex justify-end mt-1.5 -mb-0.5">
                             {msg.isRead ? (
