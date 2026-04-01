@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import TextareaAutosize from "react-textarea-autosize";
 import { format } from "date-fns";
+import { EmojiPicker } from "./EmojiPicker";
 import useAuth from "@/hooks/useAuth";
 import { getAllAdmins, Admin } from "@/services/adminService";
 import {
@@ -387,15 +388,20 @@ export default function AdminChatWidget() {
                     }}
                     className="flex gap-2 items-end"
                   >
-                    <TextareaAutosize
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder={`Message ${selectedAdmin.name.split(" ")[0]}…`}
-                      minRows={1}
-                      maxRows={5}
-                      className="flex-1 text-sm px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    />
+                    <div className="flex-1 relative flex items-end min-w-0">
+                      <TextareaAutosize
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder={`Message ${selectedAdmin.name.split(" ")[0]}…`}
+                        minRows={1}
+                        maxRows={5}
+                        className="flex-1 text-sm pl-3 pr-9 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden"
+                      />
+                      <div className="absolute right-2 bottom-1.5 grayscale hover:grayscale-0 transition-all">
+                        <EmojiPicker onEmojiSelect={(emoji) => setNewMessage((prev) => prev + emoji)} />
+                      </div>
+                    </div>
                     <Button
                       type="submit"
                       size="icon"
