@@ -14,6 +14,12 @@ import { format } from "date-fns";
 import { SampleFormRecord } from "@/types/SampleForm";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
+const SampleFormPreviewButton = dynamic(
+  () => import("@/components/pdf/SampleFormPreviewButton"),
+  { ssr: false }
+);
 
 function PreviewPDFCell({ record }: { record: SampleFormRecord }) {
   const [open, setOpen] = useState(false);
