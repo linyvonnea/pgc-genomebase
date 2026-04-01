@@ -99,25 +99,26 @@ export default function ChatBox({
     e.preventDefault();
     if (!newMessage.trim() || !user) return;
 
-    const messageContent = newMessage.trim();
-    setNewMessage(""); // Optimistic UI clear
-
-    try {
-      if (!user.email && !user.uid) {
-        throw new Error("User identifier missing");
-      }
-
       const senderDisplayName =
         role === "admin"
           ? getAdminDisplayName(user.email || user.uid)
           : user.displayName || user.email?.split("@")[0] || "Client";
+
+      const messageContent = newMessage.trim();
+      setNewMessage(""); // Optimistic UI clear
+
+      // Use a more descriptive sender name for the initials generation if this is a client message
+      let finalSenderName = senderDisplayName;
+      if (role === "client" && user.displayName) {
+        finalSenderName = user.displayName;
+      }
 
       await addThreadMessage({
         threadId: inquiryId,
         type: "text",
         content: messageContent,
         senderId: user.email || user.uid,
-        senderName: senderDisplayName,
+        senderName: finalSenderName,
         senderRole: role,
         isRead: false,
       } as Omit<ThreadMessage, "id" | "createdAt">);
