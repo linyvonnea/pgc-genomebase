@@ -23,6 +23,7 @@ import {
 } from "@/services/quotationThreadService";
 import { format } from "date-fns";
 import { getAdminDisplayName, getClientInitials } from "@/lib/chatUtils";
+import { EmojiPicker } from "./EmojiPicker";
 
 interface ChatBoxProps {
   inquiryId: string;
@@ -325,18 +326,23 @@ export default function ChatBox({
 
       <CardFooter className="p-3 bg-white border-t rounded-b-lg">
         <form onSubmit={handleSendMessage} className="flex w-full gap-2 items-end">
-          <TextareaAutosize
-            placeholder={
-              role === "admin" ? "Message client..." : "Message admin..."
-            }
-            value={newMessage}
-            disabled={loading}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            minRows={2}
-            maxRows={10}
-            className="flex-1 w-full rounded-xl px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto text-sm transition-all"
-          />
+          <div className="flex-1 relative flex items-end">
+            <TextareaAutosize
+              placeholder={
+                role === "admin" ? "Message client..." : "Message admin..."
+              }
+              value={newMessage}
+              disabled={loading}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              minRows={2}
+              maxRows={10}
+              className="flex-1 w-full rounded-xl pl-4 pr-10 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto text-sm transition-all"
+            />
+            <div className="absolute right-2 bottom-2.5">
+              <EmojiPicker onEmojiSelect={(emoji) => setNewMessage((prev) => prev + emoji)} />
+            </div>
+          </div>
           <Button
             type="submit"
             size="icon"
