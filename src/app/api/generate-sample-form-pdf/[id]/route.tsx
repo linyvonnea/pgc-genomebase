@@ -37,7 +37,22 @@ export async function GET(
     if (!data) {
       try {
         const clientRecord = await getSampleFormByIdClient(id);
-        if (clientRecord) data = { id: clientRecord.id, ...(clientRecord as any) };
+        if (clientRecord) {
+          data = { id: clientRecord.id, ...(clientRecord as any) };
+        } else {
+          // Explicitly check for sfid or formId via query if direct fallback fails
+          const { collection, query, where, getDocs } = await import("firebase/firestore");
+          const { db: clientDb } = await import("@/lib/firebase");
+          const q = query(
+            collection(clientDb, "sampleForms"),
+            where("formId", "==", id)
+          );
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+            const doc = snap.docs[0];
+            data = { id: doc.id, ...doc.data() };
+          }
+        }
       } catch (err) {
         console.error("❌ PDF generation (client read) error:", err);
       }
