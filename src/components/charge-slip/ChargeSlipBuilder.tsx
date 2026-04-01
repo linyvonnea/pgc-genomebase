@@ -168,6 +168,7 @@ function ChargeSlipBuilderInner({
       prev.map((svc) => (svc.id === id ? { ...svc, samples } : svc))
     );
   };
+
   const updateParticipants = (id: string, participants: number | "") => {
     setSelectedServices((prev) =>
       prev.map((svc) => (svc.id === id ? { ...svc, participants } : svc))

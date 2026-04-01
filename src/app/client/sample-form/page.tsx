@@ -46,7 +46,8 @@ export default function ClientSampleFormPage() {
 
   const [formData, setFormData] = useState<SampleFormData>({
     ...emptySampleFormData,
-    entries: createEmptySampleEntries(),
+    totalNumberOfSamples: 0,
+    entries: createEmptySampleEntries(0),
   });
   const [loadingForm, setLoadingForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -72,7 +73,7 @@ export default function ClientSampleFormPage() {
         }
 
         setFormData({
-          totalNumberOfSamples: record.totalNumberOfSamples || 1,
+          totalNumberOfSamples: record.totalNumberOfSamples ?? 0,
           sampleSource: {
             fish: !!record.sampleSource?.fish,
             crustacean: !!record.sampleSource?.crustacean,
@@ -101,7 +102,7 @@ export default function ClientSampleFormPage() {
           entries:
             record.entries && record.entries.length > 0
               ? record.entries
-              : createEmptySampleEntries(),
+              : createEmptySampleEntries(record.totalNumberOfSamples ?? 0),
         });
       } catch (error) {
         console.error("Error loading sample form:", error);
@@ -125,6 +126,37 @@ export default function ClientSampleFormPage() {
         [key]: value,
       },
     }));
+  };
+
+  // Ensure entries array length matches totalNumberOfSamples
+  const syncEntriesToCount = (count: number) => {
+    setFormData((prev) => {
+      const current = prev.entries || [];
+      const clamped = Math.max(0, Math.min(500, Math.floor(count || 0)));
+      if (current.length === clamped) return { ...prev, totalNumberOfSamples: count };
+
+      if (current.length < clamped) {
+        // append empty rows
+        const addCount = clamped - current.length;
+        const startIndex = current.length;
+        const newRows = Array.from({ length: addCount }, (_, i) => ({
+          row: startIndex + i + 1,
+          sampleCode: "",
+          concentration: "",
+          volume: "",
+          notes: "",
+        }));
+        return {
+          ...prev,
+          totalNumberOfSamples: count,
+          entries: [...current, ...newRows],
+        };
+      }
+
+      // truncate
+      const truncated = current.slice(0, clamped).map((e, idx) => ({ ...e, row: idx + 1 }));
+      return { ...prev, totalNumberOfSamples: count, entries: truncated };
+    });
   };
 
   const setTemplate = (
@@ -173,6 +205,13 @@ export default function ClientSampleFormPage() {
 
     setSubmitting(true);
     try {
+      console.log("Submitting sample form with context:", {
+        inquiryId,
+        projectId,
+        clientId,
+        email,
+      });
+
       await createSampleForm({
         ...result.data,
         inquiryId,
@@ -230,16 +269,14 @@ export default function ClientSampleFormPage() {
                 <Label>Total Number of Samples</Label>
                 <Input
                   type="number"
-                  min={1}
+                  min={0}
                   max={500}
                   value={formData.totalNumberOfSamples}
                   disabled={isReadOnly}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      totalNumberOfSamples: Number(e.target.value || 0),
-                    }))
-                  }
+                  onChange={(e) => {
+                    const val = Number(e.target.value || 0);
+                    syncEntriesToCount(val);
+                  }}
                 />
               </div>
             </div>
@@ -273,13 +310,23 @@ export default function ClientSampleFormPage() {
                       <Checkbox
                         checked={formData.sampleSource.others}
                         disabled={isReadOnly}
-                        onCheckedChange={(checked) => setSource("others", checked === true)}
+                        onCheckedChange={(checked) => {
+                          const enabled = checked === true;
+                          setFormData((prev) => ({
+                            ...prev,
+                            sampleSource: {
+                              ...prev.sampleSource,
+                              others: enabled,
+                              othersText: enabled ? prev.sampleSource.othersText : "",
+                            },
+                          }));
+                        }}
                       />
                       <span>Others (Please specify)</span>
                     </label>
                     <Input
                       value={formData.sampleSource.othersText}
-                      disabled={isReadOnly}
+                      disabled={isReadOnly || !formData.sampleSource.others}
                       onChange={(e) => setSource("othersText", e.target.value)}
                       placeholder="Specify other sample source"
                     />
@@ -320,15 +367,25 @@ export default function ClientSampleFormPage() {
                       <Checkbox
                         checked={formData.templateType.environmentalSample}
                         disabled={isReadOnly}
-                        onCheckedChange={(checked) =>
-                          setTemplate("environmentalSample", checked === true)
-                        }
+                        onCheckedChange={(checked) => {
+                          const enabled = checked === true;
+                          setFormData((prev) => ({
+                            ...prev,
+                            templateType: {
+                              ...prev.templateType,
+                              environmentalSample: enabled,
+                              environmentalSampleText: enabled
+                                ? prev.templateType.environmentalSampleText
+                                : "",
+                            },
+                          }));
+                        }}
                       />
                       <span>Environmental Sample (water, soil, etc.)</span>
                     </label>
                     <Input
                       value={formData.templateType.environmentalSampleText}
-                      disabled={isReadOnly}
+                      disabled={isReadOnly || !formData.templateType.environmentalSample}
                       onChange={(e) =>
                         setTemplate("environmentalSampleText", e.target.value)
                       }

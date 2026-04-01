@@ -110,10 +110,12 @@ export default function MemberApprovalsPage() {
       // For each project request, fetch associated client requests
       const projectApprovalsPromises = projectRequests.map(async (pr) => {
         try {
+          // Map UI filter 'cancelled' to clientRequests 'rejected' status
+          const clientStatus = filterStatus === "all" ? undefined : (filterStatus === "cancelled" ? "cancelled" : filterStatus as any);
           // Get client requests matching the project request status (or all if filtering for all)
           const clientRequests = await getClientRequestsByInquiry(
-            pr.inquiryId, 
-            filterStatus === "all" ? undefined : filterStatus as any
+            pr.inquiryId,
+            clientStatus
           );
           
           return {
@@ -279,6 +281,38 @@ export default function MemberApprovalsPage() {
     }
   };
 
+  // Open review dialog and ensure we have up-to-date clientRequests/members
+  const handleOpenReview = async (approval: CombinedApproval) => {
+    try {
+      // Map 'cancelled' UI status to clientRequests 'cancelled'
+      const clientStatus = approval.status === "cancelled" ? "cancelled" : undefined;
+      const clientRequests = await getClientRequestsByInquiry(approval.inquiryId, clientStatus as any);
+
+      // Map clientRequests into members array for display
+      const members = clientRequests.map((cr) => ({
+        tempId: cr.id,
+        isPrimary: cr.isPrimary,
+        isValidated: cr.isValidated,
+        formData: {
+          name: cr.name,
+          email: cr.email,
+          affiliation: cr.affiliation,
+          designation: cr.designation,
+          sex: cr.sex,
+          phoneNumber: cr.phoneNumber,
+          affiliationAddress: cr.affiliationAddress,
+        },
+      }));
+
+      setSelectedApproval({ ...approval, clientRequests, members });
+      setReviewNotes(approval.reviewNotes || "");
+      setShowReviewDialog(true);
+    } catch (error) {
+      console.error("Failed to load client requests for review:", error);
+      toast.error("Failed to load member details for this submission");
+    }
+  };
+
   const approveProjectRequest = async (approval: CombinedApproval) => {
     if (!approval.projectData || !approval.clientRequests) {
       throw new Error("Missing project data or client requests");
@@ -292,7 +326,7 @@ export default function MemberApprovalsPage() {
     const { getNextPid } = await import("@/services/projectsService");
     const { getNextCid } = await import("@/services/clientService");
     const { updateProjectRequestStatus } = await import("@/services/projectRequestService");
-    const { approveClientRequest } = await import("@/services/clientRequestService");
+    const { approveClientRequest, approveAllClientRequestsByInquiry } = await import("@/services/clientRequestService");
     const { doc, setDoc, updateDoc, serverTimestamp, Timestamp } = await import("firebase/firestore");
     const { db } = await import("@/lib/firebase");
 
@@ -389,6 +423,17 @@ export default function MemberApprovalsPage() {
       // Non-critical error, don't throw
     }
 
+    // Ensure all pending clientRequests for this inquiry are approved
+    try {
+      if (approval.inquiryId) {
+        await approveAllClientRequestsByInquiry(approval.inquiryId, user?.email || "");
+        console.log(`✅ clientRequests for inquiry ${approval.inquiryId} updated to approved`);
+      }
+    } catch (clientReqError) {
+      console.error("Error updating clientRequests status:", clientReqError);
+      // Non-critical error, don't throw
+    }
+
     // Success message
     const cidList = memberCids.map((m) => m.cid).join(", ");
     toast.success(
@@ -423,6 +468,14 @@ export default function MemberApprovalsPage() {
           user?.email || "",
           undefined,
           undefined,
+          reviewNotes
+        );
+
+        // Cancel all pending client requests for this inquiry
+        const { cancelAllClientRequestsByInquiry } = await import("@/services/clientRequestService");
+        await cancelAllClientRequestsByInquiry(
+          selectedApproval.inquiryId,
+          user?.email || "",
           reviewNotes
         );
       }
@@ -627,11 +680,7 @@ export default function MemberApprovalsPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        setSelectedApproval(approval);
-                        setReviewNotes("");
-                        setShowReviewDialog(true);
-                      }}
+                      onClick={() => handleOpenReview(approval)}
                       className="text-[#166FB5] border-[#166FB5] hover:bg-[#166FB5] hover:text-white"
                     >
                       <Eye className="h-4 w-4 mr-1.5" />
@@ -688,21 +737,28 @@ export default function MemberApprovalsPage() {
                     }
                   }
 
+                  // If member count is still 0 for an approved project, check if we have data in clientRequests
+                  const displayMembers = filteredMembers.length > 0 
+                    ? filteredMembers 
+                    : (approval.clientRequests || []).map(cr => ({
+                        formData: { name: cr.name || "Unnamed", email: cr.email }
+                      }));
+
                   return (
                     <div className="flex items-center gap-2 text-sm text-slate-600">
                       <Users className="h-4 w-4 text-slate-400" />
                       <span className="font-medium">
                         {approval.type === "project"
-                          ? `${filteredMembers.length || 0} total member(s)`
-                          : `${filteredMembers.filter((m) => !m.isPrimary).length} member(s)`}
+                          ? `${displayMembers.length || 0} total member(s)`
+                          : `${displayMembers.filter((m: any) => !m.isPrimary).length} member(s)`}
                       </span>
                       <span className="text-slate-400">•</span>
                       <span>
                         {approval.type === "project"
-                          ? filteredMembers.map((m) => m.formData.name || "Unnamed").join(", ")
-                          : filteredMembers
-                              .filter((m) => !m.isPrimary)
-                              .map((m) => m.formData.name || "Unnamed")
+                          ? displayMembers.map((m: any) => m.formData.name || "Unnamed").join(", ")
+                          : displayMembers
+                              .filter((m: any) => !m.isPrimary)
+                              .map((m: any) => m.formData.name || "Unnamed")
                               .join(", ")}
                       </span>
                     </div>

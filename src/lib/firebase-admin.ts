@@ -33,10 +33,8 @@ function parseServiceAccountFromEnv() {
   return null;
 }
 
-// Initialize Firebase Admin SDK
 if (!admin.apps.length) {
   try {
-    // Try environment variables first (for Vercel/Production)
     const serviceAccount = parseServiceAccountFromEnv();
     if (serviceAccount) {
       admin.initializeApp({
@@ -44,29 +42,13 @@ if (!admin.apps.length) {
       });
       console.log("✅ Firebase Admin initialized via environment variables");
     } else {
-      // Fallback: load from local file using absolute path based on process.cwd()
       const keyPath = path.join(process.cwd(), "scripts", "serviceAccountKey.json");
-      console.log("🔍 [Firebase Admin] Checking for serviceAccountKey at:", keyPath);
-      
-      let finalKeyPath = keyPath;
-      if (!fs.existsSync(finalKeyPath)) {
-        // Try relative to current file if process.cwd() is different (e.g. in some serverless environments)
-        finalKeyPath = path.resolve(__dirname, "../../scripts/serviceAccountKey.json");
-        console.log("🔍 [Firebase Admin] Not found at cwd, trying relative:", finalKeyPath);
-      }
-
-      if (fs.existsSync(finalKeyPath)) {
-        console.log("✅ [Firebase Admin] serviceAccountKey.json found at:", finalKeyPath);
-        const serviceAccount = JSON.parse(fs.readFileSync(finalKeyPath, "utf-8"));
+      if (fs.existsSync(keyPath)) {
+        const serviceAccount = JSON.parse(fs.readFileSync(keyPath, "utf-8"));
         admin.initializeApp({
           credential: admin.credential.cert(serviceAccount),
         });
-        console.log("✅ [Firebase Admin] Initialized successfully via serviceAccountKey.json");
-      } else {
-        console.error(
-          "❌ [Firebase Admin] credentials not found. Set FIREBASE_SERVICE_ACCOUNT or provide scripts/serviceAccountKey.json"
-        );
-        console.error("❌ [Firebase Admin] serviceAccountKey.json NOT found. Checked:", keyPath, "and", finalKeyPath);
+        console.log("✅ [Firebase Admin] Initialized via serviceAccountKey.json");
       }
     }
   } catch (error) {
@@ -74,7 +56,15 @@ if (!admin.apps.length) {
   }
 }
 
-export const adminDb = admin.apps.length ? admin.firestore() : null;
+// Add an exported getter to handle lazy initialization during Fast Refresh or lazy loading
+export function getAdminDb() {
+  if (admin.apps.length > 0) {
+    return admin.firestore();
+  }
+  return null;
+}
+
+export const adminDb = getAdminDb();
 if (!adminDb) {
   console.error("❌ adminDb failed to initialize at module level. admin.apps.length:", admin.apps.length);
 }

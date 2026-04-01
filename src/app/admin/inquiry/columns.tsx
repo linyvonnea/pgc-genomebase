@@ -23,8 +23,37 @@ import {
 } from "@/components/ui/tooltip";
 import { QuoteButton } from "./QuoteButton";
 import UnreadBadge from "@/components/chat/UnreadBadge";
-import { Copy, User, Eye } from "lucide-react";
+import { Copy, User, Eye, Circle } from "lucide-react";
 import { toast } from "sonner";
+import usePresenceStatus from "@/hooks/usePresenceStatus";
+
+/**
+ * Presence Cell Component
+ * 
+ * Separate component to handle the inclusion of the usePresenceStatus hook
+ * within the table cell, which is not allowed directly in the ColumnDef object.
+ */
+const PresenceCell = ({ inquiryId }: { inquiryId: string }) => {
+  const presence = usePresenceStatus(`client_${inquiryId}`);
+  
+  if (!presence.isOnline) return null;
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="relative flex h-2 w-2 shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Online Now</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
 
 /**
  * Utility function to get appropriate CSS classes for status badges
@@ -105,7 +134,8 @@ export const columns: ColumnDef<Inquiry>[] = [
       const shortId = inquiry.id.slice(0, 8);
 
       return (
-        <div className="flex items-center gap-2 w-full">
+        <div className="flex items-center gap-2 w-full pr-1">
+          <PresenceCell inquiryId={inquiry.id} />
           {showNew && (
             <Badge
               variant="destructive"
@@ -119,7 +149,7 @@ export const columns: ColumnDef<Inquiry>[] = [
           </span>
           <button
             onClick={handleCopy}
-            className="p-0.5 hover:bg-slate-100 rounded shrink-0"
+            className="p-0.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100 rounded shrink-0"
             title="Copy Inquiry ID"
           >
             <Copy className="h-2.5 w-2.5 text-slate-400" />

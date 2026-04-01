@@ -3,9 +3,11 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import Link from "next/link";
 import { SampleFormRecord } from "@/types/SampleForm";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export const columns: ColumnDef<SampleFormRecord>[] = [
   {
@@ -20,17 +22,15 @@ export const columns: ColumnDef<SampleFormRecord>[] = [
   {
     accessorKey: "formId",
     header: "ID",
-    cell: ({ row, table }) => {
+    cell: ({ row }) => {
       const id = row.getValue("formId") as string;
-      const meta = table.options.meta as any;
-      
       return (
-        <button 
-          onClick={() => meta?.onViewPDF?.(row.original.id)}
-          className="font-medium text-blue-600 hover:text-blue-800 transition-colors text-left"
+        <Link
+          href={`/admin/sample-forms/${row.original.id}`}
+          className="font-medium text-blue-600 hover:text-blue-800 transition-colors"
         >
           {id || row.original.id}
-        </button>
+        </Link>
       );
     },
   },
@@ -72,6 +72,25 @@ export const columns: ColumnDef<SampleFormRecord>[] = [
         >
           {status}
         </Badge>
+      );
+    },
+  },
+  {
+    id: "action",
+    header: "Action",
+    cell: ({ row }) => {
+      const recordId = row.original.id;
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const router = useRouter();
+      return (
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-blue-700 border-blue-200 hover:bg-blue-50"
+          onClick={() => router.push(`/admin/sample-forms/new?formId=${encodeURIComponent(recordId)}`)}
+        >
+          Preview PDF
+        </Button>
       );
     },
   },

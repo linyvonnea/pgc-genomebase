@@ -1,0 +1,130 @@
+[
+  {
+    "id": "PGCV-LF-SSF-1",
+    "data": {
+      "totalNumberOfSamples": 2,
+      "sampleSource": {
+        "fish": true,
+        "crustacean": true,
+        "plant": true,
+        "animal": true,
+        "others": true,
+        "othersText": "Others (Please specify)"
+      },
+      "templateType": {
+        "tissue": true,
+        "blood": true,
+        "bacteria": true,
+        "environmentalSample": true,
+        "environmentalSampleText": "Environmental Sample (water, soil, etc.)",
+        "genomicDNA": true,
+        "totalRNA": true,
+        "cDNA": true,
+        "pcrProduct": true
+      },
+      "ampliconDetails": {
+        "targetGenes": "22",
+        "targetGeneSize": "33",
+        "forwardPrimerSequence": "Forward Primer Sequence",
+        "reversePrimerSequence": "Reverse Primer Sequence"
+      },
+      "entries": [
+        {
+          "row": 1,
+          "sampleCode": "samp 1",
+          "concentration": "conc 1",
+          "volume": "vol 1",
+          "notes": "notest 1"
+        },
+        {
+          "row": 2,
+          "sampleCode": "samp 2",
+          "concentration": "conc 2",
+          "volume": "vol 2",
+          "notes": "notest 2"
+        }
+      ],
+      "inquiryId": "jROvkXthXilvqL1PWF2N",
+      "projectId": "P-2026-022",
+      "projectTitle": "test 3",
+      "clientId": "CL-2026-049",
+      "submittedByEmail": "dayonmerlitojr@gmail.com",
+      "submittedByName": "Merlito Jr Dayon",
+      "formId": "PGCV-LF-SSF-1",
+      "sfid": "PGCV-LF-SSF-1",
+      "status": "Submitted",
+      "createdAt": {
+        "_seconds": 1774237648,
+        "_nanoseconds": 134000000
+      },
+      "updatedAt": {
+        "_seconds": 1774237648,
+        "_nanoseconds": 134000000
+      }
+    }
+  },
+  {
+    "id": "PGCV-LF-SSF-2",
+    "data": {
+      "totalNumberOfSamples": 2,
+      "sampleSource": {
+        "fish": true,
+        "crustacean": false,
+        "plant": false,
+        "animal": false,
+        "others": false,
+        "othersText": ""
+      },
+      "templateType": {
+        "tissue": true,
+        "blood": false,
+        "bacteria": false,
+        "environmentalSample": false,
+        "environmentalSampleText": "",
+        "genomicDNA": false,
+        "totalRNA": false,
+        "cDNA": false,
+        "pcrProduct": false
+      },
+      "ampliconDetails": {
+        "targetGenes": "15s",
+        "targetGeneSize": "2000bp",
+        "forwardPrimerSequence": "test Forward Primer Sequence",
+        "reversePrimerSequence": "test \nReverse Primer Sequence"
+      },
+      "entries": [
+        {
+          "row": 1,
+          "sampleCode": "sample 1",
+          "concentration": "conc 1",
+          "volume": "vol 1",
+          "notes": "notes 1"
+        },
+        {
+          "row": 2,
+          "sampleCode": "sample 2",
+          "concentration": "conc 2",
+          "volume": "vol 2",
+          "notes": "notes 2"
+        }
+      ],
+      "inquiryId": "N1X3YljkbgEIVxPKpBTG",
+      "projectId": "N1X3YljkbgEIVxPKpBTG",
+      "projectTitle": "Project 1",
+      "clientId": "draft",
+      "submittedByEmail": "dayonmerlitojr@gmail.com",
+      "submittedByName": "Merlito Dayon Jr 23",
+      "formId": "PGCV-LF-SSF-2",
+      "sfid": "PGCV-LF-SSF-2",
+      "status": "Submitted",
+      "createdAt": {
+        "_seconds": 1774791836,
+        "_nanoseconds": 36000000
+      },
+      "updatedAt": {
+        "_seconds": 1774791836,
+        "_nanoseconds": 36000000
+      }
+    }
+  }
+]

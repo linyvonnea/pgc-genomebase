@@ -4,7 +4,7 @@
 // Left pane (1/4): Projects navigation sidebar
 // Right pane (3/4): Selected project details + team member management
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import {
@@ -120,6 +120,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ClientConformeModal from "@/components/forms/ClientConformeModal";
+import UploadReceipt from "@/components/client/UploadReceipt";
 
 // ────────────────────────────────────────────────────────────────
 //  Formatting Helpers
@@ -220,6 +221,7 @@ interface ClientMember {
   isSubmitted: boolean;
   isPrimary: boolean;
   isDraft?: boolean;
+  status?: string;
 }
 
 interface ProjectDetails {
@@ -311,6 +313,8 @@ export default function ClientPortalPage() {
   const [currentProjectRequestId, setCurrentProjectRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [activeSavingId, setActiveSavingId] = useState<string | null>(null);
+  const savingDraftIdsRef = useRef<Set<string>>(new Set());
 
   // ── Modal state ───────────────────────────────────────────────
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -614,11 +618,17 @@ export default function ClientPortalPage() {
              const emailMatch = r.email.toLowerCase() === emailParam?.toLowerCase();
              if (!emailMatch) return false;
              
-             if (currentProjectRequestId) {
-                 return r.projectRequestId === currentProjectRequestId;
+             // If we have current project request ID, match it
+             if (currentProjectRequestId && r.projectRequestId === currentProjectRequestId) {
+                 return true;
              }
-             // If no project ID yet, take the most recent draft or specific one? 
-             // Without project ID, we might match wrong draft, but usually this happens during creation
+             
+             // If we have a selected project PID (for approved projects but still in request phase)
+             if (selectedProjectPid && r.projectRequestId === selectedProjectPid) {
+                 return true;
+             }
+
+             // Fallback to inquiry match if no specific project link found
              return true; 
         });
         
@@ -648,6 +658,7 @@ export default function ClientPortalPage() {
                 isSubmitted: !!primaryDraftRequest.isValidated,
                 isPrimary: true,
                 isDraft: true,
+                status: primaryDraftRequest.status // Injecting real status from Firestore
             };
         }
     }
@@ -1089,8 +1100,10 @@ export default function ClientPortalPage() {
     const member = members.find((m) => m.id === pendingMemberId);
     if (!member) return;
 
-    setShowConfirmModal(false);
+    // Start loading and set as saving to disable the background button
     setSubmitting(true);
+    savingDraftIdsRef.current.add(pendingMemberId);
+    setActiveSavingId(pendingMemberId);
 
     try {
       const result = clientFormSchema.safeParse(member.formData);
@@ -1105,30 +1118,56 @@ export default function ClientPortalPage() {
 
       if (isDraftProject && inquiryIdParam) {
         // For draft projects, save ALL members to clientRequests collection
-        const savedId = await saveClientRequest({
-          inquiryId: inquiryIdParam,
-          requestedBy: emailParam || "",
-          requestedByName: members.find((m) => m.isPrimary)?.formData.name || result.data.name,
-          name: result.data.name,
-          email: result.data.email,
-          affiliation: result.data.affiliation,
-          designation: result.data.designation,
-          sex: result.data.sex,
-          phoneNumber: result.data.phoneNumber,
-          affiliationAddress: result.data.affiliationAddress,
-          isPrimary: member.isPrimary,
-          isValidated: true,
-          status: "draft",
-          ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
-        });
+        // Primary member: if an existing clientRequests doc exists (member.id), update it instead of creating a new doc
+        let savedId: string;
+        if (member.isPrimary && pendingMemberId && !pendingMemberId.startsWith("draft-") && !pendingMemberId.startsWith("request-")) {
+          // Update existing clientRequests document
+          const docRef = doc(db, "clientRequests", pendingMemberId);
+          await setDoc(docRef, {
+            inquiryId: inquiryIdParam,
+            requestedBy: emailParam || "",
+            requestedByName: members.find((m) => m.isPrimary)?.formData.name || result.data.name,
+            name: result.data.name,
+            email: result.data.email,
+            affiliation: result.data.affiliation,
+            designation: result.data.designation,
+            sex: result.data.sex,
+            phoneNumber: result.data.phoneNumber,
+            affiliationAddress: result.data.affiliationAddress,
+            isPrimary: member.isPrimary,
+            isValidated: true,
+            status: "draft",
+            ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
+            updatedAt: serverTimestamp(),
+          }, { merge: true });
+          savedId = pendingMemberId;
+        } else {
+          // Create or update via saveClientRequest (uses inquiryId + email-based ID)
+          savedId = await saveClientRequest({
+            inquiryId: inquiryIdParam,
+            requestedBy: emailParam || "",
+            requestedByName: members.find((m) => m.isPrimary)?.formData.name || result.data.name,
+            name: result.data.name,
+            email: result.data.email,
+            affiliation: result.data.affiliation,
+            designation: result.data.designation,
+            sex: result.data.sex,
+            phoneNumber: result.data.phoneNumber,
+            affiliationAddress: result.data.affiliationAddress,
+            isPrimary: member.isPrimary,
+            isValidated: true,
+            status: (member.isPrimary || isDraftProject) ? "draft" : "pending",
+            ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
+          });
 
-        // Delete old draft if ID changed (e.g. from dummy email to real email)
-        if (pendingMemberId && pendingMemberId !== savedId && !pendingMemberId.startsWith("draft-") && !pendingMemberId.startsWith("request-")) {
-          try {
-            await deleteDoc(doc(db, "clientRequests", pendingMemberId));
-            console.log("Deleted old member draft record:", pendingMemberId);
-          } catch (delError) {
-            console.warn("Failed to delete old draft document (might not exist):", delError);
+          // Delete old draft if ID changed (e.g. from dummy email to real email)
+          if (pendingMemberId && pendingMemberId !== savedId && !pendingMemberId.startsWith("draft-") && !pendingMemberId.startsWith("request-")) {
+            try {
+              await deleteDoc(doc(db, "clientRequests", pendingMemberId));
+              console.log("Deleted old member draft record:", pendingMemberId);
+            } catch (delError) {
+              console.warn("Failed to delete old draft document (might not exist):", delError);
+            }
           }
         }
 
@@ -1223,7 +1262,7 @@ export default function ClientPortalPage() {
             affiliationAddress: result.data.affiliationAddress,
             isPrimary: false,
             isValidated: true,
-            status: "draft",
+            status: "pending",
             ...(selectedProjectPid && { projectRequestId: selectedProjectPid }),
           });
 
@@ -1259,12 +1298,17 @@ export default function ClientPortalPage() {
       const msg = error instanceof Error ? error.message : "Failed to save information";
       toast.error(msg);
     } finally {
+      setShowConfirmModal(false);
       setSubmitting(false);
+      savingDraftIdsRef.current.delete(pendingMemberId);
+      setActiveSavingId(null);
       setPendingMemberId(null);
     }
   };
 
   const handleSaveDraft = async (memberId: string) => {
+    if (savingDraftIdsRef.current.has(memberId)) return;
+
     const member = members.find((m) => m.id === memberId);
     if (!member) return;
 
@@ -1280,37 +1324,69 @@ export default function ClientPortalPage() {
       return;
     }
 
+    // For approved projects, we show a confirmation modal first
+    const isDraftProject = projectDetails?.isDraft || projectDetails?.pid === "DRAFT";
+    if (!isDraftProject) {
+      setPendingMemberId(memberId);
+      setShowConfirmModal(true);
+      // We don't disable yet, it will be disabled when handleConfirmSave is called
+      return;
+    }
+
+    savingDraftIdsRef.current.add(memberId);
     setSubmitting(true);
+    setActiveSavingId(memberId);
     try {
-      // Check if this is a draft project
-      const isDraftProject = projectDetails?.isDraft || projectDetails?.pid === "DRAFT";
-
-      if (isDraftProject && inquiryIdParam) {
+      if (inquiryIdParam) {
         // For draft projects, save to clientRequests collection (without validation)
-        const savedId = await saveClientRequest({
-          inquiryId: inquiryIdParam,
-          requestedBy: emailParam || "",
-          requestedByName: members.find((m) => m.isPrimary)?.formData.name || member.formData.name || "",
-          name: member.formData.name,
-          email: member.formData.email,
-          affiliation: member.formData.affiliation,
-          designation: member.formData.designation,
-          sex: member.formData.sex,
-          phoneNumber: member.formData.phoneNumber,
-          affiliationAddress: member.formData.affiliationAddress,
-          isPrimary: member.isPrimary,
-          isValidated: false,
-          status: "draft",
-          ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
-        });
+        // Primary member: if existing clientRequests doc exists, update it instead of creating new
+        let savedIdDraft: string;
+        if (member.isPrimary && memberId && !memberId.startsWith("draft-") && !memberId.startsWith("request-")) {
+          const docRef = doc(db, "clientRequests", memberId);
+          await setDoc(docRef, {
+            inquiryId: inquiryIdParam,
+            requestedBy: emailParam || "",
+            requestedByName: members.find((m) => m.isPrimary)?.formData.name || member.formData.name || "",
+            name: member.formData.name,
+            email: member.formData.email,
+            affiliation: member.formData.affiliation,
+            designation: member.formData.designation,
+            sex: member.formData.sex,
+            phoneNumber: member.formData.phoneNumber,
+            affiliationAddress: member.formData.affiliationAddress,
+            isPrimary: member.isPrimary,
+            isValidated: false,
+            status: "draft",
+            ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
+            updatedAt: serverTimestamp(),
+          }, { merge: true });
+          savedIdDraft = memberId;
+        } else {
+          savedIdDraft = await saveClientRequest({
+            inquiryId: inquiryIdParam,
+            requestedBy: emailParam || "",
+            requestedByName: members.find((m) => m.isPrimary)?.formData.name || member.formData.name || "",
+            name: member.formData.name,
+            email: member.formData.email,
+            affiliation: member.formData.affiliation,
+            designation: member.formData.designation,
+            sex: member.formData.sex,
+            phoneNumber: member.formData.phoneNumber,
+            affiliationAddress: member.formData.affiliationAddress,
+            isPrimary: member.isPrimary,
+            isValidated: false,
+            status: "draft",
+            ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
+          });
 
-        // Delete old draft if ID changed (e.g. from dummy email to real email)
-        if (memberId && memberId !== savedId && !memberId.startsWith("draft-") && !memberId.startsWith("request-")) {
-          try {
-            await deleteDoc(doc(db, "clientRequests", memberId));
-            console.log("Deleted old member draft record:", memberId);
-          } catch (delError) {
-            console.warn("Failed to delete old draft (might not exist):", delError);
+          // Delete old draft if ID changed
+          if (memberId && memberId !== savedIdDraft && !memberId.startsWith("draft-") && !memberId.startsWith("request-")) {
+            try {
+              await deleteDoc(doc(db, "clientRequests", memberId));
+              console.log("Deleted old member draft record:", memberId);
+            } catch (delError) {
+              console.warn("Failed to delete old draft (might not exist):", delError);
+            }
           }
         }
 
@@ -1319,7 +1395,7 @@ export default function ClientPortalPage() {
             m.id === memberId
               ? {
                   ...m,
-                  id: savedId,
+                  id: savedIdDraft,
                   isDraft: true,
                   cid: "draft",
                   initialData: { ...m.formData },
@@ -1410,7 +1486,9 @@ export default function ClientPortalPage() {
       console.error("Draft save error:", error);
       toast.error("Failed to save draft");
     } finally {
+      savingDraftIdsRef.current.delete(memberId);
       setSubmitting(false);
+      setActiveSavingId(null);
     }
   };
 
@@ -1527,12 +1605,14 @@ export default function ClientPortalPage() {
         projectDetails?.title || "",
         emailParam || "",
         members.find((m) => m.isPrimary)?.formData.name || "",
-        draftMembers.map((m) => ({
-          tempId: m.id,
-          isPrimary: false,
-          isValidated: true,
-          formData: m.formData,
-        }))
+        members
+          .filter((m) => m.isSubmitted || m.isDraft) // Include both primary and team members if they are submitted/draft
+          .map((m) => ({
+            tempId: m.id,
+            isPrimary: m.isPrimary,
+            isValidated: m.isSubmitted,
+            formData: m.formData,
+          }))
       );
 
       setApprovalStatus("pending");
@@ -1761,12 +1841,24 @@ export default function ClientPortalPage() {
           ? await getSampleFormsByProjectId(project.pid)
           : [];
 
+        // Fetch official receipts from Firestore subcollection (if any)
+        let officialReceipts: any[] = [];
+        try {
+          if (project.pid && project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")) {
+            const receiptsSnapshot = await getDocs(collection(db, "projects", project.pid, "officialReceipts"));
+            officialReceipts = receiptsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          }
+        } catch (fetchReceiptError) {
+          console.warn(`Failed to load official receipts for project ${project.pid}:`, fetchReceiptError);
+          officialReceipts = [];
+        }
+
         setProjectDocuments((prev) => new Map(prev).set(pid, {
           quotations,
           chargeSlips,
           sampleForms,
           serviceReports: [],
-          officialReceipts: [],
+          officialReceipts,
           loading: false,
         }));
       } catch (error) {
@@ -1789,11 +1881,19 @@ export default function ClientPortalPage() {
   // ────────────────────────────────────────────────────────────────
 
   const getMemberStatus = (member: ClientMember) => {
-    // Check global project status first
+    // 1. Explicit Firestore status from member model (set during merging)
+    if (member.status === "pending" || member.status === "Pending Approval") {
+        return {
+          label: "Pending Approval",
+          color: "bg-blue-500", 
+        };
+    }
+    
+    // 2. Global project or specific approval status
     if ((projectDetails?.status === "Pending Approval" || approvalStatus === "pending") && member.isDraft) {
         return {
           label: "Pending Approval",
-          color: "bg-blue-500", // Blue to indicate info/waiting state rather than warning
+          color: "bg-blue-500", 
         };
     }
     
@@ -2100,6 +2200,7 @@ export default function ClientPortalPage() {
           onClick={() => handleSaveDraft(member.id)}
           disabled={
             member.isSubmitted ||
+            activeSavingId === member.id ||
             submitting ||
             projectDetails?.status === "Completed" ||
             projectDetails?.status === "Pending Approval"
@@ -2107,8 +2208,17 @@ export default function ClientPortalPage() {
           variant="outline"
           className="h-10 px-6 border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold disabled:opacity-50"
         >
-          <Save className="h-4 w-4 mr-2" />
-          Save Draft
+          {activeSavingId === member.id ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Save Draft
+            </>
+          )}
         </Button>
         <Button
           type="submit"
@@ -2467,7 +2577,7 @@ export default function ClientPortalPage() {
                                       className="block text-xs text-slate-600 hover:text-orange-600 hover:underline truncate"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      • Form #{item.id.slice(0, 8)} ({item.totalNumberOfSamples || 0} samples)
+                                      • {item.id} ({item.totalNumberOfSamples || 0} samples)
                                     </a>
                                   ))}
                                 </div>
@@ -2524,6 +2634,8 @@ export default function ClientPortalPage() {
                               ) : (
                                 <p className="text-xs text-slate-400 ml-5">No official receipts yet</p>
                               )}
+                              {/* Upload UI for Official Receipts (client) */}
+                              <UploadReceipt projectId={project.pid} />
                             </div>
                           </div>
                         )}
@@ -3474,6 +3586,11 @@ export default function ClientPortalPage() {
         onCancel={() => {
           setShowConfirmModal(false);
           setPendingMemberId(null);
+          // Re-enable draft button for this member if it was disabled
+          if (pendingMemberId) {
+            savingDraftIdsRef.current.delete(pendingMemberId);
+          }
+          setActiveSavingId(null);
         }}
         loading={submitting}
         title="Confirm Member Information"

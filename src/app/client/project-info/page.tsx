@@ -3,7 +3,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { z } from "zod";
 import { projectFormSchema, ProjectFormData } from "@/schemas/projectSchema"; 
@@ -47,6 +47,9 @@ export default function ProjectForm() {
   // Confirmation modal state
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingData, setPendingData] = useState<ProjectFormData | null>(null);
+  const [isDraftSaveLocked, setIsDraftSaveLocked] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const initialFormRef = useRef<ProjectFormData | null>(null);
 
   // Fetch existing project request draft if it exists
   useEffect(() => {
@@ -102,6 +105,19 @@ export default function ProjectForm() {
     fetchProjectRequest();
   }, [inquiryId, email, router]);
 
+  // Capture initial form state after load to detect unsaved changes
+  useEffect(() => {
+    if (!loading && !initialFormRef.current) {
+      initialFormRef.current = {
+        title: formData.title,
+        projectLead: formData.projectLead,
+        startDate: formData.startDate,
+        sendingInstitution: formData.sendingInstitution,
+        fundingInstitution: formData.fundingInstitution,
+      };
+    }
+  }, [loading]);
+
   // Permission check: Verify email and inquiryId exist and are valid
   useEffect(() => {
     async function checkPermission() {
@@ -144,6 +160,8 @@ export default function ProjectForm() {
   // On form submit, validate and show confirmation modal
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isDraftSaveLocked || isSavingDraft) return;
+
     const result = projectFormSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors: Partial<Record<keyof ProjectFormData, string>> = {};
@@ -154,6 +172,8 @@ export default function ProjectForm() {
       setErrors(fieldErrors);
       return;
     }
+
+    setIsDraftSaveLocked(true);
     setErrors({});
     setPendingData(formData); // Store data for modal
     setShowConfirmModal(true); // Show confirmation modal
@@ -161,17 +181,23 @@ export default function ProjectForm() {
 
   // On confirm in modal, save project request as draft
   const handleConfirmSave = async () => {
+    if (isSavingDraft) return;
+
     setShowConfirmModal(false);
+    setIsSavingDraft(true);
+
     try {
       const result = projectFormSchema.safeParse(pendingData);
       
       if (!result.success) {
         toast.error("Invalid data. Please review your entries.");
+        setIsDraftSaveLocked(false);
         return;
       }
 
       if (!inquiryId || !email) {
         toast.error("Missing required parameters.");
+        setIsDraftSaveLocked(false);
         return;
       }
 
@@ -210,6 +236,9 @@ export default function ProjectForm() {
     } catch (error) {
       console.error("Error saving project draft:", error);
       toast.error("Error saving project information. Please try again.");
+      setIsDraftSaveLocked(false);
+    } finally {
+      setIsSavingDraft(false);
     }
   };
 
@@ -217,6 +246,39 @@ export default function ProjectForm() {
   const handleCancelModal = () => {
     setShowConfirmModal(false);
     setPendingData(null);
+    setIsDraftSaveLocked(false);
+    setIsSavingDraft(false);
+  };
+
+  // Helper to serialize form for dirty check
+  const serializeForm = (d: ProjectFormData | null) => {
+    if (!d) return "";
+    return JSON.stringify({
+      title: d.title || "",
+      projectLead: d.projectLead || "",
+      startDate: d.startDate ? new Date(d.startDate).toISOString() : null,
+      sendingInstitution: d.sendingInstitution || "",
+      fundingInstitution: d.fundingInstitution || "",
+    });
+  };
+
+  // Cancel / Go Back button handler
+  const handleGoBack = () => {
+    const initialSerialized = serializeForm(initialFormRef.current);
+    const currentSerialized = serializeForm(formData as ProjectFormData);
+    if (initialSerialized !== currentSerialized) {
+      const confirmLeave = window.confirm(
+        "You have unsaved changes. Are you sure you want to leave? All unsaved changes will be lost."
+      );
+      if (!confirmLeave) return;
+    }
+
+    // Redirect back to Client info with session parameters
+    const params = new URLSearchParams();
+    if (email) params.set("email", email);
+    if (inquiryId) params.set("inquiryId", inquiryId);
+    
+    router.push(`/client/client-info?${params.toString()}`);
   };
 
   // Format date for display
@@ -367,7 +429,15 @@ export default function ProjectForm() {
             {/* Submit Button */}
             <div className="flex justify-end pt-6 border-t border-slate-100">
               <Button
+                type="button"
+                onClick={handleGoBack}
+                className="h-12 px-6 mr-3 bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition"
+              >
+                Go Back
+              </Button>
+              <Button
                 type="submit"
+                disabled={isDraftSaveLocked || isSavingDraft}
                 className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 Save Project Draft
@@ -381,7 +451,7 @@ export default function ProjectForm() {
         open={showConfirmModal}
         onConfirm={handleConfirmSave}
         onCancel={handleCancelModal}
-        loading={false}
+        loading={isSavingDraft}
         title="Save Project Draft?"
         description="Review your project information below. You can edit this later before submitting for approval."
         confirmLabel="Save Draft"

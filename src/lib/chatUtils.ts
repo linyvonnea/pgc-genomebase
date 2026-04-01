@@ -10,6 +10,7 @@ const ADMIN_NAME_MAP: Record<string, string> = {
   madayon1: "Merl",
   mdlojera: "Mics",
   mfjavier: "Carms",
+  jcvelo: "Jaz",
 };
 
 /**
@@ -24,6 +25,7 @@ const ADMIN_ICON_MAP: Record<string, string> = {
   madayon1: "👨‍🔬",    // Merl
   mdlojera: "👩‍🎨",    // Mics
   mfjavier: "👩‍🎨",    // Carms
+  jcvelo: "👩‍🎨",    // Jaz
 };
 
 /**

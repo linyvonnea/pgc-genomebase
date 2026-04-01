@@ -27,7 +27,6 @@ import {
   SortingState,
   getFilteredRowModel,
   ColumnFiltersState,
-  getPaginationRowModel,
 } from "@tanstack/react-table"
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
@@ -190,7 +189,7 @@ export function DataTable<TData, TValue>({
   // We keep this sync'd with the table state via onPaginationChange
   const [pagination, setPagination] = useState({
     pageIndex: 0,
-    pageSize: 10,
+    pageSize: 20,
   })
 
   const table = useReactTable({
@@ -216,7 +215,6 @@ export function DataTable<TData, TValue>({
       sorting,
       columnFilters,
       globalFilter,
-      pagination,
     },
   })
 
@@ -258,21 +256,22 @@ export function DataTable<TData, TValue>({
 
   const setPageSize = (size: number) => {
     setPagination({ pageIndex: 0, pageSize: size })
-    table.setPageSize(size)
+    // No need to call table.setPageSize(size) here since we manually slice the rows
+    // based on our own pagination state.
   }
 
   const nextPage = () => {
     if (pagination.pageIndex < pageCount - 1) {
       setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex + 1 }))
     }
-    table.nextPage()
+    // No need to call table.nextPage() here
   }
 
   const previousPage = () => {
     if (pagination.pageIndex > 0) {
       setPagination(prev => ({ ...prev, pageIndex: prev.pageIndex - 1 }))
     }
-    table.previousPage()
+    // No need to call table.previousPage() here
   }
 
   const canNextPage = pagination.pageIndex < pageCount - 1
@@ -573,7 +572,7 @@ export function DataTable<TData, TValue>({
 
       {/* Compact Table with Sticky Header */}
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
-        <div className="max-h-[70vh] overflow-hidden">
+        <div className="max-h-[70vh] overflow-y-auto overflow-x-hidden transition-all duration-300">
           <Table className="w-full border-collapse table-fixed">
             <TableHeader className="sticky top-0 bg-slate-50/95 backdrop-blur-sm z-10 border-b shadow-sm">
               {table.getHeaderGroups().map((headerGroup) => (
