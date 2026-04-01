@@ -17,6 +17,9 @@ import useAuth from "@/hooks/useAuth";
 import { subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { getClientInitials } from "@/lib/chatUtils";
+import { startPresence, subscribeToAnyAdminOnline } from "@/services/presenceService";
+import usePresenceStatus from "@/hooks/usePresenceStatus";
+import PresenceIndicator from "@/components/chat/PresenceIndicator";
 
 type NavigatorWithBadge = Navigator & {
   setAppBadge?: (contents?: number) => Promise<void>;
@@ -53,6 +56,36 @@ export default function FloatingChatWidget({
   const { user } = useAuth();
   const [inquiryData, setInquiryData] = useState<Inquiry | null>(null);
   const [lastNotifiedUnread, setLastNotifiedUnread] = useState(0);
+
+  // ---- Presence: client keyed by "client_{inquiryId}", admin by email ----
+  const clientPresenceId = `client_${inquiryId}`;
+  const adminPresenceId = user?.email ?? null;
+
+  // Subscribe to the other party's presence
+  // Admin view → watch the client's presence key
+  // Client view → handled separately via subscribeToAnyAdminOnline
+  const clientPresence = usePresenceStatus(role === "admin" ? clientPresenceId : null);
+
+  // For client view: subscribe to whether any admin is online
+  const [supportOnline, setSupportOnline] = useState(false);
+  useEffect(() => {
+    if (role !== "client") return;
+    return subscribeToAnyAdminOnline((online) => setSupportOnline(online));
+  }, [role]);
+
+  // Publish own presence
+  useEffect(() => {
+    if (role === "client") {
+      // Clients are identified by their inquiryId
+      return startPresence(clientPresenceId, "client");
+    }
+    // Admins: presence is already published by AdminChatWidget;
+    // publish here as fallback (idempotent — same key, same heartbeat behaviour)
+    if (adminPresenceId) {
+      return startPresence(adminPresenceId, "admin");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role, clientPresenceId, adminPresenceId]);
 
   useEffect(() => {
     if (!inquiryId) return;
@@ -261,18 +294,22 @@ export default function FloatingChatWidget({
                   <span className="font-bold text-sm tracking-tight leading-tight">
                     {role === "admin" ? (inquiryData?.name || "Client") : "PGC Visayas Support"}
                   </span>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 mt-0.5">
                     {role === "admin" ? (
-                      <span className="text-[10px] font-medium text-blue-100 uppercase tracking-widest line-clamp-1">
-                        {inquiryData?.affiliation || "Inquiry Request"}
-                      </span>
+                      <PresenceIndicator
+                        isOnline={clientPresence.isOnline}
+                        lastSeen={clientPresence.lastSeen}
+                        offlineLabel={inquiryData?.affiliation || "Inquiry Request"}
+                        variant="light"
+                      />
                     ) : (
-                      <>
-                        <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
-                        <span className="text-[10px] font-medium text-blue-100 uppercase tracking-widest">
-                          Online
-                        </span>
-                      </>
+                      <PresenceIndicator
+                        isOnline={supportOnline}
+                        lastSeen={null}
+                        onlineLabel="Support Available"
+                        offlineLabel="Support Offline"
+                        variant="light"
+                      />
                     )}
                   </div>
                 </div>
