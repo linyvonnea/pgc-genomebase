@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { SampleFormPDF } from "@/components/pdf/SampleFormPDF";
 import { getAdminDb } from "@/lib/firebase-admin";
