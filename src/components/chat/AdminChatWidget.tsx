@@ -25,20 +25,23 @@ import TextareaAutosize from "react-textarea-autosize";
 import { format } from "date-fns";
 import EmojiPicker from "./EmojiPicker";
 import useAuth from "@/hooks/useAuth";
+import usePresenceStatus from "@/hooks/usePresenceStatus";
+import { startPresence } from "@/services/presenceService";
+import PresenceIndicator from "./PresenceIndicator";
 import { getAllAdmins, Admin } from "@/services/adminService";
-import { getOrCreateDMChannel, sendAdminMessage, subscribeToAdminChannels, subscribeToAdminMessages, markAdminMessagesRead, emailToKey } from "@/services/adminChatService";
+import {
+  getOrCreateDMChannel,
+  sendAdminMessage,
+  subscribeToAdminChannels,
+  subscribeToAdminMessages,
+  markAdminMessagesRead,
+  emailToKey,
+} from "@/services/adminChatService";
 import { AdminChannel, AdminMessage } from "@/types/AdminChat";
-import { formatDistanceToNow } from "date-fns";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function formatLastActive(lastSeen: any): string {
-  if (!lastSeen) return "";
-  const date = lastSeen.toDate ? lastSeen.toDate() : new Date(lastSeen);
-  return `Last active ${formatDistanceToNow(date)} ago`;
-}
 
 function getInitials(name: string): string {
   return name
@@ -58,6 +61,99 @@ function formatMsgTime(ts: any): string {
   } catch {
     return "";
   }
+}
+
+// ---------------------------------------------------------------------------
+// SelectedAdminHeader — uses a hook so it must be its own component
+// ---------------------------------------------------------------------------
+
+interface SelectedAdminHeaderProps {
+  admin: Admin;
+  onBack: () => void;
+}
+
+function SelectedAdminHeader({ admin, onBack }: SelectedAdminHeaderProps) {
+  const presence = usePresenceStatus(admin.email);
+  return (
+    <>
+      <button
+        onClick={onBack}
+        className="p-1 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0"
+        aria-label="Back to admin list"
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </button>
+      <div className="relative flex-shrink-0">
+        <Avatar className="h-8 w-8 border border-white/30 bg-white/10">
+          <AvatarFallback className="bg-white/20 text-white text-xs font-bold">
+            {getInitials(admin.name)}
+          </AvatarFallback>
+        </Avatar>
+        {presence.isOnline && (
+          <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2 border-[#166FB5]" />
+        )}
+      </div>
+      <div className="min-w-0">
+        <p className="text-sm font-semibold leading-tight truncate">{admin.name}</p>
+        <PresenceIndicator
+          isOnline={presence.isOnline}
+          lastSeen={presence.lastSeen}
+          offlineLabel={admin.position}
+          variant="light"
+        />
+      </div>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// AdminListItem — isolated so it can call hooks per admin row
+// ---------------------------------------------------------------------------
+
+interface AdminListItemProps {
+  admin: Admin;
+  unread: number;
+  preview: string;
+  onClick: () => void;
+}
+
+function AdminListItem({ admin, unread, preview, onClick }: AdminListItemProps) {
+  const presence = usePresenceStatus(admin.email);
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 text-left"
+    >
+      <div className="relative flex-shrink-0">
+        <Avatar className="h-10 w-10 border border-slate-200">
+          <AvatarFallback className="bg-[#166FB5]/10 text-[#166FB5] text-sm font-bold">
+            {getInitials(admin.name)}
+          </AvatarFallback>
+        </Avatar>
+        {/* Online dot overlay */}
+        {presence.isOnline && (
+          <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 border-2 border-white" />
+        )}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-slate-800 truncate">{admin.name}</p>
+        <PresenceIndicator
+          isOnline={presence.isOnline}
+          lastSeen={presence.lastSeen}
+          offlineLabel={preview}
+          variant="dark"
+          className="mt-0.5"
+        />
+      </div>
+
+      {unread > 0 && (
+        <span className="flex-shrink-0 h-5 min-w-[20px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1.5">
+          {unread > 9 ? "9+" : unread}
+        </span>
+      )}
+    </button>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -223,6 +319,12 @@ export default function AdminChatWidget() {
     setIsOpen((v) => !v);
   };
 
+  // Publish my own online presence
+  useEffect(() => {
+    if (!user?.email) return;
+    return startPresence(user.email, "admin");
+  }, [user?.email]);
+
   // Don't render for non-admin users
   if (!isAdmin) return null;
 
@@ -246,31 +348,7 @@ export default function AdminChatWidget() {
             <div className="flex items-center justify-between bg-gradient-to-r from-[#166FB5] to-[#4038AF] px-4 py-3 text-white">
               <div className="flex items-center gap-2 min-w-0">
                 {selectedAdmin ? (
-                  <>
-                    <button
-                      onClick={handleBack}
-                      className="p-1 rounded-lg hover:bg-white/10 transition-colors flex-shrink-0"
-                      aria-label="Back to admin list"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <Avatar className="h-8 w-8 border border-white/30 bg-white/10 flex-shrink-0 relative overflow-visible">
-                      <AvatarFallback className="bg-white/20 text-white text-xs font-bold w-full h-full rounded-full">
-                        {getInitials(selectedAdmin.name)}
-                      </AvatarFallback>
-                      {selectedAdmin.online && (
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#166FB5] rounded-full z-10" title="Online" />
-                      )}
-                    </Avatar>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold leading-tight truncate">
-                        {selectedAdmin.name}
-                      </p>
-                      <p className="text-[10px] text-white/70 tracking-wider leading-tight truncate">
-                        {selectedAdmin.online ? "Online now" : formatLastActive(selectedAdmin.lastSeen)}
-                      </p>
-                    </div>
-                  </>
+                  <SelectedAdminHeader admin={selectedAdmin} onBack={handleBack} />
                 ) : (
                   <>
                     <Users className="w-4 h-4 text-white/80 flex-shrink-0" />
@@ -422,46 +500,15 @@ export default function AdminChatWidget() {
                   filteredAdmins.map((admin) => {
                     const channel = getChannelFor(admin.email);
                     const unread = channel?.unreadCounts?.[emailToKey(myEmail)] ?? 0;
-                    const preview =
-                      channel?.lastMessagePreview ?? admin.position;
-
+                    const preview = channel?.lastMessagePreview ?? admin.position;
                     return (
-                      <button
+                      <AdminListItem
                         key={admin.email}
+                        admin={admin}
+                        unread={unread}
+                        preview={preview}
                         onClick={() => handleSelectAdmin(admin)}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 text-left"
-                      >
-                        <div className="relative flex-shrink-0">
-                          <Avatar className="h-10 w-10 border border-slate-200">
-                            <AvatarFallback className="bg-[#166FB5]/10 text-[#166FB5] text-sm font-bold">
-                              {getInitials(admin.name)}
-                            </AvatarFallback>
-                          </Avatar>
-                          {admin.online && (
-                            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" title="Online" />
-                          )}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                             <p className="text-sm font-semibold text-slate-800 truncate">
-                              {admin.name}
-                            </p>
-                            <span className="text-[10px] text-slate-400 whitespace-nowrap">
-                              {admin.online ? "Online" : formatLastActive(admin.lastSeen).replace("Last active ", "").replace(" ago", "")}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-slate-400 truncate">
-                            {preview}
-                          </p>
-                        </div>
-
-                        {unread > 0 && (
-                          <span className="flex-shrink-0 h-5 min-w-[20px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1.5">
-                            {unread > 9 ? "9+" : unread}
-                          </span>
-                        )}
-                      </button>
+                      />
                     );
                   })
                 )}
