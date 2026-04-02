@@ -1,7 +1,7 @@
 // src/components/quotation/QuotationBuilder.tsx
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { pdf } from "@react-pdf/renderer";
@@ -55,8 +55,6 @@ import { QuotationPDF } from "./QuotationPDF";
 import { QuotationHistoryPanel } from "./QuotationHistoryPanel";
 import useAuth from "@/hooks/useAuth";
 import { GroupedServiceSelector } from "@/components/forms/GroupedServiceSelector";
-
-const quotationPdfCache = new Map<string, Blob>();
 
 // Allow editable quantity ("" or number)
 type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
@@ -166,10 +164,6 @@ export default function QuotationBuilder({
   const [isInternal, setIsInternal] = useState(false);
   const [useAffiliationAsClientName, setUseAffiliationAsClientName] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const previewUrlRef = useRef<string | null>(null);
-  const previewGeneratingRef = useRef(false);
   const [search, setSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState<string>("");
@@ -220,15 +214,7 @@ export default function QuotationBuilder({
   }, []);
 
   const currentYear = new Date().getFullYear();
-  const issueDate = useMemo(
-    () =>
-      new Date().toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-    []
-  );
+
   const toggleService = (id: string, service: ServiceItem) => {
     setSelectedServices((prev) => {
       const exists = prev.find((s) => s.id === id);
@@ -258,34 +244,6 @@ export default function QuotationBuilder({
   const cleanedServices: StrictSelectedService[] = selectedServices
     .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
     .map((s) => ({ ...s, quantity: s.quantity as number }));
-
-  const previewKey = useMemo(() => {
-    try {
-      return JSON.stringify({
-        referenceNumber,
-        clientInfo,
-        isInternal,
-        useAffiliationAsClientName,
-        services: cleanedServices,
-        preparedBy: {
-          name: adminInfo?.name || "—",
-          position: adminInfo?.position || "—",
-        },
-        issueDate,
-      });
-    } catch {
-      return `${referenceNumber}-${cleanedServices.length}-${issueDate}`;
-    }
-  }, [
-    referenceNumber,
-    clientInfo,
-    isInternal,
-    useAffiliationAsClientName,
-    cleanedServices,
-    adminInfo?.name,
-    adminInfo?.position,
-    issueDate,
-  ]);
 
   const subtotal = cleanedServices.reduce((sum, item) => {
     const serviceType = item.type.toLowerCase();
@@ -351,6 +309,28 @@ export default function QuotationBuilder({
         throw new Error(result.error || "Failed to save quotation");
       }
 
+      const blob = await pdf(
+        <QuotationPDF
+          services={cleanedServices}
+          clientInfo={clientInfo}
+          referenceNumber={referenceNumber}
+          useInternalPrice={isInternal}
+          useAffiliationAsClientName={useAffiliationAsClientName}
+          preparedBy={{
+            name: adminInfo?.name || "—",
+            position: adminInfo?.position || "—",
+          }}
+          dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${referenceNumber}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+
       queryClient.invalidateQueries({ queryKey: ["quotationHistory", effectiveInquiryId] });
       toast.success("Quotation saved and downloaded successfully!");
       setOpenPreview(false);
@@ -359,112 +339,6 @@ export default function QuotationBuilder({
       toast.error(`Failed to save quotation: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
-
-  const prewarmPreview = async () => {
-    if (previewGeneratingRef.current) return;
-    if (quotationPdfCache.has(previewKey)) return;
-
-    previewGeneratingRef.current = true;
-    try {
-      const doc = (
-        <QuotationPDF
-          services={cleanedServices}
-          clientInfo={clientInfo}
-          referenceNumber={referenceNumber}
-          useInternalPrice={isInternal}
-          useAffiliationAsClientName={useAffiliationAsClientName}
-          preparedBy={{
-            name: adminInfo?.name || "—",
-            position: adminInfo?.position || "—",
-          }}
-          dateOfIssue={issueDate}
-        />
-      );
-
-      const blob = await pdf(doc).toBlob();
-      quotationPdfCache.set(previewKey, blob);
-    } finally {
-      previewGeneratingRef.current = false;
-    }
-  };
-
-  useEffect(() => {
-    if (!openPreview) {
-      if (previewUrlRef.current) {
-        URL.revokeObjectURL(previewUrlRef.current);
-        previewUrlRef.current = null;
-      }
-      setPreviewUrl(null);
-      setPreviewLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setPreviewLoading(true);
-    setPreviewUrl(null);
-
-    const generate = async () => {
-      const cached = quotationPdfCache.get(previewKey);
-      if (cached) {
-        if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-        const url = URL.createObjectURL(cached);
-        previewUrlRef.current = url;
-        setPreviewUrl(url);
-        setPreviewLoading(false);
-        return;
-      }
-
-      const doc = (
-        <QuotationPDF
-          services={cleanedServices}
-          clientInfo={clientInfo}
-          referenceNumber={referenceNumber}
-          useInternalPrice={isInternal}
-          useAffiliationAsClientName={useAffiliationAsClientName}
-          preparedBy={{
-            name: adminInfo?.name || "—",
-            position: adminInfo?.position || "—",
-          }}
-          dateOfIssue={issueDate}
-        />
-      );
-
-      const blob = await pdf(doc).toBlob();
-      if (cancelled) return;
-
-      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-
-      quotationPdfCache.set(previewKey, blob);
-
-      const url = URL.createObjectURL(blob);
-      previewUrlRef.current = url;
-      setPreviewUrl(url);
-      setPreviewLoading(false);
-    };
-
-    generate();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    openPreview,
-    cleanedServices,
-    clientInfo,
-    referenceNumber,
-    isInternal,
-    useAffiliationAsClientName,
-    adminInfo?.name,
-    adminInfo?.position,
-    issueDate,
-    previewKey,
-  ]);
-
-  useEffect(() => {
-    return () => {
-      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-    };
-  }, []);
 
   return (
     <div className="p-6 flex gap-6">
@@ -921,8 +795,6 @@ export default function QuotationBuilder({
             <Button
               className="mt-4 w-full"
               disabled={cleanedServices.length === 0}
-              onMouseEnter={prewarmPreview}
-              onFocus={prewarmPreview}
             >
               Preview Quotation
             </Button>
@@ -932,21 +804,20 @@ export default function QuotationBuilder({
               <DialogTitle>Preview Quotation PDF</DialogTitle>
             </DialogHeader>
             <div className="mt-4">
-              <div className="h-[600px] border bg-muted/20 flex items-center justify-center">
-                {previewLoading && (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                    <p className="text-sm text-muted-foreground font-medium">Generating PDF...</p>
-                  </div>
-                )}
-                {previewUrl && (
-                  <iframe
-                    src={previewUrl}
-                    style={{ width: "100%", height: "100%", border: "none" }}
-                    title="Quotation Preview"
-                  />
-                )}
-              </div>
+              <PDFViewer width="100%" height="600">
+                <QuotationPDF
+                  services={cleanedServices}
+                  clientInfo={clientInfo}
+                  referenceNumber={referenceNumber}
+                  useInternalPrice={isInternal}
+                  useAffiliationAsClientName={useAffiliationAsClientName}
+                  preparedBy={{
+                    name: adminInfo?.name || "—",
+                    position: adminInfo?.position || "—",
+                  }}
+                  dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                />
+              </PDFViewer>
               <div className="text-right mt-4">
                 <Button
                   onClick={handleSaveAndDownload}
