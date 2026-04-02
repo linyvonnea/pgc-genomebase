@@ -342,7 +342,8 @@ export default function QuotationBuilder({
       URL.revokeObjectURL(url);
 
       queryClient.invalidateQueries({ queryKey: ["quotationHistory", effectiveInquiryId] });
-      toast.success("Quotation saved and downloaded successfully!");
+      queryClient.invalidateQueries({ queryKey: ["quotations"] });
+      toast.success("Quotation saved successfully!");
       setOpenPreview(false);
     } catch (error) {
       console.error("Error saving quotation:", error);
@@ -831,9 +832,16 @@ export default function QuotationBuilder({
               <div className="text-right mt-4">
                 <Button
                   onClick={handleSaveAndDownload}
-                  disabled={cleanedServices.length === 0}
+                  disabled={cleanedServices.length === 0 || saving}
                 >
-                  Generate Final Quotation
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Generate Final Quotation"
+                  )}
                 </Button>
               </div>
             </div>
