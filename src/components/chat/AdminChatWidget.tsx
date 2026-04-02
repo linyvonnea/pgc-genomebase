@@ -567,7 +567,15 @@ export default function AdminChatWidget() {
                         maxRows={5}
                         className="flex-1 text-sm pl-3 pr-9 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden"
                       />
-                      <div className="absolute right-2 bottom-1.5 grayscale hover:grayscale-0 transition-all">
+                      <div className="absolute right-2 bottom-1.5 flex flex-col items-center gap-1 grayscale hover:grayscale-0 transition-all">
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                          title="Attach file"
+                        >
+                          <Paperclip className="w-4 h-4" />
+                        </button>
                         <EmojiPicker onEmojiSelect={(emoji) => setNewMessage((prev) => prev + emoji)} />
                       </div>
                     </div>
