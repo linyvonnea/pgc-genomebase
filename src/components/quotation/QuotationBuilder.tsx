@@ -228,34 +228,6 @@ export default function QuotationBuilder({
       }),
     []
   );
-  const previewKey = useMemo(() => {
-    try {
-      return JSON.stringify({
-        referenceNumber,
-        clientInfo,
-        isInternal,
-        useAffiliationAsClientName,
-        services: cleanedServices,
-        preparedBy: {
-          name: adminInfo?.name || "—",
-          position: adminInfo?.position || "—",
-        },
-        issueDate,
-      });
-    } catch {
-      return `${referenceNumber}-${cleanedServices.length}-${issueDate}`;
-    }
-  }, [
-    referenceNumber,
-    clientInfo,
-    isInternal,
-    useAffiliationAsClientName,
-    cleanedServices,
-    adminInfo?.name,
-    adminInfo?.position,
-    issueDate,
-  ]);
-
   const toggleService = (id: string, service: ServiceItem) => {
     setSelectedServices((prev) => {
       const exists = prev.find((s) => s.id === id);
@@ -285,6 +257,34 @@ export default function QuotationBuilder({
   const cleanedServices: StrictSelectedService[] = selectedServices
     .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
     .map((s) => ({ ...s, quantity: s.quantity as number }));
+
+  const previewKey = useMemo(() => {
+    try {
+      return JSON.stringify({
+        referenceNumber,
+        clientInfo,
+        isInternal,
+        useAffiliationAsClientName,
+        services: cleanedServices,
+        preparedBy: {
+          name: adminInfo?.name || "—",
+          position: adminInfo?.position || "—",
+        },
+        issueDate,
+      });
+    } catch {
+      return `${referenceNumber}-${cleanedServices.length}-${issueDate}`;
+    }
+  }, [
+    referenceNumber,
+    clientInfo,
+    isInternal,
+    useAffiliationAsClientName,
+    cleanedServices,
+    adminInfo?.name,
+    adminInfo?.position,
+    issueDate,
+  ]);
 
   const subtotal = cleanedServices.reduce((sum, item) => {
     const serviceType = item.type.toLowerCase();
