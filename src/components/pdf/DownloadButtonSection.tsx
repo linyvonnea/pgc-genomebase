@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import type { SelectedService } from "@/types/SelectedService";
 import { QuotationPDF } from "@/components/quotation/QuotationPDF";
-import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
+import { PDFDownloadLink, pdf } from "@react-pdf/renderer";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 
@@ -38,12 +38,20 @@ interface Props {
 export default function DownloadButtonSection(props: Props) {
   const { adminInfo } = useAuth();
   const [open, setOpen] = useState(false);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const blobUrlRef = useRef<string | null>(null);
 
   const { subtotal, discount, total, referenceNumber } = props;
   const totalsOverride =
     typeof subtotal === "number" && typeof total === "number"
       ? { subtotal, discount: discount ?? 0, total }
       : undefined;
+
+  const pdfDoc = useMemo(
+    () => <QuotationPDF {...props} totalsOverride={totalsOverride} />,
+    [props, totalsOverride]
+  );
 
   const handleDownload = async () => {
     // Log DOWNLOAD activity
@@ -58,6 +66,46 @@ export default function DownloadButtonSection(props: Props) {
       description: `Downloaded quotation PDF: ${referenceNumber}`,
     });
   };
+
+  useEffect(() => {
+    if (!open) {
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+        blobUrlRef.current = null;
+      }
+      setBlobUrl(null);
+      setPreviewLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setPreviewLoading(true);
+    setBlobUrl(null);
+
+    const generate = async () => {
+      const blob = await pdf(pdfDoc).toBlob();
+      if (cancelled) return;
+
+      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+
+      const url = URL.createObjectURL(blob);
+      blobUrlRef.current = url;
+      setBlobUrl(url);
+      setPreviewLoading(false);
+    };
+
+    generate();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, pdfDoc]);
+
+  useEffect(() => {
+    return () => {
+      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+    };
+  }, []);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -77,15 +125,25 @@ export default function DownloadButtonSection(props: Props) {
           <DialogTitle>Quotation Preview</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden border">
-          <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
-            <QuotationPDF {...props} totalsOverride={totalsOverride} />
-          </PDFViewer>
+        <div className="flex-1 overflow-hidden border bg-muted/20 flex items-center justify-center">
+          {previewLoading && (
+            <div className="flex flex-col items-center gap-2">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <p className="text-sm text-muted-foreground font-medium">Generating PDF...</p>
+            </div>
+          )}
+          {blobUrl && (
+            <iframe
+              src={blobUrl}
+              style={{ width: "100%", height: "100%", border: "none" }}
+              title="Quotation Preview"
+            />
+          )}
         </div>
 
         <div className="pt-4 flex justify-end">
           <PDFDownloadLink
-            document={<QuotationPDF {...props} totalsOverride={totalsOverride} />}
+            document={pdfDoc}
             fileName={`Quotation-${props.referenceNumber}.pdf`}
           >
             {({ loading }) => (
