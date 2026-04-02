@@ -12,6 +12,8 @@ import { sanitizeObject } from "@/lib/sanitizeObject";
 import { getServiceCatalog } from "@/services/serviceCatalogService";
 import { getInquiryById } from "@/services/inquiryService";
 import { saveQuotationAction } from "@/app/actions/quotationActions";
+import useAuth from "@/hooks/useAuth";
+import { Loader2 } from "lucide-react";
 
 import { QuotationRecord } from "@/types/Quotation";
 import { SelectedService as StrictSelectedService } from "@/types/SelectedService";
@@ -53,7 +55,6 @@ import {
 import { PDFViewer } from "@react-pdf/renderer";
 import { QuotationPDF } from "./QuotationPDF";
 import { QuotationHistoryPanel } from "./QuotationHistoryPanel";
-import useAuth from "@/hooks/useAuth";
 import { GroupedServiceSelector } from "@/components/forms/GroupedServiceSelector";
 
 // Allow editable quantity ("" or number)
@@ -164,6 +165,7 @@ export default function QuotationBuilder({
   const [isInternal, setIsInternal] = useState(false);
   const [useAffiliationAsClientName, setUseAffiliationAsClientName] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState<string>("");
@@ -270,6 +272,7 @@ export default function QuotationBuilder({
   const total = subtotal - discount;
 
   const handleSaveAndDownload = async () => {
+    setIsSaving(true);
     try {
       const quotationRecord = {
         referenceNumber,
@@ -312,9 +315,21 @@ export default function QuotationBuilder({
       queryClient.invalidateQueries({ queryKey: ["quotationHistory", effectiveInquiryId] });
       toast.success("Quotation saved successfully!");
       setOpenPreview(false);
+
+      // Reset form
+      setSelectedServices([]);
+      setIsInternal(false);
+      setUseAffiliationAsClientName(false);
+
+      // Refresh reference number
+      const nextRef = await generateNextReferenceNumber(currentYear);
+      setReferenceNumber(nextRef);
+
     } catch (error) {
       console.error("Error saving quotation:", error);
       toast.error(`Failed to save quotation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -799,9 +814,16 @@ export default function QuotationBuilder({
               <div className="text-right mt-4">
                 <Button
                   onClick={handleSaveAndDownload}
-                  disabled={cleanedServices.length === 0}
+                  disabled={cleanedServices.length === 0 || isSaving}
                 >
-                  Save Final Quotation
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Final Quotation"
+                  )}
                 </Button>
               </div>
             </div>
