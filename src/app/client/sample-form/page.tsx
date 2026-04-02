@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createElement, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, AlertCircle, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -64,6 +64,7 @@ export default function ClientSampleFormPage() {
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewSaving, setPreviewSaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const previewBlobRef = useRef<string | null>(null);
 
   const isReadOnly = Boolean(formId);
@@ -284,25 +285,22 @@ export default function ClientSampleFormPage() {
   };
 
   useEffect(() => {
-    if (!previewOpen) return;
+    if (!previewOpen || !mounted) return;
     if (previewUrl) return;
 
     setPreviewLoading(true);
     setPreviewError(null);
 
     const generate = async () => {
-      const response = await fetch("/api/generate-sample-form-pdf/preview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildPreviewRecord()),
-      });
+      const [{ pdf }, { SampleFormPDF }] = await Promise.all([
+        import("@react-pdf/renderer"),
+        import("@/components/pdf/SampleFormPDF"),
+      ]);
 
-      if (!response.ok) {
-        const message = await response.text();
-        throw new Error(message || "Preview request failed.");
-      }
+      const element = createElement(SampleFormPDF, { record: buildPreviewRecord() });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const blob = await pdf(element as any).toBlob();
 
-      const blob = await response.blob();
       if (previewBlobRef.current) URL.revokeObjectURL(previewBlobRef.current);
       const url = URL.createObjectURL(blob);
       previewBlobRef.current = url;
@@ -315,7 +313,7 @@ export default function ClientSampleFormPage() {
         setPreviewError("Failed to generate PDF preview. Please try again.");
       })
       .finally(() => setPreviewLoading(false));
-  }, [previewOpen, previewUrl]);
+  }, [previewOpen, mounted, previewUrl]);
 
   useEffect(() => {
     if (previewOpen) return;
