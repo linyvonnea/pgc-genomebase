@@ -20,6 +20,7 @@ export default function ChargeSlipPDFClient({ chargeSlip }: Props) {
         client={chargeSlip.client}
         project={chargeSlip.project}
         orNumber={chargeSlip.orNumber ?? ""}
+        isInternal={chargeSlip.useInternalPrice}
         useInternalPrice={chargeSlip.useInternalPrice}
         useAffiliationAsClientName={chargeSlip.useAffiliationAsClientName}
         dateIssued={normalizeDate(chargeSlip.dateIssued)}

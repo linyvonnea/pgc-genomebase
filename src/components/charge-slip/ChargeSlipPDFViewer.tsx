@@ -58,6 +58,7 @@ export function ChargeSlipPDFViewer({ chargeSlip }: Props) {
           project={sanitized.project}
           chargeSlipNumber={sanitized.chargeSlipNumber}
           orNumber={sanitized.orNumber ?? ""}
+          isInternal={sanitized.useInternalPrice}
           useInternalPrice={sanitized.useInternalPrice}
           useAffiliationAsClientName={sanitized.useAffiliationAsClientName}
           preparedBy={sanitized.preparedBy}
@@ -103,6 +104,7 @@ export function ChargeSlipPDFViewer({ chargeSlip }: Props) {
           project={chargeSlip.project}
           chargeSlipNumber={chargeSlip.chargeSlipNumber}
           orNumber={chargeSlip.orNumber ?? ""}
+          isInternal={chargeSlip.useInternalPrice}
           useInternalPrice={chargeSlip.useInternalPrice}
           useAffiliationAsClientName={chargeSlip.useAffiliationAsClientName}
           preparedBy={chargeSlip.preparedBy}
