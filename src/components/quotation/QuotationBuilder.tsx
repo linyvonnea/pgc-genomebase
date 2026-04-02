@@ -51,7 +51,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-import { PDFViewer } from "@react-pdf/renderer";
 import { QuotationPDF } from "./QuotationPDF";
 import { QuotationHistoryPanel } from "./QuotationHistoryPanel";
 import useAuth from "@/hooks/useAuth";
@@ -168,6 +167,7 @@ export default function QuotationBuilder({
   const [isInternal, setIsInternal] = useState(false);
   const [useAffiliationAsClientName, setUseAffiliationAsClientName] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
@@ -198,29 +198,6 @@ export default function QuotationBuilder({
     queryFn: () => getInquiryById(effectiveInquiryId),
     enabled: !!effectiveInquiryId,
   });
-
-  // Sync clientInfo state with fetched inquiry data or initial props
-  useEffect(() => {
-    if (initialClientInfo) {
-      setClientInfo(initialClientInfo);
-    } else if (inquiryData) {
-      setClientInfo({
-        name: inquiryData.name || "Unknown",
-        institution: inquiryData.affiliation || "N/A",
-        designation: inquiryData.designation || "N/A",
-        email: inquiryData.email || "",
-      });
-    }
-  }, [initialClientInfo, inquiryData]);
-
-  useEffect(() => {
-    const fetchRef = async () => {
-      const year = new Date().getFullYear();
-      const next = await generateNextReferenceNumber(year);
-      setReferenceNumber(next);
-    };
-    fetchRef();
-  }, []);
 
   const currentYear = new Date().getFullYear();
 
@@ -277,6 +254,45 @@ export default function QuotationBuilder({
   }, 0);
   const discount = isInternal ? subtotal * 0.12 : 0;
   const total = subtotal - discount;
+
+  // Generate Blob URL when dialog opens
+  useEffect(() => {
+    if (openPreview && cleanedServices.length > 0) {
+      const generateBlob = async () => {
+        try {
+          const blob = await pdf(
+            <QuotationPDF
+              services={cleanedServices}
+              clientInfo={clientInfo}
+              referenceNumber={referenceNumber}
+              useInternalPrice={isInternal}
+              preparedBy={{
+                name: adminInfo?.name || "—",
+                position: adminInfo?.position || "—",
+              }}
+              dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+              useAffiliationAsClientName={useAffiliationAsClientName}
+              totalsOverride={{
+                subtotal,
+                discount,
+                total,
+              }}
+            />
+          ).toBlob();
+          const url = URL.createObjectURL(blob);
+          setPdfUrl(url);
+        } catch (err) {
+          console.error("Failed to generate PDF blob:", err);
+        }
+      };
+      generateBlob();
+    } else if (!openPreview) {
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+      setPdfUrl(null);
+    }
+  }, [openPreview, cleanedServices, referenceNumber, clientInfo, isInternal, subtotal, discount, total, adminInfo, useAffiliationAsClientName]);
+
+  // Sync clientInfo state with fetched inquiry data or initial props
 
   const handleSaveAndDownload = async () => {
     try {
@@ -809,23 +825,16 @@ export default function QuotationBuilder({
               Preview Quotation
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl h-[90vh] overflow-auto">
+          <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
             <DialogHeader>
-              <DialogTitle>Preview Quotation PDF</DialogTitle>
+              <DialogTitle>Quotation Preview</DialogTitle>
             </DialogHeader>
-            <div className="mt-4">
-              <PDFViewer width="100%" height="600">
-                <QuotationPDF
-                  services={cleanedServices}
-                  clientInfo={clientInfo}
-                  referenceNumber={referenceNumber}
-                  useInternalPrice={isInternal}
-                  useAffiliationAsClientName={useAffiliationAsClientName}
-                  preparedBy={{
-                    name: adminInfo?.name || "—",
-                    position: adminInfo?.position || "—",
-                  }}
-                  dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            <div className="flex-1 bg-slate-100 rounded-md overflow-hidden min-h-[500px] mt-4">
+              {pdfUrl ? (
+                <iframe
+                  src={`${pdfUrl}#toolbar=0`}
+                  className="w-full h-full border-none"
+                  title="Quotation Preview"
                 />
               </PDFViewer>
               <div className="text-right mt-4">
