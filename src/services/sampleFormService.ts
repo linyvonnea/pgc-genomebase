@@ -91,16 +91,28 @@ export async function getSampleFormById(
 ): Promise<SampleFormRecord | null> {
   if (!formId) return null;
 
+  // Primary lookup: document ID equals formId (standard path)
   const ref = doc(db, SAMPLE_FORMS_COLLECTION, formId);
   const snapshot = await getDoc(ref);
 
-  if (!snapshot.exists()) return null;
+  if (snapshot.exists()) {
+    const data = snapshot.data() as Omit<SampleFormRecord, "id">;
+    return { ...data, id: snapshot.id };
+  }
 
-  const data = snapshot.data() as Omit<SampleFormRecord, "id">;
-  return {
-    ...data,
-    id: snapshot.id,
-  };
+  // Fallback: query by the formId field in case the doc ID differs
+  const q = query(
+    collection(db, SAMPLE_FORMS_COLLECTION),
+    where("formId", "==", formId),
+    limit(1)
+  );
+  const qSnap = await getDocs(q);
+  if (!qSnap.empty) {
+    const d = qSnap.docs[0];
+    return { ...(d.data() as Omit<SampleFormRecord, "id">), id: d.id };
+  }
+
+  return null;
 }
 
 export async function getAllSampleForms(): Promise<SampleFormRecord[]> {

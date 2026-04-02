@@ -1,7 +1,7 @@
 // src/components/pdf/SampleFormPreviewButton.tsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,10 +10,29 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { pdf } from "@react-pdf/renderer";
-import { SampleFormPDF } from "./SampleFormPDF";
+import dynamic from "next/dynamic";
 import { SampleFormRecord } from "@/types/SampleForm";
-import { Loader2 } from "lucide-react";
+import { getSampleFormById } from "@/services/sampleFormService";
+import { Loader2, AlertCircle, Download } from "lucide-react";
+
+// Dynamically import PDF components to avoid SSR issues — same pattern as SampleFormPDFPreview
+const PDFViewer = dynamic(
+  () => import("@react-pdf/renderer").then((mod) => mod.PDFViewer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex flex-col items-center justify-center h-full gap-2">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground font-medium">Rendering PDF…</p>
+      </div>
+    ),
+  }
+);
+
+const SampleFormPDF = dynamic(
+  () => import("./SampleFormPDF").then((mod) => mod.SampleFormPDF),
+  { ssr: false }
+);
 
 interface Props {
   record: SampleFormRecord;
@@ -23,49 +42,51 @@ interface Props {
 
 export default function SampleFormPreviewButton({ record, autoOpen = false }: Props) {
   const [open, setOpen] = useState(autoOpen);
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const blobUrlRef = useRef<string | null>(null);
+  const [fullRecord, setFullRecord] = useState<SampleFormRecord | null>(null);
+  const [fetching, setFetching] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
   const referenceId = record.formId || record.sfid || record.id;
 
-  // Generate a blob URL when the dialog opens — client-side with @react-pdf/renderer
+  // When dialog opens, fetch the latest complete record from Firestore
+  // so clientId, projectId, and all fields are guaranteed to be populated.
   useEffect(() => {
     if (!open) return;
+    if (fullRecord) return; // already loaded
 
-    let cancelled = false;
-    setLoading(true);
-    setBlobUrl(null);
+    setFetching(true);
+    setFetchError(null);
 
-    const generate = async () => {
-      const blob = await pdf(<SampleFormPDF record={record} />).toBlob();
-      if (cancelled) return;
+    getSampleFormById(referenceId)
+      .then((data) => {
+        setFullRecord(data ?? record);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch sample form:", err);
+        setFetchError("Could not load form data. Showing cached data.");
+        setFullRecord(record); // fallback to prop
+      })
+      .finally(() => setFetching(false));
+  }, [open, referenceId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+  const handleDownload = async () => {
+    const target = fullRecord ?? record;
+    setDownloading(true);
+    try {
+      const { SampleFormPDF: PDFDoc } = await import("./SampleFormPDF");
+      const { pdf: pdfFn } = await import("@react-pdf/renderer");
+      const blob = await pdfFn(<PDFDoc record={target} />).toBlob();
       const url = URL.createObjectURL(blob);
-      blobUrlRef.current = url;
-      setBlobUrl(url);
-      setLoading(false);
-    };
-
-    generate().catch((err) => {
-      console.error("Failed to generate PDF blob:", err);
-      setLoading(false);
-    });
-
-    return () => { cancelled = true; };
-  }, [open, record]);
-
-  // Clean up blob URL on unmount
-  useEffect(() => {
-    return () => { if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current); };
-  }, []);
-
-  const handleDownload = () => {
-    if (!blobUrl) return;
-    const a = document.createElement("a");
-    a.href = blobUrl;
-    a.download = `SampleForm-${referenceId}.pdf`;
-    a.click();
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `SampleForm-${referenceId}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to download PDF:", err);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   return (
@@ -88,25 +109,43 @@ export default function SampleFormPreviewButton({ record, autoOpen = false }: Pr
           <DialogTitle>{referenceId}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden border-0 bg-muted/20 flex items-center justify-center">
-          {loading && (
-            <div className="flex flex-col items-center gap-2">
+        <div className="flex-1 overflow-hidden">
+          {fetching && (
+            <div className="flex flex-col items-center justify-center h-full gap-2">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground font-medium">Generating PDF…</p>
+              <p className="text-sm text-muted-foreground font-medium">Loading form data…</p>
             </div>
           )}
-          {blobUrl && (
-            <iframe
-              src={blobUrl}
-              style={{ width: "100%", height: "100%", border: "none" }}
-              title={`Sample Form PDF Preview — ${referenceId}`}
-            />
+          {!fetching && fetchError && (
+            <div className="flex flex-col items-center justify-center h-full gap-2 text-amber-600">
+              <AlertCircle className="h-6 w-6" />
+              <p className="text-sm font-medium">{fetchError}</p>
+            </div>
+          )}
+          {!fetching && fullRecord && (
+            <PDFViewer style={{ width: "100%", height: "100%", border: "none" }}>
+              <SampleFormPDF record={fullRecord} />
+            </PDFViewer>
           )}
         </div>
 
         <div className="px-6 py-4 border-t shrink-0 flex justify-end">
-          <Button variant="secondary" disabled={loading || !blobUrl} onClick={handleDownload}>
-            {loading ? "Preparing…" : "⬇ Download PDF"}
+          <Button
+            variant="secondary"
+            disabled={fetching || !fullRecord || downloading}
+            onClick={handleDownload}
+          >
+            {downloading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Preparing…
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4 mr-2" />
+                Download PDF
+              </>
+            )}
           </Button>
         </div>
       </DialogContent>
