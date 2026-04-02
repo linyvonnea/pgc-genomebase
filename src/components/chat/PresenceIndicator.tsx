@@ -45,9 +45,12 @@ export default function PresenceIndicator({
     variant === "light" ? "text-white/60" : "text-slate-400";
 
   const textOnlineColor =
-    variant === "light" ? "text-emerald-300" : "text-emerald-600";
+    variant === "light" ? "text-white/60" : "text-slate-400";
 
   if (isOnline) {
+    if (!onlineLabel || onlineLabel === "ONLINE" || onlineLabel === "Online") {
+      return null;
+    }
     return (
       <div className={`flex items-center gap-1.5 ${className}`}>
         <span className="relative flex h-2 w-2 flex-shrink-0">
