@@ -53,6 +53,10 @@ export default function PresenceIndicator({
     }
     return (
       <div className={`flex items-center gap-1.5 ${className}`}>
+        <span className="relative flex h-2 w-2 flex-shrink-0">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+        </span>
         <span
           className={`text-[10px] font-medium tracking-wide ${textOnlineColor}`}
         >
@@ -64,6 +68,7 @@ export default function PresenceIndicator({
 
   return (
     <div className={`flex items-center gap-1.5 ${className}`}>
+      <span className={`h-2 w-2 rounded-full flex-shrink-0 ${dotOfflineColor}`} />
       <span className={`text-[10px] ${textOfflineColor}`}>{lastSeenText}</span>
     </div>
   );
