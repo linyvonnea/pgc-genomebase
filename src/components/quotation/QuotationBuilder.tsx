@@ -19,7 +19,7 @@ import { ServiceItem } from "@/types/ServiceItem";
 import { Inquiry } from "@/types/Inquiry";
 
 import { Badge } from "@/components/ui/badge";
-import { FlaskConical, Calendar } from "lucide-react";
+import { FlaskConical, Calendar, Loader2 } from "lucide-react";
 
 import { saveQuotationToFirestore, generateNextReferenceNumber } from "@/services/quotationService";
 import {
@@ -164,6 +164,7 @@ export default function QuotationBuilder({
   const [isInternal, setIsInternal] = useState(false);
   const [useAffiliationAsClientName, setUseAffiliationAsClientName] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState<string>("");
@@ -270,6 +271,7 @@ export default function QuotationBuilder({
   const total = subtotal - discount;
 
   const handleSaveAndDownload = async () => {
+    setSaving(true);
     try {
       const quotationRecord = {
         referenceNumber,
@@ -297,6 +299,7 @@ export default function QuotationBuilder({
 
       if (!adminInfo?.email) {
         toast.error("User authentication required to save quotation");
+        setSaving(false);
         return;
       }
 
@@ -315,6 +318,8 @@ export default function QuotationBuilder({
     } catch (error) {
       console.error("Error saving quotation:", error);
       toast.error(`Failed to save quotation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -799,9 +804,16 @@ export default function QuotationBuilder({
               <div className="text-right mt-4">
                 <Button
                   onClick={handleSaveAndDownload}
-                  disabled={cleanedServices.length === 0}
+                  disabled={cleanedServices.length === 0 || saving}
                 >
-                  Save Final Quotation
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Final Quotation"
+                  )}
                 </Button>
               </div>
             </div>
