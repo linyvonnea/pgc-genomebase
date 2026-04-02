@@ -17,7 +17,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { X, ChevronLeft, Send, Users, Check, CheckCheck, MessageSquare, Search, Paperclip, Loader2 } from "lucide-react";
-import { uploadFile } from "@/lib/fileUpload";
+
 import ChatFileMessage from "./ChatFileMessage";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -325,15 +325,20 @@ export default function AdminChatWidget() {
     try {
       let attachments: { name: string; url: string; type: string; size?: number }[] = [];
       if (filesToSend.length > 0) {
-        const uploaded = await Promise.all(
-          filesToSend.map((f) => uploadFile(f, `admin-chat-attachments/${activeChannelId}`)),
+        attachments = await Promise.all(
+          filesToSend.map(async (f) => {
+            const fd = new FormData();
+            fd.append("file", f);
+            fd.append("folder", `admin-chat-attachments/${activeChannelId}`);
+            const res = await fetch("/api/upload", { method: "POST", body: fd });
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              throw new Error((err as { error?: string }).error || `Upload failed (${res.status})`);
+            }
+            const { url } = await (res.json() as Promise<{ url: string }>);
+            return { name: f.name, url, type: f.type, size: f.size };
+          })
         );
-        attachments = filesToSend.map((f, i) => ({
-          name: f.name,
-          url: uploaded[i],
-          type: f.type,
-          size: f.size,
-        }));
       }
       await sendAdminMessage(
         activeChannelId,
