@@ -18,6 +18,7 @@ import { SelectedService as StrictSelectedService } from "@/types/SelectedServic
 import { ServiceItem } from "@/types/ServiceItem";
 import { Inquiry } from "@/types/Inquiry";
 
+import dynamic from "next/dynamic";
 import { Badge } from "@/components/ui/badge";
 import { FlaskConical, Calendar, Loader2 } from "lucide-react";
 
@@ -167,6 +168,7 @@ export default function QuotationBuilder({
   const [isInternal, setIsInternal] = useState(false);
   const [useAffiliationAsClientName, setUseAffiliationAsClientName] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState<string>("");
@@ -277,6 +279,7 @@ export default function QuotationBuilder({
   const total = subtotal - discount;
 
   const handleSaveAndDownload = async () => {
+    setSaving(true);
     try {
       const quotationRecord = {
         referenceNumber,
@@ -345,6 +348,8 @@ export default function QuotationBuilder({
     } catch (error) {
       console.error("Error saving quotation:", error);
       toast.error(`Failed to save quotation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setSaving(false);
     }
   };
 
