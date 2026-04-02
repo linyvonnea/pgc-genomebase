@@ -316,7 +316,7 @@ export default function QuotationBuilder({
         throw new Error(result.error || "Failed to save quotation");
       }
 
-      queryClient.invalidateQueries({ queryKey: ["quotationHistory", effectiveInquiryId] });
+      await queryClient.invalidateQueries({ queryKey: ["quotationHistory", effectiveInquiryId] });
       toast.success("Quotation saved successfully!");
       setOpenPreview(false);
 
