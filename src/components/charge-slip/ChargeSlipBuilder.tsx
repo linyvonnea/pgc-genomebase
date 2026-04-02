@@ -7,7 +7,7 @@ import { QuotationHistoryPanel } from "@/components/quotation/QuotationHistoryPa
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { pdf, PDFViewer } from "@react-pdf/renderer";
+import { PDFViewer } from "@react-pdf/renderer";
 import { Timestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
@@ -81,7 +81,6 @@ function ChargeSlipBuilderInner({
   const [isInternal, setIsInternal] = useState(false);
   const [useAffiliationAsClientName, setUseAffiliationAsClientName] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [chargeSlipNumber, setChargeSlipNumber] = useState<string>("");
@@ -234,48 +233,6 @@ function ChargeSlipBuilderInner({
   }, 0);
   const discount = isInternal ? subtotal * 0.12 : 0;
   const total = subtotal - discount;
-
-  // Generate Blob URL
-  useEffect(() => {
-    if (openPreview && cleanedServices.length > 0) {
-      const generateBlob = async () => {
-        try {
-          const blob = await pdf(
-            <ChargeSlipPDF
-              services={cleanedServices}
-              client={client as any}
-              project={project as any}
-              chargeSlipNumber={chargeSlipNumber}
-              orNumber={orNumber}
-              isInternal={isInternal}
-              preparedBy={{
-                name: adminInfo?.name || "—",
-                position: adminInfo?.position || "—",
-              }}
-              referenceNumber={chargeSlipNumber}
-              clientInfo={clientInfo}
-              approvedBy={{
-                name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
-                position: "AED, PGC Visayas",
-              }}
-              dateIssued={new Date().toISOString()}
-              subtotal={subtotal}
-              discount={discount}
-              total={total}
-            />
-          ).toBlob();
-          const url = URL.createObjectURL(blob);
-          setPdfUrl(url);
-        } catch (err) {
-          console.error("Failed to generate charge slip blob:", err);
-        }
-      };
-      generateBlob();
-    } else if (!openPreview) {
-      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
-      setPdfUrl(null);
-    }
-  }, [openPreview, cleanedServices, orNumber, client, project, isInternal, adminInfo, chargeSlipNumber, clientInfo, subtotal, discount, total]);
 
   useEffect(() => {
     setClientInfo({
@@ -629,18 +586,30 @@ function ChargeSlipBuilderInner({
               <DialogTitle>Charge Slip Preview</DialogTitle>
             </DialogHeader>
             <div className="flex-1 bg-slate-100 rounded-md overflow-hidden min-h-[500px] mt-4">
-              {pdfUrl ? (
-                <iframe
-                  src={`${pdfUrl}#toolbar=0`}
-                  className="w-full h-full border-none"
-                  title="Charge Slip Preview"
+              <PDFViewer width="100%" height="600">
+                <ChargeSlipPDF
+                  services={cleanedServices}
+                  client={client as any}
+                  project={project as any}
+                  chargeSlipNumber={chargeSlipNumber}
+                  orNumber={orNumber}
+                  isInternal={isInternal}
+                  preparedBy={{
+                    name: adminInfo?.name || "—",
+                    position: adminInfo?.position || "—",
+                  }}
+                  referenceNumber={chargeSlipNumber}
+                  clientInfo={clientInfo}
+                  approvedBy={{
+                    name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
+                    position: "AED, PGC Visayas",
+                  }}
+                  dateIssued={new Date().toISOString()}
+                  subtotal={subtotal}
+                  discount={discount}
+                  total={total}
                 />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <span className="ml-2">Generating Preview...</span>
-                </div>
-              )}
+              </PDFViewer>
             </div>
             <div className="text-right mt-4">
               <Button
