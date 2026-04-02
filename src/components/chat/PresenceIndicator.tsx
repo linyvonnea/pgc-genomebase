@@ -58,7 +58,7 @@ export default function PresenceIndicator({
           <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
         </span>
         <span
-          className={`text-[10px] font-medium uppercase tracking-wide ${textOnlineColor}`}
+          className={`text-[10px] font-medium tracking-wide ${textOnlineColor}`}
         >
           {onlineLabel}
         </span>
