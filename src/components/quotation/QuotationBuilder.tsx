@@ -309,28 +309,6 @@ export default function QuotationBuilder({
         throw new Error(result.error || "Failed to save quotation");
       }
 
-      const blob = await pdf(
-        <QuotationPDF
-          services={cleanedServices}
-          clientInfo={clientInfo}
-          referenceNumber={referenceNumber}
-          useInternalPrice={isInternal}
-          useAffiliationAsClientName={useAffiliationAsClientName}
-          preparedBy={{
-            name: adminInfo?.name || "—",
-            position: adminInfo?.position || "—",
-          }}
-          dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-        />
-      ).toBlob();
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${referenceNumber}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-
       queryClient.invalidateQueries({ queryKey: ["quotationHistory", effectiveInquiryId] });
       toast.success("Quotation saved and downloaded successfully!");
       setOpenPreview(false);
