@@ -252,6 +252,7 @@ function ViewDocumentContent() {
                     project={data.project}
                     chargeSlipNumber={data.chargeSlipNumber}
                     orNumber={data.orNumber ?? ""}
+                    isInternal={data.isInternal ?? !!data.useInternalPrice}
                     useInternalPrice={data.useInternalPrice}
                     useAffiliationAsClientName={data.useAffiliationAsClientName}
                     preparedBy={data.preparedBy}
@@ -329,6 +330,7 @@ function ViewDocumentContent() {
                       project={data.project}
                       chargeSlipNumber={data.chargeSlipNumber}
                       orNumber={data.orNumber ?? ""}
+                      isInternal={data.isInternal ?? !!data.useInternalPrice}
                       useInternalPrice={data.useInternalPrice}
                       useAffiliationAsClientName={data.useAffiliationAsClientName}
                       preparedBy={data.preparedBy}
@@ -396,6 +398,7 @@ function ViewDocumentContent() {
                 project={data.project}
                 chargeSlipNumber={data.chargeSlipNumber}
                 orNumber={data.orNumber ?? ""}
+                isInternal={data.isInternal ?? !!data.useInternalPrice}
                 useInternalPrice={data.useInternalPrice}
                 useAffiliationAsClientName={data.useAffiliationAsClientName}
                 preparedBy={data.preparedBy}
