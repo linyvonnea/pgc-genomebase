@@ -185,8 +185,8 @@ export function AdminSidebar() {
     .map((section) => ({
       ...section,
       items: section.items.filter((item) => {
-        const routeModule = ROUTE_MODULE_MAP[item.href];
-        return routeModule && canView(routeModule);
+        const module = ROUTE_MODULE_MAP[item.href];
+        return module && canView(module);
       }),
     }))
     .filter((section) => section.items.length > 0); // Hide empty sections
