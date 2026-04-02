@@ -13,8 +13,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Send, Clock, AlertCircle, Check, CheckCheck, Paperclip, Receipt, X, Loader2 } from "lucide-react";
-import { uploadFile } from "@/lib/fileUpload";
+import { MessageCircle, Send, Clock, AlertCircle, Check, CheckCheck, Paperclip, X, Loader2 } from "lucide-react";
 import ChatFileMessage from "./ChatFileMessage";
 import { ThreadMessage, MessageSenderRole } from "@/types/QuotationThread";
 import {
@@ -47,10 +46,9 @@ export default function ChatBox({
   const DEFAULT_REACTIONS = ["👍", "❤️", "😮", "😂", "😥"];
 
   // File attachment state
-  const [pendingFiles, setPendingFiles] = useState<{ file: File; isOR: boolean }[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const orInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!inquiryId || !user) return;
@@ -103,17 +101,16 @@ export default function ChatBox({
     }
   }, [messages]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, isOR = false) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
-    // Validate: max 10MB each, allowed types
     const allowed = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
     for (const f of files) {
       if (f.size > 10 * 1024 * 1024) { setError(`File "${f.name}" exceeds the 10 MB limit.`); return; }
       if (!allowed.includes(f.type)) { setError(`File type "${f.type}" is not allowed.`); return; }
     }
     setError(null);
-    setPendingFiles((prev) => [...prev, ...files.map((file) => ({ file, isOR }))]);
+    setPendingFiles((prev) => [...prev, ...files]);
     e.target.value = "";
   };
 
@@ -148,16 +145,23 @@ export default function ChatBox({
         finalSenderName = user.displayName;
       }
 
-      // Upload pending attachments to Firebase Storage
-      let attachments: { name: string; url: string; type: string; size: number; isOfficialReceipt?: boolean }[] = [];
+      // Upload pending attachments via server-side API (bypasses Storage security rules)
+      let attachments: { name: string; url: string; type: string; size: number }[] = [];
       if (filesToSend.length > 0) {
         setUploading(true);
         try {
           attachments = await Promise.all(
-            filesToSend.map(async ({ file, isOR }) => {
-              const folder = isOR ? `official-receipts/${inquiryId}` : `chat-attachments/${inquiryId}`;
-              const url = await uploadFile(file, folder);
-              return { name: file.name, url, type: file.type, size: file.size, isOfficialReceipt: isOR };
+            filesToSend.map(async (file) => {
+              const fd = new FormData();
+              fd.append("file", file);
+              fd.append("folder", `chat-attachments/${inquiryId}`);
+              const res = await fetch("/api/upload", { method: "POST", body: fd });
+              if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || `Upload failed (${res.status})`);
+              }
+              const { url } = await res.json();
+              return { name: file.name, url, type: file.type, size: file.size };
             })
           );
         } finally {
@@ -179,7 +183,7 @@ export default function ChatBox({
       console.error("Failed to send message:", error);
       setError("Failed to send message. Please try again.");
       setNewMessage(messageContent); // Restore on failure
-      setPendingFiles(filesToSend as any);
+      setPendingFiles(filesToSend);
     }
   };
 
@@ -353,18 +357,16 @@ export default function ChatBox({
       </CardContent>
 
       <CardFooter className="p-3 bg-white border-t rounded-b-lg">
-        {/* Hidden file inputs */}
-        <input ref={fileInputRef} type="file" multiple className="hidden" accept="image/*,.pdf,.doc,.docx" onChange={(e) => handleFileSelect(e, false)} />
-        <input ref={orInputRef} type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => handleFileSelect(e, true)} />
+        {/* Hidden file input */}
+        <input ref={fileInputRef} type="file" multiple className="hidden" accept="image/*,.pdf,.doc,.docx" onChange={handleFileSelect} />
 
         <form onSubmit={handleSendMessage} className="flex flex-col w-full gap-2">
           {/* Pending file preview chips */}
           {pendingFiles.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pb-1">
-              {pendingFiles.map((pf, i) => (
-                <div key={i} className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-full border ${pf.isOR ? "bg-amber-50 border-amber-200 text-amber-700" : "bg-blue-50 border-blue-100 text-blue-700"}`}>
-                  {pf.isOR && <Receipt className="w-3 h-3" />}
-                  <span className="max-w-[140px] truncate">{pf.file.name}</span>
+              {pendingFiles.map((file, i) => (
+                <div key={i} className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-full border bg-blue-50 border-blue-100 text-blue-700">
+                  <span className="max-w-[140px] truncate">{file.name}</span>
                   <button type="button" onClick={() => removePendingFile(i)} className="ml-0.5 hover:opacity-70">
                     <X className="w-3 h-3" />
                   </button>
@@ -397,18 +399,6 @@ export default function ChatBox({
                 >
                   <Paperclip className="w-4 h-4" />
                 </button>
-
-                {/* Official Receipt — client only, also above emoji if present */}
-                {role === "client" && (
-                  <button
-                    type="button"
-                    title="Upload Official Receipt"
-                    onClick={() => orInputRef.current?.click()}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
-                  >
-                    <Receipt className="w-4 h-4" />
-                  </button>
-                )}
 
                 <EmojiPicker onEmojiSelect={(emoji) => setNewMessage((prev) => prev + emoji)} />
               </div>
