@@ -547,6 +547,16 @@ export default function AdminChatWidget() {
                     }}
                     className="flex gap-2 items-end"
                   >
+                    {/* Paperclip button */}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex-shrink-0 mb-1 p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                      title="Attach file"
+                    >
+                      <Paperclip className="w-4 h-4" />
+                    </button>
+
                     <div className="flex-1 relative flex items-end min-w-0">
                       <TextareaAutosize
                         value={newMessage}
