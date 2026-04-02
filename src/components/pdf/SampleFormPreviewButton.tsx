@@ -11,8 +11,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { SampleFormRecord } from "@/types/SampleForm";
-import { getSampleFormById } from "@/services/sampleFormService";
-import { Loader2, AlertCircle, Download } from "lucide-react";
+import { getSampleFormById, saveSampleFormPdf } from "@/services/sampleFormService";
+import { Loader2, AlertCircle } from "lucide-react";
 
 interface Props {
   record: SampleFormRecord;
@@ -24,9 +24,10 @@ export default function SampleFormPreviewButton({ record, autoOpen = false }: Pr
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [fetching, setFetching] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [downloading, setDownloading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [mounted, setMounted] = useState(false);
   const blobRef = useRef<string | null>(null);
+  const blobDataRef = useRef<Blob | null>(null);
   const referenceId = record.formId || record.sfid || record.id;
 
   // Guard: only run PDF generation after client fully mounts
@@ -65,6 +66,7 @@ export default function SampleFormPreviewButton({ record, autoOpen = false }: Pr
       if (blobRef.current) URL.revokeObjectURL(blobRef.current);
       const url = URL.createObjectURL(blob);
       blobRef.current = url;
+      blobDataRef.current = blob;
       setBlobUrl(url);
     };
 
@@ -81,14 +83,25 @@ export default function SampleFormPreviewButton({ record, autoOpen = false }: Pr
     return () => { if (blobRef.current) URL.revokeObjectURL(blobRef.current); };
   }, []);
 
-  const handleDownload = () => {
-    if (!blobUrl) return;
-    setDownloading(true);
-    const a = document.createElement("a");
-    a.href = blobUrl;
-    a.download = `SampleForm-${referenceId}.pdf`;
-    a.click();
-    setDownloading(false);
+  const handleSave = async () => {
+    if (!blobDataRef.current) return;
+    setSaving(true);
+    try {
+      const buffer = await blobDataRef.current.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = "";
+      for (let i = 0; i < bytes.byteLength; i += 1) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
+      const dataUrl = `data:application/pdf;base64,${base64}`;
+      await saveSampleFormPdf(referenceId, dataUrl);
+    } catch (err) {
+      console.error("Failed to save PDF:", err);
+      setFetchError("Failed to save PDF. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -136,19 +149,16 @@ export default function SampleFormPreviewButton({ record, autoOpen = false }: Pr
         <div className="px-6 py-4 border-t shrink-0 flex justify-end">
           <Button
             variant="secondary"
-            disabled={fetching || !blobUrl || downloading}
-            onClick={handleDownload}
+            disabled={fetching || !blobUrl || saving}
+            onClick={handleSave}
           >
-            {downloading ? (
+            {saving ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Preparing…
+                Saving…
               </>
             ) : (
-              <>
-                <Download className="h-4 w-4 mr-2" />
-                Download PDF
-              </>
+              "Save PDF"
             )}
           </Button>
         </div>

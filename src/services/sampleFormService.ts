@@ -128,3 +128,22 @@ export async function getAllSampleForms(): Promise<SampleFormRecord[]> {
     } as SampleFormRecord;
   });
 }
+
+export async function saveSampleFormPdf(
+  formId: string,
+  dataUrl: string
+): Promise<void> {
+  if (!formId) throw new Error("Missing formId");
+  if (!dataUrl) throw new Error("Missing PDF data");
+
+  const ref = doc(db, "sampleFormsPDF", formId);
+  await setDoc(
+    ref,
+    {
+      formId,
+      dataUrl,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
