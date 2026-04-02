@@ -6,13 +6,8 @@ import { format } from "date-fns";
 import { SampleFormRecord } from "@/types/SampleForm";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import dynamic from "next/dynamic";
-import { Eye } from "lucide-react";
-
-const SampleFormPreviewButton = dynamic(
-  () => import("@/components/pdf/SampleFormPreviewButton"),
-  { ssr: false }
-);
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export const columns: ColumnDef<SampleFormRecord>[] = [
   {
@@ -29,10 +24,9 @@ export const columns: ColumnDef<SampleFormRecord>[] = [
     header: "ID",
     cell: ({ row }) => {
       const id = row.getValue("formId") as string;
-      const inquiryId = row.original.inquiryId;
       return (
         <Link
-          href={`/admin/sample-forms/new?inquiryId=${encodeURIComponent(inquiryId)}&formId=${encodeURIComponent(id || row.original.id)}`}
+          href={`/admin/sample-forms/${row.original.id}`}
           className="font-medium text-blue-600 hover:text-blue-800 transition-colors"
         >
           {id || row.original.id}
@@ -84,17 +78,20 @@ export const columns: ColumnDef<SampleFormRecord>[] = [
   {
     id: "action",
     header: "Action",
-    cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <Link
-          href={`/admin/sample-forms/${row.original.formId || row.original.id}`}
-          className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500 hover:text-blue-600"
-          title="View Details"
+    cell: ({ row }) => {
+      const recordId = row.original.id;
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const router = useRouter();
+      return (
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-blue-700 border-blue-200 hover:bg-blue-50"
+          onClick={() => router.push(`/admin/sample-forms/new?formId=${encodeURIComponent(recordId)}`)}
         >
-          <Eye className="h-4 w-4" />
-        </Link>
-        <SampleFormPreviewButton record={row.original} />
-      </div>
-    ),
+          Preview PDF
+        </Button>
+      );
+    },
   },
 ];
