@@ -95,6 +95,7 @@ function SelectedAdminHeader({ admin, onBack }: SelectedAdminHeaderProps) {
           isOnline={presence.isOnline}
           lastSeen={presence.lastSeen}
           offlineLabel={admin.position}
+          onlineLabel={admin.position}
           variant="light"
         />
       </div>
@@ -138,6 +139,7 @@ function AdminListItem({ admin, unread, preview, onClick }: AdminListItemProps) 
           isOnline={presence.isOnline}
           lastSeen={presence.lastSeen}
           offlineLabel={preview}
+          onlineLabel={preview}
           variant="dark"
           className="mt-0.5"
         />
