@@ -7,7 +7,7 @@ import { QuotationHistoryPanel } from "@/components/quotation/QuotationHistoryPa
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { PDFViewer } from "@react-pdf/renderer";
+import { pdf, PDFViewer } from "@react-pdf/renderer";
 import { Timestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
