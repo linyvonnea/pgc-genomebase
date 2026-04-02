@@ -628,40 +628,12 @@ function ChargeSlipBuilderInner({
             <DialogHeader>
               <DialogTitle>Charge Slip Preview</DialogTitle>
             </DialogHeader>
-<<<<<<< HEAD
-            <div className="mt-4">
-              <PDFViewer width="100%" height="600">
-                <ChargeSlipPDF
-                  services={cleanedServices}
-                  client={client}
-                  project={project}
-                  chargeSlipNumber={chargeSlipNumber}
-                  orNumber={orNumber}
-                  isInternal={isInternal}
-                  useInternalPrice={isInternal}
-                  useAffiliationAsClientName={useAffiliationAsClientName}
-                  preparedBy={{
-                    name: adminInfo?.name || "—",
-                    position: adminInfo?.position || "—",
-                  }}
-                  approvedBy={{
-                    name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
-                    position: "AED, PGC Visayas",
-                  }}
-                  referenceNumber={chargeSlipNumber}
-                  clientInfo={clientInfo}
-                  dateIssued={new Date().toISOString()}
-                  subtotal={subtotal}
-                  discount={discount}
-                  total={total}
-=======
             <div className="flex-1 bg-slate-100 rounded-md overflow-hidden min-h-[500px] mt-4">
               {pdfUrl ? (
                 <iframe
                   src={`${pdfUrl}#toolbar=0`}
                   className="w-full h-full border-none"
                   title="Charge Slip Preview"
->>>>>>> 3ad343c829d4e483b48b9af5d6883a1af2454c95
                 />
               ) : (
                 <div className="flex items-center justify-center h-full">

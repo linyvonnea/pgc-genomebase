@@ -836,15 +836,19 @@ export default function QuotationBuilder({
                   className="w-full h-full border-none"
                   title="Quotation Preview"
                 />
-              </PDFViewer>
-              <div className="text-right mt-4">
-                <Button
-                  onClick={handleSaveAndDownload}
-                  disabled={cleanedServices.length === 0}
-                >
-                  Generate Final Quotation
-                </Button>
-              </div>
+              ) : (
+                <div className="flex items-center justify-center h-full text-slate-500">
+                  <p>Generating Preview...</p>
+                </div>
+              )}
+            </div>
+            <div className="text-right mt-4">
+              <Button
+                onClick={handleSaveAndDownload}
+                disabled={cleanedServices.length === 0}
+              >
+                Generate Final Quotation
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
