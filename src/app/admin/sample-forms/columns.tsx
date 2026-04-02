@@ -31,7 +31,7 @@ export const columns: ColumnDef<SampleFormRecord>[] = [
       const inquiryId = row.original.inquiryId;
       return (
         <Link
-          href={`/admin/sample-forms/new?inquiryId=${encodeURIComponent(inquiryId)}`}
+          href={`/admin/sample-forms/new?inquiryId=${encodeURIComponent(inquiryId)}&formId=${encodeURIComponent(id || row.original.id)}`}
           className="font-medium text-blue-600 hover:text-blue-800 transition-colors"
         >
           {id || row.original.id}
