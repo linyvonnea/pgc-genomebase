@@ -17,6 +17,8 @@ import { normalizeDate } from "@/lib/formatters";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 
+const chargeSlipPdfCache = new Map<string, Blob>();
+
 interface Props {
   record: ChargeSlipRecord;
 }
@@ -27,6 +29,7 @@ export default function ChargeSlipPreviewButton({ record }: Props) {
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const blobUrlRef = useRef<string | null>(null);
+  const cacheKey = record.referenceNumber || record.chargeSlipNumber || "";
 
   // Generate a blob URL when dialog opens — much faster than PDFViewer
   useEffect(() => {
@@ -37,6 +40,16 @@ export default function ChargeSlipPreviewButton({ record }: Props) {
     setBlobUrl(null);
 
     const generate = async () => {
+      const cached = cacheKey ? chargeSlipPdfCache.get(cacheKey) : undefined;
+      if (cached) {
+        if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+        const url = URL.createObjectURL(cached);
+        blobUrlRef.current = url;
+        setBlobUrl(url);
+        setLoading(false);
+        return;
+      }
+
       const doc = (
         <ChargeSlipPDF
           services={record.services}
@@ -67,6 +80,10 @@ export default function ChargeSlipPreviewButton({ record }: Props) {
       // Revoke any previous blob URL to free memory
       if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
 
+      if (cacheKey) {
+        chargeSlipPdfCache.set(cacheKey, blob);
+      }
+
       const url = URL.createObjectURL(blob);
       blobUrlRef.current = url;
       setBlobUrl(url);
@@ -75,7 +92,7 @@ export default function ChargeSlipPreviewButton({ record }: Props) {
 
     generate();
     return () => { cancelled = true; };
-  }, [open]);
+  }, [open, cacheKey, record]);
 
   // Clean up blob URL on unmount
   useEffect(() => {
