@@ -56,8 +56,6 @@ import { QuotationHistoryPanel } from "./QuotationHistoryPanel";
 import useAuth from "@/hooks/useAuth";
 import { GroupedServiceSelector } from "@/components/forms/GroupedServiceSelector";
 
-const quotationPdfCache = new Map<string, Blob>();
-
 // Allow editable quantity ("" or number)
 type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
   quantity: number | "";
@@ -228,6 +226,7 @@ export default function QuotationBuilder({
       }),
     []
   );
+
   const toggleService = (id: string, service: ServiceItem) => {
     setSelectedServices((prev) => {
       const exists = prev.find((s) => s.id === id);
@@ -257,34 +256,6 @@ export default function QuotationBuilder({
   const cleanedServices: StrictSelectedService[] = selectedServices
     .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
     .map((s) => ({ ...s, quantity: s.quantity as number }));
-
-  const previewKey = useMemo(() => {
-    try {
-      return JSON.stringify({
-        referenceNumber,
-        clientInfo,
-        isInternal,
-        useAffiliationAsClientName,
-        services: cleanedServices,
-        preparedBy: {
-          name: adminInfo?.name || "—",
-          position: adminInfo?.position || "—",
-        },
-        issueDate,
-      });
-    } catch {
-      return `${referenceNumber}-${cleanedServices.length}-${issueDate}`;
-    }
-  }, [
-    referenceNumber,
-    clientInfo,
-    isInternal,
-    useAffiliationAsClientName,
-    cleanedServices,
-    adminInfo?.name,
-    adminInfo?.position,
-    issueDate,
-  ]);
 
   const subtotal = cleanedServices.reduce((sum, item) => {
     const serviceType = item.type.toLowerCase();
@@ -375,16 +346,6 @@ export default function QuotationBuilder({
     setPreviewUrl(null);
 
     const generate = async () => {
-      const cached = quotationPdfCache.get(previewKey);
-      if (cached) {
-        if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-        const url = URL.createObjectURL(cached);
-        previewUrlRef.current = url;
-        setPreviewUrl(url);
-        setPreviewLoading(false);
-        return;
-      }
-
       const doc = (
         <QuotationPDF
           services={cleanedServices}
@@ -404,8 +365,6 @@ export default function QuotationBuilder({
       if (cancelled) return;
 
       if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-
-      quotationPdfCache.set(previewKey, blob);
 
       const url = URL.createObjectURL(blob);
       previewUrlRef.current = url;
@@ -428,7 +387,6 @@ export default function QuotationBuilder({
     adminInfo?.name,
     adminInfo?.position,
     issueDate,
-    previewKey,
   ]);
 
   useEffect(() => {

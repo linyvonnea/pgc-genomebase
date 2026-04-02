@@ -15,8 +15,6 @@ import { PDFDownloadLink, pdf } from "@react-pdf/renderer";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 
-const quotationPdfCache = new Map<string, Blob>();
-
 interface Props {
   referenceNumber: string;
   services: SelectedService[];
@@ -55,18 +53,6 @@ export default function DownloadButtonSection(props: Props) {
     [props, totalsOverride]
   );
 
-  const previewKey = useMemo(() => {
-    try {
-      return JSON.stringify({
-        referenceNumber,
-        props,
-        totalsOverride,
-      });
-    } catch {
-      return `${referenceNumber}-${props.services.length}`;
-    }
-  }, [referenceNumber, props, totalsOverride]);
-
   const handleDownload = async () => {
     // Log DOWNLOAD activity
     await logActivity({
@@ -97,22 +83,10 @@ export default function DownloadButtonSection(props: Props) {
     setBlobUrl(null);
 
     const generate = async () => {
-      const cached = quotationPdfCache.get(previewKey);
-      if (cached) {
-        if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
-        const url = URL.createObjectURL(cached);
-        blobUrlRef.current = url;
-        setBlobUrl(url);
-        setPreviewLoading(false);
-        return;
-      }
-
       const blob = await pdf(pdfDoc).toBlob();
       if (cancelled) return;
 
       if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
-
-      quotationPdfCache.set(previewKey, blob);
 
       const url = URL.createObjectURL(blob);
       blobUrlRef.current = url;
@@ -125,7 +99,7 @@ export default function DownloadButtonSection(props: Props) {
     return () => {
       cancelled = true;
     };
-  }, [open, pdfDoc, previewKey]);
+  }, [open, pdfDoc]);
 
   useEffect(() => {
     return () => {
