@@ -1,7 +1,6 @@
 import { getSampleFormById } from "@/services/sampleFormService";
 import { SampleFormRecord } from "@/types/SampleForm";
 import { notFound } from "next/navigation";
-import { SamplePDFViewer } from "@/components/pdf/SamplePDFViewer";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -42,7 +41,7 @@ export default async function SampleFormDetailPage({
       if (typeof date === "string") return format(new Date(date), "MM-dd-yyyy");
       if (date?.toDate) return format(date.toDate(), "MM-dd-yyyy");
       return format(new Date(date), "MM-dd-yyyy");
-    } catch (e) {
+    } catch (error) {
       return "—";
     }
   };
