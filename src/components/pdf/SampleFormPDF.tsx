@@ -40,6 +40,37 @@ const styles = StyleSheet.create({
     marginTop: 4,
     color: "#333333",
   },
+  idBanner: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 0,
+    marginTop: 8,
+    backgroundColor: "#166FB5",
+    borderRadius: 3,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+  },
+  idBannerItem: {
+    flex: 1,
+    alignItems: "center",
+  },
+  idBannerLabel: {
+    fontSize: 7,
+    color: "#cce4f7",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  },
+  idBannerValue: {
+    fontSize: 10,
+    color: "#ffffff",
+    fontFamily: "Helvetica-Bold",
+    marginTop: 1,
+  },
+  idBannerDivider: {
+    width: 1,
+    backgroundColor: "#5aaee0",
+    marginHorizontal: 10,
+  },
   headerMeta: {
     flexDirection: "row",
     justifyContent: "center",
@@ -227,9 +258,17 @@ export function SampleFormPDF({ record }: { record: SampleFormRecord }) {
           <Text style={styles.formId}>
             Form ID: {record.sfid || record.formId || record.id}
           </Text>
-          <View style={styles.headerMeta}>
-            <Text style={styles.headerMetaText}>Project ID: {record.projectId || "—"}</Text>
-            <Text style={styles.headerMetaText}>Client ID: {record.clientId || "—"}</Text>
+          {/* Prominent Client ID + Project ID banner */}
+          <View style={styles.idBanner}>
+            <View style={styles.idBannerItem}>
+              <Text style={styles.idBannerLabel}>Client ID</Text>
+              <Text style={styles.idBannerValue}>{record.clientId || "—"}</Text>
+            </View>
+            <View style={styles.idBannerDivider} />
+            <View style={styles.idBannerItem}>
+              <Text style={styles.idBannerLabel}>Project ID</Text>
+              <Text style={styles.idBannerValue}>{record.projectId || "—"}</Text>
+            </View>
           </View>
         </View>
 
