@@ -64,6 +64,7 @@ export default function ClientSampleFormPage() {
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewSaving, setPreviewSaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const previewBlobRef = useRef<string | null>(null);
 
   const isReadOnly = Boolean(formId);
