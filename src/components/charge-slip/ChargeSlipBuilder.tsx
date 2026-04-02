@@ -416,7 +416,6 @@ function ChargeSlipBuilderInner({
       queryClient.invalidateQueries({ queryKey: ["chargeSlipHistory", effectiveProjectId] });
 
       toast.success("Charge slip saved successfully!");
-      setOpenPreview(false);
       onSubmit?.(record);
     } catch (error) {
       console.error("Failed to save charge slip:", error);

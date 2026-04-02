@@ -335,30 +335,7 @@ export default function QuotationBuilder({
         throw new Error(result.error || "Failed to save quotation");
       }
 
-      const blob = await pdf(
-        <QuotationPDF
-          services={cleanedServices}
-          clientInfo={clientInfo}
-          referenceNumber={referenceNumber}
-          useInternalPrice={isInternal}
-          useAffiliationAsClientName={useAffiliationAsClientName}
-          preparedBy={{
-            name: adminInfo?.name || "—",
-            position: adminInfo?.position || "—",
-          }}
-          dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-        />
-      ).toBlob();
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${referenceNumber}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-
       queryClient.invalidateQueries({ queryKey: ["quotationHistory", effectiveInquiryId] });
-      queryClient.invalidateQueries({ queryKey: ["quotations"] });
       toast.success("Quotation saved successfully!");
       setOpenPreview(false);
     } catch (error) {
@@ -837,27 +814,15 @@ export default function QuotationBuilder({
                   className="w-full h-full border-none"
                   title="Quotation Preview"
                 />
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <span className="ml-2">Generating Preview...</span>
-                </div>
-              )}
-            </div>
-            <div className="text-right mt-4">
-              <Button
-                onClick={handleSaveAndDownload}
-                disabled={cleanedServices.length === 0 || saving}
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  "Generate Final Quotation"
-                )}
-              </Button>
+              </PDFViewer>
+              <div className="text-right mt-4">
+                <Button
+                  onClick={handleSaveAndDownload}
+                  disabled={cleanedServices.length === 0}
+                >
+                  Generate Final Quotation
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
