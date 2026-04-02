@@ -16,7 +16,9 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { X, ChevronLeft, Send, Users, Check, CheckCheck, MessageSquare, Search } from "lucide-react";
+import { X, ChevronLeft, Send, Users, Check, CheckCheck, MessageSquare, Search, Paperclip, Loader2 } from "lucide-react";
+import { uploadFile } from "@/lib/fileUpload";
+import ChatFileMessage from "./ChatFileMessage";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -173,6 +175,9 @@ export default function AdminChatWidget() {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // ------------------------------------------------------------------
@@ -293,18 +298,57 @@ export default function AdminChatWidget() {
     setNewMessage("");
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    const allowed = ["image/", "application/pdf", "application/msword", "application/vnd.openxmlformats"];
+    const valid = files.filter((f) => {
+      if (f.size > 10 * 1024 * 1024) return false;
+      return allowed.some((t) => f.type.startsWith(t));
+    });
+    setPendingFiles((prev) => [...prev, ...valid]);
+    e.target.value = "";
+  };
+
+  const removePendingFile = (idx: number) => {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== idx));
+  };
+
   const handleSend = async () => {
     const content = newMessage.trim();
-    if (!content || !activeChannelId || !myEmail || !adminInfo || sending) return;
+    const filesToSend = [...pendingFiles];
+    if (!content && filesToSend.length === 0) return;
+    if (!activeChannelId || !myEmail || !adminInfo || sending || uploading) return;
     setSending(true);
+    setUploading(filesToSend.length > 0);
     setNewMessage("");
+    setPendingFiles([]);
     try {
-      await sendAdminMessage(activeChannelId, myEmail, adminInfo.name, content);
+      let attachments: { name: string; url: string; type: string; size?: number }[] = [];
+      if (filesToSend.length > 0) {
+        const uploaded = await Promise.all(
+          filesToSend.map((f) => uploadFile(f, `admin-chat-attachments/${activeChannelId}`)),
+        );
+        attachments = filesToSend.map((f, i) => ({
+          name: f.name,
+          url: uploaded[i],
+          type: f.type,
+          size: f.size,
+        }));
+      }
+      await sendAdminMessage(
+        activeChannelId,
+        myEmail,
+        adminInfo.name,
+        content,
+        attachments.length > 0 ? attachments : undefined,
+      );
     } catch (err) {
       console.error("AdminChat send error:", err);
-      setNewMessage(content); // restore on failure
+      setNewMessage(content);
+      setPendingFiles(filesToSend);
     } finally {
       setSending(false);
+      setUploading(false);
     }
   };
 
@@ -427,9 +471,17 @@ export default function AdminChatWidget() {
                                 {msg.senderName}
                               </p>
                             )}
-                            <p className="whitespace-pre-wrap break-words">
-                              {msg.content}
-                            </p>
+                            {msg.content && (
+                              <p className="whitespace-pre-wrap break-words">
+                                {msg.content}
+                              </p>
+                            )}
+                            {msg.attachments && msg.attachments.length > 0 && (
+                              <ChatFileMessage
+                                attachments={msg.attachments}
+                                side={isMe ? "me" : "other"}
+                              />
+                            )}
                             {/* Seen indicator for sent messages */}
                             {isMe && (
                               <div className="flex justify-end mt-1 -mb-0.5">
@@ -457,6 +509,37 @@ export default function AdminChatWidget() {
 
                 {/* Input */}
                 <div className="p-3 border-t bg-white flex-shrink-0">
+                  {/* Hidden file input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf,.doc,.docx"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+
+                  {/* Pending file chips */}
+                  {pendingFiles.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {pendingFiles.map((f, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-1 bg-blue-50 border border-blue-200 rounded-full pl-2.5 pr-1.5 py-0.5 text-xs text-blue-700 max-w-[150px]"
+                        >
+                          <span className="truncate">{f.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => removePendingFile(idx)}
+                            className="flex-shrink-0 hover:text-red-500"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
@@ -464,6 +547,16 @@ export default function AdminChatWidget() {
                     }}
                     className="flex gap-2 items-end"
                   >
+                    {/* Paperclip button */}
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex-shrink-0 mb-1 p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                      title="Attach file"
+                    >
+                      <Paperclip className="w-4 h-4" />
+                    </button>
+
                     <div className="flex-1 relative flex items-end min-w-0">
                       <TextareaAutosize
                         value={newMessage}
@@ -481,10 +574,14 @@ export default function AdminChatWidget() {
                     <Button
                       type="submit"
                       size="icon"
-                      disabled={!newMessage.trim() || sending}
+                      disabled={(!newMessage.trim() && pendingFiles.length === 0) || sending || uploading}
                       className="rounded-full bg-[#166FB5] hover:bg-blue-700 h-9 w-9 flex-shrink-0 mb-0.5"
                     >
-                      <Send className="w-4 h-4 ml-0.5" />
+                      {uploading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4 ml-0.5" />
+                      )}
                     </Button>
                   </form>
                 </div>

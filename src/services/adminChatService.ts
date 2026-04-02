@@ -190,10 +190,9 @@ export async function sendAdminMessage(
   senderId: string,
   senderName: string,
   content: string,
+  attachments?: { name: string; url: string; type: string; size?: number }[],
 ): Promise<void> {
-  // 1. Add the message document (outside the transaction — addDoc is fine here
-  //    because the read-modify-write race is on the *channel* document, not
-  //    the new message document).
+  // 1. Add the message document
   await addDoc(collection(db, MESSAGES_COLLECTION), {
     channelId,
     senderId,
@@ -201,6 +200,7 @@ export async function sendAdminMessage(
     content: content.trim(),
     createdAt: serverTimestamp(),
     readBy: [senderId], // sender has already "read" their own message
+    ...(attachments && attachments.length > 0 ? { attachments } : {}),
   });
 
   // 2. Atomically increment unread counts for other participants
