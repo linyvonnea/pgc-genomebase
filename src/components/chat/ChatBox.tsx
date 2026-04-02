@@ -13,7 +13,9 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Send, Clock, AlertCircle, Check, CheckCheck } from "lucide-react";
+import { MessageCircle, Send, Clock, AlertCircle, Check, CheckCheck, Paperclip, Receipt, X, Loader2 } from "lucide-react";
+import { uploadFile } from "@/lib/fileUpload";
+import ChatFileMessage from "./ChatFileMessage";
 import { ThreadMessage, MessageSenderRole } from "@/types/QuotationThread";
 import {
   subscribeToThreadMessages,
@@ -43,6 +45,12 @@ export default function ChatBox({
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const DEFAULT_REACTIONS = ["👍", "❤️", "😮", "😂", "😥"];
+
+  // File attachment state
+  const [pendingFiles, setPendingFiles] = useState<{ file: File; isOR: boolean }[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const orInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!inquiryId || !user) return;
@@ -95,11 +103,31 @@ export default function ChatBox({
     }
   }, [messages]);
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, isOR = false) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    // Validate: max 10MB each, allowed types
+    const allowed = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+    for (const f of files) {
+      if (f.size > 10 * 1024 * 1024) { setError(`File "${f.name}" exceeds the 10 MB limit.`); return; }
+      if (!allowed.includes(f.type)) { setError(`File type "${f.type}" is not allowed.`); return; }
+    }
+    setError(null);
+    setPendingFiles((prev) => [...prev, ...files.map((file) => ({ file, isOR }))]);
+    e.target.value = "";
+  };
+
+  const removePendingFile = (idx: number) => {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== idx));
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !user) return;
+    if (!newMessage.trim() && pendingFiles.length === 0) return;
+    if (!user) return;
 
     const messageContent = newMessage.trim();
+    const filesToSend = [...pendingFiles];
 
     try {
       if (!user.email && !user.uid) {
@@ -112,6 +140,7 @@ export default function ChatBox({
           : user.displayName || user.email?.split("@")[0] || "Client";
 
       setNewMessage(""); // Optimistic UI clear
+      setPendingFiles([]);
 
       // Use a more descriptive sender name for the initials generation if this is a client message
       let finalSenderName = senderDisplayName;
@@ -119,19 +148,38 @@ export default function ChatBox({
         finalSenderName = user.displayName;
       }
 
+      // Upload pending attachments to Firebase Storage
+      let attachments: { name: string; url: string; type: string; size: number; isOfficialReceipt?: boolean }[] = [];
+      if (filesToSend.length > 0) {
+        setUploading(true);
+        try {
+          attachments = await Promise.all(
+            filesToSend.map(async ({ file, isOR }) => {
+              const folder = isOR ? `official-receipts/${inquiryId}` : `chat-attachments/${inquiryId}`;
+              const url = await uploadFile(file, folder);
+              return { name: file.name, url, type: file.type, size: file.size, isOfficialReceipt: isOR };
+            })
+          );
+        } finally {
+          setUploading(false);
+        }
+      }
+
       await addThreadMessage({
         threadId: inquiryId,
         type: "text",
-        content: messageContent,
+        content: messageContent || (attachments.length > 0 ? "📎 Attached file(s)" : ""),
         senderId: user.email || user.uid,
         senderName: finalSenderName,
         senderRole: role,
         isRead: false,
+        attachments: attachments.length > 0 ? attachments : undefined,
       } as Omit<ThreadMessage, "id" | "createdAt">);
     } catch (error) {
       console.error("Failed to send message:", error);
       setError("Failed to send message. Please try again.");
       setNewMessage(messageContent); // Restore on failure
+      setPendingFiles(filesToSend as any);
     }
   };
 
@@ -272,8 +320,14 @@ export default function ChatBox({
                       }`}
                     >
                       <p className="whitespace-pre-wrap leading-relaxed break-words">
-                          {msg.content}
+                          {msg.content !== "📎 Attached file(s)" ? msg.content : ""}
                         </p>
+                        {msg.attachments && msg.attachments.length > 0 && (
+                          <ChatFileMessage
+                            attachments={msg.attachments as any}
+                            side={isMe ? "me" : "other"}
+                          />
+                        )}
 
                         {isMe && (
                           <div className="flex justify-end mt-1.5 -mb-0.5">
@@ -299,32 +353,76 @@ export default function ChatBox({
       </CardContent>
 
       <CardFooter className="p-3 bg-white border-t rounded-b-lg">
-        <form onSubmit={handleSendMessage} className="flex w-full gap-2 items-end">
-          <div className="flex-1 relative flex items-end">
-            <TextareaAutosize
-              placeholder={
-                role === "admin" ? "Message client..." : "Message admin..."
-              }
-              value={newMessage}
-              disabled={loading}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={handleKeyDown}
-              minRows={2}
-              maxRows={10}
-              className="flex-1 w-full rounded-xl pl-4 pr-10 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto text-sm transition-all"
-            />
-            <div className="absolute right-2 bottom-2.5">
-              <EmojiPicker onEmojiSelect={(emoji) => setNewMessage((prev) => prev + emoji)} />
+        {/* Hidden file inputs */}
+        <input ref={fileInputRef} type="file" multiple className="hidden" accept="image/*,.pdf,.doc,.docx" onChange={(e) => handleFileSelect(e, false)} />
+        <input ref={orInputRef} type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => handleFileSelect(e, true)} />
+
+        <form onSubmit={handleSendMessage} className="flex flex-col w-full gap-2">
+          {/* Pending file preview chips */}
+          {pendingFiles.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pb-1">
+              {pendingFiles.map((pf, i) => (
+                <div key={i} className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-full border ${pf.isOR ? "bg-amber-50 border-amber-200 text-amber-700" : "bg-blue-50 border-blue-100 text-blue-700"}`}>
+                  {pf.isOR && <Receipt className="w-3 h-3" />}
+                  <span className="max-w-[140px] truncate">{pf.file.name}</span>
+                  <button type="button" onClick={() => removePendingFile(i)} className="ml-0.5 hover:opacity-70">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
             </div>
+          )}
+
+          <div className="flex gap-2 items-end">
+            {/* Attach file */}
+            <button
+              type="button"
+              title="Attach file"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-shrink-0 p-2 rounded-full text-slate-500 hover:bg-slate-100 transition-colors mb-1"
+            >
+              <Paperclip className="w-4 h-4" />
+            </button>
+
+            {/* Official Receipt — client only */}
+            {role === "client" && (
+              <button
+                type="button"
+                title="Upload Official Receipt"
+                onClick={() => orInputRef.current?.click()}
+                className="flex-shrink-0 p-2 rounded-full text-amber-500 hover:bg-amber-50 transition-colors mb-1"
+              >
+                <Receipt className="w-4 h-4" />
+              </button>
+            )}
+
+            <div className="flex-1 relative flex items-end">
+              <TextareaAutosize
+                placeholder={
+                  role === "admin" ? "Message client..." : "Message admin..."
+                }
+                value={newMessage}
+                disabled={loading || uploading}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                minRows={2}
+                maxRows={10}
+                className="flex-1 w-full rounded-xl pl-4 pr-10 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto text-sm transition-all"
+              />
+              <div className="absolute right-2 bottom-2.5">
+                <EmojiPicker onEmojiSelect={(emoji) => setNewMessage((prev) => prev + emoji)} />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              size="icon"
+              disabled={(!newMessage.trim() && pendingFiles.length === 0) || loading || uploading}
+              className="rounded-full bg-blue-600 hover:bg-blue-700 transition-colors h-10 w-10 flex-shrink-0 mb-1"
+            >
+              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-[18px] h-[18px] ml-0.5" />}
+            </Button>
           </div>
-          <Button
-            type="submit"
-            size="icon"
-            disabled={!newMessage.trim() || loading}
-            className="rounded-full bg-blue-600 hover:bg-blue-700 transition-colors h-10 w-10 flex-shrink-0 mb-1"
-          >
-            <Send className="w-[18px] h-[18px] ml-0.5" />
-          </Button>
         </form>
       </CardFooter>
     </Card>

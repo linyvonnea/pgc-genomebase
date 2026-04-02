@@ -54,4 +54,11 @@ export interface AdminMessage {
    * appear as "unread" in their own view.
    */
   readBy: string[];
+  /** Optional file attachments */
+  attachments?: {
+    name: string;
+    url: string;
+    type: string;
+    size?: number;
+  }[];
 }
