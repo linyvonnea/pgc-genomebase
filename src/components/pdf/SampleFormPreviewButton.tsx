@@ -1,7 +1,7 @@
 // src/components/pdf/SampleFormPreviewButton.tsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -115,7 +115,13 @@ export default function SampleFormPreviewButton({ record, autoOpen = false }: Pr
           {fetching && (
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground font-medium">Generating PDF…</p>
+              <p className="text-sm text-muted-foreground font-medium">Loading form data…</p>
+            </div>
+          )}
+          {!fetching && fetchError && (
+            <div className="flex flex-col items-center justify-center h-full gap-2 text-amber-600">
+              <AlertCircle className="h-6 w-6" />
+              <p className="text-sm font-medium">{fetchError}</p>
             </div>
           )}
           {!fetching && fetchError && (
