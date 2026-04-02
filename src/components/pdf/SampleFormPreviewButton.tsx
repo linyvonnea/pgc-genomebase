@@ -1,7 +1,7 @@
 // src/components/pdf/SampleFormPreviewButton.tsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, createElement } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -35,6 +35,10 @@ export default function SampleFormPreviewButton({ record, autoOpen = false }: Pr
 
   useEffect(() => {
     if (!open || !mounted) return;
+    if (!referenceId) {
+      setFetchError("Missing form ID.");
+      return;
+    }
     if (blobUrl) return; // already generated
 
     setFetching(true);
@@ -57,7 +61,6 @@ export default function SampleFormPreviewButton({ record, autoOpen = false }: Pr
       ]);
 
       // 3. Generate blob — cast through unknown to satisfy strict pdf() typing
-      const { createElement } = await import("react");
       const element = createElement(SampleFormPDF, { record: fullRecord });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const blob = await pdf(element as any).toBlob();
@@ -82,6 +85,15 @@ export default function SampleFormPreviewButton({ record, autoOpen = false }: Pr
   useEffect(() => {
     return () => { if (blobRef.current) URL.revokeObjectURL(blobRef.current); };
   }, []);
+
+  useEffect(() => {
+    if (open) return;
+    if (blobRef.current) URL.revokeObjectURL(blobRef.current);
+    blobRef.current = null;
+    blobDataRef.current = null;
+    setBlobUrl(null);
+    setFetchError(null);
+  }, [open]);
 
   const handleSave = async () => {
     if (!blobDataRef.current) return;
@@ -133,12 +145,6 @@ export default function SampleFormPreviewButton({ record, autoOpen = false }: Pr
           )}
           {!fetching && fetchError && (
             <div className="flex flex-col items-center justify-center h-full gap-2 text-amber-600">
-              <AlertCircle className="h-6 w-6" />
-              <p className="text-sm font-medium">{fetchError}</p>
-            </div>
-          )}
-          {!fetching && fetchError && (
-            <div className="flex flex-col items-center gap-2 text-destructive">
               <AlertCircle className="h-6 w-6" />
               <p className="text-sm font-medium">{fetchError}</p>
             </div>
