@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
 
 function Checkbox({ checked, label }: { checked: boolean; label: string }) {
   return (
-    <View style={styles.checkItem}>
+    <View style={styles.checkItem} wrap={false}>
       <View style={checked ? styles.checkBoxChecked : styles.checkBox} />
       <Text style={styles.checkLabel}>{label}</Text>
     </View>
@@ -220,7 +220,7 @@ function Checkbox({ checked, label }: { checked: boolean; label: string }) {
 
 function MetaRow({ label, value }: { label: string; value?: string }) {
   return (
-    <View style={styles.metaRow}>
+    <View style={styles.metaRow} wrap={false}>
       <Text style={styles.metaLabel}>{label}:</Text>
       <Text style={styles.metaValue}>{value || "—"}</Text>
     </View>
@@ -350,6 +350,7 @@ export function SampleFormPDF({ record }: { record: SampleFormRecord }) {
               <View
                 key={idx}
                 style={idx % 2 === 0 ? styles.tableRow : styles.tableRowAlt}
+                wrap={false}
               >
                 <Text style={styles.colRow}>{entry.row}</Text>
                 <Text style={styles.colCode}>{entry.sampleCode || ""}</Text>
