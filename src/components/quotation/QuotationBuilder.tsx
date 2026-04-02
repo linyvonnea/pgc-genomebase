@@ -1,7 +1,7 @@
 // src/components/quotation/QuotationBuilder.tsx
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { pdf } from "@react-pdf/renderer";
@@ -164,9 +164,6 @@ export default function QuotationBuilder({
   const [isInternal, setIsInternal] = useState(false);
   const [useAffiliationAsClientName, setUseAffiliationAsClientName] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const previewUrlRef = useRef<string | null>(null);
   const [search, setSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState<string>("");
@@ -217,15 +214,6 @@ export default function QuotationBuilder({
   }, []);
 
   const currentYear = new Date().getFullYear();
-  const issueDate = useMemo(
-    () =>
-      new Date().toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }),
-    []
-  );
 
   const toggleService = (id: string, service: ServiceItem) => {
     setSelectedServices((prev) => {
@@ -321,32 +309,7 @@ export default function QuotationBuilder({
         throw new Error(result.error || "Failed to save quotation");
       }
 
-      queryClient.invalidateQueries({ queryKey: ["quotationHistory", effectiveInquiryId] });
-      toast.success("Quotation saved and downloaded successfully!");
-      setOpenPreview(false);
-    } catch (error) {
-      console.error("Error saving quotation:", error);
-      toast.error(`Failed to save quotation: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  };
-
-  useEffect(() => {
-    if (!openPreview) {
-      if (previewUrlRef.current) {
-        URL.revokeObjectURL(previewUrlRef.current);
-        previewUrlRef.current = null;
-      }
-      setPreviewUrl(null);
-      setPreviewLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setPreviewLoading(true);
-    setPreviewUrl(null);
-
-    const generate = async () => {
-      const doc = (
+      const blob = await pdf(
         <QuotationPDF
           services={cleanedServices}
           clientInfo={clientInfo}
@@ -357,43 +320,25 @@ export default function QuotationBuilder({
             name: adminInfo?.name || "—",
             position: adminInfo?.position || "—",
           }}
-          dateOfIssue={issueDate}
+          dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
         />
-      );
-
-      const blob = await pdf(doc).toBlob();
-      if (cancelled) return;
-
-      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+      ).toBlob();
 
       const url = URL.createObjectURL(blob);
-      previewUrlRef.current = url;
-      setPreviewUrl(url);
-      setPreviewLoading(false);
-    };
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${referenceNumber}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
 
-    generate();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    openPreview,
-    cleanedServices,
-    clientInfo,
-    referenceNumber,
-    isInternal,
-    useAffiliationAsClientName,
-    adminInfo?.name,
-    adminInfo?.position,
-    issueDate,
-  ]);
-
-  useEffect(() => {
-    return () => {
-      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-    };
-  }, []);
+      queryClient.invalidateQueries({ queryKey: ["quotationHistory", effectiveInquiryId] });
+      toast.success("Quotation saved and downloaded successfully!");
+      setOpenPreview(false);
+    } catch (error) {
+      console.error("Error saving quotation:", error);
+      toast.error(`Failed to save quotation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
 
   return (
     <div className="p-6 flex gap-6">
@@ -859,21 +804,20 @@ export default function QuotationBuilder({
               <DialogTitle>Preview Quotation PDF</DialogTitle>
             </DialogHeader>
             <div className="mt-4">
-              <div className="h-[600px] border bg-muted/20 flex items-center justify-center">
-                {previewLoading && (
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                    <p className="text-sm text-muted-foreground font-medium">Generating PDF...</p>
-                  </div>
-                )}
-                {previewUrl && (
-                  <iframe
-                    src={previewUrl}
-                    style={{ width: "100%", height: "100%", border: "none" }}
-                    title="Quotation Preview"
-                  />
-                )}
-              </div>
+              <PDFViewer width="100%" height="600">
+                <QuotationPDF
+                  services={cleanedServices}
+                  clientInfo={clientInfo}
+                  referenceNumber={referenceNumber}
+                  useInternalPrice={isInternal}
+                  useAffiliationAsClientName={useAffiliationAsClientName}
+                  preparedBy={{
+                    name: adminInfo?.name || "—",
+                    position: adminInfo?.position || "—",
+                  }}
+                  dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                />
+              </PDFViewer>
               <div className="text-right mt-4">
                 <Button
                   onClick={handleSaveAndDownload}
