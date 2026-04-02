@@ -48,10 +48,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
-import { PDFViewer } from "@react-pdf/renderer";
 import { QuotationPDF } from "./QuotationPDF";
 import { QuotationHistoryPanel } from "./QuotationHistoryPanel";
 import useAuth from "@/hooks/useAuth";
@@ -788,40 +786,38 @@ export default function QuotationBuilder({
               Preview Quotation
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl h-[90vh] overflow-auto">
+          <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
             <DialogHeader>
-              <DialogTitle>Preview Quotation PDF</DialogTitle>
+              <DialogTitle>Quotation Preview</DialogTitle>
             </DialogHeader>
-            <div className="mt-4">
-              <PDFViewer width="100%" height="600">
-                <QuotationPDF
-                  services={cleanedServices}
-                  clientInfo={clientInfo}
-                  referenceNumber={referenceNumber}
-                  useInternalPrice={isInternal}
-                  useAffiliationAsClientName={useAffiliationAsClientName}
-                  preparedBy={{
-                    name: adminInfo?.name || "—",
-                    position: adminInfo?.position || "—",
-                  }}
-                  dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            <div className="flex-1 bg-slate-100 rounded-md overflow-hidden min-h-[500px] mt-4">
+              {pdfUrl ? (
+                <iframe
+                  src={`${pdfUrl}#toolbar=0`}
+                  className="w-full h-full border-none"
+                  title="Quotation Preview"
                 />
-              </PDFViewer>
-              <div className="text-right mt-4">
-                <Button
-                  onClick={handleSaveAndDownload}
-                  disabled={cleanedServices.length === 0 || saving}
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Generate Final Quotation"
-                  )}
-                </Button>
-              </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <span className="ml-2">Generating Preview...</span>
+                </div>
+              )}
+            </div>
+            <div className="text-right mt-4">
+              <Button
+                onClick={handleSaveAndDownload}
+                disabled={cleanedServices.length === 0 || saving}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Generate Final Quotation"
+                )}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>

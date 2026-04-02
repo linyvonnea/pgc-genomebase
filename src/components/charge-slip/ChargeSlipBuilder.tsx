@@ -51,12 +51,12 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
 import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import useAuth from "@/hooks/useAuth";
 import { GroupedServiceSelector } from "@/components/forms/GroupedServiceSelector";
+import { Loader2 } from "lucide-react";
 
 export type EditableSelectedService = Omit<StrictSelectedService, "quantity"  | "price"> & {
   quantity: number | "";
@@ -80,16 +80,59 @@ function ChargeSlipBuilderInner({
   const [isInternal, setIsInternal] = useState(false);
   const [useAffiliationAsClientName, setUseAffiliationAsClientName] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [chargeSlipNumber, setChargeSlipNumber] = useState<string>("");
   const [orNumber, setOrNumber] = useState<string>("");
+  const [saving, setSaving] = useState(false);
 
   const { adminInfo } = useAuth();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const effectiveClientId = clientId || searchParams.get("clientId") || "";
   const urlProjectId = projectId || searchParams.get("projectId") || "";
+
+  // Generate Blob URL
+  useEffect(() => {
+    if (openPreview && cleanedServices.length > 0) {
+      const generateBlob = async () => {
+        try {
+          const blob = await pdf(
+            <ChargeSlipPDF
+              orNumber={orNumber}
+              client={client}
+              project={project}
+              services={cleanedServices}
+              isInternal={isInternal}
+              preparedBy={{
+                name: adminInfo?.name || "—",
+                position: adminInfo?.position || "—",
+              }}
+              approvedBy={{
+                name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
+                position: "AED, PGC Visayas",
+              }}
+              referenceNumber={chargeSlipNumber}
+              clientInfo={clientInfo}
+              dateIssued={new Date().toISOString()}
+              subtotal={subtotal}
+              discount={discount}
+              total={total}
+            />
+          ).toBlob();
+          const url = URL.createObjectURL(blob);
+          setPdfUrl(url);
+        } catch (err) {
+          console.error("Failed to generate charge slip blob:", err);
+        }
+      };
+      generateBlob();
+    } else if (!openPreview) {
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+      setPdfUrl(null);
+    }
+  }, [openPreview, cleanedServices, orNumber, client, project, isInternal, adminInfo, chargeSlipNumber, clientInfo, subtotal, discount, total]);
 
   const { data: catalog = [] } = useQuery({
     queryKey: ["serviceCatalog"],
@@ -298,49 +341,53 @@ function ChargeSlipBuilderInner({
               <TableCell>
                 <Input
                   type="number"
-                  min={0}
-                  value={price}
-                  onChange={(e) =>
-                    updatePrice(
-                      item.id,
-                      e.target.value === "" ? "" : +e.target.value
-                    )
-                  }
-                  disabled={!isSelected}
-                />
-              </TableCell>
-              <TableCell>
-                <Input
-                  type="number"
-                  min={0}
-                  value={quantity}
-                  onChange={(e) =>
-                    updateQuantity(
-                      item.id,
-                      e.target.value === "" ? "" : +e.target.value
-                    )
-                  }
-                  disabled={!isSelected}
-                />
-              </TableCell>
-              <TableCell>{amount.toFixed(2)}</TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
-  );
+    setSaving(true);
+    try {
+      const rawRecord = {
+        id: chargeSlipNumber,
+        chargeSlipNumber,
+        cid: client?.cid || effectiveClientId,
+        projectId: effectiveProjectId,
+        client,
+        project,
+        services: cleanedServices,
+        orNumber,
+        useInternalPrice: isInternal,
+        useAffiliationAsClientName,
+        preparedBy: {
+          name: adminInfo?.name || "—",
+          position: adminInfo?.position || "—",
+        },
+        approvedBy: {
+          name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
+          position: "AED, PGC Visayas",
+        },
+        referenceNumber: chargeSlipNumber,
+        clientInfo,
+        dateIssued: Timestamp.fromDate(new Date()),
+        subtotal,
+        discount,
+        total,
 
-  const normalizeCategory = (raw: string): string => {
-    const lower = raw.toLowerCase();
-    if (lower.includes("equipment")) return "equipment";
-    if (lower.includes("lab")) return "laboratory";
-    if (lower.includes("bioinformatics") || lower.includes("bioinfo")) return "bioinformatics";
-    if (lower.includes("retail")) return "retail";
-    if (lower.includes("training")) return "training";
-    return lower; // fallback
-  };
-  const handleSaveAndDownload = async () => {
+        categories: Array.from(new Set(cleanedServices.map((s) => normalizeCategory(s.category)))),
+      };
+
+      const record = sanitizeObject(rawRecord) as ChargeSlipRecord;
+
+      // Save to Firestore first
+      await saveChargeSlip(record);
+
+      // Invalidate charge slip history to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["chargeSlipHistory", effectiveProjectId] });
+
+      toast.success("Charge slip saved successfully!");
+      setOpenPreview(false);
+      onSubmit?.(record);
+    } catch (error) {
+      console.error("Failed to save charge slip:", error);
+      toast.error(`Failed to save charge slip: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setSaving(false
     try {
       const rawRecord = {
         id: chargeSlipNumber,
