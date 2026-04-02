@@ -43,6 +43,7 @@ export default function DownloadButtonSection(props: Props) {
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const blobUrlRef = useRef<string | null>(null);
+  const previewGeneratingRef = useRef(false);
 
   const { subtotal, discount, total, referenceNumber } = props;
   const totalsOverride =
@@ -79,6 +80,19 @@ export default function DownloadButtonSection(props: Props) {
       entityName: `Quotation ${referenceNumber}`,
       description: `Downloaded quotation PDF: ${referenceNumber}`,
     });
+  };
+
+  const prewarmPreview = async () => {
+    if (previewGeneratingRef.current) return;
+    if (quotationPdfCache.has(previewKey)) return;
+
+    previewGeneratingRef.current = true;
+    try {
+      const blob = await pdf(pdfDoc).toBlob();
+      quotationPdfCache.set(previewKey, blob);
+    } finally {
+      previewGeneratingRef.current = false;
+    }
   };
 
   useEffect(() => {
@@ -136,7 +150,13 @@ export default function DownloadButtonSection(props: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="default">📄 Preview Quotation</Button>
+        <Button
+          variant="default"
+          onMouseEnter={prewarmPreview}
+          onFocus={prewarmPreview}
+        >
+          📄 Preview Quotation
+        </Button>
       </DialogTrigger>
 
       <DialogContent

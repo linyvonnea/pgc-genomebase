@@ -169,6 +169,7 @@ export default function QuotationBuilder({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const previewUrlRef = useRef<string | null>(null);
+  const previewGeneratingRef = useRef(false);
   const [search, setSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState<string>("");
@@ -356,6 +357,34 @@ export default function QuotationBuilder({
     } catch (error) {
       console.error("Error saving quotation:", error);
       toast.error(`Failed to save quotation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  const prewarmPreview = async () => {
+    if (previewGeneratingRef.current) return;
+    if (quotationPdfCache.has(previewKey)) return;
+
+    previewGeneratingRef.current = true;
+    try {
+      const doc = (
+        <QuotationPDF
+          services={cleanedServices}
+          clientInfo={clientInfo}
+          referenceNumber={referenceNumber}
+          useInternalPrice={isInternal}
+          useAffiliationAsClientName={useAffiliationAsClientName}
+          preparedBy={{
+            name: adminInfo?.name || "—",
+            position: adminInfo?.position || "—",
+          }}
+          dateOfIssue={issueDate}
+        />
+      );
+
+      const blob = await pdf(doc).toBlob();
+      quotationPdfCache.set(previewKey, blob);
+    } finally {
+      previewGeneratingRef.current = false;
     }
   };
 
@@ -892,6 +921,8 @@ export default function QuotationBuilder({
             <Button
               className="mt-4 w-full"
               disabled={cleanedServices.length === 0}
+              onMouseEnter={prewarmPreview}
+              onFocus={prewarmPreview}
             >
               Preview Quotation
             </Button>

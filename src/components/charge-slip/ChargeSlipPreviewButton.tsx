@@ -29,6 +29,7 @@ export default function ChargeSlipPreviewButton({ record }: Props) {
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const blobUrlRef = useRef<string | null>(null);
+  const previewGeneratingRef = useRef(false);
   const cacheKey = record.referenceNumber || record.chargeSlipNumber || "";
 
   // Generate a blob URL when dialog opens — much faster than PDFViewer
@@ -121,10 +122,55 @@ export default function ChargeSlipPreviewButton({ record }: Props) {
     });
   };
 
+  const prewarmPreview = async () => {
+    if (previewGeneratingRef.current) return;
+    if (cacheKey && chargeSlipPdfCache.has(cacheKey)) return;
+
+    previewGeneratingRef.current = true;
+    try {
+      const doc = (
+        <ChargeSlipPDF
+          services={record.services}
+          client={record.client}
+          project={record.project}
+          chargeSlipNumber={record.chargeSlipNumber}
+          orNumber={record.orNumber ?? ""}
+          isInternal={record.useInternalPrice}
+          useInternalPrice={record.useInternalPrice}
+          useAffiliationAsClientName={record.useAffiliationAsClientName}
+          preparedBy={record.preparedBy}
+          referenceNumber={record.referenceNumber}
+          clientInfo={record.clientInfo}
+          approvedBy={record.approvedBy || {
+            name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D.",
+            position: "AED, PGC Visayas",
+          }}
+          dateIssued={normalizeDate(record.dateIssued ?? "")}
+          subtotal={record.subtotal}
+          discount={record.discount}
+          total={record.total}
+        />
+      );
+
+      const blob = await pdf(doc).toBlob();
+      if (cacheKey) {
+        chargeSlipPdfCache.set(cacheKey, blob);
+      }
+    } finally {
+      previewGeneratingRef.current = false;
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="default">📄 Preview Charge Slip</Button>
+        <Button
+          variant="default"
+          onMouseEnter={prewarmPreview}
+          onFocus={prewarmPreview}
+        >
+          📄 Preview Charge Slip
+        </Button>
       </DialogTrigger>
 
       <DialogContent
