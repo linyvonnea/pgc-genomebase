@@ -422,11 +422,6 @@ export default function AdminChatWidget() {
                           >
                             {!isMe && (
                               <div className="flex items-center gap-1.5 mb-1.5">
-                                <Avatar className="h-4 w-4 border-none bg-blue-100">
-                                  <AvatarFallback className="bg-blue-100 text-[#166FB5] text-[8px] font-bold">
-                                    {getInitials(msg.senderName)}
-                                  </AvatarFallback>
-                                </Avatar>
                                 <span className="text-[10px] font-bold text-[#166FB5] uppercase tracking-wider">
                                   {msg.senderName}
                                 </span>
