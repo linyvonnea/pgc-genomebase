@@ -46,7 +46,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -79,7 +78,6 @@ function ChargeSlipBuilderInner({
 }) {
   const [selectedServices, setSelectedServices] = useState<EditableSelectedService[]>([]);
   const [isInternal, setIsInternal] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [useAffiliationAsClientName, setUseAffiliationAsClientName] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
   const [search, setSearch] = useState("");
@@ -343,7 +341,6 @@ function ChargeSlipBuilderInner({
     return lower; // fallback
   };
   const handleSaveAndDownload = async () => {
-    setIsSaving(true);
     try {
       const rawRecord = {
         id: chargeSlipNumber,
@@ -411,22 +408,10 @@ function ChargeSlipBuilderInner({
       queryClient.invalidateQueries({ queryKey: ["chargeSlipHistory", effectiveProjectId] });
 
       toast.success("Charge slip saved and downloaded successfully!");
-      
-      // Reset all selections
-      setSelectedServices([]);
-      setIsInternal(false);
-      setUseAffiliationAsClientName(false);
-      setOrNumber("");
-      const year = new Date().getFullYear();
-      generateNextChargeSlipNumber(year).then(setChargeSlipNumber);
-      setOpenPreview(false);
-
       onSubmit?.(record);
     } catch (error) {
       console.error("Failed to save charge slip:", error);
       toast.error(`Failed to save charge slip: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -633,16 +618,9 @@ function ChargeSlipBuilderInner({
               <div className="text-right mt-4">
                 <Button
                   onClick={handleSaveAndDownload}
-                  disabled={cleanedServices.length === 0 || isSaving}
+                  disabled={cleanedServices.length === 0}
                 >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Generate Final Charge Slip"
-                  )}
+                  Generate Final Charge Slip
                 </Button>
               </div>
             </div>
