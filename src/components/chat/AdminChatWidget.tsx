@@ -26,6 +26,7 @@ import { format } from "date-fns";
 import EmojiPicker from "./EmojiPicker";
 import useAuth from "@/hooks/useAuth";
 import usePresenceStatus from "@/hooks/usePresenceStatus";
+import { subscribeToPresence, UserPresence } from "@/services/presenceService";
 import { startPresence } from "@/services/presenceService";
 import PresenceIndicator from "./PresenceIndicator";
 import { getAllAdmins, Admin } from "@/services/adminService";
@@ -171,7 +172,22 @@ export default function AdminChatWidget() {
   const [newMessage, setNewMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [presenceMap, setPresenceMap] = useState<Record<string, UserPresence>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // ------------------------------------------------------------------
+  // Presence Subscriptions
+  // ------------------------------------------------------------------
+
+  useEffect(() => {
+    if (admins.length === 0) return;
+    const unsubs = admins.map((a) =>
+      subscribeToPresence(a.email, (p) => {
+        setPresenceMap((prev) => ({ ...prev, [a.email]: p }));
+      }),
+    );
+    return () => unsubs.forEach((unsub) => unsub());
+  }, [admins]);
 
   // ------------------------------------------------------------------
   // Bootstrap
@@ -229,6 +245,12 @@ export default function AdminChatWidget() {
   const otherAdmins = useMemo(() => {
     const others = admins.filter((a) => a.email !== myEmail);
     return others.sort((a, b) => {
+      // 1. Primary Sort: Online admins first
+      const pA = presenceMap[a.email]?.isOnline ?? false;
+      const pB = presenceMap[b.email]?.isOnline ?? false;
+      if (pA !== pB) return pA ? -1 : 1;
+
+      // 2. Secondary Sort: Recency of messages
       const chA = channels.find(
         (c) => c.participants.includes(a.email) && c.participants.includes(myEmail),
       );
@@ -239,7 +261,7 @@ export default function AdminChatWidget() {
       const tB = chB?.lastMessageAt?.toMillis?.() ?? chB?.createdAt?.toMillis?.() ?? 0;
       return tB - tA;
     });
-  }, [admins, channels, myEmail]);
+  }, [admins, channels, myEmail, presenceMap]);
 
   // Filtered admin list based on search query
   const filteredAdmins = useMemo(() => {
