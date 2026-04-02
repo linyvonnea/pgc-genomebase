@@ -19,7 +19,7 @@ import { ServiceItem } from "@/types/ServiceItem";
 import { Inquiry } from "@/types/Inquiry";
 
 import { Badge } from "@/components/ui/badge";
-import { FlaskConical, Calendar, Loader2 } from "lucide-react";
+import { FlaskConical, Calendar } from "lucide-react";
 
 import { saveQuotationToFirestore, generateNextReferenceNumber } from "@/services/quotationService";
 import {
@@ -164,7 +164,6 @@ export default function QuotationBuilder({
   const [isInternal, setIsInternal] = useState(false);
   const [useAffiliationAsClientName, setUseAffiliationAsClientName] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState<string>("");
@@ -271,7 +270,6 @@ export default function QuotationBuilder({
   const total = subtotal - discount;
 
   const handleSaveAndDownload = async () => {
-    setIsSaving(true);
     try {
       const quotationRecord = {
         referenceNumber,
@@ -336,18 +334,9 @@ export default function QuotationBuilder({
       queryClient.invalidateQueries({ queryKey: ["quotationHistory", effectiveInquiryId] });
       toast.success("Quotation saved and downloaded successfully!");
       setOpenPreview(false);
-
-      // Reset all selections
-      setSelectedServices([]);
-      setIsInternal(false);
-      setUseAffiliationAsClientName(false);
-      const year = new Date().getFullYear();
-      generateNextReferenceNumber(year).then(setReferenceNumber);
     } catch (error) {
       console.error("Error saving quotation:", error);
       toast.error(`Failed to save quotation: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -832,16 +821,9 @@ export default function QuotationBuilder({
               <div className="text-right mt-4">
                 <Button
                   onClick={handleSaveAndDownload}
-                  disabled={cleanedServices.length === 0 || isSaving}
+                  disabled={cleanedServices.length === 0}
                 >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Generate Final Quotation"
-                  )}
+                  Generate Final Quotation
                 </Button>
               </div>
             </div>

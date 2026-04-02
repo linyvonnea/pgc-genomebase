@@ -13,8 +13,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Send, Clock, AlertCircle, Check, CheckCheck, Paperclip, X, Loader2 } from "lucide-react";
-import ChatFileMessage from "./ChatFileMessage";
+import { MessageCircle, Send, Clock, AlertCircle, Check, CheckCheck } from "lucide-react";
 import { ThreadMessage, MessageSenderRole } from "@/types/QuotationThread";
 import {
   subscribeToThreadMessages,
@@ -44,11 +43,6 @@ export default function ChatBox({
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const DEFAULT_REACTIONS = ["👍", "❤️", "😮", "😂", "😥"];
-
-  // File attachment state
-  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!inquiryId || !user) return;
@@ -101,30 +95,11 @@ export default function ChatBox({
     }
   }, [messages]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
-    const allowed = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
-    for (const f of files) {
-      if (f.size > 10 * 1024 * 1024) { setError(`File "${f.name}" exceeds the 10 MB limit.`); return; }
-      if (!allowed.includes(f.type)) { setError(`File type "${f.type}" is not allowed.`); return; }
-    }
-    setError(null);
-    setPendingFiles((prev) => [...prev, ...files]);
-    e.target.value = "";
-  };
-
-  const removePendingFile = (idx: number) => {
-    setPendingFiles((prev) => prev.filter((_, i) => i !== idx));
-  };
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() && pendingFiles.length === 0) return;
-    if (!user) return;
+    if (!newMessage.trim() || !user) return;
 
     const messageContent = newMessage.trim();
-    const filesToSend = [...pendingFiles];
 
     try {
       if (!user.email && !user.uid) {
@@ -137,7 +112,6 @@ export default function ChatBox({
           : user.displayName || user.email?.split("@")[0] || "Client";
 
       setNewMessage(""); // Optimistic UI clear
-      setPendingFiles([]);
 
       // Use a more descriptive sender name for the initials generation if this is a client message
       let finalSenderName = senderDisplayName;
@@ -145,45 +119,19 @@ export default function ChatBox({
         finalSenderName = user.displayName;
       }
 
-      // Upload pending attachments via server-side API (bypasses Storage security rules)
-      let attachments: { name: string; url: string; type: string; size: number }[] = [];
-      if (filesToSend.length > 0) {
-        setUploading(true);
-        try {
-          attachments = await Promise.all(
-            filesToSend.map(async (file) => {
-              const fd = new FormData();
-              fd.append("file", file);
-              fd.append("folder", `chat-attachments/${inquiryId}`);
-              const res = await fetch("/api/upload", { method: "POST", body: fd });
-              if (!res.ok) {
-                const err = await res.json().catch(() => ({}));
-                throw new Error(err.error || `Upload failed (${res.status})`);
-              }
-              const { url } = await res.json();
-              return { name: file.name, url, type: file.type, size: file.size };
-            })
-          );
-        } finally {
-          setUploading(false);
-        }
-      }
-
       await addThreadMessage({
         threadId: inquiryId,
         type: "text",
-        content: messageContent || (attachments.length > 0 ? "📎 Attached file(s)" : ""),
+        content: messageContent,
         senderId: user.email || user.uid,
         senderName: finalSenderName,
         senderRole: role,
         isRead: false,
-        attachments: attachments.length > 0 ? attachments : undefined,
       } as Omit<ThreadMessage, "id" | "createdAt">);
     } catch (error) {
       console.error("Failed to send message:", error);
       setError("Failed to send message. Please try again.");
       setNewMessage(messageContent); // Restore on failure
-      setPendingFiles(filesToSend);
     }
   };
 
@@ -324,14 +272,8 @@ export default function ChatBox({
                       }`}
                     >
                       <p className="whitespace-pre-wrap leading-relaxed break-words">
-                          {msg.content !== "📎 Attached file(s)" ? msg.content : ""}
+                          {msg.content}
                         </p>
-                        {msg.attachments && msg.attachments.length > 0 && (
-                          <ChatFileMessage
-                            attachments={msg.attachments as any}
-                            side={isMe ? "me" : "other"}
-                          />
-                        )}
 
                         {isMe && (
                           <div className="flex justify-end mt-1.5 -mb-0.5">
@@ -357,62 +299,32 @@ export default function ChatBox({
       </CardContent>
 
       <CardFooter className="p-3 bg-white border-t rounded-b-lg">
-        {/* Hidden file input */}
-        <input ref={fileInputRef} type="file" multiple className="hidden" accept="image/*,.pdf,.doc,.docx" onChange={handleFileSelect} />
-
-        <form onSubmit={handleSendMessage} className="flex flex-col w-full gap-2">
-          {/* Pending file preview chips */}
-          {pendingFiles.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 pb-1">
-              {pendingFiles.map((file, i) => (
-                <div key={i} className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-full border bg-blue-50 border-blue-100 text-blue-700">
-                  <span className="max-w-[140px] truncate">{file.name}</span>
-                  <button type="button" onClick={() => removePendingFile(i)} className="ml-0.5 hover:opacity-70">
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
+        <form onSubmit={handleSendMessage} className="flex w-full gap-2 items-end">
+          <div className="flex-1 relative flex items-end">
+            <TextareaAutosize
+              placeholder={
+                role === "admin" ? "Message client..." : "Message admin..."
+              }
+              value={newMessage}
+              disabled={loading}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              minRows={2}
+              maxRows={10}
+              className="flex-1 w-full rounded-xl pl-4 pr-10 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto text-sm transition-all"
+            />
+            <div className="absolute right-2 bottom-2.5">
+              <EmojiPicker onEmojiSelect={(emoji) => setNewMessage((prev) => prev + emoji)} />
             </div>
-          )}
-
-          <div className="flex gap-2 items-end">
-            <div className="flex-1 relative flex items-end">
-              <TextareaAutosize
-                placeholder={
-                  role === "admin" ? "Message client..." : "Message admin..."
-                }
-                value={newMessage}
-                disabled={loading || uploading}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
-                minRows={2}
-                maxRows={10}
-                className="flex-1 w-full rounded-xl pl-4 pr-10 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto text-sm transition-all"
-              />
-              <div className="absolute right-2 bottom-2.5 flex flex-col items-center gap-1.5 pb-0.5">
-                {/* Attach file - now above emoji */}
-                <button
-                  type="button"
-                  title="Attach file"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                >
-                  <Paperclip className="w-4 h-4" />
-                </button>
-
-                <EmojiPicker onEmojiSelect={(emoji) => setNewMessage((prev) => prev + emoji)} />
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              size="icon"
-              disabled={(!newMessage.trim() && pendingFiles.length === 0) || loading || uploading}
-              className="rounded-full bg-blue-600 hover:bg-blue-700 transition-colors h-10 w-10 flex-shrink-0 mb-1"
-            >
-              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-[18px] h-[18px] ml-0.5" />}
-            </Button>
           </div>
+          <Button
+            type="submit"
+            size="icon"
+            disabled={!newMessage.trim() || loading}
+            className="rounded-full bg-blue-600 hover:bg-blue-700 transition-colors h-10 w-10 flex-shrink-0 mb-1"
+          >
+            <Send className="w-[18px] h-[18px] ml-0.5" />
+          </Button>
         </form>
       </CardFooter>
     </Card>
