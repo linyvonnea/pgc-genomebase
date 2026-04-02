@@ -61,13 +61,16 @@ export default function SampleFormPreviewButton({ record, autoOpen = false }: Pr
       ]);
 
       // 3. Generate blob — cast through unknown to satisfy strict pdf() typing
+      console.log("Generating PDF for:", fullRecord.formId);
       const element = createElement(SampleFormPDF, { record: fullRecord });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const blob = await pdf(element as any).toBlob();
+      console.log("Blob generated:", blob.size, "bytes");
 
       // 4. Revoke old URL if any
       if (blobRef.current) URL.revokeObjectURL(blobRef.current);
       const url = URL.createObjectURL(blob);
+      console.log("Blob URL created:", url);
       blobRef.current = url;
       blobDataRef.current = blob;
       setBlobUrl(url);

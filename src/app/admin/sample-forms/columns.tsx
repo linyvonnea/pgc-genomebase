@@ -7,6 +7,7 @@ import { SampleFormRecord } from "@/types/SampleForm";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { Eye } from "lucide-react";
 
 const SampleFormPreviewButton = dynamic(
   () => import("@/components/pdf/SampleFormPreviewButton"),
@@ -83,6 +84,17 @@ export const columns: ColumnDef<SampleFormRecord>[] = [
   {
     id: "action",
     header: "Action",
-    cell: ({ row }) => <SampleFormPreviewButton record={row.original} />,
+    cell: ({ row }) => (
+      <div className="flex items-center gap-2">
+        <Link
+          href={`/admin/sample-forms/${row.original.formId || row.original.id}`}
+          className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-500 hover:text-blue-600"
+          title="View Details"
+        >
+          <Eye className="h-4 w-4" />
+        </Link>
+        <SampleFormPreviewButton record={row.original} />
+      </div>
+    ),
   },
 ];
