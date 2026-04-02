@@ -44,13 +44,9 @@ import { AdminChannel, AdminMessage } from "@/types/AdminChat";
 // ---------------------------------------------------------------------------
 
 function getInitials(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((n) => n[0])
-    .join("")
-    .substring(0, 2)
-    .toUpperCase();
+  const parts = name.trim().split(/\s+/);
+  if (parts.length < 2) return parts[0]?.[0]?.toUpperCase() || "";
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 function formatMsgTime(ts: any): string {
@@ -423,9 +419,16 @@ export default function AdminChatWidget() {
                             }`}
                           >
                             {!isMe && (
-                              <p className="text-[10px] font-bold text-[#166FB5] mb-0.5">
-                                {msg.senderName}
-                              </p>
+                              <div className="flex items-center gap-1.5 mb-1.5">
+                                <Avatar className="h-4 w-4 border-none bg-blue-100">
+                                  <AvatarFallback className="bg-blue-100 text-[#166FB5] text-[8px] font-bold">
+                                    {getInitials(msg.senderName)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-[10px] font-bold text-[#166FB5] uppercase tracking-wider">
+                                  {msg.senderName}
+                                </span>
+                              </div>
                             )}
                             <p className="whitespace-pre-wrap break-words">
                               {msg.content}
