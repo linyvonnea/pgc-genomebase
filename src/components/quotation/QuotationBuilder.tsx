@@ -19,7 +19,7 @@ import { ServiceItem } from "@/types/ServiceItem";
 import { Inquiry } from "@/types/Inquiry";
 
 import { Badge } from "@/components/ui/badge";
-import { FlaskConical, Calendar } from "lucide-react";
+import { FlaskConical, Calendar, Loader2 } from "lucide-react";
 
 import { saveQuotationToFirestore, generateNextReferenceNumber } from "@/services/quotationService";
 import {
@@ -55,6 +55,8 @@ import { QuotationPDF } from "./QuotationPDF";
 import { QuotationHistoryPanel } from "./QuotationHistoryPanel";
 import useAuth from "@/hooks/useAuth";
 import { GroupedServiceSelector } from "@/components/forms/GroupedServiceSelector";
+
+const QuotationPDF_Client = dynamic(() => import("./QuotationPDF").then(m => m.QuotationPDF), { ssr: false });
 
 // Allow editable quantity ("" or number)
 type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
@@ -160,6 +162,7 @@ export default function QuotationBuilder({
     email: string;
   };
 }) {
+  const [mounted, setMounted] = useState(false);
   const [selectedServices, setSelectedServices] = useState<EditableSelectedService[]>([]);
   const [isInternal, setIsInternal] = useState(false);
   const [useAffiliationAsClientName, setUseAffiliationAsClientName] = useState(false);
@@ -178,6 +181,10 @@ export default function QuotationBuilder({
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const effectiveInquiryId = inquiryId || searchParams.get("inquiryId") || "";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { data: catalog = [] } = useQuery({
     queryKey: ["serviceCatalog"],
@@ -297,6 +304,7 @@ export default function QuotationBuilder({
 
       if (!adminInfo?.email) {
         toast.error("User authentication required to save quotation");
+        setSaving(false);
         return;
       }
 
