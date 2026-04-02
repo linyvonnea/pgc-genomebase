@@ -28,6 +28,42 @@ const ALLOWED_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
+function normalizeBucketName(raw: string): string {
+  return raw.replace(/^gs:\/\//, "").trim();
+}
+
+async function resolveExistingBucket() {
+  const initialBucket = getStorageBucket();
+  if (!initialBucket) return null;
+
+  const configured = [
+    process.env.FIREBASE_STORAGE_BUCKET,
+    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    initialBucket.name,
+  ]
+    .filter((v): v is string => Boolean(v && v.trim()))
+    .map((v) => normalizeBucketName(v));
+
+  const projectId =
+    process.env.FIREBASE_PROJECT_ID ||
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
+    "";
+
+  const candidates = Array.from(
+    new Set([
+      ...configured,
+      projectId ? `${projectId}.appspot.com` : "",
+      projectId ? `${projectId}.firebasestorage.app` : "",
+      projectId ? `${projectId}-backups` : "",
+    ].filter(Boolean)),
+  );
+
+  return {
+    storage: initialBucket.storage,
+    candidates,
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -52,10 +88,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const bucket = getStorageBucket();
-    if (!bucket) {
+    const bucketInfo = await resolveExistingBucket();
+    if (!bucketInfo) {
       return NextResponse.json(
-        { error: "Storage not configured on the server" },
+        { error: "Storage bucket is not configured or does not exist on the server" },
         { status: 500 }
       );
     }
@@ -70,21 +106,55 @@ export async function POST(request: NextRequest) {
     // looks and behaves exactly like one from getDownloadURL() on the client.
     const downloadToken = uuidv4();
 
-    const fileRef = bucket.file(filePath);
-    await fileRef.save(buffer, {
-      metadata: {
-        contentType: file.type,
-        metadata: {
-          // This custom metadata key is what Firebase client SDK reads to
-          // construct the download URL returned by getDownloadURL().
-          firebaseStorageDownloadTokens: downloadToken,
-        },
-      },
-    });
+    let usedBucketName: string | null = null;
+    let lastError: unknown = null;
 
-    // Construct the stable, non-expiring Firebase Storage download URL.
-    const encodedPath = encodeURIComponent(filePath);
-    const url = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodedPath}?alt=media&token=${downloadToken}`;
+    for (const candidateName of bucketInfo.candidates) {
+      try {
+        const bucket = bucketInfo.storage.bucket(candidateName);
+        const fileRef = bucket.file(filePath);
+        await fileRef.save(buffer, {
+          metadata: {
+            contentType: file.type,
+            metadata: {
+              // This custom metadata key is what Firebase client SDK reads to
+              // construct the download URL returned by getDownloadURL().
+              firebaseStorageDownloadTokens: downloadToken,
+            },
+          },
+        });
+        usedBucketName = bucket.name;
+        break;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (!usedBucketName) {
+      throw lastError instanceof Error
+        ? lastError
+        : new Error("Unable to upload to any configured storage bucket");
+    }
+
+    let url: string;
+    const isFirebaseBucket =
+      usedBucketName.endsWith(".appspot.com") ||
+      usedBucketName.endsWith(".firebasestorage.app");
+
+    if (isFirebaseBucket) {
+      // Stable Firebase Storage download URL.
+      const encodedPath = encodeURIComponent(filePath);
+      url = `https://firebasestorage.googleapis.com/v0/b/${usedBucketName}/o/${encodedPath}?alt=media&token=${downloadToken}`;
+    } else {
+      // Non-Firebase GCS bucket fallback (e.g. project backup bucket).
+      // Use a long-lived signed URL so clients can download without extra auth.
+      const fileRef = bucketInfo.storage.bucket(usedBucketName).file(filePath);
+      const [signedUrl] = await fileRef.getSignedUrl({
+        action: "read",
+        expires: "01-01-2100",
+      });
+      url = signedUrl;
+    }
 
     return NextResponse.json({ url });
   } catch (error) {
