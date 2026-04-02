@@ -376,38 +376,10 @@ function ChargeSlipBuilderInner({
       // Save to Firestore first
       await saveChargeSlip(record);
 
-      // Generate PDF after save completes
-      const blob = await pdf(
-        <ChargeSlipPDF
-          services={cleanedServices}
-          client={client}
-          project={project}
-          chargeSlipNumber={chargeSlipNumber}
-          useAffiliationAsClientName={useAffiliationAsClientName}
-          orNumber={orNumber}
-          useInternalPrice={isInternal}
-          preparedBy={record.preparedBy}
-          approvedBy={record.approvedBy}
-          referenceNumber={chargeSlipNumber}
-          clientInfo={clientInfo}
-          dateIssued={new Date().toISOString()}
-          subtotal={subtotal}
-          discount={discount}
-          total={total}
-        />
-      ).toBlob();
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${chargeSlipNumber}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-
       // Invalidate charge slip history to refresh the list
       queryClient.invalidateQueries({ queryKey: ["chargeSlipHistory", effectiveProjectId] });
 
-      toast.success("Charge slip saved and downloaded successfully!");
+      toast.success("Charge slip saved successfully!");
       onSubmit?.(record);
     } catch (error) {
       console.error("Failed to save charge slip:", error);
