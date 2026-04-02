@@ -129,6 +129,10 @@ export default function ClientSampleFormPage() {
     run();
   }, [formId, router, backPath]);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const setSource = (
     key: keyof SampleFormData["sampleSource"],
     value: boolean | string
