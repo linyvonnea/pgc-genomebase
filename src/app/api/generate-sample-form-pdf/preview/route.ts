@@ -1,7 +1,7 @@
 import { renderToBuffer } from "@react-pdf/renderer";
-import { createElement } from "react";
 import { SampleFormPDF } from "@/components/pdf/SampleFormPDF";
 import { SampleFormRecord } from "@/types/SampleForm";
+import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
@@ -52,10 +52,12 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Partial<SampleFormRecord>;
     const record = normalizeRecord(body || {});
-    const element = createElement(SampleFormPDF, { record });
+    
+    // @ts-ignore
+    const element = (SampleFormPDF({ record }) as any);
     const buffer = await renderToBuffer(element);
 
-    return new Response(buffer, {
+    return new Response(new Uint8Array(buffer), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": "inline; filename=sample_form_preview.pdf",
