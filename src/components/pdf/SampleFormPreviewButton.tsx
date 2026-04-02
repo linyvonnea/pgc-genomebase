@@ -49,10 +49,17 @@ export default function SampleFormPreviewButton({ record, autoOpen = false }: Pr
       let fullRecord: SampleFormRecord = record;
       try {
         const fetched = await getSampleFormById(referenceId);
-        if (fetched) fullRecord = fetched;
+        if (fetched) {
+          fullRecord = fetched;
+        } else {
+          console.warn("No record found in Firestore for ID:", referenceId);
+        }
       } catch (err) {
-        console.warn("Fallback to prop record:", err);
+        console.error("Firestore fetch failed for ID:", referenceId, err);
       }
+
+      // Ensure we have the basic fields needed for the PDF layout even if fetch fails
+      if (!fullRecord.formId) fullRecord.formId = referenceId;
 
       // 2. Dynamically import pdf renderer (avoids SSR bundling issues)
       const [{ pdf }, { SampleFormPDF }] = await Promise.all([
