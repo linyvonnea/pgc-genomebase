@@ -86,9 +86,6 @@ function SelectedAdminHeader({ admin, onBack }: SelectedAdminHeaderProps) {
             {getInitials(admin.name)}
           </AvatarFallback>
         </Avatar>
-        {presence.isOnline && (
-          <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-400 border-2 border-[#166FB5]" />
-        )}
       </div>
       <div className="min-w-0">
         <p className="text-sm font-semibold leading-tight truncate">{admin.name}</p>
@@ -128,10 +125,6 @@ function AdminListItem({ admin, unread, preview, onClick }: AdminListItemProps) 
             {getInitials(admin.name)}
           </AvatarFallback>
         </Avatar>
-        {/* Online dot overlay */}
-        {presence.isOnline && (
-          <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 border-2 border-white" />
-        )}
       </div>
 
       <div className="flex-1 min-w-0">
@@ -443,9 +436,9 @@ export default function AdminChatWidget() {
                             }`}
                           >
                             {!isMe && (
-                              <div className="flex items-center gap-1.5 mb-1.5">
-                                <span className="text-[10px] font-bold text-[#166FB5] uppercase tracking-wider">
-                                  {msg.senderName}
+                              <div className="flex items-center mb-1">
+                                <span className="bg-[#166FB5]/10 text-[#166FB5] text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                  {getInitials(msg.senderName)}
                                 </span>
                               </div>
                             )}
