@@ -15,8 +15,6 @@ import { PDFDownloadLink, pdf } from "@react-pdf/renderer";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 
-const quotationPdfCache = new Map<string, Blob>();
-
 interface Props {
   referenceNumber: string;
   services: SelectedService[];
@@ -43,7 +41,6 @@ export default function DownloadButtonSection(props: Props) {
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const blobUrlRef = useRef<string | null>(null);
-  const previewGeneratingRef = useRef(false);
 
   const { subtotal, discount, total, referenceNumber } = props;
   const totalsOverride =
@@ -55,18 +52,6 @@ export default function DownloadButtonSection(props: Props) {
     () => <QuotationPDF {...props} totalsOverride={totalsOverride} />,
     [props, totalsOverride]
   );
-
-  const previewKey = useMemo(() => {
-    try {
-      return JSON.stringify({
-        referenceNumber,
-        props,
-        totalsOverride,
-      });
-    } catch {
-      return `${referenceNumber}-${props.services.length}`;
-    }
-  }, [referenceNumber, props, totalsOverride]);
 
   const handleDownload = async () => {
     // Log DOWNLOAD activity
@@ -80,19 +65,6 @@ export default function DownloadButtonSection(props: Props) {
       entityName: `Quotation ${referenceNumber}`,
       description: `Downloaded quotation PDF: ${referenceNumber}`,
     });
-  };
-
-  const prewarmPreview = async () => {
-    if (previewGeneratingRef.current) return;
-    if (quotationPdfCache.has(previewKey)) return;
-
-    previewGeneratingRef.current = true;
-    try {
-      const blob = await pdf(pdfDoc).toBlob();
-      quotationPdfCache.set(previewKey, blob);
-    } finally {
-      previewGeneratingRef.current = false;
-    }
   };
 
   useEffect(() => {
@@ -111,22 +83,10 @@ export default function DownloadButtonSection(props: Props) {
     setBlobUrl(null);
 
     const generate = async () => {
-      const cached = quotationPdfCache.get(previewKey);
-      if (cached) {
-        if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
-        const url = URL.createObjectURL(cached);
-        blobUrlRef.current = url;
-        setBlobUrl(url);
-        setPreviewLoading(false);
-        return;
-      }
-
       const blob = await pdf(pdfDoc).toBlob();
       if (cancelled) return;
 
       if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
-
-      quotationPdfCache.set(previewKey, blob);
 
       const url = URL.createObjectURL(blob);
       blobUrlRef.current = url;
@@ -139,7 +99,7 @@ export default function DownloadButtonSection(props: Props) {
     return () => {
       cancelled = true;
     };
-  }, [open, pdfDoc, previewKey]);
+  }, [open, pdfDoc]);
 
   useEffect(() => {
     return () => {
@@ -150,13 +110,7 @@ export default function DownloadButtonSection(props: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="default"
-          onMouseEnter={prewarmPreview}
-          onFocus={prewarmPreview}
-        >
-          📄 Preview Quotation
-        </Button>
+        <Button variant="default">📄 Preview Quotation</Button>
       </DialogTrigger>
 
       <DialogContent
