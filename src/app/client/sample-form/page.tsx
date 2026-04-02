@@ -1,19 +1,27 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { createElement, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { ArrowLeft, AlertCircle, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   createEmptySampleEntries,
   emptySampleFormData,
   SampleFormData,
+  SampleFormRecord,
 } from "@/types/SampleForm";
 import { sampleFormSchema } from "@/schemas/sampleFormSchema";
 import { createSampleForm, getSampleFormById } from "@/services/sampleFormService";
@@ -51,6 +59,13 @@ export default function ClientSampleFormPage() {
   });
   const [loadingForm, setLoadingForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewSaving, setPreviewSaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const previewBlobRef = useRef<string | null>(null);
 
   const isReadOnly = Boolean(formId);
 
@@ -114,6 +129,10 @@ export default function ClientSampleFormPage() {
 
     run();
   }, [formId, router, backPath]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const setSource = (
     key: keyof SampleFormData["sampleSource"],
@@ -190,7 +209,26 @@ export default function ClientSampleFormPage() {
     }));
   };
 
-  const handleSubmit = async () => {
+  const buildPreviewRecord = (): SampleFormRecord => ({
+    id: formId || "preview",
+    formId: formId || "preview",
+    inquiryId: inquiryId || "",
+    projectId: projectId || "",
+    projectTitle,
+    clientId,
+    submittedByEmail: email || "",
+    submittedByName,
+    status: "Submitted",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    totalNumberOfSamples: formData.totalNumberOfSamples,
+    sampleSource: formData.sampleSource,
+    templateType: formData.templateType,
+    ampliconDetails: formData.ampliconDetails,
+    entries: formData.entries,
+  });
+
+  const persistSampleForm = async (redirectToPortal: boolean) => {
     if (!inquiryId || !email || !projectId) {
       toast.error("Missing project context. Please open this from Client Portal.");
       return;
@@ -203,9 +241,13 @@ export default function ClientSampleFormPage() {
       return;
     }
 
-    setSubmitting(true);
+    if (redirectToPortal) {
+      setSubmitting(true);
+    } else {
+      setPreviewSaving(true);
+    }
     try {
-      console.log("Submitting sample form with context:", {
+      console.log("Saving sample form with context:", {
         inquiryId,
         projectId,
         clientId,
@@ -222,15 +264,64 @@ export default function ClientSampleFormPage() {
         submittedByName,
       });
 
-      toast.success("Sample form submitted successfully.");
-      router.push(backPath);
+      toast.success(redirectToPortal ? "Sample form submitted successfully." : "Sample form saved successfully.");
+      if (redirectToPortal) {
+        router.push(backPath);
+      }
     } catch (error) {
       console.error("Error submitting sample form:", error);
-      toast.error("Failed to submit sample form. Please try again.");
+      toast.error("Failed to save sample form. Please try again.");
     } finally {
-      setSubmitting(false);
+      if (redirectToPortal) {
+        setSubmitting(false);
+      } else {
+        setPreviewSaving(false);
+      }
     }
   };
+
+  const handleSubmit = async () => {
+    await persistSampleForm(true);
+  };
+
+  useEffect(() => {
+    if (!previewOpen || !mounted) return;
+    if (previewUrl) return;
+
+    setPreviewLoading(true);
+    setPreviewError(null);
+
+    const generate = async () => {
+      const [{ pdf }, { SampleFormPDF }] = await Promise.all([
+        import("@react-pdf/renderer"),
+        import("@/components/pdf/SampleFormPDF"),
+      ]);
+
+      const element = createElement(SampleFormPDF, { record: buildPreviewRecord() });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const blob = await pdf(element as any).toBlob();
+
+      if (previewBlobRef.current) URL.revokeObjectURL(previewBlobRef.current);
+      const url = URL.createObjectURL(blob);
+      previewBlobRef.current = url;
+      setPreviewUrl(url);
+    };
+
+    generate()
+      .catch((err) => {
+        console.error("Preview PDF generation failed:", err);
+        setPreviewError("Failed to generate PDF preview. Please try again.");
+      })
+      .finally(() => setPreviewLoading(false));
+  }, [previewOpen, mounted, previewUrl]);
+
+  useEffect(() => {
+    if (previewOpen) return;
+    if (previewBlobRef.current) URL.revokeObjectURL(previewBlobRef.current);
+    previewBlobRef.current = null;
+    setPreviewUrl(null);
+    setPreviewError(null);
+  }, [previewOpen]);
 
   if (loadingForm) {
     return (
@@ -539,7 +630,59 @@ export default function ClientSampleFormPage() {
         </Card>
 
         {!isReadOnly && (
-          <div className="flex justify-end pb-3">
+          <div className="flex justify-end pb-3 gap-3 flex-wrap">
+            <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  📄 Preview PDF
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-5xl w-full h-[90vh] flex flex-col p-0 gap-0">
+                <DialogHeader className="px-6 py-4 border-b shrink-0">
+                  <DialogTitle>Sample Form PDF Preview</DialogTitle>
+                </DialogHeader>
+                <div className="flex-1 overflow-hidden flex items-center justify-center bg-muted/10">
+                  {previewLoading && (
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <p className="text-sm text-muted-foreground font-medium">Preparing preview…</p>
+                    </div>
+                  )}
+                  {!previewLoading && previewError && (
+                    <div className="flex flex-col items-center gap-2 text-amber-600">
+                      <AlertCircle className="h-6 w-6" />
+                      <p className="text-sm font-medium">{previewError}</p>
+                    </div>
+                  )}
+                  {!previewLoading && previewUrl && (
+                    <iframe
+                      src={previewUrl}
+                      style={{ width: "100%", height: "100%", border: "none" }}
+                      title="Sample Form PDF Preview"
+                    />
+                  )}
+                </div>
+                <div className="px-6 py-4 border-t shrink-0 flex justify-end gap-3">
+                  <Button variant="outline" onClick={() => setPreviewOpen(false)}>
+                    Close
+                  </Button>
+                  <Button
+                    onClick={() => persistSampleForm(false)}
+                    disabled={previewSaving || previewLoading}
+                    className="bg-[#166FB5] hover:bg-[#166FB5]/90"
+                  >
+                    {previewSaving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Sample Form"
+                    )}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
             <Button
               onClick={handleSubmit}
               disabled={submitting}
