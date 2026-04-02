@@ -374,28 +374,6 @@ export default function ChatBox({
           )}
 
           <div className="flex gap-2 items-end">
-            {/* Attach file */}
-            <button
-              type="button"
-              title="Attach file"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex-shrink-0 p-2 rounded-full text-slate-500 hover:bg-slate-100 transition-colors mb-1"
-            >
-              <Paperclip className="w-4 h-4" />
-            </button>
-
-            {/* Official Receipt — client only */}
-            {role === "client" && (
-              <button
-                type="button"
-                title="Upload Official Receipt"
-                onClick={() => orInputRef.current?.click()}
-                className="flex-shrink-0 p-2 rounded-full text-amber-500 hover:bg-amber-50 transition-colors mb-1"
-              >
-                <Receipt className="w-4 h-4" />
-              </button>
-            )}
-
             <div className="flex-1 relative flex items-end">
               <TextareaAutosize
                 placeholder={
@@ -409,7 +387,29 @@ export default function ChatBox({
                 maxRows={10}
                 className="flex-1 w-full rounded-xl pl-4 pr-10 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto text-sm transition-all"
               />
-              <div className="absolute right-2 bottom-2.5">
+              <div className="absolute right-2 bottom-2.5 flex flex-col items-center gap-1.5 pb-0.5">
+                {/* Attach file - now above emoji */}
+                <button
+                  type="button"
+                  title="Attach file"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                >
+                  <Paperclip className="w-4 h-4" />
+                </button>
+
+                {/* Official Receipt — client only, also above emoji if present */}
+                {role === "client" && (
+                  <button
+                    type="button"
+                    title="Upload Official Receipt"
+                    onClick={() => orInputRef.current?.click()}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                  >
+                    <Receipt className="w-4 h-4" />
+                  </button>
+                )}
+
                 <EmojiPicker onEmojiSelect={(emoji) => setNewMessage((prev) => prev + emoji)} />
               </div>
             </div>
