@@ -50,6 +50,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+import { PDFViewer } from "@react-pdf/renderer";
 import { QuotationPDF } from "./QuotationPDF";
 import { QuotationHistoryPanel } from "./QuotationHistoryPanel";
 import useAuth from "@/hooks/useAuth";
