@@ -4,7 +4,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import dynamic from "next/dynamic";
+import { pdf } from "@react-pdf/renderer";
 import { toast } from "sonner";
 
 import { calculateItemTotal } from "@/lib/calculatePrice";
@@ -12,7 +12,6 @@ import { sanitizeObject } from "@/lib/sanitizeObject";
 import { getServiceCatalog } from "@/services/serviceCatalogService";
 import { getInquiryById } from "@/services/inquiryService";
 import { saveQuotationAction } from "@/app/actions/quotationActions";
-import useAuth from "@/hooks/useAuth";
 
 import { QuotationRecord } from "@/types/Quotation";
 import { SelectedService as StrictSelectedService } from "@/types/SelectedService";
@@ -20,7 +19,7 @@ import { ServiceItem } from "@/types/ServiceItem";
 import { Inquiry } from "@/types/Inquiry";
 
 import { Badge } from "@/components/ui/badge";
-import { FlaskConical, Calendar, Loader2 } from "lucide-react";
+import { FlaskConical, Calendar } from "lucide-react";
 
 import { saveQuotationToFirestore, generateNextReferenceNumber } from "@/services/quotationService";
 import {
@@ -51,15 +50,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+import { PDFViewer } from "@react-pdf/renderer";
+import { QuotationPDF } from "./QuotationPDF";
 import { QuotationHistoryPanel } from "./QuotationHistoryPanel";
+import useAuth from "@/hooks/useAuth";
 import { GroupedServiceSelector } from "@/components/forms/GroupedServiceSelector";
-
-const PDFViewerClient = dynamic(
-  () => import("@react-pdf/renderer").then((mod) => mod.PDFViewer),
-  { ssr: false }
-);
-
-const QuotationPDF_Client = dynamic(() => import("./QuotationPDF").then(m => m.QuotationPDF), { ssr: false });
 
 // Allow editable quantity ("" or number)
 type EditableSelectedService = Omit<StrictSelectedService, "quantity"> & {
@@ -165,12 +160,10 @@ export default function QuotationBuilder({
     email: string;
   };
 }) {
-  const [mounted, setMounted] = useState(false);
   const [selectedServices, setSelectedServices] = useState<EditableSelectedService[]>([]);
   const [isInternal, setIsInternal] = useState(false);
   const [useAffiliationAsClientName, setUseAffiliationAsClientName] = useState(false);
   const [openPreview, setOpenPreview] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState<string>("");
@@ -185,10 +178,6 @@ export default function QuotationBuilder({
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const effectiveInquiryId = inquiryId || searchParams.get("inquiryId") || "";
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const { data: catalog = [] } = useQuery({
     queryKey: ["serviceCatalog"],
@@ -281,7 +270,6 @@ export default function QuotationBuilder({
   const total = subtotal - discount;
 
   const handleSaveAndDownload = async () => {
-    setSaving(true);
     try {
       const quotationRecord = {
         referenceNumber,
@@ -309,7 +297,6 @@ export default function QuotationBuilder({
 
       if (!adminInfo?.email) {
         toast.error("User authentication required to save quotation");
-        setSaving(false);
         return;
       }
 
@@ -322,24 +309,12 @@ export default function QuotationBuilder({
         throw new Error(result.error || "Failed to save quotation");
       }
 
-      await queryClient.invalidateQueries({ queryKey: ["quotationHistory", effectiveInquiryId] });
+      queryClient.invalidateQueries({ queryKey: ["quotationHistory", effectiveInquiryId] });
       toast.success("Quotation saved successfully!");
       setOpenPreview(false);
-
-      // Reset form
-      setSelectedServices([]);
-      setIsInternal(false);
-      setUseAffiliationAsClientName(false);
-
-      // Refresh reference number
-      const nextRef = await generateNextReferenceNumber(currentYear);
-      setReferenceNumber(nextRef);
-
     } catch (error) {
       console.error("Error saving quotation:", error);
       toast.error(`Failed to save quotation: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -807,35 +782,26 @@ export default function QuotationBuilder({
               <DialogTitle>Preview Quotation PDF</DialogTitle>
             </DialogHeader>
             <div className="mt-4">
-              {mounted && (
-                <PDFViewerClient width="100%" height="600">
-                  <QuotationPDF_Client
-                    services={cleanedServices}
-                    clientInfo={clientInfo}
-                    referenceNumber={referenceNumber}
-                    useInternalPrice={isInternal}
-                    useAffiliationAsClientName={useAffiliationAsClientName}
-                    preparedBy={{
-                      name: adminInfo?.name || "—",
-                      position: adminInfo?.position || "—",
-                    }}
-                    dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-                  />
-                </PDFViewerClient>
-              )}
+              <PDFViewer width="100%" height="600">
+                <QuotationPDF
+                  services={cleanedServices}
+                  clientInfo={clientInfo}
+                  referenceNumber={referenceNumber}
+                  useInternalPrice={isInternal}
+                  useAffiliationAsClientName={useAffiliationAsClientName}
+                  preparedBy={{
+                    name: adminInfo?.name || "—",
+                    position: adminInfo?.position || "—",
+                  }}
+                  dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                />
+              </PDFViewer>
               <div className="text-right mt-4">
                 <Button
                   onClick={handleSaveAndDownload}
-                  disabled={cleanedServices.length === 0 || saving}
+                  disabled={cleanedServices.length === 0}
                 >
-                  {saving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Final Quotation"
-                  )}
+                  Save Final Quotation
                 </Button>
               </div>
             </div>
