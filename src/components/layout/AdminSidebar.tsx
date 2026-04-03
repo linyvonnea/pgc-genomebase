@@ -45,6 +45,7 @@ const ROUTE_MODULE_MAP: Record<string, keyof RolePermissions> = {
   "/admin/manual-quotation": "manualQuotation",
   "/admin/services": "serviceCatalog",
   "/admin/catalog-settings": "catalogSettings",
+  "/admin/configurations": "configurations",
   "/admin/member-approvals": "memberApprovals",
   "/admin/roles": "roleManagement",
   "/admin/admins": "usersPermissions",
@@ -149,6 +150,11 @@ export function AdminSidebar() {
         { 
           href: "/admin/catalog-settings", 
           label: "Catalog Settings", 
+          icon: Sliders,
+        },
+        {
+          href: "/admin/configurations",
+          label: "Configurations",
           icon: Sliders,
         },
       ]
