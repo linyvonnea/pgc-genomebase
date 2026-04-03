@@ -22,6 +22,11 @@ import { InquiryFormData } from "@/schemas/inquirySchema";
 import { AdminInquiryData } from "@/schemas/adminInquirySchema";
 import { logActivity } from "@/services/activityLogService";
 import { initializeQuotationThread, addThreadMessage } from "@/services/quotationThreadService";
+import {
+  getConfigurationSettings,
+  getDefaultConfigurationSettings,
+  getInquiryNotificationRecipients,
+} from "@/services/configurationSettingsService";
 
 const BIOINFO_OPTION_LABELS: Record<string, string> = {
   "whole-genome-assembly": "Whole Genome Assembly",
@@ -436,27 +441,18 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     console.log("Template Data:", templateData);
     console.log("Firebase DB instance:", db ? "Connected" : "Not Connected");
     
-    // Configure recipients for internal notification
-    const emailRecipients = Array.from(
-      new Set([
-        "sequencing.pgc.upvisayas@up.edu.ph",
-        "madayon1@up.edu.ph",
-      ])
+    const config = await getConfigurationSettings();
+    const fallbackConfig = getDefaultConfigurationSettings();
+    const emailRecipients = getInquiryNotificationRecipients(
+      config.inquiryNotifications.length > 0
+        ? config.inquiryNotifications
+        : fallbackConfig.inquiryNotifications,
+      inquiryData.service,
     );
 
     const flattenedBioinfoDetails = inquiryData.bioinformaticsDetails
       ? flattenBioinformaticsDetails(inquiryData.bioinformaticsDetails as Record<string, any>)
       : [];
-    
-    // Add sequencing team and extra recipient for equipment inquiries
-    if (inquiryData.service === 'equipment') {
-      emailRecipients.push("sequencing.pgc.upvisayas@up.edu.ph");
-    }
-    
-    // Add Bioinformatics specialist if service type matches
-    if (inquiryData.service === 'bioinformatics' || inquiryData.service === 'training') {
-      emailRecipients.push("bioinfo.pgc.upvisayas@up.edu.ph");
-    }
     
     console.log("EMAIL DEBUG: Creating email for recipients:", emailRecipients.join(", "));
     

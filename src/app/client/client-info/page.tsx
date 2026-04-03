@@ -71,11 +71,13 @@ import { subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { getChargeSlipsByProjectId } from "@/services/chargeSlipService";
 import { getSampleFormsByProjectId } from "@/services/sampleFormService";
+import { getConfigurationSettings, DEFAULT_PORTAL_FEATURES } from "@/services/configurationSettingsService";
 import { QuotationRecord } from "@/types/Quotation";
 import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { SampleFormSummary } from "@/types/SampleForm";
 import { ApprovalStatus } from "@/types/MemberApproval";
+import { ConfigurationSettings } from "@/types/ConfigurationSettings";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
@@ -273,6 +275,7 @@ export default function ClientPortalPage() {
   });
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [expandedProjectDocs, setExpandedProjectDocs] = useState<Set<string>>(new Set());
+  const [configSettings, setConfigSettings] = useState<ConfigurationSettings | null>(null);
 
   const [projectDocuments, setProjectDocuments] = useState<
     Map<string, { 
@@ -300,6 +303,26 @@ export default function ClientPortalPage() {
     // Even if pidParam is present, we start with empty set to follow user request
     setExpandedProjectDocs(new Set());
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadConfig = async () => {
+      try {
+        const data = await getConfigurationSettings();
+        if (isMounted) setConfigSettings(data);
+      } catch (error) {
+        console.error("Failed to load portal configuration:", error);
+      }
+    };
+
+    loadConfig();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const portalFeatures = configSettings?.portalFeatures ?? DEFAULT_PORTAL_FEATURES;
 
   const [selectedProjectPid, setSelectedProjectPid] = useState<string | null>(
     null
@@ -1837,20 +1860,22 @@ export default function ClientPortalPage() {
           : [];
 
         // Fetch sample forms by project ID (client-submitted forms)
-        const sampleForms = project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
+        const sampleForms = portalFeatures.sampleForms && project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
           ? await getSampleFormsByProjectId(project.pid)
           : [];
 
         // Fetch official receipts from Firestore subcollection (if any)
         let officialReceipts: any[] = [];
-        try {
-          if (project.pid && project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")) {
-            const receiptsSnapshot = await getDocs(collection(db, "projects", project.pid, "officialReceipts"));
-            officialReceipts = receiptsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        if (portalFeatures.officialReceipts) {
+          try {
+            if (project.pid && project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")) {
+              const receiptsSnapshot = await getDocs(collection(db, "projects", project.pid, "officialReceipts"));
+              officialReceipts = receiptsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            }
+          } catch (fetchReceiptError) {
+            console.warn(`Failed to load official receipts for project ${project.pid}:`, fetchReceiptError);
+            officialReceipts = [];
           }
-        } catch (fetchReceiptError) {
-          console.warn(`Failed to load official receipts for project ${project.pid}:`, fetchReceiptError);
-          officialReceipts = [];
         }
 
         setProjectDocuments((prev) => new Map(prev).set(pid, {
@@ -2552,91 +2577,94 @@ export default function ClientPortalPage() {
                               )}
                             </div>
 
-                            {/* Sample Forms */}
-                            <div>
-                              <div className="flex items-center gap-2 mb-1.5">
-                                <FileSpreadsheet className="h-3 w-3 text-orange-600" />
-                                <span className="text-sm font-semibold text-slate-700">
-                                  Sample Forms
-                                </span>
-                                <span className="text-[10px] text-slate-500">({docs?.sampleForms?.length || 0})</span>
-                              </div>
-                              <a
-                                href={sampleFormBaseHref}
-                                className="inline-block text-xs text-[#166FB5] hover:underline ml-5 mb-2"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                + Fill out sample submission form
-                              </a>
-                              {(docs?.sampleForms?.length || 0) > 0 ? (
-                                <div className="space-y-1 ml-5">
-                                  {docs?.sampleForms.map((item) => (
-                                    <a
-                                      key={item.id}
-                                      href={`${sampleFormBaseHref}&formId=${item.id}`}
-                                      className="block text-xs text-slate-600 hover:text-orange-600 hover:underline truncate"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      • {item.id} ({item.totalNumberOfSamples || 0} samples)
-                                    </a>
-                                  ))}
+                            {portalFeatures.sampleForms && (
+                              <div>
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <FileSpreadsheet className="h-3 w-3 text-orange-600" />
+                                  <span className="text-sm font-semibold text-slate-700">
+                                    Sample Forms
+                                  </span>
+                                  <span className="text-[10px] text-slate-500">({docs?.sampleForms?.length || 0})</span>
                                 </div>
-                              ) : (
-                                <p className="text-xs text-slate-400 ml-5">No sample forms yet</p>
-                              )}
-                            </div>
+                                <a
+                                  href={sampleFormBaseHref}
+                                  className="inline-block text-xs text-[#166FB5] hover:underline ml-5 mb-2"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  + Fill out sample submission form
+                                </a>
+                                {(docs?.sampleForms?.length || 0) > 0 ? (
+                                  <div className="space-y-1 ml-5">
+                                    {docs?.sampleForms.map((item) => (
+                                      <a
+                                        key={item.id}
+                                        href={`${sampleFormBaseHref}&formId=${item.id}`}
+                                        className="block text-xs text-slate-600 hover:text-orange-600 hover:underline truncate"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        • {item.id} ({item.totalNumberOfSamples || 0} samples)
+                                      </a>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-slate-400 ml-5">No sample forms yet</p>
+                                )}
+                              </div>
+                            )}
 
-                            {/* Service Reports */}
-                            <div>
-                              <div className="flex items-center gap-2 mb-1.5">
-                                <ShieldEllipsis className="h-3 w-3 text-blue-600" />
-                                <span className="text-sm font-semibold text-slate-700">
-                                  Service Reports
-                                </span>
-                                <span className="text-[10px] text-slate-500">({docs?.serviceReports?.length || 0})</span>
-                              </div>
-                              {(docs?.serviceReports?.length || 0) > 0 ? (
-                                <div className="space-y-1 ml-5">
-                                  {docs?.serviceReports.map((item: any) => (
-                                    <div
-                                      key={item.id}
-                                      className="block text-xs text-slate-600 truncate"
-                                    >
-                                      • {item.name || item.id}
-                                    </div>
-                                  ))}
+                            {portalFeatures.serviceReports && (
+                              <div>
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <ShieldEllipsis className="h-3 w-3 text-blue-600" />
+                                  <span className="text-sm font-semibold text-slate-700">
+                                    Service Reports
+                                  </span>
+                                  <span className="text-[10px] text-slate-500">({docs?.serviceReports?.length || 0})</span>
                                 </div>
-                              ) : (
-                                <p className="text-xs text-slate-400 ml-5">No service reports yet</p>
-                              )}
-                            </div>
+                                {(docs?.serviceReports?.length || 0) > 0 ? (
+                                  <div className="space-y-1 ml-5">
+                                    {docs?.serviceReports.map((item: any) => (
+                                      <div
+                                        key={item.id}
+                                        className="block text-xs text-slate-600 truncate"
+                                      >
+                                        • {item.name || item.id}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-slate-400 ml-5">No service reports yet</p>
+                                )}
+                              </div>
+                            )}
 
-                            {/* Official Receipts */}
-                            <div>
-                              <div className="flex items-center gap-2 mb-1.5">
-                                <Stamp className="h-3 w-3 text-emerald-600" />
-                                <span className="text-sm font-semibold text-slate-700">
-                                  Official Receipts
-                                </span>
-                                <span className="text-[10px] text-slate-500">({docs?.officialReceipts?.length || 0})</span>
-                              </div>
-                              {(docs?.officialReceipts?.length || 0) > 0 ? (
-                                <div className="space-y-1 ml-5">
-                                  {docs?.officialReceipts.map((item: any) => (
-                                    <div
-                                      key={item.id}
-                                      className="block text-xs text-slate-600 truncate"
-                                    >
-                                      • {item.name || item.id}
-                                    </div>
-                                  ))}
+                            {portalFeatures.officialReceipts && (
+                              <div>
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <Stamp className="h-3 w-3 text-emerald-600" />
+                                  <span className="text-sm font-semibold text-slate-700">
+                                    Official Receipts
+                                  </span>
+                                  <span className="text-[10px] text-slate-500">({docs?.officialReceipts?.length || 0})</span>
                                 </div>
-                              ) : (
-                                <p className="text-xs text-slate-400 ml-5">No official receipts yet</p>
-                              )}
-                              {/* Upload UI for Official Receipts (client) */}
-                              <UploadReceipt projectId={project.pid} />
-                            </div>
+                                {(docs?.officialReceipts?.length || 0) > 0 ? (
+                                  <div className="space-y-1 ml-5">
+                                    {docs?.officialReceipts.map((item: any) => (
+                                      <div
+                                        key={item.id}
+                                        className="block text-xs text-slate-600 truncate"
+                                      >
+                                        • {item.name || item.id}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-slate-400 ml-5">No official receipts yet</p>
+                                )}
+                                {/* Upload UI for Official Receipts (client) */}
+                                <UploadReceipt projectId={project.pid} />
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
