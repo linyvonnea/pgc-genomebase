@@ -19,10 +19,11 @@ export async function saveChargeSlipAction(
     const result = await saveChargeSlip(slip);
     
     // Send email notification to client about billing availability
-    if (slip.clientInfo?.email) {
+    const recipientEmail = slip.clientInfo?.email || slip.client?.email || "";
+    if (recipientEmail) {
       try {
         const mailCollection = collection(db, "mail");
-        const clientName = slip.clientInfo.name || "Valued Client";
+        const clientName = slip.clientInfo?.name || slip.client?.name || "Valued Client";
         
         const clientEmailHtml = `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.6;">
@@ -65,7 +66,7 @@ Philippine Genome Center Visayas
         `.trim();
 
         await addDoc(mailCollection, {
-          to: [slip.clientInfo.email],
+          to: [recipientEmail],
           message: {
             subject: "Billing/Invoice: PGC Visayas",
             text: clientEmailText,

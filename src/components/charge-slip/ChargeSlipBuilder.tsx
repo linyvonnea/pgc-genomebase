@@ -8,7 +8,6 @@ import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { pdf, PDFViewer } from "@react-pdf/renderer";
-import { Timestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { QuotationRecord } from "@/types/Quotation";
@@ -367,7 +366,7 @@ function ChargeSlipBuilderInner({
         },
         referenceNumber: chargeSlipNumber,
         clientInfo,
-        dateIssued: Timestamp.fromDate(new Date()),
+        dateIssued: new Date().toISOString(),
         subtotal,
         discount,
         total,
