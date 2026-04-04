@@ -10,6 +10,7 @@
 import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { Inquiry } from "@/types/Inquiry";
+import { CatalogItem } from "@/types/CatalogSettings";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EditInquiryModal } from "@/components/forms/EditInquiryModal";
@@ -56,41 +57,53 @@ const PresenceCell = ({ inquiryId }: { inquiryId: string }) => {
 };
 
 /**
- * Utility function to get appropriate CSS classes for status badges
- *
- * Provides consistent color coding across the admin interface:
- * - Green: Approved clients (ready for service)
- * - Blue: Quotation only (pricing information provided)
- * - Orange: Ongoing quotation (quotation in progress)
- * - Yellow: Pending (awaiting admin review)
- *
+ * Helper to convert hex color to rgba
  */
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "Approved Client":
-      return "bg-green-100 text-green-800";
-    case "Quotation Only":
-      return "bg-blue-100 text-blue-800";
-    case "Ongoing Quotation":
-      return "bg-orange-100 text-orange-800";
-    case "Service Not Offered":
-      return "bg-slate-100 text-slate-500 border-slate-200 opacity-70";
-    case "Cancelled":
-      return "bg-slate-100 text-slate-700 border-slate-200";
-    case "Pending":
-    default:
-      return "bg-yellow-100 text-yellow-800";
+const hexToRgba = (hex: string, alpha: number) => {
+  const cleaned = hex.replace("#", "");
+  if (cleaned.length !== 6) return "";
+  const r = parseInt(cleaned.substring(0, 2), 16);
+  const g = parseInt(cleaned.substring(2, 4), 16);
+  const b = parseInt(cleaned.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+/**
+ * Get status color from catalog or fallback to default
+ */
+const getStatusColorFromCatalog = (
+  status: string,
+  catalog: CatalogItem[]
+): { bg: string; text: string } => {
+  const catalogItem = catalog.find((item) => item.value === status);
+  if (catalogItem?.color) {
+    return {
+      bg: hexToRgba(catalogItem.color, 0.15),
+      text: catalogItem.color,
+    };
   }
+  // Fallback colors
+  const fallbacks: Record<string, { bg: string; text: string }> = {
+    "Approved Client": { bg: "rgba(34, 197, 94, 0.15)", text: "#22c55e" },
+    "Quotation Only": { bg: "rgba(59, 130, 246, 0.15)", text: "#3b82f6" },
+    "Ongoing Quotation": { bg: "rgba(249, 115, 22, 0.15)", text: "#f97316" },
+    "In Progress": { bg: "rgba(14, 165, 233, 0.15)", text: "#0ea5e9" },
+    "Service Not Offered": { bg: "rgba(148, 163, 184, 0.15)", text: "#94a3b8" },
+    Cancelled: { bg: "rgba(148, 163, 184, 0.15)", text: "#94a3b8" },
+    Pending: { bg: "rgba(234, 179, 8, 0.15)", text: "#eab308" },
+  };
+  return fallbacks[status] || fallbacks.Pending;
 };
 
 /**
  * Column definitions for the inquiry data table
  *
+ * Accepts statusCatalog to apply dynamic colors from Configuration > Catalog Settings.
  * Each column defines how data should be displayed, including custom cell renderers
  * for complex data types like dates and status badges. The columns are configured
  * to work with TanStack Table's sorting and filtering features.
  */
-export const columns: ColumnDef<Inquiry>[] = [
+export const columns = (statusCatalog: CatalogItem[] = []): ColumnDef<Inquiry>[] => [
   {
     accessorKey: "id",
     header: "ID",
@@ -342,13 +355,16 @@ export const columns: ColumnDef<Inquiry>[] = [
       const hasOpenedQuotation = inquiry.hasOpenedQuotation;
 
       // Render status as a colored badge with fixed width and trailing icons
+      const colors = getStatusColorFromCatalog(status, statusCatalog);
       return (
         <div className="flex items-center gap-2 w-full pr-1">
           <div className="w-[72%] flex-shrink-0">
             <span
-              className={`block w-full px-1.5 py-0.5 rounded-full text-[9px] font-bold truncate text-center ${getStatusColor(
-                status,
-              )}`}
+              className="block w-full px-1.5 py-0.5 rounded-full text-[9px] font-bold truncate text-center"
+              style={{
+                backgroundColor: colors.bg,
+                color: colors.text,
+              }}
             >
               {status}
             </span>
