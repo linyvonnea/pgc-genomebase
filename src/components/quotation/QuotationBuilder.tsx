@@ -19,7 +19,7 @@ import { ServiceItem } from "@/types/ServiceItem";
 import { Inquiry } from "@/types/Inquiry";
 
 import { Badge } from "@/components/ui/badge";
-import { FlaskConical, Calendar } from "lucide-react";
+import { FlaskConical, Calendar, Loader2 } from "lucide-react";
 
 import { saveQuotationToFirestore, generateNextReferenceNumber } from "@/services/quotationService";
 import {
@@ -167,6 +167,7 @@ export default function QuotationBuilder({
   const [search, setSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState<string>("");
+  const [saving, setSaving] = useState(false);
   const [clientInfo, setClientInfo] = useState({
     name: "",
     institution: "",
@@ -271,6 +272,8 @@ export default function QuotationBuilder({
 
   const handleSaveAndDownload = async () => {
     try {
+      setSaving(true);
+      const currentYear = new Date().getFullYear();
       const quotationRecord = {
         referenceNumber,
         name: clientInfo.name,
@@ -297,6 +300,7 @@ export default function QuotationBuilder({
 
       if (!adminInfo?.email) {
         toast.error("User authentication required to save quotation");
+        setSaving(false);
         return;
       }
 
@@ -309,34 +313,14 @@ export default function QuotationBuilder({
         throw new Error(result.error || "Failed to save quotation");
       }
 
-      const blob = await pdf(
-        <QuotationPDF
-          services={cleanedServices}
-          clientInfo={clientInfo}
-          referenceNumber={referenceNumber}
-          useInternalPrice={isInternal}
-          useAffiliationAsClientName={useAffiliationAsClientName}
-          preparedBy={{
-            name: adminInfo?.name || "—",
-            position: adminInfo?.position || "—",
-          }}
-          dateOfIssue={new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-        />
-      ).toBlob();
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${referenceNumber}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-
       queryClient.invalidateQueries({ queryKey: ["quotationHistory", effectiveInquiryId] });
-      toast.success("Quotation saved and downloaded successfully!");
+      toast.success("Quotation saved successfully!");
       setOpenPreview(false);
     } catch (error) {
       console.error("Error saving quotation:", error);
       toast.error(`Failed to save quotation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -821,9 +805,16 @@ export default function QuotationBuilder({
               <div className="text-right mt-4">
                 <Button
                   onClick={handleSaveAndDownload}
-                  disabled={cleanedServices.length === 0}
+                  disabled={cleanedServices.length === 0 || saving}
                 >
-                  Generate Final Quotation
+                  {saving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Generate Final Quotation"
+                  )}
                 </Button>
               </div>
             </div>
