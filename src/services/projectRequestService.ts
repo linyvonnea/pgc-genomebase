@@ -35,6 +35,9 @@ export interface ProjectRequest {
   inquiryId: string;
   requestedBy: string; // Email of requester
   requestedByName: string; // Name of requester
+
+  // Selected quotation reference
+  quotationRef?: string;
   
   // Project details
   title: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { adminInquirySchema, AdminInquiryData } from "@/schemas/adminInquirySchema";
@@ -47,10 +47,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Pencil, Trash2, Mail, Building2, CheckCircle2, FileEdit, MessageSquare, Send } from "lucide-react";
 import { Inquiry } from "@/types/Inquiry";
+import { CatalogItem } from "@/types/CatalogSettings";
 import { updateInquiryAction, deleteInquiryAction } from "@/app/actions/inquiryActions";
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
+import { getCatalogSettings } from "@/services/catalogSettingsService";
 
 interface EditInquiryModalProps {
   inquiry: Inquiry;
@@ -64,6 +66,56 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [statusOptions, setStatusOptions] = useState<CatalogItem[]>([]);
+  useEffect(() => {
+    let isMounted = true;
+    getCatalogSettings()
+      .then((settings) => {
+        if (isMounted) {
+          setStatusOptions(settings.inquiryStatuses || []);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to load inquiry status catalog:", error);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const fallbackStatuses: CatalogItem[] = [
+    { id: "fallback-pending", value: "Pending", color: "#eab308", order: 1, isActive: true },
+    { id: "fallback-quotation-only", value: "Quotation Only", color: "#3b82f6", order: 2, isActive: true },
+    { id: "fallback-ongoing", value: "Ongoing Quotation", color: "#f97316", order: 3, isActive: true },
+    { id: "fallback-approved", value: "Approved Client", color: "#22c55e", order: 4, isActive: true },
+    { id: "fallback-in-progress", value: "In Progress", color: "#0ea5e9", order: 5, isActive: true },
+    { id: "fallback-service-not-offered", value: "Service Not Offered", color: "#94a3b8", order: 6, isActive: true },
+    { id: "fallback-cancelled", value: "Cancelled", color: "#94a3b8", order: 7, isActive: true },
+  ];
+
+  const orderedStatusOptions = useMemo(() => {
+    const source = statusOptions.length > 0 ? statusOptions : fallbackStatuses;
+    const active = source.filter((item) => item.isActive).sort((a, b) => a.order - b.order);
+    const currentStatus = form.getValues("status");
+    if (currentStatus && !active.some((item) => item.value === currentStatus)) {
+      active.push({
+        id: "current-status",
+        value: currentStatus,
+        order: active.length + 1,
+        isActive: true,
+      });
+    }
+    return active;
+  }, [statusOptions, form]);
+
+  const hexToRgba = (hex: string, alpha: number) => {
+    const cleaned = hex.replace("#", "");
+    if (cleaned.length !== 6) return "";
+    const r = parseInt(cleaned.substring(0, 2), 16);
+    const g = parseInt(cleaned.substring(2, 4), 16);
+    const b = parseInt(cleaned.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
 
   const form = useForm<AdminInquiryData>({
     resolver: zodResolver(adminInquirySchema),
@@ -293,48 +345,25 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Pending">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                                  Pending
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="Approved Client">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                  Approved Client
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="Ongoing Quotation">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-                                  Ongoing Quotation
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="Quotation Only">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                  Quotation Only
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="Service Not Offered">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">
-                                  Service Not Offered
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="Cancelled">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">
-                                  Cancelled
-                                </Badge>
-                              </div>
-                            </SelectItem>
+                            {orderedStatusOptions.map((status) => {
+                              const color = status.color;
+                              const style = color
+                                ? {
+                                    backgroundColor: hexToRgba(color, 0.12),
+                                    borderColor: color,
+                                    color,
+                                  }
+                                : undefined;
+                              return (
+                                <SelectItem key={status.id} value={status.value}>
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline" style={style}>
+                                      {status.value}
+                                    </Badge>
+                                  </div>
+                                </SelectItem>
+                              );
+                            })}
                           </SelectContent>
                         </Select>
                         <FormDescription className="text-xs text-gray-500">
