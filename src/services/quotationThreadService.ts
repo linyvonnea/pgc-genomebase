@@ -535,8 +535,9 @@ export async function addThreadMessage(
           if (!threadSnap.exists()) return;
           const data = threadSnap.data() as { adminTextMessageCount?: number };
           const currentCount = typeof data.adminTextMessageCount === "number" ? data.adminTextMessageCount : 0;
-          const hasCount = typeof data.adminTextMessageCount === "number";
-          shouldNotifyClient = hasCount && currentCount === 0;
+          // Trigger notification on the first real admin text message.
+          // Threads without the field (legacy threads) are treated as count 0 so they also get notified.
+          shouldNotifyClient = currentCount === 0;
           tx.update(threadRef, { adminTextMessageCount: currentCount + 1 });
         });
       } catch (error) {

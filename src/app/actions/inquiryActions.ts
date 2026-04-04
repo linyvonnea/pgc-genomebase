@@ -358,13 +358,15 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       await initializeQuotationThread(docRef.id);
       
       // Send the automated welcome message from PGC Visayas Admin
+      // type: "system" is intentional — automated messages must NOT count toward adminTextMessageCount
+      // so that the first-message email notification fires correctly when a real admin messages next.
       await addThreadMessage({
         threadId: docRef.id,
         content: "Welcome to PGC Visayas! 👋 Your inquiry has been received. You can use this chat to ask questions about your quotation or clarify your research requirements.",
         senderId: "pgc-admin",
         senderName: "PGC Visayas Admin",
         senderRole: "admin",
-        type: "text",
+        type: "system",
         isRead: false
       });
     } catch (threadError) {
