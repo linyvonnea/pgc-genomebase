@@ -274,6 +274,13 @@ export async function getChargeSlipsByProjectId(projectId: string): Promise<Char
     }
   }
 
+  // Sort by dateIssued descending (latest first)
+  results.sort((a, b) => {
+    const dateA = a.dateIssued instanceof Date ? a.dateIssued.getTime() : 0;
+    const dateB = b.dateIssued instanceof Date ? b.dateIssued.getTime() : 0;
+    return dateB - dateA;
+  });
+
   return results;
 }
 
