@@ -125,7 +125,6 @@ import {
   MapPin,
   Briefcase,
   FlaskConical,
-  DollarSign,
   FileSpreadsheet,
   ShieldEllipsis,
   Stamp,
@@ -3172,7 +3171,7 @@ export default function ClientPortalPage() {
                     <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                          <Receipt className="h-5 w-5 text-indigo-500" />
+                          <FileText className="h-5 w-5 text-indigo-500" />
                           Official Documents
                         </h3>
                         {inquiryQuotations.length > 0 && (
