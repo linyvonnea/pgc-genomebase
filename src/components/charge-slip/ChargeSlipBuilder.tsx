@@ -209,6 +209,9 @@ function ChargeSlipBuilderInner({
   };
 
   const handleQuotationDeselect = (quote: QuotationRecord) => {
+    // Reset flags when deselecting
+    setIsInternal(false);
+    setUseAffiliationAsClientName(false);
     setSelectedServices((prev) => prev.filter((s) => !quote.services.some((qs) => qs.id === s.id)));
   };
   const cleanedServices: StrictSelectedService[] = selectedServices
