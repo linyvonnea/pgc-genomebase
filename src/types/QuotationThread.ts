@@ -135,6 +135,8 @@ export interface QuotationThread {
     client: number;
   };
   adminTextMessageCount?: number;
+  /** Set to true once the one-time first-admin-message email has been sent. */
+  firstAdminChatEmailSent?: boolean;
   
   // Visibility
   dismissedByAdmin?: boolean;

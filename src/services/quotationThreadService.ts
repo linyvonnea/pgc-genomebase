@@ -533,12 +533,16 @@ export async function addThreadMessage(
         await runTransaction(db, async (tx) => {
           const threadSnap = await tx.get(threadRef);
           if (!threadSnap.exists()) return;
-          const data = threadSnap.data() as { adminTextMessageCount?: number };
+          const data = threadSnap.data() as { adminTextMessageCount?: number; firstAdminChatEmailSent?: boolean };
           const currentCount = typeof data.adminTextMessageCount === "number" ? data.adminTextMessageCount : 0;
-          // Trigger notification on the first real admin text message.
-          // Threads without the field (legacy threads) are treated as count 0 so they also get notified.
-          shouldNotifyClient = currentCount === 0;
-          tx.update(threadRef, { adminTextMessageCount: currentCount + 1 });
+          // Use a dedicated flag so legacy threads (where the automated welcome message
+          // wrongly incremented adminTextMessageCount before the system-type fix) also
+          // receive the notification on the admin's first real human message.
+          shouldNotifyClient = data.firstAdminChatEmailSent !== true;
+          tx.update(threadRef, {
+            adminTextMessageCount: currentCount + 1,
+            ...(shouldNotifyClient ? { firstAdminChatEmailSent: true } : {}),
+          });
         });
       } catch (error) {
         console.error("Error updating admin message count:", error);
