@@ -33,6 +33,7 @@ const ALLOWED_INQUIRY_STATUSES = [
   "Approved Client",
   "Quotation Only",
   "Ongoing Quotation",
+  "In Progress",
   "Service Not Offered",
 ] as const;
 
@@ -133,7 +134,7 @@ export default function ClientVerifyPage() {
         return;
       }
 
-      // Allow login for Pending, Approved Client (isApproved), Quotation Only, Ongoing Quotation, and Service Not Offered
+      // Allow login for Pending, Approved Client (isApproved), Quotation Only, Ongoing Quotation, In Progress, and Service Not Offered
       const isAllowed = inquiry.isApproved || ALLOWED_INQUIRY_STATUSES.includes((inquiry.status || "") as (typeof ALLOWED_INQUIRY_STATUSES)[number]);
       
       if (!isAllowed) {
