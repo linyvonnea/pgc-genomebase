@@ -114,7 +114,7 @@ export function InquiryPageClient({
         </div>
         {/* Enhanced Data Table with Filters & Overview */}
         <DataTable
-          columns={columns}
+          columns={columns(statusCatalog)}
           data={inquiries}
           unreadInquiryIds={unreadInquiryIds}
           statusCatalog={statusCatalog}
