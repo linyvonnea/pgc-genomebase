@@ -2579,11 +2579,6 @@ export default function ClientPortalPage() {
                                       onClick={(e) => e.stopPropagation()}
                                     >
                                       • {quotation.referenceNumber}
-                                      {projectRequest?.quotationRef === quotation.referenceNumber && (
-                                        <span className="ml-2 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
-                                          Selected
-                                        </span>
-                                      )}
                                     </a>
                                   ))}
                                 </div>
@@ -3186,14 +3181,6 @@ export default function ClientPortalPage() {
                                     <span>{new Date(quote.dateIssued).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                                     <span>•</span>
                                     <span>{new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(quote.total)}</span>
-                                    {projectRequest?.quotationRef === quote.referenceNumber && (
-                                      <>
-                                        <span>•</span>
-                                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
-                                          Selected
-                                        </span>
-                                      </>
-                                    )}
                                   </div>
                                 </div>
                               </div>
