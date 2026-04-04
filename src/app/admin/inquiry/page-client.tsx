@@ -5,9 +5,11 @@ import { AddInquiryModal } from "@/components/forms/InquiryModalForm";
 import { DataTable } from "./data-table";
 import { columns } from "./columns";
 import { Inquiry } from "@/types/Inquiry";
+import { CatalogItem } from "@/types/CatalogSettings";
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { subscribeToInquiries } from "@/services/inquiryService";
+import { getCatalogSettings } from "@/services/catalogSettingsService";
 import {
   subscribeToAllAdminUnreadCounts,
 } from "@/services/quotationThreadService";
@@ -27,6 +29,7 @@ export function InquiryPageClient({
   const { canCreate } = usePermissions(adminInfo?.role);
   const [inquiries, setInquiries] = useState<Inquiry[]>(initialData);
   const [unreadInquiryIds, setUnreadInquiryIds] = useState<Set<string>>(new Set());
+  const [statusCatalog, setStatusCatalog] = useState<CatalogItem[]>([]);
   // Track previous unread IDs to detect newly arriving messages
   const prevUnreadIdsRef = useRef<Set<string>>(new Set());
   // Suppress toasts on initial load
@@ -38,6 +41,23 @@ export function InquiryPageClient({
       setInquiries(updatedInquiries);
     });
     return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    getCatalogSettings()
+      .then((settings) => {
+        if (isMounted) {
+          setStatusCatalog(settings.inquiryStatuses || []);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to load inquiry status catalog:", error);
+        if (isMounted) setStatusCatalog([]);
+      });
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Subscribe to all threads that have unread admin messages
@@ -97,6 +117,7 @@ export function InquiryPageClient({
           columns={columns}
           data={inquiries}
           unreadInquiryIds={unreadInquiryIds}
+          statusCatalog={statusCatalog}
         />
       </div>
 
