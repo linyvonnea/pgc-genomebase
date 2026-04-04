@@ -5,10 +5,34 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import Header from "@/components/ui/header";
+import {
+  DEFAULT_PORTAL_FEATURES,
+  getConfigurationSettings,
+} from "@/services/configurationSettingsService";
+import { ConfigurationSettings } from "@/types/ConfigurationSettings";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, signIn, signOut, loading } = useAuth();
   const router = useRouter();
+  const [configSettings, setConfigSettings] = useState<ConfigurationSettings | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadSettings = async () => {
+      try {
+        const data = await getConfigurationSettings();
+        if (isMounted) setConfigSettings(data);
+      } catch (error) {
+        console.error("Failed to load configuration settings:", error);
+      }
+    };
+
+    loadSettings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -33,7 +57,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
-      <Header user={user} onLogout={signOut} />
+      <Header
+        user={user}
+        onLogout={signOut}
+        menuVisibility={configSettings?.portalFeatures ?? DEFAULT_PORTAL_FEATURES}
+      />
       <main className="flex-1 overflow-y-auto">{children}</main>
     </div>
   );

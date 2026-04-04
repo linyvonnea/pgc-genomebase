@@ -13,6 +13,9 @@ export const DEFAULT_PORTAL_FEATURES: PortalFeatureVisibility = {
   sampleForms: true,
   serviceReports: true,
   officialReceipts: true,
+  clientMenuSettings: true,
+  clientMenuChangePassword: true,
+  clientMenuAbout: true,
 };
 
 export const DEFAULT_INQUIRY_NOTIFICATION_GROUPS: InquiryNotificationGroup[] = [

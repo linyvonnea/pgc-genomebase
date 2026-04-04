@@ -1,9 +1,18 @@
-export type PortalFeatureKey = "sampleForms" | "serviceReports" | "officialReceipts";
+export type PortalFeatureKey =
+  | "sampleForms"
+  | "serviceReports"
+  | "officialReceipts"
+  | "clientMenuSettings"
+  | "clientMenuChangePassword"
+  | "clientMenuAbout";
 
 export interface PortalFeatureVisibility {
   sampleForms: boolean;
   serviceReports: boolean;
   officialReceipts: boolean;
+  clientMenuSettings: boolean;
+  clientMenuChangePassword: boolean;
+  clientMenuAbout: boolean;
 }
 
 export interface InquiryNotificationGroup {
