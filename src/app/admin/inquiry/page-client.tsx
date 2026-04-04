@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { AddInquiryModal } from "@/components/forms/InquiryModalForm";
 import { DataTable } from "./data-table";
-import { columns } from "./columns";
+import { columns as createColumns } from "./columns";
 import { Inquiry } from "@/types/Inquiry";
 import { CatalogItem } from "@/types/CatalogSettings";
 import useAuth from "@/hooks/useAuth";
@@ -94,6 +94,9 @@ export function InquiryPageClient({
 
     return () => unsubscribe();
   }, [router]);
+
+  // Create columns with catalog colors
+  const columns = useMemo(() => createColumns(statusCatalog), [statusCatalog]);
 
   return (
     <div className="w-full px-4 py-4 space-y-3">
