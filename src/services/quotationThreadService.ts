@@ -100,6 +100,7 @@ export async function initializeQuotationThread(inquiryId: string): Promise<stri
         admin: 0,
         client: 0,
       },
+      adminTextMessageCount: 0,
       createdAt: serverTimestamp() as Timestamp,
       updatedAt: serverTimestamp() as Timestamp,
     };
@@ -502,6 +503,7 @@ export async function addThreadMessage(
         status: "pending" as InquiryStatus,
         quotations: [],
         unreadCount: { admin: 0, client: 0 },
+        adminTextMessageCount: 0,
         createdAt: serverTimestamp() as Timestamp,
         updatedAt: serverTimestamp() as Timestamp,
       };
@@ -524,6 +526,23 @@ export async function addThreadMessage(
     };
 
     await updateDoc(threadRef, finalUpdate);
+
+    let shouldNotifyClient = false;
+    if (message.senderRole === "admin" && message.type === "text") {
+      try {
+        await runTransaction(db, async (tx) => {
+          const threadSnap = await tx.get(threadRef);
+          if (!threadSnap.exists()) return;
+          const data = threadSnap.data() as { adminTextMessageCount?: number };
+          const currentCount = typeof data.adminTextMessageCount === "number" ? data.adminTextMessageCount : 0;
+          const hasCount = typeof data.adminTextMessageCount === "number";
+          shouldNotifyClient = hasCount && currentCount === 0;
+          tx.update(threadRef, { adminTextMessageCount: currentCount + 1 });
+        });
+      } catch (error) {
+        console.error("Error updating admin message count:", error);
+      }
+    }
 
     // Denormalize message state onto the inquiries document for efficient table display
     const inquiryRef = doc(db, "inquiries", message.threadId);
@@ -561,6 +580,21 @@ export async function addThreadMessage(
         message.content,
         targetUnreadCount,
       );
+    }
+
+    if (shouldNotifyClient) {
+      try {
+        await fetch("/api/chat/notify-first-admin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            threadId: message.threadId,
+            adminName: message.senderName,
+          }),
+        });
+      } catch (error) {
+        console.error("Failed to send first admin chat email:", error);
+      }
     }
     
     return messageRef.id;

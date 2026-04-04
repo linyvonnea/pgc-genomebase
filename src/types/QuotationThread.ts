@@ -134,6 +134,7 @@ export interface QuotationThread {
     admin: number;
     client: number;
   };
+  adminTextMessageCount?: number;
   
   // Visibility
   dismissedByAdmin?: boolean;
