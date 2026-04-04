@@ -133,6 +133,24 @@ export async function updateQuotationStatus(
 }
 
 /**
+ * Mark a quotation as selected for a specific project.
+ */
+export async function markQuotationAsSelected(
+  referenceNumber: string,
+  projectId: string
+): Promise<void> {
+  const docRef = doc(db, "quotations", referenceNumber);
+  await setDoc(
+    docRef,
+    {
+      selectedForProject: projectId,
+      status: "in-progress",
+    },
+    { merge: true }
+  );
+}
+
+/**
  * Delete a quotation by its reference number.
  */
 export async function deleteQuotation(refNumber: string): Promise<void> {

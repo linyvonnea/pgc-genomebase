@@ -27,6 +27,7 @@ export interface QuotationRecord {
   categories: string[]; // ["Laboratory", "Equipment", ...]
   inquiryId: string; // Link to source inquiry
   status?: "pending" | "in-progress" | "completed" | "cancelled"; // Quotation lifecycle status
+  selectedForProject?: string; // Project ID/Request ID if this quotation was selected by client
 }
 
 export type { SelectedService };
