@@ -26,7 +26,6 @@ import UnreadBadge from "@/components/chat/UnreadBadge";
 import { Copy, User, Eye, Circle } from "lucide-react";
 import { toast } from "sonner";
 import usePresenceStatus from "@/hooks/usePresenceStatus";
-import { CatalogItem } from "@/types/CatalogSettings";
 
 /**
  * Presence Cell Component
@@ -57,57 +56,30 @@ const PresenceCell = ({ inquiryId }: { inquiryId: string }) => {
 };
 
 /**
- * Utility function to get appropriate CSS styles for status badges
+ * Utility function to get appropriate CSS classes for status badges
+ *
+ * Provides consistent color coding across the admin interface:
+ * - Green: Approved clients (ready for service)
+ * - Blue: Quotation only (pricing information provided)
+ * - Orange: Ongoing quotation (quotation in progress)
+ * - Yellow: Pending (awaiting admin review)
+ *
  */
-const getStatusStyles = (status: string, catalog: CatalogItem[]) => {
-  const matched = catalog.find((item) => item.value === status);
-
-  if (matched && matched.color) {
-    const hex = matched.color.replace("#", "");
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-
-    return {
-      backgroundColor: `rgba(${r}, ${g}, ${b}, 0.12)`,
-      color: matched.color,
-      borderColor: `rgba(${r}, ${g}, ${b}, 0.3)`,
-    };
-  }
-
-  // Fallback defaults
+const getStatusColor = (status: string) => {
   switch (status) {
     case "Approved Client":
-      return {
-        backgroundColor: "rgba(34, 197, 94, 0.12)",
-        color: "#166534",
-        borderColor: "rgba(34, 197, 94, 0.3)",
-      };
+      return "bg-green-100 text-green-800";
     case "Quotation Only":
-      return {
-        backgroundColor: "rgba(59, 130, 246, 0.12)",
-        color: "#1e40af",
-        borderColor: "rgba(59, 130, 246, 0.3)",
-      };
+      return "bg-blue-100 text-blue-800";
     case "Ongoing Quotation":
-      return {
-        backgroundColor: "rgba(249, 115, 22, 0.12)",
-        color: "#9a3412",
-        borderColor: "rgba(249, 115, 22, 0.3)",
-      };
+      return "bg-orange-100 text-orange-800";
     case "Service Not Offered":
+      return "bg-slate-100 text-slate-500 border-slate-200 opacity-70";
     case "Cancelled":
-      return {
-        backgroundColor: "rgba(100, 116, 139, 0.12)",
-        color: "#475569",
-        borderColor: "rgba(100, 116, 139, 0.3)",
-      };
+      return "bg-slate-100 text-slate-700 border-slate-200";
+    case "Pending":
     default:
-      return {
-        backgroundColor: "rgba(234, 179, 8, 0.12)",
-        color: "#854d0e",
-        borderColor: "rgba(234, 179, 8, 0.3)",
-      };
+      return "bg-yellow-100 text-yellow-800";
   }
 };
 
@@ -118,7 +90,7 @@ const getStatusStyles = (status: string, catalog: CatalogItem[]) => {
  * for complex data types like dates and status badges. The columns are configured
  * to work with TanStack Table's sorting and filtering features.
  */
-export const columns = (statusCatalog: CatalogItem[]): ColumnDef<Inquiry>[] => [
+export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "id",
     header: "ID",
@@ -369,15 +341,14 @@ export const columns = (statusCatalog: CatalogItem[]): ColumnDef<Inquiry>[] => [
       const hasLoggedIn = inquiry.hasLoggedIn;
       const hasOpenedQuotation = inquiry.hasOpenedQuotation;
 
-      const badgeStyles = getStatusStyles(status, statusCatalog);
-
       // Render status as a colored badge with fixed width and trailing icons
       return (
         <div className="flex items-center gap-2 w-full pr-1">
           <div className="w-[72%] flex-shrink-0">
             <span
-              className="block w-full px-1.5 py-0.5 rounded-full text-[9px] font-bold truncate text-center border"
-              style={badgeStyles}
+              className={`block w-full px-1.5 py-0.5 rounded-full text-[9px] font-bold truncate text-center ${getStatusColor(
+                status,
+              )}`}
             >
               {status}
             </span>
