@@ -9,7 +9,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileTextIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { FileTextIcon, CheckCircle2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -114,7 +115,15 @@ export function QuotationHistoryPanel({
                 </div>
               )}
               <div className="flex-1">
-                <div className="font-medium text-sm">{quote.referenceNumber}</div>
+                <div className="flex items-center gap-2">
+                  <div className="font-medium text-sm">{quote.referenceNumber}</div>
+                  {quote.selectedForProject && (
+                    <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-0.5 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Selected
+                    </Badge>
+                  )}
+                </div>
                 <div className="text-xs text-muted-foreground">
                   Issued: {new Date(quote.dateIssued).toLocaleString()}
                 </div>

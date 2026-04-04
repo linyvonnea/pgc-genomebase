@@ -24,7 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
 import { getNextPid } from "@/services/projectsService";
 import { saveProjectRequest, getProjectRequest, getProjectRequestById, getProjectRequestsByInquiry } from "@/services/projectRequestService";
-import { updateQuotationStatus } from "@/services/quotationService";
+import { updateQuotationStatus, markQuotationAsSelected } from "@/services/quotationService";
 import { updateInquiryStatus } from "@/app/actions/inquiryActions";
 
 export default function ProjectForm() {
@@ -233,8 +233,9 @@ export default function ProjectForm() {
       const quotationRef = searchParams.get("quotationRef") || sessionStorage.getItem('selectedQuotationRef');
       if (quotationRef) {
         try {
-          await updateQuotationStatus(quotationRef, "in-progress");
-          console.log(`✅ Updated quotation ${quotationRef} status to in-progress`);
+          // Mark quotation as selected for this project/inquiry
+          await markQuotationAsSelected(quotationRef, savedId || inquiryId);
+          console.log(`✅ Marked quotation ${quotationRef} as selected for project ${savedId || inquiryId}`);
           if (inquiryId) {
             await updateInquiryStatus(inquiryId, "In Progress");
             console.log(`✅ Updated inquiry ${inquiryId} status to In Progress`);

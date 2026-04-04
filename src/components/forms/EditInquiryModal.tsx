@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
 import { adminInquirySchema, AdminInquiryData } from "@/schemas/adminInquirySchema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,7 @@ import { updateInquiryAction, deleteInquiryAction } from "@/app/actions/inquiryA
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
+import { getCatalogSettings } from "@/services/catalogSettingsService";
 
 interface EditInquiryModalProps {
   inquiry: Inquiry;
@@ -64,6 +66,42 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
   const [isLoading, setIsLoading] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Load catalog settings for inquiry statuses
+  const { data: catalogSettings } = useQuery({
+    queryKey: ["catalogSettings"],
+    queryFn: getCatalogSettings,
+  });
+
+  // Fallback statuses if catalog is not loaded
+  const fallbackStatuses = [
+    { value: "Pending", color: "#facc15" },
+    { value: "Approved Client", color: "#22c55e" },
+    { value: "Ongoing Quotation", color: "#f97316" },
+    { value: "Quotation Only", color: "#3b82f6" },
+    { value: "In Progress", color: "#0ea5e9" },
+    { value: "Service Not Offered", color: "#64748b" },
+    { value: "Cancelled", color: "#64748b" },
+  ];
+
+  // Get status options from catalog or fallback
+  const statusOptions = useMemo(() => {
+    const statuses = catalogSettings?.inquiryStatuses || fallbackStatuses;
+    return statuses.map(s => ({
+      value: s.value,
+      color: s.color || "#64748b"
+    }));
+  }, [catalogSettings]);
+
+  // Helper to convert hex to rgba
+  const hexToRgba = (hex: string, alpha: number) => {
+    const cleaned = hex.replace("#", "");
+    if (cleaned.length !== 6) return "";
+    const r = parseInt(cleaned.substring(0, 2), 16);
+    const g = parseInt(cleaned.substring(2, 4), 16);
+    const b = parseInt(cleaned.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
 
   const form = useForm<AdminInquiryData>({
     resolver: zodResolver(adminInquirySchema),
@@ -293,48 +331,22 @@ export function EditInquiryModal({ inquiry, onSuccess }: EditInquiryModalProps) 
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Pending">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                                  Pending
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="Approved Client">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                  Approved Client
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="Ongoing Quotation">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-                                  Ongoing Quotation
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="Quotation Only">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                  Quotation Only
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="Service Not Offered">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">
-                                  Service Not Offered
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="Cancelled">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">
-                                  Cancelled
-                                </Badge>
-                              </div>
-                            </SelectItem>
+                            {statusOptions.map((status) => (
+                              <SelectItem key={status.value} value={status.value}>
+                                <div className="flex items-center gap-2">
+                                  <Badge 
+                                    variant="outline" 
+                                    style={{
+                                      backgroundColor: hexToRgba(status.color, 0.1),
+                                      color: status.color,
+                                      borderColor: hexToRgba(status.color, 0.3),
+                                    }}
+                                  >
+                                    {status.value}
+                                  </Badge>
+                                </div>
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormDescription className="text-xs text-gray-500">
