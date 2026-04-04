@@ -534,8 +534,8 @@ export async function addThreadMessage(
           const threadSnap = await tx.get(threadRef);
           if (!threadSnap.exists()) return;
           const data = threadSnap.data() as { adminTextMessageCount?: number };
+          const currentCount = typeof data.adminTextMessageCount === "number" ? data.adminTextMessageCount : 0;
           const hasCount = typeof data.adminTextMessageCount === "number";
-          const currentCount = hasCount ? data.adminTextMessageCount : 0;
           shouldNotifyClient = hasCount && currentCount === 0;
           tx.update(threadRef, { adminTextMessageCount: currentCount + 1 });
         });
