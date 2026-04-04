@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
 import { getNextPid } from "@/services/projectsService";
 import { saveProjectRequest, getProjectRequest, getProjectRequestById, getProjectRequestsByInquiry } from "@/services/projectRequestService";
+import { updateQuotationStatus } from "@/services/quotationService";
 
 export default function ProjectForm() {
   const router = useRouter();
@@ -226,6 +227,19 @@ export default function ProjectForm() {
       });
 
       toast.success("Project draft saved! Now add your information as Primary Member.");
+      
+      // Update quotation status if user proceeded from a quotation
+      const quotationRef = searchParams.get("quotationRef") || sessionStorage.getItem('selectedQuotationRef');
+      if (quotationRef) {
+        try {
+          await updateQuotationStatus(quotationRef, "in-progress");
+          console.log(`✅ Updated quotation ${quotationRef} status to in-progress`);
+          // Clear from sessionStorage after use
+          sessionStorage.removeItem('selectedQuotationRef');
+        } catch (error) {
+          console.warn("Could not update quotation status:", error);
+        }
+      }
       
       setTimeout(() => {
         const params = new URLSearchParams();

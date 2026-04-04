@@ -122,6 +122,17 @@ export async function saveQuotationToFirestore(quotation: QuotationRecord) {
 }
 
 /**
+ * Update quotation status.
+ */
+export async function updateQuotationStatus(
+  referenceNumber: string,
+  status: "pending" | "in-progress" | "completed" | "cancelled"
+): Promise<void> {
+  const docRef = doc(db, "quotations", referenceNumber);
+  await setDoc(docRef, { status }, { merge: true });
+}
+
+/**
  * Delete a quotation by its reference number.
  */
 export async function deleteQuotation(refNumber: string): Promise<void> {

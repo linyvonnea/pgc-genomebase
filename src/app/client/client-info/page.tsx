@@ -43,6 +43,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { getNextCid } from "@/services/clientService";
 import {
   saveMemberApproval,
@@ -119,6 +129,7 @@ import {
   FileSpreadsheet,
   ShieldEllipsis,
   Stamp,
+  ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ClientConformeModal from "@/components/forms/ClientConformeModal";
@@ -292,6 +303,10 @@ export default function ClientPortalPage() {
   const [currentInquiry, setCurrentInquiry] = useState<Inquiry | null>(null);
   const [inquiryQuotations, setInquiryQuotations] = useState<QuotationRecord[]>([]);
   const [loadingQuotations, setLoadingQuotations] = useState(false);
+
+  // Proceed with Service modal state
+  const [showProceedModal, setShowProceedModal] = useState(false);
+  const [selectedQuotationRef, setSelectedQuotationRef] = useState<string | null>(null);
 
   // ── Data state ────────────────────────────────────────────────
   const [members, setMembers] = useState<ClientMember[]>([]);
@@ -1825,6 +1840,30 @@ export default function ClientPortalPage() {
     router.push(`/client/project-info?${params.toString()}`);
   };
 
+  const handleProceedWithService = (quotationRef: string) => {
+    setSelectedQuotationRef(quotationRef);
+    setShowProceedModal(true);
+  };
+
+  const handleConfirmProceedWithService = () => {
+    setShowProceedModal(false);
+    if (!emailParam ||!inquiryIdParam || !selectedQuotationRef) {
+      toast.error("Missing required parameters to proceed.");
+      return;
+    }
+    
+    // Store the selected quotation reference in sessionStorage for later status update
+    sessionStorage.setItem('selectedQuotationRef', selectedQuotationRef);
+    
+    const params = new URLSearchParams({
+      email: emailParam,
+      inquiryId: inquiryIdParam,
+      quotationRef: selectedQuotationRef,
+      new: "true",
+    });
+    router.push(`/client/project-info?${params.toString()}`);
+  };
+
   const toggleProjectDocs = async (project: ProjectDetails) => {
     const pid = project.pid;
     const isExpanding = !expandedProjectDocs.has(pid);
@@ -3145,14 +3184,26 @@ export default function ClientPortalPage() {
                                   </div>
                                 </div>
                               </div>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => router.push(`/client/view-document?type=quotation&ref=${quote.referenceNumber}`)}
-                                className="border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold h-8 text-xs"
-                              >
-                                View PDF
-                              </Button>
+                              <div className="flex flex-col sm:flex-row gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => router.push(`/client/view-document?type=quotation&ref=${quote.referenceNumber}`)}
+                                  className="border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold h-8 text-xs"
+                                >
+                                  View PDF
+                                </Button>
+                                {fetchedApprovedProjects.length === 0 && (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleProceedWithService(quote.referenceNumber)}
+                                    className="bg-gradient-to-r from-[#166FB5] to-[#4038AF] text-white hover:opacity-90 font-bold h-8 text-xs"
+                                  >
+                                    <ArrowRight className="h-3 w-3 mr-1" />
+                                    Proceed with Service
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -3918,6 +3969,31 @@ export default function ClientPortalPage() {
         projectPid={selectedProjectPid ?? undefined}
         projectRequestId={currentProjectRequestId ?? undefined}
       />
+
+      {/* Proceed with Service Confirmation Modal */}
+      <AlertDialog open={showProceedModal} onOpenChange={setShowProceedModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Proceed with Service?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to proceed with the service using <strong>Quotation: {selectedQuotationRef}</strong>?
+              <br /><br />
+              You will be redirected to the Project Information Form to create your project.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowProceedModal(false);
+              setSelectedQuotationRef(null);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmProceedWithService}>
+              Yes, Proceed
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
