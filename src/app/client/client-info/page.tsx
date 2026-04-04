@@ -3141,9 +3141,9 @@ export default function ClientPortalPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Left Column: Documents FIRST, then Summary */}
-                  <div className="lg:col-span-2 space-y-6">
+                <div className="space-y-6">
+                  {/* Documents FIRST, then Summary */}
+                  <div className="space-y-6">
                     {/* Official Documents (Quotations) - MOVED UP */}
                     <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
                       <div className="flex items-center justify-between mb-4">
@@ -3613,49 +3613,6 @@ export default function ClientPortalPage() {
                             <div className="flex items-center gap-2 text-[#4038AF] font-bold text-xs uppercase tracking-widest bg-indigo-50/50 px-3 py-1 rounded-full border border-indigo-100/50">
                               <Building2 className="h-3.5 w-3.5" />
                               <span className="truncate max-w-[200px]">{currentInquiry.affiliation}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Right Column: Quick Actions & Projects */}
-                  <div className="space-y-6">
-                    {/* Quick Access Card - Tighter */}
-                    <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden group">
-                      <Sparkles className="absolute top-2 right-2 h-12 w-12 text-white/10 -rotate-12 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-12" />
-                      <div className="relative">
-                        <h3 className="font-bold text-base mb-1">Start a New Project</h3>
-                        <p className="text-blue-100 text-xs mb-4 leading-normal">
-                          To proceed with our services, please submit your project and client information for approval.
-                        </p>
-                        <Button 
-                          onClick={handleCreateNewProject}
-                          className="w-full h-9 bg-white text-blue-700 hover:bg-blue-50 font-bold shadow-md text-xs"
-                        >
-                          <Plus className="h-3 w-3 mr-1.5" />
-                          Get Started 
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Project Status Summary if projects exist - Tighter */}
-                    {projects.length > 0 && (
-                      <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-                        <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2 text-sm">
-                          <FolderOpen className="h-4 w-4 text-amber-500" />
-                          Project Library
-                        </h3>
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-center">
-                              <p className="text-base font-bold text-slate-800">{projects.length}</p>
-                              <p className="text-[9px] uppercase font-bold text-slate-400">Total</p>
-                            </div>
-                            <div className="bg-green-50 p-2.5 rounded-xl border border-green-100 text-center">
-                              <p className="text-base font-bold text-green-700">{projects.filter(p => !p.isDraft).length}</p>
-                              <p className="text-[9px] uppercase font-bold text-green-400">Approved</p>
                             </div>
                           </div>
                         </div>
