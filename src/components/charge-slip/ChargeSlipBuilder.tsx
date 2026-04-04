@@ -191,6 +191,14 @@ function ChargeSlipBuilderInner({
   };
 
   const handleQuotationSelect = (quote: QuotationRecord) => {
+    // Sync pricing and formatting options from quotation
+    if (typeof quote.isInternal === 'boolean') {
+      setIsInternal(quote.isInternal);
+    }
+    if (typeof quote.useAffiliationAsClientName === 'boolean') {
+      setUseAffiliationAsClientName(quote.useAffiliationAsClientName);
+    }
+
     setSelectedServices((prev) => {
       const existingIds = new Set(prev.map((s) => s.id));
       const additions = quote.services
