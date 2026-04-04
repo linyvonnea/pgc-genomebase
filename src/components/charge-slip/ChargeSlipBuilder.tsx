@@ -21,8 +21,8 @@ import {
 } from "@/services/clientProjectService";
 import {
   generateNextChargeSlipNumber,
-  saveChargeSlip,
 } from "@/services/chargeSlipService";
+import { saveChargeSlipAction } from "@/app/actions/chargeSlipActions";
 
 import { SelectedService as StrictSelectedService } from "@/types/SelectedService";
 import { ServiceItem } from "@/types/ServiceItem";
@@ -377,8 +377,21 @@ function ChargeSlipBuilderInner({
 
       const record = sanitizeObject(rawRecord) as ChargeSlipRecord;
 
-      // Save to Firestore first
-      await saveChargeSlip(record);
+      // Save to Firestore and send email notification
+      if (!adminInfo?.email) {
+        toast.error("User authentication required to save charge slip");
+        setSaving(false);
+        return;
+      }
+
+      const result = await saveChargeSlipAction(record, {
+        name: adminInfo.name || adminInfo.email!,
+        email: adminInfo.email!
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || "Failed to save charge slip");
+      }
 
       // Invalidate charge slip history to refresh the list
       queryClient.invalidateQueries({ queryKey: ["chargeSlipHistory", effectiveProjectId] });
