@@ -34,7 +34,10 @@ export async function saveChargeSlipAction(
     return { success: true, data: result };
   } catch (error) {
     console.error("Error saving charge slip:", error);
-    return { success: false, error: "Failed to save charge slip" };
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Failed to save charge slip" 
+    };
   }
 }
 
