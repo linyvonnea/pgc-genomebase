@@ -323,7 +323,12 @@ export default function FloatingChatWidget({
             </div>
 
             <div className="h-[400px] w-full bg-white flex flex-col">
-              <ChatBox inquiryId={inquiryId} role={role} variant="floating" />
+              <ChatBox
+                inquiryId={inquiryId}
+                role={role}
+                variant="floating"
+                clientName={inquiryData?.name}
+              />
             </div>
           </motion.div>
         )}
