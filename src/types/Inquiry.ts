@@ -3,7 +3,7 @@ export interface Inquiry {
   createdAt: Date;
   name: string;
   isApproved: boolean;
-  status: 'Pending' | 'Ongoing Quotation' | 'Approved Client' | 'Quotation Only' | 'Service Not Offered';
+  status: 'Pending' | 'Ongoing Quotation' | 'Approved Client' | 'Quotation Only' | 'Service Not Offered' | 'Cancelled';
   affiliation: string;
   designation: string;
   email?: string;
@@ -44,6 +44,11 @@ export interface Inquiry {
   haveSubmitted?: boolean;
   hasOpenedQuotation?: boolean;
   hasLoggedIn?: boolean;
+
+  // Cancellation metadata
+  cancelledAt?: Date | null;
+  cancelledBy?: 'client' | 'admin' | null;
+  cancellationReason?: string | null;
 
   // Client info for chat/branding
   clientInfo?: {
