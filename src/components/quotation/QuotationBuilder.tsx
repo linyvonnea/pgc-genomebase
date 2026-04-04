@@ -313,7 +313,13 @@ export default function QuotationBuilder({
         throw new Error(result.error || "Failed to save quotation");
       }
 
-      queryClient.invalidateQueries({ queryKey: ["quotationHistory", effectiveInquiryId] });
+      // Invalidate both potential query keys used in QuotationHistoryPanel
+      const normalizedInquiryId = effectiveInquiryId.trim().toUpperCase();
+      queryClient.invalidateQueries({ queryKey: ["quotationHistory", "inquiry", normalizedInquiryId] });
+      if (clientInfo.name) {
+        queryClient.invalidateQueries({ queryKey: ["quotationHistory", "client", clientInfo.name] });
+      }
+
       toast.success("Quotation saved successfully!");
       setOpenPreview(false);
     } catch (error) {
