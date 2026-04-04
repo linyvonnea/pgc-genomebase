@@ -32,10 +32,8 @@ export async function saveChargeSlipAction(
               
               <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border-left: 4px solid #1e3a8a; margin: 15px 0;">
                 <p style="margin: 0; font-size: 14px;">Once payment has been completed, please send us a copy of the official receipt for verification. <strong>Kindly note that results will be released upon confirmation of payment.</strong></p>
+                <p style="margin: 15px 0 0 0;"><a href="https://pgc-genomebase.vercel.app/portal" style="background-color: #1e3a8a; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 13px;">Access Client Portal</a></p>
               </div>
-
-              <p>If you'd like to view your billing, access the portal below:</p>
-              <p style="margin: 20px 0;"><a href="https://pgc-genomebase.vercel.app/portal" style="background-color: #1e3a8a; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600;">Access Client Portal</a></p>
 
               <p>If you have any questions regarding the billing or encounter any issues with the portal, please feel free to reach out. We look forward to working with you.</p>
               
@@ -45,14 +43,32 @@ export async function saveChargeSlipAction(
           </div>
         `;
 
+        const clientEmailText = `
+Billing/Invoice - PGC Visayas
+
+Dear ${slip.clientInfo.name},
+
+Good day. Your billing is now available in your client portal. Kindly review the details and proceed with payment at your convenience. For available modes of payment and step-by-step instructions, please refer to our FAQs.
+
+Once payment has been completed, please send us a copy of the official receipt for verification. Kindly note that results will be released upon confirmation of payment.
+
+To view your billing, access the portal below: https://pgc-genomebase.vercel.app/portal
+
+If you have any questions regarding the billing or encounter any issues with the portal, please feel free to reach out. We look forward to working with you.
+
+Yours in utilizing OMICS for a better Philippines,
+Philippine Genome Center Visayas
+        `.trim();
+
         await addDoc(mailCollection, {
-          to: slip.clientInfo.email,
+          to: [slip.clientInfo.email],
           message: {
-            subject: `Billing/Invoice: ${slip.chargeSlipNumber}`,
+            subject: "Billing/Invoice: PGC Visayas",
+            text: clientEmailText,
             html: clientEmailHtml,
           },
-          createdAt: new Date(),
         });
+        console.log(`✅ Billing/Invoice email sent to ${slip.clientInfo.email}`);
       } catch (emailError) {
         console.error("Failed to send charge slip email notification:", emailError);
       }
