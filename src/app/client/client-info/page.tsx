@@ -77,7 +77,7 @@ import {
   ClientRequest,
 } from "@/services/clientRequestService";
 import { getQuotationsByInquiryId } from "@/services/quotationService";
-import { subscribeToInquiryById } from "@/services/inquiryService";
+import { cancelInquiryByClient, subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { getChargeSlipsByProjectId } from "@/services/chargeSlipService";
 import { getSampleFormsByProjectId } from "@/services/sampleFormService";
@@ -307,6 +307,9 @@ export default function ClientPortalPage() {
   // Proceed with Service modal state
   const [showProceedModal, setShowProceedModal] = useState(false);
   const [selectedQuotationRef, setSelectedQuotationRef] = useState<string | null>(null);
+  const [showCancelInquiryModal, setShowCancelInquiryModal] = useState(false);
+  const [cancelInquiryReason, setCancelInquiryReason] = useState("");
+  const [cancelInquirySubmitting, setCancelInquirySubmitting] = useState(false);
 
   // ── Data state ────────────────────────────────────────────────
   const [members, setMembers] = useState<ClientMember[]>([]);
@@ -1864,6 +1867,27 @@ export default function ClientPortalPage() {
     router.push(`/client/project-info?${params.toString()}`);
   };
 
+  const handleConfirmCancelInquiry = async () => {
+    if (!inquiryIdParam) {
+      toast.error("Missing inquiry ID.");
+      return;
+    }
+
+    setCancelInquirySubmitting(true);
+    try {
+      const trimmedReason = cancelInquiryReason.trim();
+      await cancelInquiryByClient(inquiryIdParam, trimmedReason.length > 0 ? trimmedReason : null);
+      toast.success("Your request has been cancelled.");
+      setShowCancelInquiryModal(false);
+      setCancelInquiryReason("");
+    } catch (error) {
+      console.error("Failed to cancel inquiry:", error);
+      toast.error("Failed to cancel the request. Please try again.");
+    } finally {
+      setCancelInquirySubmitting(false);
+    }
+  };
+
   const toggleProjectDocs = async (project: ProjectDetails) => {
     const pid = project.pid;
     const isExpanding = !expandedProjectDocs.has(pid);
@@ -3206,7 +3230,7 @@ export default function ClientPortalPage() {
                                 >
                                   View PDF
                                 </Button>
-                                {fetchedApprovedProjects.length === 0 && (
+                                {fetchedApprovedProjects.length === 0 && currentInquiry?.status !== "Cancelled" && (
                                   <Button
                                     size="sm"
                                     onClick={() => handleProceedWithService(quote.referenceNumber)}
@@ -3229,6 +3253,30 @@ export default function ClientPortalPage() {
                       )}
 
                       {/* Quotation Request Details (previously Inquiry Details Summary) */}
+                    {currentInquiry && (
+                      <div className="bg-amber-50/70 border border-amber-100 rounded-2xl p-5">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="space-y-1">
+                            <h4 className="text-sm font-bold text-amber-900">Not proceeding with the service?</h4>
+                            <p className="text-xs text-amber-800">
+                              If you decide to stop, you can cancel this request. This will update your inquiry status to Cancelled.
+                            </p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            onClick={() => setShowCancelInquiryModal(true)}
+                            disabled={currentInquiry.status === "Cancelled" || cancelInquirySubmitting}
+                            className="border-amber-200 text-amber-900 hover:bg-amber-100 font-bold text-xs h-9"
+                          >
+                            Do Not Proceed
+                          </Button>
+                        </div>
+                        {currentInquiry.status === "Cancelled" && (
+                          <p className="text-[11px] text-amber-700 mt-2">This request is already marked as cancelled.</p>
+                        )}
+                      </div>
+                    )}
+
                     {currentInquiry && (
                       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
                         <div className="flex items-center justify-between mb-6">
@@ -3960,6 +4008,43 @@ export default function ClientPortalPage() {
             </AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmProceedWithService}>
               Yes, Proceed
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Do Not Proceed Confirmation Modal */}
+      <AlertDialog open={showCancelInquiryModal} onOpenChange={setShowCancelInquiryModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this request?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will mark your inquiry as Cancelled. You can optionally add a reason below.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="cancel-reason" className="text-xs text-slate-600">Reason (optional)</Label>
+            <Textarea
+              id="cancel-reason"
+              value={cancelInquiryReason}
+              onChange={(event) => setCancelInquiryReason(event.target.value)}
+              rows={3}
+              placeholder="Share any context you want us to keep on file..."
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowCancelInquiryModal(false);
+              setCancelInquiryReason("");
+            }}>
+              Go Back
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmCancelInquiry}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={cancelInquirySubmitting}
+            >
+              Yes, Cancel Request
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -6,7 +6,7 @@
  * data transformation between Firestore documents and TypeScript objects.
  */
 
-import { collection, getDocs, query, orderBy, doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, doc, getDoc, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Inquiry } from "@/types/Inquiry";
 
@@ -96,7 +96,10 @@ export async function getInquiries(): Promise<Inquiry[]> {
         hasOpenedQuotation: data.hasOpenedQuotation || false,
         hasLoggedIn: data.hasLoggedIn || false,
         messageState: data.messageState || 'none',
-        unreadMessageCount: data.unreadMessageCount || 0
+        unreadMessageCount: data.unreadMessageCount || 0,
+        cancelledAt: data.cancelledAt?.toDate?.() ?? (data.cancelledAt ? new Date(data.cancelledAt) : null),
+        cancelledBy: data.cancelledBy || null,
+        cancellationReason: data.cancellationReason || null
       };
       inquiries.push(inquiry);
     });
@@ -180,7 +183,10 @@ export async function getInquiryById(id: string): Promise<Inquiry> {
       hasOpenedQuotation: data.hasOpenedQuotation || false,
       hasLoggedIn: data.hasLoggedIn || false,
       messageState: data.messageState || 'none',
-      unreadMessageCount: data.unreadMessageCount || 0
+      unreadMessageCount: data.unreadMessageCount || 0,
+      cancelledAt: data.cancelledAt?.toDate?.() ?? (data.cancelledAt ? new Date(data.cancelledAt) : null),
+      cancelledBy: data.cancelledBy || null,
+      cancellationReason: data.cancellationReason || null
     };
   } catch (error) {
     console.error(`Failed to fetch inquiry ${id}:`, error);
@@ -246,7 +252,10 @@ export function subscribeToInquiryById(
         hasOpenedQuotation: data.hasOpenedQuotation || false,
         hasLoggedIn: data.hasLoggedIn || false,
         messageState: data.messageState || 'none',
-        unreadMessageCount: data.unreadMessageCount || 0
+        unreadMessageCount: data.unreadMessageCount || 0,
+        cancelledAt: data.cancelledAt?.toDate?.() ?? (data.cancelledAt ? new Date(data.cancelledAt) : null),
+        cancelledBy: data.cancelledBy || null,
+        cancellationReason: data.cancellationReason || null
       };
       
       callback(inquiry);
@@ -324,7 +333,10 @@ export function subscribeToInquiries(
           hasOpenedQuotation: data.hasOpenedQuotation || false,
           hasLoggedIn: data.hasLoggedIn || false,
           messageState: data.messageState || 'none',
-          unreadMessageCount: data.unreadMessageCount || 0
+          unreadMessageCount: data.unreadMessageCount || 0,
+          cancelledAt: data.cancelledAt?.toDate?.() ?? (data.cancelledAt ? new Date(data.cancelledAt) : null),
+          cancelledBy: data.cancelledBy || null,
+          cancellationReason: data.cancellationReason || null
         };
       });
       
@@ -356,6 +368,29 @@ export async function updateInquiryStatus(
     console.log(`Updated inquiry ${inquiryId} status to: ${status}`);
   } catch (error) {
     console.error(`Error updating inquiry ${inquiryId} status:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Cancels an inquiry on behalf of the client.
+ * Stores cancellation metadata for auditing.
+ */
+export async function cancelInquiryByClient(
+  inquiryId: string,
+  reason?: string | null
+): Promise<void> {
+  try {
+    const inquiryRef = doc(db, "inquiries", inquiryId);
+    await updateDoc(inquiryRef, {
+      status: "Cancelled",
+      cancelledBy: "client",
+      cancellationReason: reason ?? null,
+      cancelledAt: serverTimestamp(),
+    });
+    console.log(`Inquiry ${inquiryId} cancelled by client.`);
+  } catch (error) {
+    console.error(`Error cancelling inquiry ${inquiryId} by client:`, error);
     throw error;
   }
 }
