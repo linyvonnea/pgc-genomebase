@@ -2581,9 +2581,8 @@ export default function ClientPortalPage() {
                                         • {quotation.referenceNumber}
                                       </a>
                                       {quotation.selectedForProject && (
-                                        <span className="text-[10px] font-bold text-green-600 flex items-center gap-0.5 shrink-0">
-                                          <CheckCircle2 className="h-2.5 w-2.5" />
-                                          (Selected)
+                                        <span className="text-green-600 flex items-center justify-center shrink-0 w-4 h-4 rounded-full bg-green-50 border border-green-200">
+                                          <CheckCircle2 className="h-3 w-3" />
                                         </span>
                                       )}
                                     </div>
@@ -3185,9 +3184,8 @@ export default function ClientPortalPage() {
                                       Quotation: {quote.referenceNumber}
                                     </p>
                                     {quote.selectedForProject && (
-                                      <Badge className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-0.5 flex items-center gap-1">
-                                        <CheckCircle2 className="w-3 h-3" />
-                                        Selected
+                                      <Badge title="Selected" className="bg-green-600 hover:bg-green-700 text-white p-1 flex items-center justify-center rounded-full w-5 h-5">
+                                        <CheckCircle2 className="w-4 h-4" />
                                       </Badge>
                                     )}
                                   </div>

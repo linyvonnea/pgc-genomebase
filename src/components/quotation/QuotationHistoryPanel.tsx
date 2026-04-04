@@ -118,9 +118,8 @@ export function QuotationHistoryPanel({
                 <div className="flex items-center gap-2">
                   <div className="font-medium text-sm">{quote.referenceNumber}</div>
                   {quote.selectedForProject && (
-                    <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-0.5 flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Selected
+                    <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white text-xs px-1 py-0.5 flex items-center justify-center rounded-full w-5 h-5">
+                      <CheckCircle2 className="w-4 h-4" />
                     </Badge>
                   )}
                 </div>
