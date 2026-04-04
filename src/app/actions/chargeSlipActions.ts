@@ -8,8 +8,6 @@ import {
 } from "@/services/chargeSlipService";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { logActivity } from "@/services/activityLogService";
-import { collection, addDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 export async function saveChargeSlipAction(
   slip: ChargeSlipRecord,
