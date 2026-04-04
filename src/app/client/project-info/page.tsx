@@ -24,7 +24,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
 import { getNextPid } from "@/services/projectsService";
 import { saveProjectRequest, getProjectRequest, getProjectRequestById, getProjectRequestsByInquiry } from "@/services/projectRequestService";
-import { updateInquiryStatus } from "@/services/inquiryService";
 
 export default function ProjectForm() {
   const router = useRouter();
@@ -32,7 +31,6 @@ export default function ProjectForm() {
   // Get inquiry ID and email from URL
   const inquiryId = searchParams.get("inquiryId");
   const email = searchParams.get("email");
-  const quotationRef = searchParams.get("quotationRef");
   const [isDraft, setIsDraft] = useState(true); // New projects start as drafts
 
   // Form state
@@ -226,14 +224,6 @@ export default function ProjectForm() {
         fundingInstitution: result.data.fundingInstitution,
         status: "draft",
       });
-
-      if (quotationRef) {
-        try {
-          await updateInquiryStatus(inquiryId, "In Progress");
-        } catch (statusError) {
-          console.warn("Could not update inquiry status to In Progress:", statusError);
-        }
-      }
 
       toast.success("Project draft saved! Now add your information as Primary Member.");
       

@@ -73,8 +73,6 @@ const getStatusColor = (status: string) => {
       return "bg-blue-100 text-blue-800";
     case "Ongoing Quotation":
       return "bg-orange-100 text-orange-800";
-    case "In Progress":
-      return "bg-emerald-100 text-emerald-800";
     case "Service Not Offered":
       return "bg-slate-100 text-slate-500 border-slate-200 opacity-70";
     case "Cancelled":
@@ -117,7 +115,6 @@ export const columns: ColumnDef<Inquiry>[] = [
       // 2. Show if it's very recent (last 24h) EXCEPT if it's already quoted
       const isQuoted = [
         "Ongoing Quotation",
-        "In Progress",
         "Approved Client",
         "Quotation Only",
         "Service Not Offered",
