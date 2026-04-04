@@ -29,12 +29,14 @@ interface ChatBoxProps {
   inquiryId: string;
   role: MessageSenderRole; // "admin" or "client"
   variant?: "default" | "floating";
+  clientName?: string;
 }
 
 export default function ChatBox({
   inquiryId,
   role,
   variant = "default",
+  clientName,
 }: ChatBoxProps) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ThreadMessage[]>([]);
@@ -110,7 +112,7 @@ export default function ChatBox({
       const senderDisplayName =
         role === "admin"
           ? getAdminDisplayName(user.email || user.uid)
-          : user.displayName || user.email?.split("@")[0] || "Client";
+          : clientName || user.displayName || user.email?.split("@")[0] || "Client";
 
       await addThreadMessage({
         threadId: inquiryId,
