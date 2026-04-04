@@ -23,7 +23,6 @@ import {
   generateNextChargeSlipNumber,
   saveChargeSlip,
 } from "@/services/chargeSlipService";
-import { saveChargeSlipAction } from "@/app/actions/chargeSlipActions";
 
 import { SelectedService as StrictSelectedService } from "@/types/SelectedService";
 import { ServiceItem } from "@/types/ServiceItem";
@@ -378,11 +377,8 @@ function ChargeSlipBuilderInner({
 
       const record = sanitizeObject(rawRecord) as ChargeSlipRecord;
 
-      // Save to Firestore and trigger email notification via server action
-      const result = await saveChargeSlipAction(record, adminInfo?.email ? { name: adminInfo.name || adminInfo.email, email: adminInfo.email } : undefined);
-      if (!result.success) {
-        throw new Error(result.error || "Failed to save charge slip");
-      }
+      // Save to Firestore first
+      await saveChargeSlip(record);
 
       // Invalidate charge slip history to refresh the list
       queryClient.invalidateQueries({ queryKey: ["chargeSlipHistory", effectiveProjectId] });
