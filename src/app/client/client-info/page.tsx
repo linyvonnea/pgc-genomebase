@@ -344,6 +344,8 @@ export default function ClientPortalPage() {
   const [pendingMemberId, setPendingMemberId] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<string | null>(null);
+  const [showProceedModal, setShowProceedModal] = useState(false);
+  const [pendingQuotation, setPendingQuotation] = useState<QuotationRecord | null>(null);
   
   // Real-time data containers
   const [fetchedDraftProjects, setFetchedDraftProjects] = useState<ProjectDetails[]>([]);
@@ -1825,6 +1827,32 @@ export default function ClientPortalPage() {
     router.push(`/client/project-info?${params.toString()}`);
   };
 
+  const handleProceedWithService = (quote: QuotationRecord) => {
+    if (!emailParam || !inquiryIdParam) {
+      toast.error("Missing required parameters to proceed with service.");
+      return;
+    }
+
+    setPendingQuotation(quote);
+    setShowProceedModal(true);
+  };
+
+  const handleConfirmProceed = () => {
+    if (!pendingQuotation || !emailParam || !inquiryIdParam) {
+      toast.error("Missing required parameters to proceed with service.");
+      return;
+    }
+
+    const params = new URLSearchParams({
+      email: emailParam,
+      inquiryId: inquiryIdParam,
+      new: "true",
+      quotationRef: pendingQuotation.referenceNumber,
+    });
+    router.push(`/client/project-info?${params.toString()}`);
+    setShowProceedModal(false);
+  };
+
   const toggleProjectDocs = async (project: ProjectDetails) => {
     const pid = project.pid;
     const isExpanding = !expandedProjectDocs.has(pid);
@@ -3145,14 +3173,25 @@ export default function ClientPortalPage() {
                                   </div>
                                 </div>
                               </div>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => router.push(`/client/view-document?type=quotation&ref=${quote.referenceNumber}`)}
-                                className="border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold h-8 text-xs"
-                              >
-                                View PDF
-                              </Button>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => router.push(`/client/view-document?type=quotation&ref=${quote.referenceNumber}`)}
+                                  className="border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold h-8 text-xs"
+                                >
+                                  View PDF
+                                </Button>
+                                {projects.length === 0 && (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleProceedWithService(quote)}
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-8 text-xs"
+                                  >
+                                    Proceed with Service
+                                  </Button>
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -3559,22 +3598,24 @@ export default function ClientPortalPage() {
                   {/* Right Column: Quick Actions & Projects */}
                   <div className="space-y-6">
                     {/* Quick Access Card - Tighter */}
-                    <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden group">
-                      <Sparkles className="absolute top-2 right-2 h-12 w-12 text-white/10 -rotate-12 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-12" />
-                      <div className="relative">
-                        <h3 className="font-bold text-base mb-1">Start a New Project</h3>
-                        <p className="text-blue-100 text-xs mb-4 leading-normal">
-                          To proceed with our services, please submit your project and client information for approval.
-                        </p>
-                        <Button 
-                          onClick={handleCreateNewProject}
-                          className="w-full h-9 bg-white text-blue-700 hover:bg-blue-50 font-bold shadow-md text-xs"
-                        >
-                          <Plus className="h-3 w-3 mr-1.5" />
-                          Get Started 
-                        </Button>
+                    {projects.length === 0 && currentInquiry?.status !== "In Progress" && (
+                      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden group">
+                        <Sparkles className="absolute top-2 right-2 h-12 w-12 text-white/10 -rotate-12 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-12" />
+                        <div className="relative">
+                          <h3 className="font-bold text-base mb-1">Start a New Project</h3>
+                          <p className="text-blue-100 text-xs mb-4 leading-normal">
+                            To proceed with our services, please submit your project and client information for approval.
+                          </p>
+                          <Button 
+                            onClick={handleCreateNewProject}
+                            className="w-full h-9 bg-white text-blue-700 hover:bg-blue-50 font-bold shadow-md text-xs"
+                          >
+                            <Plus className="h-3 w-3 mr-1.5" />
+                            Get Started 
+                          </Button>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Project Status Summary if projects exist - Tighter */}
                     {projects.length > 0 && (
@@ -3724,6 +3765,23 @@ export default function ClientPortalPage() {
             );
           })()}
       </ConfirmationModalLayout>
+
+      <ConfirmationModalLayout
+        open={showProceedModal}
+        onConfirm={handleConfirmProceed}
+        onCancel={() => {
+          setShowProceedModal(false);
+          setPendingQuotation(null);
+        }}
+        title="Proceed with Service"
+        description={
+          pendingQuotation
+            ? `Are you sure you want to proceed with the service using Quotation: ${pendingQuotation.referenceNumber}?`
+            : "Are you sure you want to proceed with the service?"
+        }
+        confirmLabel="Yes"
+        cancelLabel="Cancel"
+      />
 
       {/* Delete confirmation modal */}
       <ConfirmationModalLayout

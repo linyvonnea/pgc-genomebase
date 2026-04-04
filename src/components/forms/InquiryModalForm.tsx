@@ -261,6 +261,13 @@ export function AddInquiryModal({ onSuccess }: AddInquiryModalProps) {
                               </Badge>
                             </div>
                           </SelectItem>
+                          <SelectItem value="In Progress">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+                                In Progress
+                              </Badge>
+                            </div>
+                          </SelectItem>
                           <SelectItem value="Quotation Only">
                             <div className="flex items-center gap-2">
                               <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
