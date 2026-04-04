@@ -112,6 +112,7 @@ export function DataTable<TData, TValue>({
       approvedClient: inquiries.filter(i => i.status === "Approved Client").length,
       quotationOnly: inquiries.filter(i => i.status === "Quotation Only").length,
       ongoingQuotation: inquiries.filter(i => i.status === "Ongoing Quotation").length,
+      inProgress: inquiries.filter(i => i.status === "In Progress").length,
       pending: inquiries.filter(i => i.status === "Pending").length,
       serviceNotOffered: inquiries.filter(i => i.status === "Service Not Offered").length,
     }
@@ -394,6 +395,20 @@ export function DataTable<TData, TValue>({
                     }`}
                   >
                     Ongoing Quotation ({statusCounts.ongoingQuotation})
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleStatusFilter(
+                        activeStatusFilter === "In Progress" ? undefined : "In Progress"
+                      )
+                    }
+                    className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                      activeStatusFilter === "In Progress"
+                        ? "bg-emerald-50 border-emerald-200 font-semibold text-emerald-600"
+                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                    }`}
+                  >
+                    In Progress ({statusCounts.inProgress})
                   </button>
                   <button
                     onClick={() =>

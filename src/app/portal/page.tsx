@@ -33,6 +33,7 @@ const ALLOWED_INQUIRY_STATUSES = [
   "Approved Client",
   "Quotation Only",
   "Ongoing Quotation",
+  "In Progress",
   "Service Not Offered",
 ] as const;
 
