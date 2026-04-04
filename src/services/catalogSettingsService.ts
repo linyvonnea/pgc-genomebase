@@ -33,6 +33,7 @@ export async function getCatalogSettings(): Promise<CatalogSettings> {
         fundingInstitutions: data.fundingInstitutions || [],
         serviceRequested: data.serviceRequested || getDefaultServiceRequested(),
         personnelAssigned: data.personnelAssigned || [],
+        inquiryStatuses: data.inquiryStatuses || getDefaultInquiryStatuses(),
       };
     } else {
       // Initialize with defaults if document doesn't exist
@@ -63,7 +64,7 @@ export async function getCatalog(type: CatalogType): Promise<CatalogItem[]> {
  */
 export async function addCatalogItem(
   type: CatalogType,
-  value: string | { value: string; position?: string }
+  value: string | { value: string; position?: string; color?: string }
 ): Promise<void> {
   try {
     const docRef = doc(db, "settings", CATALOG_DOC_ID);
@@ -73,11 +74,13 @@ export async function addCatalogItem(
 
     const itemValue = typeof value === "string" ? value : value.value;
     const itemPosition = typeof value === "object" ? value.position : undefined;
+    const itemColor = typeof value === "object" ? value.color : undefined;
 
     const newItem: CatalogItem = {
       id: `${type}-${Date.now()}`,
       value: itemValue,
       ...(itemPosition && { position: itemPosition }),
+      ...(itemColor && { color: itemColor }),
       order: maxOrder + 1,
       isActive: true,
       createdAt: new Date(),
@@ -179,7 +182,7 @@ export async function getActiveCatalogItems(type: CatalogType): Promise<string[]
       .sort((a, b) => a.order - b.order);
 
     // For personnelAssigned, return full items with position
-    if (type === "personnelAssigned") {
+    if (type === "personnelAssigned" || type === "inquiryStatuses") {
       return activeItems;
     }
 
@@ -220,6 +223,17 @@ function getDefaultServiceRequested(): CatalogItem[] {
   ];
 }
 
+function getDefaultInquiryStatuses(): CatalogItem[] {
+  return [
+    { id: "is-1", value: "Pending", color: "#eab308", order: 1, isActive: true },
+    { id: "is-2", value: "Quotation Only", color: "#3b82f6", order: 2, isActive: true },
+    { id: "is-3", value: "Ongoing Quotation", color: "#f97316", order: 3, isActive: true },
+    { id: "is-4", value: "Approved Client", color: "#22c55e", order: 4, isActive: true },
+    { id: "is-5", value: "In Progress", color: "#0ea5e9", order: 5, isActive: true },
+    { id: "is-6", value: "Service Not Offered", color: "#94a3b8", order: 6, isActive: true },
+  ];
+}
+
 function getDefaultCatalogSettings(): CatalogSettings {
   return {
     sendingInstitutions: getDefaultSendingInstitutions(),
@@ -227,5 +241,6 @@ function getDefaultCatalogSettings(): CatalogSettings {
     fundingInstitutions: [],
     serviceRequested: getDefaultServiceRequested(),
     personnelAssigned: [],
+    inquiryStatuses: getDefaultInquiryStatuses(),
   };
 }

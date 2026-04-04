@@ -31,6 +31,7 @@ import {
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Inquiry } from "@/types/Inquiry"
+import { CatalogItem } from "@/types/CatalogSettings"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -57,12 +58,14 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   unreadInquiryIds?: Set<string>
+  statusCatalog?: CatalogItem[]
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   unreadInquiryIds = new Set(),
+  statusCatalog = [],
 }: DataTableProps<TData, TValue>) {
   const router = useRouter()
   const [sorting, setSorting] = useState<SortingState>([])
@@ -105,17 +108,42 @@ export function DataTable<TData, TValue>({
     router.push(`/admin/inquiry/${inquiry.id}`)
   }
 
+  const fallbackStatuses: CatalogItem[] = [
+    { id: "fallback-pending", value: "Pending", color: "#eab308", order: 1, isActive: true },
+    { id: "fallback-quotation-only", value: "Quotation Only", color: "#3b82f6", order: 2, isActive: true },
+    { id: "fallback-ongoing", value: "Ongoing Quotation", color: "#f97316", order: 3, isActive: true },
+    { id: "fallback-approved", value: "Approved Client", color: "#22c55e", order: 4, isActive: true },
+    { id: "fallback-in-progress", value: "In Progress", color: "#0ea5e9", order: 5, isActive: true },
+    { id: "fallback-service-not-offered", value: "Service Not Offered", color: "#94a3b8", order: 6, isActive: true },
+  ]
+
+  const statusOptions = useMemo(() => {
+    const source = statusCatalog.length > 0 ? statusCatalog : fallbackStatuses
+    return source.filter((item) => item.isActive).sort((a, b) => a.order - b.order)
+  }, [statusCatalog])
+
+  const hexToRgba = (hex: string, alpha: number) => {
+    const cleaned = hex.replace("#", "")
+    if (cleaned.length !== 6) return ""
+    const r = parseInt(cleaned.substring(0, 2), 16)
+    const g = parseInt(cleaned.substring(2, 4), 16)
+    const b = parseInt(cleaned.substring(4, 6), 16)
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`
+  }
+
   // Calculate status counts
   const statusCounts = useMemo(() => {
     const inquiries = data as unknown as Inquiry[]
-    return {
-      approvedClient: inquiries.filter(i => i.status === "Approved Client").length,
-      quotationOnly: inquiries.filter(i => i.status === "Quotation Only").length,
-      ongoingQuotation: inquiries.filter(i => i.status === "Ongoing Quotation").length,
-      pending: inquiries.filter(i => i.status === "Pending").length,
-      serviceNotOffered: inquiries.filter(i => i.status === "Service Not Offered").length,
-    }
-  }, [data])
+    const counts: Record<string, number> = {}
+    statusOptions.forEach((status) => {
+      counts[status.value] = 0
+    })
+    inquiries.forEach((inquiry) => {
+      const status = inquiry.status || "Pending"
+      counts[status] = (counts[status] || 0) + 1
+    })
+    return counts
+  }, [data, statusOptions])
 
   // Filter summary label with click order tracking
   const filterSummaryLabel = useMemo(() => {
@@ -353,72 +381,32 @@ export function DataTable<TData, TValue>({
               <div className="space-y-2 lg:col-span-4">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Processing Status</label>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                  <button
-                    onClick={() =>
-                      handleStatusFilter(
-                        activeStatusFilter === "Approved Client" ? undefined : "Approved Client"
-                      )
-                    }
-                    className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
-                      activeStatusFilter === "Approved Client"
-                        ? "bg-green-50 border-green-200 font-semibold text-green-600"
-                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                    }`}
-                  >
-                    Approved Client ({statusCounts.approvedClient})
-                  </button>
-                  <button
-                    onClick={() =>
-                      handleStatusFilter(
-                        activeStatusFilter === "Quotation Only" ? undefined : "Quotation Only"
-                      )
-                    }
-                    className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
-                      activeStatusFilter === "Quotation Only"
-                        ? "bg-blue-50 border-blue-200 font-semibold text-blue-600"
-                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                    }`}
-                  >
-                    Quotation Only ({statusCounts.quotationOnly})
-                  </button>
-                  <button
-                    onClick={() =>
-                      handleStatusFilter(
-                        activeStatusFilter === "Ongoing Quotation" ? undefined : "Ongoing Quotation"
-                      )
-                    }
-                    className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
-                      activeStatusFilter === "Ongoing Quotation"
-                        ? "bg-orange-50 border-orange-200 font-semibold text-orange-600"
-                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                    }`}
-                  >
-                    Ongoing Quotation ({statusCounts.ongoingQuotation})
-                  </button>
-                  <button
-                    onClick={() =>
-                      handleStatusFilter(activeStatusFilter === "Pending" ? undefined : "Pending")
-                    }
-                    className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
-                      activeStatusFilter === "Pending"
-                        ? "bg-yellow-50 border-yellow-200 font-semibold text-yellow-600"
-                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                    }`}
-                  >
-                    Pending ({statusCounts.pending})
-                  </button>
-                  <button
-                    onClick={() =>
-                      handleStatusFilter(activeStatusFilter === "Service Not Offered" ? undefined : "Service Not Offered")
-                    }
-                    className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
-                      activeStatusFilter === "Service Not Offered"
-                        ? "bg-slate-100 border-slate-300 font-semibold text-slate-600"
-                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                    }`}
-                  >
-                    Service Not Offered ({statusCounts.serviceNotOffered})
-                  </button>
+                  {statusOptions.map((status) => {
+                    const isActive = activeStatusFilter === status.value
+                    const color = status.color
+                    const style = color
+                      ? {
+                          borderColor: color,
+                          color,
+                          backgroundColor: isActive ? hexToRgba(color, 0.12) : "",
+                        }
+                      : undefined
+
+                    return (
+                      <button
+                        key={status.id}
+                        onClick={() =>
+                          handleStatusFilter(isActive ? undefined : status.value)
+                        }
+                        style={style}
+                        className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm bg-white hover:bg-gray-50 ${
+                          isActive ? "font-semibold" : "text-gray-700"
+                        }`}
+                      >
+                        {status.value} ({statusCounts[status.value] || 0})
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             </div>
