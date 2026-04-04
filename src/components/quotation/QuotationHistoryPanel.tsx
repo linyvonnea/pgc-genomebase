@@ -4,7 +4,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getQuotationsByInquiryId, getQuotationsByClientName } from "@/services/quotationService";
-import { getProjectRequest } from "@/services/projectRequestService";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
@@ -24,7 +23,6 @@ import { QuotationRecord } from "@/types/Quotation";
 type QuotationHistoryPanelProps = {
   inquiryId?: string | string[];
   clientName?: string;
-  selectedQuotationRef?: string | null;
   onSelectQuotation?: (quotation: QuotationRecord) => void;
   onDeselectQuotation?: (quotation: QuotationRecord) => void;
   showCheckboxes?: boolean;
@@ -33,7 +31,6 @@ type QuotationHistoryPanelProps = {
 export function QuotationHistoryPanel({ 
   inquiryId, 
   clientName, 
-  selectedQuotationRef,
   onSelectQuotation,
   onDeselectQuotation,
   showCheckboxes = false 
@@ -64,14 +61,6 @@ export function QuotationHistoryPanel({
     },
     enabled: shouldFetch,
   });
-
-  const { data: projectRequest } = useQuery({
-    queryKey: ["projectRequest", normalizedInquiryId],
-    queryFn: () => getProjectRequest(normalizedInquiryId!),
-    enabled: useInquiryId && !!normalizedInquiryId,
-  });
-
-  const activeSelectedRef = selectedQuotationRef || projectRequest?.quotationRef || null;
 
   if (error) {
     console.error(" [HistoryPanel] Error fetching quotation history:", error);
@@ -125,14 +114,7 @@ export function QuotationHistoryPanel({
                 </div>
               )}
               <div className="flex-1">
-                <div className="font-medium text-sm flex items-center gap-2">
-                  {quote.referenceNumber}
-                  {activeSelectedRef === quote.referenceNumber && (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      Selected
-                    </span>
-                  )}
-                </div>
+                <div className="font-medium text-sm">{quote.referenceNumber}</div>
                 <div className="text-xs text-muted-foreground">
                   Issued: {new Date(quote.dateIssued).toLocaleString()}
                 </div>
