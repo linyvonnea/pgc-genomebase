@@ -214,14 +214,11 @@ export default function ProjectForm() {
         console.warn("Could not fetch requester name:", error);
       }
 
-      const selectedQuotationRef = searchParams.get("quotationRef") || sessionStorage.getItem('selectedQuotationRef');
-
       // Save as draft project request (NO PID yet)
       const savedId = await saveProjectRequest({
         inquiryId,
         requestedBy: email,
         requestedByName: requesterName,
-        ...(selectedQuotationRef ? { quotationRef: selectedQuotationRef } : {}),
         title: result.data.title,
         projectLead: result.data.projectLead,
         startDate: Timestamp.fromDate(result.data.startDate),
@@ -233,7 +230,7 @@ export default function ProjectForm() {
       toast.success("Project draft saved! Now add your information as Primary Member.");
       
       // Update quotation status if user proceeded from a quotation
-      const quotationRef = selectedQuotationRef;
+      const quotationRef = searchParams.get("quotationRef") || sessionStorage.getItem('selectedQuotationRef');
       if (quotationRef) {
         try {
           await updateQuotationStatus(quotationRef, "in-progress");
