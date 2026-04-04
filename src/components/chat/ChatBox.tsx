@@ -226,33 +226,40 @@ export default function ChatBox({
                     className={`flex flex-col max-w-[85%] ${isMe ? "items-end" : "items-start"}`}
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      {!isMe && msg.senderRole === "client" && role === "admin" ? (
-                        <Avatar className="h-5 w-5 border border-slate-200 bg-white shadow-sm">
-                          <AvatarFallback className="bg-blue-50 text-[9px] font-semibold tracking-wide text-blue-700">
-                            {getClientInitials(msg.senderName)}
-                          </AvatarFallback>
-                        </Avatar>
-                      ) : !isMe && msg.senderRole === "admin" ? (
-                        <>
-                          <Badge
-                            variant="outline"
-                            className="text-[9px] h-4 py-0 px-1.5 bg-blue-50 text-blue-700 border-blue-200"
-                          >
-                            Admin
-                          </Badge>
+                      {isMe ? (
+                        <div className="flex items-center gap-1.5 order-2">
+                          <Avatar className="h-4 w-4 border border-slate-100 bg-white order-2">
+                            <AvatarFallback className="bg-blue-50 text-[7px] font-bold text-blue-700">
+                              {role === "admin" ? "AD" : getClientInitials(msg.senderName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs font-semibold text-gray-600 order-1">
+                            {role === "admin" ? msg.senderName : "You"}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          {msg.senderRole === "client" ? (
+                            <Avatar className="h-4 w-4 border border-slate-100 bg-white">
+                              <AvatarFallback className="bg-blue-50 text-[7px] font-bold text-blue-700">
+                                {getClientInitials(msg.senderName)}
+                              </AvatarFallback>
+                            </Avatar>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="text-[8px] h-3.5 py-0 px-1 bg-blue-50 text-blue-700 border-blue-200"
+                            >
+                              Admin
+                            </Badge>
+                          )}
                           <span className="text-xs font-semibold text-gray-600">
                             {msg.senderName}
                           </span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-xs font-semibold text-gray-600">
-                            {isMe ? (role === "admin" ? msg.senderName : "You") : msg.senderName}
-                          </span>
-                        </>
+                        </div>
                       )}
-                      <span className="text-[10px] text-gray-400 flex items-center gap-1 ml-1">
-                        <Clock className="w-3 h-3" />
+                      <span className={`text-[10px] text-gray-400 flex items-center gap-1 ${isMe ? "mr-1 order-1" : "ml-1"}`}>
+                        <Clock className="w-2.5 h-2.5" />
                         {formatMessageTime(msg)}
                       </span>
                     </div>
