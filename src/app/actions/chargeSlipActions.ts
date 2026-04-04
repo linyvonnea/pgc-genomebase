@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import {
-  saveChargeSlip,
-  updateChargeSlip,
-  getAllChargeSlips
+import { 
+  saveChargeSlip, 
+  updateChargeSlip, 
+  getAllChargeSlips 
 } from "@/services/chargeSlipService";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { logActivity } from "@/services/activityLogService";
@@ -15,62 +15,6 @@ export async function saveChargeSlipAction(
 ) {
   try {
     const result = await saveChargeSlip(slip);
-
-    if (slip.clientInfo?.email) {
-      try {
-        const mailCollection = collection(db, "mail");
-        const clientName = slip.clientInfo?.name || slip.client?.name || "Client";
-
-        const clientEmailHtml = `
-          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.6;">
-            <div style="background-color: #f1f5f9; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
-              <h2 style="color: #1e3a8a; margin-top: 0;">Billing/Invoice: PGC Visayas</h2>
-              <p>Dear ${clientName},</p>
-              <p>Good day. Your billing is now available in your client portal. Kindly review the details and proceed with payment at your convenience. For available modes of payment and step-by-step instructions, please refer to our FAQs.</p>
-
-              <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border-left: 4px solid #1e3a8a; margin: 15px 0;">
-                <h3 style="margin-top: 0; color: #1e3a8a; font-size: 14px; margin-bottom: 8px;">Next Steps</h3>
-                <p style="margin-bottom: 12px; font-size: 14px;">View your billing details in the Client Portal.</p>
-                <p style="margin: 0;"><a href="https://pgc-genomebase.vercel.app/portal" style="background-color: #1e3a8a; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 13px;">Access Client Portal</a></p>
-              </div>
-
-              <p>Once payment has been completed, please send us a copy of the official receipt for verification. Kindly note that results will be released upon confirmation of payment.</p>
-              <p>If you have any questions regarding the billing or encounter any issues with the portal, please feel free to reach out. We look forward to working with you.</p>
-
-              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-              <p style="font-size: 13px; color: #64748b; margin-bottom: 0;">Yours in utilizing OMICS for a better Philippines,<br /><strong>Philippine Genome Center Visayas</strong></p>
-            </div>
-          </div>
-        `;
-
-        const clientEmailText = `
-Billing/Invoice: PGC Visayas
-
-Dear ${clientName},
-
-Good day. Your billing is now available in your client portal. Kindly review the details and proceed with payment at your convenience. For available modes of payment and step-by-step instructions, please refer to our FAQs.
-
-Once payment has been completed, please send us a copy of the official receipt for verification. Kindly note that results will be released upon confirmation of payment.
-
-If you have any questions regarding the billing or encounter any issues with the portal, please feel free to reach out. We look forward to working with you.
-
-Yours in utilizing OMICS for a better Philippines,
-Philippine Genome Center Visayas
-        `.trim();
-
-        await addDoc(mailCollection, {
-          to: [slip.clientInfo.email],
-          message: {
-            subject: "Billing/Invoice: PGC Visayas",
-            text: clientEmailText,
-            html: clientEmailHtml
-          }
-        });
-        console.log(`✅ Billing notification email sent to ${slip.clientInfo.email}`);
-      } catch (emailError) {
-        console.warn("Could not send billing notification email:", emailError);
-      }
-    }
     
     // Log the activity
     await logActivity({
