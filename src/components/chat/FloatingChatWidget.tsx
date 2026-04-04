@@ -280,8 +280,8 @@ export default function FloatingChatWidget({
             <div className="flex items-center justify-between bg-blue-600 px-4 py-3 text-white">
               <div className="flex items-center gap-3">
                 {role === "admin" ? (
-                  <Avatar className="h-10 w-10 border border-blue-500 bg-white shadow-sm">
-                    <AvatarFallback className="bg-blue-50 text-sm font-semibold tracking-wide text-blue-700">
+                  <Avatar className="h-10 w-10 border border-blue-500 bg-white shadow-sm shrink-0">
+                    <AvatarFallback className="bg-blue-50 text-base font-bold tracking-tight text-blue-700">
                       {getClientInitials(inquiryData?.name)}
                     </AvatarFallback>
                   </Avatar>
