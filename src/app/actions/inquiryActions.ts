@@ -1076,6 +1076,39 @@ export async function updateInquiryAction(
 }
 
 /**
+ * Updates an inquiry's status directly.
+ * Useful for automated status transitions.
+ * 
+ * @param id - The Firestore document ID of the inquiry
+ * @param status - The new status to set
+ */
+export async function updateInquiryStatus(id: string, status: string) {
+  try {
+    const docRef = doc(db, "inquiries", id);
+    await updateDoc(docRef, { status });
+
+    // Log the activity
+    await logActivity({
+      userId: "system",
+      userEmail: "system@pgc.admin",
+      userName: "System",
+      action: "UPDATE",
+      entityType: "inquiry",
+      entityId: id,
+      description: `Inquiry status automatically updated to: ${status}`,
+    });
+
+    // Revalidate the admin inquiry page to reflect changes
+    revalidatePath('/admin/inquiry');
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating inquiry status:", error);
+    throw error;
+  }
+}
+
+/**
  * Deletes an inquiry record from the database
  * 
  * This function permanently removes an inquiry document from Firestore.
