@@ -2570,16 +2570,23 @@ export default function ClientPortalPage() {
                               {quotationCount > 0 ? (
                                 <div className="space-y-1 ml-5">
                                   {docs?.quotations.map((quotation) => (
-                                    <a
-                                      key={quotation.id}
-                                      href={`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="block text-xs text-slate-600 hover:text-purple-600 hover:underline truncate"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      • {quotation.referenceNumber}
-                                    </a>
+                                    <div key={quotation.id} className="flex items-center gap-2">
+                                      <a
+                                        href={`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block text-xs text-slate-600 hover:text-purple-600 hover:underline truncate"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        • {quotation.referenceNumber}
+                                      </a>
+                                      {quotation.selectedForProject && (
+                                        <span className="text-[10px] font-bold text-green-600 flex items-center gap-0.5 shrink-0">
+                                          <CheckCircle2 className="h-2.5 w-2.5" />
+                                          (Selected)
+                                        </span>
+                                      )}
+                                    </div>
                                   ))}
                                 </div>
                               ) : (
