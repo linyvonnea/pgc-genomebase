@@ -13,6 +13,7 @@ export const DEFAULT_PORTAL_FEATURES: PortalFeatureVisibility = {
   sampleForms: true,
   serviceReports: true,
   officialReceipts: true,
+  requestProgressTimeline: true,
   clientMenuSettings: true,
   clientMenuChangePassword: true,
   clientMenuAbout: true,

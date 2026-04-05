@@ -2,6 +2,7 @@ export type PortalFeatureKey =
   | "sampleForms"
   | "serviceReports"
   | "officialReceipts"
+  | "requestProgressTimeline"
   | "clientMenuSettings"
   | "clientMenuChangePassword"
   | "clientMenuAbout";
@@ -10,6 +11,7 @@ export interface PortalFeatureVisibility {
   sampleForms: boolean;
   serviceReports: boolean;
   officialReceipts: boolean;
+  requestProgressTimeline: boolean;
   clientMenuSettings: boolean;
   clientMenuChangePassword: boolean;
   clientMenuAbout: boolean;

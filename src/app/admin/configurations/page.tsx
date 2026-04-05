@@ -157,6 +157,7 @@ function ConfigurationsContent() {
         </CardHeader>
         <CardContent className="space-y-4">
           {([
+            { key: "requestProgressTimeline", label: "Request Progress Timeline" },
             { key: "sampleForms", label: "Sample Forms" },
             { key: "serviceReports", label: "Service Reports" },
             { key: "officialReceipts", label: "Official Receipts" },
