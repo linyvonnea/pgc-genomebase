@@ -3016,63 +3016,65 @@ export default function ClientPortalPage() {
                 )}
               </div>
 
-              {/* ── Project Details Grid ──────────────────── */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <Card className="border border-slate-100 shadow-sm">
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <User className="h-3.5 w-3.5 text-[#166FB5]" />
-                      <span className="text-xs text-slate-500 font-medium">
-                        Project Lead
-                      </span>
-                    </div>
-                    <p className="text-sm font-semibold text-slate-800 truncate">
-                      {projectDetails.lead}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="border border-slate-100 shadow-sm">
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Calendar className="h-3.5 w-3.5 text-purple-600" />
-                      <span className="text-xs text-slate-500 font-medium">
-                        Start Date
-                      </span>
-                    </div>
-                    <p className="text-sm font-semibold text-slate-800">
-                      {formatDate(projectDetails.startDate)}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="border border-slate-100 shadow-sm">
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Building2 className="h-3.5 w-3.5 text-orange-600" />
-                      <span className="text-xs text-slate-500 font-medium">
-                        Sending Institution
-                      </span>
-                    </div>
-                    <p className="text-sm font-semibold text-slate-800 truncate">
-                      {projectDetails.sendingInstitution}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="border border-slate-100 shadow-sm">
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Building2 className="h-3.5 w-3.5 text-green-600" />
-                      <span className="text-xs text-slate-500 font-medium">
-                        Funding Institution
-                      </span>
-                    </div>
-                    <p className="text-sm font-semibold text-slate-800 truncate">
-                      {projectDetails.fundingInstitution}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
+                {/* ── Request Progress Timeline ──────────────────── */}
+                {portalFeatures.requestProgressTimeline && (
+                  <Card className="border border-slate-100 shadow-sm">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-800">
+                            Request Progress
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            Track the current stage of your request from inquiry to delivery.
+                          </p>
+                        </div>
+                        {selectedProjectPid && projectDocuments.get(selectedProjectPid)?.loading && (
+                          <div className="flex items-center gap-2 text-xs text-slate-500">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <span>Loading documents</span>
+                          </div>
+                        )}
+                      </div>
 
-              {/* ── Team Members Section ──────────────────── */}
+                      <div className="mt-4 space-y-3">
+                        {timelineSteps.map((step) => (
+                          <div key={step.key} className="flex items-start gap-3">
+                            <div className="mt-0.5">
+                              {step.state === "complete" ? (
+                                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                              ) : step.state === "current" ? (
+                                <Clock className="h-4 w-4 text-blue-500" />
+                              ) : (
+                                <span className="h-4 w-4 rounded-full border border-slate-300 block" />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-sm font-semibold text-slate-700">
+                                  {step.label}
+                                </p>
+                                {step.state === "current" && (
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                    In progress
+                                  </span>
+                                )}
+                                {step.state === "complete" && (
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                    Completed
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-slate-500 mt-0.5">
+                                {step.detail}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               <div className="space-y-4">
                 {/* Section header */}
                 <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -3308,62 +3310,64 @@ export default function ClientPortalPage() {
                   </CardContent>
 
                   {/* ── Request Progress Timeline ──────────────────── */}
-                  <Card className="border border-slate-100 shadow-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className="text-sm font-semibold text-slate-800">
-                            Request Progress
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            Track the current stage of your request from inquiry to delivery.
-                          </p>
-                        </div>
-                        {selectedProjectPid && projectDocuments.get(selectedProjectPid)?.loading && (
-                          <div className="flex items-center gap-2 text-xs text-slate-500">
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            <span>Loading documents</span>
+                  {portalFeatures.requestProgressTimeline && (
+                    <Card className="border border-slate-100 shadow-sm">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-800">
+                              Request Progress
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Track the current stage of your request from inquiry to delivery.
+                            </p>
                           </div>
-                        )}
-                      </div>
-
-                      <div className="mt-4 space-y-3">
-                        {timelineSteps.map((step) => (
-                          <div key={step.key} className="flex items-start gap-3">
-                            <div className="mt-0.5">
-                              {step.state === "complete" ? (
-                                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                              ) : step.state === "current" ? (
-                                <Clock className="h-4 w-4 text-blue-500" />
-                              ) : (
-                                <span className="h-4 w-4 rounded-full border border-slate-300 block" />
-                              )}
+                          {selectedProjectPid && projectDocuments.get(selectedProjectPid)?.loading && (
+                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              <span>Loading documents</span>
                             </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <p className="text-sm font-semibold text-slate-700">
-                                  {step.label}
-                                </p>
-                                {step.state === "current" && (
-                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
-                                    In progress
-                                  </span>
-                                )}
-                                {step.state === "complete" && (
-                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-                                    Completed
-                                  </span>
+                          )}
+                        </div>
+
+                        <div className="mt-4 space-y-3">
+                          {timelineSteps.map((step) => (
+                            <div key={step.key} className="flex items-start gap-3">
+                              <div className="mt-0.5">
+                                {step.state === "complete" ? (
+                                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                                ) : step.state === "current" ? (
+                                  <Clock className="h-4 w-4 text-blue-500" />
+                                ) : (
+                                  <span className="h-4 w-4 rounded-full border border-slate-300 block" />
                                 )}
                               </div>
-                              <p className="text-xs text-slate-500 mt-0.5">
-                                {step.detail}
-                              </p>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <p className="text-sm font-semibold text-slate-700">
+                                    {step.label}
+                                  </p>
+                                  {step.state === "current" && (
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                      In progress
+                                    </span>
+                                  )}
+                                  {step.state === "complete" && (
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                      Completed
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-slate-500 mt-0.5">
+                                  {step.detail}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </Card>
 
                 {/* Welcome & Status Header */}
