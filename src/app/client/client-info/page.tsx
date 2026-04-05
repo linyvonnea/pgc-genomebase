@@ -4,7 +4,7 @@
 // Left pane (1/4): Projects navigation sidebar
 // Right pane (3/4): Selected project details + team member management
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import {
@@ -1887,6 +1887,65 @@ export default function ClientPortalPage() {
     }
   };
 
+  const loadProjectDocuments = useCallback(async (project: ProjectDetails) => {
+    const pid = project.pid;
+    if (!pid || projectDocuments.has(pid)) return;
+
+    setProjectDocuments((prev) => new Map(prev).set(pid, {
+      quotations: [],
+      chargeSlips: [],
+      sampleForms: [],
+      serviceReports: [],
+      officialReceipts: [],
+      loading: true,
+    }));
+
+    try {
+      const quotations = await getQuotationsByInquiryId(project.inquiryId);
+
+      const chargeSlips = project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
+        ? await getChargeSlipsByProjectId(project.pid)
+        : [];
+
+      const sampleForms = portalFeatures.sampleForms && project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
+        ? await getSampleFormsByProjectId(project.pid)
+        : [];
+
+      let officialReceipts: any[] = [];
+      if (portalFeatures.officialReceipts) {
+        try {
+          if (project.pid && project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")) {
+            const receiptsSnapshot = await getDocs(collection(db, "projects", project.pid, "officialReceipts"));
+            officialReceipts = receiptsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          }
+        } catch (fetchReceiptError) {
+          console.warn(`Failed to load official receipts for project ${project.pid}:`, fetchReceiptError);
+          officialReceipts = [];
+        }
+      }
+
+      setProjectDocuments((prev) => new Map(prev).set(pid, {
+        quotations,
+        chargeSlips,
+        sampleForms,
+        serviceReports: [],
+        officialReceipts,
+        loading: false,
+      }));
+    } catch (error) {
+      console.error("Error fetching project documents:", error);
+      toast.error("Failed to load documents");
+      setProjectDocuments((prev) => new Map(prev).set(pid, {
+        quotations: [],
+        chargeSlips: [],
+        sampleForms: [],
+        serviceReports: [],
+        officialReceipts: [],
+        loading: false,
+      }));
+    }
+  }, [portalFeatures.officialReceipts, portalFeatures.sampleForms, projectDocuments]);
+
   const toggleProjectDocs = async (project: ProjectDetails) => {
     const pid = project.pid;
     const isExpanding = !expandedProjectDocs.has(pid);
@@ -1902,66 +1961,18 @@ export default function ClientPortalPage() {
     });
 
     // Fetch documents if expanding and not already loaded
-    if (isExpanding && !projectDocuments.has(pid)) {
-      setProjectDocuments((prev) => new Map(prev).set(pid, {
-        quotations: [],
-        chargeSlips: [],
-        sampleForms: [],
-        serviceReports: [],
-        officialReceipts: [],
-        loading: true,
-      }));
-
-      try {
-        // Fetch quotations by inquiry ID (since quotations are linked to inquiries)
-        const quotations = await getQuotationsByInquiryId(project.inquiryId);
-        
-        // Fetch charge slips by project ID
-        const chargeSlips = project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
-          ? await getChargeSlipsByProjectId(project.pid)
-          : [];
-
-        // Fetch sample forms by project ID (client-submitted forms)
-        const sampleForms = portalFeatures.sampleForms && project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
-          ? await getSampleFormsByProjectId(project.pid)
-          : [];
-
-        // Fetch official receipts from Firestore subcollection (if any)
-        let officialReceipts: any[] = [];
-        if (portalFeatures.officialReceipts) {
-          try {
-            if (project.pid && project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")) {
-              const receiptsSnapshot = await getDocs(collection(db, "projects", project.pid, "officialReceipts"));
-              officialReceipts = receiptsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-            }
-          } catch (fetchReceiptError) {
-            console.warn(`Failed to load official receipts for project ${project.pid}:`, fetchReceiptError);
-            officialReceipts = [];
-          }
-        }
-
-        setProjectDocuments((prev) => new Map(prev).set(pid, {
-          quotations,
-          chargeSlips,
-          sampleForms,
-          serviceReports: [],
-          officialReceipts,
-          loading: false,
-        }));
-      } catch (error) {
-        console.error("Error fetching project documents:", error);
-        toast.error("Failed to load documents");
-        setProjectDocuments((prev) => new Map(prev).set(pid, {
-          quotations: [],
-          chargeSlips: [],
-          sampleForms: [],
-          serviceReports: [],
-          officialReceipts: [],
-          loading: false,
-        }));
-      }
+    if (isExpanding) {
+      await loadProjectDocuments(project);
     }
   };
+
+  useEffect(() => {
+    if (!projectDetails?.pid) return;
+    if (projectDetails.pid === "DRAFT" || projectDetails.pid.startsWith("PENDING-")) return;
+    if (!projectDocuments.has(projectDetails.pid)) {
+      loadProjectDocuments(projectDetails);
+    }
+  }, [projectDetails?.pid, projectDocuments, loadProjectDocuments]);
 
   // ────────────────────────────────────────────────────────────────
   //  Helpers
@@ -2039,6 +2050,115 @@ export default function ClientPortalPage() {
     Completed: "bg-gray-100 text-gray-700 border-gray-200",
     Cancelled: "bg-red-100 text-red-700 border-red-200",
   };
+
+  const timelineSteps = useMemo(() => {
+    const docs = selectedProjectPid ? projectDocuments.get(selectedProjectPid) : undefined;
+    const hasInquiry = !!currentInquiry;
+    const hasQuotation = inquiryQuotations.length > 0;
+    const isApprovalComplete =
+      approvalStatus === "approved" ||
+      projectDetails?.status === "Ongoing" ||
+      projectDetails?.status === "Completed";
+    const isApprovalPending =
+      approvalStatus === "pending" || projectDetails?.status === "Pending Approval";
+    const hasChargeSlip = (docs?.chargeSlips?.length ?? 0) > 0;
+    const hasSampleForms = (docs?.sampleForms?.length ?? 0) > 0;
+    const hasOfficialReceipts = (docs?.officialReceipts?.length ?? 0) > 0;
+    const hasServiceReports = (docs?.serviceReports?.length ?? 0) > 0;
+
+    const steps = [
+      {
+        key: "inquiry",
+        label: "Inquiry Submission",
+        complete: hasInquiry,
+        detail: currentInquiry?.createdAt ? `Submitted ${formatDate(currentInquiry.createdAt)}` : "Submitted",
+      },
+      {
+        key: "quotation",
+        label: "Quotation",
+        complete: hasQuotation,
+        detail: hasQuotation
+          ? `${inquiryQuotations.length} quotation${inquiryQuotations.length > 1 ? "s" : ""} issued`
+          : "Awaiting quotation",
+      },
+      {
+        key: "approval",
+        label: "Project and Member Approval",
+        complete: isApprovalComplete,
+        inProgress: isApprovalPending,
+        detail: isApprovalComplete
+          ? "Approved"
+          : isApprovalPending
+          ? "Under review"
+          : "Not submitted",
+      },
+      {
+        key: "charge-slip",
+        label: "Charge Slip",
+        complete: hasChargeSlip,
+        detail: hasChargeSlip
+          ? `${docs?.chargeSlips?.length ?? 0} issued`
+          : "Not issued yet",
+      },
+      portalFeatures.sampleForms
+        ? {
+            key: "sample-forms",
+            label: "Sample Forms",
+            complete: hasSampleForms,
+            detail: hasSampleForms
+              ? `${docs?.sampleForms?.length ?? 0} submitted`
+              : "Awaiting sample form submission",
+          }
+        : null,
+      portalFeatures.officialReceipts
+        ? {
+            key: "official-receipt",
+            label: "Official Receipt",
+            complete: hasOfficialReceipts,
+            detail: hasOfficialReceipts
+              ? `${docs?.officialReceipts?.length ?? 0} uploaded`
+              : "Awaiting official receipt",
+          }
+        : null,
+      portalFeatures.serviceReports
+        ? {
+            key: "service-report",
+            label: "Service Report",
+            complete: hasServiceReports,
+            detail: hasServiceReports
+              ? `${docs?.serviceReports?.length ?? 0} released`
+              : "Pending service report",
+          }
+        : null,
+    ].filter(Boolean) as Array<{
+      key: string;
+      label: string;
+      complete: boolean;
+      inProgress?: boolean;
+      detail: string;
+    }>;
+
+    const firstIncompleteIndex = steps.findIndex((step) => !step.complete);
+
+    return steps.map((step, index) => ({
+      ...step,
+      state: step.complete
+        ? "complete"
+        : step.inProgress || index === firstIncompleteIndex
+        ? "current"
+        : "upcoming",
+    }));
+  }, [
+    approvalStatus,
+    currentInquiry,
+    inquiryQuotations,
+    portalFeatures.officialReceipts,
+    portalFeatures.sampleForms,
+    portalFeatures.serviceReports,
+    projectDetails?.status,
+    projectDocuments,
+    selectedProjectPid,
+  ]);
 
   // ────────────────────────────────────────────────────────────────
   //  Early returns (loading / error)
@@ -2895,6 +3015,64 @@ export default function ClientPortalPage() {
                   <FloatingChatWidget inquiryId={currentInquiry.id} role="client" />
                 )}
               </div>
+
+              {/* ── Request Progress Timeline ──────────────────── */}
+              <Card className="border border-slate-100 shadow-sm">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">
+                        Request Progress
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Track the current stage of your request from inquiry to delivery.
+                      </p>
+                    </div>
+                    {selectedProjectPid && projectDocuments.get(selectedProjectPid)?.loading && (
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <span>Loading documents</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    {timelineSteps.map((step) => (
+                      <div key={step.key} className="flex items-start gap-3">
+                        <div className="mt-0.5">
+                          {step.state === "complete" ? (
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          ) : step.state === "current" ? (
+                            <Clock className="h-4 w-4 text-blue-500" />
+                          ) : (
+                            <span className="h-4 w-4 rounded-full border border-slate-300 block" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-semibold text-slate-700">
+                              {step.label}
+                            </p>
+                            {step.state === "current" && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                In progress
+                              </span>
+                            )}
+                            {step.state === "complete" && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                Completed
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            {step.detail}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* ── Project Details Grid ──────────────────── */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
