@@ -636,7 +636,26 @@ export function DataTable<TData extends Project, TValue>({
                   <TableRow
                     key={row.id}
                     className="hover:bg-muted/50 transition-colors cursor-pointer"
-                    onClick={() => onRowClick?.(row.original)}
+                    onClick={(event) => {
+                      const target = event.target as HTMLElement;
+                      if (
+                        target.closest("button") ||
+                        target.closest('[role="button"]') ||
+                        target.closest("a") ||
+                        target.closest("input") ||
+                        target.closest("textarea") ||
+                        target.closest("select") ||
+                        target.closest("label") ||
+                        target.closest('[role="textbox"]') ||
+                        target.closest('[role="combobox"]') ||
+                        target.closest('[role="dialog"]') ||
+                        target.closest('[contenteditable="true"]') ||
+                        target.closest('[data-stop-row-click="true"]')
+                      ) {
+                        return;
+                      }
+                      onRowClick?.(row.original);
+                    }}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
