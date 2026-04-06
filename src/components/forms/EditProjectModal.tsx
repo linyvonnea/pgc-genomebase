@@ -290,6 +290,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
           size="sm"
           onClick={(event) => event.stopPropagation()}
           onPointerDown={(event) => event.stopPropagation()}
+          data-stop-row-click="true"
         >
           <Pencil className="h-4 w-4" />
         </Button>
