@@ -191,31 +191,41 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
           {receipts.map((receipt) => (
             <div
               key={receipt.id}
-              className="group flex items-center gap-2 rounded-lg bg-white border border-slate-100 shadow-sm px-2.5 py-1.5 hover:border-slate-200 transition-colors"
+              className="group flex items-center gap-2 rounded-lg bg-white border border-slate-100 shadow-sm px-2.5 py-1.5 hover:border-blue-200 hover:bg-blue-50/10 transition-colors"
             >
               <FileText className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-semibold text-slate-700 truncate leading-tight">
-                  {receipt.fileName || receipt.id}
-                </p>
-                <p className="text-[9px] text-slate-400 leading-tight mt-0.5">
-                  {[formatFileSize(receipt.size), formatDate(receipt.uploadedAt)]
-                    .filter(Boolean)
-                    .join(" \u00b7 ")}
-                </p>
-              </div>
-              <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                {receipt.downloadURL && (
+                {receipt.downloadURL ? (
                   <a
                     href={receipt.downloadURL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-1 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                    title="Download"
+                    className="block hover:underline"
+                    title="View receipt"
                   >
-                    <Download className="h-3 w-3" />
+                    <p className="text-[11px] font-semibold text-slate-700 truncate leading-tight">
+                      {receipt.fileName || receipt.id}
+                    </p>
+                    <p className="text-[9px] text-slate-400 leading-tight mt-0.5">
+                      {[formatFileSize(receipt.size), formatDate(receipt.uploadedAt)]
+                        .filter(Boolean)
+                        .join(" \u00b7 ")}
+                    </p>
                   </a>
+                ) : (
+                  <div>
+                    <p className="text-[11px] font-semibold text-slate-700 truncate leading-tight">
+                      {receipt.fileName || receipt.id}
+                    </p>
+                    <p className="text-[9px] text-slate-400 leading-tight mt-0.5">
+                      {[formatFileSize(receipt.size), formatDate(receipt.uploadedAt)]
+                        .filter(Boolean)
+                        .join(" \u00b7 ")}
+                    </p>
+                  </div>
                 )}
+              </div>
+              <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   type="button"
                   disabled={deletingId === receipt.id}
