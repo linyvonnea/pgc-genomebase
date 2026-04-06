@@ -168,7 +168,18 @@ export default function FAQPage() {
   })).filter(section => section.questions.length > 0);
 
   return (
-    <div className="bg-slate-50 min-h-screen pb-20">
+    <div className="bg-slate-50 min-h-screen pb-20 relative">
+      {/* Back Home Button */}
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 md:left-8 md:translate-x-0 z-20">
+        <Link 
+          href="/" 
+          className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full border border-white/20 text-white text-sm font-semibold transition-all backdrop-blur-sm group"
+        >
+          <Home className="w-4 h-4 transition-transform group-hover:scale-110" />
+          Back Home
+        </Link>
+      </div>
+
       {/* Header Section */}
       <div className="bg-blue-600 text-white py-12 mb-8 shadow-inner relative overflow-hidden">
         {/* Background Decoration */}
@@ -176,11 +187,7 @@ export default function FAQPage() {
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-indigo-500 rounded-full opacity-20 blur-3xl"></div>
         
         <div className="container mx-auto px-4 max-w-5xl text-center relative z-10">
-          <div className="flex flex-col items-center justify-center mb-6">
-            <Link href="/" className="mb-6 inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full border border-white/20 text-white text-sm font-medium transition-all group backdrop-blur-sm">
-              <Home className="w-4 h-4 transition-transform group-hover:scale-110" />
-              Back to Home
-            </Link>
+          <div className="flex flex-col items-center justify-center mb-6 pt-8 md:pt-0">
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
               Frequently Asked Questions
             </h1>

@@ -18,7 +18,8 @@ import {
   Mail,
   ArrowLeft,
   FileSearch,
-  HelpCircle
+  HelpCircle,
+  Home
 } from "lucide-react";
 
 export default function InquirePage() {
@@ -53,6 +54,17 @@ export default function InquirePage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Back Home Button */}
+      <div className="absolute top-8 left-1/2 -translate-x-1/2 md:left-8 md:translate-x-0 z-20">
+        <Link 
+          href="/" 
+          className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 hover:bg-white rounded-full border border-slate-200 text-slate-600 text-sm font-semibold transition-all shadow-sm hover:shadow group"
+        >
+          <Home className="w-4 h-4 transition-transform group-hover:scale-110" />
+          Back Home
+        </Link>
+      </div>
+
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
         <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-[#F69122]/10 to-[#912ABD]/10 rounded-full blur-3xl motion-safe:animate-pulse"></div>
@@ -60,14 +72,6 @@ export default function InquirePage() {
       </div>
 
       <div className="w-full max-w-md relative z-10">
-        {/* Back to Home Link */}
-        <div className="mb-6">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Home
-          </Link>
-        </div>
-
         {/* Inquire Card */}
         <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center space-y-6 pb-6">
