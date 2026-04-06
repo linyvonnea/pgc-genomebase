@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getAllAdmins } from "@/services/adminService";
+import { getAllAdmins, toggleAdminStatus } from "@/services/adminService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import useAuth from "@/hooks/useAuth";
@@ -18,10 +18,21 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus, Pencil, Search, Shield } from "lucide-react";
+import { Plus, Pencil, Search, Shield, UserX, UserCheck, Loader2 } from "lucide-react";
 import AdminModal from "./AdminModal";
 import { Admin } from "@/services/adminService";
 import { PermissionGuard } from "@/components/PermissionGuard";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function AdminsManagementPage() {
   return (
@@ -35,6 +46,14 @@ function AdminsManagementContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<Admin | null>(null);
+  const [statusDialog, setStatusDialog] = useState<{
+    isOpen: boolean;
+    admin: Admin | null;
+  }>({
+    isOpen: false,
+    admin: null,
+  });
+  const [isTogglingStatus, setIsTogglingStatus] = useState(false);
   const queryClient = useQueryClient();
   const { adminInfo } = useAuth();
   const { canCreate, canEdit } = usePermissions(adminInfo?.role);
@@ -43,6 +62,32 @@ function AdminsManagementContent() {
     queryKey: ["admins"],
     queryFn: getAllAdmins,
   });
+
+  const handleToggleStatus = async () => {
+    if (!statusDialog.admin) return;
+
+    setIsTogglingStatus(true);
+    try {
+      await toggleAdminStatus(
+        statusDialog.admin.email,
+        statusDialog.admin.status || "active"
+      );
+      toast.success(
+        `Admin ${
+          statusDialog.admin.status === "deactivated"
+            ? "activated"
+            : "deactivated"
+        } successfully`
+      );
+      queryClient.invalidateQueries({ queryKey: ["admins"] });
+    } catch (error) {
+      console.error("Failed to toggle admin status:", error);
+      toast.error("Failed to update admin status");
+    } finally {
+      setIsTogglingStatus(false);
+      setStatusDialog({ isOpen: false, admin: null });
+    }
+  };
 
   const filteredAdmins = admins.filter((admin) => {
     const matchesSearch =
@@ -149,7 +194,7 @@ function AdminsManagementContent() {
                 </TableRow>
               ) : (
                 filteredAdmins.map((admin) => (
-                  <TableRow key={admin.email}>
+                  <TableRow key={admin.email} className={admin.status === "deactivated" ? "opacity-60 bg-slate-50" : ""}>
                     <TableCell>
                       <Avatar className="h-9 w-9">
                         <AvatarImage src={admin.photoURL} />
@@ -158,7 +203,16 @@ function AdminsManagementContent() {
                         </AvatarFallback>
                       </Avatar>
                     </TableCell>
-                    <TableCell className="font-medium">{admin.name}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {admin.name}
+                        {admin.status === "deactivated" && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-red-200 text-red-600 bg-red-50">
+                            Deactivated
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-sm text-muted-foreground">{admin.email}</TableCell>
                     <TableCell className="text-sm">{admin.position}</TableCell>
                     <TableCell>
@@ -184,15 +238,38 @@ function AdminsManagementContent() {
                       {formatDate(admin.lastLogin)}
                     </TableCell>
                     <TableCell className="text-right">
-                      {canEdit("usersPermissions") && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(admin)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      )}
+                      <div className="flex items-center justify-end gap-1">
+                        {canEdit("usersPermissions") && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(admin)}
+                            disabled={admin.status === "deactivated"}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {canEdit("usersPermissions") && adminInfo?.email !== admin.email && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={
+                              admin.status === "deactivated"
+                                ? "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                                : "text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                            }
+                            onClick={() =>
+                              setStatusDialog({ isOpen: true, admin })
+                            }
+                          >
+                            {admin.status === "deactivated" ? (
+                              <UserCheck className="h-4 w-4" />
+                            ) : (
+                              <UserX className="h-4 w-4" />
+                            )}
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -210,6 +287,57 @@ function AdminsManagementContent() {
           onSuccess={handleSuccess}
         />
       )}
+
+      {/* Status Confirmation Dialog */}
+      <AlertDialog
+        open={statusDialog.isOpen}
+        onOpenChange={(open) =>
+          !open && setStatusDialog({ isOpen: false, admin: null })
+        }
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {statusDialog.admin?.status === "deactivated"
+                ? "Reactivate User?"
+                : "Deactivate User?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {statusDialog.admin?.status === "deactivated"
+                ? `This will restore access for ${statusDialog.admin?.name}. They will be able to log in and perform actions according to their role.`
+                : `This will suspend access for ${statusDialog.admin?.name}. They will not be able to log in or access the admin panel until reactivated.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isTogglingStatus}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleToggleStatus();
+              }}
+              disabled={isTogglingStatus}
+              className={
+                statusDialog.admin?.status === "deactivated"
+                  ? "bg-emerald-600 hover:bg-emerald-700"
+                  : "bg-amber-600 hover:bg-amber-700"
+              }
+            >
+              {isTogglingStatus ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : statusDialog.admin?.status === "deactivated" ? (
+                "Reactivate"
+              ) : (
+                "Deactivate"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
