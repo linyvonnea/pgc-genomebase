@@ -936,4 +936,13 @@ export async function requestQuotationRevision(
   }
 }
 
+/**
+ * Soft-delete a message by marking it as unsent.
+ * Clears the content and sets unsent=true so UIs can show a tombstone.
+ */
+export async function unsendMessage(messageId: string): Promise<void> {
+  const msgRef = doc(db, MESSAGES_COLLECTION, messageId);
+  await updateDoc(msgRef, { unsent: true, content: "" });
+}
+
 

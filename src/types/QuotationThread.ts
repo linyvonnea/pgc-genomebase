@@ -106,6 +106,8 @@ export interface ThreadMessage {
   reactions?: Record<string, string[]>;
   readAt?: Timestamp;
   readBy?: string;
+  /** Soft-delete: set to true when sender unsends a message. Content is blanked. */
+  unsent?: boolean;
   
   // Timestamps
   createdAt: Timestamp;
