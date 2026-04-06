@@ -575,7 +575,7 @@ export default function ChatBox({
                 onKeyDown={handleKeyDown}
                 minRows={1}
                 maxRows={10}
-                className="flex-1 w-full rounded-xl pl-4 pr-10 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto text-sm transition-all"
+                className="flex-1 w-full rounded-xl pl-4 pr-10 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden text-sm transition-all"
               />
               <div className="absolute right-2 bottom-2.5">
                 <EmojiPicker onEmojiSelect={(emoji) => setNewMessage((prev) => prev + emoji)} />
