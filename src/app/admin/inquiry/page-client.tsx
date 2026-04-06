@@ -16,6 +16,7 @@ import {
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { MessageCircle } from "lucide-react";
+import { InquiryDetailSheet } from "@/components/admin/InquiryDetailSheet";
 
 interface InquiryPageClientProps {
   data: Inquiry[];
@@ -28,6 +29,7 @@ export function InquiryPageClient({
   const router = useRouter();
   const { canCreate } = usePermissions(adminInfo?.role);
   const [inquiries, setInquiries] = useState<Inquiry[]>(initialData);
+  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
   const [unreadInquiryIds, setUnreadInquiryIds] = useState<Set<string>>(new Set());
   const [statusCatalog, setStatusCatalog] = useState<CatalogItem[]>([]);
   // Track previous unread IDs to detect newly arriving messages
@@ -121,8 +123,17 @@ export function InquiryPageClient({
           data={inquiries}
           unreadInquiryIds={unreadInquiryIds}
           statusCatalog={statusCatalog}
+          onRowClick={(inquiry) => setSelectedInquiry(inquiry as Inquiry)}
         />
       </div>
+
+      {/* Inquiry Detail Side Panel */}
+      <InquiryDetailSheet
+        inquiry={selectedInquiry}
+        open={!!selectedInquiry}
+        onClose={() => setSelectedInquiry(null)}
+        onInquiryUpdated={() => setSelectedInquiry(null)}
+      />
 
       {/* FloatingChatWidget is rendered globally in admin/layout.tsx via GlobalChatWidget */}
     </div>
