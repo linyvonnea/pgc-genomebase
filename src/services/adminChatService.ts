@@ -270,8 +270,8 @@ export async function unsendAdminMessage(messageId: string): Promise<void> {
 
     // Delete attachments from storage if they exist
     if (data.attachments && data.attachments.length > 0) {
-      for (const url of data.attachments) {
-        const path = extractStoragePath(url);
+      for (const attachment of data.attachments) {
+        const path = extractStoragePath(attachment.url);
         if (path) {
           try {
             const storageRef = ref(storage, path);

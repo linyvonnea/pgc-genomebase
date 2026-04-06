@@ -965,8 +965,8 @@ export async function unsendMessage(messageId: string): Promise<void> {
 
     // Remove any actual files from storage
     if (data.attachments && data.attachments.length > 0) {
-      for (const url of data.attachments) {
-        const path = extractStoragePath(url);
+      for (const attachment of data.attachments) {
+        const path = extractStoragePath(attachment.url);
         if (path) {
           try {
             const storageRef = ref(storage, path);
