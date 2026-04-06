@@ -70,7 +70,7 @@ function getFileIcon(type: string) {
 
 async function downloadAttachment(url: string, name: string) {
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, { mode: "cors" });
     const blob = await response.blob();
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -79,8 +79,10 @@ async function downloadAttachment(url: string, name: string) {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(objectUrl);
+    // Delay revoke so the browser has time to start the download
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
   } catch {
+    // Fallback: open in new tab which lets the user save manually
     window.open(url, "_blank", "noopener,noreferrer");
   }
 }

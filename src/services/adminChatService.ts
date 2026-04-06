@@ -190,6 +190,7 @@ export async function sendAdminMessage(
   senderId: string,
   senderName: string,
   content: string,
+  attachments?: { name: string; url: string; type: string }[],
 ): Promise<void> {
   // 1. Add the message document (outside the transaction — addDoc is fine here
   //    because the read-modify-write race is on the *channel* document, not
@@ -199,6 +200,7 @@ export async function sendAdminMessage(
     senderId,
     senderName,
     content: content.trim(),
+    ...(attachments && attachments.length > 0 ? { attachments } : {}),
     createdAt: serverTimestamp(),
     readBy: [senderId], // sender has already "read" their own message
   });
@@ -238,6 +240,15 @@ export async function sendAdminMessage(
  * unread counter on the channel document.
  * Uses batched writes (500-op Firestore limit respected).
  */
+/**
+ * Soft-delete a message by marking it as unsent.
+ * Sets unsent=true and clears content so the UI can show a tombstone.
+ */
+export async function unsendAdminMessage(messageId: string): Promise<void> {
+  const msgRef = doc(db, MESSAGES_COLLECTION, messageId);
+  await updateDoc(msgRef, { unsent: true, content: "" });
+}
+
 export async function markAdminMessagesRead(
   channelId: string,
   adminEmail: string,

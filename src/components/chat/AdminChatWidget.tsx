@@ -16,7 +16,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { X, ChevronLeft, Send, Users, Check, CheckCheck, MessageSquare, Search } from "lucide-react";
+import { X, ChevronLeft, Send, Users, Check, CheckCheck, MessageSquare, Search, Paperclip, FileText, FileSpreadsheet, File, Loader2, Download, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -37,12 +37,113 @@ import {
   subscribeToAdminMessages,
   markAdminMessagesRead,
   emailToKey,
+  unsendAdminMessage,
 } from "@/services/adminChatService";
+import { uploadFile } from "@/lib/fileUpload";
 import { AdminChannel, AdminMessage } from "@/types/AdminChat";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+const CHAT_MAX_SIZE_MB = 10;
+
+const ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "text/plain",
+];
+
+const ACCEPT_ATTR = ["image/*", ...ALLOWED_MIME_TYPES].join(",");
+
+function isImageType(type: string) {
+  return type.startsWith("image/");
+}
+
+function getFileIcon(type: string) {
+  if (
+    type === "application/vnd.ms-excel" ||
+    type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  )
+    return FileSpreadsheet;
+  if (type === "text/plain") return File;
+  return FileText;
+}
+
+async function downloadAttachment(url: string, name: string) {
+  try {
+    const response = await fetch(url, { mode: "cors" });
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  } catch {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+}
+
+function AdminAttachmentBubble({
+  attachment,
+  isMe,
+}: {
+  attachment: { name: string; url: string; type: string };
+  isMe: boolean;
+}) {
+  const FileIcon = getFileIcon(attachment.type);
+  if (isImageType(attachment.type)) {
+    return (
+      <div className="relative mt-1 group/img">
+        <a
+          href={attachment.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block rounded-xl overflow-hidden border border-white/20 hover:opacity-90 transition-opacity"
+          title={`View ${attachment.name}`}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={attachment.url}
+            alt={attachment.name}
+            className="max-w-[180px] max-h-[140px] object-cover w-full"
+          />
+        </a>
+        <button
+          onClick={() => downloadAttachment(attachment.url, attachment.name)}
+          className="absolute top-1 right-1 opacity-0 group-hover/img:opacity-100 transition-opacity bg-black/40 hover:bg-black/60 rounded-full p-1"
+          title="Download"
+        >
+          <Download className="h-3 w-3 text-white" />
+        </button>
+      </div>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => downloadAttachment(attachment.url, attachment.name)}
+      className={`flex items-center gap-1.5 mt-1 rounded-xl px-2.5 py-1.5 border transition-colors cursor-pointer text-[12px] ${
+        isMe
+          ? "bg-white/15 border-white/20 hover:bg-white/25 text-white"
+          : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
+      }`}
+      title={`Download ${attachment.name}`}
+    >
+      <FileIcon className="h-4 w-4 flex-shrink-0" />
+      <span className="truncate max-w-[140px] font-medium">{attachment.name}</span>
+      <Download className="h-3 w-3 flex-shrink-0 ml-auto opacity-70" />
+    </button>
+  );
+}
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -169,7 +270,11 @@ export default function AdminChatWidget() {
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [presenceMap, setPresenceMap] = useState<Record<string, UserPresence>>({});
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [unsendingId, setUnsendingId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ------------------------------------------------------------------
   // Presence Subscriptions
@@ -309,16 +414,64 @@ export default function AdminChatWidget() {
     setNewMessage("");
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > CHAT_MAX_SIZE_MB * 1024 * 1024) {
+      console.error(`File too large. Maximum size is ${CHAT_MAX_SIZE_MB}MB.`);
+      e.target.value = "";
+      return;
+    }
+    if (!file.type.startsWith("image/") && !ALLOWED_MIME_TYPES.includes(file.type)) {
+      console.error("Unsupported file type.");
+      e.target.value = "";
+      return;
+    }
+    setPendingFile(file);
+    e.target.value = "";
+  };
+
+  const handleUnsend = async (messageId: string) => {
+    setUnsendingId(messageId);
+    try {
+      await unsendAdminMessage(messageId);
+    } catch (err) {
+      console.error("Failed to unsend:", err);
+    } finally {
+      setUnsendingId(null);
+    }
+  };
+
   const handleSend = async () => {
     const content = newMessage.trim();
-    if (!content || !activeChannelId || !myEmail || !adminInfo || sending) return;
+    const hasFile = !!pendingFile;
+    if ((!content && !hasFile) || !activeChannelId || !myEmail || !adminInfo || sending) return;
     setSending(true);
     setNewMessage("");
+    const fileToSend = pendingFile;
+    setPendingFile(null);
     try {
-      await sendAdminMessage(activeChannelId, myEmail, adminInfo.name, content);
+      let attachments: { name: string; url: string; type: string }[] | undefined;
+      if (fileToSend) {
+        setUploading(true);
+        try {
+          const url = await uploadFile(fileToSend, `admin-chat-attachments/${activeChannelId}`);
+          attachments = [{ name: fileToSend.name, url, type: fileToSend.type }];
+        } finally {
+          setUploading(false);
+        }
+      }
+      await sendAdminMessage(
+        activeChannelId,
+        myEmail,
+        adminInfo.name,
+        content || (fileToSend ? fileToSend.name : ""),
+        attachments,
+      );
     } catch (err) {
       console.error("AdminChat send error:", err);
-      setNewMessage(content); // restore on failure
+      setNewMessage(content);
+      if (fileToSend) setPendingFile(fileToSend);
     } finally {
       setSending(false);
     }
@@ -426,10 +579,24 @@ export default function AdminChatWidget() {
                         Array.isArray(msg.readBy) &&
                         msg.readBy.some((e) => e !== myEmail);
 
+                      // Unsent tombstone
+                      if (msg.unsent) {
+                        return (
+                          <div
+                            key={msg.id ?? i}
+                            className={`flex w-full ${isMe ? "justify-end" : "justify-start"}`}
+                          >
+                            <p className="text-xs italic text-slate-400 px-3 py-1.5 rounded-2xl border border-dashed border-slate-200 bg-slate-50">
+                              {isMe ? "You unsent a message" : "Message was unsent"}
+                            </p>
+                          </div>
+                        );
+                      }
+
                       return (
                         <div
                           key={msg.id ?? i}
-                          className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}
+                          className={`flex flex-col group ${isMe ? "items-end" : "items-start"}`}
                         >
                           <div
                             className={`max-w-[82%] px-3 py-2 rounded-2xl text-[13px] leading-relaxed shadow-sm ${
@@ -447,9 +614,19 @@ export default function AdminChatWidget() {
                                 </Avatar>
                               </div>
                             )}
-                            <p className="whitespace-pre-wrap break-words">
-                              {msg.content}
-                            </p>
+                            {msg.content && (
+                              <p className="whitespace-pre-wrap break-words">
+                                {msg.content}
+                              </p>
+                            )}
+                            {/* Attachments */}
+                            {msg.attachments && msg.attachments.length > 0 && (
+                              <div className="space-y-1 mt-1">
+                                {msg.attachments.map((att, attIdx) => (
+                                  <AdminAttachmentBubble key={attIdx} attachment={att} isMe={isMe} />
+                                ))}
+                              </div>
+                            )}
                             {/* Seen indicator for sent messages */}
                             {isMe && (
                               <div className="flex justify-end mt-1 -mb-0.5">
@@ -466,6 +643,19 @@ export default function AdminChatWidget() {
                               </div>
                             )}
                           </div>
+                          {/* Unsend button */}
+                          {isMe && (
+                            <button
+                              type="button"
+                              onClick={() => msg.id && handleUnsend(msg.id)}
+                              disabled={unsendingId === msg.id}
+                              className="invisible group-hover:visible flex items-center gap-1 text-[10px] text-slate-400 hover:text-red-500 transition-colors mt-0.5 cursor-pointer disabled:opacity-50"
+                              title="Unsend message"
+                            >
+                              <Trash2 className="w-2.5 h-2.5" />
+                              {unsendingId === msg.id ? "Unsending…" : "Unsend"}
+                            </button>
+                          )}
                           <span className="text-[10px] text-slate-400 mt-0.5 px-1">
                             {formatMsgTime(msg.createdAt)}
                           </span>
@@ -477,6 +667,40 @@ export default function AdminChatWidget() {
 
                 {/* Input */}
                 <div className="p-3 border-t bg-white flex-shrink-0">
+                  {/* Pending file preview */}
+                  {pendingFile && (
+                    <div className="flex items-center gap-2 px-2 py-1.5 mb-2 rounded-xl bg-blue-50 border border-blue-100">
+                      {pendingFile.type.startsWith("image/") ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={URL.createObjectURL(pendingFile)}
+                          alt={pendingFile.name}
+                          className="h-8 w-8 rounded object-cover border border-blue-200 flex-shrink-0"
+                        />
+                      ) : (
+                        (() => { const PIcon = getFileIcon(pendingFile.type); return <PIcon className="h-7 w-7 text-blue-500 flex-shrink-0" />; })()
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-slate-700 truncate">{pendingFile.name}</p>
+                        <p className="text-[10px] text-slate-500">{(pendingFile.size / 1024).toFixed(1)} KB</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setPendingFile(null)}
+                        className="text-slate-400 hover:text-slate-600 flex-shrink-0"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )}
+                  {/* Hidden file input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={ACCEPT_ATTR}
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
@@ -484,6 +708,16 @@ export default function AdminChatWidget() {
                     }}
                     className="flex gap-2 items-end"
                   >
+                    {/* Paperclip button */}
+                    <button
+                      type="button"
+                      disabled={uploading}
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex-shrink-0 h-9 w-7 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors mb-0.5"
+                      title="Attach file (images, PDF, Word, Excel, PowerPoint)"
+                    >
+                      <Paperclip className="w-4 h-4" />
+                    </button>
                     <div className="flex-1 relative flex items-end min-w-0">
                       <TextareaAutosize
                         value={newMessage}
@@ -501,10 +735,14 @@ export default function AdminChatWidget() {
                     <Button
                       type="submit"
                       size="icon"
-                      disabled={!newMessage.trim() || sending}
+                      disabled={(!newMessage.trim() && !pendingFile) || sending || uploading}
                       className="rounded-full bg-[#166FB5] hover:bg-blue-700 h-9 w-9 flex-shrink-0 mb-0.5"
                     >
-                      <Send className="w-4 h-4 ml-0.5" />
+                      {uploading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4 ml-0.5" />
+                      )}
                     </Button>
                   </form>
                 </div>
