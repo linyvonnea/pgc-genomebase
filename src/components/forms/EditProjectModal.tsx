@@ -64,6 +64,9 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
   const [inquiryOptions, setInquiryOptions] = useState<Inquiry[]>([]);
   const [inquirySearch, setInquirySearch] = useState("");
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [officialReceipts, setOfficialReceipts] = useState<Array<{ id: string; fileName?: string; contentType?: string; size?: number; downloadURL?: string; uploadedBy?: string; uploadedAt?: Timestamp }>>([]);
+  const [receiptsLoading, setReceiptsLoading] = useState(false);
+  const [receiptsError, setReceiptsError] = useState("");
 
   useEffect(() => {
     getInquiries().then((inquiries) => {
