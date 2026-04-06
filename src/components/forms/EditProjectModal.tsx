@@ -285,7 +285,12 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>

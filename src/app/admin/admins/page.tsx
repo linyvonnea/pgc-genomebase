@@ -253,11 +253,13 @@ function AdminsManagementContent() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className={
+                            title={admin.status === "deactivated" ? "Reactivate user" : "Deactivate user"}
+                            aria-label={admin.status === "deactivated" ? "Reactivate user" : "Deactivate user"}
+                            className={`${
                               admin.status === "deactivated"
                                 ? "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
                                 : "text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-                            }
+                            } transition-transform duration-150 hover:scale-105`}
                             onClick={() =>
                               setStatusDialog({ isOpen: true, admin })
                             }
