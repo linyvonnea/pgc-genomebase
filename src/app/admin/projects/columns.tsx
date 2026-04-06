@@ -39,7 +39,7 @@ function ActionCell({ row, meta }: { row: Row<Project>; meta: { onSuccess?: () =
   }
 
   return (
-    <div className="flex items-center justify-end px-1">
+    <div className="flex items-center justify-end px-1" onClick={(event) => event.stopPropagation()}>
       <EditProjectModal project={project} onSuccess={meta?.onSuccess} />
     </div>
   );
