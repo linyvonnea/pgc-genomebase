@@ -28,7 +28,7 @@ import { Separator } from "@/components/ui/separator";
 import { Pencil, Trash2, FileEdit, FileText, Banknote, Briefcase, Save } from "lucide-react";
 import { Project } from "@/types/Project";
 import { db } from "@/lib/firebase";
-import { deleteDoc, doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDoc, getDocs, orderBy, query, setDoc, Timestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -64,6 +64,9 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
   const [inquiryOptions, setInquiryOptions] = useState<Inquiry[]>([]);
   const [inquirySearch, setInquirySearch] = useState("");
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [officialReceipts, setOfficialReceipts] = useState<Array<{ id: string; fileName?: string; contentType?: string; size?: number; downloadURL?: string; uploadedBy?: string; uploadedAt?: Timestamp }>>([]);
+  const [receiptsLoading, setReceiptsLoading] = useState(false);
+  const [receiptsError, setReceiptsError] = useState("");
 
   useEffect(() => {
     getInquiries().then((inquiries) => {
@@ -159,6 +162,37 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
     }
   }, [isOpen, project.pid, form]); // Added project.pid to update when project changes
 
+  useEffect(() => {
+    const loadOfficialReceipts = async () => {
+      if (!isOpen || !project.pid) return;
+
+      setReceiptsLoading(true);
+      setReceiptsError("");
+
+      try {
+        const receiptsRef = collection(db, "projects", project.pid, "officialReceipts");
+        const receiptsQuery = query(receiptsRef, orderBy("uploadedAt", "desc"));
+        const snapshot = await getDocs(receiptsQuery);
+        const results = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...(docSnap.data() as any) }));
+        setOfficialReceipts(results);
+      } catch (error) {
+        console.error("Failed to load official receipts:", error);
+        setReceiptsError("Unable to load official receipts.");
+        setOfficialReceipts([]);
+      } finally {
+        setReceiptsLoading(false);
+      }
+    };
+
+    loadOfficialReceipts();
+  }, [isOpen, project.pid]);
+
+  const formatReceiptTimestamp = (value?: Timestamp) => {
+    if (!value) return "—";
+    const date = typeof value.toDate === "function" ? value.toDate() : new Date(value as any);
+    if (isNaN(date.getTime())) return "—";
+    return date.toLocaleString();
+  };
 
   const onSubmit = async (data: AdminProjectData) => {
     setIsLoading(true);
@@ -736,6 +770,55 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
               )}
             />
 
+            {/* Documents Section */}
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-emerald-50 rounded-md">
+                  <FileText className="h-4 w-4 text-emerald-600" />
+                </div>
+                <h3 className="text-sm font-semibold text-gray-700">Documents</h3>
+              </div>
+              <Separator />
+            </div>
+
+            <div className="space-y-2 rounded-md border border-slate-200 bg-slate-50/60 p-3">
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-semibold text-slate-700">Official Receipts</div>
+                <div className="text-[10px] text-slate-500">{officialReceipts.length} total</div>
+              </div>
+              {receiptsLoading ? (
+                <div className="text-xs text-slate-500">Loading receipts...</div>
+              ) : receiptsError ? (
+                <div className="text-xs text-rose-600">{receiptsError}</div>
+              ) : officialReceipts.length === 0 ? (
+                <div className="text-xs text-slate-400">No official receipts uploaded yet.</div>
+              ) : (
+                <div className="space-y-2">
+                  {officialReceipts.map((receipt) => (
+                    <div key={receipt.id} className="flex items-start justify-between gap-3 rounded-md bg-white px-3 py-2 border border-slate-200">
+                      <div className="min-w-0">
+                        <div className="text-xs font-semibold text-slate-700 truncate">
+                          {receipt.fileName || receipt.id}
+                        </div>
+                        <div className="text-[10px] text-slate-500">
+                          {receipt.uploadedBy || "Unknown uploader"} • {formatReceiptTimestamp(receipt.uploadedAt)}
+                        </div>
+                      </div>
+                      {receipt.downloadURL && (
+                        <a
+                          href={receipt.downloadURL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-semibold text-blue-600 hover:underline shrink-0"
+                        >
+                          View
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <Separator className="my-4" />
 
             <div className="flex justify-between items-center pt-2">
