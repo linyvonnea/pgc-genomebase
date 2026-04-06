@@ -2833,23 +2833,7 @@ export default function ClientPortalPage() {
                                   <span className="text-sm font-semibold text-slate-700">
                                     Official Receipts
                                   </span>
-                                  <span className="text-[10px] text-slate-500">({docs?.officialReceipts?.length || 0})</span>
                                 </div>
-                                {(docs?.officialReceipts?.length || 0) > 0 ? (
-                                  <div className="space-y-1 ml-5">
-                                    {docs?.officialReceipts.map((item: any) => (
-                                      <div
-                                        key={item.id}
-                                        className="block text-xs text-slate-600 truncate"
-                                      >
-                                        • {item.name || item.id}
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <p className="text-xs text-slate-400 ml-5">No official receipts yet</p>
-                                )}
-                                {/* Upload UI for Official Receipts (client) */}
                                 <UploadReceipt projectId={project.pid} />
                               </div>
                             )}
