@@ -14,6 +14,8 @@ export interface Admin {
   photoURL?: string;
   createdAt?: Date | any;
   lastLogin?: Date | any;
+  /** Status of the admin user */
+  status?: "active" | "deactivated";
 }
 
 export const ADMIN_ROLES: { value: AdminRole; label: string; description: string }[] = [
@@ -61,6 +63,7 @@ export async function getAllAdmins(): Promise<Admin[]> {
       photoURL: data.photoURL || undefined,
       createdAt: data.createdAt,
       lastLogin: data.lastLogin,
+      status: data.status || "active",
     } as Admin;
   });
   
@@ -84,6 +87,7 @@ export async function getAdminByEmail(email: string): Promise<Admin | null> {
     photoURL: data.photoURL,
     createdAt: data.createdAt,
     lastLogin: data.lastLogin,
+    status: data.status || "active",
   };
 }
 
@@ -96,7 +100,14 @@ export async function saveAdmin(admin: Admin): Promise<void> {
     photoURL: admin.photoURL || null,
     createdAt: admin.createdAt || new Date(),
     lastLogin: admin.lastLogin || null,
+    status: admin.status || "active",
   }, { merge: true });
+}
+
+export async function toggleAdminStatus(email: string, currentStatus: "active" | "deactivated"): Promise<void> {
+  const adminRef = doc(db, "admins", email);
+  const newStatus = currentStatus === "active" ? "deactivated" : "active";
+  await setDoc(adminRef, { status: newStatus }, { merge: true });
 }
 
 export async function deleteAdmin(email: string): Promise<void> {
