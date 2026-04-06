@@ -7,6 +7,7 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import useAuth from "@/hooks/useAuth";
+import { logActivity } from "@/services/activityLogService";
 
 export default function UploadReceipt({ projectId }: { projectId: string }) {
   const { user } = useAuth();
@@ -44,6 +45,17 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
         downloadURL,
         uploadedBy: user?.email || "anonymous",
         uploadedAt: serverTimestamp(),
+      });
+
+      // Log the activity
+      await logActivity({
+        userId: user?.email || "anonymous",
+        userEmail: user?.email || "anonymous",
+        userName: user?.displayName || "Client",
+        action: "CREATE",
+        entityType: "project",
+        entityId: projectId,
+        description: `Uploaded official receipt: ${file.name}`,
       });
 
       toast.success("Receipt uploaded");
