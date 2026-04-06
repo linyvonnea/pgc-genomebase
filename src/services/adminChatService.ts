@@ -38,7 +38,8 @@ import {
   orderBy,
   limit,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { ref, deleteObject } from "firebase/storage";
+import { db, storage } from "@/lib/firebase";
 import { AdminChannel, AdminMessage } from "@/types/AdminChat";
 
 const CHANNELS_COLLECTION = "adminChannels";
@@ -241,12 +242,57 @@ export async function sendAdminMessage(
  * Uses batched writes (500-op Firestore limit respected).
  */
 /**
+ * Extracts a storage path from a full download URL.
+ * Matches: /o/(path-to-file)?
+ */
+function extractStoragePath(url: string): string | null {
+  try {
+    const decodedUrl = decodeURIComponent(url);
+    const match = decodedUrl.match(/\/o\/(.*?)\?/);
+    return match ? match[1] : null;
+  } catch (e) {
+    console.error("Failed to parse storage URL:", e);
+    return null;
+  }
+}
+
+/**
  * Soft-delete a message by marking it as unsent.
  * Sets unsent=true and clears content so the UI can show a tombstone.
+ * Also deletes physical file attachments from Storage.
  */
 export async function unsendAdminMessage(messageId: string): Promise<void> {
   const msgRef = doc(db, MESSAGES_COLLECTION, messageId);
-  await updateDoc(msgRef, { unsent: true, content: "" });
+  const snap = await getDoc(msgRef);
+
+  if (snap.exists()) {
+    const data = snap.data() as AdminMessage;
+
+    // Delete attachments from storage if they exist
+    if (data.attachments && data.attachments.length > 0) {
+      for (const url of data.attachments) {
+        const path = extractStoragePath(url);
+        if (path) {
+          try {
+            const storageRef = ref(storage, path);
+            await deleteObject(storageRef);
+          } catch (error: any) {
+            // Ignore if file was already deleted or doesn't exist
+            if (error.code !== "storage/object-not-found") {
+              console.error(`Failed to delete storage object at ${path}:`, error);
+            }
+          }
+        }
+      }
+    }
+
+    // Update Firestore: mark as unsent and clear attachments list
+    await updateDoc(msgRef, {
+      unsent: true,
+      content: "",
+      attachments: [], // Clear attachments so they don't show up in UI
+    });
+  }
 }
 
 export async function markAdminMessagesRead(

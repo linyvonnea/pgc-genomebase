@@ -25,7 +25,8 @@ import {
   arrayUnion,
   arrayRemove,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { ref, deleteObject } from "firebase/storage";
+import { db, storage } from "@/lib/firebase";
 import {
   QuotationThread,
   QuotationVersion,
@@ -937,12 +938,56 @@ export async function requestQuotationRevision(
 }
 
 /**
+ * Extracts a storage path from a full download URL.
+ */
+function extractStoragePath(url: string): string | null {
+  try {
+    const decodedUrl = decodeURIComponent(url);
+    const match = decodedUrl.match(/\/o\/(.*?)\?/);
+    return match ? match[1] : null;
+  } catch (e) {
+    console.error("Failed to parse storage URL:", e);
+    return null;
+  }
+}
+
+/**
  * Soft-delete a message by marking it as unsent.
  * Clears the content and sets unsent=true so UIs can show a tombstone.
+ * Physical files associated with this message are deleted from Storage.
  */
 export async function unsendMessage(messageId: string): Promise<void> {
   const msgRef = doc(db, MESSAGES_COLLECTION, messageId);
-  await updateDoc(msgRef, { unsent: true, content: "" });
+  const snap = await getDoc(msgRef);
+
+  if (snap.exists()) {
+    const data = snap.data() as ThreadMessage;
+
+    // Remove any actual files from storage
+    if (data.attachments && data.attachments.length > 0) {
+      for (const url of data.attachments) {
+        const path = extractStoragePath(url);
+        if (path) {
+          try {
+            const storageRef = ref(storage, path);
+            await deleteObject(storageRef);
+          } catch (error: any) {
+            // Ignore if file was already deleted or doesn't exist
+            if (error.code !== "storage/object-not-found") {
+              console.error(`Failed to delete storage object at ${path}:`, error);
+            }
+          }
+        }
+      }
+    }
+
+    // Mark as unsent and clear content and attachments array
+    await updateDoc(msgRef, {
+      unsent: true,
+      content: "",
+      attachments: [],
+    });
+  }
 }
 
 
