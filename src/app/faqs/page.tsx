@@ -8,8 +8,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { HelpCircle, Microscope, CreditCard, Droplets, Clock, BarChart4, Globe, Search } from "lucide-react";
+import { HelpCircle, Microscope, CreditCard, Droplets, Clock, BarChart4, Globe, Search, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const faqData = [
   {
@@ -175,7 +176,11 @@ export default function FAQPage() {
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-indigo-500 rounded-full opacity-20 blur-3xl"></div>
         
         <div className="container mx-auto px-4 max-w-5xl text-center relative z-10">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 mb-6">
+          <div className="flex flex-col items-center justify-center mb-6">
+            <Link href="/" className="mb-6 inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-full border border-white/20 text-white text-sm font-medium transition-all group backdrop-blur-sm">
+              <Home className="w-4 h-4 transition-transform group-hover:scale-110" />
+              Back to Home
+            </Link>
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
               Frequently Asked Questions
             </h1>

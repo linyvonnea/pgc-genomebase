@@ -24,8 +24,10 @@ import {
   Shield,
   CheckCircle,
   AlertTriangle,
-  Mail
+  Mail,
+  Home
 } from "lucide-react";
+import Link from "next/link";
 
 const MASTER_EMAILS = ["madayon1@up.edu.ph", "merlito.dayon@gmail.com"];
 const ALLOWED_INQUIRY_STATUSES = [
@@ -218,11 +220,22 @@ export default function ClientVerifyPage() {
 
   return (
     <main 
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-8 relative"
       style={{
         background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)"
       }}
     >
+      {/* Back Home Button */}
+      <div className="absolute top-8 left-1/2 -translate-x-1/2 md:left-8 md:translate-x-0">
+        <Link 
+          href="/" 
+          className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 hover:bg-white rounded-full border border-slate-200 text-slate-600 text-sm font-semibold transition-all shadow-sm hover:shadow group"
+        >
+          <Home className="w-4 h-4 transition-transform group-hover:scale-110" />
+          Back Home
+        </Link>
+      </div>
+
       <div className="w-full max-w-md py-4">
         <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center pb-4 pt-6">
