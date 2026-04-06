@@ -45,7 +45,17 @@ export default function useAuth() {
       // Use real-time listener for admin role changes
       const unsubscribeAdmin = onSnapshot(adminRef, async (adminSnap) => {
         if (adminSnap.exists()) {
-          const { name, position, role } = adminSnap.data();
+          const { name, position, role, status } = adminSnap.data();
+
+          if (status === "deactivated") {
+            setIsAdmin(false);
+            setAdminInfo(null);
+            setUser(null);
+            setLoading(false);
+            await firebaseSignOut(auth);
+            return;
+          }
+
           setIsAdmin(true);
           setAdminInfo({ name, position, email, role: role || "viewer" });
 
