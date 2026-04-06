@@ -10,6 +10,7 @@ import {
   getPaginationRowModel,
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Project } from "@/types/Project";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,6 +54,7 @@ export function DataTable<TData extends Project, TValue>({
   data,
   meta,
 }: DataTableProps<TData, TValue>) {
+  const router = useRouter();
   // State for search, cards, and date filters
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -633,7 +635,13 @@ export function DataTable<TData extends Project, TValue>({
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    className="hover:bg-muted/50 transition-colors"
+                    className="hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => {
+                      const pid = row.original?.pid;
+                      if (pid) {
+                        router.push(`/admin/projects/${pid}`);
+                      }
+                    }}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell
