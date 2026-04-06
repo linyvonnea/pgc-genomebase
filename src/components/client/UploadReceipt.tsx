@@ -20,7 +20,7 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
     if (!f) return;
 
     try {
-      validateFile(f, 10, ["application/pdf", "image/png", "image/jpeg"]);
+      validateFile(f, 10, ["application/pdf", "image/*"]);
     } catch (err: any) {
       setFile(null);
       toast.error(err?.message || "Invalid file");
@@ -50,7 +50,8 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
       setFile(null);
     } catch (error) {
       console.error("Upload failed", error);
-      toast.error("Upload failed. See console for details.");
+      const message = error instanceof Error ? error.message : "Upload failed. Please try again.";
+      toast.error(message);
     } finally {
       setUploading(false);
     }

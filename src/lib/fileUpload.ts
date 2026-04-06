@@ -68,9 +68,32 @@ export async function uploadFile(file: File, folder: string = 'uploads'): Promis
  * @param allowedTypes - Array of allowed MIME types
  * @returns boolean - true if valid, throws error if invalid
  */
+function matchesAllowedType(file: File, allowedTypes: string[]): boolean {
+  const fileType = file.type;
+
+  if (allowedTypes.includes(fileType)) return true;
+
+  const wildcardMatch = allowedTypes.find((type) => type.endsWith("/*"));
+  if (wildcardMatch) {
+    const [prefix] = wildcardMatch.split("/");
+    if (fileType.startsWith(`${prefix}/`)) return true;
+  }
+
+  if (!fileType) {
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
+    if (allowedTypes.includes("application/pdf") && ext === "pdf") return true;
+    if (allowedTypes.includes("image/*")) {
+      const imageExts = new Set(["jpg", "jpeg", "png", "gif", "bmp", "webp", "tiff", "heic"]);
+      return imageExts.has(ext);
+    }
+  }
+
+  return false;
+}
+
 export function validateFile(
-  file: File, 
-  maxSizeMB: number = 10, 
+  file: File,
+  maxSizeMB: number = 10,
   allowedTypes: string[] = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
 ): boolean {
   // Check file size
@@ -80,8 +103,8 @@ export function validateFile(
   }
   
   // Check file type
-  if (!allowedTypes.includes(file.type)) {
-    throw new Error('Only PDF and Word documents are allowed');
+  if (!matchesAllowedType(file, allowedTypes)) {
+    throw new Error(`Only ${allowedTypes.join(", ")} files are allowed`);
   }
   
   return true;
