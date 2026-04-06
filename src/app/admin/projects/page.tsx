@@ -17,6 +17,7 @@ import { ProjectFormModal } from "@/app/admin/projects/modalform"
 import { getProjects } from "@/services/projectsService"
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { ProjectDetailSheet } from "@/components/admin/ProjectDetailSheet";
 
 // Fetch all projects from Firestore
 async function getData(): Promise<Project[]> {
@@ -43,6 +44,7 @@ export default function ProjectPage() {
 function ProjectPageContent() {
   // State for project data
   const [data, setData] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   // State for dialog open/close
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { adminInfo } = useAuth();
@@ -106,8 +108,19 @@ function ProjectPageContent() {
           )}
         </div>
         {/* Data Table with instant update on add/edit/delete */}
-        <DataTable columns={columns} data={data} meta={{ onSuccess: fetchData }} />
+        <DataTable
+          columns={columns}
+          data={data}
+          meta={{ onSuccess: fetchData }}
+          onRowClick={(row) => setSelectedProject(row)}
+        />
       </div>
+      <ProjectDetailSheet
+        project={selectedProject}
+        open={!!selectedProject}
+        onClose={() => setSelectedProject(null)}
+        onProjectUpdated={fetchData}
+      />
     </div>
   );
 }
