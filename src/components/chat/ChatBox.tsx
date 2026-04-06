@@ -13,13 +13,14 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Send, Clock, AlertCircle, Check, CheckCheck, Paperclip, FileText, X, Loader2, Download } from "lucide-react";
+import { MessageCircle, Send, Clock, AlertCircle, Check, CheckCheck, Paperclip, FileText, FileSpreadsheet, File, X, Loader2, Download, Trash2 } from "lucide-react";
 import { ThreadMessage, MessageSenderRole } from "@/types/QuotationThread";
 import {
   subscribeToThreadMessages,
   addThreadMessage,
   markMessagesAsRead,
   toggleReaction,
+  unsendMessage,
 } from "@/services/quotationThreadService";
 import { uploadFile } from "@/lib/fileUpload";
 import { format } from "date-fns";
@@ -29,8 +30,59 @@ import EmojiPicker from "./EmojiPicker";
 // Allowed attachment types for chat
 const CHAT_MAX_SIZE_MB = 10;
 
+const ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "text/plain",
+];
+
+const ACCEPT_ATTR = [
+  "image/*",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "text/plain",
+].join(",");
+
 function isImageType(type: string) {
   return type.startsWith("image/");
+}
+
+function getFileIcon(type: string) {
+  if (
+    type === "application/vnd.ms-excel" ||
+    type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  ) {
+    return FileSpreadsheet;
+  }
+  if (type === "text/plain") return File;
+  return FileText; // PDF, Word, PPT, etc.
+}
+
+async function downloadAttachment(url: string, name: string) {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(objectUrl);
+  } catch {
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
 }
 
 function AttachmentBubble({
@@ -40,41 +92,53 @@ function AttachmentBubble({
   attachment: { name: string; url: string; type: string };
   isMe: boolean;
 }) {
+  const FileIcon = getFileIcon(attachment.type);
+
   if (isImageType(attachment.type)) {
     return (
-      <a
-        href={attachment.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block mt-1.5 rounded-xl overflow-hidden border border-white/20 hover:opacity-90 transition-opacity"
-        title={attachment.name}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={attachment.url}
-          alt={attachment.name}
-          className="max-w-[220px] max-h-[180px] object-cover w-full"
-        />
-      </a>
+      <div className="relative mt-1.5 group/img">
+        <a
+          href={attachment.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block rounded-xl overflow-hidden border border-white/20 hover:opacity-90 transition-opacity"
+          title={`View ${attachment.name}`}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={attachment.url}
+            alt={attachment.name}
+            className="max-w-[220px] max-h-[180px] object-cover w-full"
+          />
+        </a>
+        {/* Download overlay button */}
+        <button
+          onClick={() => downloadAttachment(attachment.url, attachment.name)}
+          className="absolute top-1.5 right-1.5 opacity-0 group-hover/img:opacity-100 transition-opacity bg-black/40 hover:bg-black/60 rounded-full p-1"
+          title="Download"
+        >
+          <Download className="h-3.5 w-3.5 text-white" />
+        </button>
+      </div>
     );
   }
 
-  // PDF / generic file
+  // Document / generic file — clicking forces download
   return (
-    <a
-      href={attachment.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={`flex items-center gap-2 mt-1.5 rounded-xl px-3 py-2 border transition-colors ${
+    <button
+      type="button"
+      onClick={() => downloadAttachment(attachment.url, attachment.name)}
+      className={`flex items-center gap-2 mt-1.5 rounded-xl px-3 py-2 border transition-colors cursor-pointer ${
         isMe
           ? "bg-white/15 border-white/20 hover:bg-white/25 text-white"
           : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
       }`}
+      title={`Download ${attachment.name}`}
     >
-      <FileText className="h-5 w-5 flex-shrink-0" />
+      <FileIcon className="h-5 w-5 flex-shrink-0" />
       <span className="text-xs font-medium truncate max-w-[160px]">{attachment.name}</span>
       <Download className="h-3.5 w-3.5 flex-shrink-0 ml-auto opacity-70" />
-    </a>
+    </button>
   );
 }
 
@@ -98,6 +162,7 @@ export default function ChatBox({
   const [error, setError] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [unsendingId, setUnsendingId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const DEFAULT_REACTIONS = ["👍", "❤️", "😮", "😂", "😥"];
@@ -164,11 +229,10 @@ export default function ChatBox({
       return;
     }
 
-    // Validate type (images or PDF)
+    // Validate type
     const isImage = file.type.startsWith("image/");
-    const isPdf = file.type === "application/pdf";
-    if (!isImage && !isPdf) {
-      setError("Only images (JPG, PNG, GIF, WebP) and PDFs are allowed.");
+    if (!isImage && !ALLOWED_MIME_TYPES.includes(file.type)) {
+      setError("Unsupported file type. Allowed: images, PDF, Word, Excel, PowerPoint, and text files.");
       e.target.value = "";
       return;
     }
@@ -226,6 +290,18 @@ export default function ChatBox({
       setError("Failed to send message. Please try again.");
       setNewMessage(messageContent);
       if (fileToSend) setPendingFile(fileToSend);
+    }
+  };
+
+  const handleUnsend = async (messageId: string) => {
+    setUnsendingId(messageId);
+    try {
+      await unsendMessage(messageId);
+    } catch (err) {
+      console.error("Failed to unsend message:", err);
+      setError("Failed to unsend message. Please try again.");
+    } finally {
+      setUnsendingId(null);
     }
   };
 
@@ -318,10 +394,24 @@ export default function ChatBox({
                 );
               }
 
+              // Unsent tombstone
+              if (msg.unsent) {
+                return (
+                  <div
+                    key={msg.id || idx}
+                    className={`flex w-full ${isMe ? "justify-end" : "justify-start"}`}
+                  >
+                    <p className="text-xs italic text-slate-400 px-3 py-1.5 rounded-2xl border border-dashed border-slate-200 bg-slate-50">
+                      {isMe ? "You unsent a message" : "Message was unsent"}
+                    </p>
+                  </div>
+                );
+              }
+
               return (
                 <div
                   key={msg.id || idx}
-                  className={`flex flex-col w-full ${isMe ? "items-end" : "items-start"}`}
+                  className={`flex flex-col w-full group ${isMe ? "items-end" : "items-start"}`}
                 >
                   <div
                     className={`flex flex-col max-w-[85%] ${isMe ? "items-end" : "items-start"}`}
@@ -402,8 +492,19 @@ export default function ChatBox({
                           </div>
                         )}
                       </div>
-                    </div>
-                  </div>
+                    </div>                    {/* Unsend button — visible on hover for own messages only */}
+                    {isMe && (
+                      <button
+                        type="button"
+                        onClick={() => msg.id && handleUnsend(msg.id)}
+                        disabled={unsendingId === msg.id}
+                        className="invisible group-hover:visible flex items-center gap-1 text-[10px] text-slate-400 hover:text-red-500 transition-colors mt-0.5 cursor-pointer disabled:opacity-50"
+                        title="Unsend message"
+                      >
+                        <Trash2 className="w-2.5 h-2.5" />
+                        {unsendingId === msg.id ? "Unsending…" : "Unsend"}
+                      </button>
+                    )}                  </div>
                 );
             })
           )}
@@ -423,7 +524,7 @@ export default function ChatBox({
                   className="h-10 w-10 rounded object-cover border border-blue-200 flex-shrink-0"
                 />
               ) : (
-                <FileText className="h-8 w-8 text-blue-500 flex-shrink-0" />
+                (() => { const PendingIcon = getFileIcon(pendingFile.type); return <PendingIcon className="h-8 w-8 text-blue-500 flex-shrink-0" />; })()
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-slate-700 truncate">{pendingFile.name}</p>
@@ -445,7 +546,7 @@ export default function ChatBox({
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*,application/pdf"
+              accept={ACCEPT_ATTR}
               className="hidden"
               onChange={handleFileChange}
             />
@@ -457,7 +558,7 @@ export default function ChatBox({
               disabled={uploading || loading}
               onClick={() => fileInputRef.current?.click()}
               className="h-10 w-10 flex-shrink-0 mb-1 text-slate-400 hover:text-slate-600 transition-colors"
-              title="Attach image or PDF"
+              title="Attach file (images, PDF, Word, Excel, PowerPoint)"
             >
               <Paperclip className="w-5 h-5" />
             </Button>
