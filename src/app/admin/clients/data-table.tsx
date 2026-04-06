@@ -147,6 +147,7 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
   meta?: { onSuccess?: () => void } // Optional meta for passing callbacks to cell actions
+  onRowClick?: (row: TData) => void
 }
 
 // Generic DataTable component for admin/clients
@@ -154,6 +155,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   meta,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
 
   // Table state for sorting, filtering, and global search
@@ -559,7 +561,8 @@ export function DataTable<TData, TValue>({
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    className="hover:bg-slate-50/50 transition-colors border-b last:border-0"
+                    className="hover:bg-slate-50/50 transition-colors border-b last:border-0 cursor-pointer"
+                    onClick={() => onRowClick?.(row.original)}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell 
