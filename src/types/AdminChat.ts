@@ -47,6 +47,14 @@ export interface AdminMessage {
   senderId: string;
   senderName: string;
   content: string;
+  /** Optional file attachments sent with the message */
+  attachments?: {
+    name: string;
+    url: string;
+    type: string;
+  }[];
+  /** Soft-delete flag: set to true when sender unsends the message */
+  unsent?: boolean;
   createdAt: Timestamp;
   /**
    * Array of admin emails who have read this message.
