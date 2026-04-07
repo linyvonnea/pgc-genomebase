@@ -10,7 +10,7 @@ import useAuth from "@/hooks/useAuth";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import { Inquiry } from "@/types/Inquiry";
 import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
-import { FileText, Calendar, User, Building2, Mail, Briefcase, FlaskConical, DollarSign, MessageSquare } from "lucide-react";
+import { FileText, Calendar, User, Building2, Mail, Briefcase, FlaskConical, DollarSign, MessageSquare, Download } from "lucide-react";
 
 // Utility to format date
 const formatDate = (val: Date | string | null | undefined): string => {
@@ -465,17 +465,29 @@ function InquiryDetailContent() {
                 {inquiry.methodologyFileUrl && (
                   <div className="flex flex-col">
                     <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">
-                      Methodology File
+                      Methodology / Concept Note
                     </span>
-                    <a
-                      href={inquiry.methodologyFileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-[#166FB5] hover:underline mt-1 flex items-center gap-2 w-fit"
-                    >
-                      <FileText className="h-4 w-4" />
-                      View Uploaded File
-                    </a>
+                    <div className="flex items-center gap-2 mt-2">
+                      <a
+                        href={inquiry.methodologyFileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#166FB5] bg-blue-50 border border-blue-100 rounded-lg hover:bg-blue-100 transition-colors"
+                      >
+                        <FileText className="h-4 w-4" />
+                        View File
+                      </a>
+                      <a
+                        href={inquiry.methodologyFileUrl}
+                        download
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download
+                      </a>
+                    </div>
                   </div>
                 )}
               </div>

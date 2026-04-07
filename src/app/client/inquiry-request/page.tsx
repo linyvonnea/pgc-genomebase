@@ -29,7 +29,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon } from "lucide-react"
+import { CalendarIcon, Paperclip, X, FileText, Loader2 } from "lucide-react"
+import { uploadFile, validateFile } from "@/lib/fileUpload"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner" 
@@ -78,6 +79,10 @@ export default function QuotationRequestForm() {
   
   // State for training date picker (separate from form state for UI purposes)
   const [trainingDate, setTrainingDate] = useState<Date>()
+
+  // State for methodology file upload (Laboratory service)
+  const [methodologyFile, setMethodologyFile] = useState<File | null>(null)
+  const [isUploadingFile, setIsUploadingFile] = useState(false)
   
   // Get authenticated user information
   const { user } = useAuth()
@@ -308,10 +313,29 @@ export default function QuotationRequestForm() {
     })
     
     try {
-      // Merge form data with user email from authentication
+      // Upload methodology file if one was selected
+      let methodologyFileUrl = pendingData.methodologyFileUrl || ""
+      if (methodologyFile) {
+        setIsUploadingFile(true)
+        try {
+          methodologyFileUrl = await uploadFile(methodologyFile, 'methodology-files')
+        } catch (uploadErr: any) {
+          toast.dismiss()
+          toast.error("Failed to upload methodology file", {
+            description: uploadErr.message,
+          })
+          setIsSubmitting(false)
+          setIsUploadingFile(false)
+          return
+        }
+        setIsUploadingFile(false)
+      }
+
+      // Merge form data with user email and uploaded file URL
       const submissionData = {
         ...pendingData,
-        email: user?.email || "" // Get email from authenticated user
+        email: user?.email || "",
+        methodologyFileUrl,
       }
       
       // Submit to server action
@@ -340,7 +364,8 @@ export default function QuotationRequestForm() {
         setTimeout(() => {
           reset()
           setSelectedService("laboratory") 
-          setTrainingDate(undefined) 
+          setTrainingDate(undefined)
+          setMethodologyFile(null)
           router.push("/client/inquiry-request/submitted")
         }, 2000)
         return
@@ -670,6 +695,74 @@ export default function QuotationRequestForm() {
                         {errors.researchOverview.message}
                       </p>
                     )}
+                  </div>
+                )}
+
+                {/* Methodology/Concept Note Upload - Laboratory only */}
+                {selectedService === "laboratory" && (
+                  <div>
+                    <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+                      Upload Methodology/Concept Note
+                      <span className="text-xs font-normal text-slate-400 ml-2">(Optional)</span>
+                    </Label>
+
+                    {!methodologyFile ? (
+                      <label
+                        htmlFor="methodology-file"
+                        className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer bg-white/50 hover:bg-slate-50 hover:border-[#166FB5]/40 transition-all group"
+                      >
+                        <div className="flex flex-col items-center gap-1.5 pointer-events-none">
+                          <Paperclip className="h-5 w-5 text-slate-400 group-hover:text-[#166FB5] transition-colors" />
+                          <p className="text-sm font-medium text-slate-500 group-hover:text-slate-700 transition-colors">
+                            Click to attach a file
+                          </p>
+                          <p className="text-xs text-slate-400">PDF, DOC, DOCX &mdash; up to 10&nbsp;MB</p>
+                        </div>
+                        <input
+                          id="methodology-file"
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (!file) return
+                            try {
+                              validateFile(file, 10, [
+                                'application/pdf',
+                                'application/msword',
+                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                              ])
+                              setMethodologyFile(file)
+                            } catch (err: any) {
+                              toast.error("Invalid file", { description: err.message })
+                              e.target.value = ""
+                            }
+                          }}
+                        />
+                      </label>
+                    ) : (
+                      <div className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-100 rounded-xl">
+                        <FileText className="h-5 w-5 text-[#166FB5] shrink-0" />
+                        <span className="text-sm font-medium text-slate-700 truncate flex-1">
+                          {methodologyFile.name}
+                        </span>
+                        <span className="text-xs text-slate-400 shrink-0">
+                          {(methodologyFile.size / 1024 / 1024).toFixed(2)}&nbsp;MB
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setMethodologyFile(null)}
+                          className="p-1 hover:bg-blue-100 rounded-md transition-colors shrink-0"
+                          aria-label="Remove file"
+                        >
+                          <X className="h-4 w-4 text-slate-500" />
+                        </button>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-slate-500 mt-2">
+                      Attach your methodology or concept note to help us better understand your research requirements.
+                    </p>
                   </div>
                 )}
               </div>
