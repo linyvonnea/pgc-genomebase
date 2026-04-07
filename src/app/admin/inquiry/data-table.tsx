@@ -59,7 +59,6 @@ interface DataTableProps<TData, TValue> {
   data: TData[]
   unreadInquiryIds?: Set<string>
   statusCatalog?: CatalogItem[]
-  onRowClick?: (inquiry: Inquiry) => void
 }
 
 export function DataTable<TData, TValue>({
@@ -67,7 +66,6 @@ export function DataTable<TData, TValue>({
   data,
   unreadInquiryIds = new Set(),
   statusCatalog = [],
-  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const router = useRouter()
   const [sorting, setSorting] = useState<SortingState>([])
@@ -87,9 +85,9 @@ export function DataTable<TData, TValue>({
     "July", "August", "September", "October", "November", "December"
   ];
 
-  // Handle row click — open detail sheet if handler provided, else navigate to detail page
+  // Handle row click to navigate to detail page
   const handleRowClick = (inquiry: Inquiry, event: React.MouseEvent) => {
-    // Don't trigger if clicking on interactive elements inside the row.
+    // Don't navigate if clicking on interactive elements inside the row.
     const target = event.target as HTMLElement
     if (
       target.closest('button') ||
@@ -107,11 +105,7 @@ export function DataTable<TData, TValue>({
     ) {
       return
     }
-    if (onRowClick) {
-      onRowClick(inquiry)
-    } else {
-      router.push(`/admin/inquiry/${inquiry.id}`)
-    }
+    router.push(`/admin/inquiry/${inquiry.id}`)
   }
 
   const fallbackStatuses: CatalogItem[] = [
