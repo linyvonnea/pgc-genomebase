@@ -244,7 +244,6 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
           size="sm"
           onClick={(event) => event.stopPropagation()}
           onPointerDown={(event) => event.stopPropagation()}
-          data-stop-row-click="true"
         >
           <Pencil className="h-4 w-4" />
         </Button>

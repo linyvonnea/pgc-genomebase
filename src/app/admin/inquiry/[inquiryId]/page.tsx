@@ -252,7 +252,11 @@ function InquiryDetailContent() {
                   <Mail className="h-4 w-4 text-slate-400" />
                   <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Email</span>
                 </div>
-                <span className="text-sm font-medium text-slate-800">{inquiry.email || "—"}</span>
+                <span className="text-sm font-medium text-slate-800">
+                  {Array.isArray(inquiry.email) && inquiry.email.length > 0
+                    ? inquiry.email.join(", ")
+                    : "—"}
+                </span>
               </div>
 
               <div className="flex flex-col">
@@ -327,207 +331,21 @@ function InquiryDetailContent() {
               <div className="pt-4 border-t border-slate-100 space-y-4">
                 <h3 className="text-sm font-semibold text-slate-700">Bioinformatics Details</h3>
 
-                {/* Service Types */}
                 <div className="flex flex-col">
                   <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Type of Bioinformatics Service</span>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {(Array.isArray(inquiry.bioinformaticsDetails?.serviceTypes) ? inquiry.bioinformaticsDetails?.serviceTypes : []).length > 0 ? (
-                      (inquiry.bioinformaticsDetails?.serviceTypes as string[]).map((serviceType) => {
-                        const labels: Record<string, string> = {
-                          phylogenetic: "Phylogenetic Analysis",
-                          metabarcoding: "Metabarcoding/Metagenomics",
-                          transcriptomics: "Transcriptomics",
-                          "whole-genome-assembly": "Whole Genome Assembly",
-                          others: "Others",
-                        };
-                        return (
-                          <Badge key={serviceType} variant="secondary" className="bg-blue-50 text-blue-700 border-blue-100">
-                            {labels[serviceType] || serviceType}
-                          </Badge>
-                        );
-                      })
+                      (inquiry.bioinformaticsDetails?.serviceTypes as string[]).map((serviceType) => (
+                        <Badge key={serviceType} variant="secondary" className="bg-blue-50 text-blue-700 border-blue-100">
+                          {serviceType}
+                        </Badge>
+                      ))
                     ) : (
                       <span className="text-sm text-slate-700">—</span>
                     )}
                   </div>
                 </div>
 
-                {/* Phylogenetic Analysis Sub-details */}
-                {(inquiry.bioinformaticsDetails?.serviceTypes as string[] | undefined || []).includes("phylogenetic") && (
-                  <div className="rounded-lg border border-blue-100 bg-blue-50/40 p-4 space-y-3">
-                    <h4 className="text-xs font-bold text-blue-700 uppercase tracking-wider">Phylogenetic Analysis Details</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="flex flex-col">
-                        <span className="text-xs text-slate-500">No. of markers</span>
-                        <span className="text-sm font-medium text-slate-800 mt-0.5">{inquiry.bioinformaticsDetails?.phylogenetic?.markerCount ?? "—"}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs text-slate-500">Marker(s)</span>
-                        <span className="text-sm font-medium text-slate-800 mt-0.5">{inquiry.bioinformaticsDetails?.phylogenetic?.markers || "—"}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Metabarcoding/Metagenomics Sub-details */}
-                {(inquiry.bioinformaticsDetails?.serviceTypes as string[] | undefined || []).includes("metabarcoding") && (
-                  <div className="rounded-lg border border-blue-100 bg-blue-50/40 p-4 space-y-4">
-                    <h4 className="text-xs font-bold text-blue-700 uppercase tracking-wider">Metabarcoding / Metagenomics Details</h4>
-
-                    <div>
-                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Study Structure</span>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-                        {([
-                          { label: "Sample type", val: inquiry.bioinformaticsDetails?.metabarcoding?.study?.sampleType },
-                          { label: "No. of samples", val: inquiry.bioinformaticsDetails?.metabarcoding?.study?.sampleCount },
-                          { label: "No. of groups / treatments to study", val: inquiry.bioinformaticsDetails?.metabarcoding?.study?.groupCount },
-                          { label: "No. of replicates per sample", val: inquiry.bioinformaticsDetails?.metabarcoding?.study?.replicatesPerSample },
-                          { label: "Target gene / marker", val: inquiry.bioinformaticsDetails?.metabarcoding?.study?.targetGene },
-                          { label: "Target region", val: inquiry.bioinformaticsDetails?.metabarcoding?.study?.targetRegion },
-                          { label: "Primer set used", val: inquiry.bioinformaticsDetails?.metabarcoding?.study?.primerSet },
-                          { label: "Expected amplicon size", val: inquiry.bioinformaticsDetails?.metabarcoding?.study?.ampliconSize },
-                          { label: "Sequencing type and platform", val: inquiry.bioinformaticsDetails?.metabarcoding?.study?.sequencingPlatform },
-                        ] as { label: string; val: any }[]).map(({ label, val }) => val != null && val !== "" ? (
-                          <div key={label} className="flex flex-col">
-                            <span className="text-xs text-slate-500">{label}</span>
-                            <span className="text-sm font-medium text-slate-800 mt-0.5">{val}</span>
-                          </div>
-                        ) : null)}
-                      </div>
-                    </div>
-
-                    {inquiry.bioinformaticsDetails?.metabarcoding?.analysisType && (
-                      <div className="flex flex-col">
-                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Analysis Type</span>
-                        <span className="text-sm font-medium text-slate-800 mt-1">
-                          {inquiry.bioinformaticsDetails.metabarcoding.analysisType === "general-pipeline"
-                            ? "General Pipeline"
-                            : inquiry.bioinformaticsDetails.metabarcoding.analysisType === "general-pipeline-downstream"
-                              ? "General Pipeline with Downstream Analysis"
-                              : inquiry.bioinformaticsDetails.metabarcoding.analysisType === "unsure"
-                                ? "Unsure"
-                                : inquiry.bioinformaticsDetails.metabarcoding.analysisType}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Transcriptomics Sub-details */}
-                {(inquiry.bioinformaticsDetails?.serviceTypes as string[] | undefined || []).includes("transcriptomics") && (
-                  <div className="rounded-lg border border-blue-100 bg-blue-50/40 p-4 space-y-4">
-                    <h4 className="text-xs font-bold text-blue-700 uppercase tracking-wider">Transcriptomics Details</h4>
-
-                    <div>
-                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Study Structure</span>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
-                        {([
-                          { label: "Sample type", val: inquiry.bioinformaticsDetails?.transcriptomics?.study?.sampleType },
-                          { label: "No. of samples", val: inquiry.bioinformaticsDetails?.transcriptomics?.study?.sampleCount },
-                          { label: "No. of groups / treatments / conditions", val: inquiry.bioinformaticsDetails?.transcriptomics?.study?.groupCount },
-                          { label: "No. of biological replicates per group", val: inquiry.bioinformaticsDetails?.transcriptomics?.study?.biologicalReplicates },
-                          { label: "Sequencing type and platform", val: inquiry.bioinformaticsDetails?.transcriptomics?.study?.sequencingPlatform },
-                          { label: "Estimated sequencing depth per sample", val: inquiry.bioinformaticsDetails?.transcriptomics?.study?.depth },
-                        ] as { label: string; val: any }[]).map(({ label, val }) => val != null && val !== "" ? (
-                          <div key={label} className="flex flex-col">
-                            <span className="text-xs text-slate-500">{label}</span>
-                            <span className="text-sm font-medium text-slate-800 mt-0.5">{val}</span>
-                          </div>
-                        ) : null)}
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Selected Analyses</span>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {([
-                          { key: "preProcessing", label: "Pre-processing" },
-                          { key: "deNovoAssembly", label: "De novo transcriptome assembly & evaluation" },
-                          { key: "referenceBased", label: "Reference-based assembly pipeline" },
-                          { key: "orfPrediction", label: "Open-reading frame prediction" },
-                          { key: "functionalAnnotation", label: "Functional Annotation" },
-                        ] as { key: string; label: string }[])
-                          .filter(({ key }) => inquiry.bioinformaticsDetails?.transcriptomics?.analysis?.[key])
-                          .map(({ label }) => (
-                            <Badge key={label} variant="secondary" className="bg-purple-50 text-purple-700 border-purple-100">
-                              {label}
-                            </Badge>
-                          ))}
-                        {inquiry.bioinformaticsDetails?.transcriptomics?.unsure && (
-                          <Badge variant="secondary" className="bg-gray-100 text-gray-600 border-gray-200">Unsure</Badge>
-                        )}
-                        {!inquiry.bioinformaticsDetails?.transcriptomics?.analysis?.preProcessing &&
-                          !inquiry.bioinformaticsDetails?.transcriptomics?.analysis?.deNovoAssembly &&
-                          !inquiry.bioinformaticsDetails?.transcriptomics?.analysis?.referenceBased &&
-                          !inquiry.bioinformaticsDetails?.transcriptomics?.analysis?.orfPrediction &&
-                          !inquiry.bioinformaticsDetails?.transcriptomics?.analysis?.functionalAnnotation &&
-                          !inquiry.bioinformaticsDetails?.transcriptomics?.unsure && (
-                            <span className="text-sm text-slate-500">—</span>
-                          )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Whole Genome Assembly Sub-details */}
-                {(inquiry.bioinformaticsDetails?.serviceTypes as string[] | undefined || []).includes("whole-genome-assembly") && (
-                  <div className="rounded-lg border border-blue-100 bg-blue-50/40 p-4 space-y-4">
-                    <h4 className="text-xs font-bold text-blue-700 uppercase tracking-wider">Whole Genome Assembly Details</h4>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {inquiry.bioinformaticsDetails?.wholeGenomeAssembly?.sampleTaxonomy && (
-                        <div className="flex flex-col">
-                          <span className="text-xs text-slate-500">Sample Taxonomy</span>
-                          <span className="text-sm font-medium text-slate-800 mt-0.5">{inquiry.bioinformaticsDetails.wholeGenomeAssembly.sampleTaxonomy}</span>
-                        </div>
-                      )}
-                      {inquiry.bioinformaticsDetails?.wholeGenomeAssembly?.sampleCount && (
-                        <div className="flex flex-col">
-                          <span className="text-xs text-slate-500">No. of samples</span>
-                          <span className="text-sm font-medium text-slate-800 mt-0.5">{inquiry.bioinformaticsDetails.wholeGenomeAssembly.sampleCount}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Selected Analyses</span>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
-                        {inquiry.bioinformaticsDetails?.wholeGenomeAssembly?.analysis?.assembly && (
-                          <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-100">Whole Genome Assembly</Badge>
-                        )}
-                        {inquiry.bioinformaticsDetails?.wholeGenomeAssembly?.analysis?.assemblyAnnotation && (
-                          <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-100">Whole Genome Assembly and Annotation</Badge>
-                        )}
-                        {inquiry.bioinformaticsDetails?.wholeGenomeAssembly?.unsure && (
-                          <Badge variant="secondary" className="bg-gray-100 text-gray-600 border-gray-200">Unsure</Badge>
-                        )}
-                        {!inquiry.bioinformaticsDetails?.wholeGenomeAssembly?.analysis?.assembly &&
-                          !inquiry.bioinformaticsDetails?.wholeGenomeAssembly?.analysis?.assemblyAnnotation &&
-                          !inquiry.bioinformaticsDetails?.wholeGenomeAssembly?.unsure && (
-                            <span className="text-sm text-slate-500">—</span>
-                          )}
-                      </div>
-                      {inquiry.bioinformaticsDetails?.wholeGenomeAssembly?.analysis?.additionalDownstream && (
-                        <div className="mt-2 flex flex-col">
-                          <span className="text-xs text-slate-500">Additional Downstream Analysis</span>
-                          <span className="text-sm font-medium text-slate-800 mt-0.5">{inquiry.bioinformaticsDetails.wholeGenomeAssembly.analysis.additionalDownstream}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Others - Specify */}
-                {(inquiry.bioinformaticsDetails?.serviceTypes as string[] | undefined || []).includes("others") && inquiry.bioinformaticsDetails?.othersSpecify && (
-                  <div className="flex flex-col">
-                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Others – Specify</span>
-                    <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
-                      {inquiry.bioinformaticsDetails.othersSpecify}
-                    </p>
-                  </div>
-                )}
-
-                {/* Data Section */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col">
                     <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Provide Own Data</span>
@@ -555,13 +373,27 @@ function InquiryDetailContent() {
                   </div>
                 )}
 
-                {/* Overview of Research and Objectives */}
                 <div className="flex flex-col">
                   <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Overview of Research and Objectives</span>
                   <p className="text-sm text-slate-700 mt-1 whitespace-pre-wrap bg-slate-50 p-3 rounded-lg">
                     {inquiry.bioinformaticsDetails?.overviewObjectives || "—"}
                   </p>
                 </div>
+
+                {flattenBioinformaticsDetails(inquiry.bioinformaticsDetails).length > 0 && (
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">All Submitted Bioinformatics Entries</span>
+                    <div className="mt-1 rounded-lg border border-slate-100 bg-slate-50 p-3">
+                      <ul className="space-y-1 text-xs text-slate-700">
+                        {flattenBioinformaticsDetails(inquiry.bioinformaticsDetails).map((entry) => (
+                          <li key={`${entry.key}-${entry.value}`}>
+                            <span className="font-semibold text-slate-600">{entry.key}:</span> {entry.value}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

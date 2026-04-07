@@ -214,8 +214,7 @@ export const columns: ColumnDef<Client>[] = [
           )}
           {canCreate("chargeSlips") && (
             <Button
-              onClick={(event) => {
-                event.stopPropagation();
+              onClick={() => {
                 const primaryPid = Array.isArray(client.pid) ? client.pid[0] : client.pid;
                 if (!client.cid || !primaryPid) return;
                 router.push(`/admin/charge-slips/new?clientId=${encodeURIComponent(client.cid)}&projectId=${encodeURIComponent(primaryPid)}`);
@@ -223,7 +222,6 @@ export const columns: ColumnDef<Client>[] = [
               variant="outline"
               size="sm"
               className="h-7 text-[9px] px-2 py-0 border-blue-200 text-blue-700 hover:bg-blue-50 font-semibold"
-              data-stop-row-click="true"
             >
               Charge Slip
             </Button>
