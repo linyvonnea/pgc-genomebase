@@ -63,22 +63,6 @@ export default function Home() {
               <p className="text-base lg:text-lg text-slate-600 max-w-md mx-auto lg:mx-0">
                 Start your journey with our laboratory, equipment, or bioinformatics services.
               </p>
-              
-              {/* Simple badges */}
-              <div className="flex items-center gap-2 justify-center lg:justify-start">
-                <Badge className="bg-[#166FB5] text-white border-0 hover:bg-[#166FB5]/90 px-2 lg:px-3 py-1 text-[10px] lg:text-xs">
-                  <Shield className="w-3 h-3 mr-1" />
-                  Secure
-                </Badge>
-                <Badge className="bg-[#912ABD] text-white border-0 hover:bg-[#912ABD]/90 px-2 lg:px-3 py-1 text-[10px] lg:text-xs">
-                  <Zap className="w-3 h-3 mr-1" />
-                  Fast
-                </Badge>
-                <Badge className="bg-[#F69122] text-white border-0 hover:bg-[#F69122]/90 px-2 lg:px-3 py-1 text-[10px] lg:text-xs">
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  Modern
-                </Badge>
-              </div>
             </div>
 
             {/* CTA Buttons - Best Practice Order: Primary (Submit) -> Secondary (Portal) -> Utility (FAQs) */}
