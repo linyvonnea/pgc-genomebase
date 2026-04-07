@@ -2834,7 +2834,10 @@ export default function ClientPortalPage() {
                                     Official Receipts
                                   </span>
                                 </div>
-                                <UploadReceipt projectId={project.pid} />
+                                <UploadReceipt
+                                  projectId={project.pid}
+                                  hasChargeSlip={chargeSlipCount > 0}
+                                />
                               </div>
                             )}
                           </div>
