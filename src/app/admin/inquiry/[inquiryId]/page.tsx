@@ -252,7 +252,11 @@ function InquiryDetailContent() {
                   <Mail className="h-4 w-4 text-slate-400" />
                   <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Email</span>
                 </div>
-                <span className="text-sm font-medium text-slate-800">{inquiry.email || "—"}</span>
+                <span className="text-sm font-medium text-slate-800">
+                  {Array.isArray(inquiry.email) && inquiry.email.length > 0
+                    ? inquiry.email.join(", ")
+                    : "—"}
+                </span>
               </div>
 
               <div className="flex flex-col">
