@@ -190,6 +190,21 @@ export default function ChatBox({
     return alias || "Admin";
   };
 
+  const normalizeIdentifier = (value: string | null | undefined) =>
+    (value || "").trim().toLowerCase();
+
+  const currentUserIdentifiers = new Set(
+    [normalizeIdentifier(user?.email), normalizeIdentifier(user?.uid)].filter(Boolean),
+  );
+  const currentAdminAlias =
+    role === "admin" && user ? getAdminDisplayName(user.email || user.uid) : "";
+
+  const getMessageAdminAlias = (msg: ThreadMessage) => {
+    // Always derive from senderId (email) so the alias reflects the actual sender,
+    // regardless of what was stored in senderName at message creation time.
+    return getAdminDisplayName(msg.senderId);
+  };
+
   useEffect(() => {
     if (!inquiryId || !user) return;
 
