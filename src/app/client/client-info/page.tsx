@@ -2895,21 +2895,6 @@ export default function ClientPortalPage() {
                                 )}
                               </div>
                             )}
-
-                            {portalFeatures.officialReceipts && (
-                              <div>
-                                <div className="flex items-center gap-2 mb-1.5">
-                                  <Stamp className="h-3 w-3 text-emerald-600" />
-                                  <span className="text-sm font-semibold text-slate-700">
-                                    Official Receipts
-                                  </span>
-                                </div>
-                                <UploadReceipt
-                                  projectId={project.pid}
-                                  hasChargeSlip={chargeSlipCount > 0}
-                                />
-                              </div>
-                            )}
                           </div>
                         )}
                       </div>
