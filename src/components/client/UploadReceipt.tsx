@@ -416,8 +416,8 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
         </div>
       )}
 
-      {/* ── Attach button — locked while a receipt is pending admin action ── */}
-      {!pendingFile && !hasPendingReceipt && (
+      {/* ── Attach button — only shown when no receipts exist (1 attachment max) ── */}
+      {!pendingFile && receipts.length === 0 && (
         <div className="ml-5">
           <input
             ref={fileInputRef}
@@ -447,13 +447,28 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
         </div>
       )}
 
-      {/* Locked message while pending admin review */}
-      {!pendingFile && hasPendingReceipt && (
-        <div className="ml-5 flex items-center gap-1.5 text-[10px] text-amber-600">
-          <Lock className="h-3 w-3" />
-          Receipt attachment locked — awaiting admin acknowledgment or return for correction.
-        </div>
-      )}
+      {/* Lock messages when a receipt exists but no pending file is being composed */}
+      {!pendingFile && receipts.length > 0 && (() => {
+        const hasVerified = receipts.some((r) => r.acknowledgedByAdmin);
+        const hasPending = receipts.some((r) => !r.acknowledgedByAdmin && !r.returnedByAdmin);
+        if (hasVerified) {
+          return (
+            <div className="ml-5 flex items-center gap-1.5 text-[10px] text-emerald-600">
+              <Lock className="h-3 w-3" />
+              Receipt verified. No further uploads are required.
+            </div>
+          );
+        }
+        if (hasPending) {
+          return (
+            <div className="ml-5 flex items-center gap-1.5 text-[10px] text-amber-600">
+              <Lock className="h-3 w-3" />
+              Receipt attachment locked — awaiting admin acknowledgment or return for correction.
+            </div>
+          );
+        }
+        return null;
+      })()}
     </div>
   );
 }
