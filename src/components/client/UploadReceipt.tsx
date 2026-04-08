@@ -54,6 +54,8 @@ interface UploadReceiptProps {
   hasChargeSlip: boolean;
   /** When provided, only show/upload receipts for this specific charge slip */
   chargeSlipNumber?: string;
+  /** When false, hides upload controls — receipts are shown as read-only reference (e.g. for paid slips) */
+  uploadAllowed?: boolean;
 }
 
 function formatFileSize(bytes?: number) {
@@ -83,7 +85,7 @@ function extractStoragePath(url: string): string | null {
   }
 }
 
-export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumber: csNum }: UploadReceiptProps) {
+export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumber: csNum, uploadAllowed = true }: UploadReceiptProps) {
   const { user } = useAuth();
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [loadingReceipts, setLoadingReceipts] = useState(true);
@@ -119,6 +121,9 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
     ? receipts.filter((r) => r.chargeSlipNumber === csNum)
     : receipts;
   const MAX_RECEIPTS = 3;
+
+  // View-only mode (e.g. paid slip): hide upload controls; if no receipts, render nothing
+  if (!uploadAllowed && !loadingReceipts && visibleReceipts.length === 0) return null;
 
   // Locked if any receipt is awaiting admin action (not yet acknowledged and not returned)
   const hasPendingReceipt = visibleReceipts.some((r) => !r.acknowledgedByAdmin && !r.returnedByAdmin);
@@ -250,7 +255,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
         <div className="space-y-1.5 ml-5">
           <p className="text-[9px] text-slate-400">
             {verifiedCount} of {visibleReceipts.length} receipt{visibleReceipts.length !== 1 ? "s" : ""} verified
-            {visibleReceipts.length >= MAX_RECEIPTS ? " · Maximum reached" : ` · ${MAX_RECEIPTS - visibleReceipts.length} remaining`}
+            {uploadAllowed && (visibleReceipts.length >= MAX_RECEIPTS ? " · Maximum reached" : ` · ${MAX_RECEIPTS - visibleReceipts.length} remaining`)}
           </p>
           {visibleReceipts.map((receipt) => {
             const isVerified = receipt.acknowledgedByAdmin;
@@ -369,7 +374,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
       )}
 
       {/* ── Pending file + OR details form ── */}
-      {pendingFile && (
+      {uploadAllowed && pendingFile && (
         <div className="ml-5 rounded-lg border border-emerald-200 bg-emerald-50 p-3 space-y-3">
           {/* File preview */}
           <div className="flex items-center gap-2">
@@ -389,7 +394,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
           </div>
 
           {/* OR Number & Date */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-2">
             <div className="space-y-1">
               <Label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">
                 OR Number <span className="text-red-500">*</span>
@@ -397,9 +402,10 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
               <Input
                 value={orNumber}
                 onChange={(e) => setOrNumber(e.target.value)}
-                placeholder="e.g. 0012345"
+                placeholder="e.g. 2024-01234"
                 className="h-7 text-xs"
                 maxLength={50}
+                inputMode="numeric"
               />
             </div>
             <div className="space-y-1">
@@ -410,6 +416,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
                 type="date"
                 value={orDate}
                 onChange={(e) => setOrDate(e.target.value)}
+                max={new Date().toISOString().split("T")[0]}
                 className="h-7 text-xs"
               />
             </div>
@@ -432,7 +439,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
       )}
 
       {/* ── Attach button — shown when under limit and no receipt pending ── */}
-      {!pendingFile && visibleReceipts.length < MAX_RECEIPTS && !hasPendingReceipt && (
+      {uploadAllowed && !pendingFile && visibleReceipts.length < MAX_RECEIPTS && !hasPendingReceipt && (
         <div className="ml-5">
           <input
             ref={fileInputRef}
@@ -463,7 +470,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
       )}
 
       {/* Locked message while pending admin review */}
-      {!pendingFile && hasPendingReceipt && (
+      {uploadAllowed && !pendingFile && hasPendingReceipt && (
         <div className="ml-5 flex items-center gap-1.5 text-[10px] text-amber-600">
           <Lock className="h-3 w-3" />
           Receipt attachment locked — awaiting admin acknowledgment or return for correction.

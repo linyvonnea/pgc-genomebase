@@ -2816,13 +2816,14 @@ export default function ClientPortalPage() {
                                           </div>
                                         )}
 
-                                        {/* Per-charge-slip receipt upload */}
-                                        {portalFeatures.officialReceipts && !csPaid && !csCancelled && (
+                                        {/* Per-charge-slip OR receipts — view reference when paid, upload when unpaid */}
+                                        {portalFeatures.officialReceipts && (
                                           <div className="pt-1 border-t border-slate-100">
                                             <UploadReceipt
                                               projectId={project.pid}
                                               hasChargeSlip={true}
                                               chargeSlipNumber={chargeSlip.chargeSlipNumber}
+                                              uploadAllowed={!csPaid && !csCancelled}
                                             />
                                           </div>
                                         )}
