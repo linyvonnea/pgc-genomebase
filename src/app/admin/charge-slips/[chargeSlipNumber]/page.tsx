@@ -36,6 +36,7 @@ interface OfficialReceipt {
   orDate?: string;
   acknowledgedByAdmin?: boolean;
   returnedByAdmin?: boolean;
+  chargeSlipNumber?: string;
 }
 
 /** Extract Firebase Storage object path from a download URL. */
@@ -116,7 +117,8 @@ function ChargeSlipDetailContent() {
             query(collection(db, "projects", pid, "officialReceipts"), orderBy("uploadedAt", "desc"))
           );
           const ors = orSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as OfficialReceipt[];
-          setOfficialReceipts(ors);
+          // Only show receipts uploaded specifically for this charge slip
+          setOfficialReceipts(ors.filter((r) => r.chargeSlipNumber === data.chargeSlipNumber));
 
           // Auto-fill from the latest receipt only if charge slip OR fields are not yet set
           const latest = ors.find((r) => r.orNumber);
@@ -512,9 +514,20 @@ function ChargeSlipDetailContent() {
                       className="flex items-start justify-between gap-4 rounded-xl bg-slate-50 border border-slate-200 px-4 py-3"
                     >
                       <div className="flex-1 min-w-0 space-y-1">
-                        <p className="text-sm font-semibold text-slate-700 truncate">
-                          {or_.fileName || or_.id}
-                        </p>
+                          {or_.downloadURL ? (
+                            <a
+                              href={or_.downloadURL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm font-semibold text-blue-700 hover:underline truncate block"
+                            >
+                              {or_.fileName || or_.id}
+                            </a>
+                          ) : (
+                            <p className="text-sm font-semibold text-slate-700 truncate">
+                              {or_.fileName || or_.id}
+                            </p>
+                          )}
                         <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-slate-500">
                           {or_.orNumber && (
                             <span>
@@ -533,7 +546,7 @@ function ChargeSlipDetailContent() {
                         <div className="pt-0.5">
                           {or_.acknowledgedByAdmin ? (
                             <Badge className="h-5 text-[10px] bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 gap-1">
-                              <CheckCircle2 className="h-2.5 w-2.5" /> Verified
+                              <CheckCircle2 className="h-2.5 w-2.5" /> Acknowledged
                             </Badge>
                           ) : or_.returnedByAdmin ? (
                             <Badge variant="outline" className="h-5 text-[10px] text-rose-600 border-rose-200 bg-rose-50 gap-1">
