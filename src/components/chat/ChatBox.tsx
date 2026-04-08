@@ -421,6 +421,11 @@ export default function ChatBox({
                     <div className="flex items-center gap-2 mb-1">
                       {isMe ? (
                         <div className="flex items-center gap-1.5 order-2">
+                          {role === "admin" && (
+                            <span className="text-[10px] font-medium text-slate-500 mr-0.5">
+                              {getAdminDisplayName(user?.email)}
+                            </span>
+                          )}
                           <Avatar className="h-4 w-4 border border-slate-100 bg-white order-2">
                             <AvatarFallback className="bg-blue-50 text-[7px] font-bold text-blue-700">
                               {role === "admin" ? "AD" : getClientInitials(msg.senderName)}
@@ -440,7 +445,7 @@ export default function ChatBox({
                               variant="outline"
                               className="text-[8px] h-3.5 py-0 px-1 bg-blue-50 text-blue-700 border-blue-200"
                             >
-                              Admin
+                              Admin {getAdminDisplayName(msg.senderId || msg.senderName)}
                             </Badge>
                           )}
                         </div>

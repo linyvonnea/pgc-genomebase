@@ -46,11 +46,14 @@ interface Receipt {
   orDate?: string;
   acknowledgedByAdmin?: boolean;
   returnedByAdmin?: boolean;
+  chargeSlipNumber?: string;
 }
 
 interface UploadReceiptProps {
   projectId: string;
   hasChargeSlip: boolean;
+  /** When provided, only show/upload receipts for this specific charge slip */
+  chargeSlipNumber?: string;
 }
 
 function formatFileSize(bytes?: number) {
@@ -80,7 +83,7 @@ function extractStoragePath(url: string): string | null {
   }
 }
 
-export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceiptProps) {
+export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumber: csNum }: UploadReceiptProps) {
   const { user } = useAuth();
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [loadingReceipts, setLoadingReceipts] = useState(true);
@@ -112,8 +115,8 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
   }, [projectId]);
 
   // Locked if any receipt is awaiting admin action (not yet acknowledged and not returned)
-  const hasPendingReceipt = receipts.some((r) => !r.acknowledgedByAdmin && !r.returnedByAdmin);
-  const verifiedCount = receipts.filter((r) => r.acknowledgedByAdmin).length;
+  const hasPendingReceipt = visibleReceipts.some((r) => !r.acknowledgedByAdmin && !r.returnedByAdmin);
+  const verifiedCount = visibleReceipts.filter((r) => r.acknowledgedByAdmin).length;
   const MAX_RECEIPTS = 3;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,6 +166,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
         orDate,
         acknowledgedByAdmin: false,
         returnedByAdmin: false,
+        ...(csNum && { chargeSlipNumber: csNum }),
       });
       await logActivity({
         userId: user?.email || "anonymous",
@@ -235,16 +239,16 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
           <Loader2 className="h-3 w-3 animate-spin" />
           Loading receipts…
         </div>
-      ) : receipts.length === 0 ? (
-        <p className="text-xs text-slate-400 ml-5">No official receipts yet</p>
+      ) : visibleReceipts.length === 0 ? (
+        <p className="text-xs text-slate-400 ml-5">No receipts uploaded yet</p>
       ) : (
         <div className="space-y-1.5 ml-5">
           {/* Receipt count progress */}
           <p className="text-[9px] text-slate-400">
-            {verifiedCount} of {receipts.length} receipt{receipts.length !== 1 ? "s" : ""} verified
-            {receipts.length >= MAX_RECEIPTS ? " · Maximum reached" : ` · ${MAX_RECEIPTS - receipts.length} remaining`}
+            {verifiedCount} of {visibleReceipts.length} receipt{visibleReceipts.length !== 1 ? "s" : ""} verified
+            {visibleReceipts.length >= MAX_RECEIPTS ? " · Maximum reached" : ` · ${MAX_RECEIPTS - visibleReceipts.length} remaining`}
           </p>
-          {receipts.map((receipt) => {
+          {visibleReceipts.map((receipt) => {
             const isVerified = receipt.acknowledgedByAdmin;
             const isReturned = receipt.returnedByAdmin && !receipt.acknowledgedByAdmin;
             const isPending = !receipt.acknowledgedByAdmin && !receipt.returnedByAdmin;
@@ -430,7 +434,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
       )}
 
       {/* ── Attach button — shown when under 3 receipts and no receipt is pending ── */}
-      {!pendingFile && receipts.length < MAX_RECEIPTS && !hasPendingReceipt && (
+      {!pendingFile && visibleReceipts.length < MAX_RECEIPTS && !hasPendingReceipt && (
         <div className="ml-5">
           <input
             ref={fileInputRef}
@@ -450,7 +454,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
               enabled:text-slate-500 enabled:hover:text-emerald-700 enabled:border-slate-200 enabled:hover:border-emerald-300 enabled:bg-white enabled:hover:bg-emerald-50"
           >
             <Paperclip className="h-3 w-3" />
-            Attach receipt
+            {csNum ? "Upload Official Receipt" : "Attach receipt"}
           </button>
           {!hasChargeSlip && (
             <p className="text-[9px] text-slate-400 mt-1">
@@ -461,9 +465,9 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
       )}
 
       {/* Lock messages when a receipt exists but no pending file is being composed */}
-      {!pendingFile && (receipts.length >= MAX_RECEIPTS || hasPendingReceipt) && (() => {
-        const allVerified = receipts.length > 0 && receipts.every((r) => r.acknowledgedByAdmin);
-        const hasVerified = receipts.some((r) => r.acknowledgedByAdmin);
+      {!pendingFile && (visibleReceipts.length >= MAX_RECEIPTS || hasPendingReceipt) && (() => {
+        const allVerified = visibleReceipts.length > 0 && visibleReceipts.every((r) => r.acknowledgedByAdmin);
+        const hasVerified = visibleReceipts.some((r) => r.acknowledgedByAdmin);
         if (allVerified) {
           return (
             <div className="ml-5 flex items-center gap-1.5 text-[10px] text-emerald-600">
@@ -480,7 +484,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
             </div>
           );
         }
-        if (receipts.length >= MAX_RECEIPTS) {
+        if (visibleReceipts.length >= MAX_RECEIPTS) {
           return (
             <div className="ml-5 flex items-center gap-1.5 text-[10px] text-slate-500">
               <Lock className="h-3 w-3" />

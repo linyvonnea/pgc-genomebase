@@ -565,7 +565,7 @@ function ChargeSlipDetailContent() {
                         <div className="pt-0.5">
                           {or_.acknowledgedByAdmin ? (
                             <Badge className="h-5 text-[10px] bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 gap-1">
-                              <CheckCircle2 className="h-2.5 w-2.5" /> Verified
+                              <CheckCircle2 className="h-2.5 w-2.5" /> Paid
                             </Badge>
                           ) : or_.returnedByAdmin ? (
                             <Badge variant="outline" className="h-5 text-[10px] text-rose-600 border-rose-200 bg-rose-50 gap-1">
