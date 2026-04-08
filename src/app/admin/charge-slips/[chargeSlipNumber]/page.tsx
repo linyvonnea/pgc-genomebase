@@ -22,7 +22,7 @@ import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import ChargeSlipPreviewButton from "@/components/charge-slip/ChargeSlipPreviewButton";
-import { CheckCircle2, ExternalLink, Loader2 as ReceiptLoader, Stamp } from "lucide-react";
+import { CheckCircle2, ExternalLink, Loader2 as ReceiptLoader, RotateCcw, Stamp } from "lucide-react";
 
 interface OfficialReceipt {
   id: string;
@@ -34,6 +34,7 @@ interface OfficialReceipt {
   orNumber?: string;
   orDate?: string;
   acknowledgedByAdmin?: boolean;
+  returnedByAdmin?: boolean;
 }
 
 // Utility to normalize to string date
@@ -75,6 +76,7 @@ function ChargeSlipDetailContent() {
   const [dateOfOR, setDateOfOR] = useState<Timestamp | undefined>(undefined);
   const [officialReceipts, setOfficialReceipts] = useState<OfficialReceipt[]>([]);
   const [acknowledging, setAcknowledging] = useState<string | null>(null);
+  const [returning, setReturning] = useState<string | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
@@ -132,6 +134,35 @@ function ChargeSlipDetailContent() {
     };
     fetch();
   }, [chargeSlipNumber, adminInfo]);
+
+  const handleReturn = async (receipt: OfficialReceipt) => {
+    if (!record) return;
+    setReturning(receipt.id);
+    try {
+      const pid = record.projectId || (record.project as any)?.pid || "";
+      await updateDoc(doc(db, "projects", pid, "officialReceipts", receipt.id), {
+        returnedByAdmin: true,
+      });
+      setOfficialReceipts((prev) =>
+        prev.map((r) => (r.id === receipt.id ? { ...r, returnedByAdmin: true } : r))
+      );
+      await logActivity({
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
+        action: "UPDATE",
+        entityType: "charge_slip",
+        entityId: record.referenceNumber || record.chargeSlipNumber,
+        entityName: `Charge Slip ${record.chargeSlipNumber}`,
+        description: `Returned official receipt for correction: ${receipt.fileName || receipt.id}`,
+      });
+      toast.success("Receipt returned to client for correction.");
+    } catch {
+      toast.error("Failed to return receipt.");
+    } finally {
+      setReturning(null);
+    }
+  };
 
   const handleAcknowledge = async (receipt: OfficialReceipt) => {
     if (!record?.id) return;
@@ -451,11 +482,15 @@ function ChargeSlipDetailContent() {
                       <div className="pt-0.5">
                         {or_.acknowledgedByAdmin ? (
                           <Badge className="h-5 text-[10px] bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 gap-1">
-                            <CheckCircle2 className="h-2.5 w-2.5" /> Acknowledged
+                            <CheckCircle2 className="h-2.5 w-2.5" /> Verified
+                          </Badge>
+                        ) : or_.returnedByAdmin ? (
+                          <Badge variant="outline" className="h-5 text-[10px] text-rose-600 border-rose-200 bg-rose-50 gap-1">
+                            <RotateCcw className="h-2.5 w-2.5" /> Returned for Correction
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="h-5 text-[10px] text-amber-600 border-amber-200 bg-amber-50">
-                            Pending Acknowledgment
+                            Pending
                           </Badge>
                         )}
                       </div>
@@ -471,20 +506,36 @@ function ChargeSlipDetailContent() {
                           <ExternalLink className="h-3 w-3" /> View file
                         </a>
                       )}
-                      {!or_.acknowledgedByAdmin && (
-                        <Button
-                          size="sm"
-                          disabled={acknowledging === or_.id}
-                          onClick={() => handleAcknowledge(or_)}
-                          className="h-7 text-[11px] px-3 bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
-                        >
-                          {acknowledging === or_.id ? (
-                            <ReceiptLoader className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <CheckCircle2 className="h-3 w-3" />
-                          )}
-                          Acknowledge
-                        </Button>
+                      {!or_.acknowledgedByAdmin && !or_.returnedByAdmin && (
+                        <div className="flex gap-1.5">
+                          <Button
+                            size="sm"
+                            disabled={returning === or_.id || acknowledging === or_.id}
+                            onClick={() => handleReturn(or_)}
+                            variant="outline"
+                            className="h-7 text-[11px] px-3 border-rose-200 text-rose-600 hover:bg-rose-50 gap-1"
+                          >
+                            {returning === or_.id ? (
+                              <ReceiptLoader className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <RotateCcw className="h-3 w-3" />
+                            )}
+                            Return
+                          </Button>
+                          <Button
+                            size="sm"
+                            disabled={acknowledging === or_.id || returning === or_.id}
+                            onClick={() => handleAcknowledge(or_)}
+                            className="h-7 text-[11px] px-3 bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
+                          >
+                            {acknowledging === or_.id ? (
+                              <ReceiptLoader className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="h-3 w-3" />
+                            )}
+                            Acknowledge
+                          </Button>
+                        </div>
                       )}
                     </div>
                   </div>

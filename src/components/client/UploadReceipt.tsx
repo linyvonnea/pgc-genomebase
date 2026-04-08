@@ -30,6 +30,7 @@ import {
   Upload,
   Lock,
   CheckCircle2,
+  RotateCcw,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -44,6 +45,7 @@ interface Receipt {
   orNumber?: string;
   orDate?: string;
   acknowledgedByAdmin?: boolean;
+  returnedByAdmin?: boolean;
 }
 
 interface UploadReceiptProps {
@@ -109,6 +111,9 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
     return () => unsub();
   }, [projectId]);
 
+  // Locked if any receipt is awaiting admin action (not yet acknowledged and not returned)
+  const hasPendingReceipt = receipts.some((r) => !r.acknowledgedByAdmin && !r.returnedByAdmin);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     e.target.value = "";
@@ -155,6 +160,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
         orNumber: orNumber.trim(),
         orDate,
         acknowledgedByAdmin: false,
+        returnedByAdmin: false,
       });
       await logActivity({
         userId: user?.email || "anonymous",
@@ -178,8 +184,14 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
   };
 
   const handleDelete = async (receipt: Receipt) => {
+    // Block delete if acknowledged by admin (permanent lock)
     if (receipt.acknowledgedByAdmin) {
       toast.error("This receipt has been acknowledged by the admin and cannot be deleted.");
+      return;
+    }
+    // Block delete if still pending admin action (not returned yet)
+    if (!receipt.returnedByAdmin) {
+      toast.error("This receipt is pending admin review and cannot be deleted yet.");
       return;
     }
     setDeletingId(receipt.id);
@@ -225,94 +237,119 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
         <p className="text-xs text-slate-400 ml-5">No official receipts yet</p>
       ) : (
         <div className="space-y-1.5 ml-5">
-          {receipts.map((receipt) => (
-            <div
-              key={receipt.id}
-              className="group flex items-center gap-2 rounded-lg bg-white border border-slate-100 shadow-sm px-2.5 py-1.5 hover:border-blue-200 hover:bg-blue-50/10 transition-colors"
-            >
-              <FileText className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                {receipt.downloadURL ? (
-                  <a
-                    href={receipt.downloadURL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block hover:underline"
-                    title="View receipt"
-                  >
-                    <p className="text-[11px] font-semibold text-slate-700 truncate leading-tight">
-                      {receipt.fileName || receipt.id}
-                    </p>
-                    <p className="text-[9px] text-slate-400 leading-tight mt-0.5">
-                      {[
-                        receipt.orNumber ? `OR No. ${receipt.orNumber}` : null,
-                        receipt.orDate,
-                        formatFileSize(receipt.size),
-                        formatDate(receipt.uploadedAt),
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
-                  </a>
-                ) : (
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-700 truncate leading-tight">
-                      {receipt.fileName || receipt.id}
-                    </p>
-                    <p className="text-[9px] text-slate-400 leading-tight mt-0.5">
-                      {[
-                        receipt.orNumber ? `OR No. ${receipt.orNumber}` : null,
-                        receipt.orDate,
-                        formatFileSize(receipt.size),
-                        formatDate(receipt.uploadedAt),
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-1 flex-shrink-0">
-                {receipt.acknowledgedByAdmin ? (
-                  <span
-                    className="flex items-center gap-0.5 text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5"
-                    title="Acknowledged by admin"
-                  >
-                    <CheckCircle2 className="h-2.5 w-2.5" />
-                    Verified
-                  </span>
-                ) : (
-                  <span
-                    className="text-[9px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 font-semibold"
-                    title="Waiting for admin acknowledgment"
-                  >
-                    Pending
-                  </span>
-                )}
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                  {receipt.acknowledgedByAdmin ? (
-                    <span title="Cannot delete — acknowledged by admin">
-                      <Lock className="h-3 w-3 text-slate-300" />
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={deletingId === receipt.id}
-                      onClick={() => handleDelete(receipt)}
-                      className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
-                      title="Remove receipt"
+          {receipts.map((receipt) => {
+            const isVerified = receipt.acknowledgedByAdmin;
+            const isReturned = receipt.returnedByAdmin && !receipt.acknowledgedByAdmin;
+            const isPending = !receipt.acknowledgedByAdmin && !receipt.returnedByAdmin;
+
+            return (
+              <div
+                key={receipt.id}
+                className="group flex items-center gap-2 rounded-lg bg-white border border-slate-100 shadow-sm px-2.5 py-1.5 hover:border-blue-200 hover:bg-blue-50/10 transition-colors"
+              >
+                <FileText className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  {receipt.downloadURL ? (
+                    <a
+                      href={receipt.downloadURL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block hover:underline"
+                      title="View receipt"
                     >
-                      {deletingId === receipt.id ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-3 w-3" />
-                      )}
-                    </button>
+                      <p className="text-[11px] font-semibold text-slate-700 truncate leading-tight">
+                        {receipt.fileName || receipt.id}
+                      </p>
+                      <p className="text-[9px] text-slate-400 leading-tight mt-0.5">
+                        {[
+                          receipt.orNumber ? `OR No. ${receipt.orNumber}` : null,
+                          receipt.orDate,
+                          formatFileSize(receipt.size),
+                          formatDate(receipt.uploadedAt),
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </a>
+                  ) : (
+                    <div>
+                      <p className="text-[11px] font-semibold text-slate-700 truncate leading-tight">
+                        {receipt.fileName || receipt.id}
+                      </p>
+                      <p className="text-[9px] text-slate-400 leading-tight mt-0.5">
+                        {[
+                          receipt.orNumber ? `OR No. ${receipt.orNumber}` : null,
+                          receipt.orDate,
+                          formatFileSize(receipt.size),
+                          formatDate(receipt.uploadedAt),
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
                   )}
                 </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {/* Status badge */}
+                  {isVerified && (
+                    <span
+                      className="flex items-center gap-0.5 text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5"
+                      title="Acknowledged by admin"
+                    >
+                      <CheckCircle2 className="h-2.5 w-2.5" />
+                      Verified
+                    </span>
+                  )}
+                  {isPending && (
+                    <span
+                      className="text-[9px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 font-semibold"
+                      title="Waiting for admin acknowledgment"
+                    >
+                      Pending
+                    </span>
+                  )}
+                  {isReturned && (
+                    <span
+                      className="flex items-center gap-0.5 text-[9px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded px-1.5 py-0.5"
+                      title="Admin returned this receipt for correction"
+                    >
+                      <RotateCcw className="h-2.5 w-2.5" />
+                      Returned
+                    </span>
+                  )}
+
+                  {/* Action icon */}
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    {isVerified && (
+                      <span title="Cannot delete — acknowledged by admin">
+                        <Lock className="h-3 w-3 text-slate-300" />
+                      </span>
+                    )}
+                    {isPending && (
+                      <span title="Cannot delete — awaiting admin review">
+                        <Lock className="h-3 w-3 text-amber-300" />
+                      </span>
+                    )}
+                    {isReturned && (
+                      <button
+                        type="button"
+                        disabled={deletingId === receipt.id}
+                        onClick={() => handleDelete(receipt)}
+                        className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                        title="Remove returned receipt and re-upload"
+                      >
+                        {deletingId === receipt.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3 w-3" />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -379,8 +416,8 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
         </div>
       )}
 
-      {/* ── Attach button — only active if a charge slip exists ── */}
-      {!pendingFile && (
+      {/* ── Attach button — locked while a receipt is pending admin action ── */}
+      {!pendingFile && !hasPendingReceipt && (
         <div className="ml-5">
           <input
             ref={fileInputRef}
@@ -407,6 +444,14 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
               A Charge Slip must be issued first.
             </p>
           )}
+        </div>
+      )}
+
+      {/* Locked message while pending admin review */}
+      {!pendingFile && hasPendingReceipt && (
+        <div className="ml-5 flex items-center gap-1.5 text-[10px] text-amber-600">
+          <Lock className="h-3 w-3" />
+          Receipt attachment locked — awaiting admin acknowledgment or return for correction.
         </div>
       )}
     </div>
