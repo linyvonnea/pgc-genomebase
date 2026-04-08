@@ -67,4 +67,5 @@ export interface ChargeSlipRecord {
 
   categories?: ValidCategory[]; // Now restricted to valid enums only
   status?: string;
+  showOfficialReceipts?: boolean; // Toggle visibility of uploaded official receipts
 }
