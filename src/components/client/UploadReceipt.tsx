@@ -374,8 +374,8 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
           </div>
 
           {/* OR Number & Date */}
-          <div className="grid grid-cols-[1fr_1.4fr] gap-2">
-            <div className="space-y-1">
+          <div className="flex flex-col gap-3">
+            <div className="space-y-1.5">
               <Label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">
                 OR Number <span className="text-red-500">*</span>
               </Label>
@@ -388,11 +388,11 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
                 }}
                 inputMode="numeric"
                 placeholder="e.g. 0012345"
-                className="h-7 text-xs"
+                className="h-8 text-xs w-full"
                 maxLength={20}
               />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <Label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">
                 OR Date <span className="text-red-500">*</span>
               </Label>
@@ -401,7 +401,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
                 value={orDate}
                 max={new Date().toISOString().split("T")[0]}
                 onChange={(e) => setOrDate(e.target.value)}
-                className="h-7 text-xs w-full"
+                className="h-8 text-xs w-full"
               />
             </div>
           </div>
