@@ -16,11 +16,25 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
-import { Timestamp } from "firebase/firestore";
+import { collection, doc, getDocs, orderBy, query, Timestamp, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import ChargeSlipPreviewButton from "@/components/charge-slip/ChargeSlipPreviewButton";
+import { CheckCircle2, ExternalLink, Loader2 as ReceiptLoader, Stamp } from "lucide-react";
+
+interface OfficialReceipt {
+  id: string;
+  fileName?: string;
+  size?: number;
+  downloadURL?: string;
+  uploadedBy?: string;
+  uploadedAt?: Timestamp;
+  orNumber?: string;
+  orDate?: string;
+  acknowledgedByAdmin?: boolean;
+}
 
 // Utility to normalize to string date
 const formatDate = (val: Date | string | Timestamp | null | undefined): string => {
@@ -59,6 +73,8 @@ function ChargeSlipDetailContent() {
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState<"processing" | "paid" | "cancelled">("processing");
   const [dateOfOR, setDateOfOR] = useState<Timestamp | undefined>(undefined);
+  const [officialReceipts, setOfficialReceipts] = useState<OfficialReceipt[]>([]);
+  const [acknowledging, setAcknowledging] = useState<string | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
@@ -67,13 +83,38 @@ function ChargeSlipDetailContent() {
 
       setRecord(data);
       setDvNumber(data.dvNumber ?? "");
-      setOrNumber(data.orNumber ?? "");
       setNotes(data.notes ?? "");
       setStatus((data.status as "processing" | "paid" | "cancelled") ?? "processing");
 
       const rawDate = data.dateOfOR;
       if (isTimestamp(rawDate)) setDateOfOR(rawDate);
       else if (typeof rawDate === "string") setDateOfOR(Timestamp.fromDate(new Date(rawDate)));
+
+      // Load official receipts for the project and auto-fill OR fields if empty
+      const pid = data.projectId || (data.project as any)?.pid;
+      // Always seed orNumber from the charge slip record first
+      setOrNumber(data.orNumber ?? "");
+
+      if (pid) {
+        try {
+          const orSnap = await getDocs(
+            query(collection(db, "projects", pid, "officialReceipts"), orderBy("uploadedAt", "desc"))
+          );
+          const ors = orSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as OfficialReceipt[];
+          setOfficialReceipts(ors);
+
+          // Auto-fill from the latest receipt only if charge slip OR fields are not yet set
+          const latest = ors.find((r) => r.orNumber);
+          if (latest) {
+            if (!data.orNumber) setOrNumber(latest.orNumber ?? "");
+            if (!data.dateOfOR && latest.orDate) {
+              setDateOfOR(Timestamp.fromDate(new Date(latest.orDate)));
+            }
+          }
+        } catch {
+          // silently fail — official receipts are optional
+        }
+      }
 
       // Log VIEW activity
       await logActivity({
@@ -92,11 +133,49 @@ function ChargeSlipDetailContent() {
     fetch();
   }, [chargeSlipNumber, adminInfo]);
 
-  useEffect(() => {
-    if (orNumber.trim() && !dateOfOR) {
-      setDateOfOR(Timestamp.fromDate(new Date()));
+  const handleAcknowledge = async (receipt: OfficialReceipt) => {
+    if (!record?.id) return;
+    setAcknowledging(receipt.id);
+    try {
+      const pid = record.projectId || (record.project as any)?.pid || "";
+      // Mark the receipt as acknowledged
+      await updateDoc(doc(db, "projects", pid, "officialReceipts", receipt.id), {
+        acknowledgedByAdmin: true,
+      });
+      // Update charge slip status to Paid and persist OR details
+      const orVal = receipt.orNumber || orNumber;
+      const orDateVal = receipt.orDate
+        ? Timestamp.fromDate(new Date(receipt.orDate))
+        : dateOfOR;
+      await updateChargeSlip(record.id, {
+        status: "paid",
+        orNumber: orVal,
+        dateOfOR: orDateVal,
+      });
+      // Sync local UI state
+      setStatus("paid");
+      if (orVal) setOrNumber(orVal);
+      if (orDateVal) setDateOfOR(orDateVal);
+      setOfficialReceipts((prev) =>
+        prev.map((r) => (r.id === receipt.id ? { ...r, acknowledgedByAdmin: true } : r))
+      );
+      await logActivity({
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
+        action: "UPDATE",
+        entityType: "charge_slip",
+        entityId: record.referenceNumber || record.chargeSlipNumber,
+        entityName: `Charge Slip ${record.chargeSlipNumber}`,
+        description: `Acknowledged official receipt: ${receipt.fileName || receipt.id} (OR No. ${receipt.orNumber || "—"}). Charge slip marked as Paid.`,
+      });
+      toast.success("Receipt acknowledged. Charge slip marked as Paid.");
+    } catch {
+      toast.error("Failed to acknowledge receipt.");
+    } finally {
+      setAcknowledging(null);
     }
-  }, [orNumber]);
+  };
 
   const handleSave = async () => {
     if (!record?.id) return;
@@ -325,6 +404,93 @@ function ChargeSlipDetailContent() {
               placeholder="Add any additional notes or comments..."
               className="w-full min-h-[100px]"
             />
+          </div>
+
+          {/* Official Receipts from Client */}
+          <div className="mt-6 border-t border-slate-100 pt-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Stamp className="h-4 w-4 text-emerald-600" />
+              <label className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                Official Receipts from Client
+              </label>
+              {officialReceipts.length > 0 && (
+                <Badge variant="outline" className="text-[10px] text-slate-500 border-slate-200">
+                  {officialReceipts.length}
+                </Badge>
+              )}
+            </div>
+
+            {officialReceipts.length === 0 ? (
+              <p className="text-sm text-slate-400 italic">No official receipts uploaded by client yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {officialReceipts.map((or_) => (
+                  <div
+                    key={or_.id}
+                    className="flex items-start justify-between gap-4 rounded-xl bg-slate-50 border border-slate-200 px-4 py-3"
+                  >
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <p className="text-sm font-semibold text-slate-700 truncate">
+                        {or_.fileName || or_.id}
+                      </p>
+                      <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[11px] text-slate-500">
+                        {or_.orNumber && (
+                          <span>
+                            OR No.: <span className="font-medium text-slate-700">{or_.orNumber}</span>
+                          </span>
+                        )}
+                        {or_.orDate && (
+                          <span>
+                            Date: <span className="font-medium text-slate-700">{or_.orDate}</span>
+                          </span>
+                        )}
+                        {or_.uploadedBy && (
+                          <span>By: <span className="font-medium text-slate-700">{or_.uploadedBy}</span></span>
+                        )}
+                      </div>
+                      <div className="pt-0.5">
+                        {or_.acknowledgedByAdmin ? (
+                          <Badge className="h-5 text-[10px] bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 gap-1">
+                            <CheckCircle2 className="h-2.5 w-2.5" /> Acknowledged
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="h-5 text-[10px] text-amber-600 border-amber-200 bg-amber-50">
+                            Pending Acknowledgment
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      {or_.downloadURL && (
+                        <a
+                          href={or_.downloadURL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:underline"
+                        >
+                          <ExternalLink className="h-3 w-3" /> View file
+                        </a>
+                      )}
+                      {!or_.acknowledgedByAdmin && (
+                        <Button
+                          size="sm"
+                          disabled={acknowledging === or_.id}
+                          onClick={() => handleAcknowledge(or_)}
+                          className="h-7 text-[11px] px-3 bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
+                        >
+                          {acknowledging === or_.id ? (
+                            <ReceiptLoader className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="h-3 w-3" />
+                          )}
+                          Acknowledge
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

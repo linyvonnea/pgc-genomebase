@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Project } from "@/types/Project";
-import { db } from "@/lib/firebase";
-import { collection, getDocs, orderBy, query, Timestamp } from "firebase/firestore";
+
 import { getChargeSlipsByProjectId } from "@/services/chargeSlipService";
 import { getSampleFormsByProjectId } from "@/services/sampleFormService";
 import { getQuotationsByInquiryId } from "@/services/quotationService";
@@ -27,7 +26,6 @@ import {
   FileText,
   Loader2,
   Receipt,
-  Stamp,
   User,
   Users,
   X,
@@ -36,16 +34,6 @@ import {
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 import { EditProjectModal } from "@/components/forms/EditProjectModal";
-
-type OfficialReceipt = {
-  id: string;
-  fileName?: string;
-  contentType?: string;
-  size?: number;
-  downloadURL?: string;
-  uploadedBy?: string;
-  uploadedAt?: Timestamp;
-};
 
 interface ProjectDetailSheetProps {
   project: Project | null;
@@ -85,12 +73,6 @@ const statusColor: Record<string, string> = {
   Cancelled: "bg-rose-50 text-rose-700 border-rose-200",
 };
 
-function formatTimestamp(value?: Timestamp) {
-  if (!value) return "—";
-  const date = typeof value.toDate === "function" ? value.toDate() : new Date(value as any);
-  return isNaN(date.getTime()) ? "—" : date.toLocaleString();
-}
-
 function formatDate(value?: Date | string) {
   if (!value) return "—";
   const d = value instanceof Date ? value : new Date(value);
@@ -110,7 +92,6 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
   const [quotations, setQuotations] = useState<QuotationRecord[]>([]);
   const [chargeSlips, setChargeSlips] = useState<ChargeSlipRecord[]>([]);
   const [sampleForms, setSampleForms] = useState<SampleFormSummary[]>([]);
-  const [officialReceipts, setOfficialReceipts] = useState<OfficialReceipt[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -121,25 +102,20 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
       setQuotations([]);
       setChargeSlips([]);
       setSampleForms([]);
-      setOfficialReceipts([]);
 
       try {
         const pid = project.pid!;
         const iid = project.iid;
 
-        const [qs, cs, sf, or_] = await Promise.all([
+        const [qs, cs, sf] = await Promise.all([
           iid ? getQuotationsByInquiryId(iid).catch(() => []) : Promise.resolve([]),
           getChargeSlipsByProjectId(pid).catch(() => []),
           getSampleFormsByProjectId(pid).catch(() => []),
-          getDocs(query(collection(db, "projects", pid, "officialReceipts"), orderBy("uploadedAt", "desc"))).then(
-            (snap) => snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }))
-          ).catch(() => []),
         ]);
 
         setQuotations(qs as QuotationRecord[]);
         setChargeSlips(cs as ChargeSlipRecord[]);
         setSampleForms(sf as SampleFormSummary[]);
-        setOfficialReceipts(or_ as OfficialReceipt[]);
 
         // Log view
         await logActivity({
@@ -389,44 +365,6 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                   )}
                 </div>
 
-                {/* Official Receipts */}
-                <div>
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <Stamp className="h-3.5 w-3.5 text-emerald-600" />
-                    <span className="text-xs font-semibold text-slate-700">Official Receipts</span>
-                    <span className="text-[10px] text-slate-500">({officialReceipts.length})</span>
-                  </div>
-                  {officialReceipts.length === 0 ? (
-                    <p className="text-xs text-slate-400 ml-5">No official receipts uploaded</p>
-                  ) : (
-                    <div className="space-y-2 ml-5">
-                      {officialReceipts.map((receipt) => (
-                        <div key={receipt.id} className="flex items-start justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 border border-slate-200">
-                          <div className="min-w-0 flex-1">
-                            <p className="text-xs font-semibold text-slate-700 truncate">
-                              {receipt.fileName || receipt.id}
-                            </p>
-                            <p className="text-[10px] text-slate-500 mt-0.5">
-                              {receipt.uploadedBy || "Unknown"}
-                              {receipt.size ? ` · ${formatFileSize(receipt.size)}` : ""}
-                              {" · "}{formatTimestamp(receipt.uploadedAt)}
-                            </p>
-                          </div>
-                          {receipt.downloadURL && (
-                            <a
-                              href={receipt.downloadURL}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline shrink-0 mt-0.5"
-                            >
-                              View <ExternalLink className="h-3 w-3" />
-                            </a>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
 
               </div>
             )}

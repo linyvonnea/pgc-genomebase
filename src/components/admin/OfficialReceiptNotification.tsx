@@ -32,6 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { logActivity } from "@/services/activityLogService";
+import { getChargeSlipsByProjectId, updateChargeSlip } from "@/services/chargeSlipService";
 import useAuth from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
@@ -94,6 +95,22 @@ export function OfficialReceiptNotification() {
         doc(db, "projects", receipt.projectId, "officialReceipts", receipt.id),
         { acknowledgedByAdmin: true },
       );
+
+      // Update all processing charge slips for this project to Paid
+      const chargeSlips = await getChargeSlipsByProjectId(receipt.projectId);
+      for (const cs of chargeSlips) {
+        if (cs.id && cs.status !== "paid" && cs.status !== "cancelled") {
+          const orDateVal = receipt.orDate
+            ? Timestamp.fromDate(new Date(receipt.orDate))
+            : cs.dateOfOR;
+          await updateChargeSlip(cs.id, {
+            status: "paid",
+            orNumber: cs.orNumber || receipt.orNumber,
+            dateOfOR: orDateVal,
+          });
+        }
+      }
+
       await logActivity({
         userId: adminInfo?.email || "admin",
         userEmail: adminInfo?.email || "admin",
