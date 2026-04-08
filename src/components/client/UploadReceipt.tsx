@@ -114,6 +114,11 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
     return () => unsub();
   }, [projectId]);
 
+  // Scope receipts to the active charge slip when provided.
+  const visibleReceipts = csNum
+    ? receipts.filter((r) => r.chargeSlipNumber === csNum)
+    : receipts;
+
   // Locked if any receipt is awaiting admin action (not yet acknowledged and not returned)
   const hasPendingReceipt = visibleReceipts.some((r) => !r.acknowledgedByAdmin && !r.returnedByAdmin);
   const verifiedCount = visibleReceipts.filter((r) => r.acknowledgedByAdmin).length;
