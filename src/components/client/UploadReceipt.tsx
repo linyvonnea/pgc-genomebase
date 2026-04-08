@@ -374,17 +374,22 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
           </div>
 
           {/* OR Number & Date */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-[1fr_1.4fr] gap-2">
             <div className="space-y-1">
               <Label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">
                 OR Number <span className="text-red-500">*</span>
               </Label>
               <Input
                 value={orNumber}
-                onChange={(e) => setOrNumber(e.target.value)}
+                onChange={(e) => {
+                  // Only allow digits
+                  const val = e.target.value.replace(/\D/g, "");
+                  setOrNumber(val);
+                }}
+                inputMode="numeric"
                 placeholder="e.g. 0012345"
                 className="h-7 text-xs"
-                maxLength={50}
+                maxLength={20}
               />
             </div>
             <div className="space-y-1">
@@ -394,8 +399,9 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
               <Input
                 type="date"
                 value={orDate}
+                max={new Date().toISOString().split("T")[0]}
                 onChange={(e) => setOrDate(e.target.value)}
-                className="h-7 text-xs"
+                className="h-7 text-xs w-full"
               />
             </div>
           </div>
@@ -463,7 +469,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
           return (
             <div className="ml-5 flex items-center gap-1.5 text-[10px] text-amber-600">
               <Lock className="h-3 w-3" />
-              Receipt attachment locked — awaiting admin acknowledgment or return for correction.
+              Receipt attachment locked — awaiting admin acknowledgment.
             </div>
           );
         }
