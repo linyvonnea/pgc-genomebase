@@ -168,6 +168,27 @@ export default function ChatBox({
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const DEFAULT_REACTIONS = ["👍", "❤️", "😮", "😂", "😥"];
+  const currentAdminAlias =
+    role === "admin" && user ? getAdminDisplayName(user.email || user.uid) : "";
+
+  const getMessageAdminAlias = (msg: ThreadMessage) => {
+    const alias = (msg.senderName || "").trim();
+    return alias || "Admin";
+  };
+
+  const normalizeIdentifier = (value: string | null | undefined) =>
+    (value || "").trim().toLowerCase();
+
+  const currentUserIdentifiers = new Set(
+    [normalizeIdentifier(user?.email), normalizeIdentifier(user?.uid)].filter(Boolean),
+  );
+  const currentAdminAlias =
+    role === "admin" && user ? getAdminDisplayName(user.email || user.uid) : "";
+
+  const getMessageAdminAlias = (msg: ThreadMessage) => {
+    const alias = (msg.senderName || "").trim();
+    return alias || "Admin";
+  };
 
   const normalizeIdentifier = (value: string | null | undefined) =>
     (value || "").trim().toLowerCase();
