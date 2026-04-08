@@ -192,9 +192,12 @@ function ChargeSlipDetailContent() {
         acknowledgedByAdmin: true,
       });
       // Append this OR entry to the charge slip's orEntries array (partial payment record).
+      // Also update the root OR fields with the most recent info.
       // Status is NOT auto-changed; admin sets it manually when the full payment is complete.
       if (receipt.orNumber || receipt.orDate) {
         await updateChargeSlip(record.id, {
+          orNumber: receipt.orNumber || "",
+          dateOfOR: receipt.orDate || "",
           orEntries: arrayUnion({
             orNumber: receipt.orNumber || "",
             orDate: receipt.orDate || "",
@@ -265,13 +268,20 @@ function ChargeSlipDetailContent() {
     if (!record?.id) return;
 
     try {
-      const updates = {
+      const updates: any = {
         dvNumber,
         orNumber,
         notes,
         status,
         dateOfOR,
       };
+
+      // Set datePaid automatically when switching to "paid" status
+      if (status === "paid" && record.status !== "paid") {
+        updates.datePaid = Timestamp.now();
+      } else if (status !== "paid") {
+        updates.datePaid = null;
+      }
       
       await updateChargeSlip(record.id, updates);
 
