@@ -190,6 +190,21 @@ export default function ChatBox({
     return alias || "Admin";
   };
 
+  const normalizeIdentifier = (value: string | null | undefined) =>
+    (value || "").trim().toLowerCase();
+
+  const currentUserIdentifiers = new Set(
+    [normalizeIdentifier(user?.email), normalizeIdentifier(user?.uid)].filter(Boolean),
+  );
+  const currentAdminAlias =
+    role === "admin" && user ? getAdminDisplayName(user.email || user.uid) : "";
+
+  const getMessageAdminAlias = (msg: ThreadMessage) => {
+    // Always derive from senderId (email) so the alias reflects the actual sender,
+    // regardless of what was stored in senderName at message creation time.
+    return getAdminDisplayName(msg.senderId);
+  };
+
   useEffect(() => {
     if (!inquiryId || !user) return;
 
@@ -467,7 +482,7 @@ export default function ChatBox({
                               variant="outline"
                               className="text-[8px] h-3.5 py-0 px-1 bg-blue-50 text-blue-700 border-blue-200"
                             >
-                              Admin {getMessageAdminAlias(msg)}
+                              {getMessageAdminAlias(msg)}
                             </Badge>
                           )}
                         </div>
