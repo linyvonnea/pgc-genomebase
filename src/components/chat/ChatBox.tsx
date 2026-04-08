@@ -176,6 +176,20 @@ export default function ChatBox({
     return alias || "Admin";
   };
 
+  const normalizeIdentifier = (value: string | null | undefined) =>
+    (value || "").trim().toLowerCase();
+
+  const currentUserIdentifiers = new Set(
+    [normalizeIdentifier(user?.email), normalizeIdentifier(user?.uid)].filter(Boolean),
+  );
+  const currentAdminAlias =
+    role === "admin" && user ? getAdminDisplayName(user.email || user.uid) : "";
+
+  const getMessageAdminAlias = (msg: ThreadMessage) => {
+    const alias = (msg.senderName || "").trim();
+    return alias || "Admin";
+  };
+
   useEffect(() => {
     if (!inquiryId || !user) return;
 
@@ -390,7 +404,8 @@ export default function ChatBox({
             </div>
           ) : (
             messages.map((msg, idx) => {
-              const isMe = msg.senderRole === role;
+              const senderId = normalizeIdentifier(msg.senderId);
+              const isMe = senderId ? currentUserIdentifiers.has(senderId) : false;
 
               // Handle system messages dynamically
               if (msg.type === "system") {
