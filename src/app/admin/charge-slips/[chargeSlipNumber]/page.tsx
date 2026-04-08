@@ -8,16 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
   Select,
   SelectTrigger,
   SelectContent,
@@ -26,7 +16,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
-import { arrayUnion, collection, deleteDoc, doc, getDocs, orderBy, query, Timestamp, updateDoc } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDocs, orderBy, query, Timestamp, updateDoc } from "firebase/firestore";
 import { ref as storageRef, deleteObject } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
 import { logActivity } from "@/services/activityLogService";
@@ -100,7 +90,6 @@ function ChargeSlipDetailContent() {
   const [acknowledging, setAcknowledging] = useState<string | null>(null);
   const [returning, setReturning] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [receiptToDelete, setReceiptToDelete] = useState<OfficialReceipt | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
@@ -129,8 +118,14 @@ function ChargeSlipDetailContent() {
           const ors = orSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as OfficialReceipt[];
           setOfficialReceipts(ors);
 
-          // OR Number and Date of OR are only populated from the charge slip record itself (set on Acknowledge);
-          // do NOT auto-fill from uploaded receipts here.
+          // Auto-fill from the latest receipt only if charge slip OR fields are not yet set
+          const latest = ors.find((r) => r.orNumber);
+          if (latest) {
+            if (!data.orNumber) setOrNumber(latest.orNumber ?? "");
+            if (!data.dateOfOR && latest.orDate) {
+              setDateOfOR(Timestamp.fromDate(new Date(latest.orDate)));
+            }
+          }
         } catch {
           // silently fail — official receipts are optional
         }
@@ -191,21 +186,20 @@ function ChargeSlipDetailContent() {
       await updateDoc(doc(db, "projects", pid, "officialReceipts", receipt.id), {
         acknowledgedByAdmin: true,
       });
-      // Append this OR entry to the charge slip's orEntries array (partial payment record).
-      // Also update the root OR fields with the most recent info.
-      // Status is NOT auto-changed; admin sets it manually when the full payment is complete.
-      if (receipt.orNumber || receipt.orDate) {
-        await updateChargeSlip(record.id, {
-          orNumber: receipt.orNumber || "",
-          dateOfOR: receipt.orDate || "",
-          orEntries: arrayUnion({
-            orNumber: receipt.orNumber || "",
-            orDate: receipt.orDate || "",
-            acknowledgedAt: Timestamp.now(),
-          }) as any,
-        });
-      }
+      // Update charge slip status to Paid and persist OR details
+      const orVal = receipt.orNumber || orNumber;
+      const orDateVal = receipt.orDate
+        ? Timestamp.fromDate(new Date(receipt.orDate))
+        : dateOfOR;
+      await updateChargeSlip(record.id, {
+        status: "paid",
+        orNumber: orVal,
+        dateOfOR: orDateVal,
+      });
       // Sync local UI state
+      setStatus("paid");
+      if (orVal) setOrNumber(orVal);
+      if (orDateVal) setDateOfOR(orDateVal);
       setOfficialReceipts((prev) =>
         prev.map((r) => (r.id === receipt.id ? { ...r, acknowledgedByAdmin: true } : r))
       );
@@ -217,9 +211,9 @@ function ChargeSlipDetailContent() {
         entityType: "charge_slip",
         entityId: record.referenceNumber || record.chargeSlipNumber,
         entityName: `Charge Slip ${record.chargeSlipNumber}`,
-        description: `Acknowledged official receipt: ${receipt.fileName || receipt.id} (OR No. ${receipt.orNumber || "—"}, Date: ${receipt.orDate || "—"}).`,
+        description: `Acknowledged official receipt: ${receipt.fileName || receipt.id} (OR No. ${receipt.orNumber || "—"}). Charge slip marked as Paid.`,
       });
-      toast.success("Receipt acknowledged and OR entry recorded.");
+      toast.success("Receipt acknowledged. Charge slip marked as Paid.");
     } catch {
       toast.error("Failed to acknowledge receipt.");
     } finally {
@@ -268,20 +262,13 @@ function ChargeSlipDetailContent() {
     if (!record?.id) return;
 
     try {
-      const updates: any = {
+      const updates = {
         dvNumber,
         orNumber,
         notes,
         status,
         dateOfOR,
       };
-
-      // Set datePaid automatically when switching to "paid" status
-      if (status === "paid" && record.status !== "paid") {
-        updates.datePaid = Timestamp.now();
-      } else if (status !== "paid") {
-        updates.datePaid = null;
-      }
       
       await updateChargeSlip(record.id, updates);
 
@@ -487,25 +474,6 @@ function ChargeSlipDetailContent() {
                   className="w-full"
                 />
               </div>
-
-              {/* Partial payment OR entries (read-only, auto-populated on acknowledge) */}
-              {record.orEntries && record.orEntries.length > 0 && (
-                <div>
-                  <label className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-2">
-                    OR Entries ({record.orEntries.length})
-                  </label>
-                  <div className="space-y-1.5">
-                    {record.orEntries.map((entry, i) => (
-                      <div key={i} className="flex items-center gap-3 rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-[11px] text-slate-600">
-                        <span className="font-semibold text-slate-400 w-4 shrink-0">#{i + 1}</span>
-                        <span>OR No. <span className="font-semibold text-slate-700">{entry.orNumber || "—"}</span></span>
-                        <span className="text-slate-300">·</span>
-                        <span>Date: <span className="font-semibold text-slate-700">{entry.orDate || "—"}</span></span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
 
@@ -594,7 +562,7 @@ function ChargeSlipDetailContent() {
                             size="sm"
                             variant="ghost"
                             disabled={deleting === or_.id || acknowledging === or_.id || returning === or_.id}
-                            onClick={() => setReceiptToDelete(or_)}
+                            onClick={() => handleDeleteReceipt(or_)}
                             className="h-7 w-7 p-0 text-slate-400 hover:text-red-600 hover:bg-red-50"
                             title="Delete receipt"
                           >
@@ -605,20 +573,36 @@ function ChargeSlipDetailContent() {
                             )}
                           </Button>
                         </div>
-                        {!or_.acknowledgedByAdmin && (
-                          <Button
-                            size="sm"
-                            disabled={acknowledging === or_.id || deleting === or_.id}
-                            onClick={() => handleAcknowledge(or_)}
-                            className="h-7 text-[11px] px-3 bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
-                          >
-                            {acknowledging === or_.id ? (
-                              <ReceiptLoader className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <CheckCircle2 className="h-3 w-3" />
-                            )}
-                            Acknowledge
-                          </Button>
+                        {!or_.acknowledgedByAdmin && !or_.returnedByAdmin && (
+                          <div className="flex gap-1.5">
+                            <Button
+                              size="sm"
+                              disabled={returning === or_.id || acknowledging === or_.id}
+                              onClick={() => handleReturn(or_)}
+                              variant="outline"
+                              className="h-7 text-[11px] px-3 border-rose-200 text-rose-600 hover:bg-rose-50 gap-1"
+                            >
+                              {returning === or_.id ? (
+                                <ReceiptLoader className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <RotateCcw className="h-3 w-3" />
+                              )}
+                              Return
+                            </Button>
+                            <Button
+                              size="sm"
+                              disabled={acknowledging === or_.id || returning === or_.id}
+                              onClick={() => handleAcknowledge(or_)}
+                              className="h-7 text-[11px] px-3 bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
+                            >
+                              {acknowledging === or_.id ? (
+                                <ReceiptLoader className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <CheckCircle2 className="h-3 w-3" />
+                              )}
+                              Acknowledge
+                            </Button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -656,43 +640,6 @@ function ChargeSlipDetailContent() {
           </Button>
         </div>
       </div>
-
-      {/* Delete Receipt Confirmation Modal */}
-      <AlertDialog open={!!receiptToDelete} onOpenChange={(open) => { if (!open) setReceiptToDelete(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Official Receipt?</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-2 text-sm text-slate-600">
-                <p>This action cannot be undone. The file will be permanently deleted from storage.</p>
-                {receiptToDelete && (
-                  <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 space-y-1 text-[12px]">
-                    <p><span className="font-medium text-slate-700">File:</span> {receiptToDelete.fileName || receiptToDelete.id}</p>
-                    {receiptToDelete.orNumber && <p><span className="font-medium text-slate-700">OR No.:</span> {receiptToDelete.orNumber}</p>}
-                    {receiptToDelete.orDate && <p><span className="font-medium text-slate-700">Date:</span> {receiptToDelete.orDate}</p>}
-                    {receiptToDelete.uploadedBy && <p><span className="font-medium text-slate-700">Uploaded by:</span> {receiptToDelete.uploadedBy}</p>}
-                  </div>
-                )}
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={!!deleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={!!deleting}
-              onClick={async () => {
-                if (receiptToDelete) {
-                  await handleDeleteReceipt(receiptToDelete);
-                  setReceiptToDelete(null);
-                }
-              }}
-              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-            >
-              {deleting ? "Deleting…" : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

@@ -169,21 +169,6 @@ export default function ChatBox({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const DEFAULT_REACTIONS = ["👍", "❤️", "😮", "😂", "😥"];
 
-  const normalizeIdentifier = (value: string | null | undefined) =>
-    (value || "").trim().toLowerCase();
-
-  const currentUserIdentifiers = new Set(
-    [normalizeIdentifier(user?.email), normalizeIdentifier(user?.uid)].filter(Boolean),
-  );
-  const currentAdminAlias =
-    role === "admin" && user ? getAdminDisplayName(user.email || user.uid) : "";
-
-  const getMessageAdminAlias = (msg: ThreadMessage) => {
-    // Always derive from senderId (email) so the alias reflects the actual sender,
-    // regardless of what was stored in senderName at message creation time.
-    return getAdminDisplayName(msg.senderId);
-  };
-
   useEffect(() => {
     if (!inquiryId || !user) return;
 
@@ -398,8 +383,7 @@ export default function ChatBox({
             </div>
           ) : (
             messages.map((msg, idx) => {
-              const senderId = normalizeIdentifier(msg.senderId);
-              const isMe = senderId ? currentUserIdentifiers.has(senderId) : false;
+              const isMe = msg.senderRole === role;
 
               // Handle system messages dynamically
               if (msg.type === "system") {
@@ -437,16 +421,14 @@ export default function ChatBox({
                     <div className="flex items-center gap-2 mb-1">
                       {isMe ? (
                         <div className="flex items-center gap-1.5 order-2">
-                          {role === "admin" && (
-                            <span className="text-[8px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-full px-1.5 py-0.5 order-1">
-                              {currentAdminAlias}
-                            </span>
-                          )}
                           <Avatar className="h-4 w-4 border border-slate-100 bg-white order-2">
                             <AvatarFallback className="bg-blue-50 text-[7px] font-bold text-blue-700">
                               {role === "admin" ? "AD" : getClientInitials(msg.senderName)}
                             </AvatarFallback>
                           </Avatar>
+                          <span className="text-xs font-semibold text-gray-600 order-1">
+                            {role === "admin" ? msg.senderName : "You"}
+                          </span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-1.5">
@@ -461,9 +443,12 @@ export default function ChatBox({
                               variant="outline"
                               className="text-[8px] h-3.5 py-0 px-1 bg-blue-50 text-blue-700 border-blue-200"
                             >
-                              {getMessageAdminAlias(msg)}
+                              Admin
                             </Badge>
                           )}
+                          <span className="text-xs font-semibold text-gray-600">
+                            {msg.senderName}
+                          </span>
                         </div>
                       )}
                       <span className={`text-[10px] text-gray-400 flex items-center gap-1 ${isMe ? "mr-1 order-1" : "ml-1"}`}>
