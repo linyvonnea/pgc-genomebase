@@ -25,6 +25,7 @@ import {
   ExternalLink,
   FileText,
   Loader2,
+  RotateCcw,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ interface PendingReceipt {
   uploadedBy?: string;
   uploadedAt?: Timestamp;
   size?: number;
+  returnedByAdmin?: boolean;
 }
 
 function formatDate(ts?: Timestamp) {
@@ -63,6 +65,7 @@ export function OfficialReceiptNotification() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [acknowledging, setAcknowledging] = useState<string | null>(null);
+  const [returning, setReturning] = useState<string | null>(null);
 
   useEffect(() => {
     // Listen to all officialReceipts sub-collections where acknowledgedByAdmin is false
@@ -87,6 +90,30 @@ export function OfficialReceiptNotification() {
 
     return () => unsub();
   }, []);
+
+  const handleReturn = async (receipt: PendingReceipt) => {
+    setReturning(receipt.id);
+    try {
+      await updateDoc(
+        doc(db, "projects", receipt.projectId, "officialReceipts", receipt.id),
+        { returnedByAdmin: true },
+      );
+      await logActivity({
+        userId: adminInfo?.email || "admin",
+        userEmail: adminInfo?.email || "admin",
+        userName: adminInfo?.name || "Admin",
+        action: "UPDATE",
+        entityType: "project",
+        entityId: receipt.projectId,
+        description: `Returned official receipt for correction: ${receipt.fileName || receipt.id}`,
+      });
+      toast.success("Receipt returned to client for correction.");
+    } catch {
+      toast.error("Failed to return receipt.");
+    } finally {
+      setReturning(null);
+    }
+  };
 
   const handleAcknowledge = async (receipt: PendingReceipt) => {
     setAcknowledging(receipt.id);
@@ -237,7 +264,21 @@ export function OfficialReceiptNotification() {
                         )}
                         <Button
                           size="sm"
-                          disabled={acknowledging === receipt.id}
+                          disabled={returning === receipt.id || acknowledging === receipt.id}
+                          onClick={() => handleReturn(receipt)}
+                          variant="outline"
+                          className="h-6 text-[10px] px-2 border-rose-200 text-rose-600 hover:bg-rose-50 gap-1"
+                        >
+                          {returning === receipt.id ? (
+                            <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                          ) : (
+                            <RotateCcw className="h-2.5 w-2.5" />
+                          )}
+                          Return
+                        </Button>
+                        <Button
+                          size="sm"
+                          disabled={acknowledging === receipt.id || returning === receipt.id}
                           onClick={() => handleAcknowledge(receipt)}
                           className="h-6 text-[10px] px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
                         >
