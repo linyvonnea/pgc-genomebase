@@ -179,8 +179,9 @@ export default function ChatBox({
     role === "admin" && user ? getAdminDisplayName(user.email || user.uid) : "";
 
   const getMessageAdminAlias = (msg: ThreadMessage) => {
-    const alias = (msg.senderName || "").trim();
-    return alias || "Admin";
+    // Always derive from senderId (email) so the alias reflects the actual sender,
+    // regardless of what was stored in senderName at message creation time.
+    return getAdminDisplayName(msg.senderId);
   };
 
   useEffect(() => {
@@ -460,7 +461,7 @@ export default function ChatBox({
                               variant="outline"
                               className="text-[8px] h-3.5 py-0 px-1 bg-blue-50 text-blue-700 border-blue-200"
                             >
-                              Admin {getMessageAdminAlias(msg)}
+                              {getMessageAdminAlias(msg)}
                             </Badge>
                           )}
                         </div>
