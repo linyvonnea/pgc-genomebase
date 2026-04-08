@@ -46,11 +46,14 @@ interface Receipt {
   orDate?: string;
   acknowledgedByAdmin?: boolean;
   returnedByAdmin?: boolean;
+  chargeSlipNumber?: string;
 }
 
 interface UploadReceiptProps {
   projectId: string;
   hasChargeSlip: boolean;
+  /** When provided, only show/upload receipts for this specific charge slip */
+  chargeSlipNumber?: string;
 }
 
 function formatFileSize(bytes?: number) {
@@ -80,7 +83,7 @@ function extractStoragePath(url: string): string | null {
   }
 }
 
-export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceiptProps) {
+export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumber: csNum }: UploadReceiptProps) {
   const { user } = useAuth();
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [loadingReceipts, setLoadingReceipts] = useState(true);
