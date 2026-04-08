@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
-import { collection, deleteDoc, doc, getDocs, orderBy, query, Timestamp, updateDoc } from "firebase/firestore";
+import { arrayUnion, collection, deleteDoc, doc, getDocs, orderBy, query, Timestamp, updateDoc } from "firebase/firestore";
 import { ref as storageRef, deleteObject } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
 import { logActivity } from "@/services/activityLogService";
@@ -191,20 +191,18 @@ function ChargeSlipDetailContent() {
       await updateDoc(doc(db, "projects", pid, "officialReceipts", receipt.id), {
         acknowledgedByAdmin: true,
       });
-      // Update charge slip status to Paid and persist OR details
-      const orVal = receipt.orNumber || orNumber;
-      const orDateVal = receipt.orDate
-        ? Timestamp.fromDate(new Date(receipt.orDate))
-        : dateOfOR;
-      await updateChargeSlip(record.id, {
-        status: "paid",
-        orNumber: orVal,
-        dateOfOR: orDateVal,
-      });
+      // Append this OR entry to the charge slip's orEntries array (partial payment record).
+      // Status is NOT auto-changed; admin sets it manually when the full payment is complete.
+      if (receipt.orNumber || receipt.orDate) {
+        await updateChargeSlip(record.id, {
+          orEntries: arrayUnion({
+            orNumber: receipt.orNumber || "",
+            orDate: receipt.orDate || "",
+            acknowledgedAt: Timestamp.now(),
+          }) as any,
+        });
+      }
       // Sync local UI state
-      setStatus("paid");
-      if (orVal) setOrNumber(orVal);
-      if (orDateVal) setDateOfOR(orDateVal);
       setOfficialReceipts((prev) =>
         prev.map((r) => (r.id === receipt.id ? { ...r, acknowledgedByAdmin: true } : r))
       );
@@ -216,9 +214,9 @@ function ChargeSlipDetailContent() {
         entityType: "charge_slip",
         entityId: record.referenceNumber || record.chargeSlipNumber,
         entityName: `Charge Slip ${record.chargeSlipNumber}`,
-        description: `Acknowledged official receipt: ${receipt.fileName || receipt.id} (OR No. ${receipt.orNumber || "—"}). Charge slip marked as Paid.`,
+        description: `Acknowledged official receipt: ${receipt.fileName || receipt.id} (OR No. ${receipt.orNumber || "—"}, Date: ${receipt.orDate || "—"}).`,
       });
-      toast.success("Receipt acknowledged. Charge slip marked as Paid.");
+      toast.success("Receipt acknowledged and OR entry recorded.");
     } catch {
       toast.error("Failed to acknowledge receipt.");
     } finally {
@@ -479,6 +477,25 @@ function ChargeSlipDetailContent() {
                   className="w-full"
                 />
               </div>
+
+              {/* Partial payment OR entries (read-only, auto-populated on acknowledge) */}
+              {record.orEntries && record.orEntries.length > 0 && (
+                <div>
+                  <label className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-2">
+                    OR Entries ({record.orEntries.length})
+                  </label>
+                  <div className="space-y-1.5">
+                    {record.orEntries.map((entry, i) => (
+                      <div key={i} className="flex items-center gap-3 rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-[11px] text-slate-600">
+                        <span className="font-semibold text-slate-400 w-4 shrink-0">#{i + 1}</span>
+                        <span>OR No. <span className="font-semibold text-slate-700">{entry.orNumber || "—"}</span></span>
+                        <span className="text-slate-300">·</span>
+                        <span>Date: <span className="font-semibold text-slate-700">{entry.orDate || "—"}</span></span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

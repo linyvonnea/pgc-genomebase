@@ -113,6 +113,8 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
 
   // Locked if any receipt is awaiting admin action (not yet acknowledged and not returned)
   const hasPendingReceipt = receipts.some((r) => !r.acknowledgedByAdmin && !r.returnedByAdmin);
+  const verifiedCount = receipts.filter((r) => r.acknowledgedByAdmin).length;
+  const MAX_RECEIPTS = 3;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -237,6 +239,11 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
         <p className="text-xs text-slate-400 ml-5">No official receipts yet</p>
       ) : (
         <div className="space-y-1.5 ml-5">
+          {/* Receipt count progress */}
+          <p className="text-[9px] text-slate-400">
+            {verifiedCount} of {receipts.length} receipt{receipts.length !== 1 ? "s" : ""} verified
+            {receipts.length >= MAX_RECEIPTS ? " · Maximum reached" : ` · ${MAX_RECEIPTS - receipts.length} remaining`}
+          </p>
           {receipts.map((receipt) => {
             const isVerified = receipt.acknowledgedByAdmin;
             const isReturned = receipt.returnedByAdmin && !receipt.acknowledgedByAdmin;
@@ -422,8 +429,8 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
         </div>
       )}
 
-      {/* ── Attach button — only shown when no receipts exist (1 attachment max) ── */}
-      {!pendingFile && receipts.length === 0 && (
+      {/* ── Attach button — shown when under 3 receipts and no receipt is pending ── */}
+      {!pendingFile && receipts.length < MAX_RECEIPTS && !hasPendingReceipt && (
         <div className="ml-5">
           <input
             ref={fileInputRef}
@@ -454,22 +461,30 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
       )}
 
       {/* Lock messages when a receipt exists but no pending file is being composed */}
-      {!pendingFile && receipts.length > 0 && (() => {
+      {!pendingFile && (receipts.length >= MAX_RECEIPTS || hasPendingReceipt) && (() => {
+        const allVerified = receipts.length > 0 && receipts.every((r) => r.acknowledgedByAdmin);
         const hasVerified = receipts.some((r) => r.acknowledgedByAdmin);
-        const hasPending = receipts.some((r) => !r.acknowledgedByAdmin && !r.returnedByAdmin);
-        if (hasVerified) {
+        if (allVerified) {
           return (
             <div className="ml-5 flex items-center gap-1.5 text-[10px] text-emerald-600">
               <Lock className="h-3 w-3" />
-              Receipt verified. No further uploads are required.
+              All receipts verified. No further uploads are required.
             </div>
           );
         }
-        if (hasPending) {
+        if (hasPendingReceipt) {
           return (
             <div className="ml-5 flex items-center gap-1.5 text-[10px] text-amber-600">
               <Lock className="h-3 w-3" />
               Receipt attachment locked — awaiting admin acknowledgment.
+            </div>
+          );
+        }
+        if (receipts.length >= MAX_RECEIPTS) {
+          return (
+            <div className="ml-5 flex items-center gap-1.5 text-[10px] text-slate-500">
+              <Lock className="h-3 w-3" />
+              Maximum of {MAX_RECEIPTS} receipts reached.
             </div>
           );
         }
