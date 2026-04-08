@@ -2746,89 +2746,19 @@ export default function ClientPortalPage() {
                                 <span className="text-[10px] text-slate-500">({chargeSlipCount})</span>
                               </div>
                               {chargeSlipCount > 0 ? (
-                                <div className="space-y-2 ml-4">
-                                  {docs?.chargeSlips.map((chargeSlip) => {
-                                    const csPaid = chargeSlip.status === "paid";
-                                    const csCancelled = chargeSlip.status === "cancelled";
-                                    const csTotal = typeof chargeSlip.total === "number" ? chargeSlip.total : 0;
-                                    const csRawDate = chargeSlip.dateIssued;
-                                    const csIssuedDate = csRawDate
-                                      ? (csRawDate as any)?.toDate
-                                        ? formatDate((csRawDate as any).toDate())
-                                        : formatDate(csRawDate as string)
-                                      : null;
-                                    return (
-                                      <div
-                                        key={chargeSlip.id}
-                                        className="rounded-xl border border-slate-100 bg-white shadow-sm p-2.5 space-y-2"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        {/* Top row: CS number link + status badge */}
-                                        <div className="flex items-center justify-between gap-2 flex-wrap">
-                                          <a
-                                            href={`/client/view-document?type=charge-slip&ref=${chargeSlip.id}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-1 text-xs font-semibold text-green-700 hover:underline"
-                                          >
-                                            <Receipt className="h-3 w-3 flex-shrink-0" />
-                                            {chargeSlip.chargeSlipNumber}
-                                          </a>
-                                          {csPaid ? (
-                                            <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
-                                              <CheckCircle2 className="h-2.5 w-2.5" /> Paid
-                                            </span>
-                                          ) : csCancelled ? (
-                                            <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
-                                              Cancelled
-                                            </span>
-                                          ) : (
-                                            <span className="inline-flex text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
-                                              Processing
-                                            </span>
-                                          )}
-                                        </div>
-
-                                        {/* Detail row: total + date */}
-                                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-500">
-                                          <span>
-                                            Total:{" "}
-                                            <span className="font-semibold text-slate-800">
-                                              ₱{csTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                            </span>
-                                          </span>
-                                          {csIssuedDate && (
-                                            <span>
-                                              Issued: <span className="font-medium text-slate-600">{csIssuedDate}</span>
-                                            </span>
-                                          )}
-                                        </div>
-
-                                        {/* Acknowledged OR entries */}
-                                        {(chargeSlip.orEntries?.length ?? 0) > 0 && (
-                                          <div className="space-y-0.5">
-                                            {chargeSlip.orEntries!.map((entry, idx) => (
-                                              <div key={idx} className="flex items-center gap-1 text-[10px] text-emerald-700">
-                                                <CheckCircle2 className="h-2.5 w-2.5 flex-shrink-0" />
-                                                <span>OR No. {entry.orNumber} · {entry.orDate}</span>
-                                              </div>
-                                            ))}
-                                          </div>
-                                        )}
-
-                                        {/* Per-charge-slip receipt upload */}
-                                        {portalFeatures.officialReceipts && !csPaid && !csCancelled && (
-                                          <div className="pt-1 border-t border-slate-100">
-                                            <UploadReceipt
-                                              projectId={project.pid}
-                                              hasChargeSlip={true}
-                                              chargeSlipNumber={chargeSlip.chargeSlipNumber}
-                                            />
-                                          </div>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
+                                <div className="space-y-1 ml-5">
+                                  {docs?.chargeSlips.map((chargeSlip) => (
+                                    <a
+                                      key={chargeSlip.id}
+                                      href={`/client/view-document?type=charge-slip&ref=${chargeSlip.id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="block text-xs text-slate-600 hover:text-green-600 hover:underline truncate"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      • {chargeSlip.chargeSlipNumber}
+                                    </a>
+                                  ))}
                                 </div>
                               ) : (
                                 <p className="text-xs text-slate-400 ml-5">No charge slips yet</p>
