@@ -214,6 +214,11 @@ export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRe
       : null;
   }
 
+  // Support accumulating OR entries and updating the latest OR number
+  if ("orNumber" in updates) updatedData.orNumber = updates.orNumber;
+  if ("orEntries" in updates) updatedData.orEntries = updates.orEntries;
+  if ("showOfficialReceipts" in updates) updatedData.showOfficialReceipts = updates.showOfficialReceipts;
+
   if ("createdAt" in updates) {
     updatedData.createdAt = safeTimestamp(updates.createdAt);
   }
