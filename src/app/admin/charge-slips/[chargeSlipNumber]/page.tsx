@@ -16,13 +16,14 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
-import { collection, doc, getDocs, orderBy, query, Timestamp, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { collection, deleteDoc, doc, getDocs, orderBy, query, Timestamp, updateDoc } from "firebase/firestore";
+import { ref as storageRef, deleteObject } from "firebase/storage";
+import { db, storage } from "@/lib/firebase";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import ChargeSlipPreviewButton from "@/components/charge-slip/ChargeSlipPreviewButton";
-import { CheckCircle2, ExternalLink, Loader2 as ReceiptLoader, RotateCcw, Stamp } from "lucide-react";
+import { CheckCircle2, ExternalLink, Loader2 as ReceiptLoader, RotateCcw, Stamp, Trash2 } from "lucide-react";
 
 interface OfficialReceipt {
   id: string;
@@ -35,6 +36,17 @@ interface OfficialReceipt {
   orDate?: string;
   acknowledgedByAdmin?: boolean;
   returnedByAdmin?: boolean;
+}
+
+/** Extract Firebase Storage object path from a download URL. */
+function extractStoragePath(url: string): string | null {
+  try {
+    const match = url.match(/\/o\/(.+?)(?:\?|$)/);
+    if (!match) return null;
+    return decodeURIComponent(match[1]);
+  } catch {
+    return null;
+  }
 }
 
 // Utility to normalize to string date
@@ -77,6 +89,7 @@ function ChargeSlipDetailContent() {
   const [officialReceipts, setOfficialReceipts] = useState<OfficialReceipt[]>([]);
   const [acknowledging, setAcknowledging] = useState<string | null>(null);
   const [returning, setReturning] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
@@ -205,6 +218,43 @@ function ChargeSlipDetailContent() {
       toast.error("Failed to acknowledge receipt.");
     } finally {
       setAcknowledging(null);
+    }
+  };
+
+  const handleDeleteReceipt = async (receipt: OfficialReceipt) => {
+    if (!record) return;
+    setDeleting(receipt.id);
+    try {
+      const pid = record.projectId || (record.project as any)?.pid || "";
+      // Delete Firestore document (triggers client onSnapshot — removes from client list automatically)
+      await deleteDoc(doc(db, "projects", pid, "officialReceipts", receipt.id));
+      // Delete file from Firebase Storage
+      if (receipt.downloadURL) {
+        const path = extractStoragePath(receipt.downloadURL);
+        if (path) {
+          try {
+            await deleteObject(storageRef(storage, path));
+          } catch {
+            // Non-critical: Firestore doc already removed
+          }
+        }
+      }
+      setOfficialReceipts((prev) => prev.filter((r) => r.id !== receipt.id));
+      await logActivity({
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
+        action: "DELETE",
+        entityType: "charge_slip",
+        entityId: record.referenceNumber || record.chargeSlipNumber,
+        entityName: `Charge Slip ${record.chargeSlipNumber}`,
+        description: `Deleted official receipt: ${receipt.fileName || receipt.id} (OR No. ${receipt.orNumber || "—"})`,
+      });
+      toast.success("Receipt deleted.");
+    } catch {
+      toast.error("Failed to delete receipt.");
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -497,16 +547,32 @@ function ChargeSlipDetailContent() {
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-2 shrink-0">
-                        {or_.downloadURL && (
-                          <a
-                            href={or_.downloadURL}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:underline"
+                        <div className="flex items-center gap-2">
+                          {or_.downloadURL && (
+                            <a
+                              href={or_.downloadURL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:underline"
+                            >
+                              <ExternalLink className="h-3 w-3" /> View file
+                            </a>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            disabled={deleting === or_.id || acknowledging === or_.id || returning === or_.id}
+                            onClick={() => handleDeleteReceipt(or_)}
+                            className="h-7 w-7 p-0 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                            title="Delete receipt"
                           >
-                            <ExternalLink className="h-3 w-3" /> View file
-                          </a>
-                        )}
+                            {deleting === or_.id ? (
+                              <ReceiptLoader className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                        </div>
                         {!or_.acknowledgedByAdmin && !or_.returnedByAdmin && (
                           <div className="flex gap-1.5">
                             <Button
