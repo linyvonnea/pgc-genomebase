@@ -169,6 +169,21 @@ export default function ChatBox({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const DEFAULT_REACTIONS = ["👍", "❤️", "😮", "😂", "😥"];
 
+  const normalizeIdentifier = (value: string | null | undefined) =>
+    (value || "").trim().toLowerCase();
+
+  const currentUserIdentifiers = new Set(
+    [normalizeIdentifier(user?.email), normalizeIdentifier(user?.uid)].filter(Boolean),
+  );
+
+  // Alias of the currently logged-in admin (used for own-message labels)
+  const currentAdminAlias =
+    role === "admin" && user ? getAdminDisplayName(user.email || user.uid) : "";
+
+  // Alias derived from the message senderId (email) — always reflects actual sender
+  const getMessageAdminAlias = (msg: ThreadMessage) =>
+    getAdminDisplayName(msg.senderId);
+
   useEffect(() => {
     if (!inquiryId || !user) return;
 

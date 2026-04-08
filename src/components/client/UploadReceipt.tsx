@@ -16,17 +16,21 @@ import {
 } from "firebase/firestore";
 import { ref as storageRef, deleteObject } from "firebase/storage";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import useAuth from "@/hooks/useAuth";
 import { logActivity } from "@/services/activityLogService";
 import {
   FileText,
-  Download,
   Trash2,
   Loader2,
   Paperclip,
   X,
   Upload,
+  Lock,
+  CheckCircle2,
+  RotateCcw,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -38,6 +42,15 @@ interface Receipt {
   downloadURL?: string;
   uploadedBy?: string;
   uploadedAt?: Timestamp;
+  orNumber?: string;
+  orDate?: string;
+  acknowledgedByAdmin?: boolean;
+  returnedByAdmin?: boolean;
+}
+
+interface UploadReceiptProps {
+  projectId: string;
+  hasChargeSlip: boolean;
 }
 
 function formatFileSize(bytes?: number) {
@@ -67,11 +80,13 @@ function extractStoragePath(url: string): string | null {
   }
 }
 
-export default function UploadReceipt({ projectId }: { projectId: string }) {
+export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceiptProps) {
   const { user } = useAuth();
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [loadingReceipts, setLoadingReceipts] = useState(true);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [orNumber, setOrNumber] = useState("");
+  const [orDate, setOrDate] = useState("");
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -96,6 +111,16 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
     return () => unsub();
   }, [projectId]);
 
+  // Scope receipts to the active charge slip when one is provided
+  const visibleReceipts = csNum
+    ? receipts.filter((r) => r.chargeSlipNumber === csNum)
+    : receipts;
+  const MAX_RECEIPTS = 3;
+
+  // Locked if any receipt is awaiting admin action (not yet acknowledged and not returned)
+  const hasPendingReceipt = visibleReceipts.some((r) => !r.acknowledgedByAdmin && !r.returnedByAdmin);
+  const verifiedCount = visibleReceipts.filter((r) => r.acknowledgedByAdmin).length;
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     e.target.value = "";
@@ -109,10 +134,26 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
       return;
     }
     setPendingFile(f);
+    setOrNumber("");
+    setOrDate("");
+  };
+
+  const handleCancelPending = () => {
+    setPendingFile(null);
+    setOrNumber("");
+    setOrDate("");
   };
 
   const handleUpload = async () => {
     if (!pendingFile) return;
+    if (!orNumber.trim()) {
+      toast.error("Please enter the OR Number before uploading.");
+      return;
+    }
+    if (!orDate) {
+      toast.error("Please select the OR Date before uploading.");
+      return;
+    }
     setUploading(true);
     try {
       const downloadURL = await uploadFile(pendingFile, `receipts/${projectId}`);
@@ -123,6 +164,11 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
         downloadURL,
         uploadedBy: user?.email || "anonymous",
         uploadedAt: serverTimestamp(),
+        orNumber: orNumber.trim(),
+        orDate,
+        acknowledgedByAdmin: false,
+        returnedByAdmin: false,
+        ...(csNum ? { chargeSlipNumber: csNum } : {}),
       });
       await logActivity({
         userId: user?.email || "anonymous",
@@ -131,10 +177,12 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
         action: "CREATE",
         entityType: "project",
         entityId: projectId,
-        description: `Uploaded official receipt: ${pendingFile.name}`,
+        description: `Uploaded official receipt: ${pendingFile.name} (OR No. ${orNumber.trim()})`,
       });
-      toast.success("Receipt uploaded successfully.");
+      toast.success("Receipt uploaded successfully. Awaiting admin acknowledgment.");
       setPendingFile(null);
+      setOrNumber("");
+      setOrDate("");
     } catch (err) {
       console.error("Upload failed:", err);
       toast.error(err instanceof Error ? err.message : "Upload failed. Please try again.");
@@ -144,10 +192,19 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
   };
 
   const handleDelete = async (receipt: Receipt) => {
+    // Block delete if acknowledged by admin (permanent lock)
+    if (receipt.acknowledgedByAdmin) {
+      toast.error("This receipt has been acknowledged by the admin and cannot be deleted.");
+      return;
+    }
+    // Block delete if still pending admin action (not returned yet)
+    if (!receipt.returnedByAdmin) {
+      toast.error("This receipt is pending admin review and cannot be deleted yet.");
+      return;
+    }
     setDeletingId(receipt.id);
     try {
       await deleteDoc(doc(db, "projects", projectId, "officialReceipts", receipt.id));
-      // Best-effort storage deletion
       if (receipt.downloadURL) {
         const path = extractStoragePath(receipt.downloadURL);
         if (path) {
@@ -184,121 +241,231 @@ export default function UploadReceipt({ projectId }: { projectId: string }) {
           <Loader2 className="h-3 w-3 animate-spin" />
           Loading receipts…
         </div>
-      ) : receipts.length === 0 ? (
+      ) : visibleReceipts.length === 0 ? (
         <p className="text-xs text-slate-400 ml-5">No official receipts yet</p>
       ) : (
         <div className="space-y-1.5 ml-5">
-          {receipts.map((receipt) => (
-            <div
-              key={receipt.id}
-              className="group flex items-center gap-2 rounded-lg bg-white border border-slate-100 shadow-sm px-2.5 py-1.5 hover:border-blue-200 hover:bg-blue-50/10 transition-colors"
-            >
-              <FileText className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                {receipt.downloadURL ? (
-                  <a
-                    href={receipt.downloadURL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block hover:underline"
-                    title="View receipt"
-                  >
-                    <p className="text-[11px] font-semibold text-slate-700 truncate leading-tight">
-                      {receipt.fileName || receipt.id}
-                    </p>
-                    <p className="text-[9px] text-slate-400 leading-tight mt-0.5">
-                      {[formatFileSize(receipt.size), formatDate(receipt.uploadedAt)]
-                        .filter(Boolean)
-                        .join(" \u00b7 ")}
-                    </p>
-                  </a>
-                ) : (
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-700 truncate leading-tight">
-                      {receipt.fileName || receipt.id}
-                    </p>
-                    <p className="text-[9px] text-slate-400 leading-tight mt-0.5">
-                      {[formatFileSize(receipt.size), formatDate(receipt.uploadedAt)]
-                        .filter(Boolean)
-                        .join(" \u00b7 ")}
-                    </p>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button
-                  type="button"
-                  disabled={deletingId === receipt.id}
-                  onClick={() => handleDelete(receipt)}
-                  className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
-                  title="Remove receipt"
-                >
-                  {deletingId === receipt.id ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
+          <p className="text-[9px] text-slate-400">
+            {verifiedCount} of {visibleReceipts.length} receipt{visibleReceipts.length !== 1 ? "s" : ""} verified
+            {visibleReceipts.length >= MAX_RECEIPTS ? " · Maximum reached" : ` · ${MAX_RECEIPTS - visibleReceipts.length} remaining`}
+          </p>
+          {visibleReceipts.map((receipt) => {
+            const isVerified = receipt.acknowledgedByAdmin;
+            const isReturned = receipt.returnedByAdmin && !receipt.acknowledgedByAdmin;
+            const isPending = !receipt.acknowledgedByAdmin && !receipt.returnedByAdmin;
+
+            return (
+              <div
+                key={receipt.id}
+                className="group flex items-center gap-2 rounded-lg bg-white border border-slate-100 shadow-sm px-2.5 py-1.5 hover:border-blue-200 hover:bg-blue-50/10 transition-colors"
+              >
+                <FileText className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  {receipt.downloadURL ? (
+                    <a
+                      href={receipt.downloadURL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block hover:underline"
+                      title="View receipt"
+                    >
+                      <p className="text-[11px] font-semibold text-slate-700 truncate leading-tight">
+                        {receipt.fileName || receipt.id}
+                      </p>
+                      <p className="text-[9px] text-slate-400 leading-tight mt-0.5">
+                        {[
+                          receipt.orNumber ? `OR No. ${receipt.orNumber}` : null,
+                          receipt.orDate,
+                          formatFileSize(receipt.size),
+                          formatDate(receipt.uploadedAt),
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </a>
                   ) : (
-                    <Trash2 className="h-3 w-3" />
+                    <div>
+                      <p className="text-[11px] font-semibold text-slate-700 truncate leading-tight">
+                        {receipt.fileName || receipt.id}
+                      </p>
+                      <p className="text-[9px] text-slate-400 leading-tight mt-0.5">
+                        {[
+                          receipt.orNumber ? `OR No. ${receipt.orNumber}` : null,
+                          receipt.orDate,
+                          formatFileSize(receipt.size),
+                          formatDate(receipt.uploadedAt),
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    </div>
                   )}
-                </button>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {/* Status badge */}
+                  {isVerified && (
+                    <span
+                      className="flex items-center gap-0.5 text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5"
+                      title="Acknowledged by admin"
+                    >
+                      <CheckCircle2 className="h-2.5 w-2.5" />
+                      Verified
+                    </span>
+                  )}
+                  {isPending && (
+                    <span
+                      className="text-[9px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 font-semibold"
+                      title="Waiting for admin acknowledgment"
+                    >
+                      Pending
+                    </span>
+                  )}
+                  {isReturned && (
+                    <span
+                      className="flex items-center gap-0.5 text-[9px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded px-1.5 py-0.5"
+                      title="Admin returned this receipt for correction"
+                    >
+                      <RotateCcw className="h-2.5 w-2.5" />
+                      Returned
+                    </span>
+                  )}
+
+                  {/* Action icon */}
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    {isVerified && (
+                      <span title="Cannot delete — acknowledged by admin">
+                        <Lock className="h-3 w-3 text-slate-300" />
+                      </span>
+                    )}
+                    {isPending && (
+                      <span title="Cannot delete — awaiting admin review">
+                        <Lock className="h-3 w-3 text-amber-300" />
+                      </span>
+                    )}
+                    {isReturned && (
+                      <button
+                        type="button"
+                        disabled={deletingId === receipt.id}
+                        onClick={() => handleDelete(receipt)}
+                        className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                        title="Remove returned receipt and re-upload"
+                      >
+                        {deletingId === receipt.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3 w-3" />
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
-      {/* ── Pending file preview ── */}
+      {/* ── Pending file + OR details form ── */}
       {pendingFile && (
-        <div className="flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-100 px-2.5 py-1.5 ml-5">
-          <FileText className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-semibold text-slate-700 truncate">{pendingFile.name}</p>
-            <p className="text-[9px] text-slate-400">{formatFileSize(pendingFile.size)}</p>
+        <div className="ml-5 rounded-lg border border-emerald-200 bg-emerald-50 p-3 space-y-3">
+          {/* File preview */}
+          <div className="flex items-center gap-2">
+            <FileText className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-semibold text-slate-700 truncate">{pendingFile.name}</p>
+              <p className="text-[9px] text-slate-400">{formatFileSize(pendingFile.size)}</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleCancelPending}
+              className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-emerald-100 transition-colors"
+              title="Cancel"
+            >
+              <X className="h-3 w-3" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setPendingFile(null)}
-            className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-emerald-100 transition-colors"
-            title="Cancel"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </div>
-      )}
 
-      {/* ── Action row ── */}
-      <div className="flex items-center gap-2 ml-5">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,image/*"
-          className="hidden"
-          onChange={handleFileChange}
-          disabled={uploading}
-        />
-        <button
-          type="button"
-          disabled={uploading}
-          onClick={() => fileInputRef.current?.click()}
-          className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 hover:text-emerald-700 border border-dashed border-slate-200 hover:border-emerald-300 rounded-lg px-2.5 py-1.5 bg-white hover:bg-emerald-50 transition-colors"
-        >
-          <Paperclip className="h-3 w-3" />
-          {pendingFile ? "Change file" : "Attach receipt"}
-        </button>
-        {pendingFile && (
+          {/* OR Number & Date */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">
+                OR Number <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                value={orNumber}
+                onChange={(e) => setOrNumber(e.target.value)}
+                placeholder="e.g. 0012345"
+                className="h-7 text-xs"
+                maxLength={50}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">
+                OR Date <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                type="date"
+                value={orDate}
+                onChange={(e) => setOrDate(e.target.value)}
+                className="h-7 text-xs"
+              />
+            </div>
+          </div>
+
           <Button
             size="sm"
-            disabled={uploading}
+            disabled={uploading || !orNumber.trim() || !orDate}
             onClick={handleUpload}
-            className="h-7 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white px-3 gap-1"
+            className="w-full h-7 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
           >
             {uploading ? (
               <Loader2 className="h-3 w-3 animate-spin" />
             ) : (
               <Upload className="h-3 w-3" />
             )}
-            {uploading ? "Uploading…" : "Upload"}
+            {uploading ? "Uploading…" : "Upload Receipt"}
           </Button>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* ── Attach button — shown when under limit and no receipt pending ── */}
+      {!pendingFile && visibleReceipts.length < MAX_RECEIPTS && !hasPendingReceipt && (
+        <div className="ml-5">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,image/*"
+            className="hidden"
+            onChange={handleFileChange}
+            disabled={uploading || !hasChargeSlip}
+          />
+          <button
+            type="button"
+            disabled={uploading || !hasChargeSlip}
+            onClick={() => fileInputRef.current?.click()}
+            title={!hasChargeSlip ? "A Charge Slip must be issued first before attaching a receipt." : "Attach an official receipt"}
+            className="inline-flex items-center gap-1.5 text-[11px] font-medium border border-dashed rounded-lg px-2.5 py-1.5 transition-colors
+              disabled:cursor-not-allowed disabled:opacity-50 disabled:border-slate-200 disabled:text-slate-400 disabled:bg-white
+              enabled:text-slate-500 enabled:hover:text-emerald-700 enabled:border-slate-200 enabled:hover:border-emerald-300 enabled:bg-white enabled:hover:bg-emerald-50"
+          >
+            <Paperclip className="h-3 w-3" />
+            Attach receipt
+          </button>
+          {!hasChargeSlip && (
+            <p className="text-[9px] text-slate-400 mt-1">
+              A Charge Slip must be issued first.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Locked message while pending admin review */}
+      {!pendingFile && hasPendingReceipt && (
+        <div className="ml-5 flex items-center gap-1.5 text-[10px] text-amber-600">
+          <Lock className="h-3 w-3" />
+          Receipt attachment locked — awaiting admin acknowledgment or return for correction.
+        </div>
+      )}
     </div>
   );
 }
