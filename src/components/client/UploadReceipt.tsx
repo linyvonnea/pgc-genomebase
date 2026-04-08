@@ -111,8 +111,15 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
     return () => unsub();
   }, [projectId]);
 
+  // Scope receipts to the active charge slip when one is provided
+  const visibleReceipts = csNum
+    ? receipts.filter((r) => r.chargeSlipNumber === csNum)
+    : receipts;
+  const MAX_RECEIPTS = 3;
+
   // Locked if any receipt is awaiting admin action (not yet acknowledged and not returned)
-  const hasPendingReceipt = receipts.some((r) => !r.acknowledgedByAdmin && !r.returnedByAdmin);
+  const hasPendingReceipt = visibleReceipts.some((r) => !r.acknowledgedByAdmin && !r.returnedByAdmin);
+  const verifiedCount = visibleReceipts.filter((r) => r.acknowledgedByAdmin).length;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
@@ -161,6 +168,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
         orDate,
         acknowledgedByAdmin: false,
         returnedByAdmin: false,
+        ...(csNum ? { chargeSlipNumber: csNum } : {}),
       });
       await logActivity({
         userId: user?.email || "anonymous",
@@ -233,11 +241,15 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
           <Loader2 className="h-3 w-3 animate-spin" />
           Loading receipts…
         </div>
-      ) : receipts.length === 0 ? (
+      ) : visibleReceipts.length === 0 ? (
         <p className="text-xs text-slate-400 ml-5">No official receipts yet</p>
       ) : (
         <div className="space-y-1.5 ml-5">
-          {receipts.map((receipt) => {
+          <p className="text-[9px] text-slate-400">
+            {verifiedCount} of {visibleReceipts.length} receipt{visibleReceipts.length !== 1 ? "s" : ""} verified
+            {visibleReceipts.length >= MAX_RECEIPTS ? " · Maximum reached" : ` · ${MAX_RECEIPTS - visibleReceipts.length} remaining`}
+          </p>
+          {visibleReceipts.map((receipt) => {
             const isVerified = receipt.acknowledgedByAdmin;
             const isReturned = receipt.returnedByAdmin && !receipt.acknowledgedByAdmin;
             const isPending = !receipt.acknowledgedByAdmin && !receipt.returnedByAdmin;
@@ -416,8 +428,8 @@ export default function UploadReceipt({ projectId, hasChargeSlip }: UploadReceip
         </div>
       )}
 
-      {/* ── Attach button — locked while a receipt is pending admin action ── */}
-      {!pendingFile && !hasPendingReceipt && (
+      {/* ── Attach button — shown when under limit and no receipt pending ── */}
+      {!pendingFile && visibleReceipts.length < MAX_RECEIPTS && !hasPendingReceipt && (
         <div className="ml-5">
           <input
             ref={fileInputRef}
