@@ -168,6 +168,13 @@ export default function ChatBox({
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const DEFAULT_REACTIONS = ["👍", "❤️", "😮", "😂", "😥"];
+  const currentAdminAlias =
+    role === "admin" && user ? getAdminDisplayName(user.email || user.uid) : "";
+
+  const getMessageAdminAlias = (msg: ThreadMessage) => {
+    const alias = (msg.senderName || "").trim();
+    return alias || "Admin";
+  };
 
   useEffect(() => {
     if (!inquiryId || !user) return;
@@ -421,6 +428,11 @@ export default function ChatBox({
                     <div className="flex items-center gap-2 mb-1">
                       {isMe ? (
                         <div className="flex items-center gap-1.5 order-2">
+                          {role === "admin" && (
+                            <span className="text-[8px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-full px-1.5 py-0.5 order-1">
+                              {currentAdminAlias}
+                            </span>
+                          )}
                           <Avatar className="h-4 w-4 border border-slate-100 bg-white order-2">
                             <AvatarFallback className="bg-blue-50 text-[7px] font-bold text-blue-700">
                               {role === "admin" ? "AD" : getClientInitials(msg.senderName)}
@@ -440,7 +452,7 @@ export default function ChatBox({
                               variant="outline"
                               className="text-[8px] h-3.5 py-0 px-1 bg-blue-50 text-blue-700 border-blue-200"
                             >
-                              Admin
+                              Admin {getMessageAdminAlias(msg)}
                             </Badge>
                           )}
                         </div>
