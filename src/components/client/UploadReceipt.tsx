@@ -265,49 +265,39 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
             return (
               <div
                 key={receipt.id}
-                className="group flex items-center gap-2 rounded-lg bg-white border border-slate-100 shadow-sm px-2.5 py-1.5 hover:border-blue-200 hover:bg-blue-50/10 transition-colors"
+                className="group flex items-center gap-2 rounded-lg bg-white border border-slate-100 shadow-sm px-2.5 py-1 hover:border-blue-200 hover:bg-blue-50/10 transition-colors"
               >
                 <FileText className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
+                {/* Single-line: filename + meta on one row */}
+                <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-hidden">
                   {receipt.downloadURL ? (
                     <a
                       href={receipt.downloadURL}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block hover:underline"
-                      title="View receipt"
+                      title={receipt.fileName || receipt.id}
+                      className="text-[11px] font-semibold text-slate-700 hover:underline truncate shrink-0 max-w-[50%]"
                     >
-                      <p className="text-[11px] font-semibold text-slate-700 truncate leading-tight">
-                        {receipt.fileName || receipt.id}
-                      </p>
-                      <p className="text-[9px] text-slate-400 leading-tight mt-0.5">
-                        {[
-                          receipt.orNumber ? `OR No. ${receipt.orNumber}` : null,
-                          receipt.orDate,
-                          formatFileSize(receipt.size),
-                          formatDate(receipt.uploadedAt),
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </p>
+                      {receipt.fileName || receipt.id}
                     </a>
                   ) : (
-                    <div>
-                      <p className="text-[11px] font-semibold text-slate-700 truncate leading-tight">
-                        {receipt.fileName || receipt.id}
-                      </p>
-                      <p className="text-[9px] text-slate-400 leading-tight mt-0.5">
-                        {[
-                          receipt.orNumber ? `OR No. ${receipt.orNumber}` : null,
-                          receipt.orDate,
-                          formatFileSize(receipt.size),
-                          formatDate(receipt.uploadedAt),
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </p>
-                    </div>
+                    <span
+                      title={receipt.fileName || receipt.id}
+                      className="text-[11px] font-semibold text-slate-700 truncate shrink-0 max-w-[50%]"
+                    >
+                      {receipt.fileName || receipt.id}
+                    </span>
                   )}
+                  <span className="text-[9px] text-slate-400 truncate min-w-0">
+                    {[
+                      receipt.orNumber ? `OR No. ${receipt.orNumber}` : null,
+                      receipt.orDate,
+                      formatFileSize(receipt.size),
+                      formatDate(receipt.uploadedAt),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {/* Status badge */}
