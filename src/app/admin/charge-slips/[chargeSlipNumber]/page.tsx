@@ -119,15 +119,7 @@ function ChargeSlipDetailContent() {
           const ors = orSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as OfficialReceipt[];
           // Only show receipts uploaded specifically for this charge slip
           setOfficialReceipts(ors.filter((r) => r.chargeSlipNumber === data.chargeSlipNumber));
-
-          // Auto-fill from the latest receipt only if charge slip OR fields are not yet set
-          const latest = ors.find((r) => r.orNumber);
-          if (latest) {
-            if (!data.orNumber) setOrNumber(latest.orNumber ?? "");
-            if (!data.dateOfOR && latest.orDate) {
-              setDateOfOR(Timestamp.fromDate(new Date(latest.orDate)));
-            }
-          }
+          // OR Number and Date of OR are only filled when admin acknowledges a receipt — no auto-fill here.
         } catch {
           // silently fail — official receipts are optional
         }
@@ -242,6 +234,17 @@ function ChargeSlipDetailContent() {
         }
       }
       setOfficialReceipts((prev) => prev.filter((r) => r.id !== receipt.id));
+      // Reset charge slip back to Processing and clear OR fields after receipt removal
+      if (record.id) {
+        await updateChargeSlip(record.id, {
+          status: "processing",
+          orNumber: "",
+          dateOfOR: null,
+        });
+        setStatus("processing");
+        setOrNumber("");
+        setDateOfOR(undefined);
+      }
       await logActivity({
         userId: adminInfo?.email || "system",
         userEmail: adminInfo?.email || "system@pgc.admin",
@@ -250,9 +253,9 @@ function ChargeSlipDetailContent() {
         entityType: "charge_slip",
         entityId: record.referenceNumber || record.chargeSlipNumber,
         entityName: `Charge Slip ${record.chargeSlipNumber}`,
-        description: `Deleted official receipt: ${receipt.fileName || receipt.id} (OR No. ${receipt.orNumber || "—"})`,
+        description: `Deleted official receipt: ${receipt.fileName || receipt.id} (OR No. ${receipt.orNumber || "—"}). Status reset to Processing.`,
       });
-      toast.success("Receipt deleted.");
+      toast.success("Receipt deleted. Status reset to Processing.");
     } catch {
       toast.error("Failed to delete receipt.");
     } finally {

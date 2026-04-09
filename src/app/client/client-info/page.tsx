@@ -2952,7 +2952,7 @@ export default function ClientPortalPage() {
     <>
       <div className="flex h-[calc(100vh-73px)]">
         {/* ═════ LEFT SIDEBAR — Desktop ═════ */}
-        <aside className="hidden lg:flex w-[320px] min-w-[280px] bg-white border-r border-slate-200 flex-shrink-0 flex-col">
+        <aside className="hidden lg:flex w-[400px] min-w-[340px] bg-white border-r border-slate-200 flex-shrink-0 flex-col">
           {sidebarContent}
         </aside>
 
@@ -2963,7 +2963,7 @@ export default function ClientPortalPage() {
               className="fixed inset-0 bg-black/40 z-40 lg:hidden"
               onClick={() => setMobileSidebarOpen(false)}
             />
-            <aside className="fixed left-0 top-0 bottom-0 w-[320px] bg-white z-50 lg:hidden shadow-2xl flex flex-col">
+            <aside className="fixed left-0 top-0 bottom-0 w-[400px] bg-white z-50 lg:hidden shadow-2xl flex flex-col">
               {sidebarContent}
             </aside>
           </>
