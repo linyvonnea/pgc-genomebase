@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
-import { arrayUnion, collection, deleteDoc, doc, getDocs, orderBy, query, Timestamp, updateDoc } from "firebase/firestore";
+import { arrayRemove, arrayUnion, collection, deleteDoc, doc, getDocs, orderBy, query, Timestamp, updateDoc } from "firebase/firestore";
 import { ref as storageRef, deleteObject } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
 import { logActivity } from "@/services/activityLogService";
@@ -264,6 +264,22 @@ function ChargeSlipDetailContent() {
           orNumber: "",
           dateOfOR: null,
         });
+        // Also remove the corresponding orEntry from orEntries history (matched by orNumber + orDate)
+        if (receipt.orNumber || receipt.orDate) {
+          // arrayRemove requires exact object match — find existing entry to remove
+          const updatedDoc = await import("firebase/firestore").then(({ getDoc }) =>
+            getDoc(doc(db, "chargeSlips", record.id!))
+          );
+          const existingEntries: any[] = updatedDoc.data()?.orEntries || [];
+          const entryToRemove = existingEntries.find(
+            (e) => e.orNumber === (receipt.orNumber || "") && e.orDate === (receipt.orDate || "")
+          );
+          if (entryToRemove) {
+            await updateDoc(doc(db, "chargeSlips", record.id!), {
+              orEntries: arrayRemove(entryToRemove),
+            });
+          }
+        }
         setStatus("processing");
         setOrNumber("");
         setDateOfOR(undefined);

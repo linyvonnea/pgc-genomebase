@@ -12,6 +12,7 @@ import {
   query,
   deleteDoc,
   doc,
+  updateDoc,
   Timestamp,
 } from "firebase/firestore";
 import { ref as storageRef, deleteObject } from "firebase/storage";
@@ -95,6 +96,14 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
   const [uploading, setUploading] = useState(false);
   const [selecting, setSelecting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  // Replace-on-return state
+  const [replacingId, setReplacingId] = useState<string | null>(null); // receipt being replaced
+  const [replacePendingFile, setReplacePendingFile] = useState<File | null>(null);
+  const [replaceOrNumber, setReplaceOrNumber] = useState("");
+  const [replaceOrDate, setReplaceOrDate] = useState("");
+  const [replaceUploading, setReplaceUploading] = useState(false);
+  const [replaceSelecting, setReplaceSelecting] = useState(false);
+  const replaceFileInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -128,6 +137,8 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
 
   // Locked if any receipt is awaiting admin action (not yet acknowledged and not returned)
   const hasPendingReceipt = visibleReceipts.some((r) => !r.acknowledgedByAdmin && !r.returnedByAdmin);
+  // Slots: returned receipts being replaced don’t count as occupying a slot
+  const activeReceiptCount = visibleReceipts.filter((r) => !r.returnedByAdmin || r.acknowledgedByAdmin).length;
   const verifiedCount = visibleReceipts.filter((r) => r.acknowledgedByAdmin).length;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -152,6 +163,90 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
     setPendingFile(null);
     setOrNumber("");
     setOrDate("");
+  };
+
+  /** Cancel in-progress replace for a returned receipt */
+  const handleCancelReplace = () => {
+    setReplacingId(null);
+    setReplacePendingFile(null);
+    setReplaceOrNumber("");
+    setReplaceOrDate("");
+  };
+
+  /** File picker callback for the replace flow */
+  const handleReplaceFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setReplaceSelecting(false);
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    if (f.size > 10 * 1024 * 1024) {
+      toast.error("File too large. Maximum size is 10 MB.");
+      return;
+    }
+    if (f.type !== "application/pdf" && !f.type.startsWith("image/")) {
+      toast.error("Only PDF and image files are allowed.");
+      return;
+    }
+    setReplacePendingFile(f);
+    setReplaceOrNumber("");
+    setReplaceOrDate("");
+  };
+
+  /** Upload a replacement file and overwrite the returned receipt document */
+  const handleReplaceUpload = async (receipt: Receipt) => {
+    if (!replacePendingFile) return;
+    if (!replaceOrNumber.trim()) {
+      toast.error("Please enter the OR Number before uploading.");
+      return;
+    }
+    if (!replaceOrDate) {
+      toast.error("Please select the OR Date before uploading.");
+      return;
+    }
+    setReplaceUploading(true);
+    try {
+      // Upload new file
+      const folder = csNum
+        ? `receipts/${projectId}/${csNum}`
+        : `receipts/${projectId}`;
+      const downloadURL = await uploadFile(replacePendingFile, folder);
+      // Overwrite the existing Firestore receipt doc (same ID — no new document)
+      await updateDoc(doc(db, "projects", projectId, "officialReceipts", receipt.id), {
+        fileName: replacePendingFile.name,
+        contentType: replacePendingFile.type,
+        size: replacePendingFile.size,
+        downloadURL,
+        uploadedBy: user?.email || "anonymous",
+        uploadedAt: serverTimestamp(),
+        orNumber: replaceOrNumber.trim(),
+        orDate: replaceOrDate,
+        acknowledgedByAdmin: false,
+        returnedByAdmin: false,
+      });
+      // Delete the old file from Firebase Storage
+      if (receipt.downloadURL) {
+        const oldPath = extractStoragePath(receipt.downloadURL);
+        if (oldPath) {
+          try { await deleteObject(storageRef(storage, oldPath)); } catch { /* non-critical */ }
+        }
+      }
+      await logActivity({
+        userId: user?.email || "anonymous",
+        userEmail: user?.email || "anonymous",
+        userName: user?.displayName || "Client",
+        action: "UPDATE",
+        entityType: "project",
+        entityId: projectId,
+        description: `Replaced returned receipt: ${replacePendingFile.name} (OR No. ${replaceOrNumber.trim()})`,
+      });
+      toast.success("Receipt replaced successfully. Awaiting admin acknowledgment.");
+      handleCancelReplace();
+    } catch (err) {
+      console.error("Replace upload failed:", err);
+      toast.error(err instanceof Error ? err.message : "Upload failed. Please try again.");
+    } finally {
+      setReplaceUploading(false);
+    }
   };
 
   const handleUpload = async () => {
@@ -272,7 +367,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
         <div className="space-y-1.5 ml-5">
           <p className="text-[9px] text-slate-400">
             {verifiedCount} of {visibleReceipts.length} receipt{visibleReceipts.length !== 1 ? "s" : ""} verified
-            {uploadAllowed && (visibleReceipts.length >= MAX_RECEIPTS ? " · Maximum reached" : ` · ${MAX_RECEIPTS - visibleReceipts.length} remaining`)}
+            {uploadAllowed && (activeReceiptCount >= MAX_RECEIPTS ? " · Maximum reached" : ` · ${MAX_RECEIPTS - activeReceiptCount} remaining`)}
           </p>
           {visibleReceipts.map((receipt) => {
             const isVerified = receipt.acknowledgedByAdmin;
@@ -280,100 +375,207 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
             const isPending = !receipt.acknowledgedByAdmin && !receipt.returnedByAdmin;
 
             return (
-              <div
-                key={receipt.id}
-                className="group flex items-center gap-2 rounded-lg bg-white border border-slate-100 shadow-sm px-2.5 py-1 hover:border-blue-200 hover:bg-blue-50/10 transition-colors"
-              >
-                <FileText className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
-                {/* Single-line: filename + meta on one row */}
-                <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-hidden">
-                  {receipt.downloadURL ? (
-                    <a
-                      href={receipt.downloadURL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title={receipt.fileName || receipt.id}
-                      className="text-[11px] font-semibold text-slate-700 hover:underline truncate shrink-0 max-w-[50%]"
-                    >
-                      {receipt.fileName || receipt.id}
-                    </a>
-                  ) : (
-                    <span
-                      title={receipt.fileName || receipt.id}
-                      className="text-[11px] font-semibold text-slate-700 truncate shrink-0 max-w-[50%]"
-                    >
-                      {receipt.fileName || receipt.id}
+              <div key={receipt.id} className="space-y-1.5">
+                {/* Receipt row */}
+                <div
+                  className="group flex items-center gap-2 rounded-lg bg-white border border-slate-100 shadow-sm px-2.5 py-1 hover:border-blue-200 hover:bg-blue-50/10 transition-colors"
+                >
+                  <FileText className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
+                  {/* Single-line: filename + meta on one row */}
+                  <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-hidden">
+                    {receipt.downloadURL ? (
+                      <a
+                        href={receipt.downloadURL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={receipt.fileName || receipt.id}
+                        className="text-[11px] font-semibold text-slate-700 hover:underline truncate shrink-0 max-w-[50%]"
+                      >
+                        {receipt.fileName || receipt.id}
+                      </a>
+                    ) : (
+                      <span
+                        title={receipt.fileName || receipt.id}
+                        className="text-[11px] font-semibold text-slate-700 truncate shrink-0 max-w-[50%]"
+                      >
+                        {receipt.fileName || receipt.id}
+                      </span>
+                    )}
+                    <span className="text-[9px] text-slate-400 truncate min-w-0">
+                      {[
+                        receipt.orNumber ? `OR No. ${receipt.orNumber}` : null,
+                        receipt.orDate,
+                        formatFileSize(receipt.size),
+                        formatDate(receipt.uploadedAt),
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </span>
-                  )}
-                  <span className="text-[9px] text-slate-400 truncate min-w-0">
-                    {[
-                      receipt.orNumber ? `OR No. ${receipt.orNumber}` : null,
-                      receipt.orDate,
-                      formatFileSize(receipt.size),
-                      formatDate(receipt.uploadedAt),
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  {/* Status badge */}
-                  {isVerified && (
-                    <span
-                      className="flex items-center gap-0.5 text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5"
-                      title="Acknowledged by admin"
-                    >
-                      <CheckCircle2 className="h-2.5 w-2.5" />
-                      Verified
-                    </span>
-                  )}
-                  {isPending && (
-                    <span
-                      className="text-[9px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 font-semibold"
-                      title="Waiting for admin acknowledgment"
-                    >
-                      Pending
-                    </span>
-                  )}
-                  {isReturned && (
-                    <span
-                      className="flex items-center gap-0.5 text-[9px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded px-1.5 py-0.5"
-                      title="Admin returned this receipt for correction"
-                    >
-                      <RotateCcw className="h-2.5 w-2.5" />
-                      Returned
-                    </span>
-                  )}
-
-                  {/* Action icon */}
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {/* Status badge */}
                     {isVerified && (
-                      <span title="Cannot delete — acknowledged by admin">
-                        <Lock className="h-3 w-3 text-slate-300" />
+                      <span
+                        className="flex items-center gap-0.5 text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5"
+                        title="Acknowledged by admin"
+                      >
+                        <CheckCircle2 className="h-2.5 w-2.5" />
+                        Verified
                       </span>
                     )}
                     {isPending && (
-                      <span title="Cannot delete — awaiting admin review">
-                        <Lock className="h-3 w-3 text-amber-300" />
+                      <span
+                        className="text-[9px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 font-semibold"
+                        title="Waiting for admin acknowledgment"
+                      >
+                        Pending
                       </span>
                     )}
                     {isReturned && (
+                      <span
+                        className="flex items-center gap-0.5 text-[9px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded px-1.5 py-0.5"
+                        title="Admin returned this receipt for correction"
+                      >
+                        <RotateCcw className="h-2.5 w-2.5" />
+                        Returned
+                      </span>
+                    )}
+
+                    {/* Action icon */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      {isVerified && (
+                        <span title="Cannot delete — acknowledged by admin">
+                          <Lock className="h-3 w-3 text-slate-300" />
+                        </span>
+                      )}
+                      {isPending && (
+                        <span title="Cannot delete — awaiting admin review">
+                          <Lock className="h-3 w-3 text-amber-300" />
+                        </span>
+                      )}
+                      {isReturned && replacingId !== receipt.id && (
+                        <button
+                          type="button"
+                          disabled={deletingId === receipt.id}
+                          onClick={() => handleDelete(receipt)}
+                          className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                          title="Remove returned receipt"
+                        >
+                          {deletingId === receipt.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-3 w-3" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Returned receipt — inline replace section */}
+                {uploadAllowed && isReturned && (
+                  <div className="ml-4 space-y-1.5">
+                    {/* Hidden file input for replace */}
+                    <input
+                      ref={replaceFileInputRef}
+                      type="file"
+                      accept=".pdf,image/*"
+                      className="hidden"
+                      onChange={handleReplaceFileChange}
+                    />
+
+                    {replacingId === receipt.id && replacePendingFile ? (
+                      /* Replace form */
+                      <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-3.5 w-3.5 text-rose-500 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-semibold text-slate-700 truncate">{replacePendingFile.name}</p>
+                            <p className="text-[9px] text-slate-400">{formatFileSize(replacePendingFile.size)}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleCancelReplace}
+                            className="p-1 rounded text-slate-400 hover:text-red-500 hover:bg-rose-100 transition-colors"
+                            title="Cancel"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">
+                              OR Number <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              value={replaceOrNumber}
+                              onChange={(e) => setReplaceOrNumber(e.target.value.replace(/\D/g, ""))}
+                              placeholder="e.g. 0012345"
+                              className="h-7 text-xs"
+                              maxLength={20}
+                              inputMode="numeric"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-semibold text-slate-600 uppercase tracking-wide">
+                              OR Date <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              type="date"
+                              value={replaceOrDate}
+                              onChange={(e) => setReplaceOrDate(e.target.value)}
+                              max={new Date().toISOString().split("T")[0]}
+                              className="h-7 text-xs"
+                            />
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          disabled={replaceUploading || !replaceOrNumber.trim() || !replaceOrDate}
+                          onClick={() => handleReplaceUpload(receipt)}
+                          className="w-full h-7 text-[11px] bg-rose-600 hover:bg-rose-700 text-white gap-1"
+                        >
+                          {replaceUploading ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Upload className="h-3 w-3" />
+                          )}
+                          {replaceUploading ? "Uploading…" : "Submit replacement"}
+                        </Button>
+                      </div>
+                    ) : replacingId === receipt.id && !replacePendingFile ? (
+                      /* Waiting for file picker */
                       <button
                         type="button"
-                        disabled={deletingId === receipt.id}
-                        onClick={() => handleDelete(receipt)}
-                        className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
-                        title="Remove returned receipt and re-upload"
+                        disabled
+                        className="inline-flex items-center gap-1.5 text-[11px] font-medium border border-dashed border-rose-200 rounded-lg px-2.5 py-1.5 text-rose-400 bg-white opacity-70"
                       >
-                        {deletingId === receipt.id ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Opening…
+                      </button>
+                    ) : (
+                      /* Replace file button */
+                      <button
+                        type="button"
+                        disabled={replaceSelecting}
+                        onClick={() => {
+                          setReplacingId(receipt.id);
+                          setReplaceSelecting(true);
+                          // Small delay so replacingId state is set before onChange fires
+                          setTimeout(() => replaceFileInputRef.current?.click(), 0);
+                        }}
+                        className="inline-flex items-center gap-1.5 text-[11px] font-medium border border-dashed border-rose-300 rounded-lg px-2.5 py-1.5 text-rose-600 bg-white hover:bg-rose-50 hover:border-rose-400 transition-colors"
+                      >
+                        {replaceSelecting ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
                         ) : (
-                          <Trash2 className="h-3 w-3" />
+                          <Paperclip className="h-3 w-3" />
                         )}
+                        {replaceSelecting ? "Opening…" : "Replace returned file"}
                       </button>
                     )}
                   </div>
-                </div>
+                )}
               </div>
             );
           })}
@@ -445,8 +647,8 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
         </div>
       )}
 
-      {/* ── Attach button — shown when under limit and no receipt pending ── */}
-      {uploadAllowed && !pendingFile && visibleReceipts.length < MAX_RECEIPTS && !hasPendingReceipt && (
+      {/* ── Attach button — shown when under limit and no new-upload pending ── */}
+      {uploadAllowed && !pendingFile && activeReceiptCount < MAX_RECEIPTS && !hasPendingReceipt && (
         <div className="ml-5">
           <input
             ref={fileInputRef}
