@@ -242,7 +242,18 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
   };
 
   return (
-    <div className="space-y-2 mt-1">
+    <div className="relative space-y-2 mt-1">
+      {/* ── Upload processing overlay — blocks UI while file is uploading ── */}
+      {uploading && (
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 rounded-xl bg-white/85 backdrop-blur-sm">
+          <Loader2 className="h-5 w-5 animate-spin text-emerald-600" />
+          <p className="text-[11px] font-semibold text-slate-700">Uploading receipt…</p>
+          <p className="text-[10px] text-slate-400 text-center px-4">
+            Please wait. Do not close or refresh this page.
+          </p>
+        </div>
+      )}
+
       {/* ── Receipt list ── */}
       {loadingReceipts ? (
         <div className="flex items-center gap-1.5 py-1 text-[11px] text-slate-400 ml-5">

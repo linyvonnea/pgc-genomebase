@@ -8,6 +8,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectTrigger,
   SelectContent,
@@ -16,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
-import { collection, deleteDoc, doc, getDocs, orderBy, query, Timestamp, updateDoc } from "firebase/firestore";
+import { arrayUnion, collection, deleteDoc, doc, getDocs, orderBy, query, Timestamp, updateDoc } from "firebase/firestore";
 import { ref as storageRef, deleteObject } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
 import { logActivity } from "@/services/activityLogService";
@@ -91,6 +101,7 @@ function ChargeSlipDetailContent() {
   const [acknowledging, setAcknowledging] = useState<string | null>(null);
   const [returning, setReturning] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [receiptToDelete, setReceiptToDelete] = useState<OfficialReceipt | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
@@ -180,18 +191,25 @@ function ChargeSlipDetailContent() {
       await updateDoc(doc(db, "projects", pid, "officialReceipts", receipt.id), {
         acknowledgedByAdmin: true,
       });
-      // Update charge slip status to Paid and persist OR details
+      // Persist OR details on charge slip for future reference (status NOT changed — admin updates manually)
       const orVal = receipt.orNumber || orNumber;
       const orDateVal = receipt.orDate
         ? Timestamp.fromDate(new Date(receipt.orDate))
         : dateOfOR;
+      const orEntry = {
+        orNumber: orVal || "",
+        orDate: receipt.orDate || "",
+        acknowledgedAt: Timestamp.now(),
+      };
       await updateChargeSlip(record.id, {
-        status: "paid",
         orNumber: orVal,
         dateOfOR: orDateVal,
       });
-      // Sync local UI state
-      setStatus("paid");
+      // Append to orEntries history (arrayUnion prevents duplicates)
+      await updateDoc(doc(db, "chargeSlips", record.id), {
+        orEntries: arrayUnion(orEntry),
+      });
+      // Sync local UI state (status unchanged)
       if (orVal) setOrNumber(orVal);
       if (orDateVal) setDateOfOR(orDateVal);
       setOfficialReceipts((prev) =>
@@ -205,9 +223,9 @@ function ChargeSlipDetailContent() {
         entityType: "charge_slip",
         entityId: record.referenceNumber || record.chargeSlipNumber,
         entityName: `Charge Slip ${record.chargeSlipNumber}`,
-        description: `Acknowledged official receipt: ${receipt.fileName || receipt.id} (OR No. ${receipt.orNumber || "—"}). Charge slip marked as Paid.`,
+        description: `Acknowledged official receipt: ${receipt.fileName || receipt.id} (OR No. ${orVal || "—"}). OR details saved.`,
       });
-      toast.success("Receipt acknowledged. Charge slip marked as Paid.");
+      toast.success("Receipt acknowledged. OR details saved.");
     } catch {
       toast.error("Failed to acknowledge receipt.");
     } finally {
@@ -578,7 +596,7 @@ function ChargeSlipDetailContent() {
                             size="sm"
                             variant="ghost"
                             disabled={deleting === or_.id || acknowledging === or_.id || returning === or_.id}
-                            onClick={() => handleDeleteReceipt(or_)}
+                            onClick={() => setReceiptToDelete(or_)}
                             className="h-7 w-7 p-0 text-slate-400 hover:text-red-600 hover:bg-red-50"
                             title="Delete receipt"
                           >
@@ -656,6 +674,39 @@ function ChargeSlipDetailContent() {
           </Button>
         </div>
       </div>
+
+      {/* ── Delete receipt confirmation dialog ── */}
+      <AlertDialog open={receiptToDelete !== null} onOpenChange={(open) => { if (!open) setReceiptToDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Official Receipt?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-slate-800">
+                {receiptToDelete?.fileName || receiptToDelete?.id}
+              </span>
+              ? This action cannot be undone and the file will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting === receiptToDelete?.id}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting === receiptToDelete?.id}
+              onClick={() => {
+                if (receiptToDelete) {
+                  handleDeleteReceipt(receiptToDelete);
+                  setReceiptToDelete(null);
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleting === receiptToDelete?.id ? "Deleting…" : "Yes, delete it"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
