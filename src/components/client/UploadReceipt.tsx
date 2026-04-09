@@ -136,8 +136,6 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
 
   // Locked if any receipt is awaiting admin action (not yet acknowledged and not returned)
   const hasPendingReceipt = visibleReceipts.some((r) => !r.acknowledgedByAdmin && !r.returnedByAdmin);
-  // Slots: returned receipts being replaced don’t count as occupying a slot
-  const activeReceiptCount = visibleReceipts.filter((r) => !r.returnedByAdmin || r.acknowledgedByAdmin).length;
   const verifiedCount = visibleReceipts.filter((r) => r.acknowledgedByAdmin).length;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -668,7 +666,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
             ) : (
               <Paperclip className="h-3 w-3" />
             )}
-            {!selecting && "Attach receipt"}
+            {selecting ? "Opening…" : "Attach receipt"}
           </button>
           {!hasChargeSlip && (
             <p className="text-[9px] text-slate-400 mt-1">
