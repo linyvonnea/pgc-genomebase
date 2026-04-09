@@ -24,7 +24,6 @@ import useAuth from "@/hooks/useAuth";
 import { logActivity } from "@/services/activityLogService";
 import {
   FileText,
-  Trash2,
   Loader2,
   Paperclip,
   X,
@@ -397,21 +396,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
                           <Lock className="h-3 w-3 text-amber-300" />
                         </span>
                       )}
-                      {isReturned && replacingId !== receipt.id && (
-                        <button
-                          type="button"
-                          disabled={deletingId === receipt.id}
-                          onClick={() => handleDelete(receipt)}
-                          className="p-0.5 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
-                          title="Remove returned receipt"
-                        >
-                          {deletingId === receipt.id ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-3 w-3" />
-                          )}
-                        </button>
-                      )}
+
                     </div>
                   </div>
 
@@ -666,7 +651,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
             ) : (
               <Paperclip className="h-3 w-3" />
             )}
-            {selecting ? "Opening…" : "Attach receipt"}
+            Attach receipt
           </button>
           {!hasChargeSlip && (
             <p className="text-[9px] text-slate-400 mt-1">
