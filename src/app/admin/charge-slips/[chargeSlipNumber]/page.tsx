@@ -587,9 +587,6 @@ function ChargeSlipDetailContent() {
                               Date: <span className="font-medium text-slate-700">{or_.orDate}</span>
                             </span>
                           )}
-                          {or_.uploadedBy && (
-                            <span>By: <span className="font-medium text-slate-700">{or_.uploadedBy}</span></span>
-                          )}
                           {or_.acknowledgedByAdmin && (or_.acknowledgedByName || or_.acknowledgedBy) && (
                             <span className="text-emerald-600">
                               Acknowledged by:{" "}
@@ -617,16 +614,6 @@ function ChargeSlipDetailContent() {
                       </div>
                       <div className="flex flex-col items-end gap-2 shrink-0">
                         <div className="flex items-center gap-2">
-                          {or_.downloadURL && (
-                            <a
-                              href={or_.downloadURL}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:underline"
-                            >
-                              <ExternalLink className="h-3 w-3" /> View file
-                            </a>
-                          )}
                           {/* Delete restricted to superadmin only */}
                           {adminInfo?.email === "madayon1@up.edu.ph" && (
                             <Button

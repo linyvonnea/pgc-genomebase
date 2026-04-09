@@ -668,7 +668,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
             ) : (
               <Paperclip className="h-3 w-3" />
             )}
-            {selecting ? "Opening…" : "Attach receipt"}
+            {!selecting && "Attach receipt"}
           </button>
           {!hasChargeSlip && (
             <p className="text-[9px] text-slate-400 mt-1">
