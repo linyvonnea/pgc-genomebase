@@ -391,10 +391,10 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
               </Label>
               <Input
                 value={orNumber}
-                onChange={(e) => setOrNumber(e.target.value)}
-                placeholder="e.g. 2024-01234"
+                onChange={(e) => setOrNumber(e.target.value.replace(/\D/g, ""))}
+                placeholder="e.g. 0012345"
                 className="h-7 text-xs"
-                maxLength={50}
+                maxLength={20}
                 inputMode="numeric"
               />
             </div>

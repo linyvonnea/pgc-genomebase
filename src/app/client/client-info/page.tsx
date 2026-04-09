@@ -285,6 +285,7 @@ export default function ClientPortalPage() {
   });
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [expandedProjectDocs, setExpandedProjectDocs] = useState<Set<string>>(new Set());
+  const [expandedCsIds, setExpandedCsIds] = useState<Set<string>>(new Set());
   const [configSettings, setConfigSettings] = useState<ConfigurationSettings | null>(null);
 
   const [projectDocuments, setProjectDocuments] = useState<
@@ -2760,71 +2761,88 @@ export default function ClientPortalPage() {
                                     return (
                                       <div
                                         key={chargeSlip.id}
-                                        className="rounded-xl border border-slate-100 bg-white shadow-sm p-2.5 space-y-2"
+                                        className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden"
                                         onClick={(e) => e.stopPropagation()}
                                       >
-                                        {/* Top row: CS number link + status badge */}
-                                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                                        {/* Header — always visible; click anywhere except the CS link to toggle */}
+                                        <div
+                                          className="flex items-center justify-between gap-2 p-2.5 cursor-pointer select-none hover:bg-slate-50 transition-colors"
+                                          onClick={() =>
+                                            setExpandedCsIds((prev) => {
+                                              const next = new Set(prev);
+                                              if (next.has(chargeSlip.id!)) next.delete(chargeSlip.id!);
+                                              else next.add(chargeSlip.id!);
+                                              return next;
+                                            })
+                                          }
+                                        >
                                           <a
                                             href={`/client/view-document?type=charge-slip&ref=${chargeSlip.id}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="flex items-center gap-1 text-xs font-semibold text-green-700 hover:underline"
+                                            onClick={(e) => e.stopPropagation()}
                                           >
                                             <Receipt className="h-3 w-3 flex-shrink-0" />
                                             {chargeSlip.chargeSlipNumber}
                                           </a>
-                                          {csPaid ? (
-                                            <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
-                                              <CheckCircle2 className="h-2.5 w-2.5" /> Paid
-                                            </span>
-                                          ) : csCancelled ? (
-                                            <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
-                                              Cancelled
-                                            </span>
-                                          ) : (
-                                            <span className="inline-flex text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
-                                              Processing
-                                            </span>
-                                          )}
-                                        </div>
-
-                                        {/* Detail row: total + date */}
-                                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-500">
-                                          <span>
-                                            Total:{" "}
-                                            <span className="font-semibold text-slate-800">
-                                              ₱{csTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                            </span>
-                                          </span>
-                                          {csIssuedDate && (
-                                            <span>
-                                              Issued: <span className="font-medium text-slate-600">{csIssuedDate}</span>
-                                            </span>
-                                          )}
-                                        </div>
-
-                                        {/* Acknowledged OR entries */}
-                                        {(chargeSlip.orEntries?.length ?? 0) > 0 && (
-                                          <div className="space-y-0.5">
-                                            {chargeSlip.orEntries!.map((entry, idx) => (
-                                              <div key={idx} className="flex items-center gap-1 text-[10px] text-emerald-700">
-                                                <CheckCircle2 className="h-2.5 w-2.5 flex-shrink-0" />
-                                                <span>OR No. {entry.orNumber} · {entry.orDate}</span>
-                                              </div>
-                                            ))}
+                                          <div className="flex items-center gap-1.5">
+                                            {csPaid ? (
+                                              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                                                <CheckCircle2 className="h-2.5 w-2.5" /> Paid
+                                              </span>
+                                            ) : csCancelled ? (
+                                              <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
+                                                Cancelled
+                                              </span>
+                                            ) : (
+                                              <span className="inline-flex text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+                                                Processing
+                                              </span>
+                                            )}
+                                            <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform", expandedCsIds.has(chargeSlip.id!) && "rotate-180")} />
                                           </div>
-                                        )}
+                                        </div>
 
-                                        {/* Per-charge-slip OR receipts — view reference when paid, upload when unpaid */}
-                                        {portalFeatures.officialReceipts && (
-                                          <div className="pt-1 border-t border-slate-100">
-                                            <UploadReceipt
-                                              projectId={project.pid}
-                                              hasChargeSlip={true}
-                                              chargeSlipNumber={chargeSlip.chargeSlipNumber}
-                                              uploadAllowed={!csPaid && !csCancelled}
-                                            />
+                                        {/* Collapsible body */}
+                                        {expandedCsIds.has(chargeSlip.id!) && (
+                                          <div className="px-2.5 pb-2.5 space-y-2 border-t border-slate-100">
+                                            {/* Detail row: total + date */}
+                                            <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-500 pt-2">
+                                              <span>
+                                                Total:{" "}
+                                                <span className="font-semibold text-slate-800">
+                                                  ₱{csTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </span>
+                                              </span>
+                                              {csIssuedDate && (
+                                                <span>
+                                                  Issued: <span className="font-medium text-slate-600">{csIssuedDate}</span>
+                                                </span>
+                                              )}
+                                            </div>
+
+                                            {/* Acknowledged OR entries */}
+                                            {(chargeSlip.orEntries?.length ?? 0) > 0 && (
+                                              <div className="space-y-0.5">
+                                                {chargeSlip.orEntries!.map((entry, idx) => (
+                                                  <div key={idx} className="flex items-center gap-1 text-[10px] text-emerald-700">
+                                                    <CheckCircle2 className="h-2.5 w-2.5 flex-shrink-0" />
+                                                    <span>OR No. {entry.orNumber} · {entry.orDate}</span>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            )}
+
+                                            {/* Per-charge-slip OR receipts — view reference when paid, upload when unpaid */}
+                                            {portalFeatures.officialReceipts && (
+                                              <UploadReceipt
+                                                projectId={project.pid}
+                                                hasChargeSlip={true}
+                                                chargeSlipNumber={chargeSlip.chargeSlipNumber}
+                                                uploadAllowed={!csPaid && !csCancelled}
+                                              />
+                                            )}
                                           </div>
                                         )}
                                       </div>
