@@ -187,9 +187,12 @@ function ChargeSlipDetailContent() {
     setAcknowledging(receipt.id);
     try {
       const pid = record.projectId || (record.project as any)?.pid || "";
-      // Mark the receipt as acknowledged
+      // Mark the receipt as acknowledged and record who acknowledged it
       await updateDoc(doc(db, "projects", pid, "officialReceipts", receipt.id), {
         acknowledgedByAdmin: true,
+        acknowledgedBy: adminInfo?.email || "unknown",
+        acknowledgedByName: adminInfo?.name || "",
+        acknowledgedAt: Timestamp.now(),
       });
       // Persist OR details on charge slip for future reference (status NOT changed — admin updates manually)
       const orVal = receipt.orNumber || orNumber;
@@ -200,6 +203,8 @@ function ChargeSlipDetailContent() {
         orNumber: orVal || "",
         orDate: receipt.orDate || "",
         acknowledgedAt: Timestamp.now(),
+        acknowledgedBy: adminInfo?.email || "unknown",
+        acknowledgedByName: adminInfo?.name || "",
       };
       await updateChargeSlip(record.id, {
         orNumber: orVal,
@@ -467,10 +472,13 @@ function ChargeSlipDetailContent() {
             </div>
 
             <div className="space-y-4">
+              {/* OR Number and Date of OR are managed via the Official Receipts
+                  section below — they are saved automatically when the admin
+                  acknowledges an uploaded receipt, keeping data entry in one place.
               <div>
                 <label className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-2">OR Number</label>
-                <Input 
-                  value={orNumber} 
+                <Input
+                  value={orNumber}
                   onChange={(e) => setOrNumber(e.target.value)}
                   placeholder="Enter OR number"
                   className="w-full"
@@ -497,6 +505,7 @@ function ChargeSlipDetailContent() {
                   className="w-full"
                 />
               </div>
+              */}
             </div>
           </div>
 
