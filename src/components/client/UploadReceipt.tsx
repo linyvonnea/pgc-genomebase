@@ -130,15 +130,12 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
   const visibleReceipts = csNum
     ? receipts.filter((r) => r.chargeSlipNumber === csNum)
     : receipts;
-  const MAX_RECEIPTS = 3;
 
   // View-only mode (e.g. paid slip): hide upload controls; if no receipts, render nothing
   if (!uploadAllowed && !loadingReceipts && visibleReceipts.length === 0) return null;
 
   // Locked if any receipt is awaiting admin action (not yet acknowledged and not returned)
   const hasPendingReceipt = visibleReceipts.some((r) => !r.acknowledgedByAdmin && !r.returnedByAdmin);
-  // Slots: returned receipts being replaced don’t count as occupying a slot
-  const activeReceiptCount = visibleReceipts.filter((r) => !r.returnedByAdmin || r.acknowledgedByAdmin).length;
   const verifiedCount = visibleReceipts.filter((r) => r.acknowledgedByAdmin).length;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -367,7 +364,6 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
         <div className="space-y-1.5 ml-5">
           <p className="text-[9px] text-slate-400">
             {verifiedCount} of {visibleReceipts.length} receipt{visibleReceipts.length !== 1 ? "s" : ""} verified
-            {uploadAllowed && (activeReceiptCount >= MAX_RECEIPTS ? " · Maximum reached" : ` · ${MAX_RECEIPTS - activeReceiptCount} remaining`)}
           </p>
           {visibleReceipts.map((receipt) => {
             const isVerified = receipt.acknowledgedByAdmin;
@@ -376,73 +372,21 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
 
             return (
               <div key={receipt.id} className="space-y-1.5">
-                {/* Receipt row */}
-                <div
-                  className="group flex items-center gap-2 rounded-lg bg-white border border-slate-100 shadow-sm px-2.5 py-1 hover:border-blue-200 hover:bg-blue-50/10 transition-colors"
-                >
-                  <FileText className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
-                  {/* Single-line: filename + meta on one row */}
-                  <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-hidden">
-                    {receipt.downloadURL ? (
-                      <a
-                        href={receipt.downloadURL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={receipt.fileName || receipt.id}
-                        className="text-[11px] font-semibold text-slate-700 hover:underline truncate shrink-0 max-w-[50%]"
-                      >
-                        {receipt.fileName || receipt.id}
-                      </a>
-                    ) : (
-                      <span
-                        title={receipt.fileName || receipt.id}
-                        className="text-[11px] font-semibold text-slate-700 truncate shrink-0 max-w-[50%]"
-                      >
-                        {receipt.fileName || receipt.id}
-                      </span>
-                    )}
-                    <span className="text-[9px] text-slate-400 truncate min-w-0">
+                {/* Receipt card: OR details row on top, filename + status badge below */}
+                <div className="rounded-lg bg-white border border-slate-100 shadow-sm px-2.5 py-1.5 group hover:border-blue-200 hover:bg-blue-50/10 transition-colors">
+                  {/* Row 1: OR No. · Date · file size */}
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[9px] text-slate-500 truncate">
                       {[
                         receipt.orNumber ? `OR No. ${receipt.orNumber}` : null,
                         receipt.orDate,
                         formatFileSize(receipt.size),
-                        formatDate(receipt.uploadedAt),
                       ]
                         .filter(Boolean)
-                        .join(" · ")}
+                        .join(" ·") || "\u00a0"}
                     </span>
-                  </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    {/* Status badge */}
-                    {isVerified && (
-                      <span
-                        className="flex items-center gap-0.5 text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5"
-                        title="Acknowledged by admin"
-                      >
-                        <CheckCircle2 className="h-2.5 w-2.5" />
-                        Verified
-                      </span>
-                    )}
-                    {isPending && (
-                      <span
-                        className="text-[9px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 font-semibold"
-                        title="Waiting for admin acknowledgment"
-                      >
-                        Pending
-                      </span>
-                    )}
-                    {isReturned && (
-                      <span
-                        className="flex items-center gap-0.5 text-[9px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded px-1.5 py-0.5"
-                        title="Admin returned this receipt for correction"
-                      >
-                        <RotateCcw className="h-2.5 w-2.5" />
-                        Returned
-                      </span>
-                    )}
-
-                    {/* Action icon */}
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Action icon — top-right */}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                       {isVerified && (
                         <span title="Cannot delete — acknowledged by admin">
                           <Lock className="h-3 w-3 text-slate-300" />
@@ -458,7 +402,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
                           type="button"
                           disabled={deletingId === receipt.id}
                           onClick={() => handleDelete(receipt)}
-                          className="p-1 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                          className="p-0.5 rounded text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
                           title="Remove returned receipt"
                         >
                           {deletingId === receipt.id ? (
@@ -469,6 +413,56 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
                         </button>
                       )}
                     </div>
+                  </div>
+
+                  {/* Row 2: file icon + filename link + status badge */}
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <FileText className="h-3 w-3 text-emerald-500 flex-shrink-0" />
+                    {receipt.downloadURL ? (
+                      <a
+                        href={receipt.downloadURL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={receipt.fileName || receipt.id}
+                        className="text-[11px] font-semibold text-slate-700 hover:underline truncate flex-1 min-w-0"
+                      >
+                        {receipt.fileName || receipt.id}
+                      </a>
+                    ) : (
+                      <span
+                        title={receipt.fileName || receipt.id}
+                        className="text-[11px] font-semibold text-slate-700 truncate flex-1 min-w-0"
+                      >
+                        {receipt.fileName || receipt.id}
+                      </span>
+                    )}
+                    {/* Status badge */}
+                    {isVerified && (
+                      <span
+                        className="flex items-center gap-0.5 text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5 flex-shrink-0"
+                        title="Acknowledged by admin"
+                      >
+                        <CheckCircle2 className="h-2.5 w-2.5" />
+                        Verified
+                      </span>
+                    )}
+                    {isPending && (
+                      <span
+                        className="text-[9px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 font-semibold flex-shrink-0"
+                        title="Waiting for admin acknowledgment"
+                      >
+                        Pending
+                      </span>
+                    )}
+                    {isReturned && (
+                      <span
+                        className="flex items-center gap-0.5 text-[9px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded px-1.5 py-0.5 flex-shrink-0"
+                        title="Admin returned this receipt for correction"
+                      >
+                        <RotateCcw className="h-2.5 w-2.5" />
+                        Returned
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -647,8 +641,8 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
         </div>
       )}
 
-      {/* ── Attach button — shown when under limit and no new-upload pending ── */}
-      {uploadAllowed && !pendingFile && activeReceiptCount < MAX_RECEIPTS && !hasPendingReceipt && (
+      {/* ── Attach button — shown when no new-upload is pending; one pending at a time ── */}
+      {uploadAllowed && !pendingFile && !hasPendingReceipt && (
         <div className="ml-5">
           <input
             ref={fileInputRef}

@@ -45,6 +45,8 @@ interface OfficialReceipt {
   orNumber?: string;
   orDate?: string;
   acknowledgedByAdmin?: boolean;
+  acknowledgedBy?: string;
+  acknowledgedByName?: string;
   returnedByAdmin?: boolean;
   chargeSlipNumber?: string;
 }
@@ -588,6 +590,14 @@ function ChargeSlipDetailContent() {
                           {or_.uploadedBy && (
                             <span>By: <span className="font-medium text-slate-700">{or_.uploadedBy}</span></span>
                           )}
+                          {or_.acknowledgedByAdmin && (or_.acknowledgedByName || or_.acknowledgedBy) && (
+                            <span className="text-emerald-600">
+                              Acknowledged by:{" "}
+                              <span className="font-medium">
+                                {or_.acknowledgedByName || or_.acknowledgedBy}
+                              </span>
+                            </span>
+                          )}
                         </div>
                         <div className="pt-0.5">
                           {or_.acknowledgedByAdmin ? (
@@ -617,20 +627,23 @@ function ChargeSlipDetailContent() {
                               <ExternalLink className="h-3 w-3" /> View file
                             </a>
                           )}
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            disabled={deleting === or_.id || acknowledging === or_.id || returning === or_.id}
-                            onClick={() => setReceiptToDelete(or_)}
-                            className="h-7 w-7 p-0 text-slate-400 hover:text-red-600 hover:bg-red-50"
-                            title="Delete receipt"
-                          >
-                            {deleting === or_.id ? (
-                              <ReceiptLoader className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-3.5 w-3.5" />
-                            )}
-                          </Button>
+                          {/* Delete restricted to superadmin only */}
+                          {adminInfo?.email === "madayon1@up.edu.ph" && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={deleting === or_.id || acknowledging === or_.id || returning === or_.id}
+                              onClick={() => setReceiptToDelete(or_)}
+                              className="h-7 w-7 p-0 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                              title="Delete receipt"
+                            >
+                              {deleting === or_.id ? (
+                                <ReceiptLoader className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                          )}
                         </div>
                         {!or_.acknowledgedByAdmin && !or_.returnedByAdmin && (
                           <div className="flex gap-1.5">
