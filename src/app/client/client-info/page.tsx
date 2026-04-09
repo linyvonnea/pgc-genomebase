@@ -2822,18 +2822,6 @@ export default function ClientPortalPage() {
                                               )}
                                             </div>
 
-                                            {/* Acknowledged OR entries */}
-                                            {(chargeSlip.orEntries?.length ?? 0) > 0 && (
-                                              <div className="space-y-0.5">
-                                                {chargeSlip.orEntries!.map((entry, idx) => (
-                                                  <div key={idx} className="flex items-center gap-1 text-[10px] text-emerald-700">
-                                                    <CheckCircle2 className="h-2.5 w-2.5 flex-shrink-0" />
-                                                    <span>OR No. {entry.orNumber} · {entry.orDate}</span>
-                                                  </div>
-                                                ))}
-                                              </div>
-                                            )}
-
                                             {/* Per-charge-slip OR receipts — view reference when paid, upload when unpaid */}
                                             {portalFeatures.officialReceipts && (
                                               <UploadReceipt
