@@ -93,6 +93,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
   const [orNumber, setOrNumber] = useState("");
   const [orDate, setOrDate] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [selecting, setSelecting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -130,6 +131,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
   const verifiedCount = visibleReceipts.filter((r) => r.acknowledgedByAdmin).length;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelecting(false);
     const f = e.target.files?.[0];
     e.target.value = "";
     if (!f) return;
@@ -164,7 +166,11 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
     }
     setUploading(true);
     try {
-      const downloadURL = await uploadFile(pendingFile, `receipts/${projectId}`);
+      // Store under receipts/{projectId}/{chargeSlipNumber} for easy identification
+      const folder = csNum
+        ? `receipts/${projectId}/${csNum}`
+        : `receipts/${projectId}`;
+      const downloadURL = await uploadFile(pendingFile, folder);
       await addDoc(collection(db, "projects", projectId, "officialReceipts"), {
         fileName: pendingFile.name,
         contentType: pendingFile.type,
@@ -452,15 +458,19 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
           />
           <button
             type="button"
-            disabled={uploading || !hasChargeSlip}
-            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading || selecting || !hasChargeSlip}
+            onClick={() => { setSelecting(true); fileInputRef.current?.click(); }}
             title={!hasChargeSlip ? "A Charge Slip must be issued first before attaching a receipt." : "Attach an official receipt"}
             className="inline-flex items-center gap-1.5 text-[11px] font-medium border border-dashed rounded-lg px-2.5 py-1.5 transition-colors
               disabled:cursor-not-allowed disabled:opacity-50 disabled:border-slate-200 disabled:text-slate-400 disabled:bg-white
               enabled:text-slate-500 enabled:hover:text-emerald-700 enabled:border-slate-200 enabled:hover:border-emerald-300 enabled:bg-white enabled:hover:bg-emerald-50"
           >
-            <Paperclip className="h-3 w-3" />
-            Attach receipt
+            {selecting ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Paperclip className="h-3 w-3" />
+            )}
+            {selecting ? "Opening…" : "Attach receipt"}
           </button>
           {!hasChargeSlip && (
             <p className="text-[9px] text-slate-400 mt-1">
