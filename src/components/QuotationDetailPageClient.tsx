@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getQuotationByReferenceNumber, updateQuotationStatus, getAllQuotations } from "@/services/quotationService";
+import { getQuotationByReferenceNumber, updateQuotationStatus } from "@/services/quotationService";
 import { QuotationRecord } from "@/types/Quotation";
 import { notFound } from "next/navigation";
 import DownloadButtonSection from "@/components/pdf/DownloadButtonSection";
@@ -20,7 +20,6 @@ export default function QuotationDetailPageClient() {
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<NonNullable<QuotationRecord["status"]>>("pending");
   const [savingStatus, setSavingStatus] = useState(false);
-  const [allQuotations, setAllQuotations] = useState<QuotationRecord[]>([]);
 
   useEffect(() => {
     if (!referenceNumber || typeof referenceNumber !== "string") return;
@@ -51,12 +50,6 @@ export default function QuotationDetailPageClient() {
 
     fetchQuotation();
   }, [referenceNumber]);
-
-  useEffect(() => {
-    getAllQuotations()
-      .then(setAllQuotations)
-      .catch(() => {});
-  }, []);
 
   const handleToggleCancel = async () => {
     if (!referenceNumber || typeof referenceNumber !== "string") return;
