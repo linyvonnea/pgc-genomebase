@@ -191,7 +191,17 @@ export function useApprovalNotifications() {
       (snapshot) => {
         const csNumbers = new Set<string>();
         snapshot.docs.forEach((d) => {
-          const csNum: string | undefined = d.data().chargeSlipNumber;
+          const data = d.data();
+          // Skip receipts that the admin has already returned — treat returned as "seen"
+          if (data.returnedByAdmin === true) {
+            // Dismiss any lingering toast for this doc
+            if (orToastIdsRef.current![d.id]) {
+              toast.dismiss(orToastIdsRef.current![d.id]);
+              delete orToastIdsRef.current![d.id];
+            }
+            return;
+          }
+          const csNum: string | undefined = data.chargeSlipNumber;
           if (csNum) csNumbers.add(csNum);
 
           // Toast for new uploads (skip initial load)
