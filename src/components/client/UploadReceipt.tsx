@@ -522,40 +522,18 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
                           {replaceUploading ? "Uploading…" : "Submit replacement"}
                         </Button>
                       </div>
-                    ) : replacingId === receipt.id && !replacePendingFile ? (
-                      /* Waiting for file picker */
-                      <button
-                        type="button"
-                        disabled
-                        className="inline-flex items-center gap-1.5 text-[11px] font-medium border border-dashed border-rose-200 rounded-lg px-2.5 py-1.5 text-rose-400 bg-white opacity-70"
-                      >
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        Opening…
-                      </button>
                     ) : (
                       /* Replace file button */
                       <button
                         type="button"
-                        disabled={replaceSelecting}
                         onClick={() => {
                           setReplacingId(receipt.id);
-                          setReplaceSelecting(true);
-                          const input = replaceFileInputRef.current;
-                          if (input) {
-                            const onCancel = () => { setReplaceSelecting(false); setReplacingId(null); input.removeEventListener("cancel", onCancel); };
-                            input.addEventListener("cancel", onCancel);
-                          }
-                          // Small delay so replacingId state is set before onChange fires
                           setTimeout(() => replaceFileInputRef.current?.click(), 0);
                         }}
                         className="inline-flex items-center gap-1.5 text-[11px] font-medium border border-dashed border-rose-300 rounded-lg px-2.5 py-1.5 text-rose-600 bg-white hover:bg-rose-50 hover:border-rose-400 transition-colors"
                       >
-                        {replaceSelecting ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <Paperclip className="h-3 w-3" />
-                        )}
-                        {replaceSelecting ? "Opening…" : "Replace returned file"}
+                        <Paperclip className="h-3 w-3" />
+                        Replace returned file
                       </button>
                     )}
                   </div>
@@ -631,6 +609,14 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
         </div>
       )}
 
+      {/* Locked message while pending admin review */}
+      {uploadAllowed && !pendingFile && hasPendingReceipt && (
+        <div className="ml-5 flex items-center gap-1.5 text-[10px] text-amber-600">
+          <Lock className="h-3 w-3" />
+          Receipt attachment locked — awaiting admin validation or return for correction.
+        </div>
+      )}
+
       {/* ── Attach button — shown when no new-upload is pending; one pending at a time ── */}
       {uploadAllowed && !pendingFile && !hasPendingReceipt && (
         <div className="ml-5">
@@ -644,26 +630,14 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
           />
           <button
             type="button"
-            disabled={uploading || selecting || !hasChargeSlip}
-            onClick={() => {
-              setSelecting(true);
-              const input = fileInputRef.current;
-              if (input) {
-                const onCancel = () => { setSelecting(false); input.removeEventListener("cancel", onCancel); };
-                input.addEventListener("cancel", onCancel);
-                input.click();
-              }
-            }}
+            disabled={uploading || !hasChargeSlip}
+            onClick={() => fileInputRef.current?.click()}
             title={!hasChargeSlip ? "A Charge Slip must be issued first before attaching a receipt." : "Attach an official receipt"}
             className="inline-flex items-center gap-1.5 text-[11px] font-medium border border-dashed rounded-lg px-2.5 py-1.5 transition-colors
               disabled:cursor-not-allowed disabled:opacity-50 disabled:border-slate-200 disabled:text-slate-400 disabled:bg-white
               enabled:text-slate-500 enabled:hover:text-emerald-700 enabled:border-slate-200 enabled:hover:border-emerald-300 enabled:bg-white enabled:hover:bg-emerald-50"
           >
-            {selecting ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <Paperclip className="h-3 w-3" />
-            )}
+            <Paperclip className="h-3 w-3" />
             Attach receipt
           </button>
           {!hasChargeSlip && (
@@ -671,14 +645,6 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
               A Charge Slip must be issued first.
             </p>
           )}
-        </div>
-      )}
-
-      {/* Locked message while pending admin review */}
-      {uploadAllowed && !pendingFile && hasPendingReceipt && (
-        <div className="ml-5 flex items-center gap-1.5 text-[10px] text-amber-600">
-          <Lock className="h-3 w-3" />
-          Receipt attachment locked — awaiting admin validation or return for correction.
         </div>
       )}
     </div>

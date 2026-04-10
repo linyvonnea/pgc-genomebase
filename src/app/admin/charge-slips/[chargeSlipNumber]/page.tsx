@@ -587,6 +587,14 @@ function ChargeSlipDetailContent() {
                               Date: <span className="font-medium text-slate-700">{or_.orDate}</span>
                             </span>
                           )}
+                          {or_.acknowledgedByAdmin && (or_.acknowledgedByName || or_.acknowledgedBy) && (
+                            <span className="text-emerald-600">
+                              Validated by:{" "}
+                              <span className="font-medium">
+                                {or_.acknowledgedByName || or_.acknowledgedBy}
+                              </span>
+                            </span>
+                          )}
                         </div>
                         <div className="pt-0.5">
                           {or_.acknowledgedByAdmin ? (
