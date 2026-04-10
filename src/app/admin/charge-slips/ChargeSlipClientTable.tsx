@@ -100,7 +100,10 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     const unsub = onSnapshot(q, (snap) => {
       const csNums = new Set<string>();
       snap.docs.forEach((d) => {
-        const csNum: string | undefined = d.data().chargeSlipNumber;
+        const data = d.data();
+        // Exclude returned receipts — admin already acted on them
+        if (data.returnedByAdmin === true) return;
+        const csNum: string | undefined = data.chargeSlipNumber;
         if (csNum) csNums.add(csNum);
       });
       setNewOrCsNumbers(csNums);
