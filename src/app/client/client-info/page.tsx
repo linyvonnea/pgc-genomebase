@@ -286,6 +286,7 @@ export default function ClientPortalPage() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [expandedProjectDocs, setExpandedProjectDocs] = useState<Set<string>>(new Set());
   const [expandedCsIds, setExpandedCsIds] = useState<Set<string>>(new Set());
+  const [expandedQuoteIds, setExpandedQuoteIds] = useState<Set<string>>(new Set());
   const [configSettings, setConfigSettings] = useState<ConfigurationSettings | null>(null);
 
   const [projectDocuments, setProjectDocuments] = useState<
@@ -3430,56 +3431,94 @@ export default function ClientPortalPage() {
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          {inquiryQuotations.map((quote) => (
-                            <div 
-                              key={quote.id} 
-                              className="group flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-white rounded-xl border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 gap-3"
+                          {inquiryQuotations.map((quote) => {
+                            const qCancelled = quote.status === "cancelled";
+                            const qExpanded = expandedQuoteIds.has(quote.referenceNumber);
+                            return (
+                            <div
+                              key={quote.id}
+                              className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden"
                             >
-                              <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-100 transition-colors">
-                                  <FileText className="h-4 w-4" />
+                              {/* Header — always visible */}
+                              <div
+                                className="flex items-center justify-between gap-2 p-2.5 cursor-pointer select-none hover:bg-slate-50 transition-colors"
+                                onClick={() =>
+                                  setExpandedQuoteIds((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(quote.referenceNumber)) next.delete(quote.referenceNumber);
+                                    else next.add(quote.referenceNumber);
+                                    return next;
+                                  })
+                                }
+                              >
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <FileText className="h-3 w-3 text-indigo-500 flex-shrink-0" />
+                                  <span className="text-xs font-semibold text-indigo-700 truncate">
+                                    {quote.referenceNumber}
+                                  </span>
                                 </div>
-                                <div className="min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <p className="font-bold text-slate-800 truncate text-sm">
-                                      Quotation: {quote.referenceNumber}
-                                    </p>
-                                    {quote.selectedForProject && (
-                                      <Badge title="Selected" className="bg-green-600 hover:bg-green-700 text-white p-1 flex items-center justify-center rounded-full w-5 h-5">
-                                        <CheckCircle2 className="w-4 h-4" />
-                                      </Badge>
+                                <div className="flex items-center gap-1.5 flex-shrink-0">
+                                  {qCancelled ? (
+                                    <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
+                                      Cancelled
+                                    </span>
+                                  ) : quote.selectedForProject ? (
+                                    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                                      <CheckCircle2 className="h-2.5 w-2.5" /> Selected
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex text-[10px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-full px-2 py-0.5">
+                                      Active
+                                    </span>
+                                  )}
+                                  <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform", qExpanded && "rotate-180")} />
+                                </div>
+                              </div>
+
+                              {/* Collapsible body */}
+                              {qExpanded && (
+                                <div className="px-2.5 pb-2.5 border-t border-slate-100 space-y-2">
+                                  {/* Detail row: total + date */}
+                                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-500 pt-2">
+                                    <span>
+                                      Total:{" "}
+                                      <span className="font-semibold text-slate-800">
+                                        {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(quote.total)}
+                                      </span>
+                                    </span>
+                                    <span>
+                                      Issued:{" "}
+                                      <span className="font-medium text-slate-600">
+                                        {new Date(quote.dateIssued).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                      </span>
+                                    </span>
+                                  </div>
+                                  {/* Actions */}
+                                  <div className="flex flex-wrap gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => router.push(`/client/view-document?type=quotation&ref=${quote.referenceNumber}`)}
+                                      className="border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold h-8 text-xs"
+                                    >
+                                      View PDF
+                                    </Button>
+                                    {!qCancelled && fetchedApprovedProjects.length === 0 && currentInquiry?.status !== "Cancelled" && (
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleProceedWithService(quote.referenceNumber)}
+                                        className="bg-gradient-to-r from-[#166FB5] to-[#4038AF] text-white hover:opacity-90 font-bold h-8 text-xs"
+                                      >
+                                        <ArrowRight className="h-3 w-3 mr-1" />
+                                        Proceed with Service
+                                      </Button>
                                     )}
                                   </div>
-                                  <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                                    <Calendar className="h-2.5 w-2.5" />
-                                    <span>{new Date(quote.dateIssued).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                                    <span>•</span>
-                                    <span>{new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(quote.total)}</span>
-                                  </div>
                                 </div>
-                              </div>
-                              <div className="flex flex-col sm:flex-row gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => router.push(`/client/view-document?type=quotation&ref=${quote.referenceNumber}`)}
-                                  className="border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold h-8 text-xs"
-                                >
-                                  View PDF
-                                </Button>
-                                {fetchedApprovedProjects.length === 0 && currentInquiry?.status !== "Cancelled" && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleProceedWithService(quote.referenceNumber)}
-                                    className="bg-gradient-to-r from-[#166FB5] to-[#4038AF] text-white hover:opacity-90 font-bold h-8 text-xs"
-                                  >
-                                    <ArrowRight className="h-3 w-3 mr-1" />
-                                    Proceed with Service
-                                  </Button>
-                                )}
-                              </div>
+                              )}
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>

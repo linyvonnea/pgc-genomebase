@@ -2,12 +2,20 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getQuotationByReferenceNumber } from "@/services/quotationService";
+import { getQuotationByReferenceNumber, updateQuotationStatus } from "@/services/quotationService";
 import { QuotationRecord } from "@/types/Quotation";
 import { notFound } from "next/navigation";
 import DownloadButtonSection from "@/components/pdf/DownloadButtonSection";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 
@@ -17,6 +25,8 @@ export default function QuotationDetailPageClient() {
   const router = useRouter();
   const [quotation, setQuotation] = useState<QuotationRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<NonNullable<QuotationRecord["status"]>>("pending");
+  const [savingStatus, setSavingStatus] = useState(false);
 
   useEffect(() => {
     if (!referenceNumber || typeof referenceNumber !== "string") return;
@@ -25,6 +35,7 @@ export default function QuotationDetailPageClient() {
       try {
         const data = await getQuotationByReferenceNumber(referenceNumber);
         setQuotation(data);
+        if (data) setStatus((data.status as NonNullable<QuotationRecord["status"]>) || "pending");
         
         // Log VIEW activity
         await logActivity({
@@ -46,6 +57,29 @@ export default function QuotationDetailPageClient() {
 
     fetchQuotation();
   }, [referenceNumber]);
+
+  const handleSaveStatus = async () => {
+    if (!referenceNumber || typeof referenceNumber !== "string") return;
+    setSavingStatus(true);
+    try {
+      await updateQuotationStatus(referenceNumber, status);
+      await logActivity({
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
+        action: "UPDATE",
+        entityType: "quotation",
+        entityId: referenceNumber,
+        entityName: `Quotation ${referenceNumber}`,
+        description: `Updated quotation status to "${status}": ${referenceNumber}`,
+      });
+      toast.success("Quotation status updated.");
+    } catch {
+      toast.error("Failed to update status.");
+    } finally {
+      setSavingStatus(false);
+    }
+  };
 
   if (loading) return <div className="p-6 text-sm text-muted-foreground">Loading quotation...</div>;
   if (!quotation) return notFound();
@@ -178,6 +212,34 @@ export default function QuotationDetailPageClient() {
                 </span>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Status Card */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+          <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#6E308E] rounded-full"></div>
+            Quotation Status
+          </h2>
+          <div className="flex items-center gap-3">
+            <Select value={status} onValueChange={(v) => setStatus(v as NonNullable<QuotationRecord["status"]>)}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="in-progress">In Progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              onClick={handleSaveStatus}
+              disabled={savingStatus}
+              className="bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#145a9b] hover:to-[#362f8f] text-white font-medium px-5 py-2 rounded-lg transition-all duration-200 shadow-lg"
+            >
+              {savingStatus ? "Saving…" : "Save Status"}
+            </Button>
           </div>
         </div>
 
