@@ -281,54 +281,6 @@ export default function QuotationDetailPageClient() {
             total={total}
           />
         </div>
-
-        {/* All Quotations */}
-        {allQuotations.length > 0 && (
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
-            <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-              <div className="w-2 h-2 bg-gradient-to-r from-[#166FB5] to-[#4038AF] rounded-full"></div>
-              All Quotations
-              <Badge variant="outline" className="ml-auto text-xs font-normal text-slate-500">
-                {allQuotations.length} total
-              </Badge>
-            </h2>
-            <div className="space-y-1 max-h-72 overflow-y-auto pr-1">
-              {allQuotations.map((q) => {
-                const isCurrent = q.referenceNumber === referenceNumber;
-                const isCancelled = q.status === "cancelled";
-                return (
-                  <div
-                    key={q.referenceNumber}
-                    onClick={() => !isCurrent && router.push(`/admin/quotations/${q.referenceNumber}`)}
-                    className={[
-                      "flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-                      isCurrent
-                        ? "bg-blue-50 border border-blue-200 cursor-default"
-                        : "hover:bg-slate-50 cursor-pointer border border-transparent",
-                    ].join(" ")}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className={["font-mono font-semibold truncate text-xs", isCurrent ? "text-blue-700" : "text-slate-700"].join(" ")}>
-                        {q.referenceNumber}
-                      </span>
-                      <span className="text-xs text-slate-500 truncate hidden sm:block">{q.name}</span>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-xs text-slate-500">
-                        {new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 }).format(q.total)}
-                      </span>
-                      {isCancelled ? (
-                        <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">Cancelled</span>
-                      ) : isCurrent ? (
-                        <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5">Viewing</span>
-                      ) : null}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
