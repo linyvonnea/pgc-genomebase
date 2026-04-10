@@ -103,8 +103,17 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
   {
     accessorKey: "chargeSlipNumber",
     header: "Charge Slip No.",
-    size: 130,
-    cell: ({ getValue }) => <div className="font-mono text-xs font-semibold">{getValue()}</div>,
+    size: 150,
+    cell: ({ getValue, row }) => (
+      <div className="flex items-center gap-1.5">
+        <span className="font-mono text-xs font-semibold">{getValue<string>()}</span>
+        {row.original.hasNewOR && (
+          <Badge variant="destructive" className="h-3.5 px-1 text-[7px] animate-pulse shrink-0">
+            OR
+          </Badge>
+        )}
+      </div>
+    ),
   },
   {
     accessorFn: (row) => row.clientInfo?.name,

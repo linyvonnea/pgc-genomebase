@@ -55,4 +55,7 @@ export interface UIChargeSlipRecord {
     name: string;
     position: string;
   };
+
+  // Runtime-only flag: set in ChargeSlipClientTable when this charge slip has an unacknowledged OR upload
+  hasNewOR?: boolean;
 }

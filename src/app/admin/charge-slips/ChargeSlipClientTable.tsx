@@ -10,7 +10,9 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { collectionGroup, onSnapshot, query, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -79,9 +81,7 @@ interface Props {
 export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props) {
   const router = useRouter();
 
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: "chargeSlipNumber", desc: true },
-  ]);
+  const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("__all");
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
@@ -89,6 +89,24 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   const [yearFilter, setYearFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
   const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(true);
+  const [newOrCsNumbers, setNewOrCsNumbers] = useState<Set<string>>(new Set());
+
+  // Subscribe to unacknowledged official receipts so we can highlight those rows
+  useEffect(() => {
+    const q = query(
+      collectionGroup(db, "officialReceipts"),
+      where("acknowledgedByAdmin", "==", false)
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      const csNums = new Set<string>();
+      snap.docs.forEach((d) => {
+        const csNum: string | undefined = d.data().chargeSlipNumber;
+        if (csNum) csNums.add(csNum);
+      });
+      setNewOrCsNumbers(csNums);
+    }, () => {});
+    return () => unsub();
+  }, []);
 
   const monthNames = useMemo(() => [
     "January", "February", "March", "April", "May", "June",
@@ -108,7 +126,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
 
   // Filter data manually before passing to table
   const filteredData = useMemo(() => {
-    return data.filter((item) => {
+    const filtered = data.filter((item) => {
       // 1. Global Filter
       const q = globalFilter.trim().toLowerCase();
       const haystack =
@@ -134,8 +152,23 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       const matchesMonth = monthFilter === "all" || (date && (date.getMonth() + 1).toString() === monthFilter);
 
       return matchesSearch && matchesStatus && matchesCategory && matchesYear && matchesMonth;
-    });
-  }, [data, globalFilter, statusFilter, categoryFilter, yearFilter, monthFilter]);
+    }).map((item) => ({
+      ...item,
+      hasNewOR: newOrCsNumbers.has(item.chargeSlipNumber),
+    }));
+
+    // When the user hasn't applied a manual sort, float rows with new ORs to the top,
+    // then fall back to chargeSlipNumber descending.
+    if (sorting.length === 0) {
+      filtered.sort((a, b) => {
+        if (a.hasNewOR && !b.hasNewOR) return -1;
+        if (!a.hasNewOR && b.hasNewOR) return 1;
+        return b.chargeSlipNumber.localeCompare(a.chargeSlipNumber);
+      });
+    }
+
+    return filtered;
+  }, [data, globalFilter, statusFilter, categoryFilter, yearFilter, monthFilter, newOrCsNumbers, sorting]);
 
   // Total Summary for the filtered data
   const filteredTotalValue = useMemo(() => {

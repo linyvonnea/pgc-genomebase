@@ -59,7 +59,7 @@ export function AdminSidebar() {
   const { user, signOut, adminInfo } = useAuth();
   const { canView, loading: permissionsLoading } = usePermissions(adminInfo?.role);
   const { openTab, activeTab, isTabOpen, setActiveTab } = useTabContext();
-  const { pendingCount, inquiryCount } = useApprovalNotifications();
+  const { pendingCount, inquiryCount, newOrCount } = useApprovalNotifications();
 
   const handleNavClick = (href: string, label: string, icon: React.ElementType) => {
     const tabId = href.replace("/admin/", "");
@@ -284,6 +284,18 @@ export function AdminSidebar() {
                       </span>
                     )}
                     
+                    {/* Notification badge for Charge Slips */}
+                    {href === "/admin/charge-slips" && newOrCount > 0 && (
+                      <span className={cn(
+                        "min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-bold px-1.5",
+                        isActive(href)
+                          ? "bg-white text-[#166FB5]"
+                          : "bg-red-500 text-white animate-pulse"
+                      )}>
+                        {newOrCount}
+                      </span>
+                    )}
+                    
                     {/* Notification badge for Projects Approval */}
                     {href === "/admin/member-approvals" && pendingCount > 0 && (
                       <span className={cn(
@@ -296,7 +308,7 @@ export function AdminSidebar() {
                       </span>
                     )}
                     
-                    {isTabOpen(href.replace("/admin/", "")) && !isActive(href) && href !== "/admin/member-approvals" && href !== "/admin/inquiry" && (
+                    {isTabOpen(href.replace("/admin/", "")) && !isActive(href) && href !== "/admin/member-approvals" && href !== "/admin/inquiry" && href !== "/admin/charge-slips" && (
                       <div className="w-1.5 h-1.5 rounded-full bg-[#166FB5]" />
                     )}
                   </div>

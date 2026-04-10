@@ -3,7 +3,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { 
-  collection, 
+  collection,
+  collectionGroup,
   query, 
   where, 
   onSnapshot, 
@@ -31,11 +32,15 @@ export function useApprovalNotifications() {
   const [pendingCount, setPendingCount] = useState(0);
   const [inquiryCount, setInquiryCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [newOrCount, setNewOrCount] = useState(0);
+  const [newOrChargeSlipNumbers, setNewOrChargeSlipNumbers] = useState<Set<string>>(new Set());
   const previousCountRef = useRef(0);
   const previousInquiryCountRef = useRef(0);
   const isInitialLoadRef = useRef(true);
   const isInitialInquiryLoadRef = useRef(true);
+  const isInitialOrLoadRef = useRef(true);
   const inquiryToastIdsRef = useRef<Record<string, string | number>>({});
+  const orToastIdsRef = useRef<Record<string, string | number>>();
 
   useEffect(() => {
     // Listen to traditional member approvals
@@ -174,6 +179,59 @@ export function useApprovalNotifications() {
     };
   }, []);
 
+  // Separate effect: listen to unacknowledged official receipts
+  useEffect(() => {
+    if (!orToastIdsRef.current) orToastIdsRef.current = {};
+    const orQuery = query(
+      collectionGroup(db, "officialReceipts"),
+      where("acknowledgedByAdmin", "==", false)
+    );
+    const unsubscribeOr = onSnapshot(
+      orQuery,
+      (snapshot) => {
+        const csNumbers = new Set<string>();
+        snapshot.docs.forEach((d) => {
+          const csNum: string | undefined = d.data().chargeSlipNumber;
+          if (csNum) csNumbers.add(csNum);
+
+          // Toast for new uploads (skip initial load)
+          if (!isInitialOrLoadRef.current && !orToastIdsRef.current![d.id]) {
+            const tId = toast.info("New OR Uploaded", {
+              description: `Client uploaded a receipt for Charge Slip ${csNum || d.id}`,
+              duration: Infinity,
+              action: {
+                label: "View",
+                onClick: () => {
+                  window.location.href = `/admin/charge-slips/${csNum || ""}`;
+                },
+              },
+            });
+            orToastIdsRef.current![d.id] = tId;
+          } else if (isInitialOrLoadRef.current) {
+            orToastIdsRef.current![d.id] = "existing";
+          }
+        });
+
+        // Dismiss toasts for receipts that are now acknowledged (no longer in snapshot)
+        const currentDocIds = new Set(snapshot.docs.map((d) => d.id));
+        Object.keys(orToastIdsRef.current!).forEach((id) => {
+          if (!currentDocIds.has(id)) {
+            toast.dismiss(orToastIdsRef.current![id]);
+            delete orToastIdsRef.current![id];
+          }
+        });
+
+        setNewOrCount(csNumbers.size);
+        setNewOrChargeSlipNumbers(csNumbers);
+        isInitialOrLoadRef.current = false;
+      },
+      (error) => {
+        console.error("Error listening to OR notifications:", error);
+      }
+    );
+    return () => unsubscribeOr();
+  }, []);
+
   const updateNotifications = (newNotifications: ApprovalNotification[], type: "member" | "project") => {
     setNotifications((prev) => {
       // Filter out old notifications of the same type
@@ -227,6 +285,8 @@ export function useApprovalNotifications() {
     notifications,
     pendingCount,
     inquiryCount,
+    newOrCount,
+    newOrChargeSlipNumbers,
     unreadCount,
     markAsRead,
     markAllAsRead,
