@@ -97,17 +97,24 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       collectionGroup(db, "officialReceipts"),
       where("acknowledgedByAdmin", "==", false)
     );
-    const unsub = onSnapshot(q, (snap) => {
-      const csNums = new Set<string>();
-      snap.docs.forEach((d) => {
-        const data = d.data();
-        // Exclude returned receipts — admin already acted on them
-        if (data.returnedByAdmin === true) return;
-        const csNum: string | undefined = data.chargeSlipNumber;
-        if (csNum) csNums.add(csNum);
-      });
-      setNewOrCsNumbers(csNums);
-    }, () => {});
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const csNums = new Set<string>();
+        snap.docs.forEach((d) => {
+          const data = d.data();
+          // Exclude returned receipts — admin already acted on them
+          if (data.returnedByAdmin === true) return;
+          const csNum: string | undefined = data.chargeSlipNumber;
+          if (csNum) csNums.add(csNum);
+        });
+        setNewOrCsNumbers(csNums);
+      },
+      (error) => {
+        console.error("Error subscribing to OR uploads:", error);
+        // On error, don't clear the state - keep whatever we had
+      }
+    );
     return () => unsub();
   }, []);
 
