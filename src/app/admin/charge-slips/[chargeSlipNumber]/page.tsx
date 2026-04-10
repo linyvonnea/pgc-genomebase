@@ -100,7 +100,7 @@ function ChargeSlipDetailContent() {
   const [status, setStatus] = useState<"processing" | "paid" | "cancelled">("processing");
   const [dateOfOR, setDateOfOR] = useState<Timestamp | undefined>(undefined);
   const [officialReceipts, setOfficialReceipts] = useState<OfficialReceipt[]>([]);
-  const [acknowledging, setAcknowledging] = useState<string | null>(null);
+  const [validating, setValidating] = useState<string | null>(null);
   const [returning, setReturning] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [receiptToDelete, setReceiptToDelete] = useState<OfficialReceipt | null>(null);
@@ -184,9 +184,9 @@ function ChargeSlipDetailContent() {
     }
   };
 
-  const handleAcknowledge = async (receipt: OfficialReceipt) => {
+  const handleValidate = async (receipt: OfficialReceipt) => {
     if (!record?.id) return;
-    setAcknowledging(receipt.id);
+    setValidating(receipt.id);
     try {
       const pid = record.projectId || (record.project as any)?.pid || "";
       // Mark the receipt as acknowledged and record who acknowledged it
@@ -230,13 +230,13 @@ function ChargeSlipDetailContent() {
         entityType: "charge_slip",
         entityId: record.referenceNumber || record.chargeSlipNumber,
         entityName: `Charge Slip ${record.chargeSlipNumber}`,
-        description: `Acknowledged official receipt: ${receipt.fileName || receipt.id} (OR No. ${orVal || "—"}). OR details saved.`,
+        description: `Validated official receipt: ${receipt.fileName || receipt.id} (OR No. ${orVal || "—"}). OR details saved.`,
       });
-      toast.success("Receipt acknowledged. OR details saved.");
+      toast.success("Receipt validated. OR details saved.");
     } catch {
-      toast.error("Failed to acknowledge receipt.");
+      toast.error("Failed to validate receipt.");
     } finally {
-      setAcknowledging(null);
+      setValidating(null);
     }
   };
 
@@ -587,27 +587,11 @@ function ChargeSlipDetailContent() {
                               Date: <span className="font-medium text-slate-700">{or_.orDate}</span>
                             </span>
                           )}
-                          {or_.acknowledgedByAdmin && (or_.acknowledgedByName || or_.acknowledgedBy) && (
-                            <span className="text-emerald-600">
-                              Acknowledged by:{" "}
-                              <span className="font-medium">
-                                {or_.acknowledgedByName || or_.acknowledgedBy}
-                              </span>
-                            </span>
-                          )}
-                          {or_.acknowledgedByAdmin && (or_.acknowledgedByName || or_.acknowledgedBy) && (
-                            <span className="text-emerald-600">
-                              Acknowledged by:{" "}
-                              <span className="font-medium">
-                                {or_.acknowledgedByName || or_.acknowledgedBy}
-                              </span>
-                            </span>
-                          )}
                         </div>
                         <div className="pt-0.5">
                           {or_.acknowledgedByAdmin ? (
                             <Badge className="h-5 text-[10px] bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 gap-1">
-                              <CheckCircle2 className="h-2.5 w-2.5" /> Acknowledged
+                              <CheckCircle2 className="h-2.5 w-2.5" /> Validated
                             </Badge>
                           ) : or_.returnedByAdmin ? (
                             <Badge variant="outline" className="h-5 text-[10px] text-rose-600 border-rose-200 bg-rose-50 gap-1">
@@ -627,7 +611,7 @@ function ChargeSlipDetailContent() {
                             <Button
                               size="sm"
                               variant="ghost"
-                              disabled={deleting === or_.id || acknowledging === or_.id || returning === or_.id}
+                              disabled={deleting === or_.id || validating === or_.id || returning === or_.id}
                               onClick={() => setReceiptToDelete(or_)}
                               className="h-7 w-7 p-0 text-slate-400 hover:text-red-600 hover:bg-red-50"
                               title="Delete receipt"
@@ -644,7 +628,7 @@ function ChargeSlipDetailContent() {
                           <div className="flex gap-1.5">
                             <Button
                               size="sm"
-                              disabled={returning === or_.id || acknowledging === or_.id}
+                              disabled={returning === or_.id || validating === or_.id}
                               onClick={() => handleReturn(or_)}
                               variant="outline"
                               className="h-7 text-[11px] px-3 border-rose-200 text-rose-600 hover:bg-rose-50 gap-1"
@@ -658,16 +642,16 @@ function ChargeSlipDetailContent() {
                             </Button>
                             <Button
                               size="sm"
-                              disabled={acknowledging === or_.id || returning === or_.id}
-                              onClick={() => handleAcknowledge(or_)}
+                              disabled={validating === or_.id || returning === or_.id}
+                              onClick={() => handleValidate(or_)}
                               className="h-7 text-[11px] px-3 bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
                             >
-                              {acknowledging === or_.id ? (
+                              {validating === or_.id ? (
                                 <ReceiptLoader className="h-3 w-3 animate-spin" />
                               ) : (
                                 <CheckCircle2 className="h-3 w-3" />
                               )}
-                              Acknowledge
+                              Validate
                             </Button>
                           </div>
                         )}

@@ -235,7 +235,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
         entityId: projectId,
         description: `Replaced returned receipt: ${replacePendingFile.name} (OR No. ${replaceOrNumber.trim()})`,
       });
-      toast.success("Receipt replaced successfully. Awaiting admin acknowledgment.");
+      toast.success("Receipt replaced successfully. Awaiting admin validation.");
       handleCancelReplace();
     } catch (err) {
       console.error("Replace upload failed:", err);
@@ -284,7 +284,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
         entityId: projectId,
         description: `Uploaded official receipt: ${pendingFile.name} (OR No. ${orNumber.trim()})`,
       });
-      toast.success("Receipt uploaded successfully. Awaiting admin acknowledgment.");
+      toast.success("Receipt uploaded successfully. Awaiting admin validation.");
       setPendingFile(null);
       setOrNumber("");
       setOrDate("");
@@ -387,7 +387,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
                     {/* Action icon — top-right */}
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                       {isVerified && (
-                        <span title="Cannot delete — acknowledged by admin">
+                        <span title="Cannot delete — validated by admin">
                           <Lock className="h-3 w-3 text-slate-300" />
                         </span>
                       )}
@@ -425,7 +425,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
                     {isVerified && (
                       <span
                         className="flex items-center gap-0.5 text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5 flex-shrink-0"
-                        title="Acknowledged by admin"
+                        title="Validated by admin"
                       >
                         <CheckCircle2 className="h-2.5 w-2.5" />
                         Verified
@@ -434,7 +434,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
                     {isPending && (
                       <span
                         className="text-[9px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 font-semibold flex-shrink-0"
-                        title="Waiting for admin acknowledgment"
+                        title="Waiting for admin validation"
                       >
                         Pending
                       </span>
@@ -540,6 +540,11 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
                         onClick={() => {
                           setReplacingId(receipt.id);
                           setReplaceSelecting(true);
+                          const input = replaceFileInputRef.current;
+                          if (input) {
+                            const onCancel = () => { setReplaceSelecting(false); setReplacingId(null); input.removeEventListener("cancel", onCancel); };
+                            input.addEventListener("cancel", onCancel);
+                          }
                           // Small delay so replacingId state is set before onChange fires
                           setTimeout(() => replaceFileInputRef.current?.click(), 0);
                         }}
@@ -640,7 +645,15 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
           <button
             type="button"
             disabled={uploading || selecting || !hasChargeSlip}
-            onClick={() => { setSelecting(true); fileInputRef.current?.click(); }}
+            onClick={() => {
+              setSelecting(true);
+              const input = fileInputRef.current;
+              if (input) {
+                const onCancel = () => { setSelecting(false); input.removeEventListener("cancel", onCancel); };
+                input.addEventListener("cancel", onCancel);
+                input.click();
+              }
+            }}
             title={!hasChargeSlip ? "A Charge Slip must be issued first before attaching a receipt." : "Attach an official receipt"}
             className="inline-flex items-center gap-1.5 text-[11px] font-medium border border-dashed rounded-lg px-2.5 py-1.5 transition-colors
               disabled:cursor-not-allowed disabled:opacity-50 disabled:border-slate-200 disabled:text-slate-400 disabled:bg-white
@@ -665,7 +678,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
       {uploadAllowed && !pendingFile && hasPendingReceipt && (
         <div className="ml-5 flex items-center gap-1.5 text-[10px] text-amber-600">
           <Lock className="h-3 w-3" />
-          Receipt attachment locked — awaiting admin acknowledgment or return for correction.
+          Receipt attachment locked — awaiting admin validation or return for correction.
         </div>
       )}
     </div>
