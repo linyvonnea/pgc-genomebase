@@ -190,6 +190,7 @@ export function useApprovalNotifications() {
       orQuery,
       (snapshot) => {
         const csNumbers = new Set<string>();
+        let pendingReceiptCount = 0;
         snapshot.docs.forEach((d) => {
           const data = d.data();
           // Skip receipts that the admin has already returned — treat returned as "seen"
@@ -201,6 +202,7 @@ export function useApprovalNotifications() {
             }
             return;
           }
+          pendingReceiptCount += 1;
           const csNum: string | undefined = data.chargeSlipNumber;
           if (csNum) csNumbers.add(csNum);
 
@@ -231,7 +233,7 @@ export function useApprovalNotifications() {
           }
         });
 
-        setNewOrCount(csNumbers.size);
+        setNewOrCount(pendingReceiptCount);
         setNewOrChargeSlipNumbers(csNumbers);
         isInitialOrLoadRef.current = false;
       },
