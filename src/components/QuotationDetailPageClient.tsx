@@ -52,12 +52,6 @@ export default function QuotationDetailPageClient() {
     fetchQuotation();
   }, [referenceNumber]);
 
-  useEffect(() => {
-    getAllQuotations()
-      .then(setAllQuotations)
-      .catch(() => {});
-  }, []);
-
   const handleToggleCancel = async () => {
     if (!referenceNumber || typeof referenceNumber !== "string") return;
     const newStatus = status === "cancelled" ? "pending" : "cancelled";
