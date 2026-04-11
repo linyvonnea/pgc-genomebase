@@ -32,7 +32,7 @@ export async function saveQuotationAction(
               <div style="background-color: #f1f5f9; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
                 <h2 style="color: #1e3a8a; margin-top: 0;">Quotation Available - PGC Visayas</h2>
                 <p>Dear ${inquiry.name},</p>
-                <p>Your quotation is now available in your client portal. <strong>Please note that the quotation does not include re-runs for unsuccessful samples.</strong> Make sure to read our FAQs for details about turnaround time, sample submission, and payment details.</p>
+                <p>Your quotation is now available in your client portal. <strong>Please note that the quotation does not include re-runs for unsuccessful samples.</strong> Make sure to read our <a href="https://pgc-genomebase.vercel.app/faqs" style="color: #1e3a8a; font-weight: 600; text-decoration: underline;">FAQs</a> for details about turnaround time, sample submission, and payment details.</p>
                 
                 <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border-left: 4px solid #1e3a8a; margin: 15px 0;">
                   <h3 style="margin-top: 0; color: #1e3a8a; font-size: 14px; margin-bottom: 8px;">Next Steps</h3>
@@ -53,7 +53,7 @@ Quotation Available - PGC Visayas
 
 Dear ${inquiry.name},
 
-Your quotation is now available in your client portal. Please note that the quotation does not include re-runs for unsuccessful samples. Make sure to read our FAQs for details about turnaround time, sample submission, and payment details.
+Your quotation is now available in your client portal. Please note that the quotation does not include re-runs for unsuccessful samples. Make sure to read our FAQs (https://pgc-genomebase.vercel.app/faqs) for details about turnaround time, sample submission, and payment details.
 
 To view the quotation and progress of requested services, kindly log in to your Client Portal: https://pgc-genomebase.vercel.app/portal
 
