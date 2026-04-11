@@ -30,7 +30,7 @@ export async function saveChargeSlipAction(
             <div style="background-color: #f1f5f9; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
               <h2 style="color: #1e3a8a; margin-top: 0;">Billing/Invoice: PGC Visayas</h2>
               <p>Dear ${clientName},</p>
-              <p>Good day. Your billing is now available in your client portal. Kindly review the details and proceed with payment at your convenience. For available modes of payment and step-by-step instructions, please refer to our FAQs.</p>
+              <p>Good day. Your billing is now available in your client portal. Kindly review the details and proceed with payment at your convenience. For available modes of payment and step-by-step instructions, please refer to our <a href="https://pgc-genomebase.vercel.app/faqs" style="color: #1e3a8a; font-weight: 600; text-decoration: underline;">FAQs</a>.</p>
               
               <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border-left: 4px solid #1e3a8a; margin: 15px 0;">
                 <h3 style="margin-top: 0; color: #1e3a8a; font-size: 14px; margin-bottom: 8px;">Next Steps</h3>
@@ -53,7 +53,7 @@ Billing/Invoice: PGC Visayas
 
 Dear ${clientName},
 
-Good day. Your billing is now available in your client portal. Kindly review the details and proceed with payment at your convenience. For available modes of payment and step-by-step instructions, please refer to our FAQs.
+Good day. Your billing is now available in your client portal. Kindly review the details and proceed with payment at your convenience. For available modes of payment and step-by-step instructions, please refer to our FAQs (https://pgc-genomebase.vercel.app/faqs).
 
 To view your billing details and make payment, please access your Client Portal: https://pgc-genomebase.vercel.app/portal
 
