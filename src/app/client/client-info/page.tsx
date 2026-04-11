@@ -2713,25 +2713,81 @@ export default function ClientPortalPage() {
                                 <span className="text-[10px] text-slate-500">({quotationCount})</span>
                               </div>
                               {quotationCount > 0 ? (
-                                <div className="space-y-1 ml-5">
-                                  {docs?.quotations.map((quotation) => (
-                                    <div key={quotation.id} className="flex items-center gap-2">
-                                      <a
-                                        href={`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="block text-xs text-slate-600 hover:text-purple-600 hover:underline truncate"
+                                <div className="space-y-2 ml-4">
+                                  {docs?.quotations.map((quotation) => {
+                                    const qCancelledSidebar = quotation.status === "cancelled";
+                                    const qTotal = typeof quotation.total === "number" ? quotation.total : 0;
+                                    const qRawDate = quotation.dateIssued;
+                                    const qIssuedDate = qRawDate
+                                      ? (qRawDate as any)?.toDate
+                                        ? formatDate((qRawDate as any).toDate())
+                                        : formatDate(qRawDate as string)
+                                      : null;
+                                    const qSidebarExpanded = expandedQuoteIds.has(quotation.referenceNumber + "_sidebar");
+                                    return (
+                                      <div
+                                        key={quotation.id}
+                                        className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden"
                                         onClick={(e) => e.stopPropagation()}
                                       >
-                                        • {quotation.referenceNumber}
-                                      </a>
-                                      {quotation.selectedForProject && (
-                                        <span className="text-green-600 flex items-center justify-center shrink-0 w-4 h-4 rounded-full bg-green-50 border border-green-200">
-                                          <CheckCircle2 className="h-3 w-3" />
-                                        </span>
-                                      )}
-                                    </div>
-                                  ))}
+                                        {/* Header — always visible */}
+                                        <div
+                                          className="flex items-center justify-between gap-2 p-2.5 cursor-pointer select-none hover:bg-slate-50 transition-colors"
+                                          onClick={() =>
+                                            setExpandedQuoteIds((prev) => {
+                                              const key = quotation.referenceNumber + "_sidebar";
+                                              const next = new Set(prev);
+                                              if (next.has(key)) next.delete(key);
+                                              else next.add(key);
+                                              return next;
+                                            })
+                                          }
+                                        >
+                                          <a
+                                            href={`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-1 text-xs font-semibold text-purple-700 hover:underline"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            <FileText className="h-3 w-3 flex-shrink-0" />
+                                            {quotation.referenceNumber}
+                                          </a>
+                                          <div className="flex items-center gap-1.5">
+                                            {qCancelledSidebar ? (
+                                              <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
+                                                Cancelled
+                                              </span>
+                                            ) : quotation.selectedForProject ? (
+                                              <span className="text-green-600 flex items-center justify-center shrink-0 w-4 h-4 rounded-full bg-green-50 border border-green-200">
+                                                <CheckCircle2 className="h-3 w-3" />
+                                              </span>
+                                            ) : null}
+                                            <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform", qSidebarExpanded && "rotate-180")} />
+                                          </div>
+                                        </div>
+
+                                        {/* Collapsible body */}
+                                        {qSidebarExpanded && (
+                                          <div className="px-2.5 pb-2.5 border-t border-slate-100">
+                                            <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-500 pt-2">
+                                              <span>
+                                                Total:{" "}
+                                                <span className="font-semibold text-slate-800">
+                                                  ₱{qTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </span>
+                                              </span>
+                                              {qIssuedDate && (
+                                                <span>
+                                                  Issued: <span className="font-medium text-slate-600">{qIssuedDate}</span>
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               ) : (
                                 <p className="text-xs text-slate-400 ml-5">No quotations yet</p>
