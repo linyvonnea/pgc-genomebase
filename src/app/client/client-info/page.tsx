@@ -3503,7 +3503,10 @@ export default function ClientPortalPage() {
                                     >
                                       View PDF
                                     </Button>
-                                    {!qCancelled && fetchedApprovedProjects.length === 0 && currentInquiry?.status !== "Cancelled" && (
+                                    {!qCancelled && 
+                                     fetchedApprovedProjects.length === 0 && 
+                                     currentInquiry?.status !== "Cancelled" && 
+                                     currentInquiry?.status !== "Quotation Only" && (
                                       <Button
                                         size="sm"
                                         onClick={() => handleProceedWithService(quote.referenceNumber)}
@@ -3535,20 +3538,20 @@ export default function ClientPortalPage() {
                           <div className="space-y-1">
                             <h4 className="text-sm font-bold text-amber-900">Not proceeding with the service?</h4>
                             <p className="text-xs text-amber-800">
-                              If you decide to stop, you can cancel this request. This will update your inquiry status to Cancelled.
+                              If you decide to stop, you can update this request to "Quotation Only".
                             </p>
                           </div>
                           <Button
                             variant="outline"
                             onClick={() => setShowCancelInquiryModal(true)}
-                            disabled={currentInquiry.status === "Cancelled" || cancelInquirySubmitting}
+                            disabled={currentInquiry.status === "Cancelled" || currentInquiry.status === "Quotation Only" || cancelInquirySubmitting}
                             className="border-amber-200 text-amber-900 hover:bg-amber-100 font-bold text-xs h-9"
                           >
                             Do Not Proceed
                           </Button>
                         </div>
-                        {currentInquiry.status === "Cancelled" && (
-                          <p className="text-[11px] text-amber-700 mt-2">This request is already marked as cancelled.</p>
+                        {(currentInquiry.status === "Cancelled" || currentInquiry.status === "Quotation Only") && (
+                          <p className="text-[11px] text-amber-700 mt-2">This request is already marked as {currentInquiry.status}.</p>
                         )}
                       </div>
                     )}
