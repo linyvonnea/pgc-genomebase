@@ -1,6 +1,7 @@
 // src/components/ui/header.tsx
 import Image from "next/image";
-import { LogOut, User, Settings, Info, Key, ChevronDown, Menu } from "lucide-react";
+import Link from "next/link";
+import { LogOut, User, Settings, Info, Key, ChevronDown, Menu, HelpCircle } from "lucide-react";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -97,6 +98,13 @@ export default function Header({
                       <span className="font-medium">About</span>
                     </DropdownMenuItem>
                   )}
+
+                  <Link href="/faqs" target="_blank">
+                    <DropdownMenuItem className="flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer text-slate-700 hover:bg-slate-50 transition-colors">
+                      <HelpCircle className="w-4 h-4 text-blue-600" />
+                      <span className="font-medium">Direct to FAQs</span>
+                    </DropdownMenuItem>
+                  </Link>
                   
                   <DropdownMenuSeparator className="my-1.5 bg-slate-100" />
                   
