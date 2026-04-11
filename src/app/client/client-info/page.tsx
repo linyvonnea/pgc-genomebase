@@ -1878,12 +1878,12 @@ export default function ClientPortalPage() {
     try {
       const trimmedReason = cancelInquiryReason.trim();
       await cancelInquiryByClient(inquiryIdParam, trimmedReason.length > 0 ? trimmedReason : null);
-      toast.success("Your request has been cancelled.");
+      toast.success("Request updated to Quotation Only.");
       setShowCancelInquiryModal(false);
       setCancelInquiryReason("");
     } catch (error) {
-      console.error("Failed to cancel inquiry:", error);
-      toast.error("Failed to cancel the request. Please try again.");
+      console.error("Failed to update inquiry status:", error);
+      toast.error("Failed to update the request. Please try again.");
     } finally {
       setCancelInquirySubmitting(false);
     }
@@ -4293,9 +4293,9 @@ export default function ClientPortalPage() {
       <AlertDialog open={showCancelInquiryModal} onOpenChange={setShowCancelInquiryModal}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel this request?</AlertDialogTitle>
+            <AlertDialogTitle>Change to "Quotation Only"?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will mark your inquiry as Cancelled. You can optionally add a reason below.
+              Select this if you only need the quotation for reference and do not wish to proceed with the service at this time.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-2">
@@ -4305,7 +4305,7 @@ export default function ClientPortalPage() {
               value={cancelInquiryReason}
               onChange={(event) => setCancelInquiryReason(event.target.value)}
               rows={3}
-              placeholder="Share any context you want us to keep on file..."
+              placeholder="e.g., Budgeting purposes, project deferred, etc."
             />
           </div>
           <AlertDialogFooter>
@@ -4317,10 +4317,10 @@ export default function ClientPortalPage() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmCancelInquiry}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-[#166FB5] hover:bg-[#166FB5]/90"
               disabled={cancelInquirySubmitting}
             >
-              Yes, Cancel Request
+              Confirm Quotation Only
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
