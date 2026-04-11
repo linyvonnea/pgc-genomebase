@@ -383,12 +383,12 @@ export async function cancelInquiryByClient(
   try {
     const inquiryRef = doc(db, "inquiries", inquiryId);
     await updateDoc(inquiryRef, {
-      status: "Cancelled",
+      status: "Quotation Only",
       cancelledBy: "client",
       cancellationReason: reason ?? null,
       cancelledAt: serverTimestamp(),
     });
-    console.log(`Inquiry ${inquiryId} cancelled by client.`);
+    console.log(`Inquiry ${inquiryId} marked as Quotation Only by client.`);
   } catch (error) {
     console.error(`Error cancelling inquiry ${inquiryId} by client:`, error);
     throw error;
