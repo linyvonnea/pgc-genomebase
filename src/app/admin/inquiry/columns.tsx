@@ -124,15 +124,8 @@ export const columns = (statusCatalog: CatalogItem[] = []): ColumnDef<Inquiry>[]
       })();
 
       // NEW badge logic:
-      // 1. Show if status is "Pending" (regardless of time)
-      // 2. Show if it's very recent (last 24h) EXCEPT if it's already quoted
-      const isQuoted = [
-        "Ongoing Quotation",
-        "Approved Client",
-        "Quotation Only",
-        "Service Not Offered",
-      ].includes(inquiry.status);
-      const showNew = (inquiry.status === "Pending" || isRecent) && !isQuoted;
+      // Only show if status is "Pending"
+      const showNew = inquiry.status === "Pending";
 
       const handleCopy = async (e: React.MouseEvent) => {
         e.stopPropagation();
