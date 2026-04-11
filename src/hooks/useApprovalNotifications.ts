@@ -32,8 +32,18 @@ export function useApprovalNotifications() {
   const [pendingCount, setPendingCount] = useState(0);
   const [inquiryCount, setInquiryCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [newOrCount, setNewOrCount] = useState(0);
-  const [newOrChargeSlipNumbers, setNewOrChargeSlipNumbers] = useState<Set<string>>(new Set());
+  const [newOrCount, setNewOrCount] = useState<number>(() => {
+    if (typeof window === 'undefined') return 0;
+    try { return parseInt(localStorage.getItem('pgc_or_count') ?? '0', 10) || 0; }
+    catch { return 0; }
+  });
+  const [newOrChargeSlipNumbers, setNewOrChargeSlipNumbers] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const v = localStorage.getItem('pgc_or_cs_nums');
+      return v ? new Set(JSON.parse(v)) : new Set();
+    } catch { return new Set(); }
+  });
   const previousCountRef = useRef(0);
   const previousInquiryCountRef = useRef(0);
   const isInitialLoadRef = useRef(true);
@@ -235,6 +245,10 @@ export function useApprovalNotifications() {
 
         setNewOrCount(pendingReceiptCount);
         setNewOrChargeSlipNumbers(csNumbers);
+        try {
+          localStorage.setItem('pgc_or_count', String(pendingReceiptCount));
+          localStorage.setItem('pgc_or_cs_nums', JSON.stringify([...csNumbers]));
+        } catch {}
         isInitialOrLoadRef.current = false;
       },
       (error) => {

@@ -89,7 +89,13 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   const [yearFilter, setYearFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
   const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(true);
-  const [newOrCsNumbers, setNewOrCsNumbers] = useState<Set<string>>(new Set());
+  const [newOrCsNumbers, setNewOrCsNumbers] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const v = localStorage.getItem('pgc_or_cs_nums');
+      return v ? new Set(JSON.parse(v)) : new Set();
+    } catch { return new Set(); }
+  });
 
   // Subscribe to unacknowledged official receipts so we can highlight those rows
   useEffect(() => {
@@ -109,6 +115,9 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
           if (csNum) csNums.add(csNum);
         });
         setNewOrCsNumbers(csNums);
+        try {
+          localStorage.setItem('pgc_or_cs_nums', JSON.stringify([...csNums]));
+        } catch {}
       },
       (error) => {
         console.error("Error subscribing to OR uploads:", error);
