@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import useAuth from "@/hooks/useAuth";
 import {
   doc,
@@ -129,6 +130,7 @@ import {
   ShieldEllipsis,
   Stamp,
   ArrowRight,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ClientConformeModal from "@/components/forms/ClientConformeModal";
@@ -2973,7 +2975,13 @@ export default function ClientPortalPage() {
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-slate-100">
+      <div className="p-4 border-t border-slate-100 space-y-2">
+        <Link href="/faqs" target="_blank" className="w-full flex items-center gap-3 px-4 py-3 text-[#166FB5] bg-blue-50 hover:bg-blue-100/80 rounded-xl transition-colors group">
+          <div className="p-1.5 bg-white rounded-lg shadow-sm group-hover:scale-105 transition-transform">
+             <HelpCircle className="h-4 w-4" />
+          </div>
+          <span className="font-semibold text-sm">Direct to FAQs</span>
+        </Link>
         <button
           onClick={() => router.push("/portal")}
           className="w-full flex items-center gap-3 px-4 py-3 text-[#B9273A] bg-red-50 hover:bg-red-100/80 rounded-xl transition-colors group"
