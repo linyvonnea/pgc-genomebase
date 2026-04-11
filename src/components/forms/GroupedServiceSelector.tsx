@@ -165,9 +165,9 @@ export function GroupedServiceSelector({
                         <Input
                           type="number"
                           min={1}
-                          value={quantity}
+                          value={participants}
                           onChange={(e) =>
-                            onUpdateQuantity(
+                            onUpdateParticipants(
                               item.id,
                               e.target.value === "" ? "" : +e.target.value
                             )
