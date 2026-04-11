@@ -2759,8 +2759,9 @@ export default function ClientPortalPage() {
                                                 Cancelled
                                               </span>
                                             ) : quotation.selectedForProject ? (
-                                              <span className="text-green-600 flex items-center justify-center shrink-0 w-4 h-4 rounded-full bg-green-50 border border-green-200">
-                                                <CheckCircle2 className="h-3 w-3" />
+                                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 tracking-tight">
+                                                <CheckCircle2 className="h-3 w-3" strokeWidth={3} />
+                                                Active
                                               </span>
                                             ) : null}
                                             <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform", qSidebarExpanded && "rotate-180")} />
