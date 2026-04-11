@@ -81,10 +81,10 @@ export default function InquiryThankYouPage() {
             <div className="flex items-center justify-center gap-2 text-[#166FB5] font-medium">
               <Mail className="w-4 h-4" />
               <a
-                href="mailto:pgc.upvisayas@up.edu.ph"
+                href="mailto:sequencing.pgc.upvisayas@up.edu.ph"
                 className="hover:underline"
               >
-                pgc.upvisayas@up.edu.ph
+                sequencing.pgc.upvisayas@up.edu.ph
               </a>
             </div>
           </div>
