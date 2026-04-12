@@ -2801,6 +2801,31 @@ export default function ClientPortalPage() {
                               )}
                             </div>
 
+                            {/* Sample Forms (Moved below Quotations) */}
+                            {portalFeatures.sampleForms && (docs?.sampleForms?.length || 0) > 0 && (
+                              <div>
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <FileSpreadsheet className="h-3 w-3 text-orange-600" />
+                                  <span className="text-sm font-semibold text-slate-700">
+                                    Sample Forms
+                                  </span>
+                                  <span className="text-[10px] text-slate-500">({docs?.sampleForms?.length || 0})</span>
+                                </div>
+                                <div className="space-y-1 ml-5">
+                                  {docs?.sampleForms.map((item) => (
+                                    <a
+                                      key={item.id}
+                                      href={`${sampleFormBaseHref}&formId=${item.id}`}
+                                      className="block text-xs text-slate-600 hover:text-orange-600 hover:underline truncate"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      • {item.id} ({item.totalNumberOfSamples || 0} samples)
+                                    </a>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
                             {/* Charge Slips */}
                             <div>
                               <div className="flex items-center gap-2 mb-1.5">
