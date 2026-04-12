@@ -178,6 +178,9 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
 
     try {
       setUploadingKey(form.formKey);
+      // Auto-expand the panel while uploading so the loader is visible
+      setExpandedUpload((prev) => new Set(prev).add(form.formKey));
+
       const ext = file.name.split(".").pop() || "pdf";
       const timestamp = Date.now();
       const uniqueName = `${form.formKey}-${timestamp}-${uuidv4()}.${ext}`;
@@ -303,7 +306,12 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                     ref={(el) => { fileInputRefs.current[form.formKey] = el; }}
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (file) handleUpload(form, file);
+                      if (file) {
+                        handleUpload(form, file).then(() => {
+                          // Ensure panel stays open after upload
+                          setExpandedUpload((prev) => new Set(prev).add(form.formKey));
+                        });
+                      }
                     }}
                     onClick={(e) => e.stopPropagation()}
                   />
