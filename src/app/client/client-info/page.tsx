@@ -2886,15 +2886,13 @@ export default function ClientPortalPage() {
                                               )}
                                             </div>
 
-                                            {/* Per-charge-slip OR receipts — view reference when paid, upload when unpaid */}
-                                            {portalFeatures.officialReceipts && (
-                                              <UploadReceipt
-                                                projectId={project.pid}
-                                                hasChargeSlip={true}
-                                                chargeSlipNumber={chargeSlip.chargeSlipNumber}
-                                                uploadAllowed={!csPaid && !csCancelled}
-                                              />
-                                            )}
+                                            {/* OR Upload — always available inside expanded charge slip */}
+                                            <UploadReceipt
+                                              projectId={project.pid}
+                                              hasChargeSlip={true}
+                                              chargeSlipNumber={chargeSlip.chargeSlipNumber}
+                                              uploadAllowed={!csPaid && !csCancelled}
+                                            />
                                           </div>
                                         )}
                                       </div>
