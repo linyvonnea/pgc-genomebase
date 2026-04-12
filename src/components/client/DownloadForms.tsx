@@ -62,6 +62,7 @@ interface SubmittedFile {
   id: string;
   fileName: string;
   downloadURL: string;
+  storagePath: string;
   uploadedAt: Timestamp | null;
   acknowledgedByAdmin?: boolean;
 }
@@ -117,6 +118,7 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
           id: d.id,
           fileName: data.fileName,
           downloadURL: data.downloadURL,
+          storagePath: data.storagePath,
           uploadedAt: data.uploadedAt ?? null,
           acknowledgedByAdmin: data.acknowledgedByAdmin ?? false,
         });
@@ -175,7 +177,8 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
     try {
       setUploadingKey(form.formKey);
       const ext = file.name.split(".").pop() || "pdf";
-      const uniqueName = `${form.formKey}-${uuidv4()}.${ext}`;
+      const timestamp = Date.now();
+      const uniqueName = `${form.formKey}-${timestamp}-${uuidv4()}.${ext}`;
       const storagePath = `client-form-submissions/${projectId}/${uniqueName}`;
       const fileRef = ref(storage, storagePath);
       await uploadBytes(fileRef, file);
@@ -190,6 +193,7 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
         downloadURL,
         uploadedAt: serverTimestamp(),
         uploadedBy: user?.email ?? "client",
+        acknowledgedByAdmin: false,
       });
 
       toast.success(`"${file.name}" uploaded successfully.`);
@@ -267,9 +271,39 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
               )}
             </div>
 
+            {/* Upload area */}
+            <div className="border-t border-slate-100 px-3 py-2">
+              <input
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                ref={(el) => { fileInputRefs.current[form.formKey] = el; }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleUpload(form, file);
+                }}
+                onClick={(e) => e.stopPropagation()}
+              />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRefs.current[form.formKey]?.click();
+                }}
+                disabled={isUploading}
+                className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-[#166FB5] transition-colors disabled:opacity-50"
+              >
+                {isUploading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Upload className="h-3.5 w-3.5" />
+                )}
+                {isUploading ? "Uploading…" : "Upload completed form (PDF)"}
+              </button>
+            </div>
+
             {/* Uploaded submissions */}
             {uploaded.length > 0 && (
-              <div className="border-t border-slate-100 px-3 py-1.5 space-y-1">
+              <div className="border-t border-slate-100 px-3 py-1.5 space-y-1 bg-white/50">
                 {uploaded.map((f) => (
                   <div key={f.id} className="flex items-center gap-1.5 group">
                     {f.acknowledgedByAdmin ? (
@@ -308,7 +342,7 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                       <Eye className="h-3.5 w-3.5" />
                     </a>
                     <button
-                      onClick={(e) => { e.stopPropagation(); handleDelete(f.id, `client-form-submissions/${projectId}/${f.fileName}`, f.fileName); }}
+                      onClick={(e) => { e.stopPropagation(); handleDelete(f.id, f.storagePath, f.fileName); }}
                       className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-red-400 shrink-0"
                       title="Remove uploaded file"
                     >
@@ -318,36 +352,6 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                 ))}
               </div>
             )}
-
-            {/* Upload area */}
-            <div className="border-t border-slate-100 px-3 py-2">
-              <input
-                type="file"
-                accept="application/pdf"
-                className="hidden"
-                ref={(el) => { fileInputRefs.current[form.formKey] = el; }}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleUpload(form, file);
-                }}
-                onClick={(e) => e.stopPropagation()}
-              />
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  fileInputRefs.current[form.formKey]?.click();
-                }}
-                disabled={isUploading}
-                className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-[#166FB5] transition-colors disabled:opacity-50"
-              >
-                {isUploading ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Upload className="h-3.5 w-3.5" />
-                )}
-                {isUploading ? "Uploading…" : "Upload completed form (PDF)"}
-              </button>
-            </div>
           </div>
         );
       })}
