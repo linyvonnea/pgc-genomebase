@@ -22,7 +22,6 @@ import {
   Upload,
   X,
   CheckCircle2,
-  Eye,
   Clock,
   ChevronDown,
 } from "lucide-react";
@@ -294,39 +293,89 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
 
             {/* Collapsible upload panel */}
             {isUploadExpanded && (
-              <div className="border-t border-slate-100 px-3 py-2 bg-white/60">
-                <input
-                  type="file"
-                  accept="application/pdf"
-                  className="hidden"
-                  ref={(el) => { fileInputRefs.current[form.formKey] = el; }}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleUpload(form, file);
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    fileInputRefs.current[form.formKey]?.click();
-                  }}
-                  disabled={isUploading}
-                  className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-[#166FB5] transition-colors disabled:opacity-50"
-                >
-                  {isUploading ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Upload className="h-3.5 w-3.5" />
-                  )}
-                  {isUploading ? "Uploading…" : "Upload completed form (PDF)"}
-                </button>
+              <div className="border-t border-slate-100 px-3 py-2.5 bg-white/60 space-y-2">
+                {/* Upload button row */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    ref={(el) => { fileInputRefs.current[form.formKey] = el; }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleUpload(form, file);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRefs.current[form.formKey]?.click();
+                    }}
+                    disabled={isUploading}
+                    className="flex items-center gap-1.5 text-[11px] font-medium text-white bg-[#166FB5] hover:bg-[#0e4f8a] rounded-full px-2.5 py-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                  >
+                    {isUploading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Upload className="h-3 w-3" />
+                    )}
+                    {isUploading ? "Uploading…" : "Upload PDF"}
+                  </button>
+                </div>
+
+                {/* Uploaded files listed inline in the panel */}
+                {uploaded.length > 0 && (
+                  <div className="space-y-1">
+                    {uploaded.map((f) => (
+                      <div key={f.id} className="flex items-center gap-1.5 group rounded-md bg-slate-50 border border-slate-100 px-2 py-1">
+                        {f.acknowledgedByAdmin ? (
+                          <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />
+                        ) : (
+                          <Clock className="h-3 w-3 shrink-0 text-amber-400" />
+                        )}
+                        {/* Clickable filename */}
+                        <a
+                          href={f.downloadURL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-[11px] font-medium text-[#166FB5] hover:underline truncate flex-1 min-w-0"
+                          title={`View ${f.fileName}`}
+                        >
+                          {f.fileName}
+                        </a>
+                        {f.acknowledgedByAdmin ? (
+                          <span className="text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0.5 shrink-0">
+                            Acknowledged
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5 shrink-0">
+                            Pending
+                          </span>
+                        )}
+                        {f.uploadedAt && (
+                          <span className="text-[10px] text-slate-400 shrink-0">
+                            {format(f.uploadedAt.toDate(), "MMM d")}
+                          </span>
+                        )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDelete(f.id, f.storagePath, f.fileName); }}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-red-400 shrink-0"
+                          title="Remove file"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Uploaded submissions — always visible when files exist */}
-            {uploaded.length > 0 && (
-              <div className={cn("px-3 py-1.5 space-y-1 bg-white/50", isUploadExpanded ? "border-t border-slate-100" : "border-t border-slate-100")}>
+            {/* When panel is collapsed, still show uploaded files so client sees status */}
+            {!isUploadExpanded && uploaded.length > 0 && (
+              <div className="border-t border-slate-100 px-3 py-1.5 space-y-1 bg-white/50">
                 {uploaded.map((f) => (
                   <div key={f.id} className="flex items-center gap-1.5 group">
                     {f.acknowledgedByAdmin ? (
@@ -334,43 +383,25 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                     ) : (
                       <Clock className="h-3 w-3 shrink-0 text-amber-400" />
                     )}
-                    <span
-                      className="text-[11px] text-slate-600 truncate flex-1"
-                      title={f.fileName}
+                    <a
+                      href={f.downloadURL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-[11px] font-medium text-[#166FB5] hover:underline truncate flex-1 min-w-0"
+                      title={`View ${f.fileName}`}
                     >
                       {f.fileName}
-                    </span>
+                    </a>
                     {f.acknowledgedByAdmin ? (
                       <span className="text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0.5 shrink-0">
                         Acknowledged
                       </span>
                     ) : (
                       <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5 shrink-0">
-                        Pending review
+                        Pending
                       </span>
                     )}
-                    {f.uploadedAt && (
-                      <span className="text-[10px] text-slate-400 shrink-0">
-                        {format(f.uploadedAt.toDate(), "MMM d")}
-                      </span>
-                    )}
-                    <a
-                      href={f.downloadURL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-slate-400 hover:text-[#166FB5] transition-colors shrink-0"
-                      title="View PDF"
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                    </a>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleDelete(f.id, f.storagePath, f.fileName); }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-red-400 shrink-0"
-                      title="Remove uploaded file"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
                   </div>
                 ))}
               </div>
