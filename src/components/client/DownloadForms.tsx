@@ -9,7 +9,6 @@ import {
   onSnapshot,
   query,
   where,
-  orderBy,
   deleteDoc,
   doc,
   Timestamp,
@@ -101,32 +100,42 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
   }, []);
 
   // Realtime listener for uploaded submissions
+  // No orderBy to avoid requiring a composite Firestore index — sorted client-side.
   useEffect(() => {
     if (!projectId) return;
 
     const q = query(
       collection(db, "clientFormSubmissions"),
-      where("projectId", "==", projectId),
-      orderBy("uploadedAt", "desc")
+      where("projectId", "==", projectId)
     );
 
-    const unsub = onSnapshot(q, (snap) => {
-      const grouped: Record<string, SubmittedFile[]> = {};
-      snap.forEach((d) => {
-        const data = d.data();
-        const key = data.formKey as string;
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push({
-          id: d.id,
-          fileName: data.fileName,
-          downloadURL: data.downloadURL,
-          storagePath: data.storagePath,
-          uploadedAt: data.uploadedAt ?? null,
-          acknowledgedByAdmin: data.acknowledgedByAdmin ?? false,
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const grouped: Record<string, SubmittedFile[]> = {};
+        snap.forEach((d) => {
+          const data = d.data();
+          const key = data.formKey as string;
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push({
+            id: d.id,
+            fileName: data.fileName,
+            downloadURL: data.downloadURL,
+            storagePath: data.storagePath,
+            uploadedAt: data.uploadedAt ?? null,
+            acknowledgedByAdmin: data.acknowledgedByAdmin ?? false,
+          });
         });
-      });
-      setSubmittedFiles(grouped);
-    });
+        // Sort each group newest-first
+        for (const key of Object.keys(grouped)) {
+          grouped[key].sort((a, b) => (b.uploadedAt?.toMillis() ?? 0) - (a.uploadedAt?.toMillis() ?? 0));
+        }
+        setSubmittedFiles(grouped);
+      },
+      (error) => {
+        console.error("DownloadForms: Firestore error", error);
+      }
+    );
 
     return () => unsub();
   }, [projectId]);
