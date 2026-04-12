@@ -297,42 +297,7 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
             {/* Collapsible upload panel */}
             {isUploadExpanded && (
               <div className="border-t border-slate-100 px-3 py-2.5 bg-white/60 space-y-2">
-                {/* Upload button row */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <input
-                    type="file"
-                    accept="application/pdf"
-                    className="hidden"
-                    ref={(el) => { fileInputRefs.current[form.formKey] = el; }}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        handleUpload(form, file).then(() => {
-                          // Ensure panel stays open after upload
-                          setExpandedUpload((prev) => new Set(prev).add(form.formKey));
-                        });
-                      }
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      fileInputRefs.current[form.formKey]?.click();
-                    }}
-                    disabled={isUploading}
-                    className="flex items-center gap-1.5 text-[11px] font-medium text-white bg-[#166FB5] hover:bg-[#0e4f8a] rounded-full px-2.5 py-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-                  >
-                    {isUploading ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Upload className="h-3 w-3" />
-                    )}
-                    {isUploading ? "Uploading…" : "Upload PDF"}
-                  </button>
-                </div>
-
-                {/* Uploaded files listed inline in the panel */}
+                {/* Uploaded files listed ABOVE the upload button */}
                 {uploaded.length > 0 && (
                   <div className="space-y-1">
                     {uploaded.map((f) => (
@@ -378,6 +343,40 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                     ))}
                   </div>
                 )}
+
+                {/* Upload button row */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    ref={(el) => { fileInputRefs.current[form.formKey] = el; }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleUpload(form, file).then(() => {
+                          setExpandedUpload((prev) => new Set(prev).add(form.formKey));
+                        });
+                      }
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fileInputRefs.current[form.formKey]?.click();
+                    }}
+                    disabled={isUploading}
+                    className="flex items-center gap-1.5 text-[11px] font-medium text-white bg-[#166FB5] hover:bg-[#0e4f8a] rounded-full px-2.5 py-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                  >
+                    {isUploading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Upload className="h-3 w-3" />
+                    )}
+                    {isUploading ? "Uploading…" : "Upload PDF"}
+                  </button>
+                </div>
               </div>
             )}
 

@@ -5,7 +5,6 @@ import {
   collection,
   query,
   where,
-  orderBy,
   onSnapshot,
   doc,
   updateDoc,
@@ -52,31 +51,45 @@ export default function AdminFormSubmissions({ projectId }: AdminFormSubmissions
   useEffect(() => {
     if (!projectId) return;
 
+    // Use a simple query (no orderBy) to avoid composite index requirement.
+    // Results are sorted client-side below.
     const q = query(
       collection(db, "clientFormSubmissions"),
-      where("projectId", "==", projectId),
-      orderBy("uploadedAt", "desc")
+      where("projectId", "==", projectId)
     );
 
-    const unsub = onSnapshot(q, (snap) => {
-      const items: SubmittedFile[] = snap.docs.map((d) => {
-        const data = d.data();
-        return {
-          id: d.id,
-          formLabel: data.formLabel ?? data.formKey,
-          formKey: data.formKey,
-          fileName: data.fileName,
-          downloadURL: data.downloadURL,
-          uploadedAt: data.uploadedAt ?? null,
-          uploadedBy: data.uploadedBy ?? "client",
-          acknowledgedByAdmin: data.acknowledgedByAdmin ?? false,
-          acknowledgedAt: data.acknowledgedAt ?? null,
-          acknowledgedBy: data.acknowledgedBy ?? null,
-        };
-      });
-      setSubmissions(items);
-      setLoading(false);
-    });
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const items: SubmittedFile[] = snap.docs.map((d) => {
+          const data = d.data();
+          return {
+            id: d.id,
+            formLabel: data.formLabel ?? data.formKey,
+            formKey: data.formKey,
+            fileName: data.fileName,
+            downloadURL: data.downloadURL,
+            uploadedAt: data.uploadedAt ?? null,
+            uploadedBy: data.uploadedBy ?? "client",
+            acknowledgedByAdmin: data.acknowledgedByAdmin ?? false,
+            acknowledgedAt: data.acknowledgedAt ?? null,
+            acknowledgedBy: data.acknowledgedBy ?? null,
+          };
+        });
+        // Sort newest-first client-side
+        items.sort((a, b) => {
+          const aMs = a.uploadedAt?.toMillis() ?? 0;
+          const bMs = b.uploadedAt?.toMillis() ?? 0;
+          return bMs - aMs;
+        });
+        setSubmissions(items);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("AdminFormSubmissions: Firestore error", error);
+        setLoading(false);
+      }
+    );
 
     return () => unsub();
   }, [projectId]);
