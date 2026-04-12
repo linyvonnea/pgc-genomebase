@@ -185,15 +185,14 @@ export default function AdminFormSubmissions({ projectId }: AdminFormSubmissions
                 )}
               </div>
 
-              {/* Meta: upload date + by */}
-              <div className="flex items-center gap-3 pl-5 text-[10px] text-slate-400">
+              {/* Meta: upload date / acknowledged info */}
+              <div className="flex flex-col gap-0.5 pl-5 text-[10px] text-slate-400">
                 {f.uploadedAt && (
                   <span>Uploaded {format(f.uploadedAt.toDate(), "MMM d, yyyy")}</span>
                 )}
-                {f.uploadedBy && <span>by {f.uploadedBy}</span>}
                 {f.acknowledgedByAdmin && f.acknowledgedAt && (
                   <span className="text-emerald-600">
-                    Acknowledged {format(f.acknowledgedAt.toDate(), "MMM d, yyyy")}
+                    Acknowledged by: {f.acknowledgedBy ?? "Admin"} · {format(f.acknowledgedAt.toDate(), "MMM d, yyyy")}
                   </span>
                 )}
               </div>
