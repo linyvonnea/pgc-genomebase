@@ -1,93 +1,154 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ref, getDownloadURL, getBlob } from "firebase/storage";
-import { storage } from "@/lib/firebase";
-import { FileText, Download, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ref, getDownloadURL, getBlob, uploadBytes, deleteObject } from "firebase/storage";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  onSnapshot,
+  query,
+  where,
+  orderBy,
+  deleteDoc,
+  doc,
+  Timestamp,
+} from "firebase/firestore";
+import { storage, db } from "@/lib/firebase";
+import {
+  FileText,
+  Download,
+  Loader2,
+  Upload,
+  X,
+  CheckCircle2,
+} from "lucide-react";
 import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
+import useAuth from "@/hooks/useAuth";
+import { format } from "date-fns";
 
 interface FormEntry {
   label: string;
   description: string;
   storagePath: string;
+  formKey: string;
 }
 
 const PORTAL_FORMS: FormEntry[] = [
   {
     label: "Sample Submission Requirements",
     description: "VSF-LR-SSR Rev. 005 — Read before submitting samples",
-    storagePath:
-      "forms/VSF-LR-SSR_Sample Submission Requirements and Form_v6.pdf",
+    storagePath: "forms/VSF-LR-SSR_Sample Submission Requirements and Form_v6.pdf",
+    formKey: "ssreq",
   },
   {
     label: "Sample Submission Form",
     description: "PGCV-LF-SSF Rev. 001 — Fill out and include with shipment",
     storagePath: "forms/Sample_Submission_Form.pdf",
+    formKey: "ssf",
   },
 ];
 
-interface FormState {
+interface TemplateState {
   url: string | null;
   loading: boolean;
   error: boolean;
 }
 
-export default function DownloadForms() {
-  const [states, setStates] = useState<FormState[]>(
+interface SubmittedFile {
+  id: string;
+  fileName: string;
+  downloadURL: string;
+  uploadedAt: Timestamp | null;
+}
+
+interface DownloadFormsProps {
+  projectId: string;
+}
+
+export default function DownloadForms({ projectId }: DownloadFormsProps) {
+  const { user } = useAuth();
+  const [templateStates, setTemplateStates] = useState<TemplateState[]>(
     PORTAL_FORMS.map(() => ({ url: null, loading: true, error: false }))
   );
   const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
+  const [uploadingKey, setUploadingKey] = useState<string | null>(null);
+  const [submittedFiles, setSubmittedFiles] = useState<Record<string, SubmittedFile[]>>({});
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
+  // Load template download URLs
   useEffect(() => {
     PORTAL_FORMS.forEach((form, i) => {
       getDownloadURL(ref(storage, form.storagePath))
         .then((url) =>
-          setStates((prev) =>
+          setTemplateStates((prev) =>
             prev.map((s, idx) => (idx === i ? { url, loading: false, error: false } : s))
           )
         )
         .catch(() =>
-          setStates((prev) =>
+          setTemplateStates((prev) =>
             prev.map((s, idx) => (idx === i ? { url: null, loading: false, error: true } : s))
           )
         );
     });
   }, []);
 
-  const handleDownload = async (storagePath: string, filename: string, index: number) => {
+  // Realtime listener for uploaded submissions
+  useEffect(() => {
+    if (!projectId) return;
+
+    const q = query(
+      collection(db, "clientFormSubmissions"),
+      where("projectId", "==", projectId),
+      orderBy("uploadedAt", "desc")
+    );
+
+    const unsub = onSnapshot(q, (snap) => {
+      const grouped: Record<string, SubmittedFile[]> = {};
+      snap.forEach((d) => {
+        const data = d.data();
+        const key = data.formKey as string;
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push({
+          id: d.id,
+          fileName: data.fileName,
+          downloadURL: data.downloadURL,
+          uploadedAt: data.uploadedAt ?? null,
+        });
+      });
+      setSubmittedFiles(grouped);
+    });
+
+    return () => unsub();
+  }, [projectId]);
+
+  const handleDownloadTemplate = async (form: FormEntry, index: number) => {
     try {
       setDownloadingIdx(index);
-      
-      const fileRef = ref(storage, storagePath);
+      const fileRef = ref(storage, form.storagePath);
       let blob: Blob;
-
       try {
-        // Primary method: Official Firebase getBlob
         blob = await getBlob(fileRef);
-      } catch (firebaseErr: any) {
-        console.warn("Firebase getBlob failed, trying manual fetch:", firebaseErr);
-        // Fallback: Fetch via signed URL (requires CORS)
-        const downloadUrl = await getDownloadURL(fileRef);
-        const response = await fetch(downloadUrl);
-        if (!response.ok) throw new Error("Network response was not ok");
-        blob = await response.blob();
+      } catch {
+        const url = await getDownloadURL(fileRef);
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Network error");
+        blob = await res.blob();
       }
-
       const blobUrl = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = blobUrl;
-      link.download = filename;
+      link.download = form.storagePath.split("/").pop() || "form.pdf";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
-    } catch (err: any) {
-      console.error("All download methods failed:", err);
-      
-      // Final fallback: Just open in new tab
-      if (states[index].url) {
-        window.open(states[index].url!, "_blank");
-        toast.info("Opening file in new tab (Direct download restricted)");
+    } catch {
+      const url = templateStates[index].url;
+      if (url) {
+        window.open(url, "_blank");
+        toast.info("Opening in new tab (direct download restricted)");
       } else {
         toast.error("Download failed. Please try viewing the file instead.");
       }
@@ -96,58 +157,174 @@ export default function DownloadForms() {
     }
   };
 
+  const handleUpload = async (form: FormEntry, file: File) => {
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      toast.error("Only PDF files are accepted.");
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      toast.error("File must be under 20 MB.");
+      return;
+    }
+
+    try {
+      setUploadingKey(form.formKey);
+      const ext = file.name.split(".").pop() || "pdf";
+      const uniqueName = `${form.formKey}-${uuidv4()}.${ext}`;
+      const storagePath = `client-form-submissions/${projectId}/${uniqueName}`;
+      const fileRef = ref(storage, storagePath);
+      await uploadBytes(fileRef, file);
+      const downloadURL = await getDownloadURL(fileRef);
+
+      await addDoc(collection(db, "clientFormSubmissions"), {
+        projectId,
+        formKey: form.formKey,
+        formLabel: form.label,
+        fileName: file.name,
+        storagePath,
+        downloadURL,
+        uploadedAt: serverTimestamp(),
+        uploadedBy: user?.email ?? "client",
+      });
+
+      toast.success(`"${file.name}" uploaded successfully.`);
+    } catch (err) {
+      console.error("Upload failed:", err);
+      toast.error("Upload failed. Please try again.");
+    } finally {
+      setUploadingKey(null);
+      // Reset the file input
+      const input = fileInputRefs.current[form.formKey];
+      if (input) input.value = "";
+    }
+  };
+
+  const handleDelete = async (fileId: string, storagePath: string, fileName: string) => {
+    try {
+      await deleteDoc(doc(db, "clientFormSubmissions", fileId));
+      try {
+        await deleteObject(ref(storage, storagePath));
+      } catch {
+        // Storage file may already be gone — ignore
+      }
+      toast.success(`"${fileName}" removed.`);
+    } catch {
+      toast.error("Could not remove the file. Please try again.");
+    }
+  };
+
   return (
-    <div className="ml-5 mb-2 space-y-2">
+    <div className="ml-5 mb-2 space-y-3">
       {PORTAL_FORMS.map((form, i) => {
-        const { url, loading, error } = states[i];
+        const { url, loading, error } = templateStates[i];
         const isDownloading = downloadingIdx === i;
+        const isUploading = uploadingKey === form.formKey;
+        const uploaded = submittedFiles[form.formKey] ?? [];
 
         return (
-          <div
-            key={form.storagePath}
-            className="flex items-start gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2"
-          >
-            <FileText className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
-            <div className="min-w-0 flex-1">
-              <a
-                href={url || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => {
-                  if (!url) e.preventDefault();
-                  e.stopPropagation();
-                }}
-                className={`text-xs font-medium leading-snug ${
-                  url
-                    ? "text-slate-700 hover:text-[#166FB5] hover:underline transition-colors"
-                    : "text-slate-400"
-                }`}
-              >
-                {form.label}
-              </a>
-              <p className="text-[10px] text-slate-400 leading-snug">{form.description}</p>
+          <div key={form.formKey} className="rounded-lg border border-slate-100 bg-slate-50 overflow-hidden">
+            {/* Template row */}
+            <div className="flex items-start gap-2 px-3 py-2">
+              <FileText className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
+              <div className="min-w-0 flex-1">
+                <a
+                  href={url || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => { if (!url) e.preventDefault(); e.stopPropagation(); }}
+                  className={`text-xs font-medium leading-snug ${
+                    url ? "text-slate-700 hover:text-[#166FB5] hover:underline transition-colors" : "text-slate-400"
+                  }`}
+                >
+                  {form.label}
+                </a>
+                <p className="text-[10px] text-slate-400 leading-snug">{form.description}</p>
+              </div>
+
+              {/* Download template button */}
+              {loading ? (
+                <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-slate-400" />
+              ) : error ? (
+                <span className="text-[10px] text-red-400 mt-0.5">Unavailable</span>
+              ) : (
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDownloadTemplate(form, i); }}
+                  disabled={isDownloading}
+                  className="mt-0.5 text-[#166FB5] hover:text-[#0e4f8a] transition-colors disabled:opacity-50"
+                  title="Download template PDF"
+                >
+                  {isDownloading ? (
+                    <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4 shrink-0" />
+                  )}
+                </button>
+              )}
             </div>
-            {loading ? (
-              <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-slate-400" />
-            ) : error ? (
-              <span className="text-[10px] text-red-400 mt-0.5">Unavailable</span>
-            ) : (
+
+            {/* Uploaded submissions */}
+            {uploaded.length > 0 && (
+              <div className="border-t border-slate-100 px-3 py-1.5 space-y-1">
+                {uploaded.map((f) => (
+                  <div key={f.id} className="flex items-center gap-1.5 group">
+                    <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />
+                    <a
+                      href={f.downloadURL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-[11px] text-slate-600 hover:text-[#166FB5] hover:underline truncate flex-1"
+                      title={f.fileName}
+                    >
+                      {f.fileName}
+                    </a>
+                    {f.uploadedAt && (
+                      <span className="text-[10px] text-slate-400 shrink-0">
+                        {format(f.uploadedAt.toDate(), "MMM d")}
+                      </span>
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDelete(f.id, `client-form-submissions/${projectId}/${f.fileName}`, f.fileName); }}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-red-400 shrink-0"
+                      title="Remove uploaded file"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload area */}
+            <div className="border-t border-slate-100 px-3 py-2">
+              <input
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                ref={(el) => { fileInputRefs.current[form.formKey] = el; }}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleUpload(form, file);
+                }}
+                onClick={(e) => e.stopPropagation()}
+              />
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleDownload(form.storagePath, form.storagePath.split("/").pop() || "form.pdf", i);
+                  fileInputRefs.current[form.formKey]?.click();
                 }}
-                disabled={isDownloading}
-                className="mt-0.5 text-[#166FB5] hover:text-[#0e4f8a] transition-colors disabled:opacity-50"
-                title="Download PDF"
+                disabled={isUploading}
+                className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-[#166FB5] transition-colors disabled:opacity-50"
               >
-                {isDownloading ? (
-                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                {isUploading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <Download className="h-4 w-4 shrink-0" />
+                  <Upload className="h-3.5 w-3.5" />
                 )}
+                {isUploading ? "Uploading…" : "Upload completed form (PDF)"}
               </button>
-            )}
+            </div>
           </div>
         );
       })}
