@@ -30,10 +30,28 @@ import {
   Users,
   X,
   FileSpreadsheet,
+  CheckCircle2,
+  Clock,
+  Eye,
+  Upload,
 } from "lucide-react";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 import { EditProjectModal } from "@/components/forms/EditProjectModal";
+import {
+  collection,
+  onSnapshot,
+  query,
+  where,
+  orderBy,
+  doc,
+  updateDoc,
+  serverTimestamp,
+  Timestamp,
+} from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface ProjectDetailSheetProps {
   project: Project | null;
@@ -86,6 +104,20 @@ function formatFileSize(bytes?: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+interface ClientFormSubmission {
+  id: string;
+  formKey: string;
+  formLabel: string;
+  fileName: string;
+  downloadURL: string;
+  storagePath: string;
+  uploadedAt: Timestamp | null;
+  uploadedBy: string;
+  acknowledgedByAdmin: boolean;
+  acknowledgedAt?: Timestamp;
+  acknowledgedBy?: string;
+}
+
 export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }: ProjectDetailSheetProps) {
   const { adminInfo } = useAuth();
 
@@ -93,6 +125,8 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
   const [chargeSlips, setChargeSlips] = useState<ChargeSlipRecord[]>([]);
   const [sampleForms, setSampleForms] = useState<SampleFormSummary[]>([]);
   const [loading, setLoading] = useState(false);
+  const [clientSubmissions, setClientSubmissions] = useState<ClientFormSubmission[]>([]);
+  const [acknowledgingId, setAcknowledgingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open || !project?.pid) return;
@@ -138,6 +172,57 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
     loadDocs();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, project?.pid]);
+
+  // Realtime listener for client form submissions
+  useEffect(() => {
+    if (!open || !project?.pid) {
+      setClientSubmissions([]);
+      return;
+    }
+    const q = query(
+      collection(db, "clientFormSubmissions"),
+      where("projectId", "==", project.pid),
+      orderBy("uploadedAt", "desc")
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      const docs: ClientFormSubmission[] = snap.docs.map((d) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          formKey: data.formKey,
+          formLabel: data.formLabel,
+          fileName: data.fileName,
+          downloadURL: data.downloadURL,
+          storagePath: data.storagePath,
+          uploadedAt: data.uploadedAt ?? null,
+          uploadedBy: data.uploadedBy ?? "",
+          acknowledgedByAdmin: data.acknowledgedByAdmin ?? false,
+          acknowledgedAt: data.acknowledgedAt,
+          acknowledgedBy: data.acknowledgedBy,
+        };
+      });
+      setClientSubmissions(docs);
+    });
+    return () => unsub();
+  }, [open, project?.pid]);
+
+  const handleAcknowledge = async (submissionId: string) => {
+    if (!adminInfo?.email) return;
+    try {
+      setAcknowledgingId(submissionId);
+      await updateDoc(doc(db, "clientFormSubmissions", submissionId), {
+        acknowledgedByAdmin: true,
+        acknowledgedAt: serverTimestamp(),
+        acknowledgedBy: adminInfo.email,
+      });
+      toast.success("Form submission acknowledged.");
+    } catch (err) {
+      console.error("Acknowledge failed:", err);
+      toast.error("Could not acknowledge. Please try again.");
+    } finally {
+      setAcknowledgingId(null);
+    }
+  };
 
   if (!project) return null;
 
@@ -358,6 +443,91 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                           <div>
                             <span className="text-xs font-mono text-slate-600">{sf.id}</span>
                             <span className="text-[10px] text-slate-400 ml-2">({sf.totalNumberOfSamples} samples)</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Client Form Submissions */}
+                <div>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Upload className="h-3.5 w-3.5 text-sky-600" />
+                    <span className="text-xs font-semibold text-slate-700">Client Form Submissions</span>
+                    <span className="text-[10px] text-slate-500">({clientSubmissions.length})</span>
+                    {clientSubmissions.some((s) => !s.acknowledgedByAdmin) && (
+                      <span className="ml-1 text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5">
+                        {clientSubmissions.filter((s) => !s.acknowledgedByAdmin).length} pending
+                      </span>
+                    )}
+                  </div>
+                  {clientSubmissions.length === 0 ? (
+                    <p className="text-xs text-slate-400 ml-5">No submissions yet</p>
+                  ) : (
+                    <div className="space-y-2 ml-0">
+                      {clientSubmissions.map((sub) => (
+                        <div
+                          key={sub.id}
+                          className={`rounded-lg border px-3 py-2 flex items-start gap-3 ${
+                            sub.acknowledgedByAdmin
+                              ? "border-emerald-100 bg-emerald-50/50"
+                              : "border-amber-100 bg-amber-50/50"
+                          }`}
+                        >
+                          <div className="mt-0.5">
+                            {sub.acknowledgedByAdmin ? (
+                              <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                            ) : (
+                              <Clock className="h-4 w-4 text-amber-400 shrink-0" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-slate-700 truncate" title={sub.fileName}>
+                              {sub.fileName}
+                            </p>
+                            <p className="text-[10px] text-slate-500">{sub.formLabel}</p>
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              {sub.uploadedAt && (
+                                <span className="text-[10px] text-slate-400">
+                                  Uploaded {format(sub.uploadedAt.toDate(), "MMM d, yyyy 'at' h:mm a")}
+                                </span>
+                              )}
+                              {sub.acknowledgedByAdmin && sub.acknowledgedAt && (
+                                <span className="text-[10px] text-emerald-600">
+                                  · Acknowledged {format(sub.acknowledgedAt.toDate(), "MMM d")}
+                                  {sub.acknowledgedBy ? ` by ${sub.acknowledgedBy}` : ""}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <a
+                              href={sub.downloadURL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-xs text-[#166FB5] hover:underline"
+                              title="View PDF"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                              View
+                            </a>
+                            {!sub.acknowledgedByAdmin && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-6 text-[10px] px-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                                onClick={() => handleAcknowledge(sub.id)}
+                                disabled={acknowledgingId === sub.id}
+                              >
+                                {acknowledgingId === sub.id ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <CheckCircle2 className="h-3 w-3 mr-1" />
+                                )}
+                                Acknowledge
+                              </Button>
+                            )}
                           </div>
                         </div>
                       ))}
