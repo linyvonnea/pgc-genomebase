@@ -273,7 +273,18 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
               </div>
 
               <div className="flex items-center gap-1.5 mt-0.5 shrink-0">
-                {/* Download template button */}
+                {/* Uploaded file count badge — visible even when panel is collapsed */}
+                {uploaded.length > 0 && (
+                  <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full shrink-0
+                    border
+                    " style={{
+                    color: hasPendingUpload ? "#b45309" : "#059669",
+                    background: hasPendingUpload ? "#fffbeb" : "#f0fdf4",
+                    borderColor: hasPendingUpload ? "#fcd34d" : "#6ee7b7",
+                  }}>
+                    {uploaded.length} {uploaded.length === 1 ? "file" : "files"}
+                  </span>
+                )}
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
                 ) : error ? (
@@ -304,7 +315,7 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
               </div>
             </button>
 
-            {/* Collapsible upload panel */}
+            {/* Collapsible upload panel — files and upload button only shown when expanded */}
             {isUploadExpanded && (
               <div className="border-t border-slate-100 px-3 py-2.5 bg-white/60 space-y-2">
                 {/* Uploaded files listed ABOVE the upload button */}
@@ -382,40 +393,6 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                   </button>
                 </div>
                 )}
-              </div>
-            )}
-
-            {/* When panel is collapsed, still show uploaded files so client sees status */}
-            {!isUploadExpanded && uploaded.length > 0 && (
-              <div className="border-t border-slate-100 px-3 py-1.5 space-y-1 bg-white/50">
-                {uploaded.map((f) => (
-                  <div key={f.id} className="flex items-center gap-1.5">
-                    {f.acknowledgedByAdmin ? (
-                      <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />
-                    ) : (
-                      <Clock className="h-3 w-3 shrink-0 text-amber-400" />
-                    )}
-                    <a
-                      href={f.downloadURL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-[11px] font-medium text-[#166FB5] hover:underline truncate flex-1 min-w-0"
-                      title={`View ${f.fileName}`}
-                    >
-                      {f.fileName}
-                    </a>
-                    {f.acknowledgedByAdmin ? (
-                      <span className="text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0.5 shrink-0">
-                        Acknowledged
-                      </span>
-                    ) : (
-                      <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5 shrink-0">
-                        Pending
-                      </span>
-                    )}
-                  </div>
-                ))}
               </div>
             )}
           </div>
