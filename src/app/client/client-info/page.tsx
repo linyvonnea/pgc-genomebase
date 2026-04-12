@@ -6,7 +6,6 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import useAuth from "@/hooks/useAuth";
 import {
   doc,
@@ -130,12 +129,10 @@ import {
   ShieldEllipsis,
   Stamp,
   ArrowRight,
-  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ClientConformeModal from "@/components/forms/ClientConformeModal";
 import UploadReceipt from "@/components/client/UploadReceipt";
-import DownloadForms from "@/components/client/DownloadForms";
 
 // ────────────────────────────────────────────────────────────────
 //  Formatting Helpers
@@ -290,7 +287,6 @@ export default function ClientPortalPage() {
   const [expandedProjectDocs, setExpandedProjectDocs] = useState<Set<string>>(new Set());
   const [expandedCsIds, setExpandedCsIds] = useState<Set<string>>(new Set());
   const [expandedQuoteIds, setExpandedQuoteIds] = useState<Set<string>>(new Set());
-  const [expandedSsfIds, setExpandedSsfIds] = useState<Set<string>>(new Set());
   const [configSettings, setConfigSettings] = useState<ConfigurationSettings | null>(null);
 
   const [projectDocuments, setProjectDocuments] = useState<
@@ -604,12 +600,6 @@ export default function ClientPortalPage() {
         // Sync project details but avoid infinite loops with deep comparison checks
         if (!projectDetails || projectDetails.pid !== selectedDetails.pid || projectDetails.status !== selectedDetails.status) {
            setProjectDetails(selectedDetails);
-           // Also expand SSF by default when selecting a project
-           setExpandedSsfIds(prev => {
-             const next = new Set(prev);
-             if (selectedDetails) next.add(selectedDetails.pid);
-             return next;
-           });
         }
         
         if (selectedProjectPid !== selectedDetails.pid) {
@@ -2805,39 +2795,6 @@ export default function ClientPortalPage() {
                               )}
                             </div>
 
-                            {portalFeatures.sampleForms && (
-                              <div>
-                                {/* Collapsible header */}
-                                <button
-                                  className="flex items-center gap-2 mb-1 w-full text-left"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setExpandedSsfIds((prev) => {
-                                      const next = new Set(prev);
-                                      if (next.has(project.pid)) next.delete(project.pid);
-                                      else next.add(project.pid);
-                                      return next;
-                                    });
-                                  }}
-                                >
-                                  <FileSpreadsheet className="h-3 w-3 text-orange-600 shrink-0" />
-                                  <span className="text-sm font-semibold text-slate-700 flex-1">
-                                    Sample Submission Form
-                                  </span>
-                                  <ChevronDown
-                                    className={cn(
-                                      "h-3 w-3 text-slate-400 transition-transform shrink-0",
-                                      expandedSsfIds.has(project.pid) && "rotate-180"
-                                    )}
-                                  />
-                                </button>
-                                {/* Collapsible body */}
-                                {expandedSsfIds.has(project.pid) && (
-                                  <DownloadForms projectId={project.pid} />
-                                )}
-                              </div>
-                            )}
-
                             {/* Charge Slips */}
                             <div>
                               <div className="flex items-center gap-2 mb-1.5">
@@ -2943,6 +2900,41 @@ export default function ClientPortalPage() {
                               )}
                             </div>
 
+                            {portalFeatures.sampleForms && (
+                              <div>
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <FileSpreadsheet className="h-3 w-3 text-orange-600" />
+                                  <span className="text-sm font-semibold text-slate-700">
+                                    Sample Forms
+                                  </span>
+                                  <span className="text-[10px] text-slate-500">({docs?.sampleForms?.length || 0})</span>
+                                </div>
+                                <a
+                                  href={sampleFormBaseHref}
+                                  className="inline-block text-xs text-[#166FB5] hover:underline ml-5 mb-2"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  + Fill out sample submission form
+                                </a>
+                                {(docs?.sampleForms?.length || 0) > 0 ? (
+                                  <div className="space-y-1 ml-5">
+                                    {docs?.sampleForms.map((item) => (
+                                      <a
+                                        key={item.id}
+                                        href={`${sampleFormBaseHref}&formId=${item.id}`}
+                                        className="block text-xs text-slate-600 hover:text-orange-600 hover:underline truncate"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        • {item.id} ({item.totalNumberOfSamples || 0} samples)
+                                      </a>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-slate-400 ml-5">No sample forms yet</p>
+                                )}
+                              </div>
+                            )}
+
                             {portalFeatures.serviceReports && (
                               <div>
                                 <div className="flex items-center gap-2 mb-1.5">
@@ -2981,13 +2973,7 @@ export default function ClientPortalPage() {
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-slate-100 space-y-2">
-        <Link href="/faqs" target="_blank" className="w-full flex items-center gap-3 px-4 py-3 text-[#166FB5] bg-blue-50 hover:bg-blue-100/80 rounded-xl transition-colors group">
-          <div className="p-1.5 bg-white rounded-lg shadow-sm group-hover:scale-105 transition-transform">
-             <HelpCircle className="h-4 w-4" />
-          </div>
-          <span className="font-semibold text-sm">Direct to FAQs</span>
-        </Link>
+      <div className="p-4 border-t border-slate-100">
         <button
           onClick={() => router.push("/portal")}
           className="w-full flex items-center gap-3 px-4 py-3 text-[#B9273A] bg-red-50 hover:bg-red-100/80 rounded-xl transition-colors group"
