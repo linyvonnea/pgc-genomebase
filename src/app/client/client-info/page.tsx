@@ -604,6 +604,12 @@ export default function ClientPortalPage() {
         // Sync project details but avoid infinite loops with deep comparison checks
         if (!projectDetails || projectDetails.pid !== selectedDetails.pid || projectDetails.status !== selectedDetails.status) {
            setProjectDetails(selectedDetails);
+           // Also expand SSF by default when selecting a project
+           setExpandedSsfIds(prev => {
+             const next = new Set(prev);
+             if (selectedDetails) next.add(selectedDetails.pid);
+             return next;
+           });
         }
         
         if (selectedProjectPid !== selectedDetails.pid) {
