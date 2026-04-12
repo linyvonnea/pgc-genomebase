@@ -24,7 +24,9 @@ import {
   CheckCircle2,
   Eye,
   Clock,
+  ChevronDown,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import useAuth from "@/hooks/useAuth";
@@ -79,6 +81,7 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
   const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
   const [submittedFiles, setSubmittedFiles] = useState<Record<string, SubmittedFile[]>>({});
+  const [expandedUpload, setExpandedUpload] = useState<Set<string>>(new Set());
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   // Load template download URLs
@@ -229,81 +232,101 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
         const isDownloading = downloadingIdx === i;
         const isUploading = uploadingKey === form.formKey;
         const uploaded = submittedFiles[form.formKey] ?? [];
+        const isUploadExpanded = expandedUpload.has(form.formKey);
+
+        const toggleUpload = (e: React.MouseEvent) => {
+          e.stopPropagation();
+          setExpandedUpload((prev) => {
+            const next = new Set(prev);
+            if (next.has(form.formKey)) next.delete(form.formKey);
+            else next.add(form.formKey);
+            return next;
+          });
+        };
 
         return (
           <div key={form.formKey} className="rounded-lg border border-slate-100 bg-slate-50 overflow-hidden">
-            {/* Template row */}
-            <div className="flex items-start gap-2 px-3 py-2">
+            {/* Clickable header row — click anywhere (except download btn) to toggle upload panel */}
+            <button
+              type="button"
+              onClick={toggleUpload}
+              className="w-full flex items-start gap-2 px-3 py-2 text-left hover:bg-slate-100/60 transition-colors"
+            >
               <FileText className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
               <div className="min-w-0 flex-1">
-                <a
-                  href={url || "#"}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => { if (!url) e.preventDefault(); e.stopPropagation(); }}
-                  className={`text-xs font-medium leading-snug ${
-                    url ? "text-slate-700 hover:text-[#166FB5] hover:underline transition-colors" : "text-slate-400"
-                  }`}
-                >
+                <p className={`text-xs font-medium leading-snug ${url ? "text-slate-700" : "text-slate-400"}`}>
                   {form.label}
-                </a>
+                </p>
                 <p className="text-[10px] text-slate-400 leading-snug">{form.description}</p>
               </div>
 
-              {/* Download template button */}
-              {loading ? (
-                <Loader2 className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-slate-400" />
-              ) : error ? (
-                <span className="text-[10px] text-red-400 mt-0.5">Unavailable</span>
-              ) : (
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleDownloadTemplate(form, i); }}
-                  disabled={isDownloading}
-                  className="mt-0.5 text-[#166FB5] hover:text-[#0e4f8a] transition-colors disabled:opacity-50"
-                  title="Download template PDF"
-                >
-                  {isDownloading ? (
-                    <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4 shrink-0" />
-                  )}
-                </button>
-              )}
-            </div>
-
-            {/* Upload area */}
-            <div className="border-t border-slate-100 px-3 py-2">
-              <input
-                type="file"
-                accept="application/pdf"
-                className="hidden"
-                ref={(el) => { fileInputRefs.current[form.formKey] = el; }}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleUpload(form, file);
-                }}
-                onClick={(e) => e.stopPropagation()}
-              />
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  fileInputRefs.current[form.formKey]?.click();
-                }}
-                disabled={isUploading}
-                className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-[#166FB5] transition-colors disabled:opacity-50"
-              >
-                {isUploading ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <div className="flex items-center gap-1.5 mt-0.5 shrink-0">
+                {/* Download template button */}
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                ) : error ? (
+                  <span className="text-[10px] text-red-400">Unavailable</span>
                 ) : (
-                  <Upload className="h-3.5 w-3.5" />
+                  <a
+                    href={url || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => { if (!url) e.preventDefault(); e.stopPropagation(); }}
+                    className="text-[#166FB5] hover:text-[#0e4f8a] transition-colors"
+                    title="Download template PDF"
+                  >
+                    {isDownloading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4" />
+                    )}
+                  </a>
                 )}
-                {isUploading ? "Uploading…" : "Upload completed form (PDF)"}
-              </button>
-            </div>
+                {/* Expand/collapse chevron */}
+                <ChevronDown
+                  className={cn(
+                    "h-3.5 w-3.5 text-slate-400 transition-transform",
+                    isUploadExpanded && "rotate-180"
+                  )}
+                />
+              </div>
+            </button>
 
-            {/* Uploaded submissions */}
+            {/* Collapsible upload panel */}
+            {isUploadExpanded && (
+              <div className="border-t border-slate-100 px-3 py-2 bg-white/60">
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  ref={(el) => { fileInputRefs.current[form.formKey] = el; }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleUpload(form, file);
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRefs.current[form.formKey]?.click();
+                  }}
+                  disabled={isUploading}
+                  className="flex items-center gap-1.5 text-[11px] text-slate-500 hover:text-[#166FB5] transition-colors disabled:opacity-50"
+                >
+                  {isUploading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Upload className="h-3.5 w-3.5" />
+                  )}
+                  {isUploading ? "Uploading…" : "Upload completed form (PDF)"}
+                </button>
+              </div>
+            )}
+
+            {/* Uploaded submissions — always visible when files exist */}
             {uploaded.length > 0 && (
-              <div className="border-t border-slate-100 px-3 py-1.5 space-y-1 bg-white/50">
+              <div className={cn("px-3 py-1.5 space-y-1 bg-white/50", isUploadExpanded ? "border-t border-slate-100" : "border-t border-slate-100")}>
                 {uploaded.map((f) => (
                   <div key={f.id} className="flex items-center gap-1.5 group">
                     {f.acknowledgedByAdmin ? (
