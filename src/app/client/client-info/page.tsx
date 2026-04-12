@@ -290,6 +290,7 @@ export default function ClientPortalPage() {
   const [expandedProjectDocs, setExpandedProjectDocs] = useState<Set<string>>(new Set());
   const [expandedCsIds, setExpandedCsIds] = useState<Set<string>>(new Set());
   const [expandedQuoteIds, setExpandedQuoteIds] = useState<Set<string>>(new Set());
+  const [expandedSsfIds, setExpandedSsfIds] = useState<Set<string>>(new Set());
   const [configSettings, setConfigSettings] = useState<ConfigurationSettings | null>(null);
 
   const [projectDocuments, setProjectDocuments] = useState<
@@ -2800,13 +2801,34 @@ export default function ClientPortalPage() {
 
                             {portalFeatures.sampleForms && (
                               <div>
-                                <div className="flex items-center gap-2 mb-1.5">
-                                  <FileSpreadsheet className="h-3 w-3 text-orange-600" />
-                                  <span className="text-sm font-semibold text-slate-700">
+                                {/* Collapsible header */}
+                                <button
+                                  className="flex items-center gap-2 mb-1 w-full text-left"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setExpandedSsfIds((prev) => {
+                                      const next = new Set(prev);
+                                      if (next.has(project.pid)) next.delete(project.pid);
+                                      else next.add(project.pid);
+                                      return next;
+                                    });
+                                  }}
+                                >
+                                  <FileSpreadsheet className="h-3 w-3 text-orange-600 shrink-0" />
+                                  <span className="text-sm font-semibold text-slate-700 flex-1">
                                     Sample Submission Form
                                   </span>
-                                </div>
-                                <DownloadForms />
+                                  <ChevronDown
+                                    className={cn(
+                                      "h-3 w-3 text-slate-400 transition-transform shrink-0",
+                                      expandedSsfIds.has(project.pid) && "rotate-180"
+                                    )}
+                                  />
+                                </button>
+                                {/* Collapsible body */}
+                                {expandedSsfIds.has(project.pid) && (
+                                  <DownloadForms projectId={project.pid} />
+                                )}
                               </div>
                             )}
 
