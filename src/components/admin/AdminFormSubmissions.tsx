@@ -56,6 +56,8 @@ export default function AdminFormSubmissions({ projectId }: AdminFormSubmissions
   useEffect(() => {
     if (!projectId) return;
 
+    // Use a simple query (no orderBy) to avoid composite index requirement.
+    // Results are sorted client-side below.
     const q = query(
       collection(db, "clientFormSubmissions"),
       where("projectId", "==", projectId)
