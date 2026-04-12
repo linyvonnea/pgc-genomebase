@@ -22,6 +22,8 @@ import {
   Upload,
   X,
   CheckCircle2,
+  Eye,
+  Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
@@ -61,6 +63,7 @@ interface SubmittedFile {
   fileName: string;
   downloadURL: string;
   uploadedAt: Timestamp | null;
+  acknowledgedByAdmin?: boolean;
 }
 
 interface DownloadFormsProps {
@@ -115,6 +118,7 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
           fileName: data.fileName,
           downloadURL: data.downloadURL,
           uploadedAt: data.uploadedAt ?? null,
+          acknowledgedByAdmin: data.acknowledgedByAdmin ?? false,
         });
       });
       setSubmittedFiles(grouped);
@@ -268,22 +272,41 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
               <div className="border-t border-slate-100 px-3 py-1.5 space-y-1">
                 {uploaded.map((f) => (
                   <div key={f.id} className="flex items-center gap-1.5 group">
-                    <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />
-                    <a
-                      href={f.downloadURL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-[11px] text-slate-600 hover:text-[#166FB5] hover:underline truncate flex-1"
+                    {f.acknowledgedByAdmin ? (
+                      <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />
+                    ) : (
+                      <Clock className="h-3 w-3 shrink-0 text-amber-400" />
+                    )}
+                    <span
+                      className="text-[11px] text-slate-600 truncate flex-1"
                       title={f.fileName}
                     >
                       {f.fileName}
-                    </a>
+                    </span>
+                    {f.acknowledgedByAdmin ? (
+                      <span className="text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0.5 shrink-0">
+                        Acknowledged
+                      </span>
+                    ) : (
+                      <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5 shrink-0">
+                        Pending review
+                      </span>
+                    )}
                     {f.uploadedAt && (
                       <span className="text-[10px] text-slate-400 shrink-0">
                         {format(f.uploadedAt.toDate(), "MMM d")}
                       </span>
                     )}
+                    <a
+                      href={f.downloadURL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-slate-400 hover:text-[#166FB5] transition-colors shrink-0"
+                      title="View PDF"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                    </a>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleDelete(f.id, `client-form-submissions/${projectId}/${f.fileName}`, f.fileName); }}
                       className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-red-400 shrink-0"
