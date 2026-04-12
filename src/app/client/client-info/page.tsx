@@ -133,6 +133,7 @@ import {
 import { cn } from "@/lib/utils";
 import ClientConformeModal from "@/components/forms/ClientConformeModal";
 import UploadReceipt from "@/components/client/UploadReceipt";
+import SidebarFormDownloads from "@/components/client/SidebarFormDownloads";
 
 // ────────────────────────────────────────────────────────────────
 //  Formatting Helpers
@@ -2799,6 +2800,15 @@ export default function ClientPortalPage() {
                               ) : (
                                 <p className="text-xs text-slate-400 ml-5">No quotations yet</p>
                               )}
+                            </div>
+
+                            {/* Sample Submission Form Downloads */}
+                            <div>
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <FileText className="h-3 w-3 text-orange-500" />
+                                <span className="text-sm font-semibold text-slate-700">Sample Submission Form</span>
+                              </div>
+                              <SidebarFormDownloads />
                             </div>
 
                             {/* Sample Forms (Moved below Quotations) */}
