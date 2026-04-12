@@ -2801,6 +2801,31 @@ export default function ClientPortalPage() {
                               )}
                             </div>
 
+                            {/* Sample Forms (Moved below Quotations) */}
+                            {portalFeatures.sampleForms && (docs?.sampleForms?.length || 0) > 0 && (
+                              <div>
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <FileSpreadsheet className="h-3 w-3 text-orange-600" />
+                                  <span className="text-sm font-semibold text-slate-700">
+                                    Sample Forms
+                                  </span>
+                                  <span className="text-[10px] text-slate-500">({docs?.sampleForms?.length || 0})</span>
+                                </div>
+                                <div className="space-y-1 ml-5">
+                                  {docs?.sampleForms.map((item) => (
+                                    <a
+                                      key={item.id}
+                                      href={`${sampleFormBaseHref}&formId=${item.id}`}
+                                      className="block text-xs text-slate-600 hover:text-orange-600 hover:underline truncate"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      • {item.id} ({item.totalNumberOfSamples || 0} samples)
+                                    </a>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
                             {/* Charge Slips */}
                             <div>
                               <div className="flex items-center gap-2 mb-1.5">
@@ -2903,41 +2928,6 @@ export default function ClientPortalPage() {
                                 <p className="text-xs text-slate-400 ml-5">No charge slips yet</p>
                               )}
                             </div>
-
-                            {portalFeatures.sampleForms && (
-                              <div>
-                                <div className="flex items-center gap-2 mb-1.5">
-                                  <FileSpreadsheet className="h-3 w-3 text-orange-600" />
-                                  <span className="text-sm font-semibold text-slate-700">
-                                    Sample Forms
-                                  </span>
-                                  <span className="text-[10px] text-slate-500">({docs?.sampleForms?.length || 0})</span>
-                                </div>
-                                <a
-                                  href={sampleFormBaseHref}
-                                  className="inline-block text-xs text-[#166FB5] hover:underline ml-5 mb-2"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  + Fill out sample submission form
-                                </a>
-                                {(docs?.sampleForms?.length || 0) > 0 ? (
-                                  <div className="space-y-1 ml-5">
-                                    {docs?.sampleForms.map((item) => (
-                                      <a
-                                        key={item.id}
-                                        href={`${sampleFormBaseHref}&formId=${item.id}`}
-                                        className="block text-xs text-slate-600 hover:text-orange-600 hover:underline truncate"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        • {item.id} ({item.totalNumberOfSamples || 0} samples)
-                                      </a>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <p className="text-xs text-slate-400 ml-5">No sample forms yet</p>
-                                )}
-                              </div>
-                            )}
 
                             {portalFeatures.serviceReports && (
                               <div>
