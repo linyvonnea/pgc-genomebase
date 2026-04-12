@@ -19,7 +19,6 @@ import {
   Download,
   Loader2,
   Upload,
-  X,
   CheckCircle2,
   Clock,
   ChevronDown,
@@ -244,6 +243,8 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
         const isUploading = uploadingKey === form.formKey;
         const uploaded = submittedFiles[form.formKey] ?? [];
         const isUploadExpanded = expandedUpload.has(form.formKey);
+        // Hide upload button if any file is still pending admin acknowledgement
+        const hasPendingUpload = uploaded.some((f) => !f.acknowledgedByAdmin);
 
         const toggleUpload = (e: React.MouseEvent) => {
           e.stopPropagation();
@@ -310,7 +311,7 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                 {uploaded.length > 0 && (
                   <div className="space-y-1">
                     {uploaded.map((f) => (
-                      <div key={f.id} className="flex items-center gap-1.5 group rounded-md bg-slate-50 border border-slate-100 px-2 py-1">
+                      <div key={f.id} className="flex items-center gap-1.5 rounded-md bg-slate-50 border border-slate-100 px-2 py-1">
                         {f.acknowledgedByAdmin ? (
                           <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />
                         ) : (
@@ -341,19 +342,13 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                             {format(f.uploadedAt.toDate(), "MMM d")}
                           </span>
                         )}
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDelete(f.id, f.storagePath, f.fileName); }}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-300 hover:text-red-400 shrink-0"
-                          title="Remove file"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
                       </div>
                     ))}
                   </div>
                 )}
 
-                {/* Upload button row */}
+                {/* Upload button — hidden while a pending (unacknowledged) file exists */}
+                {!hasPendingUpload && (
                 <div className="flex items-center gap-2 flex-wrap">
                   <input
                     type="file"
@@ -386,6 +381,7 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                     {isUploading ? "Uploading…" : "Upload PDF"}
                   </button>
                 </div>
+                )}
               </div>
             )}
 
@@ -393,7 +389,7 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
             {!isUploadExpanded && uploaded.length > 0 && (
               <div className="border-t border-slate-100 px-3 py-1.5 space-y-1 bg-white/50">
                 {uploaded.map((f) => (
-                  <div key={f.id} className="flex items-center gap-1.5 group">
+                  <div key={f.id} className="flex items-center gap-1.5">
                     {f.acknowledgedByAdmin ? (
                       <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />
                     ) : (
