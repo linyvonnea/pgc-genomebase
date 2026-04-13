@@ -81,7 +81,7 @@ import { cancelInquiryByClient, subscribeToInquiryById } from "@/services/inquir
 import { Inquiry } from "@/types/Inquiry";
 import { getChargeSlipsByProjectId } from "@/services/chargeSlipService";
 import { getSampleFormsByProjectId } from "@/services/sampleFormService";
-import { getServiceReportsByProjectId } from "@/services/serviceReportService";
+import { getServiceReportsByProjectId, markServiceReportReceived } from "@/services/serviceReportService";
 import { getConfigurationSettings, DEFAULT_PORTAL_FEATURES } from "@/services/configurationSettingsService";
 import { QuotationRecord } from "@/types/Quotation";
 import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
@@ -130,8 +130,10 @@ import {
   ShieldEllipsis,
   Stamp,
   ArrowRight,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import ClientConformeModal from "@/components/forms/ClientConformeModal";
 import UploadReceipt from "@/components/client/UploadReceipt";
 import DownloadForms from "@/components/client/DownloadForms";
@@ -286,6 +288,7 @@ export default function ClientPortalPage() {
     return new Set(); // Start with all collapsed, let user decide
   });
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [receivingReportId, setReceivingReportId] = useState<string | null>(null);
   const [expandedProjectDocs, setExpandedProjectDocs] = useState<Set<string>>(new Set());
   const [expandedCsIds, setExpandedCsIds] = useState<Set<string>>(new Set());
   const [expandedQuoteIds, setExpandedQuoteIds] = useState<Set<string>>(new Set());
@@ -1960,6 +1963,40 @@ export default function ClientPortalPage() {
     }
   }, [portalFeatures.officialReceipts, portalFeatures.sampleForms, projectDocuments]);
 
+  const handleReceiveServiceReport = useCallback(async (pid: string, report: any) => {
+    const reportKey = `${pid}:${report.id}`;
+    setReceivingReportId(reportKey);
+    try {
+      await markServiceReportReceived(
+        pid,
+        report.id,
+        user?.email || "",
+        user?.displayName || user?.email || "Client"
+      );
+      setProjectDocuments((prev) => {
+        const next = new Map(prev);
+        const existing = next.get(pid);
+        if (existing) {
+          next.set(pid, {
+            ...existing,
+            serviceReports: existing.serviceReports.map((r: any) =>
+              r.id === report.id
+                ? { ...r, status: "received", receivedAt: { toDate: () => new Date() } }
+                : r
+            ),
+          });
+        }
+        return next;
+      });
+      toast.success(`"${report.fileName}" marked as received.`);
+    } catch (err) {
+      console.error("Failed to mark service report as received:", err);
+      toast.error("Failed to mark as received. Please try again.");
+    } finally {
+      setReceivingReportId(null);
+    }
+  }, [user]);
+
   const toggleProjectDocs = async (project: ProjectDetails) => {
     const pid = project.pid;
     const isExpanding = !expandedProjectDocs.has(pid);
@@ -2989,20 +3026,83 @@ export default function ClientPortalPage() {
                                   <span className="text-[10px] text-slate-500">({docs?.serviceReports?.length || 0})</span>
                                 </div>
                                 {(docs?.serviceReports?.length || 0) > 0 ? (
-                                  <div className="space-y-1.5 ml-5">
-                                    {docs?.serviceReports.map((item: any) => (
-                                      <a
-                                        key={item.id}
-                                        href={item.fileUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center gap-1.5 text-xs text-blue-700 hover:underline truncate"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <FileText className="h-3 w-3 shrink-0 text-blue-500" />
-                                        {item.fileName || item.id}
-                                      </a>
-                                    ))}
+                                  <div className="space-y-2 ml-5">
+                                    {docs?.serviceReports.map((item: any) => {
+                                      const isReceived = item.status === "received";
+                                      const receivedDate = item.receivedAt?.toDate
+                                        ? format(item.receivedAt.toDate(), "MMM d, yyyy h:mm a")
+                                        : "";
+                                      const reportKey = `${project.pid}:${item.id}`;
+                                      const isReceiving = receivingReportId === reportKey;
+                                      return (
+                                        <div
+                                          key={item.id}
+                                          className="flex items-start justify-between gap-2 py-1.5 border-b border-slate-100 last:border-0"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <div className="flex items-start gap-1.5 min-w-0">
+                                            <FileText className="h-3 w-3 shrink-0 text-blue-500 mt-0.5" />
+                                            <div className="min-w-0">
+                                              {isReceived ? (
+                                                <a
+                                                  href={item.fileUrl}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="text-xs text-blue-700 hover:underline truncate block"
+                                                >
+                                                  {item.fileName || item.id}
+                                                </a>
+                                              ) : (
+                                                <span className="text-xs text-slate-600 truncate block">
+                                                  {item.fileName || item.id}
+                                                </span>
+                                              )}
+                                              {isReceived && receivedDate && (
+                                                <span className="text-[10px] text-green-600 block">
+                                                  Received {receivedDate}
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+                                          <div className="shrink-0">
+                                            {isReceived ? (
+                                              <div className="flex items-center gap-1">
+                                                <Badge
+                                                  variant="outline"
+                                                  className="text-[10px] text-green-700 border-green-200 bg-green-50 gap-1 py-0.5 h-5"
+                                                >
+                                                  <CheckCircle2 className="h-2.5 w-2.5" />
+                                                  Received
+                                                </Badge>
+                                                <a
+                                                  href={item.fileUrl}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  title="Download"
+                                                >
+                                                  <Download className="h-3 w-3 text-slate-400 hover:text-blue-600" />
+                                                </a>
+                                              </div>
+                                            ) : (
+                                              <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-6 text-[10px] px-2 gap-1 text-blue-700 border-blue-200 hover:bg-blue-50"
+                                                disabled={isReceiving}
+                                                onClick={() => handleReceiveServiceReport(project.pid, item)}
+                                              >
+                                                {isReceiving ? (
+                                                  <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                                                ) : (
+                                                  <Download className="h-2.5 w-2.5" />
+                                                )}
+                                                Receive
+                                              </Button>
+                                            )}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 ) : (
                                   <p className="text-xs text-slate-400 ml-5">No service reports yet</p>

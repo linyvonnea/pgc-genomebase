@@ -7,6 +7,7 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
+  updateDoc,
   Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -20,6 +21,10 @@ export interface ServiceReport {
   uploadedBy: string;
   uploadedByName: string;
   projectId: string;
+  status?: "pending" | "received";
+  receivedAt?: Timestamp | null;
+  receivedBy?: string;
+  receivedByName?: string;
 }
 
 const subCollection = (pid: string) =>
@@ -50,4 +55,18 @@ export async function deleteServiceReport(
   reportId: string
 ): Promise<void> {
   await deleteDoc(doc(db, "projects", pid, "serviceReports", reportId));
+}
+
+export async function markServiceReportReceived(
+  pid: string,
+  reportId: string,
+  receivedBy: string,
+  receivedByName: string
+): Promise<void> {
+  await updateDoc(doc(db, "projects", pid, "serviceReports", reportId), {
+    status: "received",
+    receivedAt: serverTimestamp(),
+    receivedBy,
+    receivedByName,
+  });
 }
