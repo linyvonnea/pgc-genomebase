@@ -163,6 +163,8 @@ function ChargeSlipDetailContent() {
       await updateDoc(doc(db, "projects", pid, "officialReceipts", receipt.id), {
         returnedByAdmin: true,
       });
+      // Keep orStatus as Pending — returned receipts still awaiting a valid replacement
+      await updateDoc(doc(db, "chargeSlips", record.chargeSlipNumber), { orStatus: "Pending" });
       setOfficialReceipts((prev) =>
         prev.map((r) => (r.id === receipt.id ? { ...r, returnedByAdmin: true } : r))
       );
@@ -216,6 +218,8 @@ function ChargeSlipDetailContent() {
       await updateDoc(doc(db, "chargeSlips", record.id), {
         orEntries: arrayUnion(orEntry),
       });
+      // Mark the charge slip orStatus as Validated
+      await updateDoc(doc(db, "chargeSlips", record.chargeSlipNumber), { orStatus: "Validated" });
       // Sync local UI state (status unchanged)
       if (orVal) setOrNumber(orVal);
       if (orDateVal) setDateOfOR(orDateVal);
@@ -266,6 +270,8 @@ function ChargeSlipDetailContent() {
           orNumber: "",
           dateOfOR: null,
         });
+        // Clear orStatus since no receipt remains
+        await updateDoc(doc(db, "chargeSlips", record.chargeSlipNumber), { orStatus: null });
         // Also remove the corresponding orEntry from orEntries history (matched by orNumber + orDate)
         if (receipt.orNumber || receipt.orDate) {
           // arrayRemove requires exact object match — find existing entry to remove
