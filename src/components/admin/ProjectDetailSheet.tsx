@@ -4,10 +4,8 @@ import { useEffect, useState } from "react";
 import { Project } from "@/types/Project";
 
 import { getChargeSlipsByProjectId } from "@/services/chargeSlipService";
-import { getSampleFormsByProjectId } from "@/services/sampleFormService";
 import { getQuotationsByInquiryId } from "@/services/quotationService";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
-import { SampleFormSummary } from "@/types/SampleForm";
 import { QuotationRecord } from "@/types/Quotation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,12 +27,13 @@ import {
   User,
   Users,
   X,
-  FileSpreadsheet,
+  ShieldEllipsis,
 } from "lucide-react";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 import { EditProjectModal } from "@/components/forms/EditProjectModal";
 import AdminFormSubmissions from "@/components/admin/AdminFormSubmissions";
+import AdminServiceReport from "@/components/admin/AdminServiceReport";
 
 interface ProjectDetailSheetProps {
   project: Project | null;
@@ -92,7 +91,6 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
 
   const [quotations, setQuotations] = useState<QuotationRecord[]>([]);
   const [chargeSlips, setChargeSlips] = useState<ChargeSlipRecord[]>([]);
-  const [sampleForms, setSampleForms] = useState<SampleFormSummary[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -102,21 +100,18 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
       setLoading(true);
       setQuotations([]);
       setChargeSlips([]);
-      setSampleForms([]);
 
       try {
         const pid = project.pid!;
         const iid = project.iid;
 
-        const [qs, cs, sf] = await Promise.all([
+        const [qs, cs] = await Promise.all([
           iid ? getQuotationsByInquiryId(iid).catch(() => []) : Promise.resolve([]),
           getChargeSlipsByProjectId(pid).catch(() => []),
-          getSampleFormsByProjectId(pid).catch(() => []),
         ]);
 
         setQuotations(qs as QuotationRecord[]);
         setChargeSlips(cs as ChargeSlipRecord[]);
-        setSampleForms(sf as SampleFormSummary[]);
 
         // Log view
         await logActivity({
@@ -343,29 +338,6 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                   )}
                 </div>
 
-                {/* Sample Forms */}
-                <div>
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <FileSpreadsheet className="h-3.5 w-3.5 text-orange-600" />
-                    <span className="text-xs font-semibold text-slate-700">Sample Forms</span>
-                    <span className="text-[10px] text-slate-500">({sampleForms.length})</span>
-                  </div>
-                  {sampleForms.length === 0 ? (
-                    <p className="text-xs text-slate-400 ml-5">No sample forms</p>
-                  ) : (
-                    <div className="space-y-1 ml-5">
-                      {sampleForms.map((sf) => (
-                        <div key={sf.id} className="flex items-center justify-between gap-2 py-1 border-b border-slate-50 last:border-0">
-                          <div>
-                            <span className="text-xs font-mono text-slate-600">{sf.id}</span>
-                            <span className="text-[10px] text-slate-400 ml-2">({sf.totalNumberOfSamples} samples)</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
                 {/* Client Form Submissions — admin acknowledge */}
                 {project.pid && (
                   <div>
@@ -374,6 +346,17 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                       <span className="text-xs font-semibold text-slate-700">Uploaded Submission Forms</span>
                     </div>
                     <AdminFormSubmissions projectId={project.pid} />
+                  </div>
+                )}
+
+                {/* Service Report — admin uploads */}
+                {project.pid && (
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <ShieldEllipsis className="h-3.5 w-3.5 text-blue-600" />
+                      <span className="text-xs font-semibold text-slate-700">Service Report</span>
+                    </div>
+                    <AdminServiceReport projectId={project.pid} />
                   </div>
                 )}
 
