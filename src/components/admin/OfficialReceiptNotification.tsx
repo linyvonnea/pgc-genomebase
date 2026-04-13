@@ -169,11 +169,18 @@ export function OfficialReceiptNotification() {
       const orFullId = receipt.orNumber?.trim()
         ? `OR-${receipt.orNumber.trim().replace(/\s+/g, "-")}`
         : `OR-${receipt.projectId}-${receipt.id}`;
-      await updateDoc(doc(db, "receipts", orFullId), {
+      
+      await setDoc(doc(db, "receipts", orFullId), {
         uploadStatus: "validated",
         validatedBy: adminInfo?.email ?? "admin",
         validatedDate: serverTimestamp(),
-      });
+        // Ensure critical fields exist even if setDoc on client failed
+        orId: orFullId,
+        projectId: receipt.projectId,
+        orNo: receipt.orNumber?.trim() || null,
+        orDate: receipt.orDate || null,
+        receiptDocId: receipt.id,
+      }, { merge: true });
 
       toast.success("Receipt acknowledged successfully.");
     } catch (err) {

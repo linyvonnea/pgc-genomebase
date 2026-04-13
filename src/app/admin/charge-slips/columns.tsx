@@ -194,47 +194,6 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     },
   },
   {
-    accessorKey: "datePaid",
-    header: "Date Paid",
-    size: 90,
-    cell: ({ row }) => {
-      const raw = row.getValue("datePaid") as Date | string | undefined | null;
-      const date = raw instanceof Date ? raw : new Date(raw || "");
-      return <div className="text-muted-foreground text-xs">{isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-CA")}</div>;
-    },
-  },
-  {
-    accessorKey: "orNumber",
-    header: "OR No.",
-    size: 90,
-    cell: ({ row }) => <span className="font-mono text-[10px]">{row.getValue("orNumber") || "—"}</span>,
-  },
-  {
-    accessorKey: "dvNumber",
-    header: "DV No.",
-    size: 90,
-    cell: ({ row }) => <span className="font-mono text-[10px]">{row.getValue("dvNumber") || "—"}</span>,
-  },
-  // Hidden columns - Access via Detail View/Modal
-  // {
-  //   accessorFn: (row) => row.clientInfo?.address,
-  //   id: "clientInfo.address",
-  //   header: "Address",
-  // },
-  // {
-  //   accessorFn: (row) => row.project?.title,
-  //   id: "project.title",
-  //   header: "Payment For",
-  // },
-  // {
-  //   accessorKey: "dateOfOR",
-  //   header: "Date of OR",
-  // },
-  // {
-  //   accessorKey: "notes",
-  //   header: "Notes",
-  // },
-  {
     accessorFn: (row) => row.preparedBy?.name,
     id: "preparedBy.name",
     header: "Prepared By",
