@@ -135,7 +135,7 @@ export function QuotationPDF({
         </View>
 
         <Text style={{ marginBottom: 10 }}>
-          Dear Valued Client,{"\n\n"}
+          Dear Valued Client,{"\n"}
           Thank you for choosing the Philippine Genome Center Visayas for your research and training needs. We are pleased to quote you the following:
         </Text>
 
