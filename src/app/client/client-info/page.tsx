@@ -81,6 +81,7 @@ import { cancelInquiryByClient, subscribeToInquiryById } from "@/services/inquir
 import { Inquiry } from "@/types/Inquiry";
 import { getChargeSlipsByProjectId } from "@/services/chargeSlipService";
 import { getSampleFormsByProjectId } from "@/services/sampleFormService";
+import { getServiceReportsByProjectId } from "@/services/serviceReportService";
 import { getConfigurationSettings, DEFAULT_PORTAL_FEATURES } from "@/services/configurationSettingsService";
 import { QuotationRecord } from "@/types/Quotation";
 import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
@@ -1933,11 +1934,15 @@ export default function ClientPortalPage() {
         }
       }
 
+      const serviceReports = portalFeatures.serviceReports && project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
+        ? await getServiceReportsByProjectId(project.pid).catch(() => [])
+        : [];
+
       setProjectDocuments((prev) => new Map(prev).set(pid, {
         quotations,
         chargeSlips,
         sampleForms,
-        serviceReports: [],
+        serviceReports,
         officialReceipts,
         loading: false,
       }));
@@ -2984,14 +2989,19 @@ export default function ClientPortalPage() {
                                   <span className="text-[10px] text-slate-500">({docs?.serviceReports?.length || 0})</span>
                                 </div>
                                 {(docs?.serviceReports?.length || 0) > 0 ? (
-                                  <div className="space-y-1 ml-5">
+                                  <div className="space-y-1.5 ml-5">
                                     {docs?.serviceReports.map((item: any) => (
-                                      <div
+                                      <a
                                         key={item.id}
-                                        className="block text-xs text-slate-600 truncate"
+                                        href={item.fileUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1.5 text-xs text-blue-700 hover:underline truncate"
+                                        onClick={(e) => e.stopPropagation()}
                                       >
-                                        • {item.name || item.id}
-                                      </div>
+                                        <FileText className="h-3 w-3 shrink-0 text-blue-500" />
+                                        {item.fileName || item.id}
+                                      </a>
                                     ))}
                                   </div>
                                 ) : (
