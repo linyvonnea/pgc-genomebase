@@ -113,11 +113,6 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     cell: ({ getValue, row }) => (
       <div className="flex items-center gap-1.5">
         <span className="font-mono text-xs font-semibold">{getValue<string>()}</span>
-        {row.original.hasNewOR && (
-          <Badge variant="destructive" className="h-3.5 px-1 text-[7px] animate-pulse shrink-0">
-            OR
-          </Badge>
-        )}
       </div>
     ),
   },
