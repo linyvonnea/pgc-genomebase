@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+// NOTE: This file is loaded client-side only (via dynamic import with ssr:false in QuotationDetailPageClient).
+// @react-pdf/renderer APIs are safe to use here without SSR guards.
+
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,11 +14,9 @@ import {
 } from "@/components/ui/dialog";
 import type { SelectedService } from "@/types/SelectedService";
 import { QuotationPDF } from "@/components/quotation/QuotationPDF";
-import { PDFDownloadLink, pdf } from "@react-pdf/renderer";
+import { PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
-
-const quotationPdfCache = new Map<string, Blob>();
 
 interface Props {
   referenceNumber: string;
@@ -40,36 +41,49 @@ interface Props {
 export default function DownloadButtonSection(props: Props) {
   const { adminInfo } = useAuth();
   const [open, setOpen] = useState(false);
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [previewLoading, setPreviewLoading] = useState(false);
-  const blobUrlRef = useRef<string | null>(null);
-  const previewGeneratingRef = useRef(false);
 
-  const { subtotal, discount, total, referenceNumber } = props;
-  const totalsOverride =
-    typeof subtotal === "number" && typeof total === "number"
-      ? { subtotal, discount: discount ?? 0, total }
-      : undefined;
+  const {
+    referenceNumber,
+    services,
+    clientInfo,
+    useInternalPrice,
+    preparedBy,
+    subtotal,
+    discount,
+    total,
+  } = props;
 
-  const pdfDoc = useMemo(
-    () => <QuotationPDF {...props} totalsOverride={totalsOverride} />,
-    [props, totalsOverride]
+  const totalsOverride = useMemo(
+    () =>
+      typeof subtotal === "number" && typeof total === "number"
+        ? { subtotal, discount: discount ?? 0, total }
+        : undefined,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [subtotal, discount, total]
   );
 
-  const previewKey = useMemo(() => {
-    try {
-      return JSON.stringify({
-        referenceNumber,
-        props,
-        totalsOverride,
-      });
-    } catch {
-      return `${referenceNumber}-${props.services.length}`;
-    }
-  }, [referenceNumber, props, totalsOverride]);
+  // Stable serialised keys prevent pdfDoc from being recreated on every parent re-render.
+  const servicesKey = JSON.stringify(services);
+  const clientInfoKey = JSON.stringify(clientInfo);
+  const preparedByKey = JSON.stringify(preparedBy);
+  const totalsKey = JSON.stringify(totalsOverride);
+
+  const pdfDoc = useMemo(
+    () => (
+      <QuotationPDF
+        referenceNumber={referenceNumber}
+        services={services}
+        clientInfo={clientInfo}
+        useInternalPrice={useInternalPrice}
+        preparedBy={preparedBy}
+        totalsOverride={totalsOverride}
+      />
+    ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [referenceNumber, servicesKey, clientInfoKey, useInternalPrice, preparedByKey, totalsKey]
+  );
 
   const handleDownload = async () => {
-    // Log DOWNLOAD activity
     await logActivity({
       userId: adminInfo?.email || "system",
       userEmail: adminInfo?.email || "system@pgc.admin",
@@ -82,132 +96,50 @@ export default function DownloadButtonSection(props: Props) {
     });
   };
 
-  const prewarmPreview = async () => {
-    if (previewGeneratingRef.current) return;
-    if (quotationPdfCache.has(previewKey)) return;
-
-    previewGeneratingRef.current = true;
-    try {
-      const blob = await pdf(pdfDoc).toBlob();
-      quotationPdfCache.set(previewKey, blob);
-    } finally {
-      previewGeneratingRef.current = false;
-    }
-  };
-
-  useEffect(() => {
-    if (!open) {
-      if (blobUrlRef.current) {
-        URL.revokeObjectURL(blobUrlRef.current);
-        blobUrlRef.current = null;
-      }
-      setBlobUrl(null);
-      setPreviewLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setPreviewLoading(true);
-    setBlobUrl(null);
-
-    const generate = async () => {
-      try {
-        const cached = quotationPdfCache.get(previewKey);
-        if (cached) {
-          if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
-          const url = URL.createObjectURL(cached);
-          blobUrlRef.current = url;
-          setBlobUrl(url);
-          setPreviewLoading(false);
-          return;
-        }
-
-        const blob = await pdf(pdfDoc).toBlob();
-        if (cancelled) return;
-
-        if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
-
-        quotationPdfCache.set(previewKey, blob);
-
-        const url = URL.createObjectURL(blob);
-        blobUrlRef.current = url;
-        setBlobUrl(url);
-      } catch (error) {
-        console.error("PDF generation error:", error);
-      } finally {
-        if (!cancelled) {
-          setPreviewLoading(false);
-        }
-      }
-    };
-
-    generate();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [open, pdfDoc, previewKey]);
-
-  useEffect(() => {
-    return () => {
-      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
-    };
-  }, []);
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="default"
-          onMouseEnter={prewarmPreview}
-          onFocus={prewarmPreview}
-        >
+        <Button variant="default">
           📄 Preview Quotation
         </Button>
       </DialogTrigger>
 
       <DialogContent
-        className="max-w-5xl w-full h-[90vh] flex flex-col"
+        className="max-w-5xl w-full h-[90vh] flex flex-col p-0"
         aria-describedby="pdf-preview-desc"
       >
         <div id="pdf-preview-desc" className="sr-only">
-          This is a preview of the generated quotation PDF.
+          Preview of the generated quotation PDF.
         </div>
 
-        <DialogHeader>
+        <DialogHeader className="px-6 pt-5 pb-2 shrink-0">
           <DialogTitle>Quotation Preview</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden border bg-muted/20 flex items-center justify-center relative">
-          {previewLoading && (
-            <div className="absolute inset-0 z-10 bg-white/50 flex flex-col items-center justify-center gap-2">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-              <p className="text-sm text-muted-foreground font-medium">Generating PDF...</p>
-            </div>
+        <div className="flex-1 overflow-hidden px-6 min-h-0">
+          {open && (
+            <PDFViewer
+              width="100%"
+              height="100%"
+              style={{ border: "1px solid #e2e8f0", borderRadius: "6px" }}
+            >
+              {pdfDoc}
+            </PDFViewer>
           )}
-          {blobUrl ? (
-            <iframe
-              src={blobUrl}
-              style={{ width: "100%", height: "100%", border: "none" }}
-              title="Quotation Preview"
-            />
-          ) : !previewLoading ? (
-            <div className="text-sm text-muted-foreground">Failed to load preview. Please try again.</div>
-          ) : null}
         </div>
 
-        <div className="pt-4 flex justify-end">
+        <div className="px-6 pb-5 pt-3 flex justify-end shrink-0">
           <PDFDownloadLink
             document={pdfDoc}
-            fileName={`Quotation-${props.referenceNumber}.pdf`}
+            fileName={`Quotation-${referenceNumber}.pdf`}
           >
             {({ loading }) => (
-              <Button 
-                disabled={loading} 
+              <Button
+                disabled={loading}
                 variant="secondary"
                 onClick={handleDownload}
               >
-                {loading ? "Preparing..." : "⬇ Download PDF"}
+                {loading ? "Preparing…" : "⬇ Download PDF"}
               </Button>
             )}
           </PDFDownloadLink>
