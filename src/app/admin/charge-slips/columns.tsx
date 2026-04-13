@@ -5,7 +5,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { UIChargeSlipRecord } from "@/types/UIChargeSlipRecord";
 import { Badge } from "@/components/ui/badge";
 import { ValidCategory } from "@/types/ValidCategory";
-import { Trash2 } from "lucide-react";
+import { Trash2, FileWarning } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteChargeSlip } from "@/services/chargeSlipService";
 import { toast } from "sonner";
@@ -13,6 +13,12 @@ import { useRouter } from "next/navigation";
 import { ChargeSlipButton } from "../clients/ChargeSlipButton";
 import { usePermissions } from "@/hooks/usePermissions";
 import useAuth from "@/hooks/useAuth";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Badge colors for statuses
 const statusColors: Record<string, string> = {
@@ -152,7 +158,32 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     cell: ({ row }) => {
       const raw = String(row.getValue("status") ?? "processing").toLowerCase();
       const color = statusColors[raw] || "bg-gray-100 text-gray-800";
-      return <Badge className={`capitalize text-[10px] h-5 px-2 ${color} hover:${color} shadow-none`}>{raw}</Badge>;
+      const hasNewOR = row.original.hasNewOR;
+
+      return (
+        <div className="flex items-center gap-2">
+          <Badge className={`capitalize text-[10px] h-5 px-2 ${color} hover:${color} shadow-none`}>
+            {raw}
+          </Badge>
+          {hasNewOR && (
+            <TooltipProvider>
+              <Tooltip delayDuration={100}>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center">
+                    <div className="relative flex">
+                      <div className="absolute inset-0 rounded-full bg-rose-400 animate-ping opacity-75" />
+                      <FileWarning className="h-4 w-4 text-rose-500 relative z-10" />
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="bg-rose-600 text-white border-none text-[11px] font-medium py-1.5 px-3">
+                  <p>Client has uploaded a new Official Receipt for validation</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
+      );
     },
   },
   {
