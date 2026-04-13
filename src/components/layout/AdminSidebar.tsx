@@ -119,16 +119,6 @@ export function AdminSidebar() {
           icon: Receipt, 
         },
         { 
-          href: "/admin/official-receipts", 
-          label: "Official Receipts", 
-          icon: ScrollText, 
-        },
-        { 
-          href: "/admin/sample-forms", 
-          label: "Sample Forms", 
-          icon: FileSpreadsheet, 
-        },
-        { 
           href: "/admin/manual-quotation", 
           label: "Manual Quotation", 
           icon: Calculator,
