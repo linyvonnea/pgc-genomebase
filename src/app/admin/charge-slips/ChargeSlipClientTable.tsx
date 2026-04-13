@@ -173,7 +173,9 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       return matchesSearch && matchesStatus && matchesCategory && matchesYear && matchesMonth;
     }).map((item) => ({
       ...item,
-      hasNewOR: newOrCsNumbers.has(item.chargeSlipNumber),
+      // Only flag OR Pending while the charge slip is still being processed.
+      // Once paid or cancelled the OR upload indicator is no longer relevant.
+      hasNewOR: newOrCsNumbers.has(item.chargeSlipNumber) && item.status === "processing",
     }));
 
     // When the user hasn't applied a manual sort, float rows with new ORs to the top,
