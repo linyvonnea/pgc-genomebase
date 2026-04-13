@@ -244,6 +244,13 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
           try { await deleteObject(storageRef(storage, oldPath)); } catch { /* non-critical */ }
         }
       }
+      // Mark the charge slip as having a pending OR again after replacement
+      if (csNum) {
+        try {
+          await updateDoc(doc(db, "chargeSlips", csNum), { orStatus: "Pending" });
+        } catch { /* non-critical */ }
+      }
+
       await logActivity({
         userId: user?.email || "anonymous",
         userEmail: user?.email || "anonymous",
@@ -309,6 +316,13 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
         uploadedBy: user?.email || "anonymous",
         receiptDocId: newReceiptRef.id,
       }, { merge: true });
+
+      // Mark the charge slip as having a pending OR (awaiting admin validation)
+      if (csNum) {
+        try {
+          await updateDoc(doc(db, "chargeSlips", csNum), { orStatus: "Pending" });
+        } catch { /* non-critical */ }
+      }
 
       await logActivity({
         userId: user?.email || "anonymous",

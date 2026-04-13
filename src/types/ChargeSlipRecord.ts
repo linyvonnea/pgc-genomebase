@@ -67,6 +67,8 @@ export interface ChargeSlipRecord {
 
   categories?: ValidCategory[]; // Now restricted to valid enums only
   status?: string;
+  /** Tracks the status of the client-uploaded Official Receipt: "Pending" until admin validates, "Validated" after. */
+  orStatus?: "Pending" | "Validated" | null;
   showOfficialReceipts?: boolean; // Toggle visibility of uploaded official receipts
   /** Accumulated OR entries from partial payments, appended on each admin acknowledgment */
   orEntries?: Array<{ orNumber: string; orDate: string; acknowledgedAt: Timestamp }>;
