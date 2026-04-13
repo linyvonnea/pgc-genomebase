@@ -109,6 +109,16 @@ export function OfficialReceiptNotification() {
         entityId: receipt.projectId,
         description: `Returned official receipt for correction: ${receipt.fileName || receipt.id}`,
       });
+
+      // Update the canonical record in 'receipts' collection to show 'returned'
+      const orFullId = receipt.orNumber?.trim()
+        ? `OR-${receipt.orNumber.trim().replace(/\s+/g, "-")}`
+        : `OR-${receipt.projectId}-${receipt.id}`;
+      await updateDoc(doc(db, "receipts", orFullId), {
+        uploadStatus: "returned",
+        returnedDate: serverTimestamp(),
+      });
+
       toast.success("Receipt returned to client for correction.");
     } catch {
       toast.error("Failed to return receipt.");
@@ -141,24 +151,10 @@ export function OfficialReceiptNotification() {
         }
       }
 
-      // 3. Write a canonical record to top-level receipts/ collection
-      const orId = receipt.orNumber?.trim()
-        ? `OR-${receipt.orNumber.trim().replace(/\s+/g, "-")}`
-        : `OR-${receipt.projectId}-${receipt.id}`;
-      await setDoc(doc(db, "receipts", orId), {
-        orId,
-        projectId: receipt.projectId,
-        date: serverTimestamp(),
-        orNo: receipt.orNumber ?? null,
-        orDate: receipt.orDate ?? null,
-        uploadStatus: "validated",
-        fileLink: receipt.downloadURL ?? null,
-        validatedBy: adminInfo?.email ?? "admin",
-        validatedDate: serverTimestamp(),
-        uploadedBy: receipt.uploadedBy ?? null,
-        receiptDocId: receipt.id,
-      }, { merge: true });
-
+      // 3. (Optional) We no longer need to write the whole setDoc here if the client already wrote it.
+      // But we update the status to 'validated'.
+      // Redundant code removed to keep it clean.
+      
       await logActivity({
         userId: adminInfo?.email || "admin",
         userEmail: adminInfo?.email || "admin",
@@ -168,6 +164,17 @@ export function OfficialReceiptNotification() {
         entityId: receipt.projectId,
         description: `Acknowledged official receipt: ${receipt.fileName || receipt.id} (OR No. ${receipt.orNumber || "—"})`,
       });
+
+      // 4. Update the canonical record to 'validated'
+      const orFullId = receipt.orNumber?.trim()
+        ? `OR-${receipt.orNumber.trim().replace(/\s+/g, "-")}`
+        : `OR-${receipt.projectId}-${receipt.id}`;
+      await updateDoc(doc(db, "receipts", orFullId), {
+        uploadStatus: "validated",
+        validatedBy: adminInfo?.email ?? "admin",
+        validatedDate: serverTimestamp(),
+      });
+
       toast.success("Receipt acknowledged successfully.");
     } catch (err) {
       console.error("Acknowledge failed:", err);

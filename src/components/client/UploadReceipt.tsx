@@ -6,6 +6,7 @@ import { db, storage } from "@/lib/firebase";
 import {
   collection,
   addDoc,
+  setDoc,
   serverTimestamp,
   onSnapshot,
   orderBy,
@@ -207,18 +208,35 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
         : `receipts/${projectId}`;
       const downloadURL = await uploadFile(replacePendingFile, folder);
       // Overwrite the existing Firestore receipt doc (same ID — no new document)
-      await updateDoc(doc(db, "projects", projectId, "officialReceipts", receipt.id), {
+      const receiptRef = doc(db, "projects", projectId, "officialReceipts", receipt.id);
+      await updateDoc(receiptRef, {
         fileName: replacePendingFile.name,
         contentType: replacePendingFile.type,
         size: replacePendingFile.size,
         downloadURL,
-        uploadedBy: user?.email || "anonymous",
         uploadedAt: serverTimestamp(),
         orNumber: replaceOrNumber.trim(),
         orDate: replaceOrDate,
         acknowledgedByAdmin: false,
         returnedByAdmin: false,
       });
+
+      // Update the canonical record in top-level 'receipts' collection
+      const orId = replaceOrNumber.trim()
+        ? `OR-${replaceOrNumber.trim().replace(/\s+/g, "-")}`
+        : `OR-${projectId}-${receipt.id}`;
+      await setDoc(doc(db, "receipts", orId), {
+        orId,
+        projectId,
+        date: serverTimestamp(),
+        orNo: replaceOrNumber.trim() || null,
+        orDate: replaceOrDate || null,
+        uploadStatus: "pending_validation",
+        fileLink: downloadURL,
+        uploadedBy: user?.email || "anonymous",
+        receiptDocId: receipt.id,
+      }, { merge: true });
+
       // Delete the old file from Firebase Storage
       if (receipt.downloadURL) {
         const oldPath = extractStoragePath(receipt.downloadURL);
@@ -262,7 +280,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
         ? `receipts/${projectId}/${csNum}`
         : `receipts/${projectId}`;
       const downloadURL = await uploadFile(pendingFile, folder);
-      await addDoc(collection(db, "projects", projectId, "officialReceipts"), {
+      const newReceiptRef = await addDoc(collection(db, "projects", projectId, "officialReceipts"), {
         fileName: pendingFile.name,
         contentType: pendingFile.type,
         size: pendingFile.size,
@@ -275,6 +293,23 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
         returnedByAdmin: false,
         ...(csNum ? { chargeSlipNumber: csNum } : {}),
       });
+
+      // Also write to the canonical 'receipts' top-level collection
+      const orId = orNumber.trim()
+        ? `OR-${orNumber.trim().replace(/\s+/g, "-")}`
+        : `OR-${projectId}-${newReceiptRef.id}`;
+      await setDoc(doc(db, "receipts", orId), {
+        orId,
+        projectId,
+        date: serverTimestamp(),
+        orNo: orNumber.trim() || null,
+        orDate: orDate || null,
+        uploadStatus: "pending_validation",
+        fileLink: downloadURL,
+        uploadedBy: user?.email || "anonymous",
+        receiptDocId: newReceiptRef.id,
+      }, { merge: true });
+
       await logActivity({
         userId: user?.email || "anonymous",
         userEmail: user?.email || "anonymous",
