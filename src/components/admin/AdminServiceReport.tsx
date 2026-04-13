@@ -19,10 +19,21 @@ import {
   deleteObject,
 } from "firebase/storage";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import useAuth from "@/hooks/useAuth";
 import { logActivity } from "@/services/activityLogService";
-import { FileText, Loader2, Trash2, Upload, Download } from "lucide-react";
+import { CheckCircle2, Clock, FileText, Loader2, Trash2, Upload, Download } from "lucide-react";
 import { format } from "date-fns";
 import { ServiceReport } from "@/services/serviceReportService";
 
@@ -45,6 +56,7 @@ export default function AdminServiceReport({ projectId }: Props) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<ServiceReport | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Real-time listener
@@ -127,7 +139,6 @@ export default function AdminServiceReport({ projectId }: Props) {
   };
 
   const handleDelete = async (report: ServiceReport) => {
-    if (!confirm(`Delete "${report.fileName}"?`)) return;
     setDeleting(report.id);
     try {
       // Delete from Storage
@@ -172,6 +183,11 @@ export default function AdminServiceReport({ projectId }: Props) {
               report.uploadedAt?.toDate
                 ? format(report.uploadedAt.toDate(), "MMM d, yyyy")
                 : "";
+            const isReceived = report.status === "received";
+            const receivedDate =
+              report.receivedAt?.toDate
+                ? format(report.receivedAt.toDate(), "MMM d, yyyy h:mm a")
+                : "";
             return (
               <div
                 key={report.id}
@@ -194,6 +210,30 @@ export default function AdminServiceReport({ projectId }: Props) {
                         {uploadedAt} · {report.uploadedByName}
                       </span>
                     )}
+                    {isReceived ? (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] text-green-700 border-green-200 bg-green-50 gap-1 py-0 px-1.5 h-4"
+                        >
+                          <CheckCircle2 className="h-2.5 w-2.5" />
+                          Received
+                        </Badge>
+                        {receivedDate && (
+                          <span className="text-[10px] text-slate-400">{receivedDate}</span>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] text-amber-700 border-amber-200 bg-amber-50 gap-1 py-0 px-1.5 h-4"
+                        >
+                          <Clock className="h-2.5 w-2.5" />
+                          Pending
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
@@ -211,7 +251,7 @@ export default function AdminServiceReport({ projectId }: Props) {
                     size="icon"
                     className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
                     disabled={deleting === report.id}
-                    onClick={() => handleDelete(report)}
+                    onClick={() => setConfirmDelete(report)}
                   >
                     {deleting === report.id ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -253,6 +293,34 @@ export default function AdminServiceReport({ projectId }: Props) {
           </Button>
         )}
       </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={!!confirmDelete} onOpenChange={(open) => { if (!open) setConfirmDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Service Report</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-slate-700">&ldquo;{confirmDelete?.fileName}&rdquo;</span>?
+              This action cannot be undone and the file will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90"
+              onClick={() => {
+                if (confirmDelete) {
+                  handleDelete(confirmDelete);
+                  setConfirmDelete(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
