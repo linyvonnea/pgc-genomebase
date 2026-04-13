@@ -2,10 +2,14 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { getQuotationByReferenceNumber, updateQuotationStatus, getAllQuotations } from "@/services/quotationService";
 import { QuotationRecord } from "@/types/Quotation";
 import { notFound } from "next/navigation";
-import DownloadButtonSection from "@/components/pdf/DownloadButtonSection";
+const DownloadButtonSection = dynamic(
+  () => import("@/components/pdf/DownloadButtonSection"),
+  { ssr: false, loading: () => <div className="text-sm text-muted-foreground py-2">Loading PDF tools...</div> }
+);
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
