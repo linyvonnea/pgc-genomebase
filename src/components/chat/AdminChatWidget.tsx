@@ -244,8 +244,11 @@ function AdminListItem({ admin, unread, preview, onClick }: AdminListItemProps) 
       </div>
 
       {unread > 0 && (
-        <span className="flex-shrink-0 h-5 min-w-[20px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1.5">
-          {unread > 9 ? "9+" : unread}
+        <span className="relative flex-shrink-0 inline-flex">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-60" />
+          <span className="relative h-5 min-w-[20px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1.5 shadow-sm">
+            {unread > 9 ? "9+" : unread}
+          </span>
         </span>
       )}
     </button>
@@ -791,8 +794,11 @@ export default function AdminChatWidget() {
         )}
 
         {!isOpen && totalUnread > 0 && (
-          <span className="absolute -top-1 -right-1 h-6 w-6 flex items-center justify-center rounded-full bg-red-500 text-[11px] font-bold text-white ring-2 ring-white">
-            {totalUnread > 9 ? "9+" : totalUnread}
+          <span className="absolute -top-1 -right-1 inline-flex">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-60" />
+            <span className="relative h-6 w-6 flex items-center justify-center rounded-full bg-red-500 text-[11px] font-bold text-white ring-2 ring-white shadow">
+              {totalUnread > 9 ? "9+" : totalUnread}
+            </span>
           </span>
         )}
       </motion.button>

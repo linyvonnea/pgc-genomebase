@@ -153,7 +153,7 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     cell: ({ row }) => {
       const raw = String(row.getValue("status") ?? "processing").toLowerCase();
       const color = statusColors[raw] || "bg-gray-100 text-gray-800";
-      const hasNewOR = row.original.hasNewOR && raw === "processing";
+      const hasNewOR = row.original.hasNewOR;
 
       return (
         <div className="flex items-center gap-2">
