@@ -111,27 +111,34 @@ export default function DownloadButtonSection(props: Props) {
     setBlobUrl(null);
 
     const generate = async () => {
-      const cached = quotationPdfCache.get(previewKey);
-      if (cached) {
+      try {
+        const cached = quotationPdfCache.get(previewKey);
+        if (cached) {
+          if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+          const url = URL.createObjectURL(cached);
+          blobUrlRef.current = url;
+          setBlobUrl(url);
+          setPreviewLoading(false);
+          return;
+        }
+
+        const blob = await pdf(pdfDoc).toBlob();
+        if (cancelled) return;
+
         if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
-        const url = URL.createObjectURL(cached);
+
+        quotationPdfCache.set(previewKey, blob);
+
+        const url = URL.createObjectURL(blob);
         blobUrlRef.current = url;
         setBlobUrl(url);
-        setPreviewLoading(false);
-        return;
+      } catch (error) {
+        console.error("PDF generation error:", error);
+      } finally {
+        if (!cancelled) {
+          setPreviewLoading(false);
+        }
       }
-
-      const blob = await pdf(pdfDoc).toBlob();
-      if (cancelled) return;
-
-      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
-
-      quotationPdfCache.set(previewKey, blob);
-
-      const url = URL.createObjectURL(blob);
-      blobUrlRef.current = url;
-      setBlobUrl(url);
-      setPreviewLoading(false);
     };
 
     generate();
@@ -171,20 +178,22 @@ export default function DownloadButtonSection(props: Props) {
           <DialogTitle>Quotation Preview</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden border bg-muted/20 flex items-center justify-center">
+        <div className="flex-1 overflow-hidden border bg-muted/20 flex items-center justify-center relative">
           {previewLoading && (
-            <div className="flex flex-col items-center gap-2">
+            <div className="absolute inset-0 z-10 bg-white/50 flex flex-col items-center justify-center gap-2">
               <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
               <p className="text-sm text-muted-foreground font-medium">Generating PDF...</p>
             </div>
           )}
-          {blobUrl && (
+          {blobUrl ? (
             <iframe
               src={blobUrl}
               style={{ width: "100%", height: "100%", border: "none" }}
               title="Quotation Preview"
             />
-          )}
+          ) : !previewLoading ? (
+            <div className="text-sm text-muted-foreground">Failed to load preview. Please try again.</div>
+          ) : null}
         </div>
 
         <div className="pt-4 flex justify-end">
