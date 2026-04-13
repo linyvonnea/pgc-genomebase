@@ -2773,7 +2773,7 @@ export default function ClientPortalPage() {
                                             ) : quotation.selectedForProject ? (
                                               <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 tracking-tight">
                                                 <CheckCircle2 className="h-3 w-3" strokeWidth={3} />
-                                                Active
+                                                Selected
                                               </span>
                                             ) : null}
                                             <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform", qSidebarExpanded && "rotate-180")} />
@@ -3563,7 +3563,7 @@ export default function ClientPortalPage() {
                                     {quote.referenceNumber}
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-1.5 flex-shrink-0">
+                                  <div className="flex items-center gap-1.5 flex-shrink-0">
                                   {qCancelled ? (
                                     <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
                                       Cancelled
@@ -3572,11 +3572,7 @@ export default function ClientPortalPage() {
                                     <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
                                       <CheckCircle2 className="h-2.5 w-2.5" /> Selected
                                     </span>
-                                  ) : (
-                                    <span className="inline-flex text-[10px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-full px-2 py-0.5">
-                                      Active
-                                    </span>
-                                  )}
+                                  ) : null}
                                   <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform", qExpanded && "rotate-180")} />
                                 </div>
                               </div>
