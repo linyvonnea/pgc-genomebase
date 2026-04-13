@@ -41,6 +41,7 @@ const ROUTE_MODULE_MAP: Record<string, keyof RolePermissions> = {
   "/admin/clients": "clients",
   "/admin/quotations": "quotations",
   "/admin/charge-slips": "chargeSlips",
+  "/admin/official-receipts": "officialReceipts",
   "/admin/sample-forms": "sampleForms",
   "/admin/manual-quotation": "manualQuotation",
   "/admin/services": "serviceCatalog",
@@ -116,6 +117,11 @@ export function AdminSidebar() {
           href: "/admin/charge-slips", 
           label: "Charge Slips", 
           icon: Receipt, 
+        },
+        { 
+          href: "/admin/official-receipts", 
+          label: "Official Receipts", 
+          icon: ScrollText, 
         },
         { 
           href: "/admin/sample-forms", 

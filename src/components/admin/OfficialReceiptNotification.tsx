@@ -15,7 +15,9 @@ import {
   where,
   onSnapshot,
   updateDoc,
+  setDoc,
   doc,
+  serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -118,12 +120,13 @@ export function OfficialReceiptNotification() {
   const handleAcknowledge = async (receipt: PendingReceipt) => {
     setAcknowledging(receipt.id);
     try {
+      // 1. Mark as acknowledged in the sub-collection
       await updateDoc(
         doc(db, "projects", receipt.projectId, "officialReceipts", receipt.id),
         { acknowledgedByAdmin: true },
       );
 
-      // Update all processing charge slips for this project to Paid
+      // 2. Update all processing charge slips for this project to Paid
       const chargeSlips = await getChargeSlipsByProjectId(receipt.projectId);
       for (const cs of chargeSlips) {
         if (cs.id && cs.status !== "paid" && cs.status !== "cancelled") {
@@ -137,6 +140,24 @@ export function OfficialReceiptNotification() {
           });
         }
       }
+
+      // 3. Write a canonical record to top-level receipts/ collection
+      const orId = receipt.orNumber?.trim()
+        ? `OR-${receipt.orNumber.trim().replace(/\s+/g, "-")}`
+        : `OR-${receipt.projectId}-${receipt.id}`;
+      await setDoc(doc(db, "receipts", orId), {
+        orId,
+        projectId: receipt.projectId,
+        date: serverTimestamp(),
+        orNo: receipt.orNumber ?? null,
+        orDate: receipt.orDate ?? null,
+        uploadStatus: "validated",
+        fileLink: receipt.downloadURL ?? null,
+        validatedBy: adminInfo?.email ?? "admin",
+        validatedDate: serverTimestamp(),
+        uploadedBy: receipt.uploadedBy ?? null,
+        receiptDocId: receipt.id,
+      }, { merge: true });
 
       await logActivity({
         userId: adminInfo?.email || "admin",
