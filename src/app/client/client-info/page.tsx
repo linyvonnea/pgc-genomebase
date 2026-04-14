@@ -292,7 +292,7 @@ export default function ClientPortalPage() {
   const [expandedProjectDocs, setExpandedProjectDocs] = useState<Set<string>>(new Set());
   const [expandedCsIds, setExpandedCsIds] = useState<Set<string>>(new Set());
   const [expandedQuoteIds, setExpandedQuoteIds] = useState<Set<string>>(new Set());
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
   const [configSettings, setConfigSettings] = useState<ConfigurationSettings | null>(null);
 
   const [projectDocuments, setProjectDocuments] = useState<
@@ -1964,37 +1964,31 @@ export default function ClientPortalPage() {
     }
   }, [portalFeatures.officialReceipts, portalFeatures.sampleForms, projectDocuments]);
 
-  // Manual refresh hook for children (like UploadReceipt)
-  const reloadCurrentProject = useCallback(() => {
-    if (projectDetails?.pid && projectDetails.pid !== "DRAFT" && !projectDetails.pid.startsWith("PENDING-")) {
-      // Force reload by removing from map first
-      setProjectDocuments((prev) => {
-        const next = new Map(prev);
-        next.delete(projectDetails.pid);
-        return next;
+  // Real-time charge slip listener for all expanded projects
+  // When a charge slip's status changes (e.g. "pending" after OR upload), the UI updates instantly
+  useEffect(() => {
+    const expandedPids = [...expandedProjectDocs].filter(
+      (pid) => pid && pid !== "DRAFT" && !pid.startsWith("PENDING-")
+    );
+    if (expandedPids.length === 0) return;
+
+    const unsubscribers = expandedPids.map((pid) => {
+      const q = query(
+        collection(db, "chargeSlips"),
+        where("projectId", "==", pid)
+      );
+      return onSnapshot(q, (snapshot) => {
+        const chargeSlips = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as ChargeSlipRecord));
+        setProjectDocuments((prev) => {
+          const existing = prev.get(pid);
+          if (!existing || existing.loading) return prev;
+          return new Map(prev).set(pid, { ...existing, chargeSlips });
+        });
       });
-      // Then reload
-      loadProjectDocuments(projectDetails);
-    }
-  }, [projectDetails, loadProjectDocuments]);
+    });
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      (window as any).refreshProjectDetails = () => setRefreshTrigger(prev => prev + 1);
-    }
-    return () => {
-      if (typeof window !== 'undefined') {
-        delete (window as any).refreshProjectDetails;
-      }
-    };
-  }, []);
-
-  // Watch refreshTrigger and reload current project documents
-  useEffect(() => {
-    if (refreshTrigger > 0) {
-      reloadCurrentProject();
-    }
-  }, [refreshTrigger, reloadCurrentProject]);
+    return () => unsubscribers.forEach((u) => u());
+  }, [expandedProjectDocs]);
 
   const handleReceiveServiceReport = useCallback(async (pid: string, report: any) => {
     const reportKey = `${pid}:${report.id}`;
