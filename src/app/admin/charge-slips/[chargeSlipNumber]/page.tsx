@@ -34,6 +34,8 @@ import useAuth from "@/hooks/useAuth";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import ChargeSlipPreviewButton from "@/components/charge-slip/ChargeSlipPreviewButton";
 import { CheckCircle2, Loader2 as ReceiptLoader, RotateCcw, Stamp, Trash2 } from "lucide-react";
+import { getActiveCatalogItems } from "@/services/catalogSettingsService";
+import { CatalogItem } from "@/types/CatalogSettings";
 
 interface OfficialReceipt {
   id: string;
@@ -97,7 +99,8 @@ function ChargeSlipDetailContent() {
   const [dvNumber, setDvNumber] = useState("");
   const [orNumber, setOrNumber] = useState("");
   const [notes, setNotes] = useState("");
-  const [status, setStatus] = useState<"processing" | "paid" | "cancelled">("processing");
+  const [status, setStatus] = useState<string>("processing");
+  const [availableStatuses, setAvailableStatuses] = useState<CatalogItem[]>([]);
   const [dateOfOR, setDateOfOR] = useState<Timestamp | undefined>(undefined);
   const [officialReceipts, setOfficialReceipts] = useState<OfficialReceipt[]>([]);
   const [validating, setValidating] = useState<string | null>(null);
@@ -107,13 +110,21 @@ function ChargeSlipDetailContent() {
 
   useEffect(() => {
     const fetch = async () => {
+      // Load statuses from catalog
+      try {
+        const statuses = await getActiveCatalogItems("chargeSlipStatuses") as CatalogItem[];
+        setAvailableStatuses(statuses);
+      } catch (error) {
+        console.error("Failed to load charge slip statuses:", error);
+      }
+
       const data = await getChargeSlipById(chargeSlipNumber);
       if (!data) return notFound();
 
       setRecord(data);
       setDvNumber(data.dvNumber ?? "");
       setNotes(data.notes ?? "");
-      setStatus((data.status as "processing" | "paid" | "cancelled") ?? "processing");
+      setStatus(data.status ?? "processing");
 
       const rawDate = data.dateOfOR;
       if (isTimestamp(rawDate)) setDateOfOR(rawDate);
@@ -471,15 +482,31 @@ function ChargeSlipDetailContent() {
                 <label className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-2">Status</label>
                 <Select
                   value={status}
-                  onValueChange={(value) => setStatus(value as "processing" | "paid" | "cancelled")}
+                  onValueChange={(value) => setStatus(value)}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="processing">Processing</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    {availableStatuses.length > 0 ? (
+                      availableStatuses.map((s) => (
+                        <SelectItem key={s.id} value={s.value}>
+                          <div className="flex items-center gap-2">
+                            <div 
+                              className="w-2 h-2 rounded-full" 
+                              style={{ backgroundColor: s.color || "#94a3b8" }}
+                            />
+                            <span className="capitalize">{s.value}</span>
+                          </div>
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <>
+                        <SelectItem value="processing">Processing</SelectItem>
+                        <SelectItem value="paid">Paid</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
