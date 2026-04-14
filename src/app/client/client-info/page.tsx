@@ -349,6 +349,18 @@ export default function ClientPortalPage() {
 
   const portalFeatures = configSettings?.portalFeatures ?? DEFAULT_PORTAL_FEATURES;
 
+  // Manual refresh hook for children (like UploadReceipt)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).refreshProjectDetails = () => setRefreshTrigger(prev => prev + 1);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).refreshProjectDetails;
+      }
+    };
+  }, []);
+
   const [selectedProjectPid, setSelectedProjectPid] = useState<string | null>(
     null
   );
