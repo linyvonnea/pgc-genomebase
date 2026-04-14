@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import useAuth from "@/hooks/useAuth";
 import { logActivity } from "@/services/activityLogService";
+import { updateChargeSlip } from "@/services/chargeSlipService";
 import {
   FileText,
   Loader2,
@@ -247,7 +248,10 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
       // Mark the charge slip as having a pending OR again after replacement
       if (csNum) {
         try {
-          await updateDoc(doc(db, "chargeSlips", csNum), { orStatus: "Pending" });
+          await updateDoc(doc(db, "chargeSlips", csNum), { 
+            orStatus: "Pending",
+            status: "pending" 
+          });
         } catch { /* non-critical */ }
       }
 
@@ -320,7 +324,10 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
       // Mark the charge slip as having a pending OR (awaiting admin validation)
       if (csNum) {
         try {
-          await updateDoc(doc(db, "chargeSlips", csNum), { orStatus: "Pending" });
+          await updateDoc(doc(db, "chargeSlips", csNum), { 
+            orStatus: "Pending",
+            status: "pending" 
+          });
         } catch { /* non-critical */ }
       }
 
@@ -369,6 +376,25 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
           }
         }
       }
+      
+      // If deleting a returned receipt and no other receipts remain for this charge slip,
+      // reset the charge slip status back to Processing.
+      if (csNum) {
+        try {
+          // Check remaining receipts for this projects/{projectId}/officialReceipts subcollection
+          // that match this csNum. Since we just deleted one, we count what's left.
+          const remainingForCs = visibleReceipts.filter(r => r.id !== receipt.id);
+          if (remainingForCs.length === 0) {
+            await updateDoc(doc(db, "chargeSlips", csNum), { 
+              status: "processing",
+              orStatus: null 
+            });
+          }
+        } catch (e) {
+          console.error("Failed to reset CS status on delete:", e);
+        }
+      }
+
       await logActivity({
         userId: user?.email || "anonymous",
         userEmail: user?.email || "anonymous",
