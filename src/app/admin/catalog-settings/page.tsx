@@ -40,9 +40,11 @@ function CatalogManagementContent() {
     serviceRequested: "",
     personnelAssigned: "",
     inquiryStatuses: "",
+    chargeSlipStatuses: "",
   });
   const [newPersonnelPosition, setNewPersonnelPosition] = useState("");
   const [newStatusColor, setNewStatusColor] = useState("#0ea5e9");
+  const [newChargeSlipStatusColor, setNewChargeSlipStatusColor] = useState("#0ea5e9");
 
   useEffect(() => {
     loadCatalogs();
@@ -79,7 +81,9 @@ function CatalogManagementContent() {
         ? { value, position: newPersonnelPosition.trim() }
         : type === "inquiryStatuses"
           ? { value, color: newStatusColor }
-          : value;
+          : type === "chargeSlipStatuses"
+            ? { value, color: newChargeSlipStatusColor }
+            : value;
       
       // Create the new item locally
       const maxOrder = catalogs?.[type].reduce((max, item) => Math.max(max, item.order), 0) || 0;
@@ -88,6 +92,7 @@ function CatalogManagementContent() {
         value,
         ...(type === "personnelAssigned" && newPersonnelPosition ? { position: newPersonnelPosition.trim() } : {}),
         ...(type === "inquiryStatuses" && newStatusColor ? { color: newStatusColor } : {}),
+        ...(type === "chargeSlipStatuses" && newChargeSlipStatusColor ? { color: newChargeSlipStatusColor } : {}),
         order: maxOrder + 1,
         isActive: true,
         createdAt: new Date(),
@@ -129,7 +134,7 @@ function CatalogManagementContent() {
       if (type === "personnelAssigned" && newPosition !== undefined) {
         updates.position = newPosition;
       }
-      if (type === "inquiryStatuses" && newColor !== undefined) {
+      if ((type === "inquiryStatuses" || type === "chargeSlipStatuses") && newColor !== undefined) {
         updates.color = newColor;
       }
       
@@ -243,6 +248,34 @@ function CatalogManagementContent() {
                 type="color"
                 value={newStatusColor}
                 onChange={(e) => setNewStatusColor(e.target.value)}
+                className="h-9 w-12 p-1"
+                title="Status color"
+              />
+              <Button onClick={() => handleAddItem(type)} size="sm" className="shrink-0">
+                <Plus className="h-4 w-4 mr-1" />
+                Add
+              </Button>
+            </div>
+          ) : type === "chargeSlipStatuses" && canCreate("catalogSettings") ? (
+            <div className="flex gap-2">
+              <Input
+                placeholder="Status name..."
+                value={newItemValue[type]}
+                onChange={(e) =>
+                  setNewItemValue((prev) => ({ ...prev, [type]: e.target.value }))
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddItem(type);
+                  }
+                }}
+                className="h-9 flex-1"
+              />
+              <Input
+                type="color"
+                value={newChargeSlipStatusColor}
+                onChange={(e) => setNewChargeSlipStatusColor(e.target.value)}
                 className="h-9 w-12 p-1"
                 title="Status color"
               />
@@ -388,6 +421,33 @@ function CatalogManagementContent() {
                             title="Status color"
                           />
                         </div>
+                      ) : type === "chargeSlipStatuses" ? (
+                        <div className="flex-1 flex items-center gap-2">
+                          <Input
+                            value={editingItem.value}
+                            onChange={(e) =>
+                              setEditingItem({ ...editingItem, value: e.target.value })
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleUpdateItem(type, item.id, editingItem.value, undefined, editingItem.color);
+                              }
+                              if (e.key === "Escape") setEditingItem(null);
+                            }}
+                            className="h-8 flex-1"
+                            autoFocus
+                          />
+                          <Input
+                            type="color"
+                            value={editingItem.color || "#0ea5e9"}
+                            onChange={(e) =>
+                              setEditingItem({ ...editingItem, color: e.target.value })
+                            }
+                            className="h-8 w-10 p-1"
+                            title="Status color"
+                          />
+                        </div>
                       ) : (
                         <Input
                           value={editingItem.value}
@@ -432,6 +492,14 @@ function CatalogManagementContent() {
                           )}
                         </div>
                       ) : type === "inquiryStatuses" ? (
+                        <div className="flex-1 flex items-center gap-2">
+                          <span
+                            className="h-3 w-3 rounded-full border"
+                            style={{ backgroundColor: item.color || "#94a3b8", borderColor: item.color || "#94a3b8" }}
+                          />
+                          <span className="text-sm">{item.value}</span>
+                        </div>
+                      ) : type === "chargeSlipStatuses" ? (
                         <div className="flex-1 flex items-center gap-2">
                           <span
                             className="h-3 w-3 rounded-full border"
@@ -526,6 +594,7 @@ function CatalogManagementContent() {
             {renderCatalogSection("serviceRequested", catalogs.serviceRequested)}
             {renderCatalogSection("personnelAssigned", catalogs.personnelAssigned)}
             {renderCatalogSection("inquiryStatuses", catalogs.inquiryStatuses)}
+            {renderCatalogSection("chargeSlipStatuses", catalogs.chargeSlipStatuses)}
           </>
         )}
       </div>

@@ -34,6 +34,7 @@ export async function getCatalogSettings(): Promise<CatalogSettings> {
         serviceRequested: data.serviceRequested || getDefaultServiceRequested(),
         personnelAssigned: data.personnelAssigned || [],
         inquiryStatuses: data.inquiryStatuses || getDefaultInquiryStatuses(),
+        chargeSlipStatuses: data.chargeSlipStatuses || getDefaultChargeSlipStatuses(),
       };
     } else {
       // Initialize with defaults if document doesn't exist
@@ -182,7 +183,7 @@ export async function getActiveCatalogItems(type: CatalogType): Promise<string[]
       .sort((a, b) => a.order - b.order);
 
     // For personnelAssigned, return full items with position
-    if (type === "personnelAssigned" || type === "inquiryStatuses") {
+    if (type === "personnelAssigned" || type === "inquiryStatuses" || type === "chargeSlipStatuses") {
       return activeItems;
     }
 
@@ -234,6 +235,15 @@ function getDefaultInquiryStatuses(): CatalogItem[] {
   ];
 }
 
+function getDefaultChargeSlipStatuses(): CatalogItem[] {
+  return [
+    { id: "cs-1", value: "processing", color: "#3b82f6", order: 1, isActive: true },
+    { id: "cs-2", value: "pending", color: "#eab308", order: 2, isActive: true },
+    { id: "cs-3", value: "validated", color: "#22c55e", order: 3, isActive: true },
+    { id: "cs-4", value: "cancelled", color: "#ef4444", order: 4, isActive: true },
+  ];
+}
+
 function getDefaultCatalogSettings(): CatalogSettings {
   return {
     sendingInstitutions: getDefaultSendingInstitutions(),
@@ -242,5 +252,6 @@ function getDefaultCatalogSettings(): CatalogSettings {
     serviceRequested: getDefaultServiceRequested(),
     personnelAssigned: [],
     inquiryStatuses: getDefaultInquiryStatuses(),
+    chargeSlipStatuses: getDefaultChargeSlipStatuses(),
   };
 }
