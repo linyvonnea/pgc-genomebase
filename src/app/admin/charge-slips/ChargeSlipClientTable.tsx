@@ -11,7 +11,7 @@ import {
 } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useEffect } from "react";
-import { collectionGroup, onSnapshot, query, where } from "firebase/firestore";
+import { collection, collectionGroup, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Input } from "@/components/ui/input";
 import {
@@ -97,6 +97,16 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     } catch { return new Set(); }
   });
 
+  // Real-time listener: track which charge slips currently have status "pending" in Firestore
+  const [pendingCsNums, setPendingCsNums] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const q = query(collection(db, "chargeSlips"), where("status", "==", "pending"));
+    const unsub = onSnapshot(q, (snap) => {
+      setPendingCsNums(new Set(snap.docs.map((d) => d.id)));
+    }, (err) => console.error("Pending CS listener:", err));
+    return () => unsub();
+  }, []);
+
   // Subscribe to unacknowledged official receipts so we can highlight those rows
   useEffect(() => {
     const q = query(
@@ -171,11 +181,14 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       const matchesMonth = monthFilter === "all" || (date && (date.getMonth() + 1).toString() === monthFilter);
 
       return matchesSearch && matchesStatus && matchesCategory && matchesYear && matchesMonth;
-    }).map((item) => ({
-      ...item,
-      // Flag OR Pending only when status is explicitly "pending" (client uploaded OR, awaiting admin validation).
-      hasNewOR: item.status === "pending",
-    }));
+    }.map((item) => {
+      const liveStatus = pendingCsNums.has(item.chargeSlipNumber) ? ("pending" as const) : item.status;
+      return {
+        ...item,
+        status: liveStatus,
+        hasNewOR: liveStatus === "pending",
+      };
+    });
 
     // When the user hasn't applied a manual sort, float rows with new ORs to the top,
     // then fall back to chargeSlipNumber descending.
@@ -188,7 +201,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     }
 
     return filtered;
-  }, [data, globalFilter, statusFilter, categoryFilter, yearFilter, monthFilter, newOrCsNumbers, sorting]);
+  }, [data, globalFilter, statusFilter, categoryFilter, yearFilter, monthFilter, newOrCsNumbers, pendingCsNums, sorting]);
 
   // Total Summary for the filtered data
   const filteredTotalValue = useMemo(() => {
@@ -363,26 +376,6 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
 
   return (
     <div className="space-y-4">
-      {/* OR Pending Notification Banner */}
-      {orPendingCount > 0 && (
-        <div className="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5">
-          <div className="relative flex items-center">
-            <div className="relative flex h-5 w-5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-              <FileWarning className="h-5 w-5 text-rose-600 relative z-10" />
-            </div>
-          </div>
-          <p className="text-sm font-medium text-rose-700 flex-1">
-            <span className="font-bold">{orPendingCount}</span> charge slip{orPendingCount !== 1 ? "s" : ""} {orPendingCount !== 1 ? "have" : "has"} a client-uploaded Official Receipt pending admin validation.
-          </p>
-          <span
-            className="inline-flex items-center justify-center rounded-full bg-rose-600 text-white text-xs font-bold min-w-[24px] h-6 px-2 shadow-sm"
-          >
-            {orPendingCount}
-          </span>
-        </div>
-      )}
-
       {/* Collapsible Filter Section */}
       <Card className="overflow-hidden">
         <div 
