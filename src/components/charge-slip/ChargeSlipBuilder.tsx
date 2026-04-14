@@ -57,6 +57,8 @@ import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import useAuth from "@/hooks/useAuth";
 import { GroupedServiceSelector } from "@/components/forms/GroupedServiceSelector";
 import { Loader2 } from "lucide-react";
+import { getActiveCatalogItems } from "@/services/catalogSettingsService";
+import { CatalogItem } from "@/types/CatalogSettings";
 
 export type EditableSelectedService = Omit<StrictSelectedService, "quantity"  | "price"> & {
   quantity: number | "";
