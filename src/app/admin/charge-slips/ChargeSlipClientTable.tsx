@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { ChevronsLeft, ChevronsRight, Filter, ChevronDown } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, Filter, ChevronDown, FileWarning } from "lucide-react";
 import { columns as defaultColumns } from "./columns";
 
 import type { ValidCategory } from "@/types/ChargeSlipRecord";
@@ -43,7 +43,7 @@ type UIChargeSlipRecord = {
   dateOfOR?: Date;
   createdAt?: Date;
   total: number;
-  status?: "processing" | "paid" | "cancelled";
+  status?: "processing" | "paid" | "cancelled" | "pending";
   cid: string;
   projectId: string;
   clientInfo: {
@@ -173,9 +173,9 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       return matchesSearch && matchesStatus && matchesCategory && matchesYear && matchesMonth;
     }).map((item) => ({
       ...item,
-      // Only flag OR Pending while the charge slip is still being processed.
-      // Once paid or cancelled the OR upload indicator is no longer relevant.
-      hasNewOR: newOrCsNumbers.has(item.chargeSlipNumber) && item.status === "processing",
+      // Flag OR Pending when status is "pending" (client uploaded OR) OR when there's
+      // an unacknowledged receipt for a processing slip.
+      hasNewOR: item.status === "pending" || (newOrCsNumbers.has(item.chargeSlipNumber) && item.status === "processing"),
     }));
 
     // When the user hasn't applied a manual sort, float rows with new ORs to the top,
@@ -221,6 +221,10 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }
 
+  const orPendingCount = useMemo(() => {
+    return filteredData.filter((item) => item.hasNewOR).length;
+  }, [filteredData]);
+
   const table = useReactTable({
     data: filteredData,
     columns,
@@ -245,6 +249,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   // Statuses
   const statuses = useMemo(() => [
     { id: "processing", label: "Processing", color: "text-blue-500", border: "border-blue-200", bg: "bg-blue-50" },
+    { id: "pending", label: "Pending", color: "text-amber-600", border: "border-amber-200", bg: "bg-amber-50" },
     { id: "paid", label: "Paid", color: "text-green-600", border: "border-green-200", bg: "bg-green-50" },
     { id: "cancelled", label: "Cancelled", color: "text-red-500", border: "border-red-200", bg: "bg-red-50" },
   ], []);
@@ -358,6 +363,26 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
 
   return (
     <div className="space-y-4">
+      {/* OR Pending Notification Banner */}
+      {orPendingCount > 0 && (
+        <div className="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5">
+          <div className="relative flex items-center">
+            <div className="relative flex h-5 w-5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+              <FileWarning className="h-5 w-5 text-rose-600 relative z-10" />
+            </div>
+          </div>
+          <p className="text-sm font-medium text-rose-700 flex-1">
+            <span className="font-bold">{orPendingCount}</span> charge slip{orPendingCount !== 1 ? "s" : ""} {orPendingCount !== 1 ? "have" : "has"} a client-uploaded Official Receipt pending admin validation.
+          </p>
+          <span
+            className="inline-flex items-center justify-center rounded-full bg-rose-600 text-white text-xs font-bold min-w-[24px] h-6 px-2 shadow-sm"
+          >
+            {orPendingCount}
+          </span>
+        </div>
+      )}
+
       {/* Collapsible Filter Section */}
       <Card className="overflow-hidden">
         <div 
