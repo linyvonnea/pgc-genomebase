@@ -154,15 +154,15 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     cell: ({ row }) => {
       const raw = String(row.getValue("status") ?? "processing").toLowerCase();
       const color = statusColors[raw] || "bg-gray-100 text-gray-800";
-      const hasNewOR = raw === "pending" || row.original.hasNewOR;
-      const label = raw === "pending" ? "Pending" : raw.charAt(0).toUpperCase() + raw.slice(1);
+      const isPending = raw === "pending";
+      const label = raw.charAt(0).toUpperCase() + raw.slice(1);
 
       return (
         <div className="flex items-center gap-2">
           <Badge className={`capitalize text-[10px] h-5 px-2 ${color} hover:${color} shadow-none`}>
             {label}
           </Badge>
-          {hasNewOR && (
+          {isPending && (
             <TooltipProvider>
               <Tooltip delayDuration={100}>
                 <TooltipTrigger asChild>

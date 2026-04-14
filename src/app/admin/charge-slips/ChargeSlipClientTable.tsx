@@ -173,9 +173,8 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       return matchesSearch && matchesStatus && matchesCategory && matchesYear && matchesMonth;
     }).map((item) => ({
       ...item,
-      // Flag OR Pending when status is "pending" (client uploaded OR) OR when there's
-      // an unacknowledged receipt for a processing slip.
-      hasNewOR: item.status === "pending" || (newOrCsNumbers.has(item.chargeSlipNumber) && item.status === "processing"),
+      // Flag OR Pending only when status is explicitly "pending" (client uploaded OR, awaiting admin validation).
+      hasNewOR: item.status === "pending",
     }));
 
     // When the user hasn't applied a manual sort, float rows with new ORs to the top,
@@ -221,9 +220,10 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }
 
+  // Count all pending charge slips across the entire dataset (not just current page/filter).
   const orPendingCount = useMemo(() => {
-    return filteredData.filter((item) => item.hasNewOR).length;
-  }, [filteredData]);
+    return data.filter((item) => item.status === "pending").length;
+  }, [data]);
 
   const table = useReactTable({
     data: filteredData,
