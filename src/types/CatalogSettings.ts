@@ -21,6 +21,7 @@ export interface CatalogSettings {
   serviceRequested: CatalogItem[];
   personnelAssigned: CatalogItem[];
   inquiryStatuses: CatalogItem[];
+  chargeSlipStatuses: CatalogItem[];
 }
 
 export type CatalogType = keyof CatalogSettings;
@@ -32,4 +33,5 @@ export const CATALOG_LABELS: Record<CatalogType, string> = {
   serviceRequested: "Service Requested",
   personnelAssigned: "Personnel Assigned",
   inquiryStatuses: "Inquiry Statuses",
+  chargeSlipStatuses: "Charge Slip Statuses",
 };
