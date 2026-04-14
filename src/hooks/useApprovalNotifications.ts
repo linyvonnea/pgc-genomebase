@@ -32,6 +32,7 @@ export function useApprovalNotifications() {
   const [pendingCount, setPendingCount] = useState(0);
   const [inquiryCount, setInquiryCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [pendingChargeSlipCount, setPendingChargeSlipCount] = useState(0);
   const [newOrCount, setNewOrCount] = useState<number>(() => {
     if (typeof window === 'undefined') return 0;
     try { return parseInt(localStorage.getItem('pgc_or_count') ?? '0', 10) || 0; }
@@ -258,6 +259,24 @@ export function useApprovalNotifications() {
     return () => unsubscribeOr();
   }, []);
 
+  // Listen to charge slips with status "pending" — drives the sidebar badge count
+  useEffect(() => {
+    const q = query(
+      collection(db, "chargeSlips"),
+      where("status", "==", "pending")
+    );
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        setPendingChargeSlipCount(snapshot.size);
+      },
+      (error) => {
+        console.error("Error listening to pending charge slips:", error);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
   const updateNotifications = (newNotifications: ApprovalNotification[], type: "member" | "project") => {
     setNotifications((prev) => {
       // Filter out old notifications of the same type
@@ -313,6 +332,7 @@ export function useApprovalNotifications() {
     inquiryCount,
     newOrCount,
     newOrChargeSlipNumbers,
+    pendingChargeSlipCount,
     unreadCount,
     markAsRead,
     markAllAsRead,

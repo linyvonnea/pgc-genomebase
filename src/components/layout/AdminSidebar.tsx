@@ -60,7 +60,7 @@ export function AdminSidebar() {
   const { user, signOut, adminInfo } = useAuth();
   const { canView, loading: permissionsLoading } = usePermissions(adminInfo?.role);
   const { openTab, activeTab, isTabOpen, setActiveTab } = useTabContext();
-  const { pendingCount, inquiryCount, newOrChargeSlipNumbers } = useApprovalNotifications();
+  const { pendingCount, inquiryCount, newOrChargeSlipNumbers, pendingChargeSlipCount } = useApprovalNotifications();
 
   const handleNavClick = (href: string, label: string, icon: React.ElementType) => {
     const tabId = href.replace("/admin/", "");
@@ -281,14 +281,14 @@ export function AdminSidebar() {
                     )}
                     
                     {/* Notification badge for Charge Slips */}
-                    {href === "/admin/charge-slips" && newOrChargeSlipNumbers.size > 0 && (
+                    {href === "/admin/charge-slips" && pendingChargeSlipCount > 0 && (
                       <span className={cn(
                         "min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-bold px-1.5",
                         isActive(href)
                           ? "bg-white text-[#166FB5]"
                           : "bg-red-500 text-white animate-pulse"
                       )}>
-                        {newOrChargeSlipNumbers.size}
+                        {pendingChargeSlipCount}
                       </span>
                     )}
                     
@@ -304,7 +304,7 @@ export function AdminSidebar() {
                       </span>
                     )}
                     
-                    {isTabOpen(href.replace("/admin/", "")) && !isActive(href) && href !== "/admin/member-approvals" && href !== "/admin/inquiry" && (href !== "/admin/charge-slips" || newOrChargeSlipNumbers.size === 0) && (
+                    {isTabOpen(href.replace("/admin/", "")) && !isActive(href) && href !== "/admin/member-approvals" && href !== "/admin/inquiry" && (href !== "/admin/charge-slips" || pendingChargeSlipCount === 0) && (
                       <div className="w-1.5 h-1.5 rounded-full bg-[#166FB5]" />
                     )}
                   </div>
