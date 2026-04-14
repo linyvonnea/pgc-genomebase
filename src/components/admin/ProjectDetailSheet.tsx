@@ -295,7 +295,14 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                     <div className="space-y-1 ml-5">
                       {quotations.map((q) => (
                         <div key={q.id} className="flex items-center justify-between gap-2 py-1 border-b border-slate-50 last:border-0">
-                          <span className="text-xs font-mono text-slate-600">{q.referenceNumber}</span>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-xs font-mono text-slate-600">{q.referenceNumber}</span>
+                            {q.selectedForProject && q.status !== "cancelled" ? (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-medium shrink-0">Selected</span>
+                            ) : q.status === "cancelled" ? (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-700 font-medium shrink-0">Cancelled</span>
+                            ) : null}
+                          </div>
                           <a
                             href={`/admin/quotations/${q.referenceNumber}`}
                             target="_blank"
@@ -321,19 +328,35 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                     <p className="text-xs text-slate-400 ml-5">No charge slips</p>
                   ) : (
                     <div className="space-y-1 ml-5">
-                      {chargeSlips.map((cs) => (
-                        <div key={cs.id} className="flex items-center justify-between gap-2 py-1 border-b border-slate-50 last:border-0">
-                          <span className="text-xs font-mono text-slate-600">{cs.chargeSlipNumber}</span>
-                          <a
-                            href={`/client/view-document?type=charge-slip&ref=${cs.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
-                          >
-                            View <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </div>
-                      ))}
+                      {chargeSlips.map((cs) => {
+                        const csStatus = (cs.status ?? "").toLowerCase();
+                        const csBadge =
+                          csStatus === "paid" ? "bg-emerald-50 border-emerald-200 text-emerald-700" :
+                          csStatus === "pending" ? "bg-blue-50 border-blue-200 text-blue-700" :
+                          csStatus === "cancelled" ? "bg-rose-50 border-rose-200 text-rose-700" :
+                          "bg-amber-50 border-amber-200 text-amber-700"; // processing / default
+                        const csLabel =
+                          csStatus === "paid" ? "Paid" :
+                          csStatus === "pending" ? "Pending" :
+                          csStatus === "cancelled" ? "Cancelled" :
+                          "Processing";
+                        return (
+                          <div key={cs.id} className="flex items-center justify-between gap-2 py-1 border-b border-slate-50 last:border-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-xs font-mono text-slate-600">{cs.chargeSlipNumber}</span>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium shrink-0 ${csBadge}`}>{csLabel}</span>
+                            </div>
+                            <a
+                              href={`/admin/charge-slips/${cs.chargeSlipNumber}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                            >
+                              View <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -356,7 +379,11 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                       <ShieldEllipsis className="h-3.5 w-3.5 text-blue-600" />
                       <span className="text-xs font-semibold text-slate-700">Service Report</span>
                     </div>
-                    <AdminServiceReport projectId={project.pid} />
+                    <AdminServiceReport
+                      projectId={project.pid}
+                      clientEmail={chargeSlips[0]?.clientInfo?.email ?? quotations[0]?.email}
+                      clientName={chargeSlips[0]?.clientInfo?.name ?? quotations[0]?.name}
+                    />
                   </div>
                 )}
 

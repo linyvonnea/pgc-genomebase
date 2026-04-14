@@ -39,6 +39,8 @@ import { ServiceReport } from "@/services/serviceReportService";
 
 interface Props {
   projectId: string;
+  clientEmail?: string;
+  clientName?: string;
 }
 
 const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
@@ -50,7 +52,7 @@ function formatFileSize(bytes?: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function AdminServiceReport({ projectId }: Props) {
+export default function AdminServiceReport({ projectId, clientEmail, clientName }: Props) {
   const { adminInfo } = useAuth();
   const [reports, setReports] = useState<ServiceReport[]>([]);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -131,6 +133,61 @@ export default function AdminServiceReport({ projectId }: Props) {
         entityName: file.name,
         description: `Uploaded service report "${file.name}" for project ${projectId}`,
       });
+
+      // Send notification email to client
+      if (clientEmail) {
+        const recipientName = clientName || "Client";
+        const portalUrl = "https://pgc-genomebase.vercel.app/portal";
+
+        const emailHtml = `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.6;">
+            <div style="background-color: #f1f5f9; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
+              <h2 style="color: #1e3a8a; margin-top: 0;">Service Report Available - PGC Visayas</h2>
+              <p>Dear ${recipientName},</p>
+              <p>Your service report is now available in your client portal.</p>
+              <p>You may log in to access and review the results at your convenience. Should you have any questions or require further clarification, please feel free to contact us.</p>
+
+              <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border-left: 4px solid #1e3a8a; margin: 15px 0;">
+                <h3 style="margin-top: 0; color: #1e3a8a; font-size: 14px; margin-bottom: 8px;">Access Your Report</h3>
+                <p style="margin-bottom: 12px; font-size: 14px;">Log in to your client portal to view and download your service report.</p>
+                <p style="margin: 0;"><a href="${portalUrl}" style="background-color: #1e3a8a; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 13px;">Log in to Client Portal</a></p>
+              </div>
+
+              <p>Thank you for choosing our services.</p>
+              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+              <p style="font-size: 13px; color: #64748b; margin-bottom: 0;">Yours in utilizing OMICS for a better Philippines,<br /><strong>Philippine Genome Center Visayas</strong></p>
+            </div>
+          </div>
+        `;
+
+        const emailText = `Service Report Available - PGC Visayas
+
+Dear ${recipientName},
+
+Your service report is now available in your client portal.
+
+You may log in to access and review the results at your convenience. Should you have any questions or require further clarification, please feel free to contact us.
+
+To view your service report, kindly log in to your Client Portal: ${portalUrl}
+
+Thank you for choosing our services.
+
+Yours in utilizing OMICS for a better Philippines,
+Philippine Genome Center Visayas`.trim();
+
+        try {
+          await addDoc(collection(db, "mail"), {
+            to: [clientEmail],
+            message: {
+              subject: "Service Report Available: PGC Visayas",
+              text: emailText,
+              html: emailHtml,
+            },
+          });
+        } catch (emailErr) {
+          console.warn("Service report email could not be sent:", emailErr);
+        }
+      }
 
       toast.success(`"${file.name}" uploaded successfully.`);
       setPendingFile(null);
