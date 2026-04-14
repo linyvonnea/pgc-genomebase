@@ -252,6 +252,10 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
             orStatus: "Pending",
             status: "pending" 
           });
+          // Update local status in client portal project details if matches
+          if (typeof window !== 'undefined' && (window as any).refreshProjectDetails) {
+            (window as any).refreshProjectDetails();
+          }
         } catch { /* non-critical */ }
       }
 
@@ -328,6 +332,10 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
             orStatus: "Pending",
             status: "pending" 
           });
+          // Update local status in client portal project details if matches
+          if (typeof window !== 'undefined' && (window as any).refreshProjectDetails) {
+            (window as any).refreshProjectDetails();
+          }
         } catch { /* non-critical */ }
       }
 
