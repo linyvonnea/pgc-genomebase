@@ -292,6 +292,7 @@ export default function ClientPortalPage() {
   const [expandedProjectDocs, setExpandedProjectDocs] = useState<Set<string>>(new Set());
   const [expandedCsIds, setExpandedCsIds] = useState<Set<string>>(new Set());
   const [expandedQuoteIds, setExpandedQuoteIds] = useState<Set<string>>(new Set());
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [configSettings, setConfigSettings] = useState<ConfigurationSettings | null>(null);
 
   const [projectDocuments, setProjectDocuments] = useState<
@@ -347,6 +348,18 @@ export default function ClientPortalPage() {
   }, []);
 
   const portalFeatures = configSettings?.portalFeatures ?? DEFAULT_PORTAL_FEATURES;
+
+  // Manual refresh hook for children (like UploadReceipt)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).refreshProjectDetails = () => setRefreshTrigger(prev => prev + 1);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).refreshProjectDetails;
+      }
+    };
+  }, []);
 
   const [selectedProjectPid, setSelectedProjectPid] = useState<string | null>(
     null
@@ -2892,6 +2905,7 @@ export default function ClientPortalPage() {
                                   {docs?.chargeSlips.map((chargeSlip) => {
                                     const csPaid = chargeSlip.status === "paid";
                                     const csCancelled = chargeSlip.status === "cancelled";
+                                    const csPending = chargeSlip.status === "pending";
                                     const csTotal = typeof chargeSlip.total === "number" ? chargeSlip.total : 0;
                                     const csRawDate = chargeSlip.dateIssued;
                                     const csIssuedDate = csRawDate
@@ -2936,8 +2950,12 @@ export default function ClientPortalPage() {
                                               <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
                                                 Cancelled
                                               </span>
+                                            ) : csPending ? (
+                                              <span className="inline-flex text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 animate-pulse">
+                                                Pending Validation
+                                              </span>
                                             ) : (
-                                              <span className="inline-flex text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+                                              <span className="inline-flex text-[10px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5">
                                                 Processing
                                               </span>
                                             )}
