@@ -1976,6 +1976,38 @@ export default function ClientPortalPage() {
     }
   }, [portalFeatures.officialReceipts, portalFeatures.sampleForms, projectDocuments]);
 
+  // Manual refresh hook for children (like UploadReceipt)
+  const reloadCurrentProject = useCallback(() => {
+    if (projectDetails?.pid && projectDetails.pid !== "DRAFT" && !projectDetails.pid.startsWith("PENDING-")) {
+      // Force reload by removing from map first
+      setProjectDocuments((prev) => {
+        const next = new Map(prev);
+        next.delete(projectDetails.pid);
+        return next;
+      });
+      // Then reload
+      loadProjectDocuments(projectDetails);
+    }
+  }, [projectDetails, loadProjectDocuments]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).refreshProjectDetails = () => setRefreshTrigger(prev => prev + 1);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).refreshProjectDetails;
+      }
+    };
+  }, []);
+
+  // Watch refreshTrigger and reload current project documents
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      reloadCurrentProject();
+    }
+  }, [refreshTrigger, reloadCurrentProject]);
+
   const handleReceiveServiceReport = useCallback(async (pid: string, report: any) => {
     const reportKey = `${pid}:${report.id}`;
     setReceivingReportId(reportKey);

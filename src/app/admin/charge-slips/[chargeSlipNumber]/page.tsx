@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
-import { arrayRemove, arrayUnion, collection, deleteDoc, doc, getDocs, orderBy, query, Timestamp, updateDoc } from "firebase/firestore";
+import { arrayRemove, arrayUnion, collection, deleteDoc, doc, getDocs, onSnapshot, orderBy, query, Timestamp, updateDoc } from "firebase/firestore";
 import { ref as storageRef, deleteObject } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
 import { logActivity } from "@/services/activityLogService";
@@ -109,31 +109,56 @@ function ChargeSlipDetailContent() {
   const [receiptToDelete, setReceiptToDelete] = useState<OfficialReceipt | null>(null);
 
   useEffect(() => {
-    const fetch = async () => {
-      // Load statuses from catalog
+    // Load statuses from catalog once
+    const loadStatuses = async () => {
       try {
         const statuses = await getActiveCatalogItems("chargeSlipStatuses") as CatalogItem[];
         setAvailableStatuses(statuses);
       } catch (error) {
         console.error("Failed to load charge slip statuses:", error);
       }
+    };
+    loadStatuses();
 
-      const data = await getChargeSlipById(chargeSlipNumber);
-      if (!data) return notFound();
+    // Set up real-time listener for charge slip document
+    const chargeSlipRef = doc(db, "chargeSlips", chargeSlipNumber);
+    const unsubscribe = onSnapshot(chargeSlipRef, async (docSnap) => {
+      if (!docSnap.exists()) {
+        notFound();
+        return;
+      }
 
-      setRecord(data);
-      setDvNumber(data.dvNumber ?? "");
-      setNotes(data.notes ?? "");
-      setStatus(data.status ?? "processing");
+      const data = docSnap.data() as any;
+      
+      // Convert to ChargeSlipRecord format
+      const chargeSlipData: ChargeSlipRecord = {
+        ...data,
+        id: docSnap.id,
+        client: {
+          ...data.client,
+          createdAt: data.client?.createdAt?.toDate?.() || new Date(),
+        },
+        project: {
+          ...data.project,
+          createdAt: data.project?.createdAt?.toDate?.() || new Date(),
+        },
+        dateIssued: data.dateIssued?.toDate?.() || data.dateIssued || new Date(),
+        dateOfOR: data.dateOfOR?.toDate?.() || data.dateOfOR,
+        createdAt: data.createdAt?.toDate?.() || data.createdAt || new Date(),
+      };
 
-      const rawDate = data.dateOfOR;
+      setRecord(chargeSlipData);
+      setDvNumber(chargeSlipData.dvNumber ?? "");
+      setNotes(chargeSlipData.notes ?? "");
+      setStatus(chargeSlipData.status ?? "processing");
+
+      const rawDate = chargeSlipData.dateOfOR;
       if (isTimestamp(rawDate)) setDateOfOR(rawDate);
       else if (typeof rawDate === "string") setDateOfOR(Timestamp.fromDate(new Date(rawDate)));
 
-      // Load official receipts for the project and auto-fill OR fields if empty
-      const pid = data.projectId || (data.project as any)?.pid;
-      // Always seed orNumber from the charge slip record first
-      setOrNumber(data.orNumber ?? "");
+      // Load official receipts for the project
+      const pid = chargeSlipData.projectId || (chargeSlipData.project as any)?.pid;
+      setOrNumber(chargeSlipData.orNumber ?? "");
 
       if (pid) {
         try {
@@ -141,30 +166,49 @@ function ChargeSlipDetailContent() {
             query(collection(db, "projects", pid, "officialReceipts"), orderBy("uploadedAt", "desc"))
           );
           const ors = orSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as OfficialReceipt[];
-          // Only show receipts uploaded specifically for this charge slip
-          setOfficialReceipts(ors.filter((r) => r.chargeSlipNumber === data.chargeSlipNumber));
-          // OR Number and Date of OR are only filled when admin acknowledges a receipt — no auto-fill here.
+          setOfficialReceipts(ors.filter((r) => r.chargeSlipNumber === chargeSlipData.chargeSlipNumber));
         } catch {
           // silently fail — official receipts are optional
         }
       }
 
-      // Log VIEW activity
-      await logActivity({
-        userId: adminInfo?.email || "system",
-        userEmail: adminInfo?.email || "system@pgc.admin",
-        userName: adminInfo?.name || "System",
+      setLoading(false);
+    });
+
+    // Log VIEW activity once on mount
+    if (adminInfo?.email) {
+      logActivity({
+        userId: adminInfo.email,
+        userEmail: adminInfo.email,
+        userName: adminInfo.name || "System",
         action: "VIEW",
         entityType: "charge_slip",
         entityId: chargeSlipNumber,
         entityName: `Charge Slip ${chargeSlipNumber}`,
         description: `Viewed charge slip: ${chargeSlipNumber}`,
       });
+    }
 
-      setLoading(false);
-    };
-    fetch();
+    return () => unsubscribe();
   }, [chargeSlipNumber, adminInfo]);
+
+  // Set up real-time listener for official receipts
+  useEffect(() => {
+    if (!record?.projectId && !(record?.project as any)?.pid) return;
+
+    const pid = record?.projectId || (record?.project as any)?.pid;
+    if (!pid) return;
+
+    const receiptsRef = collection(db, "projects", pid, "officialReceipts");
+    const receiptsQuery = query(receiptsRef, orderBy("uploadedAt", "desc"));
+
+    const unsubscribeReceipts = onSnapshot(receiptsQuery, (snapshot) => {
+      const ors = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as OfficialReceipt[];
+      setOfficialReceipts(ors.filter((r) => r.chargeSlipNumber === record?.chargeSlipNumber));
+    });
+
+    return () => unsubscribeReceipts();
+  }, [record?.projectId, record?.project, record?.chargeSlipNumber]);
 
   const handleReturn = async (receipt: OfficialReceipt) => {
     if (!record) return;
