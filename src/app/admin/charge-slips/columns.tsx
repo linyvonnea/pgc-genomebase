@@ -174,7 +174,7 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
                   </div>
                 </TooltipTrigger>
                 <TooltipContent side="right" className="bg-rose-600 text-white border-none text-[11px] font-medium py-1.5 px-3">
-                  <p>Client has uploaded an Official Receipt pending admin validation</p>
+                  <p>The client has uploaded an Official Receipt, pending admin validation or status update.</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
