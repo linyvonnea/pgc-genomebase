@@ -749,6 +749,16 @@ function ChargeSlipDetailContent() {
               )}
             </div>
           )}
+
+          {/* Save Changes */}
+          <div className="mt-6 pt-4 border-t border-slate-100 flex justify-end">
+            <Button
+              onClick={handleSave}
+              className="bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#145a9b] hover:to-[#362f8f] text-white font-medium px-6 py-2 rounded-lg transition-all duration-200 shadow-lg"
+            >
+              Save Changes
+            </Button>
+          </div>
         </div>
 
         {/* Preview Charge Slip Card */}
@@ -762,21 +772,6 @@ function ChargeSlipDetailContent() {
           <ChargeSlipPreviewButton record={record} />
         </div>
 
-        {/* Save Changes Card */}
-        <div className="bg-gradient-to-r from-[#F69122]/5 via-[#B9273A]/5 to-[#912ABD]/5 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
-          <h2 className="text-lg font-semibold text-slate-800 mb-3 flex items-center gap-2">
-            <div className="w-2 h-2 bg-gradient-to-r from-[#F69122] to-[#912ABD] rounded-full"></div>
-            Save Changes
-          </h2>
-          <p className="text-sm text-slate-600 mb-4">Update the charge slip with the latest information</p>
-          
-          <Button 
-            onClick={handleSave}
-            className="bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#145a9b] hover:to-[#362f8f] text-white font-medium px-6 py-2 rounded-lg transition-all duration-200 shadow-lg"
-          >
-            Save Changes
-          </Button>
-        </div>
       </div>
 
       {/* ── Delete receipt confirmation dialog ── */}
