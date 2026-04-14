@@ -11,7 +11,7 @@ import {
 } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useEffect } from "react";
-import { collectionGroup, onSnapshot, query, where } from "firebase/firestore";
+import { collection, collectionGroup, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Input } from "@/components/ui/input";
 import {
@@ -97,6 +97,17 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     } catch { return new Set(); }
   });
 
+  // Real-time set of charge slip numbers with status "pending" from Firestore.
+  // Overrides the static server-fetched `data` so OR-uploaded rows move to top instantly.
+  const [pendingCsNums, setPendingCsNums] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const q = query(collection(db, "chargeSlips"), where("status", "==", "pending"));
+    const unsub = onSnapshot(q, (snap) => {
+      setPendingCsNums(new Set(snap.docs.map((d) => d.id)));
+    }, (err) => console.error("pendingCsNums listener error:", err));
+    return () => unsub();
+  }, []);
+
   // Subscribe to unacknowledged official receipts so we can highlight those rows
   useEffect(() => {
     const q = query(
@@ -171,11 +182,12 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       const matchesMonth = monthFilter === "all" || (date && (date.getMonth() + 1).toString() === monthFilter);
 
       return matchesSearch && matchesStatus && matchesCategory && matchesYear && matchesMonth;
-    }).map((item) => ({
-      ...item,
-      // Flag OR Pending only when status is explicitly "pending" (client uploaded OR, awaiting admin validation).
-      hasNewOR: item.status === "pending",
-    }));
+    }.map((item) => {
+      // Override status with live Firestore value so "pending" rows appear without a page reload.
+      const livePending = pendingCsNums.has(item.chargeSlipNumber);
+      const liveStatus = livePending ? ("pending" as const) : item.status;
+      return { ...item, status: liveStatus, hasNewOR: livePending };
+    });
 
     // When the user hasn't applied a manual sort, float rows with new ORs to the top,
     // then fall back to chargeSlipNumber descending.
@@ -188,7 +200,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     }
 
     return filtered;
-  }, [data, globalFilter, statusFilter, categoryFilter, yearFilter, monthFilter, newOrCsNumbers, sorting]);
+  }, [data, globalFilter, statusFilter, categoryFilter, yearFilter, monthFilter, newOrCsNumbers, pendingCsNums, sorting]);
 
   // Total Summary for the filtered data
   const filteredTotalValue = useMemo(() => {
