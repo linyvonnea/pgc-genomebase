@@ -150,7 +150,7 @@ function ChargeSlipDetailContent() {
       setRecord(chargeSlipData);
       setDvNumber(chargeSlipData.dvNumber ?? "");
       setNotes(chargeSlipData.notes ?? "");
-      setStatus(chargeSlipData.status ?? "processing");
+      setStatus((chargeSlipData.status ?? "processing").toLowerCase());
 
       const rawDate = chargeSlipData.dateOfOR;
       if (isTimestamp(rawDate)) setDateOfOR(rawDate);
@@ -317,9 +317,10 @@ function ChargeSlipDetailContent() {
           }
         }
       }
-      setOfficialReceipts((prev) => prev.filter((r) => r.id !== receipt.id));
-      // Reset charge slip back to Processing and clear OR fields after receipt removal
-      if (record.id) {
+      const remainingReceipts = officialReceipts.filter((r) => r.id !== receipt.id);
+      setOfficialReceipts(remainingReceipts);
+      // Only reset to Processing when the last receipt is deleted
+      if (record.id && remainingReceipts.length === 0) {
         await updateChargeSlip(record.id, {
           status: "processing",
           orNumber: "",
@@ -355,9 +356,9 @@ function ChargeSlipDetailContent() {
         entityType: "charge_slip",
         entityId: record.referenceNumber || record.chargeSlipNumber,
         entityName: `Charge Slip ${record.chargeSlipNumber}`,
-        description: `Deleted official receipt: ${receipt.fileName || receipt.id} (OR No. ${receipt.orNumber || "—"}). Status reset to Processing.`,
+        description: `Deleted official receipt: ${receipt.fileName || receipt.id} (OR No. ${receipt.orNumber || "—"})${remainingReceipts.length === 0 ? ". Status reset to Processing." : "."}`,
       });
-      toast.success("Receipt deleted. Status reset to Processing.");
+      toast.success(remainingReceipts.length === 0 ? "Receipt deleted. Status reset to Processing." : "Receipt deleted.");
     } catch {
       toast.error("Failed to delete receipt.");
     } finally {
@@ -534,7 +535,7 @@ function ChargeSlipDetailContent() {
                   <SelectContent>
                     {availableStatuses.length > 0 ? (
                       availableStatuses.map((s) => (
-                        <SelectItem key={s.id} value={s.value}>
+                        <SelectItem key={s.id} value={s.value.toLowerCase()}>
                           <div className="flex items-center gap-2">
                             <div 
                               className="w-2 h-2 rounded-full" 
