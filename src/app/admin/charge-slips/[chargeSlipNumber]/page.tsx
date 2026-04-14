@@ -150,7 +150,7 @@ function ChargeSlipDetailContent() {
       setRecord(chargeSlipData);
       setDvNumber(chargeSlipData.dvNumber ?? "");
       setNotes(chargeSlipData.notes ?? "");
-      setStatus(chargeSlipData.status ?? "processing");
+      setStatus((chargeSlipData.status ?? "processing").toLowerCase());
 
       const rawDate = chargeSlipData.dateOfOR;
       if (isTimestamp(rawDate)) setDateOfOR(rawDate);
@@ -304,6 +304,8 @@ function ChargeSlipDetailContent() {
     setDeleting(receipt.id);
     try {
       const pid = record.projectId || (record.project as any)?.pid || "";
+      // Calculate remaining receipts BEFORE removal to decide if status should reset
+      const remainingReceipts = officialReceipts.filter((r) => r.id !== receipt.id);
       // Delete Firestore document (triggers client onSnapshot — removes from client list automatically)
       await deleteDoc(doc(db, "projects", pid, "officialReceipts", receipt.id));
       // Delete file from Firebase Storage
@@ -317,9 +319,9 @@ function ChargeSlipDetailContent() {
           }
         }
       }
-      setOfficialReceipts((prev) => prev.filter((r) => r.id !== receipt.id));
-      // Reset charge slip back to Processing and clear OR fields after receipt removal
-      if (record.id) {
+      setOfficialReceipts(remainingReceipts);
+      // Reset charge slip back to Processing and clear OR fields only when ALL receipts are removed
+      if (record.id && remainingReceipts.length === 0) {
         await updateChargeSlip(record.id, {
           status: "processing",
           orNumber: "",
@@ -534,7 +536,7 @@ function ChargeSlipDetailContent() {
                   <SelectContent>
                     {availableStatuses.length > 0 ? (
                       availableStatuses.map((s) => (
-                        <SelectItem key={s.id} value={s.value}>
+                        <SelectItem key={s.id} value={s.value.toLowerCase()}>
                           <div className="flex items-center gap-2">
                             <div 
                               className="w-2 h-2 rounded-full" 
