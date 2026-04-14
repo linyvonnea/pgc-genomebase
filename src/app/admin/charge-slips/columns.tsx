@@ -23,6 +23,7 @@ import {
 // Badge colors for statuses
 const statusColors: Record<string, string> = {
   processing: "bg-blue-100 text-blue-800",
+  pending: "bg-amber-100 text-amber-800",
   paid: "bg-green-100 text-green-800",
   cancelled: "bg-red-100 text-red-800",
 };
@@ -153,12 +154,13 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     cell: ({ row }) => {
       const raw = String(row.getValue("status") ?? "processing").toLowerCase();
       const color = statusColors[raw] || "bg-gray-100 text-gray-800";
-      const hasNewOR = row.original.hasNewOR;
+      const hasNewOR = raw === "pending" || row.original.hasNewOR;
+      const label = raw === "pending" ? "Pending" : raw.charAt(0).toUpperCase() + raw.slice(1);
 
       return (
         <div className="flex items-center gap-2">
           <Badge className={`capitalize text-[10px] h-5 px-2 ${color} hover:${color} shadow-none`}>
-            {raw}
+            {label}
           </Badge>
           {hasNewOR && (
             <TooltipProvider>
