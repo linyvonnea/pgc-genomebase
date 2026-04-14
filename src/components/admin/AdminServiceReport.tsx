@@ -33,7 +33,7 @@ import {
 import { toast } from "sonner";
 import useAuth from "@/hooks/useAuth";
 import { logActivity } from "@/services/activityLogService";
-import { CheckCircle2, Clock, FileText, Loader2, Trash2, Upload, Download } from "lucide-react";
+import { CheckCircle2, Clock, FileText, Loader2, Trash2, Upload, Download, Paperclip, X } from "lucide-react";
 import { format } from "date-fns";
 import { ServiceReport } from "@/services/serviceReportService";
 
@@ -53,6 +53,7 @@ function formatFileSize(bytes?: number) {
 export default function AdminServiceReport({ projectId }: Props) {
   const { adminInfo } = useAuth();
   const [reports, setReports] = useState<ServiceReport[]>([]);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -72,18 +73,22 @@ export default function AdminServiceReport({ projectId }: Props) {
     return unsub;
   }, [projectId]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
-
     if (file.size > MAX_BYTES) {
       toast.error("File must be 20 MB or less.");
       return;
     }
+    setPendingFile(file);
+  };
 
+  const handleUpload = async () => {
+    const file = pendingFile;
+    if (!file) return;
     setUploading(true);
     setUploadProgress(0);
-
     try {
       const ext = file.name.split(".").pop();
       const uniqueName = `${Date.now()}-${file.name}`;
@@ -128,6 +133,7 @@ export default function AdminServiceReport({ projectId }: Props) {
       });
 
       toast.success(`"${file.name}" uploaded successfully.`);
+      setPendingFile(null);
     } catch (err) {
       console.error("Service report upload error:", err);
       toast.error("Upload failed. Please try again.");
@@ -281,6 +287,31 @@ export default function AdminServiceReport({ projectId }: Props) {
             <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500" />
             <span>Uploading… {uploadProgress}%</span>
           </div>
+        ) : pendingFile ? (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-md px-2.5 py-1.5 min-w-0 flex-1 truncate">
+              <FileText className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+              <span className="truncate font-medium">{pendingFile.name}</span>
+              <span className="text-slate-400 shrink-0">({(pendingFile.size / 1024).toFixed(0)} KB)</span>
+            </div>
+            <Button
+              size="sm"
+              className="h-7 text-xs gap-1 bg-blue-600 hover:bg-blue-700 text-white shrink-0"
+              onClick={handleUpload}
+            >
+              <Upload className="h-3 w-3" />
+              Upload
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 w-7 p-0 text-slate-400 hover:text-red-500 shrink-0"
+              onClick={() => setPendingFile(null)}
+              title="Cancel"
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         ) : (
           <Button
             variant="outline"
@@ -288,8 +319,8 @@ export default function AdminServiceReport({ projectId }: Props) {
             className="h-7 text-xs gap-1.5 border-dashed"
             onClick={() => fileInputRef.current?.click()}
           >
-            <Upload className="h-3 w-3" />
-            Upload Service Report
+            <Paperclip className="h-3 w-3" />
+            Attach Service Report
           </Button>
         )}
       </div>

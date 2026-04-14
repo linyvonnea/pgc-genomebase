@@ -556,16 +556,6 @@ function ChargeSlipDetailContent() {
                   </SelectContent>
                 </Select>
               </div>
-
-              <div>
-                <label className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-2">DV Number</label>
-                <Input 
-                  value={dvNumber} 
-                  onChange={(e) => setDvNumber(e.target.value)}
-                  placeholder="Enter DV number"
-                  className="w-full"
-                />
-              </div>
             </div>
 
             <div className="space-y-4">
@@ -604,16 +594,6 @@ function ChargeSlipDetailContent() {
               </div>
               */}
             </div>
-          </div>
-
-          <div className="mt-6">
-            <label className="text-xs font-medium text-slate-500 uppercase tracking-wide block mb-2">Notes</label>
-            <Textarea 
-              value={notes} 
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add any additional notes or comments..."
-              className="w-full min-h-[100px]"
-            />
           </div>
 
           {/* Official Receipts from Client */}
