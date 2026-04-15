@@ -74,6 +74,16 @@ Philippine Genome Center Visayas
           }
         });
         console.log(`✅ Billing notification email sent to ${slip.clientInfo.email}`);
+
+        // In-app notification
+        await addDoc(collection(db, "clientNotifications"), {
+          recipientEmail,
+          type: "chargeSlip",
+          title: "New Charge Slip Available",
+          body: "Your billing is now available in the client portal. Please review and proceed with payment.",
+          read: false,
+          createdAt: new Date(),
+        });
       } catch (emailError) {
         console.warn("Could not send billing notification email:", emailError);
       }

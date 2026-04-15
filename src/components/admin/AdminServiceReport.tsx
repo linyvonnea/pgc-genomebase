@@ -184,6 +184,16 @@ Philippine Genome Center Visayas`.trim();
               html: emailHtml,
             },
           });
+
+          // In-app notification
+          await addDoc(collection(db, "clientNotifications"), {
+            recipientEmail: clientEmail,
+            type: "serviceReport",
+            title: "Service Report Available",
+            body: "Your service report is now available in the client portal. Please log in to access your results.",
+            read: false,
+            createdAt: new Date(),
+          });
         } catch (emailErr) {
           console.warn("Service report email could not be sent:", emailErr);
         }
