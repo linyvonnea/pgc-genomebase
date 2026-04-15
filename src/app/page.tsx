@@ -16,7 +16,10 @@ import {
   Sparkles,
   ArrowRight,
   Zap,
-  HelpCircle
+  HelpCircle,
+  FileCheck,
+  Upload,
+  BarChart3
 } from "lucide-react";
 
 export default function Home() {
@@ -25,7 +28,7 @@ export default function Home() {
   // Auto-cycle through steps for demonstration
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentStep((prev) => (prev + 1) % 6);
+      setCurrentStep((prev) => (prev + 1) % 7);
     }, 3000);
     return () => clearInterval(interval);
   }, []);
@@ -103,40 +106,41 @@ export default function Home() {
                 <p className="text-sm text-slate-600">Follow these simple steps</p>
               </div>
             
-              <div className="space-y-3 lg:space-y-4">
+              <div className="space-y-1.5 lg:space-y-2">
                 {[
-                  { icon: Mail, title: "Sign in with Google", description: "Your account will be used to communicate with PGC Visayas", color: "text-[#166FB5]" },
-                  { icon: FileText, title: "Submit Inquiry Form", description: "Indicate services or objectives", color: "text-[#F69122]" },
-                  { icon: Clock, title: "Wait for Response", description: "Receive a quotation or follow-up via email", color: "text-[#B9273A]" },
-                  { icon: UserCheck, title: "Get Approved", description: "PGC will send credentials (Inquiry ID) to your email", color: "text-[#912ABD]" },
-                  { icon: FileText, title: "Complete Forms", description: "Log in and fill out Client and Project info", color: "text-[#6E308E]" },
-                  { icon: CreditCard, title: "Receive Charge Slip", description: "It will be sent via email", color: "text-[#4038AF]" }
+                  { icon: FileText, title: "Submit an Inquiry", description: "Enter your research and service details.", color: "text-[#166FB5]" },
+                  { icon: Clock, title: "Wait for Assessment", description: "Receive your quotation.", color: "text-[#F69122]" },
+                  { icon: CheckCircle, title: "Confirm and Proceed", description: "Approve the quote and proceed with the service", color: "text-[#B9273A]" },
+                  { icon: FileCheck, title: "Submit Sample Information", description: "Send the Sample Submission Form", color: "text-[#912ABD]" },
+                  { icon: CreditCard, title: "Receive Charge Slip", description: "Settle payment while sample processing begins", color: "text-[#6E308E]" },
+                  { icon: Upload, title: "Upload Official Receipt", description: "Upload proof of payment", color: "text-[#166FB5]" },
+                  { icon: BarChart3, title: "Receive Service Reports", description: "Access your results", color: "text-[#4038AF]" }
                 ].map((step, index) => {
                   const IconComponent = step.icon;
                   const isActive = index === currentStep;
                   return (
                     <div 
                       key={index} 
-                      className={`flex items-start gap-4 p-2 lg:p-3 rounded-lg transition-all duration-300 relative ${
+                      className={`flex items-start gap-3 p-1.5 lg:p-2 rounded-lg transition-all duration-300 relative ${
                         isActive 
-                          ? 'bg-gradient-to-r from-[#F69122]/10 to-[#912ABD]/10 scale-[1.02] shadow-sm' 
+                          ? 'bg-gradient-to-r from-[#F69122]/10 to-[#912ABD]/10 scale-[1.01] shadow-sm' 
                           : 'hover:bg-slate-50'
                       }`}
                     >
-                      <div className={`w-7 h-7 lg:w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                      <div className={`w-6 h-6 lg:w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
                         isActive ? 'bg-gradient-to-r from-[#F69122] to-[#912ABD]' : 'bg-slate-100'
                       }`}>
-                        <IconComponent className={`h-3 w-3 lg:h-4 w-4 ${isActive ? 'text-white' : step.color}`} />
+                        <IconComponent className={`h-2.5 w-2.5 lg:h-3.5 w-3.5 ${isActive ? 'text-white' : step.color}`} />
                       </div>
                       <div className="flex-1 min-w-0 pr-4">
-                        <h3 className={`text-sm lg:text-base font-medium ${isActive ? 'text-slate-800' : 'text-slate-600'}`}>
+                        <h3 className={`text-xs lg:text-sm font-medium ${isActive ? 'text-slate-800' : 'text-slate-600'}`}>
                           {step.title}
                         </h3>
-                        <p className="text-[10px] lg:text-sm text-slate-500 leading-tight lg:leading-relaxed">
+                        <p className="text-[9px] lg:text-[12px] text-slate-500 leading-tight lg:leading-tight">
                           {step.description}
                         </p>
                       </div>
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] lg:text-xs font-bold text-slate-300">
+                      <span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[9px] lg:text-[11px] font-bold text-slate-300">
                         {index + 1}
                       </span>
                     </div>
