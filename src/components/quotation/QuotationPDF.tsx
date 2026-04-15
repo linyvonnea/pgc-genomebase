@@ -213,6 +213,7 @@ export function QuotationPDF({
               else if (name.includes("ALBERT") && name.includes("NOBLEZADA")) signatureSrc = "/assets/signature_noblezada.png";
               else if (name.includes("CAMILLE") && name.includes("MUEDA")) signatureSrc = "/assets/signature_mueda.png";
               else if (name.includes("MICAH") && name.includes("LOJERA")) signatureSrc = "/assets/signature_lojera.png";
+              else if (name.includes("JASMINE") && name.includes("VELO")) signatureSrc = "/assets/signature_velo.png";
               else if (name.includes("KARL") && name.includes("TENIZO")) signatureSrc = "/assets/signature_tenizo.png";
               else if (name.includes("VICTOR") && name.includes("FERRIOLS")) signatureSrc = "/assets/signature_ferriols.png";
 
