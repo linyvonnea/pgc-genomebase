@@ -21,6 +21,7 @@ export interface HeaderProps {
   } | null;
   onLogout?: () => void;
   menuVisibility?: PortalFeatureVisibility;
+  extras?: React.ReactNode;
 }
 
 export default function Header({
@@ -28,6 +29,7 @@ export default function Header({
   onLogout,
   showNavigation = true,
   menuVisibility,
+  extras,
 }: HeaderProps) {
   const menuFlags = menuVisibility ?? {
     clientMenuSettings: true,
@@ -65,7 +67,10 @@ export default function Header({
 
           {/* User Dropdown Section */}
           {showNavigation && user && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              {/* Extra slot: FAQs button, notification bell, etc. */}
+              {extras}
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
@@ -98,13 +103,6 @@ export default function Header({
                       <span className="font-medium">About</span>
                     </DropdownMenuItem>
                   )}
-
-                  <Link href="/faqs" target="_blank">
-                    <DropdownMenuItem className="flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer text-slate-700 hover:bg-slate-50 transition-colors">
-                      <HelpCircle className="w-4 h-4 text-blue-600" />
-                      <span className="font-medium">Direct to FAQs</span>
-                    </DropdownMenuItem>
-                  </Link>
                   
                   <DropdownMenuSeparator className="my-1.5 bg-slate-100" />
                   

@@ -72,6 +72,16 @@ Philippine Genome Center Visayas
             }
           });
           console.log(`✅ Quotation availability email sent to ${inquiry.email}`);
+
+          // In-app notification
+          await addDoc(collection(db, "clientNotifications"), {
+            recipientEmail: inquiry.email,
+            type: "quotation",
+            title: "Quotation Available",
+            body: "Your quotation is now available in the client portal. Please review it at your convenience.",
+            read: false,
+            createdAt: new Date(),
+          });
         }
       } catch (statusError) {
         console.warn("Could not handle inquiry update or email:", statusError);

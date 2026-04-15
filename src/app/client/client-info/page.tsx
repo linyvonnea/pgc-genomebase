@@ -3153,18 +3153,7 @@ export default function ClientPortalPage() {
         )}
       </div>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-slate-100">
-        <button
-          onClick={() => router.push("/portal")}
-          className="w-full flex items-center gap-3 px-4 py-3 text-[#B9273A] bg-red-50 hover:bg-red-100/80 rounded-xl transition-colors group"
-        >
-          <div className="p-1.5 bg-white rounded-lg shadow-sm group-hover:scale-105 transition-transform">
-             <LogOut className="h-4 w-4" />
-          </div>
-          <span className="font-semibold text-sm">Exit Portal</span>
-        </button>
-      </div>
+      {/* Footer deleted as requested */}
     </div>
   );
 

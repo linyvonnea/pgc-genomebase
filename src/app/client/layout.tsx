@@ -6,12 +6,13 @@ import { useRouter, usePathname } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import Header from "@/components/ui/header";
 import Link from "next/link";
-import { HelpCircle, LogOut } from "lucide-react";
+import { HelpCircle } from "lucide-react";
 import {
   DEFAULT_PORTAL_FEATURES,
   getConfigurationSettings,
 } from "@/services/configurationSettingsService";
 import { ConfigurationSettings } from "@/types/ConfigurationSettings";
+import ClientNotificationBell from "@/components/client/ClientNotificationBell";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, signIn, signOut, loading } = useAuth();
@@ -63,31 +64,26 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         user={user}
         onLogout={signOut}
         menuVisibility={configSettings?.portalFeatures ?? DEFAULT_PORTAL_FEATURES}
+        extras={
+          <div className="flex items-center gap-1">
+            {/* Notification Bell */}
+            <ClientNotificationBell userEmail={user.email} />
+
+            {/* FAQs shortcut */}
+            <Link
+              href="/faqs"
+              target="_blank"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:text-[#166FB5] hover:bg-slate-100 rounded-lg transition-colors border border-slate-100"
+              title="Frequently Asked Questions"
+            >
+              <HelpCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">FAQs</span>
+            </Link>
+          </div>
+        }
       />
       <main className="flex-1 overflow-y-auto relative">
         {children}
-        
-        {/* Floating Controls - Bottom Left */}
-        <div className="fixed bottom-6 left-6 z-[60] flex items-center gap-3">
-          {/* Exit Portal Button - Matched size with FAQs */}
-          <button
-            onClick={signOut}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#EA580C] text-white rounded-full shadow-lg shadow-orange-200/50 hover:bg-[#C2410C] transition-all group active:scale-95"
-          >
-            <LogOut className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-            <span className="text-sm font-bold tracking-wide">Exit Portal</span>
-          </button>
-
-          {/* FAQs Button - Secondary */}
-          <Link
-            href="/faqs"
-            target="_blank"
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-full shadow-md text-[#166FB5] hover:bg-slate-50 hover:border-[#166FB5] transition-all group"
-          >
-            <HelpCircle className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-            <span className="text-sm font-bold">FAQs</span>
-          </Link>
-        </div>
       </main>
     </div>
   );

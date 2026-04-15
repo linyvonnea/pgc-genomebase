@@ -338,7 +338,11 @@ export default function FloatingChatWidget({
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={toggleOpen}
-        className="relative flex items-center justify-center p-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+        className={`relative flex items-center justify-center p-4 text-white rounded-full shadow-lg transition-colors ${
+          !isOpen && unreadCount > 0
+            ? "bg-blue-600 hover:bg-blue-700 ring-4 ring-blue-300 ring-offset-1 animate-pulse"
+            : "bg-blue-600 hover:bg-blue-700"
+        }`}
       >
         {isOpen ? (
           <ChevronDown className="w-6 h-6" />
@@ -348,9 +352,13 @@ export default function FloatingChatWidget({
 
         {/* Unread Badge outside */}
         {!isOpen && unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-sm ring-2 ring-white">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
+          <>
+            <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-sm ring-2 ring-white z-10">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+            {/* Outer ping ring for flashing effect */}
+            <span className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-red-400 animate-ping opacity-60 pointer-events-none" />
+          </>
         )}
       </motion.button>
     </div>
