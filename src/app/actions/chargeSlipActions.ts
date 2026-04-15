@@ -34,7 +34,7 @@ export async function saveChargeSlipAction(
               
               <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border-left: 4px solid #1e3a8a; margin: 15px 0;">
                 <h3 style="margin-top: 0; color: #1e3a8a; font-size: 14px; margin-bottom: 8px;">Next Steps</h3>
-                <p style="margin-bottom: 12px; font-size: 14px;">View your billing details and complete payment via the Client Portal.</p>
+                <p style="margin-bottom: 12px; font-size: 14px;">View your billing details and complete payment by following the instructions detailed on the Mode of Payment in our <a href="https://pgc-genomebase.vercel.app/faqs" style="color: #1e3a8a; font-weight: 600; text-decoration: underline;">FAQs</a>.</p>
                 <p style="margin: 0;"><a href="https://pgc-genomebase.vercel.app/portal" style="background-color: #1e3a8a; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 13px;">Access Client Portal</a></p>
               </div>
 
@@ -55,7 +55,7 @@ Dear ${clientName},
 
 Good day. Your billing is now available in your client portal. Kindly review the details and proceed with payment at your convenience. For available modes of payment and step-by-step instructions, please refer to our FAQs (https://pgc-genomebase.vercel.app/faqs).
 
-To view your billing details and make payment, please access your Client Portal: https://pgc-genomebase.vercel.app/portal
+To view your billing details and complete payment by following the instructions detailed on the Mode of Payment in our FAQs (https://pgc-genomebase.vercel.app/faqs), please access your Client Portal: https://pgc-genomebase.vercel.app/portal
 
 Once payment has been completed, please send us a copy of the official receipt for verification. Kindly note that results will be released upon confirmation of payment.
 
