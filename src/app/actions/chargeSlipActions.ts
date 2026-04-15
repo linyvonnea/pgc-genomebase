@@ -30,15 +30,15 @@ export async function saveChargeSlipAction(
             <div style="background-color: #f1f5f9; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
               <h2 style="color: #1e3a8a; margin-top: 0;">Billing/Invoice: PGC Visayas</h2>
               <p>Dear ${clientName},</p>
-              <p>Good day. Your billing is now available in your client portal. Kindly review the details and proceed with payment at your convenience. For available modes of payment and step-by-step instructions, please refer to our <a href="https://pgc-genomebase.vercel.app/faqs" style="color: #1e3a8a; font-weight: 600; text-decoration: underline;">FAQs</a>.</p>
+              <p>Good day. Your billing is now available in your client portal. Kindly review the details and proceed with payment at your convenience. For payment instructions, please refer to our <a href="https://firebasestorage.googleapis.com/v0/b/pgc-genomebase.appspot.com/o/documents%2Fmode_of_payment.pdf?alt=media" style="color: #1e3a8a; font-weight: 600; text-decoration: underline;">Mode of Payment</a>.</p>
               
               <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border-left: 4px solid #1e3a8a; margin: 15px 0;">
                 <h3 style="margin-top: 0; color: #1e3a8a; font-size: 14px; margin-bottom: 8px;">Next Steps</h3>
-                <p style="margin-bottom: 12px; font-size: 14px;">View your billing details and complete payment by following the instructions detailed on the Mode of Payment in our <a href="https://pgc-genomebase.vercel.app/faqs" style="color: #1e3a8a; font-weight: 600; text-decoration: underline;">FAQs</a>.</p>
+                <p style="margin-bottom: 12px; font-size: 14px;">View your billing details and complete payment by following the instructions detailed on the <a href="https://firebasestorage.googleapis.com/v0/b/pgc-genomebase.appspot.com/o/documents%2Fmode_of_payment.pdf?alt=media" style="color: #1e3a8a; font-weight: 600; text-decoration: underline;">Mode of Payment</a>.</p>
                 <p style="margin: 0;"><a href="https://pgc-genomebase.vercel.app/portal" style="background-color: #1e3a8a; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 13px;">Access Client Portal</a></p>
               </div>
 
-              <p>Once payment has been completed, please send us a copy of the official receipt for verification. <strong>Kindly note that results will be released upon confirmation of payment.</strong></p>
+              <p>Once payment has been completed, please upload the official receipt requested from the UPV Cash Office through the portal for verification. <strong>Kindly note that results will be released upon confirmation of payment.</strong></p>
               
               <p>If you have any questions regarding the billing or encounter any issues with the portal, please feel free to reach out. We look forward to working with you.</p>
               
@@ -53,11 +53,11 @@ Billing/Invoice: PGC Visayas
 
 Dear ${clientName},
 
-Good day. Your billing is now available in your client portal. Kindly review the details and proceed with payment at your convenience. For available modes of payment and step-by-step instructions, please refer to our FAQs (https://pgc-genomebase.vercel.app/faqs).
+Good day. Your billing is now available in your client portal. Kindly review the details and proceed with payment at your convenience. For payment instructions, please refer to our Mode of Payment: https://firebasestorage.googleapis.com/v0/b/pgc-genomebase.appspot.com/o/documents%2Fmode_of_payment.pdf?alt=media
 
-To view your billing details and complete payment by following the instructions detailed on the Mode of Payment in our FAQs (https://pgc-genomebase.vercel.app/faqs), please access your Client Portal: https://pgc-genomebase.vercel.app/portal
+To view your billing details and complete payment by following the instructions detailed on the Mode of Payment (https://firebasestorage.googleapis.com/v0/b/pgc-genomebase.appspot.com/o/documents%2Fmode_of_payment.pdf?alt=media), please access your Client Portal: https://pgc-genomebase.vercel.app/portal
 
-Once payment has been completed, please send us a copy of the official receipt for verification. Kindly note that results will be released upon confirmation of payment.
+Once payment has been completed, please upload the official receipt requested from the UPV Cash Office through the portal for verification. Kindly note that results will be released upon confirmation of payment.
 
 If you have any questions regarding the billing or encounter any issues with the portal, please feel free to reach out. We look forward to working with you.
 
