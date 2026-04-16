@@ -313,17 +313,12 @@ export default function QuotationRequestForm() {
     })
     
     try {
-      // Create a document ID first for better storage organization
-      const inquiryRef = doc(collection(db, "inquiries"));
-      const inquiryId = inquiryRef.id;
-
       // Upload methodology file if one was selected
       let methodologyFileUrl = pendingData.methodologyFileUrl || ""
       if (methodologyFile) {
         setIsUploadingFile(true)
         try {
-          // Use the pre-generated inquiry ID as the folder name
-          methodologyFileUrl = await uploadFile(methodologyFile, `methodology-files/${inquiryId}`)
+          methodologyFileUrl = await uploadFile(methodologyFile, 'methodology-files')
         } catch (uploadErr: any) {
           toast.dismiss()
           toast.error("Failed to upload methodology file", {
@@ -341,7 +336,6 @@ export default function QuotationRequestForm() {
         ...pendingData,
         email: user?.email || "",
         methodologyFileUrl,
-        id: inquiryId, // Pass the pre-generated ID
       }
       
       // Submit to server action
