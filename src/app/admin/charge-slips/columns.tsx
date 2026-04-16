@@ -8,6 +8,8 @@ import { ValidCategory } from "@/types/ValidCategory";
 import { Trash2, FileWarning } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteChargeSlip } from "@/services/chargeSlipService";
+import { storage } from "@/lib/firebase";
+import { ref, listAll, deleteObject } from "firebase/storage";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ChargeSlipButton } from "../clients/ChargeSlipButton";
@@ -62,6 +64,16 @@ const ActionCell = ({ row }: { row: any }) => {
 
     try {
       setIsDeleting(true);
+
+      // Delete associated receipts from Storage: receipts/{projectId}/{chargeSlipNumber}/
+      try {
+        const folderRef = ref(storage, `receipts/${row.original.projectId}/${row.original.chargeSlipNumber}`);
+        const listRes = await listAll(folderRef);
+        await Promise.all(listRes.items.map((item) => deleteObject(item)));
+      } catch (storageErr) {
+        console.warn(`Could not delete receipts folder for ${row.original.chargeSlipNumber}:`, storageErr);
+      }
+
       await deleteChargeSlip(row.original.chargeSlipNumber);
       toast.success("Charge slip deleted successfully");
       router.refresh(); // Tells Next.js to re-fetch Server Components data

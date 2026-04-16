@@ -27,8 +27,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Pencil, Trash2, FileEdit, FileText, Banknote, Briefcase, Save } from "lucide-react";
 import { Project } from "@/types/Project";
-import { db } from "@/lib/firebase";
+import { db, storage } from "@/lib/firebase";
 import { deleteDoc, doc, getDoc, setDoc } from "firebase/firestore";
+import { ref, listAll, deleteObject } from "firebase/storage";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -253,6 +254,17 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       const projectRef = doc(db, "projects", project.pid);
       const projectDoc = await getDoc(projectRef);
       const projectData = projectDoc.data();
+
+      // Delete associated Storage folders
+      for (const basePath of [`serviceReports/${project.pid}`, `client-form-submissions/${project.pid}`]) {
+        try {
+          const folderRef = ref(storage, basePath);
+          const listRes = await listAll(folderRef);
+          await Promise.all(listRes.items.map((item) => deleteObject(item)));
+        } catch (storageErr) {
+          console.warn(`Could not delete storage folder ${basePath}:`, storageErr);
+        }
+      }
 
       await deleteDoc(projectRef);
 
