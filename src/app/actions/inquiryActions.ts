@@ -280,7 +280,7 @@ export async function testEmailSystem() {
  * This function processes form data, transforms it for database storage,
  * saves it to Firestore, and triggers automated email notifications.
  */
-export async function createInquiryAction(inquiryData: InquiryFormData) {
+export async function createInquiryAction(inquiryData: InquiryFormData & { id?: string }) {
   try {
     // Check Firebase configuration first
     if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
@@ -337,7 +337,18 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     };
 
     // Add the inquiry document to the Firestore 'inquiries' collection
-    const docRef = await addDoc(collection(db, "inquiries"), transformedData);
+    let finalInquiryId: string;
+    
+    if (inquiryData.id) {
+      // Use pre-generated ID if provided
+      finalInquiryId = inquiryData.id;
+      const docRef = doc(db, "inquiries", finalInquiryId);
+      await setDoc(docRef, transformedData);
+    } else {
+      // Otherwise let Firestore generate a new ID
+      const docRef = await addDoc(collection(db, "inquiries"), transformedData);
+      finalInquiryId = docRef.id;
+    }
     
     // Log the inquiry creation to activity logs
     await logActivity({
@@ -347,7 +358,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
       userRole: 'client',
       action: 'CREATE',
       entityType: 'inquiry',
-      entityId: docRef.id,
+      entityId: finalInquiryId,
       entityName: inquiryData.name,
       description: `New inquiry request submitted by ${inquiryData.name} (${inquiryData.service})`,
       changesAfter: transformedData,
@@ -355,13 +366,13 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
 
     // Initialize quotation thread for this inquiry and send a welcome message
     try {
-      await initializeQuotationThread(docRef.id);
+      await initializeQuotationThread(finalInquiryId);
       
       // Send the automated welcome message from PGC Visayas Admin
       // type: "system" is intentional — automated messages must NOT count toward adminTextMessageCount
       // so that the first-message email notification fires correctly when a real admin messages next.
       await addThreadMessage({
-        threadId: docRef.id,
+        threadId: finalInquiryId,
         content: "Welcome to PGC Visayas! 👋 Your inquiry has been received. You can use this chat to ask questions about your quotation or clarify your research requirements.",
         senderId: "pgc-admin",
         senderName: "PGC Visayas Admin",
@@ -370,7 +381,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
         isRead: false
       });
     } catch (threadError) {
-      console.error(`⚠️ Failed to initialize quotation thread for inquiry ${docRef.id}:`, threadError);
+      console.error(`⚠️ Failed to initialize quotation thread for inquiry ${finalInquiryId}:`, threadError);
       // Non-fatal — the thread will be auto-created on first message if this fails
     }
 
@@ -381,7 +392,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData) {
     
     // Create base template data that applies to all service types
     let templateData: Record<string, any> = {
-      inquiryId: docRef.id, 
+      inquiryId: finalInquiryId, 
       name: inquiryData.name,
       affiliation: inquiryData.affiliation,
       designation: inquiryData.designation,
