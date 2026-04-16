@@ -31,6 +31,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { CalendarIcon, Paperclip, X, FileText, Loader2 } from "lucide-react"
 import { uploadFile, validateFile } from "@/lib/fileUpload"
+import { db } from "@/lib/firebase"
+import { doc, collection } from "firebase/firestore"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner" 
@@ -1463,19 +1465,6 @@ export default function QuotationRequestForm() {
                 {pendingData.researchOverview && (
                   <div>
                     <span className="font-semibold">Research Overview:</span> {pendingData.researchOverview}
-                  </div>
-                )}
-                {pendingData.methodologyFileUrl && (
-                  <div>
-                    <span className="font-semibold">Methodology File:</span>{" "}
-                    <a 
-                      href={pendingData.methodologyFileUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 underline"
-                    >
-                      View uploaded file
-                    </a>
                   </div>
                 )}
                 {pendingData.sampleCount && (
