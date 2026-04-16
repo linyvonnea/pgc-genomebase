@@ -36,6 +36,7 @@ function ConfigurationsContent() {
   const [settings, setSettings] = useState<ConfigurationSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [emailInputs, setEmailInputs] = useState<Record<string, string>>({});
+  const [receiptEmailInput, setReceiptEmailInput] = useState("");
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -129,6 +130,37 @@ function ConfigurationsContent() {
     });
 
     updateNotificationGroups(groups);
+  };
+
+  const handleAddReceiptRecipient = () => {
+    if (!settings) return;
+    const email = receiptEmailInput.trim().toLowerCase();
+    if (!email) { toast.error("Please enter an email address"); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast.error("Please enter a valid email address"); return; }
+    const current = new Set((settings.receiptNotifications || []).map((e) => e.toLowerCase()));
+    current.add(email);
+    const updated = Array.from(current);
+    setReceiptEmailInput("");
+    updateReceiptNotifications(updated);
+  };
+
+  const handleRemoveReceiptRecipient = (email: string) => {
+    if (!settings) return;
+    const updated = (settings.receiptNotifications || []).filter((e) => e !== email);
+    updateReceiptNotifications(updated);
+  };
+
+  const updateReceiptNotifications = async (emails: string[]) => {
+    if (!settings) return;
+    setSettings({ ...settings, receiptNotifications: emails });
+    try {
+      await updateConfigurationSettings({ receiptNotifications: emails });
+      toast.success("Receipt notification recipients updated");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update receipt notification recipients");
+      setSettings(settings);
+    }
   };
 
   if (loading) {
@@ -275,6 +307,55 @@ function ConfigurationsContent() {
               <Separator />
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Receipt Upload Notifications</CardTitle>
+          <CardDescription>
+            Email addresses that receive an automatic alert when a client uploads an Official Receipt.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap gap-2">
+            {(settings?.receiptNotifications || []).length ? (
+              (settings!.receiptNotifications!).map((email) => (
+                <span
+                  key={email}
+                  className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700"
+                >
+                  {email}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveReceiptRecipient(email)}
+                    className="text-slate-500 hover:text-red-500"
+                    disabled={!canEdit("configurations")}
+                  >
+                    &times;
+                  </button>
+                </span>
+              ))
+            ) : (
+              <p className="text-xs text-slate-400">No recipients configured.</p>
+            )}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              placeholder="Add recipient email"
+              value={receiptEmailInput}
+              onChange={(e) => setReceiptEmailInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddReceiptRecipient(); } }}
+              className="sm:flex-1"
+              disabled={!canEdit("configurations")}
+            />
+            <Button
+              onClick={handleAddReceiptRecipient}
+              disabled={!canEdit("configurations")}
+            >
+              Add recipient
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

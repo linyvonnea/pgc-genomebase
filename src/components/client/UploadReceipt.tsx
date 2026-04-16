@@ -13,6 +13,7 @@ import {
   query,
   deleteDoc,
   doc,
+  getDoc,
   updateDoc,
   Timestamp,
 } from "firebase/firestore";
@@ -341,6 +342,132 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
         description: `Uploaded official receipt: ${pendingFile.name} (OR No. ${orNumber.trim()})`,
       });
       toast.success("Receipt uploaded successfully. Awaiting admin validation.");
+
+      // === EMAIL NOTIFICATION ===
+      // Notify receipt notification recipients (non-blocking, non-critical)
+      if (csNum) {
+        try {
+          const [csSnap, configSnap] = await Promise.all([
+            getDoc(doc(db, "chargeSlips", csNum)),
+            getDoc(doc(db, "settings", "appConfig")),
+          ]);
+
+          const csData = csSnap.exists() ? (csSnap.data() as Record<string, any>) : null;
+          const configData = configSnap.exists() ? (configSnap.data() as Record<string, any>) : null;
+          const recipients: string[] =
+            Array.isArray(configData?.receiptNotifications) && configData.receiptNotifications.length > 0
+              ? configData.receiptNotifications
+              : ["madayon1@up.edu.ph"];
+
+          if (csData) {
+            const clientName = csData.clientInfo?.name || user?.displayName || "Client";
+            const clientEmail = csData.clientInfo?.email || "";
+            const affiliation = csData.clientInfo?.institution || "";
+            const designation = csData.clientInfo?.designation || "";
+            const total: number = csData.total || 0;
+            const services: any[] = csData.services || [];
+
+            const servicesHtml = services.length
+              ? services.map((s: any) => `
+                <tr>
+                  <td style="padding: 4px 0; color: #334155;">${s.name || "—"}</td>
+                  <td style="padding: 4px 0; text-align: right; color: #334155;">${s.quantity ?? 1}</td>
+                  <td style="padding: 4px 0; text-align: right; color: #334155;">&#8369;${(s.price ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
+                </tr>`).join("")
+              : `<tr><td colspan="3" style="color: #94a3b8; font-style: italic;">No services listed</td></tr>`;
+
+            const emailHtml = `
+              <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.5;">
+                <div style="background-color: #f8fafc; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                  <h2 style="color: #1e40af; margin-top: 0; font-size: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
+                    New Receipt Uploaded from ${clientName}
+                  </h2>
+
+                  <div style="margin: 20px 0;">
+                    <p style="margin: 5px 0;"><strong>Name:</strong> ${clientName}</p>
+                    <p style="margin: 5px 0;"><strong>Email:</strong> ${clientEmail}</p>
+                    <p style="margin: 5px 0;"><strong>Affiliation:</strong> ${affiliation}</p>
+                    <p style="margin: 5px 0;"><strong>Designation:</strong> ${designation}</p>
+                  </div>
+
+                  <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; margin: 20px 0;">
+                    <h3 style="margin-top: 0; font-size: 16px; color: #1e40af;">Service Details</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                      <thead>
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                          <th style="padding: 4px 0; text-align: left; color: #64748b; font-weight: 600;">Service</th>
+                          <th style="padding: 4px 0; text-align: right; color: #64748b; font-weight: 600;">Qty</th>
+                          <th style="padding: 4px 0; text-align: right; color: #64748b; font-weight: 600;">Price</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${servicesHtml}
+                      </tbody>
+                    </table>
+
+                    <div style="margin-top: 12px; padding-top: 12px; border-top: 2px solid #e2e8f0; text-align: right;">
+                      <p style="margin: 0; font-size: 16px; font-weight: 700; color: #1e40af;">
+                        Amount Paid: &#8369;${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style="background-color: #f0fdf4; padding: 12px 15px; border-radius: 6px; border: 1px solid #bbf7d0; margin: 20px 0; font-size: 13px;">
+                    <p style="margin: 3px 0;"><strong>Charge Slip No.:</strong> ${csNum}</p>
+                    <p style="margin: 3px 0;"><strong>Project ID:</strong> ${projectId}</p>
+                    <p style="margin: 3px 0;"><strong>OR Number:</strong> ${orNumber.trim()}</p>
+                    <p style="margin: 3px 0;"><strong>OR Date:</strong> ${orDate}</p>
+                    ${downloadURL ? `<p style="margin: 3px 0;"><a href="${downloadURL}" style="color: #1e40af; font-weight: 600;">View Uploaded Receipt</a></p>` : ""}
+                  </div>
+
+                  <div style="margin-top: 20px;">
+                    <a href="https://pgc-genomebase.vercel.app/admin/charge-slips/${csNum}" style="background-color: #1e40af; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 14px;">Review in Admin Panel</a>
+                  </div>
+
+                  <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8;">
+                    <p style="margin: 2px 0;">Submitted: ${new Date().toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+            `;
+
+            const emailText = [
+              `New Receipt Uploaded from ${clientName}`,
+              "",
+              `Name: ${clientName}`,
+              `Email: ${clientEmail}`,
+              `Affiliation: ${affiliation}`,
+              `Designation: ${designation}`,
+              "",
+              "Service Details:",
+              ...services.map((s: any) => `  - ${s.name ?? "Service"} x${s.quantity ?? 1} @ \u20B1${(s.price ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}`),
+              "",
+              `Amount Paid: \u20B1${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+              "",
+              `Charge Slip No.: ${csNum}`,
+              `Project ID: ${projectId}`,
+              `OR Number: ${orNumber.trim()}`,
+              `OR Date: ${orDate}`,
+              "",
+              `Yours in utilizing OMICS for a better Philippines,`,
+              `Philippine Genome Center Visayas`,
+            ].join("\n");
+
+            await addDoc(collection(db, "mail"), {
+              to: recipients,
+              message: {
+                subject: `New Receipt Uploaded from ${clientName}`,
+                html: emailHtml,
+                text: emailText,
+              },
+            });
+          }
+        } catch (emailErr) {
+          console.error("Receipt email notification failed:", emailErr);
+          // Non-critical — upload already succeeded
+        }
+      }
+
       setPendingFile(null);
       setOrNumber("");
       setOrDate("");
