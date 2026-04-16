@@ -30,7 +30,6 @@ import {
   getClientRequestsByInquiry,
   ClientRequest,
 } from "@/services/clientRequestService";
-import { sendProjectApprovalEmail } from "@/app/actions/inquiryActions";
 import { ApprovalStatus } from "@/types/MemberApproval";
 import useAuth from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -435,24 +434,20 @@ export default function MemberApprovalsPage() {
       // Non-critical error, don't throw
     }
 
-    // Send project approval email to the primary member/requester
+    // Send approval email to the primary member (project submitter)
     try {
-      const primaryMember = approval.clientRequests.find(m => m.isPrimary);
-      const recipientEmail = primaryMember?.email || approval.submittedBy;
-      const recipientName = primaryMember?.name || approval.submittedByName || "Valued Client";
-      
-      if (recipientEmail) {
-        await sendProjectApprovalEmail(
-          recipientEmail,
-          recipientName,
-          approval.projectData.title || approval.projectTitle || "Your Project",
-          approval.inquiryId
-        );
-        console.log(`✅ Project approval email sent to ${recipientEmail}`);
-      }
+      const { sendProjectApprovalEmail } = await import("@/app/actions/inquiryActions");
+      await sendProjectApprovalEmail(
+        approval.submittedBy,
+        approval.submittedByName || approval.submittedBy,
+        approval.projectTitle,
+        pid,
+        approval.inquiryId
+      );
+      console.log("✅ Approval email sent to", approval.submittedBy);
     } catch (emailError) {
-      console.error("Error sending project approval email:", emailError);
-      // Non-critical error, don't let it block the UI flow, but log it
+      console.error("Failed to send approval email:", emailError);
+      // Non-critical — approval itself succeeded; don't block the flow
     }
 
     // Success message
