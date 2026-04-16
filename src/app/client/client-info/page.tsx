@@ -688,7 +688,7 @@ export default function ClientPortalPage() {
         
         if (primaryDraftRequest) {
             primaryMember = {
-                id: "primary",
+                id: primaryDraftRequest.id || "primary",
                 cid: "draft",
                 formData: {
                   name: primaryDraftRequest.name || "",
@@ -1174,7 +1174,7 @@ export default function ClientPortalPage() {
         // For draft projects, save ALL members to clientRequests collection
         // Primary member: if an existing clientRequests doc exists (member.id), update it instead of creating a new doc
         let savedId: string;
-        if (member.isPrimary && pendingMemberId && !pendingMemberId.startsWith("draft-") && !pendingMemberId.startsWith("request-")) {
+        if (member.isPrimary && pendingMemberId && pendingMemberId !== "primary" && !pendingMemberId.startsWith("draft-") && !pendingMemberId.startsWith("request-")) {
           // Update existing clientRequests document
           const docRef = doc(db, "clientRequests", pendingMemberId);
           await setDoc(docRef, {
@@ -1395,7 +1395,7 @@ export default function ClientPortalPage() {
         // For draft projects, save to clientRequests collection (without validation)
         // Primary member: if existing clientRequests doc exists, update it instead of creating new
         let savedIdDraft: string;
-        if (member.isPrimary && memberId && !memberId.startsWith("draft-") && !memberId.startsWith("request-")) {
+        if (member.isPrimary && memberId && memberId !== "primary" && !memberId.startsWith("draft-") && !memberId.startsWith("request-")) {
           const docRef = doc(db, "clientRequests", memberId);
           await setDoc(docRef, {
             inquiryId: inquiryIdParam,
