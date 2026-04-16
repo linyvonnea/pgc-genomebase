@@ -1242,26 +1242,25 @@ export async function sendProjectCancellationEmail(
 }
 
 /**
- * Sends an email notification to the client when their project and team members are approved.
- * 
- * @param clientEmail - Recipient email
- * @param clientName - Recipient name
- * @param projectName - The name of the approved project
- * @param inquiryId - Associated inquiry document ID
+ * Send an approval + next-steps email to the client when their project is approved
+ * and CIDs have been generated.
  */
 export async function sendProjectApprovalEmail(
   clientEmail: string,
   clientName: string,
   projectName: string,
+  projectPid: string,
   inquiryId: string
 ) {
   try {
-    const { collection, doc, setDoc, serverTimestamp } = await import("firebase/firestore");
+    const { collection, doc, setDoc } = await import("firebase/firestore");
     const { db } = await import("@/lib/firebase");
+
+    const portalUrl = "https://pgc-genomebase.vercel.app/portal";
 
     const emailHtml = `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-        <!-- Header with Logo -->
+        <!-- Header -->
         <div style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); padding: 30px 20px; text-align: center;">
           <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.025em;">PGC Visayas</h1>
           <p style="color: rgba(255, 255, 255, 0.9); margin: 8px 0 0 0; font-size: 14px;">Project Approval and Next Steps</p>
@@ -1269,24 +1268,44 @@ export async function sendProjectApprovalEmail(
 
         <div style="padding: 32px 24px; color: #334155; line-height: 1.6;">
           <p style="margin: 0 0 20px 0; font-size: 16px;">Dear <strong>${clientName}</strong>,</p>
-          
-          <p style="margin: 0 0 20px 0;">Thank you for confirming your intent to avail of our services. Your project, "<strong>${projectName}</strong>," has been approved, and we’re pleased to have you on board!</p>
-          
-          <p style="margin: 0 0 16px 0;">To proceed, kindly complete the sample submission form directly through your client portal for the samples you will be submitting:</p>
 
-          <div style="background-color: #f0f9ff; border-radius: 8px; padding: 20px; margin-bottom: 24px; border: 1px solid #bae6fd;">
-            <ol style="margin: 0; padding-left: 20px; color: #0369a1;">
-              <li style="margin-bottom: 8px;">Navigate to your approved project under the <strong>"My Projects"</strong> section.</li>
-              <li style="margin-bottom: 8px;">Make sure to read the <strong>Sample Submission Requirements</strong>.</li>
-              <li style="margin-bottom: 8px;">Download the <strong>Sample Submission Form</strong> and fill it out with your sample details.</li>
-              <li style="margin-bottom: 0;">Upload the sample submission form and <strong>"Submit"</strong> to finalize.</li>
+          <p style="margin: 0 0 20px 0;">
+            Thank you for confirming your intent to avail of our services. Your project,
+            <strong>&ldquo;${projectName}&rdquo;</strong> (Project ID: <code style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 13px;">${projectPid}</code>),
+            has been <strong style="color: #16a34a;">approved</strong>, and we&rsquo;re pleased to have you on board!
+          </p>
+
+          <!-- Next Steps Box -->
+          <div style="background-color: #f0fdf4; border-left: 4px solid #16a34a; border-radius: 4px; padding: 20px 20px 8px 20px; margin-bottom: 24px;">
+            <h3 style="margin: 0 0 14px 0; font-size: 15px; color: #15803d; text-transform: uppercase; letter-spacing: 0.05em;">Next Steps</h3>
+            <p style="margin: 0 0 12px 0;">
+              To proceed, kindly complete the <strong>Sample Submission Form</strong> directly through your client portal
+              for the samples you will be submitting:
+            </p>
+            <ol style="margin: 0 0 12px 0; padding-left: 20px; line-height: 1.9;">
+              <li>Navigate to your approved project under the <strong>&ldquo;My Projects&rdquo;</strong> section.</li>
+              <li>Make sure to read the <strong>Sample Submission Requirements</strong>.</li>
+              <li>Download the <strong>Sample Submission Form</strong> and fill it out with your sample details.</li>
+              <li>Upload the completed form and click <strong>&ldquo;Submit&rdquo;</strong> to finalise.</li>
             </ol>
+            <p style="margin: 0 0 12px 0;">
+              Once your submission is received, we will coordinate with you regarding the
+              physical drop-off or shipping of your samples.
+            </p>
           </div>
-          
-          <p style="margin: 0 0 20px 0;">Once your submission is received, we will coordinate with you regarding the physical drop-off or shipping of your samples.</p>
-          
-          <p style="margin: 0 0 32px 0;">If you encounter any issues accessing the portal or have questions about the submission requirements, please do not hesitate to reach out. We look forward to working with you!</p>
-          
+
+          <p style="margin: 0 0 20px 0;">
+            You may access your client portal here:&nbsp;
+            <a href="${portalUrl}" style="color: #2563eb; font-weight: 600; text-decoration: none;">${portalUrl}</a>
+          </p>
+
+          <p style="margin: 0 0 20px 0;">
+            If you encounter any issues accessing the portal or have questions about the submission
+            requirements, please do not hesitate to reach out via the <strong>portal chat box</strong> or
+            check our <a href="https://pgc-genomebase.vercel.app/faqs" style="color: #2563eb; text-decoration: none;">FAQs</a>.
+            We look forward to working with you!
+          </p>
+
           <div style="border-top: 1px solid #f1f5f9; padding-top: 24px;">
             <p style="margin: 0; color: #64748b; font-size: 14px;">Yours in utilizing OMICS for a better Philippines,</p>
             <p style="margin: 4px 0 0 0; color: #1e40af; font-weight: 700; font-size: 16px;">Philippine Genome Center Visayas</p>
@@ -1300,27 +1319,48 @@ export async function sendProjectApprovalEmail(
       </div>
     `;
 
+    const emailText = `Dear ${clientName},
+
+Thank you for confirming your intent to avail of our services. Your project, "${projectName}" (Project ID: ${projectPid}), has been approved, and we're pleased to have you on board!
+
+To proceed, kindly complete the Sample Submission Form directly through your client portal for the samples you will be submitting:
+
+1. Navigate to your approved project under the "My Projects" section.
+2. Make sure to read the Sample Submission Requirements.
+3. Download the Sample Submission Form and fill it out with your sample details.
+4. Upload the completed form and click "Submit" to finalise.
+
+Once your submission is received, we will coordinate with you regarding the physical drop-off or shipping of your samples.
+
+Access your client portal here: ${portalUrl}
+
+If you encounter any issues accessing the portal or have questions about the submission requirements, please do not hesitate to reach out. We look forward to working with you!
+
+Yours in utilizing OMICS for a better Philippines,
+Philippine Genome Center Visayas`.trim();
+
     const mailDocRef = doc(collection(db, "mail"));
     await setDoc(mailDocRef, {
       to: clientEmail,
       message: {
-        subject: "Project Approval and Next Steps",
+        subject: `Project Approval and Next Steps: ${projectName}`,
+        text: emailText,
         html: emailHtml,
       },
       metadata: {
-        inquiryId: inquiryId,
+        inquiryId,
         type: "project-approval",
-        projectName: projectName
+        projectName,
+        projectPid,
       },
-      createdAt: serverTimestamp()
     });
 
     return { success: true };
   } catch (error) {
     console.error("Error sending project approval email:", error);
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : "Unknown error while sending approval email" 
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error while sending email",
     };
   }
 }
