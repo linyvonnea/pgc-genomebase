@@ -3856,6 +3856,21 @@ export default function ClientPortalPage() {
                                   {currentInquiry.researchOverview ? `"${currentInquiry.researchOverview}"` : "—"}
                                 </div>
                               </div>
+
+                              {/* Methodology File if exists */}
+                              {currentInquiry.methodologyFileUrl && (
+                                <div className="flex items-center gap-2 px-1 pt-2">
+                                  <FileText className="h-4 w-4 text-blue-500" />
+                                  <a 
+                                    href={currentInquiry.methodologyFileUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-xs font-bold text-blue-600 hover:underline"
+                                  >
+                                    View Methodology File
+                                  </a>
+                                </div>
+                              )}
                             </div>
                           ) : (
                             /* Other Services (Research, Training, Retail, etc.) */
