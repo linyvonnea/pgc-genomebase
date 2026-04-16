@@ -439,13 +439,13 @@ export default function MemberApprovalsPage() {
     try {
       const primaryMember = approval.clientRequests.find(m => m.isPrimary);
       const recipientEmail = primaryMember?.email || approval.submittedBy;
-      const recipientName = primaryMember?.name || approval.submittedByName;
+      const recipientName = primaryMember?.name || approval.submittedByName || "Valued Client";
       
       if (recipientEmail) {
         await sendProjectApprovalEmail(
           recipientEmail,
           recipientName,
-          approval.projectData.title || approval.projectTitle,
+          approval.projectData.title || approval.projectTitle || "Your Project",
           approval.inquiryId
         );
         console.log(`✅ Project approval email sent to ${recipientEmail}`);
