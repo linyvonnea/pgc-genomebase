@@ -30,6 +30,7 @@ import {
   getClientRequestsByInquiry,
   ClientRequest,
 } from "@/services/clientRequestService";
+import { sendProjectApprovalEmail } from "@/app/actions/inquiryActions";
 import { ApprovalStatus } from "@/types/MemberApproval";
 import useAuth from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -432,6 +433,26 @@ export default function MemberApprovalsPage() {
     } catch (clientReqError) {
       console.error("Error updating clientRequests status:", clientReqError);
       // Non-critical error, don't throw
+    }
+
+    // Send project approval email to the primary member/requester
+    try {
+      const primaryMember = approval.clientRequests.find(m => m.isPrimary);
+      const recipientEmail = primaryMember?.email || approval.submittedBy;
+      const recipientName = primaryMember?.name || approval.submittedByName;
+      
+      if (recipientEmail) {
+        await sendProjectApprovalEmail(
+          recipientEmail,
+          recipientName,
+          approval.projectData.title || approval.projectTitle,
+          approval.inquiryId
+        );
+        console.log(`✅ Project approval email sent to ${recipientEmail}`);
+      }
+    } catch (emailError) {
+      console.error("Error sending project approval email:", emailError);
+      // Non-critical error, don't let it block the UI flow, but log it
     }
 
     // Success message
