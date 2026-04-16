@@ -49,6 +49,10 @@ export const DEFAULT_INQUIRY_NOTIFICATION_GROUPS: InquiryNotificationGroup[] = [
   },
 ];
 
+export const DEFAULT_RECEIPT_NOTIFICATION_EMAILS: string[] = [
+  "madayon1@up.edu.ph",
+];
+
 export const getDefaultConfigurationSettings = (): ConfigurationSettings => ({
   portalFeatures: { ...DEFAULT_PORTAL_FEATURES },
   inquiryNotifications: DEFAULT_INQUIRY_NOTIFICATION_GROUPS.map((group) => ({
@@ -56,6 +60,7 @@ export const getDefaultConfigurationSettings = (): ConfigurationSettings => ({
     serviceFilters: [...group.serviceFilters],
     recipients: [...group.recipients],
   })),
+  receiptNotifications: [...DEFAULT_RECEIPT_NOTIFICATION_EMAILS],
 });
 
 export async function getConfigurationSettings(): Promise<ConfigurationSettings> {
@@ -85,6 +90,10 @@ export async function getConfigurationSettings(): Promise<ConfigurationSettings>
         (data.inquiryNotifications && data.inquiryNotifications.length > 0)
           ? data.inquiryNotifications
           : defaults.inquiryNotifications,
+      receiptNotifications:
+        Array.isArray(data.receiptNotifications)
+          ? data.receiptNotifications
+          : defaults.receiptNotifications,
     };
   } catch (error) {
     console.error("Error fetching configuration settings:", error);
