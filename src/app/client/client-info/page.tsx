@@ -253,6 +253,26 @@ interface ProjectDetails {
 }
 
 // ────────────────────────────────────────────────────────────────
+//  Helpers
+// ────────────────────────────────────────────────────────────────
+
+/**
+ * Normalise the sex value coming from Firestore.
+ * Firestore may store "M", "F", "O" or "Other" (legacy data uses "O").
+ * The Select component expects exactly "M", "F", or "Other".
+ */
+function normalizeSex(val?: string): "M" | "F" | "Other" | "" {
+  if (!val) return "";
+  const v = val.trim();
+  if (v === "M" || v === "F" || v === "Other") return v;
+  const u = v.toUpperCase();
+  if (u === "M" || u === "MALE") return "M";
+  if (u === "F" || u === "FEMALE") return "F";
+  if (u === "O" || u === "OTHER") return "Other";
+  return "";
+}
+
+// ────────────────────────────────────────────────────────────────
 //  Component
 // ────────────────────────────────────────────────────────────────
 
@@ -626,18 +646,25 @@ export default function ClientPortalPage() {
     // 1. Find Primary Member
     let primaryMember: ClientMember | null = null;
     
-    // Check approved clients FIRST for primary
-    const primaryClientDoc = fetchedClients.find((c: any) => {
+    // Check approved clients FIRST for primary.
+    // Try PID-specific match first; fall back to any approved doc with this email
+    // so that a PID mismatch (race condition / new project context) never drops
+    // a "Complete" member back to Draft.
+    const primaryClientDoc =
+      fetchedClients.find((c: any) => {
         const email = c.email?.toLowerCase();
         if (email !== emailParam?.toLowerCase()) return false;
-        
-        // If we have a selected project, prioritize the doc linked to that project
         if (selectedDetails) {
-            const memberPids = Array.isArray(c.pid) ? c.pid : (c.pid ? [c.pid] : []);
-            return memberPids.includes(selectedDetails.pid);
+          const memberPids = Array.isArray(c.pid) ? c.pid : (c.pid ? [c.pid] : []);
+          return memberPids.includes(selectedDetails.pid);
         }
         return true;
-    });
+      }) ??
+      // Fallback: email-only match – keeps the member "Complete" even when the
+      // PID array hasn't been updated yet or the context is a different project.
+      fetchedClients.find((c: any) =>
+        c.email?.toLowerCase() === emailParam?.toLowerCase() && !!c.haveSubmitted
+      );
     
     if (primaryClientDoc) {
          primaryMember = {
@@ -648,7 +675,7 @@ export default function ClientPortalPage() {
               email: primaryClientDoc.email || emailParam || "",
               affiliation: primaryClientDoc.affiliation || "",
               designation: primaryClientDoc.designation || "",
-              sex: (primaryClientDoc.sex || "M") as any,
+              sex: normalizeSex(primaryClientDoc.sex),
               phoneNumber: primaryClientDoc.phoneNumber || "",
               affiliationAddress: primaryClientDoc.affiliationAddress || "",
             },
@@ -657,7 +684,7 @@ export default function ClientPortalPage() {
               email: primaryClientDoc.email || emailParam || "",
               affiliation: primaryClientDoc.affiliation || "",
               designation: primaryClientDoc.designation || "",
-              sex: (primaryClientDoc.sex || "M") as any,
+              sex: normalizeSex(primaryClientDoc.sex),
               phoneNumber: primaryClientDoc.phoneNumber || "",
               affiliationAddress: primaryClientDoc.affiliationAddress || "",
             },
@@ -695,7 +722,7 @@ export default function ClientPortalPage() {
                   email: primaryDraftRequest.email || emailParam || "",
                   affiliation: primaryDraftRequest.affiliation || "",
                   designation: primaryDraftRequest.designation || "",
-                  sex: (primaryDraftRequest.sex || "") as any,
+                  sex: normalizeSex(primaryDraftRequest.sex),
                   phoneNumber: primaryDraftRequest.phoneNumber || "",
                   affiliationAddress: primaryDraftRequest.affiliationAddress || "",
                 },
@@ -704,7 +731,7 @@ export default function ClientPortalPage() {
                   email: primaryDraftRequest.email || emailParam || "",
                   affiliation: primaryDraftRequest.affiliation || "",
                   designation: primaryDraftRequest.designation || "",
-                  sex: (primaryDraftRequest.sex || "") as any,
+                  sex: normalizeSex(primaryDraftRequest.sex),
                   phoneNumber: primaryDraftRequest.phoneNumber || "",
                   affiliationAddress: primaryDraftRequest.affiliationAddress || "",
                 },
@@ -767,7 +794,7 @@ export default function ClientPortalPage() {
               email: r.email?.includes("@temp.pgc") ? "" : r.email || "",
               affiliation: r.affiliation || "",
               designation: r.designation || "",
-              sex: (r.sex || "") as any,
+              sex: normalizeSex(r.sex),
               phoneNumber: r.phoneNumber || "",
               affiliationAddress: r.affiliationAddress || "",
             },
@@ -776,7 +803,7 @@ export default function ClientPortalPage() {
               email: r.email?.includes("@temp.pgc") ? "" : r.email || "",
               affiliation: r.affiliation || "",
               designation: r.designation || "",
-              sex: (r.sex || "") as any,
+              sex: normalizeSex(r.sex),
               phoneNumber: r.phoneNumber || "",
               affiliationAddress: r.affiliationAddress || "",
             },
@@ -833,7 +860,7 @@ export default function ClientPortalPage() {
                   email: data.email || "",
                   affiliation: data.affiliation || "",
                   designation: data.designation || "",
-                  sex: data.sex || "" as any,
+                  sex: normalizeSex(data.sex),
                   phoneNumber: data.phoneNumber || "",
                   affiliationAddress: data.affiliationAddress || "",
              },
@@ -842,7 +869,7 @@ export default function ClientPortalPage() {
                   email: data.email || "",
                   affiliation: data.affiliation || "",
                   designation: data.designation || "",
-                  sex: data.sex || "" as any,
+                  sex: normalizeSex(data.sex),
                   phoneNumber: data.phoneNumber || "",
                   affiliationAddress: data.affiliationAddress || "",
              },
