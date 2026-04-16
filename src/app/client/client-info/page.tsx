@@ -666,6 +666,9 @@ export default function ClientPortalPage() {
     // 1. Find Primary Member
     let primaryMember: ClientMember | null = null;
     
+    // Log for debugging
+    console.log("Merging members logic - clientsLoadedRef:", clientsLoadedRef.current, "fetchedClients count:", fetchedClients.length);
+    
     // Check approved clients FIRST for primary.
     // Try PID-specific match first; fall back to any approved doc with this email
     // so that a PID mismatch (race condition / new project context) never drops
@@ -687,6 +690,7 @@ export default function ClientPortalPage() {
       );
     
     if (primaryClientDoc) {
+         console.log("Found primary from approved clients docs:", primaryClientDoc.id);
          primaryMember = {
             id: "primary",
             cid: primaryClientDoc.id,
@@ -712,8 +716,8 @@ export default function ClientPortalPage() {
             isSubmitted: !!primaryClientDoc.haveSubmitted,
             isPrimary: true,
         };
-    } else if (clientsLoadedRef.current) {
-        // Only check drafts once the clients subscription has fired (even if empty).
+    } else if (clientsLoadedRef.current || fetchedClients.length > 0) {
+        // Only check drafts once the clients subscription has fired (even if empty) OR if we already have clients.
         // This prevents briefly showing Draft/empty-sex while fetchedClients is still loading.
         // Prioritize draft for the current project if we have an ID
         const primaryDraftRequest = fetchedClientRequests.find(r => {
@@ -735,6 +739,7 @@ export default function ClientPortalPage() {
         });
         
         if (primaryDraftRequest) {
+            console.log("Fallback: Found primary from draft requests:", primaryDraftRequest.id);
             primaryMember = {
                 id: primaryDraftRequest.id || "primary",
                 cid: "draft",
@@ -765,7 +770,8 @@ export default function ClientPortalPage() {
         }
     }
 
-    if (!primaryMember && emailParam) {
+    if (!primaryMember && emailParam && clientsLoadedRef.current) {
+         console.log("No primary found after loading clients, creating default pending primary");
          primaryMember = {
             id: "primary",
             cid: "pending",
