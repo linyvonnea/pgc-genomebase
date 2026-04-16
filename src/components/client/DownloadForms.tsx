@@ -358,8 +358,8 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                   </div>
                 )}
 
-                {/* Upload button — hidden while a pending (unacknowledged) file exists */}
-                {!hasPendingUpload && (
+                {/* Upload button — hidden while a pending (unacknowledged) file exists, and hidden for read-only forms */}
+                {!hasPendingUpload && form.formKey !== "ssreq" && (
                 <div className="flex items-center gap-2 flex-wrap">
                   <input
                     type="file"
