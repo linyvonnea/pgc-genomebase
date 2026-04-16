@@ -1116,7 +1116,7 @@ export default function ClientPortalPage() {
               ...member,
               formData: { ...member.formData, [field]: value },
               isSubmitted: false,
-              errors: { ...member.errors, [field]: undefined },
+              errors: (({ [field]: _removed, ...rest }) => rest)(member.errors),
             }
           : member
       )
@@ -2085,7 +2085,7 @@ export default function ClientPortalPage() {
         label: member.isDraft ? "Ready" : "Complete",
         color: member.isDraft ? "bg-blue-500" : "bg-green-500",
       };
-    if (Object.keys(member.errors).length > 0)
+    if (Object.values(member.errors).some(Boolean))
       return { label: "Needs Attention", color: "bg-red-500" };
     return { label: "Draft", color: "bg-yellow-500" };
   };
@@ -2934,8 +2934,9 @@ export default function ClientPortalPage() {
                                         onClick={(e) => e.stopPropagation()}
                                       >
                                         {/* Header — always visible */}
-                                        <div className="flex items-center justify-between gap-2 p-2.5 flex-wrap">
-                                          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                                        <div className="p-2.5 space-y-1">
+                                          {/* Row 1: CS number + status badge */}
+                                          <div className="flex items-center gap-1.5 flex-wrap">
                                             <a
                                               href={`/client/view-document?type=charge-slip&ref=${chargeSlip.id}`}
                                               target="_blank"
@@ -2946,19 +2947,6 @@ export default function ClientPortalPage() {
                                               <Receipt className="h-3 w-3 flex-shrink-0" />
                                               {chargeSlip.chargeSlipNumber}
                                             </a>
-                                            <span className="text-[10px] text-slate-500">
-                                              Total:{" "}
-                                              <span className="font-semibold text-slate-800">
-                                                ₱{csTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                              </span>
-                                            </span>
-                                            {csIssuedDate && (
-                                              <span className="text-[10px] text-slate-500">
-                                                Issued: <span className="font-medium text-slate-600">{csIssuedDate}</span>
-                                              </span>
-                                            )}
-                                          </div>
-                                          <div className="flex items-center gap-1.5">
                                             {csPaid ? (
                                               <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
                                                 <CheckCircle2 className="h-2.5 w-2.5" /> Paid
@@ -2974,6 +2962,20 @@ export default function ClientPortalPage() {
                                             ) : (
                                               <span className="inline-flex text-[10px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5">
                                                 Processing
+                                              </span>
+                                            )}
+                                          </div>
+                                          {/* Row 2: Total + Issued */}
+                                          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-500">
+                                            <span>
+                                              Total:{" "}
+                                              <span className="font-semibold text-slate-800">
+                                                ₱{csTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                              </span>
+                                            </span>
+                                            {csIssuedDate && (
+                                              <span>
+                                                Issued: <span className="font-medium text-slate-600">{csIssuedDate}</span>
                                               </span>
                                             )}
                                           </div>
