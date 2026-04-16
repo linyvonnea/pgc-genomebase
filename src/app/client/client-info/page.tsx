@@ -399,6 +399,9 @@ export default function ClientPortalPage() {
   const [submitting, setSubmitting] = useState(false);
   const [activeSavingId, setActiveSavingId] = useState<string | null>(null);
   const savingDraftIdsRef = useRef<Set<string>>(new Set());
+  // Tracks whether the clients Firestore subscription has fired at least once.
+  // Used to prevent falling back to draft data while clients are still loading.
+  const clientsLoadedRef = useRef(false);
 
   // ── Modal state ───────────────────────────────────────────────
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -538,6 +541,7 @@ export default function ClientPortalPage() {
     const clientsQ = query(collection(db, "clients"), where("inquiryId", "==", inquiryIdParam));
     const unsubClients = onSnapshot(clientsQ, (snapshot) => {
         const clients = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+        clientsLoadedRef.current = true;
         setFetchedClients(clients);
         setLoading(false); // Assume data is loaded once clients return (or empty)
     });
@@ -708,8 +712,9 @@ export default function ClientPortalPage() {
             isSubmitted: !!primaryClientDoc.haveSubmitted,
             isPrimary: true,
         };
-    } else {
-        // Only if not found in approved, check drafts
+    } else if (clientsLoadedRef.current) {
+        // Only check drafts once the clients subscription has fired (even if empty).
+        // This prevents briefly showing Draft/empty-sex while fetchedClients is still loading.
         // Prioritize draft for the current project if we have an ID
         const primaryDraftRequest = fetchedClientRequests.find(r => {
              const emailMatch = r.email.toLowerCase() === emailParam?.toLowerCase();
