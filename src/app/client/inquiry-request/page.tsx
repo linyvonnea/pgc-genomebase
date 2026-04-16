@@ -31,6 +31,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { CalendarIcon, Paperclip, X, FileText, Loader2 } from "lucide-react"
 import { uploadFile, validateFile } from "@/lib/fileUpload"
+import { db } from "@/lib/firebase"
+import { doc, collection } from "firebase/firestore"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner" 
@@ -313,12 +315,17 @@ export default function QuotationRequestForm() {
     })
     
     try {
+      // Create a document ID first for better storage organization
+      const inquiryRef = doc(collection(db, "inquiries"));
+      const inquiryId = inquiryRef.id;
+
       // Upload methodology file if one was selected
       let methodologyFileUrl = pendingData.methodologyFileUrl || ""
       if (methodologyFile) {
         setIsUploadingFile(true)
         try {
-          methodologyFileUrl = await uploadFile(methodologyFile, 'methodology-files')
+          // Use the pre-generated inquiry ID as the folder name
+          methodologyFileUrl = await uploadFile(methodologyFile, `methodology-files/${inquiryId}`)
         } catch (uploadErr: any) {
           toast.dismiss()
           toast.error("Failed to upload methodology file", {
@@ -336,6 +343,7 @@ export default function QuotationRequestForm() {
         ...pendingData,
         email: user?.email || "",
         methodologyFileUrl,
+        id: inquiryId, // Pass the pre-generated ID
       }
       
       // Submit to server action
@@ -1457,19 +1465,6 @@ export default function QuotationRequestForm() {
                 {pendingData.researchOverview && (
                   <div>
                     <span className="font-semibold">Research Overview:</span> {pendingData.researchOverview}
-                  </div>
-                )}
-                {pendingData.methodologyFileUrl && (
-                  <div>
-                    <span className="font-semibold">Methodology File:</span>{" "}
-                    <a 
-                      href={pendingData.methodologyFileUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 underline"
-                    >
-                      View uploaded file
-                    </a>
                   </div>
                 )}
                 {pendingData.sampleCount && (
