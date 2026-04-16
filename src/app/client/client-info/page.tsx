@@ -2933,28 +2933,31 @@ export default function ClientPortalPage() {
                                         className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden"
                                         onClick={(e) => e.stopPropagation()}
                                       >
-                                        {/* Header — always visible; click anywhere except the CS link to toggle */}
-                                        <div
-                                          className="flex items-center justify-between gap-2 p-2.5 cursor-pointer select-none hover:bg-slate-50 transition-colors"
-                                          onClick={() =>
-                                            setExpandedCsIds((prev) => {
-                                              const next = new Set(prev);
-                                              if (next.has(chargeSlip.id!)) next.delete(chargeSlip.id!);
-                                              else next.add(chargeSlip.id!);
-                                              return next;
-                                            })
-                                          }
-                                        >
-                                          <a
-                                            href={`/client/view-document?type=charge-slip&ref=${chargeSlip.id}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-1 text-xs font-semibold text-green-700 hover:underline"
-                                            onClick={(e) => e.stopPropagation()}
-                                          >
-                                            <Receipt className="h-3 w-3 flex-shrink-0" />
-                                            {chargeSlip.chargeSlipNumber}
-                                          </a>
+                                        {/* Header — always visible */}
+                                        <div className="flex items-center justify-between gap-2 p-2.5 flex-wrap">
+                                          <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                                            <a
+                                              href={`/client/view-document?type=charge-slip&ref=${chargeSlip.id}`}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="flex items-center gap-1 text-xs font-semibold text-green-700 hover:underline"
+                                              onClick={(e) => e.stopPropagation()}
+                                            >
+                                              <Receipt className="h-3 w-3 flex-shrink-0" />
+                                              {chargeSlip.chargeSlipNumber}
+                                            </a>
+                                            <span className="text-[10px] text-slate-500">
+                                              Total:{" "}
+                                              <span className="font-semibold text-slate-800">
+                                                ₱{csTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                              </span>
+                                            </span>
+                                            {csIssuedDate && (
+                                              <span className="text-[10px] text-slate-500">
+                                                Issued: <span className="font-medium text-slate-600">{csIssuedDate}</span>
+                                              </span>
+                                            )}
+                                          </div>
                                           <div className="flex items-center gap-1.5">
                                             {csPaid ? (
                                               <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
@@ -2973,37 +2976,18 @@ export default function ClientPortalPage() {
                                                 Processing
                                               </span>
                                             )}
-                                            <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform", expandedCsIds.has(chargeSlip.id!) && "rotate-180")} />
                                           </div>
                                         </div>
 
-                                        {/* Collapsible body */}
-                                        {expandedCsIds.has(chargeSlip.id!) && (
-                                          <div className="px-2.5 pb-2.5 space-y-2 border-t border-slate-100">
-                                            {/* Detail row: total + date */}
-                                            <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-500 pt-2">
-                                              <span>
-                                                Total:{" "}
-                                                <span className="font-semibold text-slate-800">
-                                                  ₱{csTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                </span>
-                                              </span>
-                                              {csIssuedDate && (
-                                                <span>
-                                                  Issued: <span className="font-medium text-slate-600">{csIssuedDate}</span>
-                                                </span>
-                                              )}
-                                            </div>
-
-                                            {/* OR Upload — always available inside expanded charge slip */}
-                                            <UploadReceipt
-                                              projectId={project.pid}
-                                              hasChargeSlip={true}
-                                              chargeSlipNumber={chargeSlip.chargeSlipNumber}
-                                              uploadAllowed={!csPaid && !csCancelled}
-                                            />
-                                          </div>
-                                        )}
+                                        {/* OR Upload — always visible */}
+                                        <div className="px-2.5 pb-2.5">
+                                          <UploadReceipt
+                                            projectId={project.pid}
+                                            hasChargeSlip={true}
+                                            chargeSlipNumber={chargeSlip.chargeSlipNumber}
+                                            uploadAllowed={!csPaid && !csCancelled}
+                                          />
+                                        </div>
                                       </div>
                                     );
                                   })}
@@ -3660,31 +3644,30 @@ export default function ClientPortalPage() {
                         <div className="space-y-2">
                           {inquiryQuotations.map((quote) => {
                             const qCancelled = quote.status === "cancelled";
-                            const qExpanded = expandedQuoteIds.has(quote.referenceNumber);
                             return (
                             <div
                               key={quote.id}
-                              className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden"
+                              className="rounded-xl border border-slate-100 bg-white shadow-sm p-2.5"
                             >
-                              {/* Header — always visible */}
-                              <div
-                                className="flex items-center justify-between gap-2 p-2.5 cursor-pointer select-none hover:bg-slate-50 transition-colors"
-                                onClick={() =>
-                                  setExpandedQuoteIds((prev) => {
-                                    const next = new Set(prev);
-                                    if (next.has(quote.referenceNumber)) next.delete(quote.referenceNumber);
-                                    else next.add(quote.referenceNumber);
-                                    return next;
-                                  })
-                                }
-                              >
-                                <div className="flex items-center gap-1.5 min-w-0">
+                              <div className="flex items-center justify-between gap-2 flex-wrap">
+                                {/* Left: icon + name + totals + status */}
+                                <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
                                   <FileText className="h-3 w-3 text-indigo-500 flex-shrink-0" />
                                   <span className="text-xs font-semibold text-indigo-700 truncate">
                                     {quote.referenceNumber}
                                   </span>
-                                </div>
-                                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                                  <span className="text-[10px] text-slate-500">
+                                    Total:{" "}
+                                    <span className="font-semibold text-slate-800">
+                                      {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(quote.total)}
+                                    </span>
+                                  </span>
+                                  <span className="text-[10px] text-slate-500">
+                                    Issued:{" "}
+                                    <span className="font-medium text-slate-600">
+                                      {new Date(quote.dateIssued).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                    </span>
+                                  </span>
                                   {qCancelled ? (
                                     <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
                                       Cancelled
@@ -3694,54 +3677,32 @@ export default function ClientPortalPage() {
                                       <CheckCircle2 className="h-2.5 w-2.5" /> Selected
                                     </span>
                                   ) : null}
-                                  <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform", qExpanded && "rotate-180")} />
                                 </div>
-                              </div>
-
-                              {/* Collapsible body */}
-                              {qExpanded && (
-                                <div className="px-2.5 pb-2.5 border-t border-slate-100 space-y-2">
-                                  {/* Detail row: total + date */}
-                                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-500 pt-2">
-                                    <span>
-                                      Total:{" "}
-                                      <span className="font-semibold text-slate-800">
-                                        {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(quote.total)}
-                                      </span>
-                                    </span>
-                                    <span>
-                                      Issued:{" "}
-                                      <span className="font-medium text-slate-600">
-                                        {new Date(quote.dateIssued).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                                      </span>
-                                    </span>
-                                  </div>
-                                  {/* Actions */}
-                                  <div className="flex flex-wrap gap-2">
+                                {/* Right: action buttons */}
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => router.push(`/client/view-document?type=quotation&ref=${quote.referenceNumber}`)}
+                                    className="border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold h-8 text-xs"
+                                  >
+                                    View PDF
+                                  </Button>
+                                  {!qCancelled && 
+                                   fetchedApprovedProjects.length === 0 && 
+                                   currentInquiry?.status !== "Cancelled" && 
+                                   currentInquiry?.status !== "Quotation Only" && (
                                     <Button
                                       size="sm"
-                                      variant="outline"
-                                      onClick={() => router.push(`/client/view-document?type=quotation&ref=${quote.referenceNumber}`)}
-                                      className="border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold h-8 text-xs"
+                                      onClick={() => handleProceedWithService(quote.referenceNumber)}
+                                      className="bg-gradient-to-r from-[#166FB5] to-[#4038AF] text-white hover:opacity-90 font-bold h-8 text-xs"
                                     >
-                                      View PDF
+                                      <ArrowRight className="h-3 w-3 mr-1" />
+                                      Proceed with Service
                                     </Button>
-                                    {!qCancelled && 
-                                     fetchedApprovedProjects.length === 0 && 
-                                     currentInquiry?.status !== "Cancelled" && 
-                                     currentInquiry?.status !== "Quotation Only" && (
-                                      <Button
-                                        size="sm"
-                                        onClick={() => handleProceedWithService(quote.referenceNumber)}
-                                        className="bg-gradient-to-r from-[#166FB5] to-[#4038AF] text-white hover:opacity-90 font-bold h-8 text-xs"
-                                      >
-                                        <ArrowRight className="h-3 w-3 mr-1" />
-                                        Proceed with Service
-                                      </Button>
-                                    )}
-                                  </div>
+                                  )}
                                 </div>
-                              )}
+                              </div>
                             </div>
                             );
                           })}
