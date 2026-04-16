@@ -231,8 +231,24 @@ const flattenBioinformaticsDetails = (
 interface ClientMember {
   id: string;
   cid: string;
-  formData: ClientFormData;
-  initialData?: ClientFormData;
+  formData: {
+    name: string;
+    email: string;
+    affiliation: string;
+    designation: string;
+    sex: "M" | "F" | "Other" | "";
+    phoneNumber: string;
+    affiliationAddress: string;
+  };
+  initialData?: {
+    name: string;
+    email: string;
+    affiliation: string;
+    designation: string;
+    sex: "M" | "F" | "Other" | "";
+    phoneNumber: string;
+    affiliationAddress: string;
+  };
   errors: Partial<Record<keyof ClientFormData, string>>;
   isSubmitted: boolean;
   isPrimary: boolean;
@@ -264,7 +280,7 @@ interface ProjectDetails {
 function normalizeSex(val?: string): "M" | "F" | "Other" | "" {
   if (!val) return "";
   const v = val.trim();
-  if (v === "M" || v === "F" || v === "Other") return v;
+  if (v === "M" || v === "F" || v === "Other" || v === "") return v as any;
   const u = v.toUpperCase();
   if (u === "M" || u === "MALE") return "M";
   if (u === "F" || u === "FEMALE") return "F";
