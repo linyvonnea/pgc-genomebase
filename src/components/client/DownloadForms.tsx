@@ -21,9 +21,7 @@ import {
   Upload,
   CheckCircle2,
   Clock,
-  ChevronDown,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
 import useAuth from "@/hooks/useAuth";
@@ -78,7 +76,6 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
   const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
   const [submittedFiles, setSubmittedFiles] = useState<Record<string, SubmittedFile[]>>({});
-  const [expandedUpload, setExpandedUpload] = useState<Set<string>>(new Set());
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   // Load template download URLs
@@ -186,8 +183,6 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
 
     try {
       setUploadingKey(form.formKey);
-      // Auto-expand the panel while uploading so the loader is visible
-      setExpandedUpload((prev) => new Set(prev).add(form.formKey));
 
       const ext = file.name.split(".").pop() || "pdf";
       const timestamp = Date.now();
@@ -242,28 +237,13 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
         const isDownloading = downloadingIdx === i;
         const isUploading = uploadingKey === form.formKey;
         const uploaded = submittedFiles[form.formKey] ?? [];
-        const isUploadExpanded = expandedUpload.has(form.formKey);
         // Hide upload button if any file is still pending admin acknowledgement
         const hasPendingUpload = uploaded.some((f) => !f.acknowledgedByAdmin);
-
-        const toggleUpload = (e: React.MouseEvent) => {
-          e.stopPropagation();
-          setExpandedUpload((prev) => {
-            const next = new Set(prev);
-            if (next.has(form.formKey)) next.delete(form.formKey);
-            else next.add(form.formKey);
-            return next;
-          });
-        };
 
         return (
           <div key={form.formKey} className="rounded-lg border border-slate-100 bg-slate-50 overflow-hidden">
             {/* Clickable header row — click anywhere (except download btn) to toggle upload panel */}
-            <button
-              type="button"
-              onClick={toggleUpload}
-              className="w-full flex items-start gap-2 px-3 py-2 text-left hover:bg-slate-100/60 transition-colors"
-            >
+            <div className="w-full flex items-start gap-2 px-3 py-2">
               <FileText className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
               <div className="min-w-0 flex-1">
                 <p className={`text-xs font-medium leading-snug ${url ? "text-slate-700" : "text-slate-400"}`}>
@@ -305,19 +285,11 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                     )}
                   </a>
                 )}
-                {/* Expand/collapse chevron */}
-                <ChevronDown
-                  className={cn(
-                    "h-3.5 w-3.5 text-slate-400 transition-transform",
-                    isUploadExpanded && "rotate-180"
-                  )}
-                />
               </div>
-            </button>
+            </div>
 
-            {/* Collapsible upload panel — files and upload button only shown when expanded */}
-            {isUploadExpanded && (
-              <div className="border-t border-slate-100 px-3 py-2.5 bg-white/60 space-y-2">
+            {/* Upload panel */}
+            <div className="border-t border-slate-100 px-3 py-2.5 bg-white/60 space-y-2">
                 {/* Uploaded files listed ABOVE the upload button */}
                 {uploaded.length > 0 && (
                   <div className="space-y-1">
@@ -369,9 +341,7 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        handleUpload(form, file).then(() => {
-                          setExpandedUpload((prev) => new Set(prev).add(form.formKey));
-                        });
+                        handleUpload(form, file);
                       }
                     }}
                     onClick={(e) => e.stopPropagation()}
@@ -394,7 +364,6 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                 </div>
                 )}
               </div>
-            )}
           </div>
         );
       })}
