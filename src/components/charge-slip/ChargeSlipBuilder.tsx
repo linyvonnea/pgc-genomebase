@@ -591,6 +591,8 @@ function ChargeSlipBuilderInner({
                   chargeSlipNumber={chargeSlipNumber}
                   orNumber={orNumber}
                   isInternal={isInternal}
+                  useInternalPrice={isInternal}
+                  useAffiliationAsClientName={useAffiliationAsClientName}
                   preparedBy={{
                     name: adminInfo?.name || "—",
                     position: adminInfo?.position || "—",
