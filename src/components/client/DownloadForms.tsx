@@ -21,6 +21,9 @@ import {
   Upload,
   CheckCircle2,
   Clock,
+  X,
+  Paperclip,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import { v4 as uuidv4 } from "uuid";
@@ -76,6 +79,7 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
   const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
   const [submittedFiles, setSubmittedFiles] = useState<Record<string, SubmittedFile[]>>({});
+  const [attachedFiles, setAttachedFiles] = useState<Record<string, File | null>>({});
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   // Load template download URLs
@@ -170,7 +174,7 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
     }
   };
 
-  const handleUpload = async (form: FormEntry, file: File) => {
+  const handleAttachFile = (form: FormEntry, file: File) => {
     if (!file) return;
     if (file.type !== "application/pdf") {
       toast.error("Only PDF files are accepted.");
@@ -178,6 +182,22 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
     }
     if (file.size > 20 * 1024 * 1024) {
       toast.error("File must be under 20 MB.");
+      return;
+    }
+    setAttachedFiles((prev) => ({ ...prev, [form.formKey]: file }));
+    toast.success(`"${file.name}" attached. Review and confirm upload.`);
+  };
+
+  const handleRemoveAttachment = (formKey: string) => {
+    setAttachedFiles((prev) => ({ ...prev, [formKey]: null }));
+    const input = fileInputRefs.current[formKey];
+    if (input) input.value = "";
+  };
+
+  const handleUpload = async (form: FormEntry) => {
+    const file = attachedFiles[form.formKey];
+    if (!file) {
+      toast.error("No file attached.");
       return;
     }
 
@@ -205,12 +225,12 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
       });
 
       toast.success(`"${file.name}" uploaded successfully.`);
+      setAttachedFiles((prev) => ({ ...prev, [form.formKey]: null }));
     } catch (err) {
       console.error("Upload failed:", err);
       toast.error("Upload failed. Please try again.");
     } finally {
       setUploadingKey(null);
-      // Reset the file input
       const input = fileInputRefs.current[form.formKey];
       if (input) input.value = "";
     }
@@ -237,6 +257,7 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
         const isDownloading = downloadingIdx === i;
         const isUploading = uploadingKey === form.formKey;
         const uploaded = submittedFiles[form.formKey] ?? [];
+        const attachedFile = attachedFiles[form.formKey];
         // Hide upload button if any file is still pending admin acknowledgement
         const hasPendingUpload = uploaded.some((f) => !f.acknowledgedByAdmin);
 
@@ -318,38 +339,81 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                   </div>
                 )}
 
-                {/* Upload button — hidden while a pending (unacknowledged) file exists, and hidden for read-only forms */}
+                {/* Attach/Upload workflow — hidden while a pending (unacknowledged) file exists, and hidden for read-only forms */}
                 {!hasPendingUpload && form.formKey !== "ssreq" && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <input
-                    type="file"
-                    accept="application/pdf"
-                    className="hidden"
-                    ref={(el) => { fileInputRefs.current[form.formKey] = el; }}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        handleUpload(form, file);
-                      }
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      fileInputRefs.current[form.formKey]?.click();
-                    }}
-                    disabled={isUploading}
-                    className="flex items-center gap-1.5 text-[11px] font-medium text-white bg-[#166FB5] hover:bg-[#0e4f8a] rounded-full px-2.5 py-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
-                  >
-                    {isUploading ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
+                  <div className="space-y-2">
+                    {!attachedFile ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="file"
+                          accept="application/pdf"
+                          className="hidden"
+                          ref={(el) => { fileInputRefs.current[form.formKey] = el; }}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleAttachFile(form, file);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            fileInputRefs.current[form.formKey]?.click();
+                          }}
+                          disabled={isUploading}
+                          className="flex items-center gap-1.5 text-[11px] font-medium text-[#166FB5] bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-full px-2.5 py-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                        >
+                          <Paperclip className="h-3 w-3" />
+                          Attach Form
+                        </button>
+                      </div>
                     ) : (
-                      <Upload className="h-3 w-3" />
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 p-2 bg-blue-50/50 border border-blue-200 rounded-lg">
+                          <FileText className="h-4 w-4 text-blue-600 shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-medium text-slate-800 truncate">{attachedFile.name}</p>
+                            <p className="text-[10px] text-slate-500">{(attachedFile.size / 1024).toFixed(1)} KB</p>
+                          </div>
+                          <a
+                            href={URL.createObjectURL(attachedFile)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="p-1 hover:bg-blue-100 rounded transition-colors"
+                            title="Preview file"
+                          >
+                            <Eye className="h-3.5 w-3.5 text-blue-600" />
+                          </a>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveAttachment(form.formKey);
+                            }}
+                            className="p-1 hover:bg-red-100 rounded transition-colors"
+                            title="Remove attachment"
+                          >
+                            <X className="h-3.5 w-3.5 text-red-600" />
+                          </button>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUpload(form);
+                          }}
+                          disabled={isUploading}
+                          className="flex items-center gap-1.5 text-[11px] font-medium text-white bg-[#166FB5] hover:bg-[#0e4f8a] rounded-full px-3 py-1.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full justify-center"
+                        >
+                          {isUploading ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Upload className="h-3 w-3" />
+                          )}
+                          {isUploading ? "Uploading…" : "Upload"}
+                        </button>
+                      </div>
                     )}
-                    {isUploading ? "Uploading…" : "Upload PDF"}
-                  </button>
-                </div>
+                  </div>
                 )}
               </div>
           </div>
