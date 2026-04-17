@@ -5,7 +5,6 @@ import { ColumnDef } from "@tanstack/react-table";
 import { QuotationRecord } from "@/types/Quotation";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { deleteQuotation } from "@/services/quotationService";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -151,42 +150,6 @@ export const columns: ColumnDef<QuotationRecord>[] = [
         <div className="max-w-[150px] truncate text-left" title={name}>
           {name}
         </div>
-      );
-    },
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const s = (row.getValue("status") as string) || "pending";
-      const styles: Record<string, string> = {
-        selected: "bg-green-100 text-green-800 border-green-200",
-        cancelled: "bg-slate-100 text-slate-600 border-slate-300",
-        completed: "bg-blue-100 text-blue-800 border-blue-200",
-        "in-progress": "bg-yellow-100 text-yellow-800 border-yellow-200",
-        pending: "bg-orange-100 text-orange-700 border-orange-200",
-      };
-      return (
-        <Badge
-          className={`capitalize border text-[11px] px-2 py-0.5 font-medium ${
-            styles[s] || styles.pending
-          }`}
-        >
-          {s}
-        </Badge>
-      );
-    },
-  },
-  {
-    accessorKey: "selectedForProject",
-    header: "Project ID",
-    cell: ({ row }) => {
-      const pid = row.getValue("selectedForProject") as string | undefined;
-      if (!pid) return <span className="text-slate-400 text-xs">—</span>;
-      return (
-        <span className="font-mono text-xs text-slate-700 truncate block max-w-[140px]" title={pid}>
-          {pid}
-        </span>
       );
     },
   },
