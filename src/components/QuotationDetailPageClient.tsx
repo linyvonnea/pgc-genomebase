@@ -12,13 +12,6 @@ const DownloadButtonSection = dynamic(
 );
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
@@ -63,12 +56,13 @@ export default function QuotationDetailPageClient() {
     fetchQuotation();
   }, [referenceNumber]);
 
-  const handleStatusChange = async (newStatus: "cancelled" | "selected") => {
+  const handleToggleCancel = async () => {
     if (!referenceNumber || typeof referenceNumber !== "string") return;
+    const newStatus = status === "cancelled" ? "pending" : "cancelled";
     setSavingStatus(true);
     try {
       await updateQuotationStatus(referenceNumber, newStatus);
-      setStatus(newStatus as any);
+      setStatus(newStatus);
       await logActivity({
         userId: adminInfo?.email || "system",
         userEmail: adminInfo?.email || "system@pgc.admin",
@@ -228,22 +222,23 @@ export default function QuotationDetailPageClient() {
             Quotation Status
           </h2>
           <div className="flex items-center gap-3">
-            <Select
-              value={status === "cancelled" || status === "selected" ? status : "cancelled"}
-              onValueChange={(value: "cancelled" | "selected") => handleStatusChange(value)}
-              disabled={savingStatus}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-                <SelectItem value="selected">Selected</SelectItem>
-              </SelectContent>
-            </Select>
-            {savingStatus && (
-              <span className="text-sm text-slate-500">Saving…</span>
+            {status === "cancelled" ? (
+              <Badge className="bg-slate-100 text-slate-600 border border-slate-300 text-sm px-3 py-1">
+                Cancelled
+              </Badge>
+            ) : (
+              <Badge className="bg-blue-50 text-blue-700 border border-blue-200 text-sm px-3 py-1">
+                Active
+              </Badge>
             )}
+            <Button
+              onClick={handleToggleCancel}
+              disabled={savingStatus}
+              variant={status === "cancelled" ? "outline" : "destructive"}
+              className={status === "cancelled" ? "border-slate-300 text-slate-700 hover:bg-slate-50" : ""}
+            >
+              {savingStatus ? "Saving…" : status === "cancelled" ? "Undo Cancellation" : "Mark as Cancelled"}
+            </Button>
           </div>
         </div>
 
