@@ -12,6 +12,13 @@ const DownloadButtonSection = dynamic(
 );
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
@@ -33,7 +40,14 @@ export default function QuotationDetailPageClient() {
       try {
         const data = await getQuotationByReferenceNumber(referenceNumber);
         setQuotation(data);
-        if (data) setStatus((data.status as NonNullable<QuotationRecord["status"]>) || "pending");
+        if (data) {
+          // Determine initial status value for the dropdown
+          let initialStatus: string = data.status || "pending";
+          if (data.selectedForProject) {
+            initialStatus = "selected";
+          }
+          setStatus(initialStatus as any);
+        }
         
         // Log VIEW activity
         await logActivity({
@@ -56,13 +70,43 @@ export default function QuotationDetailPageClient() {
     fetchQuotation();
   }, [referenceNumber]);
 
-  const handleToggleCancel = async () => {
-    if (!referenceNumber || typeof referenceNumber !== "string") return;
-    const newStatus = status === "cancelled" ? "pending" : "cancelled";
+  const handleStatusChange = async (newStatus: string) => {
+    if (!referenceNumber || typeof referenceNumber !== "string" || !quotation) return;
+    
     setSavingStatus(true);
     try {
-      await updateQuotationStatus(referenceNumber, newStatus);
-      setStatus(newStatus);
+      if (newStatus === "selected") {
+        // Use the inquiryId as a placeholder for projectId if not already selected
+        const projectId = quotation.selectedForProject || quotation.inquiryId || "MANUAL";
+        await updateQuotationStatus(referenceNumber, "in-progress" as any);
+        // Also update selectedForProject in Firestore if we want to mimic 'Selected'
+        const { doc, setDoc, db } = await import("@/lib/firebase");
+        const docRef = doc(db, "quotations", referenceNumber);
+        await setDoc(docRef, { selectedForProject: projectId, status: "in-progress" }, { merge: true });
+        
+        setStatus("selected" as any);
+        setQuotation({ ...quotation, selectedForProject: projectId, status: "in-progress" });
+      } else {
+        // For 'cancelled' or 'pending' (undoing selection)
+        let firestoreStatus = newStatus;
+        const updateData: any = { status: firestoreStatus };
+        
+        if (newStatus === "pending") {
+          updateData.selectedForProject = null;
+        }
+
+        const { doc, setDoc, db } = await import("@/lib/firebase");
+        const docRef = doc(db, "quotations", referenceNumber);
+        await setDoc(docRef, updateData, { merge: true });
+        
+        setStatus(newStatus as any);
+        setQuotation({ 
+          ...quotation, 
+          status: firestoreStatus as any,
+          selectedForProject: newStatus === "pending" ? undefined : quotation.selectedForProject 
+        });
+      }
+
       await logActivity({
         userId: adminInfo?.email || "system",
         userEmail: adminInfo?.email || "system@pgc.admin",
@@ -74,12 +118,15 @@ export default function QuotationDetailPageClient() {
         description: `Updated quotation status to "${newStatus}": ${referenceNumber}`,
       });
       toast.success(`Quotation marked as ${newStatus}.`);
-    } catch {
+    } catch (err) {
+      console.error("Error updating status:", err);
       toast.error("Failed to update status.");
     } finally {
       setSavingStatus(false);
     }
   };
+
+  const handleToggleCancel = async () => {
 
   if (loading) return <div className="p-6 text-sm text-muted-foreground">Loading quotation...</div>;
   if (!quotation) return notFound();
@@ -217,28 +264,45 @@ export default function QuotationDetailPageClient() {
 
         {/* Status Card */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
-          <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-            <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#6E308E] rounded-full"></div>
-            Quotation Status
-          </h2>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+              <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#6E308E] rounded-full"></div>
+              Quotation Status
+            </h2>
             {status === "cancelled" ? (
               <Badge className="bg-slate-100 text-slate-600 border border-slate-300 text-sm px-3 py-1">
                 Cancelled
+              </Badge>
+            ) : status === "selected" ? (
+              <Badge className="bg-green-50 text-green-700 border border-green-200 text-sm px-3 py-1">
+                Selected
               </Badge>
             ) : (
               <Badge className="bg-blue-50 text-blue-700 border border-blue-200 text-sm px-3 py-1">
                 Active
               </Badge>
             )}
-            <Button
-              onClick={handleToggleCancel}
-              disabled={savingStatus}
-              variant={status === "cancelled" ? "outline" : "destructive"}
-              className={status === "cancelled" ? "border-slate-300 text-slate-700 hover:bg-slate-50" : ""}
-            >
-              {savingStatus ? "Saving…" : status === "cancelled" ? "Undo Cancellation" : "Mark as Cancelled"}
-            </Button>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="w-full max-w-xs">
+              <Select
+                value={status}
+                onValueChange={handleStatusChange}
+                disabled={savingStatus}
+              >
+                <SelectTrigger className="w-full bg-white border-slate-200">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Active (Pending)</SelectItem>
+                  <SelectItem value="in-progress">In Progress</SelectItem>
+                  <SelectItem value="selected">Selected</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {savingStatus && <span className="text-xs text-slate-400 animate-pulse">Saving…</span>}
           </div>
         </div>
 
