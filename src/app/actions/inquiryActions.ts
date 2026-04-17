@@ -1286,7 +1286,7 @@ export async function sendProjectApprovalEmail(
               <li>Navigate to your approved project under the <strong>&ldquo;My Projects&rdquo;</strong> section.</li>
               <li>Make sure to read the <strong>Sample Submission Requirements</strong>.</li>
               <li>Download the <strong>Sample Submission Form</strong> and fill it out with your sample details.</li>
-              <li>Upload the completed form and click <strong>&ldquo;Submit&rdquo;</strong> to finalise.</li>
+              <li>Attach the completed sample submission form and click <strong>&ldquo;Upload&rdquo;</strong> to submit.</li>
             </ol>
             <p style="margin: 0 0 12px 0;">
               Once your submission is received, we will coordinate with you regarding the
@@ -1328,7 +1328,7 @@ To proceed, kindly complete the Sample Submission Form directly through your cli
 1. Navigate to your approved project under the "My Projects" section.
 2. Make sure to read the Sample Submission Requirements.
 3. Download the Sample Submission Form and fill it out with your sample details.
-4. Upload the completed form and click "Submit" to finalise.
+4. Attach the completed sample submission form and click "Upload" to submit.
 
 Once your submission is received, we will coordinate with you regarding the physical drop-off or shipping of your samples.
 
