@@ -126,7 +126,7 @@ export async function saveQuotationToFirestore(quotation: QuotationRecord) {
  */
 export async function updateQuotationStatus(
   referenceNumber: string,
-  status: "pending" | "in-progress" | "completed" | "cancelled" | "selected"
+  status: "pending" | "in-progress" | "completed" | "cancelled"
 ): Promise<void> {
   const docRef = doc(db, "quotations", referenceNumber);
   await setDoc(docRef, { status }, { merge: true });
