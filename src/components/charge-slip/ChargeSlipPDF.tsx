@@ -291,7 +291,7 @@ export function ChargeSlipPDF({
 
         {/* Client Info */}
         <View style={styles.section}>
-          <Text style={styles.bold}>PAYOR: {useAffiliationAsClientName ? (client?.affiliation || clientInfo.name) : clientInfo.name}</Text>
+          <Text style={styles.bold}>PAYOR: {useAffiliationAsClientName ? clientInfo.institution : clientInfo.name}</Text>
           <Text style={styles.bold}>ADDRESS: {client?.affiliationAddress || client?.affiliation || "—"}</Text>
           <Text style={styles.bold}>PAYMENT FOR: {project?.title || "—"}</Text>
         </View>
