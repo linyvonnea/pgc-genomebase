@@ -84,38 +84,6 @@ export const columns: ColumnDef<QuotationRecord>[] = [
     header: "Reference No.",
   },
   {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const status = (row.getValue("status") as string) || "pending";
-      const colorMap: Record<string, string> = {
-        pending: "bg-gray-100 text-gray-800",
-        "in-progress": "bg-blue-100 text-blue-800",
-        completed: "bg-green-100 text-green-800",
-        cancelled: "bg-red-100 text-red-800",
-        selected: "bg-purple-100 text-purple-800",
-      };
-      const color = colorMap[status] || "bg-gray-100 text-gray-800";
-      return (
-        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${color}`}>
-          {status.charAt(0).toUpperCase() + status.slice(1)}
-        </span>
-      );
-    },
-  },
-  {
-    accessorKey: "selectedForProject",
-    header: "Project ID",
-    cell: ({ getValue }) => {
-      const projectId = getValue() as string || "—";
-      return (
-        <div className="max-w-[120px] truncate text-left" title={projectId}>
-          {projectId}
-        </div>
-      );
-    },
-  },
-  {
     accessorKey: "name",
     header: "Client",
   },
