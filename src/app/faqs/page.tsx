@@ -8,9 +8,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { HelpCircle, Microscope, CreditCard, Droplets, Clock, BarChart4, Globe, Search, Home } from "lucide-react";
+import { HelpCircle, Microscope, CreditCard, Droplets, Clock, BarChart4, Globe, Search, Home, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { storage } from "@/lib/firebase";
+import { ref, getDownloadURL } from "firebase/storage";
 
 const faqData = [
   {
@@ -129,12 +131,22 @@ const faqData = [
 
 export default function FAQPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [ssrUrl, setSsrUrl] = React.useState<string | null>(null);
   
   const primerListText = "See the list of available primers for target species";
   const primerListHref = "/assets/pgc-visayas-primer-list.pdf";
 
+  const ssrText = "Sample Submission Requirements";
+  const ssrStoragePath = "forms/VSF-LR-SSR_Sample Submission Requirements and Form_v6.pdf";
+
   const turnaroundImgTrigger = "Sample quality: Samples needing extra preparation or troubleshooting can extend the timeline.";
   const turnaroundImgSrc = "/assets/sample-processing-turnaround.png";
+
+  React.useEffect(() => {
+    getDownloadURL(ref(storage, ssrStoragePath))
+      .then((url) => setSsrUrl(url))
+      .catch((error) => console.error("Error fetching SSR PDF:", error));
+  }, []);
 
   // Helper function to highlight text
   const HighlightText = ({ text, highlight }: { text: string; highlight: string }) => {
@@ -243,20 +255,39 @@ export default function FAQPage() {
                           <div className="whitespace-pre-wrap">
                             {item.a.split(primerListText).map((part, partIdx, arr) => (
                               <React.Fragment key={partIdx}>
-                                {part.split(turnaroundImgTrigger).map((subPart, subIdx, subArr) => (
-                                  <React.Fragment key={subIdx}>
-                                    <HighlightText text={subPart} highlight={searchQuery} />
-                                    {subIdx < subArr.length - 1 && (
-                                      <>
-                                        <HighlightText text={turnaroundImgTrigger} highlight={searchQuery} />
-                                        <div className="mt-4 mb-2 overflow-hidden rounded-lg border border-slate-200 max-w-2xl mx-auto shadow-sm">
-                                          <img 
-                                            src={turnaroundImgSrc} 
-                                            alt="Sample Processing Turn Around Time"
-                                            className="w-full h-auto transition-transform hover:scale-[1.01]"
-                                          />
-                                        </div>
-                                      </>
+                                {part.split(ssrText).map((ssrPart, ssrPartIdx, ssrArr) => (
+                                  <React.Fragment key={ssrPartIdx}>
+                                    {ssrPart.split(turnaroundImgTrigger).map((subPart, subIdx, subArr) => (
+                                      <React.Fragment key={subIdx}>
+                                        <HighlightText text={subPart} highlight={searchQuery} />
+                                        {subIdx < subArr.length - 1 && (
+                                          <>
+                                            <HighlightText text={turnaroundImgTrigger} highlight={searchQuery} />
+                                            <div className="mt-4 mb-2 overflow-hidden rounded-lg border border-slate-200 max-w-2xl mx-auto shadow-sm">
+                                              <img 
+                                                src={turnaroundImgSrc} 
+                                                alt="Sample Processing Turn Around Time"
+                                                className="w-full h-auto transition-transform hover:scale-[1.01]"
+                                              />
+                                            </div>
+                                          </>
+                                        )}
+                                      </React.Fragment>
+                                    ))}
+                                    {ssrPartIdx < ssrArr.length - 1 && (
+                                      ssrUrl ? (
+                                        <a
+                                          href={ssrUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-blue-700 underline hover:text-blue-900 font-medium inline-flex items-center gap-1 group"
+                                        >
+                                          {ssrText}
+                                          <ExternalLink className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                                        </a>
+                                      ) : (
+                                        <span className="font-semibold text-slate-700">{ssrText}</span>
+                                      )
                                     )}
                                   </React.Fragment>
                                 ))}
