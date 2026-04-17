@@ -12,6 +12,13 @@ const DownloadButtonSection = dynamic(
 );
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
@@ -56,9 +63,8 @@ export default function QuotationDetailPageClient() {
     fetchQuotation();
   }, [referenceNumber]);
 
-  const handleToggleCancel = async () => {
+  const handleStatusChange = async (newStatus: NonNullable<QuotationRecord["status"]>) => {
     if (!referenceNumber || typeof referenceNumber !== "string") return;
-    const newStatus = status === "cancelled" ? "pending" : "cancelled";
     setSavingStatus(true);
     try {
       await updateQuotationStatus(referenceNumber, newStatus);
@@ -73,7 +79,7 @@ export default function QuotationDetailPageClient() {
         entityName: `Quotation ${referenceNumber}`,
         description: `Updated quotation status to "${newStatus}": ${referenceNumber}`,
       });
-      toast.success(`Quotation marked as ${newStatus}.`);
+      toast.success(`Quotation status updated to "${newStatus}".`);
     } catch {
       toast.error("Failed to update status.");
     } finally {
@@ -222,23 +228,26 @@ export default function QuotationDetailPageClient() {
             Quotation Status
           </h2>
           <div className="flex items-center gap-3">
-            {status === "cancelled" ? (
-              <Badge className="bg-slate-100 text-slate-600 border border-slate-300 text-sm px-3 py-1">
-                Cancelled
-              </Badge>
-            ) : (
-              <Badge className="bg-blue-50 text-blue-700 border border-blue-200 text-sm px-3 py-1">
-                Active
-              </Badge>
-            )}
-            <Button
-              onClick={handleToggleCancel}
+            <Select
+              value={status}
+              onValueChange={(val) => handleStatusChange(val as NonNullable<QuotationRecord["status"]>)}
               disabled={savingStatus}
-              variant={status === "cancelled" ? "outline" : "destructive"}
-              className={status === "cancelled" ? "border-slate-300 text-slate-700 hover:bg-slate-50" : ""}
             >
-              {savingStatus ? "Saving…" : status === "cancelled" ? "Undo Cancellation" : "Mark as Cancelled"}
-            </Button>
+              <SelectTrigger className="w-48">
+                <SelectValue>
+                  {status === "cancelled" && <span className="text-red-600 font-medium">Cancelled</span>}
+                  {status === "selected" && <span className="text-green-700 font-medium">Selected</span>}
+                  {status !== "cancelled" && status !== "selected" && (
+                    <span className="capitalize text-slate-600">{status ?? "pending"}</span>
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="selected">Selected</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+            {savingStatus && <span className="text-xs text-slate-500">Saving…</span>}
           </div>
         </div>
 
