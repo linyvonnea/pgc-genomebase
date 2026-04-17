@@ -150,7 +150,7 @@ export function AdminSidebar() {
         },
         {
           href: "/admin/configurations",
-          label: "Configurations",
+          label: "General Settings",
           icon: Sliders,
         },
       ]

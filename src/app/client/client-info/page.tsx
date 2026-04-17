@@ -328,6 +328,15 @@ export default function ClientPortalPage() {
   const [expandedProjectDocs, setExpandedProjectDocs] = useState<Set<string>>(new Set());
   const [expandedCsIds, setExpandedCsIds] = useState<Set<string>>(new Set());
   const [expandedQuoteIds, setExpandedQuoteIds] = useState<Set<string>>(new Set());
+  // Keys are `${pid}:quotations`, `${pid}:sampleForm`, `${pid}:chargeSlips`, `${pid}:serviceReports`
+  const [expandedDocSections, setExpandedDocSections] = useState<Set<string>>(new Set());
+  const toggleDocSection = (pid: string, section: string) =>
+    setExpandedDocSections((prev) => {
+      const next = new Set(prev);
+      const key = `${pid}:${section}`;
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
 
   const [configSettings, setConfigSettings] = useState<ConfigurationSettings | null>(null);
 
@@ -2835,14 +2844,19 @@ export default function ClientPortalPage() {
                           <div className="p-3 pl-6 space-y-3">
                             {/* Quotations */}
                             <div>
-                              <div className="flex items-center gap-2 mb-1.5">
-                                <FileText className="h-3 w-3 text-purple-600" />
-                                <span className="text-sm font-semibold text-slate-700">
+                              <button
+                                type="button"
+                                className="flex items-center gap-2 mb-1.5 w-full text-left group/sec"
+                                onClick={(e) => { e.stopPropagation(); toggleDocSection(project.pid!, "quotations"); }}
+                              >
+                                <FileText className="h-3 w-3 text-purple-600 flex-shrink-0" />
+                                <span className="text-sm font-semibold text-slate-700 flex-1">
                                   Quotations
                                 </span>
-                                <span className="text-[10px] text-slate-500">({quotationCount})</span>
-                              </div>
-                              {quotationCount > 0 ? (
+                                <span className="text-[10px] text-slate-500 mr-1">({quotationCount})</span>
+                                <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:quotations`) && "rotate-180")} />
+                              </button>
+                              {expandedDocSections.has(`${project.pid}:quotations`) && quotationCount > 0 ? (
                                 <div className="space-y-2 ml-4">
                                   {docs?.quotations.map((quotation) => {
                                     const qCancelledSidebar = quotation.status === "cancelled";
@@ -2920,18 +2934,25 @@ export default function ClientPortalPage() {
                                     );
                                   })}
                                 </div>
-                              ) : (
+                              ) : expandedDocSections.has(`${project.pid}:quotations`) ? (
                                 <p className="text-xs text-slate-400 ml-5">No quotations yet</p>
-                              )}
+                              ) : null}
                             </div>
 
                             {/* Sample Submission Form Downloads + Upload */}
                             <div>
-                              <div className="flex items-center gap-2 mb-1.5">
-                                <FileText className="h-3 w-3 text-orange-500" />
-                                <span className="text-sm font-semibold text-slate-700">Sample Submission Form</span>
-                              </div>
-                              <DownloadForms projectId={project.pid!} />
+                              <button
+                                type="button"
+                                className="flex items-center gap-2 mb-1.5 w-full text-left"
+                                onClick={(e) => { e.stopPropagation(); toggleDocSection(project.pid!, "sampleForm"); }}
+                              >
+                                <FileText className="h-3 w-3 text-orange-500 flex-shrink-0" />
+                                <span className="text-sm font-semibold text-slate-700 flex-1">Sample Submission Form</span>
+                                <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:sampleForm`) && "rotate-180")} />
+                              </button>
+                              {expandedDocSections.has(`${project.pid}:sampleForm`) && (
+                                <DownloadForms projectId={project.pid!} />
+                              )}
                             </div>
 
                             {/* Sample Forms (Moved below Quotations) */}
@@ -2961,14 +2982,19 @@ export default function ClientPortalPage() {
 
                             {/* Charge Slips */}
                             <div>
-                              <div className="flex items-center gap-2 mb-1.5">
-                                <Receipt className="h-3 w-3 text-green-600" />
-                                <span className="text-sm font-semibold text-slate-700">
+                              <button
+                                type="button"
+                                className="flex items-center gap-2 mb-1.5 w-full text-left"
+                                onClick={(e) => { e.stopPropagation(); toggleDocSection(project.pid!, "chargeSlips"); }}
+                              >
+                                <Receipt className="h-3 w-3 text-green-600 flex-shrink-0" />
+                                <span className="text-sm font-semibold text-slate-700 flex-1">
                                   Charge Slips
                                 </span>
-                                <span className="text-[10px] text-slate-500">({chargeSlipCount})</span>
-                              </div>
-                              {chargeSlipCount > 0 ? (
+                                <span className="text-[10px] text-slate-500 mr-1">({chargeSlipCount})</span>
+                                <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:chargeSlips`) && "rotate-180")} />
+                              </button>
+                              {expandedDocSections.has(`${project.pid}:chargeSlips`) && chargeSlipCount > 0 ? (
                                 <div className="space-y-2 ml-4">
                                   {docs?.chargeSlips.map((chargeSlip) => {
                                     const csPaid = chargeSlip.status === "paid";
@@ -3048,9 +3074,9 @@ export default function ClientPortalPage() {
                                     );
                                   })}
                                 </div>
-                              ) : (
+                              ) : expandedDocSections.has(`${project.pid}:chargeSlips`) ? (
                                 <p className="text-xs text-slate-400 ml-5">No charge slips yet</p>
-                              )}
+                              ) : null}
                             </div>
 
                             {portalFeatures.sampleForms && (
@@ -3090,14 +3116,19 @@ export default function ClientPortalPage() {
 
                             {portalFeatures.serviceReports && (
                               <div>
-                                <div className="flex items-center gap-2 mb-1.5">
-                                  <ShieldEllipsis className="h-3 w-3 text-blue-600" />
-                                  <span className="text-sm font-semibold text-slate-700">
+                                <button
+                                  type="button"
+                                  className="flex items-center gap-2 mb-1.5 w-full text-left"
+                                  onClick={(e) => { e.stopPropagation(); toggleDocSection(project.pid!, "serviceReports"); }}
+                                >
+                                  <ShieldEllipsis className="h-3 w-3 text-blue-600 flex-shrink-0" />
+                                  <span className="text-sm font-semibold text-slate-700 flex-1">
                                     Service Reports
                                   </span>
-                                  <span className="text-[10px] text-slate-500">({docs?.serviceReports?.length || 0})</span>
-                                </div>
-                                {(docs?.serviceReports?.length || 0) > 0 ? (
+                                  <span className="text-[10px] text-slate-500 mr-1">({docs?.serviceReports?.length || 0})</span>
+                                  <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:serviceReports`) && "rotate-180")} />
+                                </button>
+                                {expandedDocSections.has(`${project.pid}:serviceReports`) && (docs?.serviceReports?.length || 0) > 0 ? (
                                   <div className="space-y-2 ml-5">
                                     {docs?.serviceReports.map((item: any) => {
                                       const isReceived = item.status === "received";
@@ -3176,9 +3207,9 @@ export default function ClientPortalPage() {
                                       );
                                     })}
                                   </div>
-                                ) : (
+                                ) : expandedDocSections.has(`${project.pid}:serviceReports`) ? (
                                   <p className="text-xs text-slate-400 ml-5">No service reports yet</p>
-                                )}
+                                ) : null}
                               </div>
                             )}
                           </div>

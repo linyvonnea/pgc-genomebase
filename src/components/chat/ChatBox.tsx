@@ -509,19 +509,23 @@ export default function ChatBox({
                           </div>
                         )}
                       </div>
-                    </div>                    {/* Unsend button — visible on hover for own messages only */}
-                    {isMe && (
-                      <button
-                        type="button"
-                        onClick={() => msg.id && handleUnsend(msg.id)}
-                        disabled={unsendingId === msg.id}
-                        className="invisible group-hover:visible flex items-center gap-1 text-[10px] text-slate-400 hover:text-red-500 transition-colors mt-0.5 cursor-pointer disabled:opacity-50"
-                        title="Unsend message"
-                      >
-                        <Trash2 className="w-2.5 h-2.5" />
-                        {unsendingId === msg.id ? "Unsending…" : "Unsend"}
-                      </button>
-                    )}                  </div>
+                    </div>                    {/* Unsend button — visible on hover for own messages only, within 24 hours */}
+                    {isMe && !msg.unsent && (() => {
+                      const sentAt = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date((msg.createdAt as any) ?? 0);
+                      const within24h = Date.now() - sentAt.getTime() < 24 * 60 * 60 * 1000;
+                      return within24h ? (
+                        <button
+                          type="button"
+                          onClick={() => msg.id && handleUnsend(msg.id)}
+                          disabled={unsendingId === msg.id}
+                          className="invisible group-hover:visible flex items-center gap-1 text-[10px] text-slate-400 hover:text-red-500 transition-colors mt-0.5 cursor-pointer disabled:opacity-50"
+                          title="Unsend message"
+                        >
+                          <Trash2 className="w-2.5 h-2.5" />
+                          {unsendingId === msg.id ? "Unsending…" : "Unsend"}
+                        </button>
+                      ) : null;
+                    })()}                  </div>
                 );
             })
           )}
