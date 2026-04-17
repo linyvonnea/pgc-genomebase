@@ -77,7 +77,6 @@ export function GroupedServiceSelector({
 
   const renderServiceTable = (services: ServiceItem[], serviceType: string) => {
     const normalizedType = serviceType.toLowerCase();
-    const isTraining = normalizedType === "training";
 
     // Group services by category
     const servicesByCategory: Record<string, ServiceItem[]> = {};
@@ -93,50 +92,39 @@ export function GroupedServiceSelector({
         <Table className="w-full">
           <colgroup>
             <col style={{ width: '40px' }} />
-            <col style={{ width: '180px' }} />
+            <col style={{ width: '220px' }} />
             <col style={{ width: '80px' }} />
-            <col style={{ width: '90px' }} />
             <col style={{ width: '100px' }} />
-            <col style={{ width: '70px' }} />
-            <col style={{ width: '90px' }} />
+            <col style={{ width: '80px' }} />
+            <col style={{ width: '110px' }} />
           </colgroup>
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="w-[40px]">✔</TableHead>
-              <TableHead className="min-w-[200px]">Service</TableHead>
+              <TableHead className="min-w-[220px]">Service</TableHead>
               <TableHead className="text-center w-[80px]">Unit</TableHead>
-              <TableHead className="text-right w-[110px]">Price</TableHead>
-              <TableHead className="text-center w-[110px]">{isTraining ? "Participants" : "—"}</TableHead>
+              <TableHead className="text-right w-[100px]">Price</TableHead>
               <TableHead className="text-center w-[80px]">Qty</TableHead>
-              <TableHead className="text-right w-[120px]">Amount</TableHead>
+              <TableHead className="text-right w-[110px]">Amount</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {categoryNames.map((cat) => [
               // Category separator row
               <TableRow key={cat + "-sep"} className="bg-gray-50">
-                <TableCell colSpan={7} className="!p-3 !pl-4 text-sm font-semibold text-gray-700 border-b border-gray-200 tracking-wide">
+                <TableCell colSpan={6} className="!p-3 !pl-4 text-sm font-semibold text-gray-700 border-b border-gray-200 tracking-wide">
                   {cat}
                 </TableCell>
               </TableRow>,
               // Services in this category
               ...servicesByCategory[cat].map((item) => {
                 const isSelected = selectedServices.find((s) => s.id === item.id);
-                const participants = (isSelected as any)?.participants ?? "";
                 const quantity = isSelected?.quantity ?? "";
                 const price = isSelected?.price ?? 0;
 
                 let amount = 0;
                 if (isSelected && typeof quantity === "number") {
-                  if (isTraining && typeof participants === "number") {
-                    const participantsAmount = calculateItemTotal(participants, price, {
-                      minQuantity: (item as any).minParticipants,
-                      additionalUnitPrice: (item as any).additionalParticipantPrice,
-                    });
-                    amount = participantsAmount * quantity;
-                  } else {
-                    amount = price * quantity;
-                  }
+                  amount = price * quantity;
                 }
 
                 return (
@@ -159,25 +147,6 @@ export function GroupedServiceSelector({
                     <TableCell className="text-center text-sm text-muted-foreground">{item.unit}</TableCell>
                     <TableCell className="text-right text-sm">
                       ₱{item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {isTraining ? (
-                        <Input
-                          type="number"
-                          min={1}
-                          value={participants}
-                          onChange={(e) =>
-                            onUpdateParticipants(
-                              item.id,
-                              e.target.value === "" ? "" : +e.target.value
-                            )
-                          }
-                          disabled={!isSelected}
-                          className="h-8 w-20 mx-auto text-center"
-                        />
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
                     </TableCell>
                     <TableCell>
                       <Input
