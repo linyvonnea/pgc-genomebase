@@ -347,6 +347,7 @@ export default function ClientPortalPage() {
       sampleForms: SampleFormSummary[];
       serviceReports: any[];
       officialReceipts: any[];
+      formSubmissions: number;
       loading: boolean 
     }>
   >(new Map());
@@ -1974,6 +1975,7 @@ export default function ClientPortalPage() {
       sampleForms: [],
       serviceReports: [],
       officialReceipts: [],
+      formSubmissions: 0,
       loading: true,
     }));
 
@@ -1987,6 +1989,11 @@ export default function ClientPortalPage() {
       const sampleForms = portalFeatures.sampleForms && project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
         ? await getSampleFormsByProjectId(project.pid)
         : [];
+
+      const formSubmissionsSnapshot = project.pid && project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
+        ? await getDocs(query(collection(db, "clientFormSubmissions"), where("projectId", "==", project.pid)))
+        : null;
+      const formSubmissions = formSubmissionsSnapshot ? formSubmissionsSnapshot.size : 0;
 
       let officialReceipts: any[] = [];
       if (portalFeatures.officialReceipts) {
@@ -2011,6 +2018,7 @@ export default function ClientPortalPage() {
         sampleForms,
         serviceReports,
         officialReceipts,
+        formSubmissions,
         loading: false,
       }));
     } catch (error) {
@@ -2022,6 +2030,7 @@ export default function ClientPortalPage() {
         sampleForms: [],
         serviceReports: [],
         officialReceipts: [],
+        formSubmissions: 0,
         loading: false,
       }));
     }
@@ -2767,6 +2776,7 @@ export default function ClientPortalPage() {
                 const quotationCount = docs?.quotations.length || 0;
                 const chargeSlipCount = docs?.chargeSlips.length || 0;
                 const sampleFormCount = docs?.sampleForms?.length || 0;
+                const formSubmissionCount = docs?.formSubmissions || 0;
                 const serviceReportCount = docs?.serviceReports?.length || 0;
                 const officialReceiptCount = docs?.officialReceipts?.length || 0;
                 const sampleFormParams = new URLSearchParams();
@@ -2948,6 +2958,7 @@ export default function ClientPortalPage() {
                               >
                                 <FileText className="h-3 w-3 text-orange-500 flex-shrink-0" />
                                 <span className="text-sm font-semibold text-slate-700 flex-1">Sample Submission Form</span>
+                                <span className="text-[10px] text-slate-500 mr-1">({formSubmissionCount})</span>
                                 <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:sampleForm`) && "rotate-180")} />
                               </button>
                               {expandedDocSections.has(`${project.pid}:sampleForm`) && (
