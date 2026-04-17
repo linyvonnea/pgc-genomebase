@@ -30,6 +30,7 @@ import {
   getClientRequestsByInquiry,
   ClientRequest,
 } from "@/services/clientRequestService";
+import { sendProjectApprovalEmail } from "@/app/actions/inquiryActions";
 import { ApprovalStatus } from "@/types/MemberApproval";
 import useAuth from "@/hooks/useAuth";
 import { toast } from "sonner";
