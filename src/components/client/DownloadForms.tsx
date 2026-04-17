@@ -253,18 +253,6 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
               </div>
 
               <div className="flex items-center gap-1.5 mt-0.5 shrink-0">
-                {/* Uploaded file count badge — visible even when panel is collapsed */}
-                {uploaded.length > 0 && (
-                  <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full shrink-0
-                    border
-                    " style={{
-                    color: hasPendingUpload ? "#b45309" : "#059669",
-                    background: hasPendingUpload ? "#fffbeb" : "#f0fdf4",
-                    borderColor: hasPendingUpload ? "#fcd34d" : "#6ee7b7",
-                  }}>
-                    {uploaded.length} {uploaded.length === 1 ? "file" : "files"}
-                  </span>
-                )}
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
                 ) : error ? (
