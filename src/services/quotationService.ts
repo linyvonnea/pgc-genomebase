@@ -126,7 +126,7 @@ export async function saveQuotationToFirestore(quotation: QuotationRecord) {
 /**
  * Update quotation status.
  * When status is "selected", sets selectedForProject to the inquiryId.
- * When status is "cancelled", removes the selectedForProject field.
+ * When status is "cancelled", empties the selectedForProject field.
  */
 export async function updateQuotationStatus(
   referenceNumber: string,
@@ -140,7 +140,7 @@ export async function updateQuotationStatus(
   if (status === "selected" && inquiryId) {
     updateData.selectedForProject = inquiryId;
   } else if (status === "cancelled") {
-    updateData.selectedForProject = deleteField();
+    updateData.selectedForProject = "";
   }
   
   await setDoc(docRef, updateData, { merge: true });
