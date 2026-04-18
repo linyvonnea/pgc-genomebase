@@ -115,10 +115,11 @@ export async function getQuotationsByClientName(
 
 /**
  * Save or overwrite a quotation using referenceNumber as the document ID.
+ * Ensures the status field is always present, defaulting to "pending".
  */
 export async function saveQuotationToFirestore(quotation: QuotationRecord) {
   const docRef = doc(db, "quotations", quotation.referenceNumber);
-  await setDoc(docRef, quotation);
+  await setDoc(docRef, { status: "pending", ...quotation });
 }
 
 /**
@@ -171,6 +172,7 @@ export async function getQuotationByReferenceNumber(
 
   const data = snapshot.data();
   return {
+    status: "pending" as const,
     ...data,
     id: snapshot.id,
     dateIssued:
@@ -191,6 +193,7 @@ export async function getAllQuotations(): Promise<QuotationRecord[]> {
   snapshot.forEach((docSnap) => {
     const data = docSnap.data();
     records.push({
+      status: "pending" as const,
       ...data,
       id: docSnap.id,
       dateIssued:
