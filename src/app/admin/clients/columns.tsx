@@ -37,7 +37,7 @@ export const columns: ColumnDef<Client>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="hover:bg-accent px-1 text-[11px] font-semibold"
         >
-          CID
+          Client ID
           <ArrowUpDown className="ml-1 h-3 w-3" />
         </Button>
       )
