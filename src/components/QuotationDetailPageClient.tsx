@@ -63,8 +63,19 @@ export default function QuotationDetailPageClient() {
     setSavingStatusValue(newStatus);
     setSavingStatus(true);
     try {
-      await updateQuotationStatus(referenceNumber, newStatus);
+      await updateQuotationStatus(referenceNumber, newStatus, quotation?.inquiryId);
       setStatus(newStatus);
+      
+      // Update local quotation state to reflect selectedForProject changes
+      if (quotation) {
+        if (newStatus === "selected" && quotation.inquiryId) {
+          setQuotation({ ...quotation, selectedForProject: quotation.inquiryId });
+        } else if (newStatus === "cancelled") {
+          const { selectedForProject, ...rest } = quotation;
+          setQuotation(rest as QuotationRecord);
+        }
+      }
+      
       await logActivity({
         userId: adminInfo?.email || "system",
         userEmail: adminInfo?.email || "system@pgc.admin",
