@@ -3011,6 +3011,7 @@ export default function ClientPortalPage() {
                                     const csPaid = chargeSlip.status === "paid";
                                     const csCancelled = chargeSlip.status === "cancelled";
                                     const csPending = chargeSlip.status === "pending";
+                                    const csWaived = chargeSlip.status === "waived";
                                     const csTotal = typeof chargeSlip.total === "number" ? chargeSlip.total : 0;
                                     const csRawDate = chargeSlip.dateIssued;
                                     const csIssuedDate = csRawDate
@@ -3045,6 +3046,10 @@ export default function ClientPortalPage() {
                                             ) : csCancelled ? (
                                               <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
                                                 Cancelled
+                                              </span>
+                                            ) : csWaived ? (
+                                              <span className="inline-flex text-[10px] font-semibold text-purple-700 bg-purple-50 border border-purple-200 rounded-full px-2 py-0.5">
+                                                Waived
                                               </span>
                                             ) : csPending ? (
                                               <span className="inline-flex text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 animate-pulse">

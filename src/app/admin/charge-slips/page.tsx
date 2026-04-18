@@ -38,9 +38,9 @@ function extractValidCategories(services: any[]): ValidCategory[] {
 }
 
 // Normalize status
-function normalizeStatus(status?: string): "paid" | "cancelled" | "processing" | "pending" {
+function normalizeStatus(status?: string): "paid" | "cancelled" | "processing" | "pending" | "waived" {
   const safe = (status || "processing").toLowerCase();
-  if (safe === "paid" || safe === "cancelled" || safe === "processing" || safe === "pending") return safe;
+  if (safe === "paid" || safe === "cancelled" || safe === "processing" || safe === "pending" || safe === "waived") return safe;
   return "processing";
 }
 

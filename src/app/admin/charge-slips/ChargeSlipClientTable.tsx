@@ -43,7 +43,7 @@ type UIChargeSlipRecord = {
   dateOfOR?: Date;
   createdAt?: Date;
   total: number;
-  status?: "processing" | "paid" | "cancelled" | "pending";
+  status?: "processing" | "paid" | "cancelled" | "pending" | "waived";
   cid: string;
   projectId: string;
   clientInfo: {
