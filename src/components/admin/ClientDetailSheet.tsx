@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Client } from "@/types/Client";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { getChargeSlipsByClientId } from "@/services/chargeSlipService";
+import { updateClient } from "@/services/updateClient";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -27,6 +28,8 @@ import {
   X,
   CheckCircle2,
   Circle,
+  ShieldCheck,
+  Ban,
 } from "lucide-react";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
@@ -110,9 +113,14 @@ export function ClientDetailSheet({
   const { adminInfo } = useAuth();
   const [chargeSlips, setChargeSlips] = useState<ChargeSlipRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [clientStatus, setClientStatus] = useState<"Approved" | "Cancelled">("Approved");
+  const [statusSaving, setStatusSaving] = useState(false);
 
   useEffect(() => {
     if (!open || !client?.cid) return;
+
+    // Sync status from client prop
+    setClientStatus(client.status || "Approved");
 
     const loadData = async () => {
       setLoading(true);
@@ -149,6 +157,32 @@ export function ClientDetailSheet({
   if (!client) return null;
 
   const pids = Array.isArray(client.pid) ? client.pid : client.pid ? [client.pid] : [];
+
+  const handleStatusChange = async (newStatus: "Approved" | "Cancelled") => {
+    if (!client.cid || newStatus === clientStatus) return;
+    setStatusSaving(true);
+    try {
+      await updateClient(client.cid, { status: newStatus });
+      setClientStatus(newStatus);
+      await logActivity({
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
+        action: "UPDATE",
+        entityType: "client",
+        entityId: client.cid,
+        entityName: client.name || client.cid,
+        description: `Updated client status to: ${newStatus}`,
+        changesAfter: { status: newStatus },
+        changedFields: ["status"],
+      });
+      onClientUpdated?.();
+    } catch (err) {
+      console.error("Failed to update client status:", err);
+    } finally {
+      setStatusSaving(false);
+    }
+  };
 
   return (
     <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
@@ -274,6 +308,48 @@ export function ClientDetailSheet({
                   <Circle className="h-4 w-4 text-slate-300" />
                 )}
                 <span className="text-sm text-slate-700">Is Contact Person</span>
+              </div>
+            </div>
+          </SectionCard>
+
+          {/* ── Client Status ── */}
+          <SectionCard>
+            <SectionHeader icon={<ShieldCheck className="h-4 w-4 text-rose-600" />} label="Client Status" />
+            <Separator />
+            <div className="space-y-3">
+              <p className="text-xs text-slate-500">
+                Set the current standing of this client account.
+              </p>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  disabled={statusSaving}
+                  onClick={() => handleStatusChange("Approved")}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-semibold transition-all ${
+                    clientStatus === "Approved"
+                      ? "bg-emerald-600 text-white border-emerald-600 shadow"
+                      : "bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                  }`}
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Approved
+                </button>
+                <button
+                  type="button"
+                  disabled={statusSaving}
+                  onClick={() => handleStatusChange("Cancelled")}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-semibold transition-all ${
+                    clientStatus === "Cancelled"
+                      ? "bg-rose-600 text-white border-rose-600 shadow"
+                      : "bg-white text-rose-700 border-rose-200 hover:bg-rose-50"
+                  }`}
+                >
+                  <Ban className="h-4 w-4" />
+                  Cancelled
+                </button>
+                {statusSaving && (
+                  <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                )}
               </div>
             </div>
           </SectionCard>

@@ -32,4 +32,5 @@ export const clientSchema = z.object({
   projectName: z.string().nullable().optional(),
   sex: z.enum(["F", "M", "Other", ""]).nullable().optional(),
   year: z.number().or(z.string()).nullable().optional(),
+  status: z.enum(["Approved", "Cancelled"]).nullable().optional(),
 });
