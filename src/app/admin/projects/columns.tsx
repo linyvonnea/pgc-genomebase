@@ -56,7 +56,7 @@ export const columns: ColumnDef<Project>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="hover:bg-accent px-1 text-[11px] font-semibold"
         >
-          PID
+          Project ID
           <ArrowUpDown className="ml-1 h-3 w-3" />
         </Button>
       )
@@ -177,32 +177,6 @@ export const columns: ColumnDef<Project>[] = [
     filterFn: (row, columnId, filterValue) => {
       const value: string[] = row.getValue(columnId) || [];
       return value.join(", ").toLowerCase().includes(filterValue.toLowerCase());
-    },
-  },
-  {
-    accessorKey: "lead",
-    header: () => <div className="px-1 text-[12px] font-semibold">Lead</div>,
-    size: 110,
-    cell: ({ getValue }) => {
-      const lead = getValue() as string || "—";
-      return (
-        <div className="max-w-[110px] truncate text-left text-[11px] text-slate-500 px-1" title={lead}>
-          {lead}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "personnelAssigned",
-    header: () => <div className="px-1 text-[12px] font-semibold">Personnel</div>,
-    size: 110,
-    cell: ({ getValue }) => {
-      const personnel = getValue() as string || "—";
-      return (
-        <div className="max-w-[110px] truncate text-left text-[11px] text-slate-500 px-1" title={personnel}>
-          {personnel}
-        </div>
-      );
     },
   },
   {

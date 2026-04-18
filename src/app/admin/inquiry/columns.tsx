@@ -106,7 +106,7 @@ const getStatusColorFromCatalog = (
 export const columns = (statusCatalog: CatalogItem[] = []): ColumnDef<Inquiry>[] => [
   {
     accessorKey: "id",
-    header: "ID",
+    header: "Inquiry ID",
     size: 110, // Increased size to display the complete inquiry ID
     cell: ({ row }) => {
       const inquiry = row.original;
