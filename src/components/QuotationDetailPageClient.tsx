@@ -23,6 +23,7 @@ export default function QuotationDetailPageClient() {
   const [quotation, setQuotation] = useState<QuotationRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState<NonNullable<QuotationRecord["status"]>>("pending");
+  const [savingStatusValue, setSavingStatusValue] = useState<NonNullable<QuotationRecord["status"]> | null>(null);
   const [savingStatus, setSavingStatus] = useState(false);
   const [allQuotations, setAllQuotations] = useState<QuotationRecord[]>([]);
 
@@ -56,9 +57,10 @@ export default function QuotationDetailPageClient() {
     fetchQuotation();
   }, [referenceNumber]);
 
-  const handleToggleCancel = async () => {
+  const handleStatusChange = async (newStatus: NonNullable<QuotationRecord["status"]>) => {
     if (!referenceNumber || typeof referenceNumber !== "string") return;
-    const newStatus = status === "cancelled" ? "pending" : "cancelled";
+    if (newStatus === status) return;
+    setSavingStatusValue(newStatus);
     setSavingStatus(true);
     try {
       await updateQuotationStatus(referenceNumber, newStatus);
@@ -78,6 +80,7 @@ export default function QuotationDetailPageClient() {
       toast.error("Failed to update status.");
     } finally {
       setSavingStatus(false);
+      setSavingStatusValue(null);
     }
   };
 
@@ -221,24 +224,44 @@ export default function QuotationDetailPageClient() {
             <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#6E308E] rounded-full"></div>
             Quotation Status
           </h2>
-          <div className="flex items-center gap-3">
-            {status === "cancelled" ? (
-              <Badge className="bg-slate-100 text-slate-600 border border-slate-300 text-sm px-3 py-1">
-                Cancelled
-              </Badge>
-            ) : (
-              <Badge className="bg-blue-50 text-blue-700 border border-blue-200 text-sm px-3 py-1">
-                Active
-              </Badge>
-            )}
-            <Button
-              onClick={handleToggleCancel}
-              disabled={savingStatus}
-              variant={status === "cancelled" ? "outline" : "destructive"}
-              className={status === "cancelled" ? "border-slate-300 text-slate-700 hover:bg-slate-50" : ""}
-            >
-              {savingStatus ? "Saving…" : status === "cancelled" ? "Undo Cancellation" : "Mark as Cancelled"}
-            </Button>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              {status === "pending" && <Badge className="bg-yellow-50 text-yellow-700 border border-yellow-200 text-sm px-3 py-1">Pending</Badge>}
+              {status === "selected" && <Badge className="bg-green-50 text-green-700 border border-green-200 text-sm px-3 py-1">Selected</Badge>}
+              {status === "cancelled" && <Badge className="bg-slate-100 text-slate-600 border border-slate-300 text-sm px-3 py-1">Cancelled</Badge>}
+              {status !== "pending" && status !== "selected" && status !== "cancelled" && (
+                <Badge className="bg-blue-50 text-blue-700 border border-blue-200 text-sm px-3 py-1 capitalize">{status}</Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                size="sm"
+                onClick={() => handleStatusChange("pending")}
+                disabled={savingStatus}
+                variant={status === "pending" ? "default" : "outline"}
+                className={status === "pending" ? "bg-yellow-500 hover:bg-yellow-600 text-white border-yellow-500" : "border-yellow-300 text-yellow-700 hover:bg-yellow-50"}
+              >
+                {savingStatusValue === "pending" ? "Saving…" : "Pending"}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleStatusChange("selected")}
+                disabled={savingStatus}
+                variant={status === "selected" ? "default" : "outline"}
+                className={status === "selected" ? "bg-green-600 hover:bg-green-700 text-white border-green-600" : "border-green-300 text-green-700 hover:bg-green-50"}
+              >
+                {savingStatusValue === "selected" ? "Saving…" : "Selected"}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleStatusChange("cancelled")}
+                disabled={savingStatus}
+                variant={status === "cancelled" ? "default" : "outline"}
+                className={status === "cancelled" ? "bg-slate-600 hover:bg-slate-700 text-white border-slate-600" : "border-slate-300 text-slate-600 hover:bg-slate-50"}
+              >
+                {savingStatusValue === "cancelled" ? "Saving…" : "Cancelled"}
+              </Button>
+            </div>
           </div>
         </div>
 
