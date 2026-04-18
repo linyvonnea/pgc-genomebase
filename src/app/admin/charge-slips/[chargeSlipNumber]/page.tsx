@@ -551,6 +551,7 @@ function ChargeSlipDetailContent() {
                         <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="paid">Paid</SelectItem>
                         <SelectItem value="cancelled">Cancelled</SelectItem>
+                        <SelectItem value="waived">Waived</SelectItem>
                       </>
                     )}
                   </SelectContent>

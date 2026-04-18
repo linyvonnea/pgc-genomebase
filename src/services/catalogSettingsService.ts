@@ -241,6 +241,7 @@ function getDefaultChargeSlipStatuses(): CatalogItem[] {
     { id: "cs-2", value: "pending", color: "#eab308", order: 2, isActive: true },
     { id: "cs-3", value: "validated", color: "#22c55e", order: 3, isActive: true },
     { id: "cs-4", value: "cancelled", color: "#ef4444", order: 4, isActive: true },
+    { id: "cs-5", value: "waived", color: "#9333ea", order: 5, isActive: true },
   ];
 }
 
