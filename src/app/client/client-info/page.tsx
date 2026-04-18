@@ -2912,16 +2912,12 @@ export default function ClientPortalPage() {
                                               <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
                                                 Cancelled
                                               </span>
-                                            ) : quotation.status === "selected" || quotation.selectedForProject ? (
+                                            ) : (quotation.status === "selected" || quotation.selectedForProject) ? (
                                               <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 tracking-tight">
                                                 <CheckCircle2 className="h-3 w-3" strokeWidth={3} />
                                                 Selected
                                               </span>
-                                            ) : (
-                                              <span className="inline-flex text-[10px] font-semibold text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-full px-2 py-0.5">
-                                                Pending
-                                              </span>
-                                            )}
+                                            ) : null}
                                             <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform", qSidebarExpanded && "rotate-180")} />
                                           </div>
                                         </div>
@@ -3774,15 +3770,11 @@ export default function ClientPortalPage() {
                                     <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
                                       Cancelled
                                     </span>
-                                  ) : quote.status === "selected" || quote.selectedForProject ? (
+                                  ) : (quote.status === "selected" || quote.selectedForProject) ? (
                                     <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
                                       <CheckCircle2 className="h-2.5 w-2.5" /> Selected
                                     </span>
-                                  ) : (
-                                    <span className="inline-flex text-[10px] font-semibold text-yellow-700 bg-yellow-50 border border-yellow-200 rounded-full px-2 py-0.5">
-                                      Pending
-                                    </span>
-                                  )}
+                                  ) : null}
                                 </div>
                                 {/* Right: action buttons */}
                                 <div className="flex items-center gap-2 flex-shrink-0">
