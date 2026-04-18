@@ -38,10 +38,8 @@ function extractValidCategories(services: any[]): ValidCategory[] {
 }
 
 // Normalize status
-function normalizeStatus(status?: string): "paid" | "cancelled" | "processing" | "pending" {
-  const safe = (status || "processing").toLowerCase();
-  if (safe === "paid" || safe === "cancelled" || safe === "processing" || safe === "pending") return safe;
-  return "processing";
+function normalizeStatus(status?: string): string {
+  return (status || "processing").toLowerCase();
 }
 
 // Server Component: Charge Slip Management Page
