@@ -11,5 +11,6 @@ export interface Client {
   createdAt?: string |Date;
   haveSubmitted?: boolean;
   isContactPerson?: boolean;
-  year?: number
+  year?: number;
+  status?: "Approved" | "Cancelled";
 }

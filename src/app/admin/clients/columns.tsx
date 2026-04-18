@@ -187,14 +187,26 @@ export const columns: ColumnDef<Client>[] = [
     ),
   },
   {
-    accessorKey: "phoneNumber",
-    header: () => <div className="px-1 text-[11px] font-semibold text-right">Phone</div>,
+    accessorKey: "status",
+    header: () => <div className="px-1 text-[11px] font-semibold">Status</div>,
     size: 90,
-    cell: ({ getValue }) => (
-      <div className="text-[10px] whitespace-nowrap text-right text-slate-500 px-1">
-        {getValue() as string}
-      </div>
-    ),
+    cell: ({ getValue }) => {
+      const val = (getValue() as string | undefined) || "Approved";
+      const isCancelled = val === "Cancelled";
+      return (
+        <div className="px-1">
+          <span
+            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border whitespace-nowrap ${
+              isCancelled
+                ? "bg-rose-50 text-rose-700 border-rose-200"
+                : "bg-emerald-50 text-emerald-700 border-emerald-200"
+            }`}
+          >
+            {val}
+          </span>
+        </div>
+      );
+    },
   },
   {
     id: "actions",
