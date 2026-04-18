@@ -119,13 +119,13 @@ export async function getQuotationsByClientName(
  */
 export async function saveQuotationToFirestore(quotation: QuotationRecord) {
   const docRef = doc(db, "quotations", quotation.referenceNumber);
-  await setDoc(docRef, { status: "pending", ...quotation });
+  await setDoc(docRef, { status: "pending", selectedForProject: "", ...quotation });
 }
 
 /**
  * Update quotation status.
  * When status is "selected", sets selectedForProject to the inquiryId.
- * When status is "cancelled", empties the selectedForProject field.
+ * When status is "cancelled" or "pending", empties the selectedForProject field.
  */
 export async function updateQuotationStatus(
   referenceNumber: string,
@@ -138,7 +138,7 @@ export async function updateQuotationStatus(
   
   if (status === "selected" && inquiryId) {
     updateData.selectedForProject = inquiryId;
-  } else if (status === "cancelled") {
+  } else if (status === "cancelled" || status === "pending") {
     updateData.selectedForProject = "";
   }
   

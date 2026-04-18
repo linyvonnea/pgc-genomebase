@@ -70,7 +70,7 @@ export default function QuotationDetailPageClient() {
       if (quotation) {
         if (newStatus === "selected" && quotation.inquiryId) {
           setQuotation({ ...quotation, selectedForProject: quotation.inquiryId });
-        } else if (newStatus === "cancelled") {
+        } else if (newStatus === "cancelled" || newStatus === "pending") {
           setQuotation({ ...quotation, selectedForProject: "" });
         }
       }
