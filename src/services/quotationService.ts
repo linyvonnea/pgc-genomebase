@@ -130,7 +130,7 @@ export async function saveQuotationToFirestore(quotation: QuotationRecord) {
  */
 export async function updateQuotationStatus(
   referenceNumber: string,
-  status: "pending" | "selected" | "in-progress" | "completed" | "cancelled",
+  status: "pending" | "selected" | "completed" | "cancelled",
   inquiryId?: string
 ): Promise<void> {
   const docRef = doc(db, "quotations", referenceNumber);
@@ -158,7 +158,7 @@ export async function markQuotationAsSelected(
     docRef,
     {
       selectedForProject: projectId,
-      status: "in-progress",
+      status: "selected",
     },
     { merge: true }
   );
