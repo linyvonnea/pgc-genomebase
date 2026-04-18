@@ -11,6 +11,7 @@ import {
   limit,
   deleteDoc,
   updateDoc,
+  deleteField,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { QuotationRecord } from "@/types/Quotation";
@@ -124,13 +125,25 @@ export async function saveQuotationToFirestore(quotation: QuotationRecord) {
 
 /**
  * Update quotation status.
+ * When status is "selected", sets selectedForProject to the inquiryId.
+ * When status is "cancelled", removes the selectedForProject field.
  */
 export async function updateQuotationStatus(
   referenceNumber: string,
-  status: "pending" | "selected" | "in-progress" | "completed" | "cancelled"
+  status: "pending" | "selected" | "in-progress" | "completed" | "cancelled",
+  inquiryId?: string
 ): Promise<void> {
   const docRef = doc(db, "quotations", referenceNumber);
-  await setDoc(docRef, { status }, { merge: true });
+  
+  const updateData: Record<string, any> = { status };
+  
+  if (status === "selected" && inquiryId) {
+    updateData.selectedForProject = inquiryId;
+  } else if (status === "cancelled") {
+    updateData.selectedForProject = deleteField();
+  }
+  
+  await setDoc(docRef, updateData, { merge: true });
 }
 
 /**
