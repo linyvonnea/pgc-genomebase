@@ -63,8 +63,8 @@ export default function Home() {
               <h1 className="text-2xl lg:text-4xl font-bold bg-gradient-to-r from-[#F69122] via-[#B9273A] to-[#166FB5] bg-clip-text text-transparent leading-tight">
                 PGC Visayas Genomic Service Request Portal
               </h1>
-              <p className="text-base lg:text-lg text-slate-600 max-w-md mx-auto lg:mx-0">
-                Start your journey with our laboratory, equipment, or bioinformatics services.
+              <p className="text-base lg:text-lg text-slate-600 max-w-md mx-auto lg:mx-0 font-medium italic">
+                “Genomics for a Better Philippines”
               </p>
             </div>
 
