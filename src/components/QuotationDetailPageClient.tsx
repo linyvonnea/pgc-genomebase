@@ -71,8 +71,7 @@ export default function QuotationDetailPageClient() {
         if (newStatus === "selected" && quotation.inquiryId) {
           setQuotation({ ...quotation, selectedForProject: quotation.inquiryId });
         } else if (newStatus === "cancelled") {
-          const { selectedForProject, ...rest } = quotation;
-          setQuotation(rest as QuotationRecord);
+          setQuotation({ ...quotation, selectedForProject: "" });
         }
       }
       
