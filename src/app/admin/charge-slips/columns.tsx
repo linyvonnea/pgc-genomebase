@@ -28,6 +28,7 @@ const statusColors: Record<string, string> = {
   pending: "bg-amber-100 text-amber-800",
   paid: "bg-green-100 text-green-800",
   cancelled: "bg-red-100 text-red-800",
+  waived: "bg-purple-100 text-purple-800",
 };
 
 // Badge colors for categories
