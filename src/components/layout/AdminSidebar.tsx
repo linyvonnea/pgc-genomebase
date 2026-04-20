@@ -60,7 +60,13 @@ export function AdminSidebar() {
   const { user, signOut, adminInfo } = useAuth();
   const { canView, loading: permissionsLoading } = usePermissions(adminInfo?.role);
   const { openTab, activeTab, isTabOpen, setActiveTab } = useTabContext();
-  const { pendingCount, inquiryCount, newOrChargeSlipNumbers, pendingChargeSlipCount } = useApprovalNotifications();
+  const { 
+    pendingCount, 
+    inquiryCount, 
+    newOrChargeSlipNumbers, 
+    pendingChargeSlipCount,
+    projectUploadCount 
+  } = useApprovalNotifications();
 
   const handleNavClick = (href: string, label: string, icon: React.ElementType) => {
     const tabId = href.replace("/admin/", "");
@@ -289,6 +295,18 @@ export function AdminSidebar() {
                           : "bg-red-500 text-white animate-pulse"
                       )}>
                         {pendingChargeSlipCount}
+                      </span>
+                    )}
+
+                    {/* Notification badge for Projects (New Form Submissions) */}
+                    {href === "/admin/projects" && projectUploadCount > 0 && (
+                      <span className={cn(
+                        "min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-bold px-1.5",
+                        isActive(href)
+                          ? "bg-white text-[#166FB5]"
+                          : "bg-red-500 text-white animate-pulse"
+                      )}>
+                        {projectUploadCount}
                       </span>
                     )}
                     
