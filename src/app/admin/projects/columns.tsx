@@ -31,7 +31,32 @@ const CLIENT_COLORS = [
   "text-cyan-600",
 ];
 
-// StatusCell: shows blinking alert icon on "Ongoing" rows when client has unacknowledged form uploads
+// Hook to track count of projects with unacknowledged form submissions
+function useProjectFormNotifications() {
+  const [projectsWithUnacknowledged, setProjectsWithUnacknowledged] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const q = query(
+      collection(db, "clientFormSubmissions"),
+      where("acknowledgedByAdmin", "==", false)
+    );
+
+    const unsub = onSnapshot(q, (snap) => {
+      const projectIds = new Set<string>();
+      snap.forEach((doc) => {
+        const projectId = doc.data().projectId;
+        if (projectId) projectIds.add(projectId);
+      });
+      setProjectsWithUnacknowledged(projectIds);
+    });
+
+    return () => unsub();
+  }, []);
+
+  return projectsWithUnacknowledged;
+}
+
+// StatusCell: shows red blinking alert icon on "Ongoing" rows when client has unacknowledged form uploads
 function StatusCell({ projectId, status }: { projectId: string; status: string }) {
   const [hasUnread, setHasUnread] = useState(false);
 
@@ -85,12 +110,38 @@ function StatusCell({ projectId, status }: { projectId: string; status: string }
           <Tooltip>
             <TooltipTrigger asChild>
               <span className="relative flex h-2.5 w-2.5 shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
               </span>
             </TooltipTrigger>
             <TooltipContent side="right" className="text-[10px]">
               Client uploaded a new submission form
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </div>
+  );
+}
+
+// StatusHeader: shows count of projects with unacknowledged submissions
+function StatusHeader() {
+  const projectsWithUnacknowledged = useProjectFormNotifications();
+  const count = projectsWithUnacknowledged.size;
+
+  return (
+    <div className="px-1 text-[12px] font-semibold flex items-center gap-1.5">
+      <span>Status</span>
+      {count > 0 && (
+        <TooltipProvider delayDuration={100}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="relative flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[9px] font-bold px-1 animate-pulse">
+                {count > 9 ? "9+" : count}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-[10px]">
+              {count} {count === 1 ? "project has" : "projects have"} new uploaded forms
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -252,8 +303,8 @@ export const columns: ColumnDef<Project>[] = [
   },
   {
     accessorKey: "status",
-    header: () => <div className="px-1 text-[12px] font-semibold">Status</div>,
-    size: 100,
+    header: () => <StatusHeader />,
+    size: 110,
     cell: ({ row }) => (
       <StatusCell
         projectId={row.original.pid ?? ""}
