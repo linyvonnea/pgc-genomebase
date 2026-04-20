@@ -36,6 +36,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -3010,7 +3016,7 @@ export default function ClientPortalPage() {
                             {/* Charge Slips */}
                             <div>
                               {(() => {
-                                const isChargeSlipsDisabled = currentInquiry?.status === "In Progress";
+                                const isChargeSlipsDisabled = chargeSlipCount === 0;
                                 return (
                                   <button
                                     type="button"
@@ -3163,118 +3169,143 @@ export default function ClientPortalPage() {
                             {portalFeatures.serviceReports && (
                               <div>
                                 {(() => {
-                                  const hasPaidOrWaivedChargeSlip = docs?.chargeSlips?.some(
-                                    (cs) => cs.status === "paid" || cs.status === "waived"
-                                  ) ?? false;
-                                  const isServiceReportsDisabled = 
-                                    currentInquiry?.status === "In Progress" || 
-                                    !hasPaidOrWaivedChargeSlip;
+                                  const hasServiceReports = (docs?.serviceReports?.length || 0) > 0;
+                                  // All charge slips must be paid, waived, or cancelled for the client to receive/view
+                                  const allChargeSlipsSettled =
+                                    chargeSlipCount === 0 ||
+                                    (docs?.chargeSlips?.every(
+                                      (cs) => cs.status === "paid" || cs.status === "waived" || cs.status === "cancelled"
+                                    ) ?? false);
+                                  const isServiceReportSectionDisabled = !hasServiceReports;
                                   return (
-                                    <button
-                                      type="button"
-                                      disabled={isServiceReportsDisabled}
-                                      className={cn(
-                                        "flex items-center gap-2 mb-1.5 w-full text-left",
-                                        isServiceReportsDisabled && "opacity-40 cursor-not-allowed"
-                                      )}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (!isServiceReportsDisabled) {
-                                          toggleDocSection(project.pid!, "serviceReports");
-                                        }
-                                      }}
-                                    >
-                                      <ShieldEllipsis className="h-3 w-3 text-blue-600 flex-shrink-0" />
-                                      <span className="text-sm font-semibold text-slate-700 flex-1">
-                                        Service Reports
-                                      </span>
-                                      <span className="text-[10px] text-slate-500 mr-1">({docs?.serviceReports?.length || 0})</span>
-                                      <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:serviceReports`) && "rotate-180")} />
-                                    </button>
+                                    <>
+                                      <button
+                                        type="button"
+                                        disabled={isServiceReportSectionDisabled}
+                                        className={cn(
+                                          "flex items-center gap-2 mb-1.5 w-full text-left",
+                                          isServiceReportSectionDisabled && "opacity-40 cursor-not-allowed"
+                                        )}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (!isServiceReportSectionDisabled) {
+                                            toggleDocSection(project.pid!, "serviceReports");
+                                          }
+                                        }}
+                                      >
+                                        <ShieldEllipsis className="h-3 w-3 text-blue-600 flex-shrink-0" />
+                                        <span className="text-sm font-semibold text-slate-700 flex-1">
+                                          Service Reports
+                                        </span>
+                                        <span className="text-[10px] text-slate-500 mr-1">({docs?.serviceReports?.length || 0})</span>
+                                        <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:serviceReports`) && "rotate-180")} />
+                                      </button>
+                                      {expandedDocSections.has(`${project.pid}:serviceReports`) && hasServiceReports ? (
+                                        <div className="space-y-2 ml-5">
+                                          {docs?.serviceReports.map((item: any) => {
+                                            const isReceived = item.status === "received";
+                                            const receivedDate = item.receivedAt?.toDate
+                                              ? format(item.receivedAt.toDate(), "MMM d, yyyy h:mm a")
+                                              : "";
+                                            const reportKey = `${project.pid}:${item.id}`;
+                                            const isReceiving = receivingReportId === reportKey;
+                                            return (
+                                              <div
+                                                key={item.id}
+                                                className="flex items-start justify-between gap-2 py-1.5 border-b border-slate-100 last:border-0"
+                                                onClick={(e) => e.stopPropagation()}
+                                              >
+                                                <div className="flex items-start gap-1.5 min-w-0">
+                                                  <FileText className="h-3 w-3 shrink-0 text-blue-500 mt-0.5" />
+                                                  <div className="min-w-0">
+                                                    {isReceived ? (
+                                                      <a
+                                                        href={item.fileUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-xs text-blue-700 hover:underline truncate block"
+                                                      >
+                                                        {item.fileName || item.id}
+                                                      </a>
+                                                    ) : (
+                                                      <span className="text-xs text-slate-600 truncate block">
+                                                        {item.fileName || item.id}
+                                                      </span>
+                                                    )}
+                                                    {isReceived && receivedDate && (
+                                                      <span className="text-[10px] text-green-600 block">
+                                                        Received {receivedDate}
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                                <div className="shrink-0">
+                                                  {isReceived ? (
+                                                    <div className="flex items-center gap-1">
+                                                      <Badge
+                                                        variant="outline"
+                                                        className="text-[10px] text-green-700 border-green-200 bg-green-50 gap-1 py-0.5 h-5"
+                                                      >
+                                                        <CheckCircle2 className="h-2.5 w-2.5" />
+                                                        Received
+                                                      </Badge>
+                                                      <a
+                                                        href={item.fileUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        title="Download"
+                                                      >
+                                                        <Download className="h-3 w-3 text-slate-400 hover:text-blue-600" />
+                                                      </a>
+                                                    </div>
+                                                  ) : allChargeSlipsSettled ? (
+                                                    <Button
+                                                      size="sm"
+                                                      variant="outline"
+                                                      className="h-6 text-[10px] px-2 gap-1 text-blue-700 border-blue-200 hover:bg-blue-50"
+                                                      disabled={isReceiving}
+                                                      onClick={() => handleReceiveServiceReport(project.pid, item)}
+                                                    >
+                                                      {isReceiving ? (
+                                                        <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                                                      ) : (
+                                                        <Download className="h-2.5 w-2.5" />
+                                                      )}
+                                                      Receive
+                                                    </Button>
+                                                  ) : (
+                                                    <TooltipProvider delayDuration={100}>
+                                                      <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                          <span className="inline-block">
+                                                            <Button
+                                                              size="sm"
+                                                              variant="outline"
+                                                              className="h-6 text-[10px] px-2 gap-1 text-slate-400 border-slate-200 cursor-not-allowed pointer-events-none"
+                                                              disabled
+                                                            >
+                                                              <Download className="h-2.5 w-2.5" />
+                                                              Receive
+                                                            </Button>
+                                                          </span>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="left" className="max-w-[180px] text-[10px] text-center">
+                                                          Please settle all outstanding charge slips to view and download the service report.
+                                                        </TooltipContent>
+                                                      </Tooltip>
+                                                    </TooltipProvider>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      ) : expandedDocSections.has(`${project.pid}:serviceReports`) ? (
+                                        <p className="text-xs text-slate-400 ml-5">No service reports yet</p>
+                                      ) : null}
+                                    </>
                                   );
                                 })()}
-                                {expandedDocSections.has(`${project.pid}:serviceReports`) && (docs?.serviceReports?.length || 0) > 0 ? (
-                                  <div className="space-y-2 ml-5">
-                                    {docs?.serviceReports.map((item: any) => {
-                                      const isReceived = item.status === "received";
-                                      const receivedDate = item.receivedAt?.toDate
-                                        ? format(item.receivedAt.toDate(), "MMM d, yyyy h:mm a")
-                                        : "";
-                                      const reportKey = `${project.pid}:${item.id}`;
-                                      const isReceiving = receivingReportId === reportKey;
-                                      return (
-                                        <div
-                                          key={item.id}
-                                          className="flex items-start justify-between gap-2 py-1.5 border-b border-slate-100 last:border-0"
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          <div className="flex items-start gap-1.5 min-w-0">
-                                            <FileText className="h-3 w-3 shrink-0 text-blue-500 mt-0.5" />
-                                            <div className="min-w-0">
-                                              {isReceived ? (
-                                                <a
-                                                  href={item.fileUrl}
-                                                  target="_blank"
-                                                  rel="noopener noreferrer"
-                                                  className="text-xs text-blue-700 hover:underline truncate block"
-                                                >
-                                                  {item.fileName || item.id}
-                                                </a>
-                                              ) : (
-                                                <span className="text-xs text-slate-600 truncate block">
-                                                  {item.fileName || item.id}
-                                                </span>
-                                              )}
-                                              {isReceived && receivedDate && (
-                                                <span className="text-[10px] text-green-600 block">
-                                                  Received {receivedDate}
-                                                </span>
-                                              )}
-                                            </div>
-                                          </div>
-                                          <div className="shrink-0">
-                                            {isReceived ? (
-                                              <div className="flex items-center gap-1">
-                                                <Badge
-                                                  variant="outline"
-                                                  className="text-[10px] text-green-700 border-green-200 bg-green-50 gap-1 py-0.5 h-5"
-                                                >
-                                                  <CheckCircle2 className="h-2.5 w-2.5" />
-                                                  Received
-                                                </Badge>
-                                                <a
-                                                  href={item.fileUrl}
-                                                  target="_blank"
-                                                  rel="noopener noreferrer"
-                                                  title="Download"
-                                                >
-                                                  <Download className="h-3 w-3 text-slate-400 hover:text-blue-600" />
-                                                </a>
-                                              </div>
-                                            ) : (
-                                              <Button
-                                                size="sm"
-                                                variant="outline"
-                                                className="h-6 text-[10px] px-2 gap-1 text-blue-700 border-blue-200 hover:bg-blue-50"
-                                                disabled={isReceiving}
-                                                onClick={() => handleReceiveServiceReport(project.pid, item)}
-                                              >
-                                                {isReceiving ? (
-                                                  <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                                                ) : (
-                                                  <Download className="h-2.5 w-2.5" />
-                                                )}
-                                                Receive
-                                              </Button>
-                                            )}
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                ) : expandedDocSections.has(`${project.pid}:serviceReports`) ? (
-                                  <p className="text-xs text-slate-400 ml-5">No service reports yet</p>
-                                ) : null}
                               </div>
                             )}
                           </div>
