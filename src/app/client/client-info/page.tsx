@@ -131,7 +131,6 @@ import {
   Stamp,
   ArrowRight,
   Download,
-  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -2780,13 +2779,6 @@ export default function ClientPortalPage() {
                 const formSubmissionCount = docs?.formSubmissions || 0;
                 const serviceReportCount = docs?.serviceReports?.length || 0;
                 const officialReceiptCount = docs?.officialReceipts?.length || 0;
-
-                // Section access control based on inquiry status
-                const inquiryStatus = currentInquiry?.status;
-                const sampleFormEnabled = inquiryStatus === "Approved Client";
-                const chargeSlipsEnabled = chargeSlipCount > 0;
-                const serviceReportsEnabled = inquiryStatus !== "In Progress";
-
                 const sampleFormParams = new URLSearchParams();
                 if (emailParam) sampleFormParams.set("email", emailParam);
                 if (inquiryIdParam) sampleFormParams.set("inquiryId", inquiryIdParam);
@@ -2958,22 +2950,18 @@ export default function ClientPortalPage() {
                             </div>
 
                             {/* Sample Submission Form Downloads + Upload */}
-                            <div className={cn(!sampleFormEnabled && "opacity-40 pointer-events-none")}>
+                            <div>
                               <button
                                 type="button"
-                                disabled={!sampleFormEnabled}
                                 className="flex items-center gap-2 mb-1.5 w-full text-left"
-                                onClick={(e) => { e.stopPropagation(); if (sampleFormEnabled) toggleDocSection(project.pid!, "sampleForm"); }}
+                                onClick={(e) => { e.stopPropagation(); toggleDocSection(project.pid!, "sampleForm"); }}
                               >
-                                <FileText className={cn("h-3 w-3 flex-shrink-0", sampleFormEnabled ? "text-orange-500" : "text-slate-400")} />
-                                <span className={cn("text-sm font-semibold flex-1", sampleFormEnabled ? "text-slate-700" : "text-slate-400")}>Sample Submission Form</span>
+                                <FileText className="h-3 w-3 text-orange-500 flex-shrink-0" />
+                                <span className="text-sm font-semibold text-slate-700 flex-1">Sample Submission Form</span>
                                 <span className="text-[10px] text-slate-500 mr-1">({formSubmissionCount})</span>
-                                {!sampleFormEnabled
-                                  ? <Lock className="h-3 w-3 text-slate-400 flex-shrink-0" />
-                                  : <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:sampleForm`) && "rotate-180")} />
-                                }
+                                <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:sampleForm`) && "rotate-180")} />
                               </button>
-                              {sampleFormEnabled && expandedDocSections.has(`${project.pid}:sampleForm`) && (
+                              {expandedDocSections.has(`${project.pid}:sampleForm`) && (
                                 <DownloadForms projectId={project.pid!} />
                               )}
                             </div>
@@ -3004,22 +2992,18 @@ export default function ClientPortalPage() {
                             )}
 
                             {/* Charge Slips */}
-                            <div className={cn(!chargeSlipsEnabled && "opacity-40 pointer-events-none")}>
+                            <div>
                               <button
                                 type="button"
-                                disabled={!chargeSlipsEnabled}
                                 className="flex items-center gap-2 mb-1.5 w-full text-left"
-                                onClick={(e) => { e.stopPropagation(); if (chargeSlipsEnabled) toggleDocSection(project.pid!, "chargeSlips"); }}
+                                onClick={(e) => { e.stopPropagation(); toggleDocSection(project.pid!, "chargeSlips"); }}
                               >
-                                <Receipt className={cn("h-3 w-3 flex-shrink-0", chargeSlipsEnabled ? "text-green-600" : "text-slate-400")} />
-                                <span className={cn("text-sm font-semibold flex-1", chargeSlipsEnabled ? "text-slate-700" : "text-slate-400")}>
+                                <Receipt className="h-3 w-3 text-green-600 flex-shrink-0" />
+                                <span className="text-sm font-semibold text-slate-700 flex-1">
                                   Charge Slips
                                 </span>
                                 <span className="text-[10px] text-slate-500 mr-1">({chargeSlipCount})</span>
-                                {!chargeSlipsEnabled
-                                  ? <Lock className="h-3 w-3 text-slate-400 flex-shrink-0" />
-                                  : <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:chargeSlips`) && "rotate-180")} />
-                                }
+                                <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:chargeSlips`) && "rotate-180")} />
                               </button>
                               {expandedDocSections.has(`${project.pid}:chargeSlips`) && chargeSlipCount > 0 ? (
                                 <div className="space-y-2 ml-4">
@@ -3147,22 +3131,18 @@ export default function ClientPortalPage() {
                             )}
 
                             {portalFeatures.serviceReports && (
-                              <div className={cn(!serviceReportsEnabled && "opacity-40 pointer-events-none")}>
+                              <div>
                                 <button
                                   type="button"
-                                  disabled={!serviceReportsEnabled}
                                   className="flex items-center gap-2 mb-1.5 w-full text-left"
-                                  onClick={(e) => { e.stopPropagation(); if (serviceReportsEnabled) toggleDocSection(project.pid!, "serviceReports"); }}
+                                  onClick={(e) => { e.stopPropagation(); toggleDocSection(project.pid!, "serviceReports"); }}
                                 >
-                                  <ShieldEllipsis className={cn("h-3 w-3 flex-shrink-0", serviceReportsEnabled ? "text-blue-600" : "text-slate-400")} />
-                                  <span className={cn("text-sm font-semibold flex-1", serviceReportsEnabled ? "text-slate-700" : "text-slate-400")}>
+                                  <ShieldEllipsis className="h-3 w-3 text-blue-600 flex-shrink-0" />
+                                  <span className="text-sm font-semibold text-slate-700 flex-1">
                                     Service Reports
                                   </span>
                                   <span className="text-[10px] text-slate-500 mr-1">({docs?.serviceReports?.length || 0})</span>
-                                  {!serviceReportsEnabled
-                                    ? <Lock className="h-3 w-3 text-slate-400 flex-shrink-0" />
-                                    : <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:serviceReports`) && "rotate-180")} />
-                                  }
+                                  <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:serviceReports`) && "rotate-180")} />
                                 </button>
                                 {expandedDocSections.has(`${project.pid}:serviceReports`) && (docs?.serviceReports?.length || 0) > 0 ? (
                                   <div className="space-y-2 ml-5">
