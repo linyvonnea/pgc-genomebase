@@ -32,7 +32,7 @@ const CLIENT_COLORS = [
 ];
 
 // Hook to track count of projects with unacknowledged form submissions
-export function useProjectFormNotifications() {
+function useProjectFormNotifications() {
   const [projectsWithUnacknowledged, setProjectsWithUnacknowledged] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -124,9 +124,30 @@ function StatusCell({ projectId, status }: { projectId: string; status: string }
   );
 }
 
-// StatusHeader: plain label (badge moved to page title)
+// StatusHeader: shows count of projects with unacknowledged submissions
 function StatusHeader() {
-  return <div className="px-1 text-[12px] font-semibold">Status</div>;
+  const projectsWithUnacknowledged = useProjectFormNotifications();
+  const count = projectsWithUnacknowledged.size;
+
+  return (
+    <div className="px-1 text-[12px] font-semibold flex items-center gap-1.5">
+      <span>Status</span>
+      {count > 0 && (
+        <TooltipProvider delayDuration={100}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="relative flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[9px] font-bold px-1 animate-pulse">
+                {count > 9 ? "9+" : count}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-[10px]">
+              {count} {count === 1 ? "project has" : "projects have"} new uploaded forms
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </div>
+  );
 }
 
 // Proper React component for the actions cell so hooks are valid
