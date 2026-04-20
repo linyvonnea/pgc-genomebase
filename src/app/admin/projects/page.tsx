@@ -50,7 +50,6 @@ function ProjectPageContent() {
   const { adminInfo } = useAuth();
   const { canCreate } = usePermissions(adminInfo?.role);
   const projectsWithUnacknowledged = useProjectFormNotifications();
-  const unreadCount = projectsWithUnacknowledged.size;
 
   // Sort: projects with unacknowledged uploads float to top
   const sortedData = useMemo(() => {
