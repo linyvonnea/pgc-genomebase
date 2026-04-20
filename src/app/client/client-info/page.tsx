@@ -2951,19 +2951,35 @@ export default function ClientPortalPage() {
 
                             {/* Sample Submission Form Downloads + Upload */}
                             <div>
-                              <button
-                                type="button"
-                                className="flex items-center gap-2 mb-1.5 w-full text-left"
-                                onClick={(e) => { e.stopPropagation(); toggleDocSection(project.pid!, "sampleForm"); }}
-                              >
-                                <FileText className="h-3 w-3 text-orange-500 flex-shrink-0" />
-                                <span className="text-sm font-semibold text-slate-700 flex-1">Sample Submission Form</span>
-                                <span className="text-[10px] text-slate-500 mr-1">({formSubmissionCount})</span>
-                                <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:sampleForm`) && "rotate-180")} />
-                              </button>
-                              {expandedDocSections.has(`${project.pid}:sampleForm`) && (
-                                <DownloadForms projectId={project.pid!} />
-                              )}
+                              {(() => {
+                                const isSampleFormDisabled = currentInquiry?.status === "In Progress";
+                                return (
+                                  <>
+                                    <button
+                                      type="button"
+                                      disabled={isSampleFormDisabled}
+                                      className={cn(
+                                        "flex items-center gap-2 mb-1.5 w-full text-left",
+                                        isSampleFormDisabled && "opacity-40 cursor-not-allowed"
+                                      )}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (!isSampleFormDisabled) {
+                                          toggleDocSection(project.pid!, "sampleForm");
+                                        }
+                                      }}
+                                    >
+                                      <FileText className="h-3 w-3 text-orange-500 flex-shrink-0" />
+                                      <span className="text-sm font-semibold text-slate-700 flex-1">Sample Submission Form</span>
+                                      <span className="text-[10px] text-slate-500 mr-1">({formSubmissionCount})</span>
+                                      <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:sampleForm`) && "rotate-180")} />
+                                    </button>
+                                    {expandedDocSections.has(`${project.pid}:sampleForm`) && !isSampleFormDisabled && (
+                                      <DownloadForms projectId={project.pid!} />
+                                    )}
+                                  </>
+                                );
+                              })()}
                             </div>
 
                             {/* Sample Forms (Moved below Quotations) */}
@@ -2993,18 +3009,32 @@ export default function ClientPortalPage() {
 
                             {/* Charge Slips */}
                             <div>
-                              <button
-                                type="button"
-                                className="flex items-center gap-2 mb-1.5 w-full text-left"
-                                onClick={(e) => { e.stopPropagation(); toggleDocSection(project.pid!, "chargeSlips"); }}
-                              >
-                                <Receipt className="h-3 w-3 text-green-600 flex-shrink-0" />
-                                <span className="text-sm font-semibold text-slate-700 flex-1">
-                                  Charge Slips
-                                </span>
-                                <span className="text-[10px] text-slate-500 mr-1">({chargeSlipCount})</span>
-                                <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:chargeSlips`) && "rotate-180")} />
-                              </button>
+                              {(() => {
+                                const isChargeSlipsDisabled = currentInquiry?.status === "In Progress";
+                                return (
+                                  <button
+                                    type="button"
+                                    disabled={isChargeSlipsDisabled}
+                                    className={cn(
+                                      "flex items-center gap-2 mb-1.5 w-full text-left",
+                                      isChargeSlipsDisabled && "opacity-40 cursor-not-allowed"
+                                    )}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (!isChargeSlipsDisabled) {
+                                        toggleDocSection(project.pid!, "chargeSlips");
+                                      }
+                                    }}
+                                  >
+                                    <Receipt className="h-3 w-3 text-green-600 flex-shrink-0" />
+                                    <span className="text-sm font-semibold text-slate-700 flex-1">
+                                      Charge Slips
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 mr-1">({chargeSlipCount})</span>
+                                    <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:chargeSlips`) && "rotate-180")} />
+                                  </button>
+                                );
+                              })()}
                               {expandedDocSections.has(`${project.pid}:chargeSlips`) && chargeSlipCount > 0 ? (
                                 <div className="space-y-2 ml-4">
                                   {docs?.chargeSlips.map((chargeSlip) => {
@@ -3132,18 +3162,37 @@ export default function ClientPortalPage() {
 
                             {portalFeatures.serviceReports && (
                               <div>
-                                <button
-                                  type="button"
-                                  className="flex items-center gap-2 mb-1.5 w-full text-left"
-                                  onClick={(e) => { e.stopPropagation(); toggleDocSection(project.pid!, "serviceReports"); }}
-                                >
-                                  <ShieldEllipsis className="h-3 w-3 text-blue-600 flex-shrink-0" />
-                                  <span className="text-sm font-semibold text-slate-700 flex-1">
-                                    Service Reports
-                                  </span>
-                                  <span className="text-[10px] text-slate-500 mr-1">({docs?.serviceReports?.length || 0})</span>
-                                  <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:serviceReports`) && "rotate-180")} />
-                                </button>
+                                {(() => {
+                                  const hasPaidOrWaivedChargeSlip = docs?.chargeSlips?.some(
+                                    (cs) => cs.status === "paid" || cs.status === "waived"
+                                  ) ?? false;
+                                  const isServiceReportsDisabled = 
+                                    currentInquiry?.status === "In Progress" || 
+                                    !hasPaidOrWaivedChargeSlip;
+                                  return (
+                                    <button
+                                      type="button"
+                                      disabled={isServiceReportsDisabled}
+                                      className={cn(
+                                        "flex items-center gap-2 mb-1.5 w-full text-left",
+                                        isServiceReportsDisabled && "opacity-40 cursor-not-allowed"
+                                      )}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (!isServiceReportsDisabled) {
+                                          toggleDocSection(project.pid!, "serviceReports");
+                                        }
+                                      }}
+                                    >
+                                      <ShieldEllipsis className="h-3 w-3 text-blue-600 flex-shrink-0" />
+                                      <span className="text-sm font-semibold text-slate-700 flex-1">
+                                        Service Reports
+                                      </span>
+                                      <span className="text-[10px] text-slate-500 mr-1">({docs?.serviceReports?.length || 0})</span>
+                                      <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:serviceReports`) && "rotate-180")} />
+                                    </button>
+                                  );
+                                })()}
                                 {expandedDocSections.has(`${project.pid}:serviceReports`) && (docs?.serviceReports?.length || 0) > 0 ? (
                                   <div className="space-y-2 ml-5">
                                     {docs?.serviceReports.map((item: any) => {
