@@ -99,14 +99,14 @@ export function AdminSidebar() {
           icon: MessageSquare,
         },
         { 
-          href: "/admin/projects", 
-          label: "Projects", 
-          icon: LibraryBig,
-        },
-        { 
           href: "/admin/clients", 
           label: "Clients", 
           icon: Users,
+        },
+        { 
+          href: "/admin/projects", 
+          label: "Projects", 
+          icon: LibraryBig,
         },
         { 
           href: "/admin/quotations", 
@@ -301,6 +301,18 @@ export function AdminSidebar() {
                           : "bg-red-500 text-white animate-pulse"
                       )}>
                         {pendingChargeSlipCount}
+                      </span>
+                    )}
+
+                    {/* Notification badge for Projects (New Form Submissions) */}
+                    {href === "/admin/projects" && projectUploadCount > 0 && (
+                      <span className={cn(
+                        "min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-bold px-1.5",
+                        isActive(href)
+                          ? "bg-white text-[#166FB5]"
+                          : "bg-red-500 text-white animate-pulse"
+                      )}>
+                        {projectUploadCount}
                       </span>
                     )}
                     
