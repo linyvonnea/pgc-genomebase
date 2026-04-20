@@ -33,7 +33,7 @@ export function useApprovalNotifications() {
   const [inquiryCount, setInquiryCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingChargeSlipCount, setPendingChargeSlipCount] = useState(0);
-  const [projectUploadCount, setProjectUploadCount] = useState(0);
+  const [pendingProjectFormCount, setPendingProjectFormCount] = useState(0);
   const [newOrCount, setNewOrCount] = useState<number>(() => {
     if (typeof window === 'undefined') return 0;
     try { return parseInt(localStorage.getItem('pgc_or_count') ?? '0', 10) || 0; }
@@ -278,25 +278,25 @@ export function useApprovalNotifications() {
     return () => unsubscribe();
   }, []);
 
-  // Listen to unacknowledged client form submissions - drives the Sidebar Projects badge
+  // Listen to unacknowledged client form submissions — drives the Projects sidebar badge
   useEffect(() => {
     const q = query(
-      collectionGroup(db, "clientFormSubmissions"),
+      collection(db, "clientFormSubmissions"),
       where("acknowledgedByAdmin", "==", false)
     );
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        // We count unique project IDs (pid) from the submissions
-        const uniqueProjectPids = new Set<string>();
-        snapshot.docs.forEach((doc) => {
-          const pid = doc.data().pid;
-          if (pid) uniqueProjectPids.add(pid);
+        // Count distinct projects that have at least one unacknowledged submission
+        const projectIds = new Set<string>();
+        snapshot.forEach((d) => {
+          const pid = d.data().projectId;
+          if (pid) projectIds.add(pid);
         });
-        setProjectUploadCount(uniqueProjectPids.size);
+        setPendingProjectFormCount(projectIds.size);
       },
       (error) => {
-        console.error("Error listening to project form notifications:", error);
+        console.error("Error listening to project form submissions:", error);
       }
     );
     return () => unsubscribe();
@@ -358,7 +358,7 @@ export function useApprovalNotifications() {
     newOrCount,
     newOrChargeSlipNumbers,
     pendingChargeSlipCount,
-    projectUploadCount,
+    pendingProjectFormCount,
     unreadCount,
     markAsRead,
     markAllAsRead,
