@@ -105,14 +105,14 @@ export function AdminSidebar() {
           icon: MessageSquare,
         },
         { 
-          href: "/admin/projects", 
-          label: "Projects", 
-          icon: LibraryBig,
-        },
-        { 
           href: "/admin/clients", 
           label: "Clients", 
           icon: Users,
+        },
+        { 
+          href: "/admin/projects", 
+          label: "Projects", 
+          icon: LibraryBig,
         },
         { 
           href: "/admin/quotations", 
