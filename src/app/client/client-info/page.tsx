@@ -3171,10 +3171,12 @@ export default function ClientPortalPage() {
                                 {(() => {
                                   const hasServiceReports = (docs?.serviceReports?.length || 0) > 0;
                                   // All charge slips must be paid, waived, or cancelled for the client to receive/view
+                                  // Receive is enabled only when at least one charge slip is paid or waived.
+                                  // If all charge slips are cancelled (or none exist), keep disabled.
                                   const allChargeSlipsSettled =
-                                    chargeSlipCount === 0 ||
-                                    (docs?.chargeSlips?.every(
-                                      (cs) => cs.status === "paid" || cs.status === "waived" || cs.status === "cancelled"
+                                    chargeSlipCount > 0 &&
+                                    (docs?.chargeSlips?.some(
+                                      (cs) => cs.status === "paid" || cs.status === "waived"
                                     ) ?? false);
                                   const isServiceReportSectionDisabled = !hasServiceReports;
                                   return (
