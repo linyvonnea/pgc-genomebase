@@ -60,7 +60,7 @@ export function AdminSidebar() {
   const { user, signOut, adminInfo } = useAuth();
   const { canView, loading: permissionsLoading } = usePermissions(adminInfo?.role);
   const { openTab, activeTab, isTabOpen, setActiveTab } = useTabContext();
-  const { pendingCount, inquiryCount, newOrChargeSlipNumbers, pendingChargeSlipCount, pendingProjectFormCount } = useApprovalNotifications();
+  const { pendingCount, inquiryCount, newOrChargeSlipNumbers, pendingChargeSlipCount } = useApprovalNotifications();
 
   const handleNavClick = (href: string, label: string, icon: React.ElementType) => {
     const tabId = href.replace("/admin/", "");
@@ -99,14 +99,14 @@ export function AdminSidebar() {
           icon: MessageSquare,
         },
         { 
-          href: "/admin/clients", 
-          label: "Clients", 
-          icon: Users,
-        },
-        { 
           href: "/admin/projects", 
           label: "Projects", 
           icon: LibraryBig,
+        },
+        { 
+          href: "/admin/clients", 
+          label: "Clients", 
+          icon: Users,
         },
         { 
           href: "/admin/quotations", 
@@ -187,8 +187,8 @@ export function AdminSidebar() {
     .map((section) => ({
       ...section,
       items: section.items.filter((item) => {
-        const routeModule = ROUTE_MODULE_MAP[item.href];
-        return routeModule && canView(routeModule);
+        const module = ROUTE_MODULE_MAP[item.href];
+        return module && canView(module);
       }),
     }))
     .filter((section) => section.items.length > 0); // Hide empty sections
@@ -280,18 +280,6 @@ export function AdminSidebar() {
                       </span>
                     )}
                     
-                    {/* Notification badge for Projects */}
-                    {href === "/admin/projects" && pendingProjectFormCount > 0 && (
-                      <span className={cn(
-                        "min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-bold px-1.5",
-                        isActive(href)
-                          ? "bg-white text-[#166FB5]"
-                          : "bg-red-500 text-white animate-pulse"
-                      )}>
-                        {pendingProjectFormCount > 99 ? "99+" : pendingProjectFormCount}
-                      </span>
-                    )}
-
                     {/* Notification badge for Charge Slips */}
                     {href === "/admin/charge-slips" && pendingChargeSlipCount > 0 && (
                       <span className={cn(
@@ -301,18 +289,6 @@ export function AdminSidebar() {
                           : "bg-red-500 text-white animate-pulse"
                       )}>
                         {pendingChargeSlipCount}
-                      </span>
-                    )}
-
-                    {/* Notification badge for Projects (New Form Submissions) */}
-                    {href === "/admin/projects" && projectUploadCount > 0 && (
-                      <span className={cn(
-                        "min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-bold px-1.5",
-                        isActive(href)
-                          ? "bg-white text-[#166FB5]"
-                          : "bg-red-500 text-white animate-pulse"
-                      )}>
-                        {projectUploadCount}
                       </span>
                     )}
                     
