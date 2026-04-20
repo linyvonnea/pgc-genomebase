@@ -33,7 +33,6 @@ export function useApprovalNotifications() {
   const [inquiryCount, setInquiryCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [pendingChargeSlipCount, setPendingChargeSlipCount] = useState(0);
-  const [projectUploadCount, setProjectUploadCount] = useState(0);
   const [newOrCount, setNewOrCount] = useState<number>(() => {
     if (typeof window === 'undefined') return 0;
     try { return parseInt(localStorage.getItem('pgc_or_count') ?? '0', 10) || 0; }
@@ -278,30 +277,6 @@ export function useApprovalNotifications() {
     return () => unsubscribe();
   }, []);
 
-  // Listen to unacknowledged client form submissions - drives the Sidebar Projects badge
-  useEffect(() => {
-    const q = query(
-      collectionGroup(db, "clientFormSubmissions"),
-      where("acknowledgedByAdmin", "==", false)
-    );
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        // We count unique project IDs (pid) from the submissions
-        const uniqueProjectPids = new Set<string>();
-        snapshot.docs.forEach((doc) => {
-          const pid = doc.data().pid;
-          if (pid) uniqueProjectPids.add(pid);
-        });
-        setProjectUploadCount(uniqueProjectPids.size);
-      },
-      (error) => {
-        console.error("Error listening to project form notifications:", error);
-      }
-    );
-    return () => unsubscribe();
-  }, []);
-
   const updateNotifications = (newNotifications: ApprovalNotification[], type: "member" | "project") => {
     setNotifications((prev) => {
       // Filter out old notifications of the same type
@@ -358,7 +333,6 @@ export function useApprovalNotifications() {
     newOrCount,
     newOrChargeSlipNumbers,
     pendingChargeSlipCount,
-    projectUploadCount,
     unreadCount,
     markAsRead,
     markAllAsRead,
