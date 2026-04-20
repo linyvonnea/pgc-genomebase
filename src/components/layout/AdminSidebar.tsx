@@ -187,8 +187,8 @@ export function AdminSidebar() {
     .map((section) => ({
       ...section,
       items: section.items.filter((item) => {
-        const module = ROUTE_MODULE_MAP[item.href];
-        return module && canView(module);
+        const routeModule = ROUTE_MODULE_MAP[item.href];
+        return routeModule && canView(routeModule);
       }),
     }))
     .filter((section) => section.items.length > 0); // Hide empty sections
@@ -280,6 +280,18 @@ export function AdminSidebar() {
                       </span>
                     )}
                     
+                    {/* Notification badge for Projects */}
+                    {href === "/admin/projects" && pendingProjectFormCount > 0 && (
+                      <span className={cn(
+                        "min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-bold px-1.5",
+                        isActive(href)
+                          ? "bg-white text-[#166FB5]"
+                          : "bg-red-500 text-white animate-pulse"
+                      )}>
+                        {pendingProjectFormCount > 99 ? "99+" : pendingProjectFormCount}
+                      </span>
+                    )}
+
                     {/* Notification badge for Charge Slips */}
                     {href === "/admin/charge-slips" && pendingChargeSlipCount > 0 && (
                       <span className={cn(
