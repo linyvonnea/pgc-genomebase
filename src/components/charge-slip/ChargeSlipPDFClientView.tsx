@@ -21,6 +21,7 @@ export function ChargeSlipPDFClientView({ record }: Props) {
         project={record.project}
         chargeSlipNumber={record.chargeSlipNumber}
         orNumber={record.orNumber ?? ""}
+        isInternal={record.useInternalPrice}
         useInternalPrice={record.useInternalPrice}
         useAffiliationAsClientName={record.useAffiliationAsClientName}
         preparedBy={record.preparedBy}

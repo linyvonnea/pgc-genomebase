@@ -10,7 +10,9 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { collection, collectionGroup, onSnapshot, query, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -41,7 +43,7 @@ type UIChargeSlipRecord = {
   dateOfOR?: Date;
   createdAt?: Date;
   total: number;
-  status?: "processing" | "paid" | "cancelled";
+  status?: "processing" | "paid" | "cancelled" | "pending" | "waived";
   cid: string;
   projectId: string;
   clientInfo: {
@@ -79,9 +81,7 @@ interface Props {
 export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props) {
   const router = useRouter();
 
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: "chargeSlipNumber", desc: true },
-  ]);
+  const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("__all");
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
@@ -89,6 +89,53 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   const [yearFilter, setYearFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
   const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(true);
+  const [newOrCsNumbers, setNewOrCsNumbers] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const v = localStorage.getItem('pgc_or_cs_nums');
+      return v ? new Set(JSON.parse(v)) : new Set();
+    } catch { return new Set(); }
+  });
+
+  // Real-time set of charge slip numbers whose status is "pending" in Firestore
+  const [pendingCsNums, setPendingCsNums] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const q = query(collection(db, "chargeSlips"), where("status", "==", "pending"));
+    const unsub = onSnapshot(q, (snap) => {
+      setPendingCsNums(new Set(snap.docs.map((d) => d.id)));
+    }, (err) => console.error("Pending CS listener error:", err));
+    return () => unsub();
+  }, []);
+
+  // Subscribe to unacknowledged official receipts so we can highlight those rows
+  useEffect(() => {
+    const q = query(
+      collectionGroup(db, "officialReceipts"),
+      where("acknowledgedByAdmin", "==", false)
+    );
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const csNums = new Set<string>();
+        snap.docs.forEach((d) => {
+          const data = d.data();
+          // Exclude returned receipts — admin already acted on them
+          if (data.returnedByAdmin === true) return;
+          const csNum: string | undefined = data.chargeSlipNumber;
+          if (csNum) csNums.add(csNum);
+        });
+        setNewOrCsNumbers(csNums);
+        try {
+          localStorage.setItem('pgc_or_cs_nums', JSON.stringify([...csNums]));
+        } catch {}
+      },
+      (error) => {
+        console.error("Error subscribing to OR uploads:", error);
+        // On error, don't clear the state - keep whatever we had
+      }
+    );
+    return () => unsub();
+  }, []);
 
   const monthNames = useMemo(() => [
     "January", "February", "March", "April", "May", "June",
@@ -108,7 +155,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
 
   // Filter data manually before passing to table
   const filteredData = useMemo(() => {
-    return data.filter((item) => {
+    const filtered = data.filter((item) => {
       // 1. Global Filter
       const q = globalFilter.trim().toLowerCase();
       const haystack =
@@ -134,8 +181,27 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       const matchesMonth = monthFilter === "all" || (date && (date.getMonth() + 1).toString() === monthFilter);
 
       return matchesSearch && matchesStatus && matchesCategory && matchesYear && matchesMonth;
+    }).map((item) => {
+      const liveStatus = pendingCsNums.has(item.chargeSlipNumber) ? ("pending" as const) : item.status;
+      return {
+        ...item,
+        status: liveStatus,
+        hasNewOR: liveStatus === "pending",
+      };
     });
-  }, [data, globalFilter, statusFilter, categoryFilter, yearFilter, monthFilter]);
+
+    // When the user hasn't applied a manual sort, float rows with new ORs to the top,
+    // then fall back to chargeSlipNumber descending.
+    if (sorting.length === 0) {
+      filtered.sort((a, b) => {
+        if (a.hasNewOR && !b.hasNewOR) return -1;
+        if (!a.hasNewOR && b.hasNewOR) return 1;
+        return b.chargeSlipNumber.localeCompare(a.chargeSlipNumber);
+      });
+    }
+
+    return filtered;
+  }, [data, globalFilter, statusFilter, categoryFilter, yearFilter, monthFilter, newOrCsNumbers, pendingCsNums, sorting]);
 
   // Total Summary for the filtered data
   const filteredTotalValue = useMemo(() => {
@@ -167,6 +233,13 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }
 
+  // Count all pending charge slips across the entire dataset (not just current page/filter).
+  // Kept for potential future use; banner removed per design.
+  const _orPendingCount = useMemo(() => {
+    return data.filter((item) => pendingCsNums.has(item.chargeSlipNumber)).length;
+  }, [data, pendingCsNums]);
+  void _orPendingCount;
+
   const table = useReactTable({
     data: filteredData,
     columns,
@@ -191,6 +264,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   // Statuses
   const statuses = useMemo(() => [
     { id: "processing", label: "Processing", color: "text-blue-500", border: "border-blue-200", bg: "bg-blue-50" },
+    { id: "pending", label: "Pending", color: "text-amber-600", border: "border-amber-200", bg: "bg-amber-50" },
     { id: "paid", label: "Paid", color: "text-green-600", border: "border-green-200", bg: "bg-green-50" },
     { id: "cancelled", label: "Cancelled", color: "text-red-500", border: "border-red-200", bg: "bg-red-50" },
   ], []);

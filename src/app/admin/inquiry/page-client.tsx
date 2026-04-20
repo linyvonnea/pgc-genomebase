@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { AddInquiryModal } from "@/components/forms/InquiryModalForm";
 import { DataTable } from "./data-table";
-import { columns } from "./columns";
+import { columns as createColumns } from "./columns";
 import { Inquiry } from "@/types/Inquiry";
+import { CatalogItem } from "@/types/CatalogSettings";
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { subscribeToInquiries } from "@/services/inquiryService";
+import { getCatalogSettings } from "@/services/catalogSettingsService";
 import {
   subscribeToAllAdminUnreadCounts,
 } from "@/services/quotationThreadService";
@@ -27,6 +29,7 @@ export function InquiryPageClient({
   const { canCreate } = usePermissions(adminInfo?.role);
   const [inquiries, setInquiries] = useState<Inquiry[]>(initialData);
   const [unreadInquiryIds, setUnreadInquiryIds] = useState<Set<string>>(new Set());
+  const [statusCatalog, setStatusCatalog] = useState<CatalogItem[]>([]);
   // Track previous unread IDs to detect newly arriving messages
   const prevUnreadIdsRef = useRef<Set<string>>(new Set());
   // Suppress toasts on initial load
@@ -40,6 +43,23 @@ export function InquiryPageClient({
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+    getCatalogSettings()
+      .then((settings) => {
+        if (isMounted) {
+          setStatusCatalog(settings.inquiryStatuses || []);
+        }
+      })
+      .catch((error) => {
+        console.error("Failed to load inquiry status catalog:", error);
+        if (isMounted) setStatusCatalog([]);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Subscribe to all threads that have unread admin messages
   useEffect(() => {
     const unsubscribe = subscribeToAllAdminUnreadCounts((unreadThreads) => {
@@ -49,6 +69,7 @@ export function InquiryPageClient({
         // Fire a toast only for inquiry IDs that are newly unread this cycle
         unreadThreads.forEach((thread) => {
           if (!prevUnreadIdsRef.current.has(thread.inquiryId)) {
+            /* Notification pop-up disabled as requested
             toast.info(`New message from ${thread.clientName}`, {
               description: `Inquiry ID: ${thread.inquiryId}`,
               icon: <MessageCircle className="w-4 h-4 text-blue-500" />,
@@ -61,6 +82,7 @@ export function InquiryPageClient({
               },
               duration: 6000,
             });
+            */
           }
         });
       }
@@ -72,6 +94,9 @@ export function InquiryPageClient({
 
     return () => unsubscribe();
   }, [router]);
+
+  // Create columns with catalog colors
+  const columns = useMemo(() => createColumns(statusCatalog), [statusCatalog]);
 
   return (
     <div className="w-full px-4 py-4 space-y-3">
@@ -95,6 +120,7 @@ export function InquiryPageClient({
           columns={columns}
           data={inquiries}
           unreadInquiryIds={unreadInquiryIds}
+          statusCatalog={statusCatalog}
         />
       </div>
 

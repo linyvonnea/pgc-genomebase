@@ -13,6 +13,7 @@ import { ArrowUpDown } from "lucide-react"
 import useAuth from "@/hooks/useAuth"
 import { usePermissions } from "@/hooks/usePermissions"
 import { ChargeSlipButton } from "./ChargeSlipButton"
+import { EditClientModal } from "@/components/forms/EditClientModal"
 
 // Helper to validate client data using Zod schema
 const validateClient = (data: any) => {
@@ -36,7 +37,7 @@ export const columns: ColumnDef<Client>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="hover:bg-accent px-1 text-[11px] font-semibold"
         >
-          CID
+          Client ID
           <ArrowUpDown className="ml-1 h-3 w-3" />
         </Button>
       )
@@ -186,14 +187,26 @@ export const columns: ColumnDef<Client>[] = [
     ),
   },
   {
-    accessorKey: "phoneNumber",
-    header: () => <div className="px-1 text-[11px] font-semibold text-right">Phone</div>,
+    accessorKey: "status",
+    header: () => <div className="px-1 text-[11px] font-semibold">Status</div>,
     size: 90,
-    cell: ({ getValue }) => (
-      <div className="text-[10px] whitespace-nowrap text-right text-slate-500 px-1">
-        {getValue() as string}
-      </div>
-    ),
+    cell: ({ getValue }) => {
+      const val = (getValue() as string | undefined) || "Approved";
+      const isCancelled = val === "Cancelled";
+      return (
+        <div className="px-1">
+          <span
+            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border whitespace-nowrap ${
+              isCancelled
+                ? "bg-rose-50 text-rose-700 border-rose-200"
+                : "bg-emerald-50 text-emerald-700 border-emerald-200"
+            }`}
+          >
+            {val}
+          </span>
+        </div>
+      );
+    },
   },
   {
     id: "actions",
@@ -202,7 +215,6 @@ export const columns: ColumnDef<Client>[] = [
     cell: (ctx: any) => {
       const { row, meta } = ctx;
       const client = row.original;
-      const EditClientModal = require("@/components/forms/EditClientModal").EditClientModal;
       const router = useRouter();
       const { adminInfo } = useAuth();
       const { canEdit, canCreate } = usePermissions(adminInfo?.role);
@@ -214,7 +226,8 @@ export const columns: ColumnDef<Client>[] = [
           )}
           {canCreate("chargeSlips") && (
             <Button
-              onClick={() => {
+              onClick={(event) => {
+                event.stopPropagation();
                 const primaryPid = Array.isArray(client.pid) ? client.pid[0] : client.pid;
                 if (!client.cid || !primaryPid) return;
                 router.push(`/admin/charge-slips/new?clientId=${encodeURIComponent(client.cid)}&projectId=${encodeURIComponent(primaryPid)}`);
@@ -222,6 +235,7 @@ export const columns: ColumnDef<Client>[] = [
               variant="outline"
               size="sm"
               className="h-7 text-[9px] px-2 py-0 border-blue-200 text-blue-700 hover:bg-blue-50 font-semibold"
+              data-stop-row-click="true"
             >
               Charge Slip
             </Button>

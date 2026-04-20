@@ -5,20 +5,30 @@ import { ColumnDef } from "@tanstack/react-table";
 import { UIChargeSlipRecord } from "@/types/UIChargeSlipRecord";
 import { Badge } from "@/components/ui/badge";
 import { ValidCategory } from "@/types/ValidCategory";
-import { Trash2 } from "lucide-react";
+import { Trash2, FileWarning } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteChargeSlip } from "@/services/chargeSlipService";
+import { storage } from "@/lib/firebase";
+import { ref, listAll, deleteObject } from "firebase/storage";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ChargeSlipButton } from "../clients/ChargeSlipButton";
 import { usePermissions } from "@/hooks/usePermissions";
 import useAuth from "@/hooks/useAuth";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Badge colors for statuses
 const statusColors: Record<string, string> = {
   processing: "bg-blue-100 text-blue-800",
+  pending: "bg-amber-100 text-amber-800",
   paid: "bg-green-100 text-green-800",
   cancelled: "bg-red-100 text-red-800",
+  waived: "bg-purple-100 text-purple-800",
 };
 
 // Badge colors for categories
@@ -55,6 +65,16 @@ const ActionCell = ({ row }: { row: any }) => {
 
     try {
       setIsDeleting(true);
+
+      // Delete associated receipts from Storage: receipts/{projectId}/{chargeSlipNumber}/
+      try {
+        const folderRef = ref(storage, `receipts/${row.original.projectId}/${row.original.chargeSlipNumber}`);
+        const listRes = await listAll(folderRef);
+        await Promise.all(listRes.items.map((item) => deleteObject(item)));
+      } catch (storageErr) {
+        console.warn(`Could not delete receipts folder for ${row.original.chargeSlipNumber}:`, storageErr);
+      }
+
       await deleteChargeSlip(row.original.chargeSlipNumber);
       toast.success("Charge slip deleted successfully");
       router.refresh(); // Tells Next.js to re-fetch Server Components data
@@ -103,8 +123,12 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
   {
     accessorKey: "chargeSlipNumber",
     header: "Charge Slip No.",
-    size: 130,
-    cell: ({ getValue }) => <div className="font-mono text-xs font-semibold">{getValue()}</div>,
+    size: 150,
+    cell: ({ getValue, row }) => (
+      <div className="flex items-center gap-1.5">
+        <span className="font-mono text-xs font-semibold">{getValue<string>()}</span>
+      </div>
+    ),
   },
   {
     accessorFn: (row) => row.clientInfo?.name,
@@ -143,7 +167,33 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
     cell: ({ row }) => {
       const raw = String(row.getValue("status") ?? "processing").toLowerCase();
       const color = statusColors[raw] || "bg-gray-100 text-gray-800";
-      return <Badge className={`capitalize text-[10px] h-5 px-2 ${color} hover:${color} shadow-none`}>{raw}</Badge>;
+      const isPending = raw === "pending";
+      const label = raw.charAt(0).toUpperCase() + raw.slice(1);
+
+      return (
+        <div className="flex items-center gap-2">
+          <Badge className={`capitalize text-[10px] h-5 px-2 ${color} hover:${color} shadow-none`}>
+            {label}
+          </Badge>
+          {isPending && (
+            <TooltipProvider>
+              <Tooltip delayDuration={100}>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1">
+                    <div className="relative flex h-4 w-4">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                      <FileWarning className="h-4 w-4 text-rose-500 relative z-10" />
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="bg-rose-600 text-white border-none text-[11px] font-medium py-1.5 px-3">
+                  <p>The client has uploaded an Official Receipt, pending admin validation or status update.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
+      );
     },
   },
   {
@@ -184,47 +234,6 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
       );
     },
   },
-  {
-    accessorKey: "datePaid",
-    header: "Date Paid",
-    size: 90,
-    cell: ({ row }) => {
-      const raw = row.getValue("datePaid") as Date | string | undefined | null;
-      const date = raw instanceof Date ? raw : new Date(raw || "");
-      return <div className="text-muted-foreground text-xs">{isNaN(date.getTime()) ? "—" : date.toLocaleDateString("en-CA")}</div>;
-    },
-  },
-  {
-    accessorKey: "orNumber",
-    header: "OR No.",
-    size: 90,
-    cell: ({ row }) => <span className="font-mono text-[10px]">{row.getValue("orNumber") || "—"}</span>,
-  },
-  {
-    accessorKey: "dvNumber",
-    header: "DV No.",
-    size: 90,
-    cell: ({ row }) => <span className="font-mono text-[10px]">{row.getValue("dvNumber") || "—"}</span>,
-  },
-  // Hidden columns - Access via Detail View/Modal
-  // {
-  //   accessorFn: (row) => row.clientInfo?.address,
-  //   id: "clientInfo.address",
-  //   header: "Address",
-  // },
-  // {
-  //   accessorFn: (row) => row.project?.title,
-  //   id: "project.title",
-  //   header: "Payment For",
-  // },
-  // {
-  //   accessorKey: "dateOfOR",
-  //   header: "Date of OR",
-  // },
-  // {
-  //   accessorKey: "notes",
-  //   header: "Notes",
-  // },
   {
     accessorFn: (row) => row.preparedBy?.name,
     id: "preparedBy.name",

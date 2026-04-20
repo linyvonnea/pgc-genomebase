@@ -1,8 +1,8 @@
 "use client";
 
-
+import { useEffect, useMemo, useRef, useState } from "react";
 import { normalizeDate } from "@/lib/formatters";
-import { PDFDownloadLink, PDFViewer } from "@react-pdf/renderer";
+import { PDFDownloadLink, pdf } from "@react-pdf/renderer";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ChargeSlipPDF } from "./ChargeSlipPDF";
@@ -10,8 +10,14 @@ import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 
+const chargeSlipPdfCache = new Map<string, Blob>();
+
 export function ChargeSlipHistoryPDFPreview({ record }: { record: ChargeSlipRecord }) {
   const { adminInfo } = useAuth();
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const blobUrlRef = useRef<string | null>(null);
+  const cacheKey = record.referenceNumber || record.chargeSlipNumber || "";
   
   const handleDownload = async () => {
     // Log DOWNLOAD activity
@@ -27,33 +33,91 @@ export function ChargeSlipHistoryPDFPreview({ record }: { record: ChargeSlipReco
     });
   };
   
-  const pdfDoc = (
-    <ChargeSlipPDF
-      services={record.services}
-      client={record.client}
-      project={record.project}
-      chargeSlipNumber={record.chargeSlipNumber}
-      orNumber={record.orNumber ?? ""}
-      useInternalPrice={record.useInternalPrice}
-      useAffiliationAsClientName={record.useAffiliationAsClientName}
-      preparedBy={record.preparedBy}
-      referenceNumber={record.referenceNumber}
-      clientInfo={record.clientInfo}
-      approvedBy={record.approvedBy}
-      dateIssued={normalizeDate(record.dateIssued)}
-      subtotal={record.subtotal}
-      discount={record.discount}
-      total={record.total}
-    />
+  const pdfDoc = useMemo(
+    () => (
+      <ChargeSlipPDF
+        services={record.services}
+        client={record.client}
+        project={record.project}
+        chargeSlipNumber={record.chargeSlipNumber}
+        orNumber={record.orNumber ?? ""}
+        isInternal={record.useInternalPrice}
+        useInternalPrice={record.useInternalPrice}
+        useAffiliationAsClientName={record.useAffiliationAsClientName}
+        preparedBy={record.preparedBy}
+        referenceNumber={record.referenceNumber}
+        clientInfo={record.clientInfo}
+        approvedBy={record.approvedBy}
+        dateIssued={normalizeDate(record.dateIssued)}
+        subtotal={record.subtotal}
+        discount={record.discount}
+        total={record.total}
+      />
+    ),
+    [record]
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setBlobUrl(null);
+
+    const generate = async () => {
+      const cached = cacheKey ? chargeSlipPdfCache.get(cacheKey) : undefined;
+      if (cached) {
+        if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+        const url = URL.createObjectURL(cached);
+        blobUrlRef.current = url;
+        setBlobUrl(url);
+        setLoading(false);
+        return;
+      }
+
+      const blob = await pdf(pdfDoc).toBlob();
+      if (cancelled) return;
+
+      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+
+      if (cacheKey) {
+        chargeSlipPdfCache.set(cacheKey, blob);
+      }
+
+      const url = URL.createObjectURL(blob);
+      blobUrlRef.current = url;
+      setBlobUrl(url);
+      setLoading(false);
+    };
+
+    generate();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pdfDoc, cacheKey]);
+
+  useEffect(() => {
+    return () => {
+      if (blobUrlRef.current) URL.revokeObjectURL(blobUrlRef.current);
+    };
+  }, []);
 
   return (
     <div className="flex flex-col flex-1 h-[calc(90vh-56px)]">
       {/* PDF Viewer */}
-      <div className="flex-1 overflow-hidden">
-        <PDFViewer width="100%" height="100%" className="!m-0 !p-0">
-          {pdfDoc}
-        </PDFViewer>
+      <div className="flex-1 overflow-hidden bg-muted/20 flex items-center justify-center">
+        {loading && (
+          <div className="flex flex-col items-center gap-2">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            <p className="text-sm text-muted-foreground font-medium">Generating PDF...</p>
+          </div>
+        )}
+        {blobUrl && (
+          <iframe
+            src={blobUrl}
+            style={{ width: "100%", height: "100%", border: "none" }}
+            title="Charge Slip Preview"
+          />
+        )}
       </div>
 
       <Separator className="my-4" />

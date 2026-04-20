@@ -4,8 +4,8 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
-import { columns } from "./columns"
+import { useEffect, useMemo, useState } from "react";
+import { columns, useProjectFormNotifications } from "./columns"
 import { DataTable } from "./data-table"
 import { Project } from "@/types/Project"
 import { projectSchema } from "@/schemas/projectSchema"
@@ -17,6 +17,7 @@ import { ProjectFormModal } from "@/app/admin/projects/modalform"
 import { getProjects } from "@/services/projectsService"
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { ProjectDetailSheet } from "@/components/admin/ProjectDetailSheet";
 
 // Fetch all projects from Firestore
 async function getData(): Promise<Project[]> {
@@ -43,10 +44,23 @@ export default function ProjectPage() {
 function ProjectPageContent() {
   // State for project data
   const [data, setData] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   // State for dialog open/close
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { adminInfo } = useAuth();
   const { canCreate } = usePermissions(adminInfo?.role);
+  const projectsWithUnacknowledged = useProjectFormNotifications();
+  const unreadCount = projectsWithUnacknowledged.size;
+
+  // Sort: projects with unacknowledged uploads float to top
+  const sortedData = useMemo(() => {
+    if (projectsWithUnacknowledged.size === 0) return data;
+    return [...data].sort((a, b) => {
+      const aFlagged = projectsWithUnacknowledged.has(a.pid ?? "") ? 0 : 1;
+      const bFlagged = projectsWithUnacknowledged.has(b.pid ?? "") ? 0 : 1;
+      return aFlagged - bFlagged;
+    });
+  }, [data, projectsWithUnacknowledged]);
 
   // Fetch data and update state
   const fetchData = async () => {
@@ -70,7 +84,14 @@ function ProjectPageContent() {
         {/* Header and Add New Project Button */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold tracking-tight">Projects</h1>
+            <h1 className="text-xl font-semibold tracking-tight flex items-center gap-2">
+              Projects
+              {unreadCount > 0 && (
+                <span className="inline-flex items-center justify-center min-w-[20px] h-5 rounded-full bg-red-500 text-white text-[10px] font-bold px-1.5 animate-pulse">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </h1>
             <p className="text-sm text-muted-foreground">
               Manage and review the projects submitted to the database.
             </p>
@@ -106,8 +127,19 @@ function ProjectPageContent() {
           )}
         </div>
         {/* Data Table with instant update on add/edit/delete */}
-        <DataTable columns={columns} data={data} meta={{ onSuccess: fetchData }} />
+        <DataTable
+          columns={columns}
+          data={sortedData}
+          meta={{ onSuccess: fetchData }}
+          onRowClick={(row) => setSelectedProject(row)}
+        />
       </div>
+      <ProjectDetailSheet
+        project={selectedProject}
+        open={!!selectedProject}
+        onClose={() => setSelectedProject(null)}
+        onProjectUpdated={fetchData}
+      />
     </div>
   );
 }

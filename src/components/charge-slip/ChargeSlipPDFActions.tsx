@@ -104,6 +104,7 @@ export default function ChargeSlipPDFActions({
             project={project}
             chargeSlipNumber={chargeSlipNumber}
             orNumber={orNumber}
+            isInternal={useInternalPrice}
             useInternalPrice={useInternalPrice}
             useAffiliationAsClientName={useAffiliationAsClientName}
             preparedBy={preparedBy}

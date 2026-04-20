@@ -19,7 +19,8 @@ type Props = {
   project: Project | null | undefined;
   chargeSlipNumber: string;
   orNumber: string;
-  useInternalPrice: boolean;
+  isInternal: boolean;
+  useInternalPrice?: boolean;
   useAffiliationAsClientName?: boolean;
   preparedBy: AdminInfo;
   referenceNumber: string;

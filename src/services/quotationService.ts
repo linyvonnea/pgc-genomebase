@@ -11,6 +11,7 @@ import {
   limit,
   deleteDoc,
   updateDoc,
+  deleteField,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { QuotationRecord } from "@/types/Quotation";
@@ -115,10 +116,52 @@ export async function getQuotationsByClientName(
 
 /**
  * Save or overwrite a quotation using referenceNumber as the document ID.
+ * Ensures the status field is always present, defaulting to "pending".
  */
 export async function saveQuotationToFirestore(quotation: QuotationRecord) {
   const docRef = doc(db, "quotations", quotation.referenceNumber);
-  await setDoc(docRef, quotation);
+  await setDoc(docRef, { status: "pending", selectedForProject: "", ...quotation });
+}
+
+/**
+ * Update quotation status.
+ * When status is "selected", sets selectedForProject to the inquiryId.
+ * When status is "cancelled" or "pending", empties the selectedForProject field.
+ */
+export async function updateQuotationStatus(
+  referenceNumber: string,
+  status: "pending" | "selected" | "completed" | "cancelled",
+  inquiryId?: string
+): Promise<void> {
+  const docRef = doc(db, "quotations", referenceNumber);
+  
+  const updateData: Record<string, any> = { status };
+  
+  if (status === "selected" && inquiryId) {
+    updateData.selectedForProject = inquiryId;
+  } else if (status === "cancelled" || status === "pending") {
+    updateData.selectedForProject = "";
+  }
+  
+  await setDoc(docRef, updateData, { merge: true });
+}
+
+/**
+ * Mark a quotation as selected for a specific project.
+ */
+export async function markQuotationAsSelected(
+  referenceNumber: string,
+  projectId: string
+): Promise<void> {
+  const docRef = doc(db, "quotations", referenceNumber);
+  await setDoc(
+    docRef,
+    {
+      selectedForProject: projectId,
+      status: "selected",
+    },
+    { merge: true }
+  );
 }
 
 /**
@@ -142,6 +185,7 @@ export async function getQuotationByReferenceNumber(
 
   const data = snapshot.data();
   return {
+    status: "pending" as const,
     ...data,
     id: snapshot.id,
     dateIssued:
@@ -162,6 +206,7 @@ export async function getAllQuotations(): Promise<QuotationRecord[]> {
   snapshot.forEach((docSnap) => {
     const data = docSnap.data();
     records.push({
+      status: "pending" as const,
       ...data,
       id: docSnap.id,
       dateIssued:

@@ -214,6 +214,11 @@ export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRe
       : null;
   }
 
+  // Support accumulating OR entries and updating the latest OR number
+  if ("orNumber" in updates) updatedData.orNumber = updates.orNumber;
+  if ("orEntries" in updates) updatedData.orEntries = updates.orEntries;
+  if ("showOfficialReceipts" in updates) updatedData.showOfficialReceipts = updates.showOfficialReceipts;
+
   if ("createdAt" in updates) {
     updatedData.createdAt = safeTimestamp(updates.createdAt);
   }
@@ -273,6 +278,13 @@ export async function getChargeSlipsByProjectId(projectId: string): Promise<Char
       });
     }
   }
+
+  // Sort by dateIssued descending (latest first)
+  results.sort((a, b) => {
+    const dateA = a.dateIssued instanceof Date ? a.dateIssued.getTime() : 0;
+    const dateB = b.dateIssued instanceof Date ? b.dateIssued.getTime() : 0;
+    return dateB - dateA;
+  });
 
   return results;
 }

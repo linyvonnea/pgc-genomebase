@@ -8,6 +8,8 @@ import {
 } from "@/services/chargeSlipService";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { logActivity } from "@/services/activityLogService";
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export async function saveChargeSlipAction(
   slip: ChargeSlipRecord,
@@ -15,6 +17,77 @@ export async function saveChargeSlipAction(
 ) {
   try {
     const result = await saveChargeSlip(slip);
+    
+    // Send email notification to client about billing availability
+    const recipientEmail = slip.clientInfo?.email || slip.client?.email || "";
+    if (recipientEmail) {
+      try {
+        const mailCollection = collection(db, "mail");
+        const clientName = slip.clientInfo?.name || slip.client?.name || "Valued Client";
+        
+        const clientEmailHtml = `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.6;">
+            <div style="background-color: #f1f5f9; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
+              <h2 style="color: #1e3a8a; margin-top: 0;">Billing/Invoice: PGC Visayas</h2>
+              <p>Dear ${clientName},</p>
+              <p>Good day. Your billing is now available in your client portal. Kindly review the details and proceed with payment at your convenience. For payment instructions, please refer to our <a href="https://firebasestorage.googleapis.com/v0/b/pgc-genomebase.firebasestorage.app/o/documents%2Fmode_of_payment.pdf?alt=media&token=279c10a9-ce74-40ef-8e7d-80a86820a8e0" style="color: #1e3a8a; font-weight: 600; text-decoration: underline;">Mode of Payment</a>.</p>
+              
+              <div style="background-color: #ffffff; padding: 15px; border-radius: 6px; border-left: 4px solid #1e3a8a; margin: 15px 0;">
+                <h3 style="margin-top: 0; color: #1e3a8a; font-size: 14px; margin-bottom: 8px;">Next Steps</h3>
+                <p style="margin-bottom: 12px; font-size: 14px;">View your billing details and complete payment by following the instructions detailed on the <a href="https://firebasestorage.googleapis.com/v0/b/pgc-genomebase.firebasestorage.app/o/documents%2Fmode_of_payment.pdf?alt=media&token=279c10a9-ce74-40ef-8e7d-80a86820a8e0" style="color: #1e3a8a; font-weight: 600; text-decoration: underline;">Mode of Payment</a>.</p>
+                <p style="margin: 0;"><a href="https://pgc-genomebase.vercel.app/portal" style="background-color: #1e3a8a; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 13px;">Access Client Portal</a></p>
+              </div>
+
+              <p>Once payment has been completed, please upload the official receipt requested from the UPV Cash Office through the portal for verification. <strong>Kindly note that results will be released upon confirmation of payment.</strong></p>
+              
+              <p>If you have any questions regarding the billing or encounter any issues with the portal, please feel free to reach out. We look forward to working with you.</p>
+              
+              <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+              <p style="font-size: 13px; color: #64748b; margin-bottom: 0;">Yours in utilizing OMICS for a better Philippines,<br /><strong>Philippine Genome Center Visayas</strong></p>
+            </div>
+          </div>
+        `;
+
+        const clientEmailText = `
+Billing/Invoice: PGC Visayas
+
+Dear ${clientName},
+
+Good day. Your billing is now available in your client portal. Kindly review the details and proceed with payment at your convenience. For payment instructions, please refer to our Mode of Payment: https://firebasestorage.googleapis.com/v0/b/pgc-genomebase.firebasestorage.app/o/documents%2Fmode_of_payment.pdf?alt=media&token=279c10a9-ce74-40ef-8e7d-80a86820a8e0
+
+To view your billing details and complete payment by following the instructions detailed on the Mode of Payment (https://firebasestorage.googleapis.com/v0/b/pgc-genomebase.firebasestorage.app/o/documents%2Fmode_of_payment.pdf?alt=media&token=279c10a9-ce74-40ef-8e7d-80a86820a8e0), please access your Client Portal: https://pgc-genomebase.vercel.app/portal
+
+Once payment has been completed, please upload the official receipt requested from the UPV Cash Office through the portal for verification. Kindly note that results will be released upon confirmation of payment.
+
+If you have any questions regarding the billing or encounter any issues with the portal, please feel free to reach out. We look forward to working with you.
+
+Yours in utilizing OMICS for a better Philippines,
+Philippine Genome Center Visayas
+        `.trim();
+
+        await addDoc(mailCollection, {
+          to: [recipientEmail],
+          message: {
+            subject: "Billing/Invoice: PGC Visayas",
+            text: clientEmailText,
+            html: clientEmailHtml
+          }
+        });
+        console.log(`✅ Billing notification email sent to ${slip.clientInfo.email}`);
+
+        // In-app notification
+        await addDoc(collection(db, "clientNotifications"), {
+          recipientEmail,
+          type: "chargeSlip",
+          title: "New Charge Slip Available",
+          body: "Your billing is now available in the client portal. Please review and proceed with payment.",
+          read: false,
+          createdAt: new Date(),
+        });
+      } catch (emailError) {
+        console.warn("Could not send billing notification email:", emailError);
+      }
+    }
     
     // Log the activity
     await logActivity({
@@ -34,7 +107,10 @@ export async function saveChargeSlipAction(
     return { success: true, data: result };
   } catch (error) {
     console.error("Error saving charge slip:", error);
-    return { success: false, error: "Failed to save charge slip" };
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Failed to save charge slip" 
+    };
   }
 }
 

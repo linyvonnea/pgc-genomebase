@@ -1,6 +1,7 @@
 // src/components/ui/header.tsx
 import Image from "next/image";
-import { LogOut, User, Settings, Info, Key, ChevronDown, Menu } from "lucide-react";
+import Link from "next/link";
+import { LogOut, User, Settings, Info, Key, ChevronDown, Menu, HelpCircle } from "lucide-react";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -10,6 +11,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { PortalFeatureVisibility } from "@/types/ConfigurationSettings";
 
 export interface HeaderProps {
   showNavigation?: boolean;
@@ -18,9 +20,26 @@ export interface HeaderProps {
     email?: string | null;
   } | null;
   onLogout?: () => void;
+  menuVisibility?: PortalFeatureVisibility;
+  extras?: React.ReactNode;
 }
 
-export default function Header({ user, onLogout, showNavigation = true }: HeaderProps) {
+export default function Header({
+  user,
+  onLogout,
+  showNavigation = true,
+  menuVisibility,
+  extras,
+}: HeaderProps) {
+  const menuFlags = menuVisibility ?? {
+    clientMenuSettings: true,
+    clientMenuChangePassword: true,
+    clientMenuAbout: true,
+    sampleForms: true,
+    serviceReports: true,
+    officialReceipts: true,
+  };
+
   return (
     <header className="bg-white/90 backdrop-blur-md shadow-sm border-b border-slate-100 sticky top-0 z-50">
       <div className="w-full px-4 py-3">
@@ -48,7 +67,10 @@ export default function Header({ user, onLogout, showNavigation = true }: Header
 
           {/* User Dropdown Section */}
           {showNavigation && user && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              {/* Extra slot: FAQs button, notification bell, etc. */}
+              {extras}
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
@@ -61,20 +83,26 @@ export default function Header({ user, onLogout, showNavigation = true }: Header
                 </DropdownMenuTrigger>
                 
                 <DropdownMenuContent className="w-[200px] mt-2 p-1.5 rounded-xl border-slate-200" align="end">
-                  <DropdownMenuItem className="flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer text-slate-700 hover:bg-slate-50 transition-colors">
-                    <Settings className="w-4 h-4 text-[#166FB5]" />
-                    <span className="font-medium">Settings</span>
-                  </DropdownMenuItem>
+                  {menuFlags.clientMenuSettings && (
+                    <DropdownMenuItem className="flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer text-slate-700 hover:bg-slate-50 transition-colors">
+                      <Settings className="w-4 h-4 text-[#166FB5]" />
+                      <span className="font-medium">Settings</span>
+                    </DropdownMenuItem>
+                  )}
                   
-                  <DropdownMenuItem className="flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer text-slate-700 hover:bg-slate-50 transition-colors">
-                    <Key className="w-4 h-4 text-purple-600" />
-                    <span className="font-medium">Change Password</span>
-                  </DropdownMenuItem>
+                  {menuFlags.clientMenuChangePassword && (
+                    <DropdownMenuItem className="flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer text-slate-700 hover:bg-slate-50 transition-colors">
+                      <Key className="w-4 h-4 text-purple-600" />
+                      <span className="font-medium">Change Password</span>
+                    </DropdownMenuItem>
+                  )}
                   
-                  <DropdownMenuItem className="flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer text-slate-700 hover:bg-slate-50 transition-colors">
-                    <Info className="w-4 h-4 text-orange-600" />
-                    <span className="font-medium">About</span>
-                  </DropdownMenuItem>
+                  {menuFlags.clientMenuAbout && (
+                    <DropdownMenuItem className="flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer text-slate-700 hover:bg-slate-50 transition-colors">
+                      <Info className="w-4 h-4 text-orange-600" />
+                      <span className="font-medium">About</span>
+                    </DropdownMenuItem>
+                  )}
                   
                   <DropdownMenuSeparator className="my-1.5 bg-slate-100" />
                   

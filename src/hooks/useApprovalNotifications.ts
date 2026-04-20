@@ -3,7 +3,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { 
-  collection, 
+  collection,
+  collectionGroup,
   query, 
   where, 
   onSnapshot, 
@@ -31,11 +32,26 @@ export function useApprovalNotifications() {
   const [pendingCount, setPendingCount] = useState(0);
   const [inquiryCount, setInquiryCount] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [pendingChargeSlipCount, setPendingChargeSlipCount] = useState(0);
+  const [newOrCount, setNewOrCount] = useState<number>(() => {
+    if (typeof window === 'undefined') return 0;
+    try { return parseInt(localStorage.getItem('pgc_or_count') ?? '0', 10) || 0; }
+    catch { return 0; }
+  });
+  const [newOrChargeSlipNumbers, setNewOrChargeSlipNumbers] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const v = localStorage.getItem('pgc_or_cs_nums');
+      return v ? new Set(JSON.parse(v)) : new Set();
+    } catch { return new Set(); }
+  });
   const previousCountRef = useRef(0);
   const previousInquiryCountRef = useRef(0);
   const isInitialLoadRef = useRef(true);
   const isInitialInquiryLoadRef = useRef(true);
+  const isInitialOrLoadRef = useRef(true);
   const inquiryToastIdsRef = useRef<Record<string, string | number>>({});
+  const orToastIdsRef = useRef<Record<string, string | number>>();
 
   useEffect(() => {
     // Listen to traditional member approvals
@@ -135,6 +151,7 @@ export function useApprovalNotifications() {
           if (!inquiryToastIdsRef.current[iq.id]) {
             if (!isInitialInquiryLoadRef.current) {
               // New inquiry detected!
+              /* Notification pop-up disabled as requested
               const tId = toast.info("Pending Inquiry", {
                 description: `${iq.name || "Unknown"} from ${iq.affiliation || "Unknown"}`,
                 duration: Infinity, // Does not expire
@@ -146,6 +163,8 @@ export function useApprovalNotifications() {
                 },
               });
               inquiryToastIdsRef.current[iq.id] = tId;
+              */
+              inquiryToastIdsRef.current[iq.id] = "suppressed";
             } else {
               // Mark as tracked during initial load so we don't toast later
               inquiryToastIdsRef.current[iq.id] = "existing";
@@ -171,6 +190,93 @@ export function useApprovalNotifications() {
     };
   }, []);
 
+  // Separate effect: listen to unacknowledged official receipts
+  useEffect(() => {
+    if (!orToastIdsRef.current) orToastIdsRef.current = {};
+    const orQuery = query(
+      collectionGroup(db, "officialReceipts"),
+      where("acknowledgedByAdmin", "==", false)
+    );
+    const unsubscribeOr = onSnapshot(
+      orQuery,
+      (snapshot) => {
+        const csNumbers = new Set<string>();
+        let pendingReceiptCount = 0;
+        snapshot.docs.forEach((d) => {
+          const data = d.data();
+          // Skip receipts that the admin has already returned — treat returned as "seen"
+          if (data.returnedByAdmin === true) {
+            // Dismiss any lingering toast for this doc
+            if (orToastIdsRef.current![d.id]) {
+              toast.dismiss(orToastIdsRef.current![d.id]);
+              delete orToastIdsRef.current![d.id];
+            }
+            return;
+          }
+          pendingReceiptCount += 1;
+          const csNum: string | undefined = data.chargeSlipNumber;
+          if (csNum) csNumbers.add(csNum);
+
+          // Toast for new uploads (skip initial load)
+          if (!isInitialOrLoadRef.current && !orToastIdsRef.current![d.id]) {
+            const tId = toast.info("New OR Uploaded", {
+              description: `Client uploaded a receipt for Charge Slip ${csNum || d.id}`,
+              duration: Infinity,
+              action: {
+                label: "View",
+                onClick: () => {
+                  window.location.href = `/admin/charge-slips/${csNum || ""}`;
+                },
+              },
+            });
+            orToastIdsRef.current![d.id] = tId;
+          } else if (isInitialOrLoadRef.current) {
+            orToastIdsRef.current![d.id] = "existing";
+          }
+        });
+
+        // Dismiss toasts for receipts that are now acknowledged (no longer in snapshot)
+        const currentDocIds = new Set(snapshot.docs.map((d) => d.id));
+        Object.keys(orToastIdsRef.current!).forEach((id) => {
+          if (!currentDocIds.has(id)) {
+            toast.dismiss(orToastIdsRef.current![id]);
+            delete orToastIdsRef.current![id];
+          }
+        });
+
+        setNewOrCount(pendingReceiptCount);
+        setNewOrChargeSlipNumbers(csNumbers);
+        try {
+          localStorage.setItem('pgc_or_count', String(pendingReceiptCount));
+          localStorage.setItem('pgc_or_cs_nums', JSON.stringify([...csNumbers]));
+        } catch {}
+        isInitialOrLoadRef.current = false;
+      },
+      (error) => {
+        console.error("Error listening to OR notifications:", error);
+      }
+    );
+    return () => unsubscribeOr();
+  }, []);
+
+  // Listen to charge slips with status "pending" — drives the sidebar badge count
+  useEffect(() => {
+    const q = query(
+      collection(db, "chargeSlips"),
+      where("status", "==", "pending")
+    );
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        setPendingChargeSlipCount(snapshot.size);
+      },
+      (error) => {
+        console.error("Error listening to pending charge slips:", error);
+      }
+    );
+    return () => unsubscribe();
+  }, []);
+
   const updateNotifications = (newNotifications: ApprovalNotification[], type: "member" | "project") => {
     setNotifications((prev) => {
       // Filter out old notifications of the same type
@@ -187,6 +293,7 @@ export function useApprovalNotifications() {
 
       // Show toast notification for new submissions (only after initial load)
       if (!isInitialLoadRef.current && totalCount > previousCountRef.current) {
+        /* Notification pop-up disabled as requested
         const latestNotification = combined[0];
         toast.info(latestNotification.title, {
           description: latestNotification.message,
@@ -198,6 +305,7 @@ export function useApprovalNotifications() {
             },
           },
         });
+        */
       }
 
       previousCountRef.current = totalCount;
@@ -222,6 +330,9 @@ export function useApprovalNotifications() {
     notifications,
     pendingCount,
     inquiryCount,
+    newOrCount,
+    newOrChargeSlipNumbers,
+    pendingChargeSlipCount,
     unreadCount,
     markAsRead,
     markAllAsRead,

@@ -12,6 +12,7 @@ import {
   FileText,
   Calculator,
   Receipt,
+  FileSpreadsheet,
   ScrollText,
   Settings,
   ShieldCheck,
@@ -25,6 +26,7 @@ import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useApprovalNotifications } from "@/hooks/useApprovalNotifications";
 import { useInquiryNotifications } from "@/hooks/useInquiryNotifications";
+import { useProjectFormNotifications } from "@/app/admin/projects/columns";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,9 +42,12 @@ const ROUTE_MODULE_MAP: Record<string, keyof RolePermissions> = {
   "/admin/clients": "clients",
   "/admin/quotations": "quotations",
   "/admin/charge-slips": "chargeSlips",
+  "/admin/official-receipts": "officialReceipts",
+  "/admin/sample-forms": "sampleForms",
   "/admin/manual-quotation": "manualQuotation",
   "/admin/services": "serviceCatalog",
   "/admin/catalog-settings": "catalogSettings",
+  "/admin/configurations": "configurations",
   "/admin/member-approvals": "memberApprovals",
   "/admin/roles": "roleManagement",
   "/admin/admins": "usersPermissions",
@@ -56,7 +61,9 @@ export function AdminSidebar() {
   const { user, signOut, adminInfo } = useAuth();
   const { canView, loading: permissionsLoading } = usePermissions(adminInfo?.role);
   const { openTab, activeTab, isTabOpen, setActiveTab } = useTabContext();
-  const { pendingCount, inquiryCount } = useApprovalNotifications();
+  const { pendingCount, inquiryCount, newOrChargeSlipNumbers, pendingChargeSlipCount } = useApprovalNotifications();
+  const projectsWithUnacknowledged = useProjectFormNotifications();
+  const pendingProjectFormCount = projectsWithUnacknowledged.size;
 
   const handleNavClick = (href: string, label: string, icon: React.ElementType) => {
     const tabId = href.replace("/admin/", "");
@@ -112,7 +119,7 @@ export function AdminSidebar() {
         { 
           href: "/admin/charge-slips", 
           label: "Charge Slips", 
-          icon: Receipt,
+          icon: Receipt, 
         },
         { 
           href: "/admin/manual-quotation", 
@@ -142,6 +149,11 @@ export function AdminSidebar() {
         { 
           href: "/admin/catalog-settings", 
           label: "Catalog Settings", 
+          icon: Sliders,
+        },
+        {
+          href: "/admin/configurations",
+          label: "General Settings",
           icon: Sliders,
         },
       ]
@@ -178,14 +190,57 @@ export function AdminSidebar() {
     .map((section) => ({
       ...section,
       items: section.items.filter((item) => {
-        const module = ROUTE_MODULE_MAP[item.href];
-        return module && canView(module);
+        const routeModule = ROUTE_MODULE_MAP[item.href];
+        return routeModule && canView(routeModule);
       }),
     }))
     .filter((section) => section.items.length > 0); // Hide empty sections
 
   return (
     <div className="flex flex-col h-full w-64 bg-white border-r border-slate-200">
+      {/* Admin profile — pinned at the top */}
+      {user && (
+        <div className="p-4 border-b border-slate-100 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-9 w-9 flex-shrink-0">
+              <AvatarImage src={user.photoURL || ""} />
+              <AvatarFallback className="bg-[#166FB5] text-white text-sm">
+                {user.displayName?.[0] ?? "A"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-slate-900 truncate">{adminInfo?.name || user.displayName}</p>
+              <p className="text-xs text-slate-500 truncate">{user.email}</p>
+            </div>
+            <Button
+              onClick={signOut}
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 text-slate-400 hover:text-red-500 flex-shrink-0"
+              title="Sign out"
+            >
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
+          {adminInfo?.role && (
+            <div className="mt-2.5">
+              <Badge
+                variant="outline"
+                className={cn(
+                  "text-xs font-medium capitalize",
+                  adminInfo.role === "superadmin" && "border-purple-300 text-purple-700 bg-purple-50",
+                  adminInfo.role === "admin" && "border-blue-300 text-blue-700 bg-blue-50",
+                  adminInfo.role === "moderator" && "border-green-300 text-green-700 bg-green-50",
+                  adminInfo.role === "viewer" && "border-slate-300 text-slate-700 bg-slate-50"
+                )}
+              >
+                {adminInfo.role}
+              </Badge>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Clean Navigation */}
       <div className="flex-1 overflow-y-auto p-4">
         <nav className="space-y-6">
@@ -228,6 +283,30 @@ export function AdminSidebar() {
                       </span>
                     )}
                     
+                    {/* Notification badge for Projects */}
+                    {href === "/admin/projects" && pendingProjectFormCount > 0 && (
+                      <span className={cn(
+                        "min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-bold px-1.5",
+                        isActive(href)
+                          ? "bg-white text-[#166FB5]"
+                          : "bg-red-500 text-white animate-pulse"
+                      )}>
+                        {pendingProjectFormCount > 99 ? "99+" : pendingProjectFormCount}
+                      </span>
+                    )}
+
+                    {/* Notification badge for Charge Slips */}
+                    {href === "/admin/charge-slips" && pendingChargeSlipCount > 0 && (
+                      <span className={cn(
+                        "min-w-[20px] h-5 flex items-center justify-center rounded-full text-[10px] font-bold px-1.5",
+                        isActive(href)
+                          ? "bg-white text-[#166FB5]"
+                          : "bg-red-500 text-white animate-pulse"
+                      )}>
+                        {pendingChargeSlipCount}
+                      </span>
+                    )}
+                    
                     {/* Notification badge for Projects Approval */}
                     {href === "/admin/member-approvals" && pendingCount > 0 && (
                       <span className={cn(
@@ -240,7 +319,7 @@ export function AdminSidebar() {
                       </span>
                     )}
                     
-                    {isTabOpen(href.replace("/admin/", "")) && !isActive(href) && href !== "/admin/member-approvals" && href !== "/admin/inquiry" && (
+                    {isTabOpen(href.replace("/admin/", "")) && !isActive(href) && href !== "/admin/member-approvals" && href !== "/admin/inquiry" && (href !== "/admin/charge-slips" || pendingChargeSlipCount === 0) && (
                       <div className="w-1.5 h-1.5 rounded-full bg-[#166FB5]" />
                     )}
                   </div>
@@ -255,51 +334,6 @@ export function AdminSidebar() {
           ))}
         </nav>
       </div>
-
-      {/* Simple User Profile */}
-      {user && (
-        <div className="p-4 border-t border-slate-100">
-          <div className="flex items-center gap-3 mb-2">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={user.photoURL || ""} />
-              <AvatarFallback className="bg-[#166FB5] text-white text-sm">
-                {user.displayName?.[0] ?? "A"}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 truncate">{user.displayName}</p>
-              <p className="text-xs text-slate-500 truncate">{user.email}</p>
-            </div>
-            <Button
-              onClick={signOut}
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0 text-slate-400 hover:text-red-500"
-              title="Sign out"
-            >
-              <LogOut className="w-4 h-4" />
-            </Button>
-          </div>
-          
-          {/* Role Badge */}
-          {adminInfo?.role && (
-            <div className="mt-2 flex justify-center">
-              <Badge 
-                variant="outline" 
-                className={cn(
-                  "text-xs font-medium capitalize",
-                  adminInfo.role === "superadmin" && "border-purple-300 text-purple-700 bg-purple-50",
-                  adminInfo.role === "admin" && "border-blue-300 text-blue-700 bg-blue-50",
-                  adminInfo.role === "moderator" && "border-green-300 text-green-700 bg-green-50",
-                  adminInfo.role === "viewer" && "border-slate-300 text-slate-700 bg-slate-50"
-                )}
-              >
-                {adminInfo.role}
-              </Badge>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

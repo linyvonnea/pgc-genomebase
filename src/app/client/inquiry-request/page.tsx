@@ -29,13 +29,36 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
-import { CalendarIcon } from "lucide-react"
+import { CalendarIcon, Paperclip, X, FileText, Loader2 } from "lucide-react"
+import { uploadFile, validateFile } from "@/lib/fileUpload"
+import { db } from "@/lib/firebase"
+import { doc, collection } from "firebase/firestore"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner" 
 import useAuth from "@/hooks/useAuth"
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout"
 import { useRouter } from "next/navigation"
+
+const TRAINING_PROGRAM_OPTIONS = [
+  "Basic Molecular Biology Techniques: Applications in Next Generation Sequencing",
+  "Whole Genome Sequencing: Library Preparation and Bioinformatics Analysis",
+  "Amplicon Sequencing: Library Preparation and Bioinformatics Analysis",
+  "Metagenomics/Metabarcoding Sequencing: Library Preparation and Bioinformatics Analysis",
+  "Real-Time PCR Workshop",
+  "Bioinformatics Analysis (Customized depending on the needed application)",
+  "Others / Customized Training Program"
+] as const;
+
+const BIOINFO_SERVICE_TYPE_OPTIONS = [
+  { id: "phylogenetic", label: "Phylogenetic Analysis" },
+  { id: "metabarcoding", label: "Metabarcoding/Metagenomics" },
+  { id: "transcriptomics", label: "Transcriptomics" },
+  { id: "whole-genome-assembly", label: "Whole Genome Assembly" },
+  { id: "others", label: "Others" },
+] as const;
+
+const BIOINFO_DATA_FORMAT_OPTIONS = ["fastq", "fasta", "others"] as const;
 
 /**
  * Main Quotation Request Form Component
@@ -58,6 +81,10 @@ export default function QuotationRequestForm() {
   
   // State for training date picker (separate from form state for UI purposes)
   const [trainingDate, setTrainingDate] = useState<Date>()
+
+  // State for methodology file upload (Laboratory service)
+  const [methodologyFile, setMethodologyFile] = useState<File | null>(null)
+  const [isUploadingFile, setIsUploadingFile] = useState(false)
   
   // Get authenticated user information
   const { user } = useAuth()
@@ -82,15 +109,22 @@ export default function QuotationRequestForm() {
       methodologyFileUrl: "",
       sampleCount: undefined,
       workflowType: undefined,
+      bioinformaticsDetails: {
+        serviceTypes: [],
+        dataFileFormats: [],
+        dataProvidedByPgc: false,
+      },
       bioinfoOptions: [],
       individualAssayDetails: "",
       retailItems: [],
+      retailItemDetails: {},
       workflows: [],
       additionalInfo: "",
       projectBackground: "",
       projectBudget: "",
       molecularServicesBudget: "",
       plannedSampleCount: "",
+      trainingPrograms: [],
       specificTrainingNeed: "",
       targetTrainingDate: "",
       numberOfParticipants: undefined
@@ -117,19 +151,39 @@ export default function QuotationRequestForm() {
     setValue("methodologyFileUrl", "")
     setValue("sampleCount", undefined)
     setValue("workflowType", undefined)
+    setValue("bioinformaticsDetails", {
+      serviceTypes: [],
+      dataFileFormats: [],
+      dataProvidedByPgc: false,
+    })
     setValue("bioinfoOptions", [])
     setValue("individualAssayDetails", "")
     setValue("retailItems", [])
+    setValue("retailItemDetails", {})
     setValue("workflows", [])
     setValue("additionalInfo", "")
     setValue("projectBackground", "")
     setValue("projectBudget", "")
     setValue("molecularServicesBudget", "")
     setValue("plannedSampleCount", "")
+    setValue("trainingPrograms", [])
     setValue("specificTrainingNeed", "")
     setValue("targetTrainingDate", "")
     setValue("numberOfParticipants", undefined)
     setTrainingDate(undefined)
+  }
+
+  const handleTrainingProgramChange = (program: string, checked: boolean) => {
+    const currentPrograms = formData.trainingPrograms || []
+    const newPrograms = checked
+      ? [...currentPrograms, program]
+      : currentPrograms.filter((p) => p !== program)
+
+    setValue("trainingPrograms", newPrograms, { shouldDirty: true, shouldValidate: true })
+
+    if (program === "others-customized" && !checked) {
+      setValue("specificTrainingNeed", "", { shouldDirty: true, shouldValidate: true })
+    }
   }
 
   /**
@@ -155,6 +209,24 @@ export default function QuotationRequestForm() {
       ? [...currentItems, item] 
       : currentItems.filter(i => i !== item)
     setValue("retailItems", newItems)
+    
+    // Also clear detail if unchecked
+    if (!checked) {
+      const currentDetails = formData.retailItemDetails || {}
+      const { [item]: _, ...newDetails } = currentDetails
+      setValue("retailItemDetails", newDetails)
+    }
+  }
+
+  /**
+   * Handles retail item detail changes
+   */
+  const handleRetailDetailChange = (item: string, amount: string) => {
+    const currentDetails = formData.retailItemDetails || {}
+    setValue("retailItemDetails", {
+      ...currentDetails,
+      [item]: amount
+    })
   }
 
   /**
@@ -168,6 +240,34 @@ export default function QuotationRequestForm() {
       ? [...currentOptions, typedOptionId]
       : currentOptions.filter(option => option !== typedOptionId)
     setValue("bioinfoOptions", newOptions)
+  }
+
+  const handleBioinformaticsServiceTypeChange = (optionId: string, checked: boolean) => {
+    const current = Array.isArray(formData.bioinformaticsDetails?.serviceTypes)
+      ? formData.bioinformaticsDetails?.serviceTypes
+      : []
+    const next = checked
+      ? [...current, optionId]
+      : current.filter((item: string) => item !== optionId)
+
+    setValue("bioinformaticsDetails.serviceTypes", next, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+  }
+
+  const handleBioinformaticsDataFormatChange = (formatId: string, checked: boolean) => {
+    const current = Array.isArray(formData.bioinformaticsDetails?.dataFileFormats)
+      ? formData.bioinformaticsDetails?.dataFileFormats
+      : []
+    const next = checked
+      ? [...current, formatId]
+      : current.filter((item: string) => item !== formatId)
+
+    setValue("bioinformaticsDetails.dataFileFormats", next, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
   }
 
   /**
@@ -215,10 +315,35 @@ export default function QuotationRequestForm() {
     })
     
     try {
-      // Merge form data with user email from authentication
+      // Create a document ID first for better storage organization
+      const inquiryRef = doc(collection(db, "inquiries"));
+      const inquiryId = inquiryRef.id;
+
+      // Upload methodology file if one was selected
+      let methodologyFileUrl = pendingData.methodologyFileUrl || ""
+      if (methodologyFile) {
+        setIsUploadingFile(true)
+        try {
+          // Use the pre-generated inquiry ID as the folder name
+          methodologyFileUrl = await uploadFile(methodologyFile, `methodology-files/${inquiryId}`)
+        } catch (uploadErr: any) {
+          toast.dismiss()
+          toast.error("Failed to upload methodology file", {
+            description: uploadErr.message,
+          })
+          setIsSubmitting(false)
+          setIsUploadingFile(false)
+          return
+        }
+        setIsUploadingFile(false)
+      }
+
+      // Merge form data with user email and uploaded file URL
       const submissionData = {
         ...pendingData,
-        email: user?.email || "" // Get email from authenticated user
+        email: user?.email || "",
+        methodologyFileUrl,
+        id: inquiryId, // Pass the pre-generated ID
       }
       
       // Submit to server action
@@ -247,7 +372,8 @@ export default function QuotationRequestForm() {
         setTimeout(() => {
           reset()
           setSelectedService("laboratory") 
-          setTrainingDate(undefined) 
+          setTrainingDate(undefined)
+          setMethodologyFile(null)
           router.push("/client/inquiry-request/submitted")
         }, 2000)
         return
@@ -429,6 +555,27 @@ export default function QuotationRequestForm() {
                   )}
                 </div>
 
+                {/* Equipment Use - Replacement Free Text Field */}
+                {selectedService === "equipment" && (
+                  <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+                    <Label htmlFor="individualAssayDetails" className="text-sm font-semibold text-slate-700 mb-2 block">
+                      Equipment / Workflow Details <span className="text-[#B9273A]">*</span>
+                    </Label>
+                    <Textarea
+                      id="individualAssayDetails"
+                      placeholder="Please specify the equipment needed or the molecular workflow you intend to perform (e.g., RT-qPCR, DNA extraction, SDS-PAGE, etc.)."
+                      {...register("individualAssayDetails")}
+                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[150px] resize-none"
+                    />
+                    {errors.individualAssayDetails && (
+                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                        {errors.individualAssayDetails.message}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Retail Item Selection - Moved here */}
                 {selectedService === "retail" && (
                   <div className="animate-in fade-in slide-in-from-top-4 duration-500">
@@ -437,21 +584,35 @@ export default function QuotationRequestForm() {
                     </Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {[
-                        "Type 1 (Ultrapure) Milli-Q Water",
-                        "Type 2 (Pure/Elix) Distilled Water",
-                        "Liquid Nitrogen",
-                        "Flake Ice"
+                        { label: "Type 1 (Ultrapure) Milli-Q Water", placeholder: "Enter amount in mL or liters" },
+                        { label: "Type 2 (Pure/Elix) Distilled Water", placeholder: "Enter amount in mL or liters" },
+                        { label: "Liquid Nitrogen", placeholder: "Enter amount in mL or liters" },
+                        { label: "Flake Ice", placeholder: "Enter amount in grams or kilograms" }
                       ].map((item) => (
-                        <div key={item} className="flex items-center space-x-3 p-3 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
-                          <input
-                            type="checkbox"
-                            checked={formData.retailItems?.includes(item)}
-                            onChange={(e) => handleRetailItemChange(item, e.target.checked)}
-                            className="h-4 w-4 rounded border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
-                          />
-                          <Label className="text-sm text-slate-700 font-medium cursor-pointer">
-                            {item}
-                          </Label>
+                        <div key={item.label} className="flex flex-col space-y-2 p-3 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors">
+                          <div className="flex items-center space-x-3">
+                            <input
+                              type="checkbox"
+                              checked={formData.retailItems?.includes(item.label)}
+                              onChange={(e) => handleRetailItemChange(item.label, e.target.checked)}
+                              className="h-4 w-4 rounded border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                            />
+                            <Label className="text-sm text-slate-700 font-medium cursor-pointer">
+                              {item.label}
+                            </Label>
+                          </div>
+                          
+                          {formData.retailItems?.includes(item.label) && (
+                            <div className="pl-7 animate-in fade-in slide-in-from-top-2 duration-300">
+                              <Input
+                                type="text"
+                                placeholder={item.placeholder}
+                                value={formData.retailItemDetails?.[item.label] || ""}
+                                onChange={(e) => handleRetailDetailChange(item.label, e.target.value)}
+                                className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-9 text-xs"
+                              />
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -544,39 +705,108 @@ export default function QuotationRequestForm() {
                     )}
                   </div>
                 )}
+
+                {/* Methodology/Concept Note Upload - Laboratory only */}
+                {selectedService === "laboratory" && (
+                  <div>
+                    <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+                      Upload Methodology/Concept Note
+                      <span className="text-xs font-normal text-slate-400 ml-2">(Optional)</span>
+                    </Label>
+
+                    {!methodologyFile ? (
+                      <label
+                        htmlFor="methodology-file"
+                        className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer bg-white/50 hover:bg-slate-50 hover:border-[#166FB5]/40 transition-all group"
+                      >
+                        <div className="flex flex-col items-center gap-1.5 pointer-events-none">
+                          <Paperclip className="h-5 w-5 text-slate-400 group-hover:text-[#166FB5] transition-colors" />
+                          <p className="text-sm font-medium text-slate-500 group-hover:text-slate-700 transition-colors">
+                            Click to attach a file
+                          </p>
+                          <p className="text-xs text-slate-400">PDF, DOC, DOCX &mdash; up to 10&nbsp;MB</p>
+                        </div>
+                        <input
+                          id="methodology-file"
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (!file) return
+                            try {
+                              validateFile(file, 10, [
+                                'application/pdf',
+                                'application/msword',
+                                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                              ])
+                              setMethodologyFile(file)
+                            } catch (err: any) {
+                              toast.error("Invalid file", { description: err.message })
+                              e.target.value = ""
+                            }
+                          }}
+                        />
+                      </label>
+                    ) : (
+                      <div className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-100 rounded-xl">
+                        <FileText className="h-5 w-5 text-[#166FB5] shrink-0" />
+                        <span className="text-sm font-medium text-slate-700 truncate flex-1">
+                          {methodologyFile.name}
+                        </span>
+                        <span className="text-xs text-slate-400 shrink-0">
+                          {(methodologyFile.size / 1024 / 1024).toFixed(2)}&nbsp;MB
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setMethodologyFile(null)}
+                          className="p-1 hover:bg-blue-100 rounded-md transition-colors shrink-0"
+                          aria-label="Remove file"
+                        >
+                          <X className="h-4 w-4 text-slate-500" />
+                        </button>
+                      </div>
+                    )}
+
+                    <p className="text-xs text-slate-500 mt-2">
+                      Attach your methodology or concept note to help us better understand your research requirements.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Dynamic Fields Section - Changes based on selected service */}
-            <div className="bg-gradient-to-r from-slate-50 to-blue-50/50 rounded-xl p-6 border border-slate-100">
-              <h2 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-2">
-                <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#4038AF] rounded-full"></div>
-                Service Details
-              </h2>
-              
-              {/* Laboratory Service Fields */}
-              {selectedService === "laboratory" && (
-                <div className="space-y-6">
-                  {/* Sample Count */}
-                  <div>
-                      <Label htmlFor="sampleCount" className="text-sm font-semibold text-slate-700 mb-2 block">
-                        How many samples are you planning to send? <span className="text-[#B9273A]">*</span>
-                      </Label>
-                      <Input
-                        id="sampleCount"
-                        type="number"
-                        min="1"
-                        placeholder="Enter number of samples"
-                        {...register("sampleCount", { valueAsNumber: true })}
-                        className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
-                      />
-                      {errors.sampleCount && (
-                        <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
-                          <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                          {errors.sampleCount.message}
-                        </p>
-                      )}
-                    </div>
+            {selectedService !== "equipment" && selectedService !== "retail" && (
+              <div className="bg-gradient-to-r from-slate-50 to-blue-50/50 rounded-xl p-6 border border-slate-100">
+                <h2 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#4038AF] rounded-full"></div>
+                  Service Details
+                </h2>
+                
+                {/* Laboratory Service Fields */}
+                {selectedService === "laboratory" && (
+                  <div className="space-y-6">
+                    {/* Sample Count */}
+                    <div>
+                        <Label htmlFor="sampleCount" className="text-sm font-semibold text-slate-700 mb-2 block">
+                          How many samples are you planning to send? <span className="text-[#B9273A]">*</span>
+                        </Label>
+                        <Input
+                          id="sampleCount"
+                          type="number"
+                          min="1"
+                          placeholder="Enter number of samples"
+                          {...register("sampleCount", { valueAsNumber: true })}
+                          className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
+                        />
+                        {errors.sampleCount && (
+                          <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                            <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                            {errors.sampleCount.message}
+                          </p>
+                        )}
+                      </div>
 
                     {/* Workflow Selection */}
                     <div>
@@ -597,9 +827,6 @@ export default function QuotationRequestForm() {
                             <Label htmlFor="workflow-complete-bioinfo" className="text-sm text-slate-700 font-semibold cursor-pointer block">
                               Complete molecular workflow with Bioinformatics Analysis
                             </Label>
-                            <p className="text-xs text-slate-600 mt-1">
-                              DNA Extraction, Quantification, Library Preparation, Sequencing, and Bioinformatics Analysis
-                            </p>
                             
                             {/* Bioinformatics Analysis Dropdown - Shown when this option is selected */}
                             {formData.workflowType === "complete-bioinfo" && (
@@ -609,20 +836,28 @@ export default function QuotationRequestForm() {
                                 </Label>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                   {[
-                                    { id: "genome-assembly", label: "Whole Genome Assembly" },
-                                    { id: "metabarcoding", label: "Metabarcoding with Downstream Analysis" },
-                                    { id: "pre-processing", label: "Metabarcoding with Pre-processing only" },
+                                    { id: "whole-genome-assembly", label: "Whole Genome Assembly" },
+                                    { id: "metabarcoding-downstream", label: "Metabarcoding with Downstream Analysis" },
+                                    { id: "metabarcoding-preprocessing", label: "Metabarcoding with Pre-processing Only" },
                                     { id: "transcriptomics", label: "Transcriptomics (QC to Annotation)" },
                                     { id: "phylogenetics", label: "Phylogenetics (1 marker)" },
                                     { id: "assembly-annotation", label: "Whole Genome Assembly and Annotation" }
                                   ].map((option) => (
                                     <div key={option.id} className="flex items-center space-x-3 p-2 bg-white rounded-lg border border-slate-100 hover:border-blue-200 transition-all shadow-sm">
                                       <input
-                                        type="checkbox"
+                                        type="radio"
+                                        name="bioinfoOption"
                                         id={`bioinfo-${option.id}`}
                                         checked={(formData.bioinfoOptions || []).includes(option.id as any)}
-                                        onChange={(e) => handleBioinfoOptionChange(option.id, e.target.checked)}
-                                        className="rounded border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                                        onChange={(e) => {
+                                          if (e.target.checked) {
+                                            setValue("bioinfoOptions", [option.id as any], { 
+                                              shouldValidate: true,
+                                              shouldDirty: true 
+                                            });
+                                          }
+                                        }}
+                                        className="rounded-full border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
                                       />
                                       <Label htmlFor={`bioinfo-${option.id}`} className="text-[11px] font-medium text-slate-700 leading-tight cursor-pointer select-none">
                                         {option.label}
@@ -684,11 +919,10 @@ export default function QuotationRequestForm() {
                       {formData.workflowType === "individual" && (
                         <div className="mt-4">
                           <Label htmlFor="individualAssayDetails" className="text-sm font-semibold text-slate-700 mb-2 block">
-                            Please provide specific services <span className="text-[#B9273A]">*</span>
+                            Please specify e.g. DNA Extraction, PCR etc. <span className="text-[#B9273A]">*</span>
                           </Label>
                           <Textarea
                             id="individualAssayDetails"
-                            placeholder="e.g., DNA Extraction, PCR, Sequencing, Bioinformatics Analysis etc"
                             {...register("individualAssayDetails")}
                             className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[80px] resize-none"
                             rows={3}
@@ -705,25 +939,317 @@ export default function QuotationRequestForm() {
                   </div>
                 )}
 
+                {selectedService === "bioinformatics" && (
+                  <div className="space-y-6">
+                    <div>
+                      <Label className="text-sm font-semibold text-slate-700 mb-3 block">
+                        Type of bioinformatics service <span className="text-[#B9273A]">*</span>
+                      </Label>
+                      <div className="space-y-3">
+                        {BIOINFO_SERVICE_TYPE_OPTIONS.map((option) => {
+                          const selected = (formData.bioinformaticsDetails?.serviceTypes || []).includes(option.id)
+                          return (
+                            <details key={option.id} className="rounded-lg border border-slate-200 bg-white/60" open={selected}>
+                              <summary className="cursor-pointer list-none px-4 py-3">
+                                <div className="flex items-center gap-3">
+                                  <input
+                                    type="checkbox"
+                                    checked={selected}
+                                    onChange={(e) => handleBioinformaticsServiceTypeChange(option.id, e.target.checked)}
+                                    className="h-4 w-4 rounded border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                                  />
+                                  <span className="text-sm font-semibold text-slate-700">{option.label}</span>
+                                </div>
+                              </summary>
+
+                              {option.id === "phylogenetic" && selected && (
+                                <div className="border-t border-slate-100 px-4 py-3 space-y-3">
+                                  <div>
+                                    <Label className="text-xs font-semibold text-slate-600">No. of markers</Label>
+                                    <Input
+                                      type="number"
+                                      min="1"
+                                      {...register("bioinformaticsDetails.phylogenetic.markerCount", { valueAsNumber: true })}
+                                      className="mt-1 h-10"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs font-semibold text-slate-600">Specify marker(s)</Label>
+                                    <Input
+                                      placeholder="e.g., COI"
+                                      {...register("bioinformaticsDetails.phylogenetic.markers")}
+                                      className="mt-1 h-10"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {option.id === "metabarcoding" && selected && (
+                                <div className="border-t border-slate-100 px-4 py-3 space-y-4">
+                                  <details className="rounded-md border border-slate-100 bg-slate-50/70" open>
+                                    <summary className="px-3 py-2 text-sm font-semibold text-slate-700 cursor-pointer">Study Structure</summary>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 border-t border-slate-100">
+                                      <div><Label className="text-xs">Sample type</Label><Input placeholder="e.g., soil, water" {...register("bioinformaticsDetails.metabarcoding.study.sampleType")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">No. of samples</Label><Input type="number" min="1" {...register("bioinformaticsDetails.metabarcoding.study.sampleCount", { valueAsNumber: true })} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">No. of groups/treatments to study</Label><Input placeholder="NA if not applicable" {...register("bioinformaticsDetails.metabarcoding.study.groupCount")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">No. of replicates per sample</Label><Input placeholder="NA if not applicable" {...register("bioinformaticsDetails.metabarcoding.study.replicatesPerSample")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">Target gene/marker</Label><Input placeholder="e.g., 16s rRNA, ITS (Fungi)" {...register("bioinformaticsDetails.metabarcoding.study.targetGene")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">Target region</Label><Input placeholder="V4" {...register("bioinformaticsDetails.metabarcoding.study.targetRegion")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">Primer set used</Label><Input placeholder="e.g., 515F / 806R" {...register("bioinformaticsDetails.metabarcoding.study.primerSet")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">Expected amplicon size</Label><Input placeholder="e.g., ~250 bp" {...register("bioinformaticsDetails.metabarcoding.study.ampliconSize")} className="mt-1 h-9" /></div>
+                                      <div className="md:col-span-2"><Label className="text-xs">Sequencing type and platform</Label><Input placeholder="e.g., paired-end Illumina iSeq (2 x 150 bp), Data to be generated by PGC Visayas sequencing service" {...register("bioinformaticsDetails.metabarcoding.study.sequencingPlatform")} className="mt-1 h-9" /></div>
+                                    </div>
+                                  </details>
+
+                                  <details className="rounded-md border border-slate-100 bg-slate-50/70" open>
+                                    <summary className="px-3 py-2 text-sm font-semibold text-slate-700 cursor-pointer">Analysis</summary>
+                                    <div className="space-y-3 p-3 border-t border-slate-100">
+                                      <label className="block rounded border border-slate-200 bg-white p-3">
+                                        <div className="flex items-start gap-2">
+                                          <input type="radio" value="general-pipeline" {...register("bioinformaticsDetails.metabarcoding.analysisType")} className="mt-1" />
+                                          <div>
+                                            <p className="text-sm font-semibold text-slate-700">General Pipeline</p>
+                                            <p className="text-xs text-slate-600 mt-1">Includes FastQC, trimming, denoising, and generating the representative sequences, count table, taxonomic information, alpha/beta diversity, and relative abundance plot.</p>
+                                          </div>
+                                        </div>
+                                      </label>
+                                      <label className="block rounded border border-slate-200 bg-white p-3">
+                                        <div className="flex items-start gap-2">
+                                          <input type="radio" value="general-pipeline-downstream" {...register("bioinformaticsDetails.metabarcoding.analysisType")} className="mt-1" />
+                                          <div>
+                                            <p className="text-sm font-semibold text-slate-700">General Pipeline with Downstream Analysis</p>
+                                            <p className="text-xs text-slate-600 mt-1">Pre-processing and downstream analysis results include FastQC, trimming, denoising, and generating the representative sequences, count table, taxonomic information, and relative abundance plot; Alpha diversity indices; Beta diversity indices; Univariate and Multivariate Analysis; Differential Abundance; Function Prediction.</p>
+                                          </div>
+                                        </div>
+                                      </label>
+                                      <label className="block rounded border border-slate-200 bg-white p-3">
+                                        <div className="flex items-start gap-2">
+                                          <input type="radio" value="unsure" {...register("bioinformaticsDetails.metabarcoding.analysisType")} className="mt-1" />
+                                          <div>
+                                            <p className="text-sm font-semibold text-slate-700">Unsure</p>
+                                            <p className="text-xs text-slate-600 mt-1">We will try to provide quotation and/or recommendation based on your target objective/s.</p>
+                                          </div>
+                                        </div>
+                                      </label>
+                                    </div>
+                                  </details>
+                                </div>
+                              )}
+
+                              {option.id === "transcriptomics" && selected && (
+                                <div className="border-t border-slate-100 px-4 py-3 space-y-4">
+                                  <details className="rounded-md border border-slate-100 bg-slate-50/70" open>
+                                    <summary className="px-3 py-2 text-sm font-semibold text-slate-700 cursor-pointer">Study Structure</summary>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 border-t border-slate-100">
+                                      <div><Label className="text-xs">Sample type</Label><Input placeholder="e.g., tissue, organ, organism" {...register("bioinformaticsDetails.transcriptomics.study.sampleType")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">No. of samples</Label><Input type="number" min="1" {...register("bioinformaticsDetails.transcriptomics.study.sampleCount", { valueAsNumber: true })} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">No. of groups/treatments/conditions</Label><Input placeholder="e.g., control vs. treatment" {...register("bioinformaticsDetails.transcriptomics.study.groupCount")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">No. of biological replicates per group</Label><Input {...register("bioinformaticsDetails.transcriptomics.study.biologicalReplicates")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">Sequencing type and platform</Label><Input placeholder="e.g., paired-end Illumina NextSeq (2 x 150 bp)" {...register("bioinformaticsDetails.transcriptomics.study.sequencingPlatform")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">Estimated sequencing depth per sample/library</Label><Input placeholder="e.g., 20-50 Mbp" {...register("bioinformaticsDetails.transcriptomics.study.depth")} className="mt-1 h-9" /></div>
+                                    </div>
+                                  </details>
+
+                                  <details className="rounded-md border border-slate-100 bg-slate-50/70" open>
+                                    <summary className="px-3 py-2 text-sm font-semibold text-slate-700 cursor-pointer">Analysis</summary>
+                                    <div className="space-y-2 p-3 border-t border-slate-100">
+                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3"><input type="checkbox" {...register("bioinformaticsDetails.transcriptomics.analysis.preProcessing")} className="mt-1" /><span className="text-sm">Pre-processing <span className="block text-xs text-slate-600">Includes quality control, k-mer correction, trimming and filtering, rRNA removal (optional)</span></span></label>
+                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3"><input type="checkbox" {...register("bioinformaticsDetails.transcriptomics.analysis.deNovoAssembly")} className="mt-1" /><span className="text-sm">De novo transcriptome assembly pipeline and assembly evaluation <span className="block text-xs text-slate-600">Includes De novo assembly, optional filtering, assembly statistics, alignment rate, BUSCO, quantification</span></span></label>
+                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3"><input type="checkbox" {...register("bioinformaticsDetails.transcriptomics.analysis.referenceBased")} className="mt-1" /><span className="text-sm">Reference-based assembly pipeline <span className="block text-xs text-slate-600">Includes reference-based assembly and quantification. Client must provide .fa and .gtf with accession number.</span></span></label>
+                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3"><input type="checkbox" {...register("bioinformaticsDetails.transcriptomics.analysis.orfPrediction")} className="mt-1" /><span className="text-sm">Open-reading frame prediction <span className="block text-xs text-slate-600">Includes ORF prediction using TransDecoder</span></span></label>
+                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3"><input type="checkbox" {...register("bioinformaticsDetails.transcriptomics.analysis.functionalAnnotation")} className="mt-1" /><span className="text-sm">Functional Annotation <span className="block text-xs text-slate-600">Trinotate (UniProt/SwissProt, Pfam, Eggnog, SignalP, TMHMM, infernal), extracted GO Terms</span></span></label>
+                                    </div>
+                                  </details>
+
+                                  <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3">
+                                    <input type="checkbox" {...register("bioinformaticsDetails.transcriptomics.unsure")} className="mt-1" />
+                                    <span className="text-sm">Unsure <span className="block text-xs text-slate-600">We will try to provide quotation and/or recommendation based on your target objective/s.</span></span>
+                                  </label>
+                                </div>
+                              )}
+
+                              {option.id === "whole-genome-assembly" && selected && (
+                                <div className="border-t border-slate-100 px-4 py-3 space-y-4">
+                                  <details className="rounded-md border border-slate-100 bg-slate-50/70" open>
+                                    <summary className="px-3 py-2 text-sm font-semibold text-slate-700 cursor-pointer">Sample Details</summary>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 border-t border-slate-100">
+                                      <div><Label className="text-xs">Sample Taxonomy</Label><Input placeholder="e.g. E. coli, bacteria, eukaryote, unknown" {...register("bioinformaticsDetails.wholeGenomeAssembly.sampleTaxonomy")} className="mt-1 h-9" /></div>
+                                      <div><Label className="text-xs">No. of samples</Label><Input type="number" min="1" {...register("bioinformaticsDetails.wholeGenomeAssembly.sampleCount", { valueAsNumber: true })} className="mt-1 h-9" /></div>
+                                    </div>
+                                  </details>
+
+                                  <details className="rounded-md border border-slate-100 bg-slate-50/70" open>
+                                    <summary className="px-3 py-2 text-sm font-semibold text-slate-700 cursor-pointer">Analysis</summary>
+                                    <div className="space-y-2 p-3 border-t border-slate-100">
+                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3">
+                                        <input
+                                          type="checkbox"
+                                          {...register("bioinformaticsDetails.wholeGenomeAssembly.analysis.assembly")}
+                                          className="mt-1"
+                                          disabled={formData.bioinformaticsDetails?.wholeGenomeAssembly?.unsure}
+                                        />
+                                        <span className="text-sm">Whole Genome Assembly <span className="block text-xs text-slate-600">Includes FastQC, Trimming, Genome Assembly, and Assembly QC</span></span>
+                                      </label>
+                                      <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3">
+                                        <input
+                                          type="checkbox"
+                                          {...register("bioinformaticsDetails.wholeGenomeAssembly.analysis.assemblyAnnotation")}
+                                          className="mt-1"
+                                          disabled={formData.bioinformaticsDetails?.wholeGenomeAssembly?.unsure}
+                                        />
+                                        <span className="text-sm">Whole Genome Assembly and Annotation <span className="block text-xs text-slate-600">Includes FastQC, Trimming, Genome Assembly, and Assembly QC and Annotation</span></span>
+                                      </label>
+                                      <div>
+                                        <Label className="text-xs">Additional Downstream Analysis</Label>
+                                        <Input 
+                                          placeholder="Please specify" 
+                                          {...register("bioinformaticsDetails.wholeGenomeAssembly.analysis.additionalDownstream")} 
+                                          className="mt-1 h-9" 
+                                          disabled={formData.bioinformaticsDetails?.wholeGenomeAssembly?.unsure}
+                                        />
+                                      </div>
+                                    </div>
+                                  </details>
+
+                                  <label className="flex items-start gap-2 rounded border border-slate-200 bg-white p-3">
+                                    <input
+                                      type="checkbox"
+                                      {...register("bioinformaticsDetails.wholeGenomeAssembly.unsure")}
+                                      className="mt-1"
+                                      disabled={
+                                        formData.bioinformaticsDetails?.wholeGenomeAssembly?.analysis?.assembly ||
+                                        formData.bioinformaticsDetails?.wholeGenomeAssembly?.analysis?.assemblyAnnotation ||
+                                        !!formData.bioinformaticsDetails?.wholeGenomeAssembly?.analysis?.additionalDownstream
+                                      }
+                                    />
+                                    <span className="text-sm">Unsure <span className="block text-xs text-slate-600">We will try to provide quotation and/or recommendation based on your target objective/s.</span></span>
+                                  </label>
+                                </div>
+                              )}
+
+                              {option.id === "others" && selected && (
+                                <div className="border-t border-slate-100 px-4 py-3">
+                                  <Label className="text-xs font-semibold text-slate-600">Please specify</Label>
+                                  <Textarea
+                                    {...register("bioinformaticsDetails.othersSpecify")}
+                                    className="mt-1 min-h-[90px]"
+                                  />
+                                </div>
+                              )}
+                            </details>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    <details className="rounded-lg border border-slate-200 bg-white/60" open>
+                      <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-slate-700">Data</summary>
+                      <div className="space-y-4 border-t border-slate-100 px-4 py-3">
+                        <label className="flex items-center gap-2 text-sm text-slate-700">
+                          <input
+                            type="radio"
+                            name="bioinfo-data-source"
+                            checked={!!formData.bioinformaticsDetails?.dataProvideOwnData}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setValue("bioinformaticsDetails.dataProvideOwnData", true)
+                                setValue("bioinformaticsDetails.dataProvidedByPgc", false)
+                              }
+                            }}
+                            className="h-4 w-4"
+                          />
+                          Provide own data
+                        </label>
+
+                        {formData.bioinformaticsDetails?.dataProvideOwnData && (
+                          <div className="rounded-md border border-slate-100 bg-slate-50/70 p-3 space-y-3">
+                            <Label className="text-xs font-semibold text-slate-600">File Format</Label>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                              {BIOINFO_DATA_FORMAT_OPTIONS.map((formatId) => (
+                                <label key={formatId} className="flex items-center gap-2 text-sm text-slate-700">
+                                  <input
+                                    type="checkbox"
+                                    checked={(formData.bioinformaticsDetails?.dataFileFormats || []).includes(formatId)}
+                                    onChange={(e) => handleBioinformaticsDataFormatChange(formatId, e.target.checked)}
+                                  />
+                                  {formatId === "fastq" ? "Fastq" : formatId === "fasta" ? "Fasta" : "Others"}
+                                </label>
+                              ))}
+                            </div>
+                            {(formData.bioinformaticsDetails?.dataFileFormats || []).includes("others") && (
+                              <Input placeholder="e.g., BAM, GTF" {...register("bioinformaticsDetails.dataOtherFormat")} className="h-9" />
+                            )}
+
+                            <div>
+                              <Label className="text-xs font-semibold text-slate-600">Specify file size for each sample</Label>
+                              <Input placeholder="e.g., 1 Mb, 1 Gb" {...register("bioinformaticsDetails.dataFileSizePerSample")} className="mt-1 h-9" />
+                            </div>
+
+                            <div>
+                              <Label className="text-xs font-semibold text-slate-600">Preferred mode of file transfer</Label>
+                              <Input placeholder="e.g., Google drive" {...register("bioinformaticsDetails.dataTransferMode")} className="mt-1 h-9" />
+                            </div>
+                          </div>
+                        )}
+
+                        <label className="flex items-center gap-2 text-sm text-slate-700">
+                          <input
+                            type="radio"
+                            name="bioinfo-data-source"
+                            checked={!!formData.bioinformaticsDetails?.dataProvidedByPgc}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setValue("bioinformaticsDetails.dataProvideOwnData", false)
+                                setValue("bioinformaticsDetails.dataProvidedByPgc", true)
+                              }
+                            }}
+                            className="h-4 w-4"
+                          />
+                          Data to be generated by PGC Visayas sequencing service
+                        </label>
+                      </div>
+                    </details>
+
+                    <div>
+                      <Label className="text-sm font-semibold text-slate-700 mb-2 block">
+                        Overview of research and objectives <span className="text-[#B9273A]">*</span>
+                      </Label>
+                      <Textarea
+                        {...register("bioinformaticsDetails.overviewObjectives")}
+                        className="min-h-[120px] bg-white/70"
+                        placeholder="To help us provide the appropriate bioinformatics analysis, kindly provide comprehensive details of study objectives and/or why you need the service."
+                      />
+                      {errors.bioinformaticsDetails && (
+                        <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                          <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                          {typeof errors.bioinformaticsDetails.message === "string"
+                            ? errors.bioinformaticsDetails.message
+                            : "Please complete the bioinformatics details."}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
               {/* Research Service Fields */}
               {selectedService === "research" && (
                 <div className="space-y-6">
-                  {/* Project Background - Required for research */}
+                  {/* Research Overview - Required for research */}
                   <div>
-                    <Label htmlFor="projectBackground" className="text-sm font-semibold text-slate-700 mb-2 block">
-                      Indicate a brief background of the project and required molecular workflow <span className="text-[#B9273A]">*</span>
+                    <Label htmlFor="researchOverview" className="text-sm font-semibold text-slate-700 mb-2 block">
+                      Overview of research, objectives, and scope of collaboration with PGC Visayas. Kindly provide comprehensive details. <span className="text-[#B9273A]">*</span>
                     </Label>
                     <Textarea
-                      id="projectBackground"
-                      placeholder="Enter a description..."
-                      {...register("projectBackground")}
-                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[100px] resize-none"
-                      rows={4}
+                      id="researchOverview"
+                      placeholder="Provide comprehensive details about your research, objectives, and scope of collaboration with PGC Visayas..."
+                      {...register("researchOverview")}
+                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[140px] resize-none"
+                      rows={5}
                     />
-                    {errors.projectBackground && (
+                    {errors.researchOverview && (
                       <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
                         <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                        {errors.projectBackground.message}
+                        {errors.researchOverview.message}
                       </p>
                     )}
                   </div>
@@ -743,29 +1269,25 @@ export default function QuotationRequestForm() {
                     </div>
                     <div>
                       <Label htmlFor="plannedSampleCount" className="text-sm font-semibold text-slate-700 mb-2 block">
-                        How many samples are you planning to send
+                        How many samples are you planning to send?
                       </Label>
                       <Input
                         id="plannedSampleCount"
-                        placeholder="___"
+                        type="number"
+                        min="0"
+                        step="1"
+                        inputMode="numeric"
+                        placeholder="Enter number of samples"
                         {...register("plannedSampleCount")}
                         className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
                       />
+                      {errors.plannedSampleCount && (
+                        <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                          <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                          {errors.plannedSampleCount.message}
+                        </p>
+                      )}
                     </div>
-                  </div>
-
-                  {/* Project Budget - Required for research */}
-                  <div className="hidden">
-                    <Label htmlFor="projectBudget" className="text-sm font-semibold text-slate-700 mb-2 block">
-                      Indicate project budget for molecular workflow <span className="text-[#B9273A]">*</span>
-                    </Label>
-                    <Input
-                      id="projectBudget"
-                      type="text"
-                      placeholder="₱"
-                      {...register("projectBudget")}
-                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
-                    />
                   </div>
                 </div>
               )}
@@ -773,58 +1295,52 @@ export default function QuotationRequestForm() {
               {/* Training Service Fields */}
               {selectedService === "training" && (
                 <div className="space-y-6">
-                  {/* Training Information Section - Informational content */}
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-slate-800 mb-3">PGC Visayas Training Services</h3>
-                        <p className="text-slate-700 mb-3">PGC Visayas offers a range of training services, including:</p>
-                        <ul className="list-disc list-inside space-y-1 text-slate-700 ml-4">
-                          <li>Basic Molecular Techniques (DNA Extraction, PCR, and Quantification)</li>
-                          <li>Library Preparation for Next Generation Sequencing (Amplicon Sequencing, 16s Metabarcoding, Whole Genome Sequencing)</li>
-                          <li>Sequencing (Illumina iSeq 100 and NextSeq 1000)</li>
-                          <li>Bioinformatics Analysis (Customized depending on the needed application)</li>
-                        </ul>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-semibold text-slate-800 mb-2">Training Structure:</h4>
-                        <div className="space-y-2 text-slate-700">
-                          <div>
-                            <span className="font-medium">Lecture and Hands-On Training (4-5 day Training)</span>
-                            <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
-                              <li>Lecture and Hands-On Laboratory Training (2-3 days)</li>
-                              <li>Lecture and Hand-On Bioinformatics Training (1-2 days)</li>
-                            </ul>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <p className="text-slate-700 font-medium">
-                        If you are interested, kindly provide us with the following details:
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Specific Training Need - Required field */}
                   <div>
-                    <Label htmlFor="specificTrainingNeed" className="text-sm font-semibold text-slate-700 mb-2 block">
-                      Specific Training Needs <span className="text-[#B9273A]">*</span>
+                    <Label className="text-sm font-semibold text-slate-700 mb-3 block">
+                      Kindly choose from the following PGC Visayas Training Programs <span className="text-[#B9273A]">*</span>
                     </Label>
-                    <Input
-                      id="specificTrainingNeed"
-                      type="text"
-                      placeholder="Describe the specific training you need..."
-                      {...register("specificTrainingNeed")}
-                      className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 h-12"
-                    />
-                    {errors.specificTrainingNeed && (
+                    <div className="space-y-2">
+                      {TRAINING_PROGRAM_OPTIONS.map((program) => {
+                        const value = program === "Others / Customized Training Program" ? "others-customized" : program
+                        const isChecked = (formData.trainingPrograms || []).includes(value)
+                        return (
+                          <label key={value} className="flex items-start gap-3 p-3 bg-white/50 rounded-lg border border-slate-100 hover:bg-white/70 transition-colors cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => handleTrainingProgramChange(value, e.target.checked)}
+                              className="h-4 w-4 mt-0.5 rounded border-slate-300 text-[#166FB5] focus:ring-[#166FB5]/20"
+                            />
+                            <span className="text-sm text-slate-700 font-medium leading-snug">{program}</span>
+                          </label>
+                        )
+                      })}
+                    </div>
+                    {errors.trainingPrograms && (
                       <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
                         <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                        {errors.specificTrainingNeed.message}
+                        {errors.trainingPrograms.message}
                       </p>
                     )}
                   </div>
+
+                  {(formData.trainingPrograms || []).includes("others-customized") && (
+                    <div>
+                      <Textarea
+                        id="specificTrainingNeed"
+                        placeholder="Kindly provide specific training needs"
+                        {...register("specificTrainingNeed")}
+                        className="bg-white/70 border-slate-200 focus:border-[#166FB5] focus:ring-[#166FB5]/20 min-h-[100px] resize-none"
+                        rows={4}
+                      />
+                      {errors.specificTrainingNeed && (
+                        <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                          <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                          {errors.specificTrainingNeed.message}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   {/* Target Date for Training with Calendar Picker */}
                   <div>
@@ -854,12 +1370,6 @@ export default function QuotationRequestForm() {
                           }
                           initialFocus
                         />
-                        {errors.bioinfoOptions && formData.workflowType === "complete-bioinfo" && (
-                          <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
-                            <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
-                            {errors.bioinfoOptions.message}
-                          </p>
-                        )}
                       </PopoverContent>
                     </Popover>
                     {errors.targetTrainingDate && (
@@ -868,12 +1378,18 @@ export default function QuotationRequestForm() {
                         {errors.targetTrainingDate.message}
                       </p>
                     )}
+                    {errors.bioinfoOptions && formData.workflowType === "complete-bioinfo" && (
+                      <p className="text-[#B9273A] text-sm mt-1 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                        {errors.bioinfoOptions.message}
+                      </p>
+                    )}
                   </div>
 
                   {/* Number of Participants - Required field with minimum constraint */}
                   <div>
                     <Label htmlFor="numberOfParticipants" className="text-sm font-semibold text-slate-700 mb-2 block">
-                      Number of Participants (Minimum of 6 pax for in-person) <span className="text-[#B9273A]">*</span>
+                      Number of Participants <span className="text-[#B9273A]">*</span>
                     </Label>
                     <Input
                       id="numberOfParticipants"
@@ -892,7 +1408,8 @@ export default function QuotationRequestForm() {
                   </div>
                 </div>
               )}
-            </div>
+              </div>
+            )}
 
             {/* Submit Button */}
             <div className="flex justify-end pt-8 border-t border-slate-100">
@@ -928,6 +1445,14 @@ export default function QuotationRequestForm() {
             <div><span className="font-semibold">Service Type:</span> {pendingData.service}</div>
             
             {/* Show service-specific fields based on service type */}
+            {pendingData.service === "equipment" && pendingData.individualAssayDetails && (
+              <div>
+                <span className="font-semibold block mb-1">Equipment / Workflow Details:</span>
+                <p className="bg-slate-50 p-3 rounded-lg text-slate-700 whitespace-pre-wrap">
+                  {pendingData.individualAssayDetails}
+                </p>
+              </div>
+            )}
             {pendingData.service === "laboratory" && (
               <>
                 {pendingData.species && (
@@ -940,19 +1465,6 @@ export default function QuotationRequestForm() {
                 {pendingData.researchOverview && (
                   <div>
                     <span className="font-semibold">Research Overview:</span> {pendingData.researchOverview}
-                  </div>
-                )}
-                {pendingData.methodologyFileUrl && (
-                  <div>
-                    <span className="font-semibold">Methodology File:</span>{" "}
-                    <a 
-                      href={pendingData.methodologyFileUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 underline"
-                    >
-                      View uploaded file
-                    </a>
                   </div>
                 )}
                 {pendingData.sampleCount && (
@@ -972,21 +1484,90 @@ export default function QuotationRequestForm() {
                 )}
                 {pendingData.bioinfoOptions && pendingData.bioinfoOptions.length > 0 && (
                   <div>
-                    <span className="font-semibold">Bioinformatics Analysis:</span> {pendingData.bioinfoOptions.join(", ")}
+                    <span className="font-semibold">Bioinformatics Analysis:</span> {pendingData.bioinfoOptions.map(opt => {
+                      const labels: Record<string, string> = {
+                        "whole-genome-assembly": "Whole Genome Assembly",
+                        "metabarcoding-downstream": "Metabarcoding with Downstream Analysis",
+                        "metabarcoding-preprocessing": "Metabarcoding with Pre-processing Only",
+                        "transcriptomics": "Transcriptomics (QC to Annotation)",
+                        "phylogenetics": "Phylogenetics (1 Marker)",
+                        "whole-genome-assembly-annotation": "Whole Genome Assembly and Annotation",
+                        // Legacy values
+                        "genome-assembly": "Whole Genome Assembly",
+                        "metabarcoding": "Metabarcoding with Downstream Analysis",
+                        "pre-processing": "Metabarcoding with Pre-processing Only",
+                        "assembly-annotation": "Whole Genome Assembly and Annotation"
+                      };
+                      return labels[opt] || opt;
+                    }).join(", ")}
                   </div>
                 )}
               </>
             )}
+            {pendingData.service === "bioinformatics" && (
+              <div className="space-y-3">
+                <div>
+                  <span className="font-semibold">Type of bioinformatics service:</span>{" "}
+                  {Array.isArray(pendingData.bioinformaticsDetails?.serviceTypes) && pendingData.bioinformaticsDetails?.serviceTypes.length > 0
+                    ? pendingData.bioinformaticsDetails.serviceTypes.join(", ")
+                    : "—"}
+                </div>
+                <div>
+                  <span className="font-semibold">Data (provide own data):</span>{" "}
+                  {pendingData.bioinformaticsDetails?.dataProvideOwnData ? "Yes" : "No"}
+                </div>
+                {pendingData.bioinformaticsDetails?.dataProvideOwnData && (
+                  <>
+                    <div>
+                      <span className="font-semibold">File format:</span>{" "}
+                      {Array.isArray(pendingData.bioinformaticsDetails?.dataFileFormats) && pendingData.bioinformaticsDetails?.dataFileFormats.length > 0
+                        ? pendingData.bioinformaticsDetails.dataFileFormats.join(", ")
+                        : "—"}
+                    </div>
+                    {pendingData.bioinformaticsDetails?.dataOtherFormat && (
+                      <div><span className="font-semibold">Other file format:</span> {pendingData.bioinformaticsDetails.dataOtherFormat}</div>
+                    )}
+                    {pendingData.bioinformaticsDetails?.dataFileSizePerSample && (
+                      <div><span className="font-semibold">File size per sample:</span> {pendingData.bioinformaticsDetails.dataFileSizePerSample}</div>
+                    )}
+                    {pendingData.bioinformaticsDetails?.dataTransferMode && (
+                      <div><span className="font-semibold">Preferred file transfer mode:</span> {pendingData.bioinformaticsDetails.dataTransferMode}</div>
+                    )}
+                  </>
+                )}
+                <div>
+                  <span className="font-semibold">Data to be generated by PGC Visayas sequencing service:</span>{" "}
+                  {pendingData.bioinformaticsDetails?.dataProvidedByPgc ? "Yes" : "No"}
+                </div>
+                {pendingData.bioinformaticsDetails?.overviewObjectives && (
+                  <div>
+                    <span className="font-semibold block mb-1">Overview of research and objectives:</span>
+                    <p className="bg-slate-50 p-3 rounded-lg text-slate-700 whitespace-pre-wrap">
+                      {pendingData.bioinformaticsDetails.overviewObjectives}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
             {pendingData.service === "research" && (
-              <>
-                <div><span className="font-semibold">Project Background:</span> {pendingData.projectBackground}</div>
-                {pendingData.molecularServicesBudget && (
-                  <div><span className="font-semibold">Budget for molecular services:</span> {pendingData.molecularServicesBudget}</div>
+              <div className="space-y-3">
+                {pendingData.researchOverview && (
+                  <div>
+                    <span className="font-semibold block mb-1">Overview of research, objectives, and scope of collaboration:</span>
+                    <p className="bg-slate-50 p-3 rounded-lg text-slate-700 whitespace-pre-wrap">
+                      {pendingData.researchOverview}
+                    </p>
+                  </div>
                 )}
-                {pendingData.plannedSampleCount && (
-                  <div><span className="font-semibold">Planned Sample Count:</span> {pendingData.plannedSampleCount}</div>
-                )}
-              </>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {pendingData.molecularServicesBudget && (
+                    <div><span className="font-semibold">Budget for molecular services:</span> {pendingData.molecularServicesBudget}</div>
+                  )}
+                  {pendingData.plannedSampleCount && (
+                    <div><span className="font-semibold">How many samples are you planning to send?</span> {pendingData.plannedSampleCount}</div>
+                  )}
+                </div>
+              </div>
             )}
             {pendingData.service === "retail" && pendingData.retailItems && pendingData.retailItems.length > 0 && (
               <div>
@@ -995,7 +1576,14 @@ export default function QuotationRequestForm() {
             )}
             {pendingData.service === "training" && (
               <>
-                <div><span className="font-semibold">Specific Training Need:</span> {pendingData.specificTrainingNeed}</div>
+                {pendingData.trainingPrograms && pendingData.trainingPrograms.length > 0 && (
+                  <div>
+                    <span className="font-semibold">Training Programs:</span> {pendingData.trainingPrograms.map((program) => program === "others-customized" ? "Others / Customized Training Program" : program).join(", ")}
+                  </div>
+                )}
+                {pendingData.specificTrainingNeed && (
+                  <div><span className="font-semibold">Specific Training Needs:</span> {pendingData.specificTrainingNeed}</div>
+                )}
                 <div><span className="font-semibold">Target Training Date:</span> {pendingData.targetTrainingDate}</div>
                 <div><span className="font-semibold">Number of Participants:</span> {pendingData.numberOfParticipants}</div>
               </>

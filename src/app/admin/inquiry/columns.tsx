@@ -10,6 +10,7 @@
 import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { Inquiry } from "@/types/Inquiry";
+import { CatalogItem } from "@/types/CatalogSettings";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EditInquiryModal } from "@/components/forms/EditInquiryModal";
@@ -23,47 +24,90 @@ import {
 } from "@/components/ui/tooltip";
 import { QuoteButton } from "./QuoteButton";
 import UnreadBadge from "@/components/chat/UnreadBadge";
-import { Copy, User, Eye } from "lucide-react";
+import { Copy, User, Eye, Circle } from "lucide-react";
 import { toast } from "sonner";
+import usePresenceStatus from "@/hooks/usePresenceStatus";
 
 /**
- * Utility function to get appropriate CSS classes for status badges
- *
- * Provides consistent color coding across the admin interface:
- * - Green: Approved clients (ready for service)
- * - Blue: Quotation only (pricing information provided)
- * - Orange: Ongoing quotation (quotation in progress)
- * - Yellow: Pending (awaiting admin review)
- *
+ * Presence Cell Component
+ * 
+ * Separate component to handle the inclusion of the usePresenceStatus hook
+ * within the table cell, which is not allowed directly in the ColumnDef object.
  */
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "Approved Client":
-      return "bg-green-100 text-green-800";
-    case "Quotation Only":
-      return "bg-blue-100 text-blue-800";
-    case "Ongoing Quotation":
-      return "bg-orange-100 text-orange-800";
-    case "Service Not Offered":
-      return "bg-slate-100 text-slate-500 border-slate-200 opacity-70";
-    case "Pending":
-    default:
-      return "bg-yellow-100 text-yellow-800";
+const PresenceCell = ({ inquiryId }: { inquiryId: string }) => {
+  const presence = usePresenceStatus(`client_${inquiryId}`);
+  
+  if (!presence.isOnline) return null;
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="relative flex h-2 w-2 shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Online Now</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
+
+/**
+ * Helper to convert hex color to rgba
+ */
+const hexToRgba = (hex: string, alpha: number) => {
+  const cleaned = hex.replace("#", "");
+  if (cleaned.length !== 6) return "";
+  const r = parseInt(cleaned.substring(0, 2), 16);
+  const g = parseInt(cleaned.substring(2, 4), 16);
+  const b = parseInt(cleaned.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+};
+
+/**
+ * Get status color from catalog or fallback to default
+ */
+const getStatusColorFromCatalog = (
+  status: string,
+  catalog: CatalogItem[]
+): { bg: string; text: string } => {
+  const catalogItem = catalog.find((item) => item.value === status);
+  if (catalogItem?.color) {
+    return {
+      bg: hexToRgba(catalogItem.color, 0.15),
+      text: catalogItem.color,
+    };
   }
+  // Fallback colors
+  const fallbacks: Record<string, { bg: string; text: string }> = {
+    "Approved Client": { bg: "rgba(34, 197, 94, 0.15)", text: "#22c55e" },
+    "Quotation Only": { bg: "rgba(59, 130, 246, 0.15)", text: "#3b82f6" },
+    "Ongoing Quotation": { bg: "rgba(249, 115, 22, 0.15)", text: "#f97316" },
+    "In Progress": { bg: "rgba(14, 165, 233, 0.15)", text: "#0ea5e9" },
+    "Service Not Offered": { bg: "rgba(148, 163, 184, 0.15)", text: "#94a3b8" },
+    Cancelled: { bg: "rgba(148, 163, 184, 0.15)", text: "#94a3b8" },
+    Pending: { bg: "rgba(234, 179, 8, 0.15)", text: "#eab308" },
+  };
+  return fallbacks[status] || fallbacks.Pending;
 };
 
 /**
  * Column definitions for the inquiry data table
  *
+ * Accepts statusCatalog to apply dynamic colors from Configuration > Catalog Settings.
  * Each column defines how data should be displayed, including custom cell renderers
  * for complex data types like dates and status badges. The columns are configured
  * to work with TanStack Table's sorting and filtering features.
  */
-export const columns: ColumnDef<Inquiry>[] = [
+export const columns = (statusCatalog: CatalogItem[] = []): ColumnDef<Inquiry>[] => [
   {
     accessorKey: "id",
-    header: "ID",
-    size: 85, // Compact to preserve room for trailing columns
+    header: "Inquiry ID",
+    size: 110, // Increased size to display the complete inquiry ID
     cell: ({ row }) => {
       const inquiry = row.original;
 
@@ -80,14 +124,8 @@ export const columns: ColumnDef<Inquiry>[] = [
       })();
 
       // NEW badge logic:
-      // 1. Show if status is "Pending" (regardless of time)
-      // 2. Show if it's very recent (last 24h) EXCEPT if it's already quoted
-      const isQuoted = [
-        "Ongoing Quotation",
-        "Approved Client",
-        "Quotation Only",
-      ].includes(inquiry.status);
-      const showNew = (inquiry.status === "Pending" || isRecent) && !isQuoted;
+      // Only show if status is "Pending"
+      const showNew = inquiry.status === "Pending";
 
       const handleCopy = async (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -102,7 +140,8 @@ export const columns: ColumnDef<Inquiry>[] = [
       const shortId = inquiry.id.slice(0, 8);
 
       return (
-        <div className="flex items-center gap-2 w-full">
+        <div className="flex items-center gap-2 w-full pr-1">
+          <PresenceCell inquiryId={inquiry.id} />
           {showNew && (
             <Badge
               variant="destructive"
@@ -116,7 +155,7 @@ export const columns: ColumnDef<Inquiry>[] = [
           </span>
           <button
             onClick={handleCopy}
-            className="p-0.5 hover:bg-slate-100 rounded shrink-0"
+            className="p-0.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-slate-100 rounded shrink-0"
             title="Copy Inquiry ID"
           >
             <Copy className="h-2.5 w-2.5 text-slate-400" />
@@ -200,7 +239,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "email",
     header: "Email",
-    size: 120, // Reduced per request; tooltip shows full value
+    size: 100, // Reduced from 120 per request
     cell: ({ getValue }) => {
       const email = (getValue() as string) || "—";
 
@@ -300,7 +339,7 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    size: 130, // Keep status readable and prevent clipping
+    size: 180, // Expanded slightly to provide more breathing room for labels and icons
     cell: ({ row }) => {
       const router = useRouter();
       const inquiry = row.original;
@@ -308,54 +347,70 @@ export const columns: ColumnDef<Inquiry>[] = [
       const hasLoggedIn = inquiry.hasLoggedIn;
       const hasOpenedQuotation = inquiry.hasOpenedQuotation;
 
-      // Render status as a colored badge
+      // Render status as a colored badge with fixed width and trailing icons
+      const colors = getStatusColorFromCatalog(status, statusCatalog);
       return (
-        <div className="flex items-center gap-1 w-full overflow-hidden">
-          <span
-            className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold truncate flex-1 text-center ${getStatusColor(
-              status,
-            )}`}
-          >
-            {status}
-          </span>
-          <div className="flex items-center gap-0.5 shrink-0 ml-auto">
-            {!!hasLoggedIn && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <User className="h-3.5 w-3.5 text-green-600 fill-green-600 cursor-default" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs font-semibold">
-                      Client logged in
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            {!!hasOpenedQuotation && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Eye
-                      className="h-3.5 w-3.5 text-blue-500 cursor-default"
-                      strokeWidth={3}
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-xs font-semibold">
-                      Quotation viewed
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            <UnreadBadge
-              inquiryId={inquiry.id}
-              role="admin"
-              senderId={inquiry.email}
-              senderName={inquiry.name}
-            />
+        <div className="flex items-center gap-2 w-full pr-1">
+          <div className="w-[72%] flex-shrink-0">
+            <span
+              className="block w-full px-1.5 py-0.5 rounded-full text-[9px] font-bold truncate text-center"
+              style={{
+                backgroundColor: colors.bg,
+                color: colors.text,
+              }}
+            >
+              {status}
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-1.5 flex-1 justify-start">
+            <div className="flex items-center gap-1.5 min-w-[42px] justify-start shrink-0">
+              {!!hasLoggedIn ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <User className="h-3.5 w-3.5 text-green-600 fill-green-600 shrink-0 cursor-default" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs font-semibold">
+                        Client logged in
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <div className="w-3.5 h-3.5 shrink-0" />
+              )}
+              
+              {!!hasOpenedQuotation ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Eye
+                        className="h-3.5 w-3.5 text-blue-500 shrink-0 cursor-default"
+                        strokeWidth={3}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs font-semibold">
+                        Quotation viewed
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <div className="w-3.5 h-3.5 shrink-0" />
+              )}
+            </div>
+            
+            <div className="shrink-0 flex items-center ml-auto">
+              <UnreadBadge
+                inquiryId={inquiry.id}
+                role="admin"
+                senderId={inquiry.email}
+                senderName={inquiry.name}
+              />
+            </div>
           </div>
         </div>
       );
@@ -364,17 +419,17 @@ export const columns: ColumnDef<Inquiry>[] = [
   {
     id: "actions",
     header: () => <div className="text-center w-full">Actions</div>,
-    size: 110, // Reserve enough space for action controls
+    size: 100, // Increased from 70 to provide more breathing room for buttons
     cell: ({ row }) => {
       const inquiry = row.original;
       const router = useRouter();
       const { adminInfo } = useAuth();
-      const { canEdit, canCreate, canView } = usePermissions(adminInfo?.role);
+      const { canEdit, canCreate } = usePermissions(adminInfo?.role);
 
       return (
-        <div className="flex items-center justify-center gap-1 px-1">
+        <div className="flex items-center justify-center -space-x-1 h-9">
           {canCreate("quotations") && (
-            <div className="scale-75 origin-center">
+            <div className="scale-90 origin-center">
               <QuoteButton inquiryId={inquiry.id} />
             </div>
           )}

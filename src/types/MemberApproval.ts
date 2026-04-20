@@ -7,10 +7,18 @@ export interface DraftMember {
   tempId: string;
   isPrimary: boolean;
   isValidated: boolean;
-  formData: ClientFormData;
+  formData: {
+    name: string;
+    email: string;
+    affiliation: string;
+    designation: string;
+    sex: "M" | "F" | "Other" | "";
+    phoneNumber: string;
+    affiliationAddress: string;
+  };
 }
 
-export type ApprovalStatus = "draft" | "pending" | "approved" | "rejected";
+export type ApprovalStatus = "draft" | "pending" | "approved" | "rejected" | "cancelled";
 
 export interface MemberApproval {
   id?: string; // Firestore doc ID (auto or composite)

@@ -2,12 +2,17 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getQuotationByReferenceNumber } from "@/services/quotationService";
+import dynamic from "next/dynamic";
+import { getQuotationByReferenceNumber, updateQuotationStatus, getAllQuotations } from "@/services/quotationService";
 import { QuotationRecord } from "@/types/Quotation";
 import { notFound } from "next/navigation";
-import DownloadButtonSection from "@/components/pdf/DownloadButtonSection";
+const DownloadButtonSection = dynamic(
+  () => import("@/components/pdf/DownloadButtonSection"),
+  { ssr: false, loading: () => <div className="text-sm text-muted-foreground py-2">Loading PDF tools...</div> }
+);
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 
@@ -17,6 +22,10 @@ export default function QuotationDetailPageClient() {
   const router = useRouter();
   const [quotation, setQuotation] = useState<QuotationRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<NonNullable<QuotationRecord["status"]>>("pending");
+  const [savingStatusValue, setSavingStatusValue] = useState<NonNullable<QuotationRecord["status"]> | null>(null);
+  const [savingStatus, setSavingStatus] = useState(false);
+  const [allQuotations, setAllQuotations] = useState<QuotationRecord[]>([]);
 
   useEffect(() => {
     if (!referenceNumber || typeof referenceNumber !== "string") return;
@@ -25,6 +34,7 @@ export default function QuotationDetailPageClient() {
       try {
         const data = await getQuotationByReferenceNumber(referenceNumber);
         setQuotation(data);
+        if (data) setStatus((data.status as NonNullable<QuotationRecord["status"]>) || "pending");
         
         // Log VIEW activity
         await logActivity({
@@ -46,6 +56,43 @@ export default function QuotationDetailPageClient() {
 
     fetchQuotation();
   }, [referenceNumber]);
+
+  const handleStatusChange = async (newStatus: NonNullable<QuotationRecord["status"]>) => {
+    if (!referenceNumber || typeof referenceNumber !== "string") return;
+    if (newStatus === status) return;
+    setSavingStatusValue(newStatus);
+    setSavingStatus(true);
+    try {
+      await updateQuotationStatus(referenceNumber, newStatus, quotation?.inquiryId);
+      setStatus(newStatus);
+      
+      // Update local quotation state to reflect selectedForProject changes
+      if (quotation) {
+        if (newStatus === "selected" && quotation.inquiryId) {
+          setQuotation({ ...quotation, selectedForProject: quotation.inquiryId });
+        } else if (newStatus === "cancelled" || newStatus === "pending") {
+          setQuotation({ ...quotation, selectedForProject: "" });
+        }
+      }
+      
+      await logActivity({
+        userId: adminInfo?.email || "system",
+        userEmail: adminInfo?.email || "system@pgc.admin",
+        userName: adminInfo?.name || "System",
+        action: "UPDATE",
+        entityType: "quotation",
+        entityId: referenceNumber,
+        entityName: `Quotation ${referenceNumber}`,
+        description: `Updated quotation status to "${newStatus}": ${referenceNumber}`,
+      });
+      toast.success(`Quotation marked as ${newStatus}.`);
+    } catch {
+      toast.error("Failed to update status.");
+    } finally {
+      setSavingStatus(false);
+      setSavingStatusValue(null);
+    }
+  };
 
   if (loading) return <div className="p-6 text-sm text-muted-foreground">Loading quotation...</div>;
   if (!quotation) return notFound();
@@ -181,6 +228,53 @@ export default function QuotationDetailPageClient() {
           </div>
         </div>
 
+        {/* Status Card */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+          <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+            <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#6E308E] rounded-full"></div>
+            Quotation Status
+          </h2>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              {status === "pending" && <Badge className="bg-yellow-50 text-yellow-700 border border-yellow-200 text-sm px-3 py-1">Pending</Badge>}
+              {status === "selected" && <Badge className="bg-green-50 text-green-700 border border-green-200 text-sm px-3 py-1">Selected</Badge>}
+              {status === "cancelled" && <Badge className="bg-slate-100 text-slate-600 border border-slate-300 text-sm px-3 py-1">Cancelled</Badge>}
+              {status !== "pending" && status !== "selected" && status !== "cancelled" && (
+                <Badge className="bg-blue-50 text-blue-700 border border-blue-200 text-sm px-3 py-1 capitalize">{status}</Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                size="sm"
+                onClick={() => handleStatusChange("pending")}
+                disabled={savingStatus}
+                variant={status === "pending" ? "default" : "outline"}
+                className={status === "pending" ? "bg-yellow-500 hover:bg-yellow-600 text-white border-yellow-500" : "border-yellow-300 text-yellow-700 hover:bg-yellow-50"}
+              >
+                {savingStatusValue === "pending" ? "Saving…" : "Pending"}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleStatusChange("selected")}
+                disabled={savingStatus}
+                variant={status === "selected" ? "default" : "outline"}
+                className={status === "selected" ? "bg-green-600 hover:bg-green-700 text-white border-green-600" : "border-green-300 text-green-700 hover:bg-green-50"}
+              >
+                {savingStatusValue === "selected" ? "Saving…" : "Selected"}
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => handleStatusChange("cancelled")}
+                disabled={savingStatus}
+                variant={status === "cancelled" ? "default" : "outline"}
+                className={status === "cancelled" ? "bg-slate-600 hover:bg-slate-700 text-white border-slate-600" : "border-slate-300 text-slate-600 hover:bg-slate-50"}
+              >
+                {savingStatusValue === "cancelled" ? "Saving…" : "Cancelled"}
+              </Button>
+            </div>
+          </div>
+        </div>
+
         {/* Preparation Details Card */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
           <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
@@ -218,6 +312,54 @@ export default function QuotationDetailPageClient() {
             total={total}
           />
         </div>
+
+        {/* All Quotations */}
+        {allQuotations.length > 0 && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-white/50">
+            <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+              <div className="w-2 h-2 bg-gradient-to-r from-[#166FB5] to-[#4038AF] rounded-full"></div>
+              All Quotations
+              <Badge variant="outline" className="ml-auto text-xs font-normal text-slate-500">
+                {allQuotations.length} total
+              </Badge>
+            </h2>
+            <div className="space-y-1 max-h-72 overflow-y-auto pr-1">
+              {allQuotations.map((q) => {
+                const isCurrent = q.referenceNumber === referenceNumber;
+                const isCancelled = q.status === "cancelled";
+                return (
+                  <div
+                    key={q.referenceNumber}
+                    onClick={() => !isCurrent && router.push(`/admin/quotations/${q.referenceNumber}`)}
+                    className={[
+                      "flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                      isCurrent
+                        ? "bg-blue-50 border border-blue-200 cursor-default"
+                        : "hover:bg-slate-50 cursor-pointer border border-transparent",
+                    ].join(" ")}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={["font-mono font-semibold truncate text-xs", isCurrent ? "text-blue-700" : "text-slate-700"].join(" ")}>
+                        {q.referenceNumber}
+                      </span>
+                      <span className="text-xs text-slate-500 truncate hidden sm:block">{q.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-xs text-slate-500">
+                        {new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 }).format(q.total)}
+                      </span>
+                      {isCancelled ? (
+                        <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">Cancelled</span>
+                      ) : isCurrent ? (
+                        <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5">Viewing</span>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

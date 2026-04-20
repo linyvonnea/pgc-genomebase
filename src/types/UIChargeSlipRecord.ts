@@ -12,7 +12,7 @@ export interface UIChargeSlipRecord {
   total: number;
 
   // Optional status field for filtering and display
-  status?: "processing" | "paid" | "cancelled";
+  status?: "processing" | "paid" | "cancelled" | "pending" | "waived";
 
   // For filtering and project linkage
   cid: string;
@@ -55,4 +55,7 @@ export interface UIChargeSlipRecord {
     name: string;
     position: string;
   };
+
+  // Runtime-only flag: set in ChargeSlipClientTable when this charge slip has an unacknowledged OR upload
+  hasNewOR?: boolean;
 }

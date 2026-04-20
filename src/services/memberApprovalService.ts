@@ -278,7 +278,7 @@ export async function approveMemberApproval(
 }
 
 /**
- * Reject a member approval request.
+ * Cancel a member approval request (previously reject).
  */
 export async function rejectMemberApproval(
   approvalId: string,
@@ -294,7 +294,7 @@ export async function rejectMemberApproval(
   await setDoc(
     docRef,
     {
-      status: "rejected" as ApprovalStatus,
+      status: "cancelled" as ApprovalStatus,
       reviewedBy,
       reviewedByName,
       reviewedAt: serverTimestamp(),

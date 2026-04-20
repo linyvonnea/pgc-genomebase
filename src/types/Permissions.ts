@@ -22,11 +22,14 @@ export interface RolePermissions {
   clients: ModulePermission;
   quotations: ModulePermission;
   chargeSlips: ModulePermission;
+  officialReceipts: ModulePermission;
+  sampleForms: ModulePermission;
   manualQuotation: ModulePermission;
   
   // Configuration
   serviceCatalog: ModulePermission;
   catalogSettings: ModulePermission;
+  configurations: ModulePermission;
   
   // Approvals
   memberApprovals: ModulePermission;
@@ -45,9 +48,12 @@ export const MODULE_LABELS: Record<keyof RolePermissions, string> = {
   clients: "Clients",
   quotations: "Quotations",
   chargeSlips: "Charge Slips",
+  officialReceipts: "Official Receipts",
+  sampleForms: "Sample Forms",
   manualQuotation: "Manual Quotation",
   serviceCatalog: "Service Catalog",
   catalogSettings: "Catalog Settings",
+  configurations: "Configurations",
   memberApprovals: "Projects Approval",
   usersPermissions: "Users & Permissions",
   roleManagement: "Role Management",
@@ -63,9 +69,11 @@ export const MODULE_SECTIONS = {
     "clients",
     "quotations",
     "chargeSlips",
+    "officialReceipts",
+    "sampleForms",
     "manualQuotation",
   ],
-  configuration: ["serviceCatalog", "catalogSettings"],
+  configuration: ["serviceCatalog", "catalogSettings", "configurations"],
   approvals: ["memberApprovals"],
   administration: ["usersPermissions", "roleManagement", "activityLogs", "databaseBackup"],
 } as const;
@@ -79,9 +87,12 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     clients: { view: true, create: false, edit: false, delete: false },
     quotations: { view: true, create: false, edit: false, delete: false },
     chargeSlips: { view: true, create: false, edit: false, delete: false },
+    officialReceipts: { view: true, create: false, edit: false, delete: false },
+    sampleForms: { view: true, create: false, edit: false, delete: false },
     manualQuotation: { view: false, create: false, edit: false, delete: false },
     serviceCatalog: { view: true, create: false, edit: false, delete: false },
     catalogSettings: { view: false, create: false, edit: false, delete: false },
+    configurations: { view: false, create: false, edit: false, delete: false },
     memberApprovals: { view: false, create: false, edit: false, delete: false },
     usersPermissions: { view: false, create: false, edit: false, delete: false },
     roleManagement: { view: false, create: false, edit: false, delete: false },
@@ -95,9 +106,12 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     clients: { view: true, create: false, edit: false, delete: false },
     quotations: { view: true, create: true, edit: true, delete: false },
     chargeSlips: { view: true, create: true, edit: true, delete: false },
+    officialReceipts: { view: true, create: false, edit: false, delete: false },
+    sampleForms: { view: true, create: true, edit: true, delete: false },
     manualQuotation: { view: true, create: true, edit: false, delete: false },
     serviceCatalog: { view: true, create: false, edit: false, delete: false },
     catalogSettings: { view: false, create: false, edit: false, delete: false },
+    configurations: { view: false, create: false, edit: false, delete: false },
     memberApprovals: { view: false, create: false, edit: false, delete: false },
     usersPermissions: { view: false, create: false, edit: false, delete: false },
     roleManagement: { view: false, create: false, edit: false, delete: false },
@@ -111,9 +125,12 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     clients: { view: true, create: true, edit: true, delete: true },
     quotations: { view: true, create: true, edit: true, delete: true },
     chargeSlips: { view: true, create: true, edit: true, delete: true },
+    officialReceipts: { view: true, create: false, edit: false, delete: false },
+    sampleForms: { view: true, create: true, edit: true, delete: true },
     manualQuotation: { view: true, create: true, edit: true, delete: false },
     serviceCatalog: { view: true, create: true, edit: true, delete: true },
     catalogSettings: { view: true, create: true, edit: true, delete: true },
+    configurations: { view: true, create: true, edit: true, delete: true },
     memberApprovals: { view: true, create: false, edit: true, delete: false },
     usersPermissions: { view: false, create: false, edit: false, delete: false },
     roleManagement: { view: false, create: false, edit: false, delete: false },
@@ -127,9 +144,12 @@ export const DEFAULT_ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     clients: { view: true, create: true, edit: true, delete: true },
     quotations: { view: true, create: true, edit: true, delete: true },
     chargeSlips: { view: true, create: true, edit: true, delete: true },
+    officialReceipts: { view: true, create: true, edit: true, delete: true },
+    sampleForms: { view: true, create: true, edit: true, delete: true },
     manualQuotation: { view: true, create: true, edit: true, delete: true },
     serviceCatalog: { view: true, create: true, edit: true, delete: true },
     catalogSettings: { view: true, create: true, edit: true, delete: true },
+    configurations: { view: true, create: true, edit: true, delete: true },
     memberApprovals: { view: true, create: false, edit: true, delete: true },
     usersPermissions: { view: true, create: true, edit: true, delete: true },
     roleManagement: { view: true, create: false, edit: true, delete: false },

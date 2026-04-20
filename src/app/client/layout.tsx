@@ -5,10 +5,37 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import Header from "@/components/ui/header";
+import Link from "next/link";
+import { HelpCircle } from "lucide-react";
+import {
+  DEFAULT_PORTAL_FEATURES,
+  getConfigurationSettings,
+} from "@/services/configurationSettingsService";
+import { ConfigurationSettings } from "@/types/ConfigurationSettings";
+import ClientNotificationBell from "@/components/client/ClientNotificationBell";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, signIn, signOut, loading } = useAuth();
   const router = useRouter();
+  const [configSettings, setConfigSettings] = useState<ConfigurationSettings | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadSettings = async () => {
+      try {
+        const data = await getConfigurationSettings();
+        if (isMounted) setConfigSettings(data);
+      } catch (error) {
+        console.error("Failed to load configuration settings:", error);
+      }
+    };
+
+    loadSettings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -33,8 +60,31 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
-      <Header user={user} onLogout={signOut} />
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <Header
+        user={user}
+        onLogout={signOut}
+        menuVisibility={configSettings?.portalFeatures ?? DEFAULT_PORTAL_FEATURES}
+        extras={
+          <div className="flex items-center gap-1">
+            {/* Notification Bell */}
+            <ClientNotificationBell userEmail={user.email} />
+
+            {/* FAQs shortcut */}
+            <Link
+              href="/faqs"
+              target="_blank"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:text-[#166FB5] hover:bg-slate-100 rounded-lg transition-colors border border-slate-100"
+              title="Frequently Asked Questions"
+            >
+              <HelpCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">FAQs</span>
+            </Link>
+          </div>
+        }
+      />
+      <main className="flex-1 overflow-y-auto relative">
+        {children}
+      </main>
     </div>
   );
 }

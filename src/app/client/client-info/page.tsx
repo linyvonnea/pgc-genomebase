@@ -4,7 +4,7 @@
 // Left pane (1/4): Projects navigation sidebar
 // Right pane (3/4): Selected project details + team member management
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import {
@@ -36,6 +36,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -43,6 +49,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { getNextCid } from "@/services/clientService";
 import {
   saveMemberApproval,
@@ -67,13 +83,18 @@ import {
   ClientRequest,
 } from "@/services/clientRequestService";
 import { getQuotationsByInquiryId } from "@/services/quotationService";
-import { subscribeToInquiryById } from "@/services/inquiryService";
+import { cancelInquiryByClient, subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { getChargeSlipsByProjectId } from "@/services/chargeSlipService";
+import { getSampleFormsByProjectId } from "@/services/sampleFormService";
+import { getServiceReportsByProjectId, markServiceReportReceived } from "@/services/serviceReportService";
+import { getConfigurationSettings, DEFAULT_PORTAL_FEATURES } from "@/services/configurationSettingsService";
 import { QuotationRecord } from "@/types/Quotation";
 import FloatingChatWidget from "@/components/chat/FloatingChatWidget";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
+import { SampleFormSummary } from "@/types/SampleForm";
 import { ApprovalStatus } from "@/types/MemberApproval";
+import { ConfigurationSettings } from "@/types/ConfigurationSettings";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout";
@@ -111,10 +132,17 @@ import {
   MapPin,
   Briefcase,
   FlaskConical,
-  DollarSign,
+  FileSpreadsheet,
+  ShieldEllipsis,
+  Stamp,
+  ArrowRight,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import ClientConformeModal from "@/components/forms/ClientConformeModal";
+import UploadReceipt from "@/components/client/UploadReceipt";
+import DownloadForms from "@/components/client/DownloadForms";
 
 // ────────────────────────────────────────────────────────────────
 //  Formatting Helpers
@@ -129,7 +157,77 @@ const formatServiceType = (type: string | null | undefined): string => {
 // Format workflow type for display
 const formatWorkflowType = (type: string | null | undefined): string => {
   if (!type) return "—";
-  return type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  if (type === "complete-bioinfo") return "Complete molecular workflow with Bioinformatics Analysis";
+  if (type === "complete") return "Complete Molecular workflow only (DNA Extraction to Sequencing)";
+  if (type === "individual") return "Individual Assay";
+  return type
+    .split(/[-_]/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+const formatBioinfoOption = (option: string): string => {
+  switch (option) {
+    case "whole-genome-assembly":
+      return "Whole Genome Assembly";
+    case "metabarcoding-downstream":
+      return "Metabarcoding with Downstream Analysis";
+    case "metabarcoding-preprocessing":
+      return "Metabarcoding with Pre-processing Only";
+    case "transcriptomics":
+      return "Transcriptomics (QC to Annotation)";
+    case "phylogenetics":
+      return "Phylogenetics (1 Marker)";
+    case "whole-genome-assembly-annotation":
+      return "Whole Genome Assembly and Annotation";
+    case "dna-extraction":
+      return "DNA Extraction";
+    case "quantification":
+      return "Quantification";
+    case "library-preparation":
+      return "Library Preparation";
+    case "sequencing":
+      return "Sequencing";
+    case "bioinformatics-analysis":
+      return "Bioinformatics Analysis";
+    case "genome-assembly":
+      return "Whole Genome Assembly";
+    case "metabarcoding":
+      return "Metabarcoding with Downstream Analysis";
+    case "pre-processing":
+      return "Metabarcoding with Pre-processing Only";
+    case "assembly-annotation":
+      return "Whole Genome Assembly and Annotation";
+    default:
+      return option;
+  }
+};
+
+const flattenBioinformaticsDetails = (
+  input: Record<string, any> | null | undefined,
+  prefix = ""
+): Array<{ key: string; value: string }> => {
+  if (!input) return [];
+
+  const rows: Array<{ key: string; value: string }> = [];
+  Object.entries(input).forEach(([key, value]) => {
+    if (value === null || value === undefined || value === "") return;
+    const path = prefix ? `${prefix}.${key}` : key;
+
+    if (Array.isArray(value)) {
+      if (value.length > 0) rows.push({ key: path, value: value.join(", ") });
+      return;
+    }
+
+    if (typeof value === "object") {
+      rows.push(...flattenBioinformaticsDetails(value as Record<string, any>, path));
+      return;
+    }
+
+    rows.push({ key: path, value: String(value) });
+  });
+
+  return rows;
 };
 
 // ────────────────────────────────────────────────────────────────
@@ -139,12 +237,29 @@ const formatWorkflowType = (type: string | null | undefined): string => {
 interface ClientMember {
   id: string;
   cid: string;
-  formData: ClientFormData;
-  initialData?: ClientFormData;
+  formData: {
+    name: string;
+    email: string;
+    affiliation: string;
+    designation: string;
+    sex: "M" | "F" | "Other" | "";
+    phoneNumber: string;
+    affiliationAddress: string;
+  };
+  initialData?: {
+    name: string;
+    email: string;
+    affiliation: string;
+    designation: string;
+    sex: "M" | "F" | "Other" | "";
+    phoneNumber: string;
+    affiliationAddress: string;
+  };
   errors: Partial<Record<keyof ClientFormData, string>>;
   isSubmitted: boolean;
   isPrimary: boolean;
   isDraft?: boolean;
+  status?: string;
 }
 
 interface ProjectDetails {
@@ -157,6 +272,26 @@ interface ProjectDetails {
   status: string;
   inquiryId: string;
   isDraft?: boolean; // Flag for draft project requests
+}
+
+// ────────────────────────────────────────────────────────────────
+//  Helpers
+// ────────────────────────────────────────────────────────────────
+
+/**
+ * Normalise the sex value coming from Firestore.
+ * Firestore may store "M", "F", "O" or "Other" (legacy data uses "O").
+ * The Select component expects exactly "M", "F", or "Other".
+ */
+function normalizeSex(val?: string): "M" | "F" | "Other" | "" {
+  if (!val) return "";
+  const v = val.trim();
+  if (v === "M" || v === "F" || v === "Other" || v === "") return v as any;
+  const u = v.toUpperCase();
+  if (u === "M" || u === "MALE") return "M";
+  if (u === "F" || u === "FEMALE") return "F";
+  if (u === "O" || u === "OTHER") return "Other";
+  return "";
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -195,16 +330,45 @@ export default function ClientPortalPage() {
     return new Set(); // Start with all collapsed, let user decide
   });
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [receivingReportId, setReceivingReportId] = useState<string | null>(null);
   const [expandedProjectDocs, setExpandedProjectDocs] = useState<Set<string>>(new Set());
+  const [expandedCsIds, setExpandedCsIds] = useState<Set<string>>(new Set());
+  const [expandedQuoteIds, setExpandedQuoteIds] = useState<Set<string>>(new Set());
+  // Keys are `${pid}:quotations`, `${pid}:sampleForm`, `${pid}:chargeSlips`, `${pid}:serviceReports`
+  const [expandedDocSections, setExpandedDocSections] = useState<Set<string>>(new Set());
+  const toggleDocSection = (pid: string, section: string) =>
+    setExpandedDocSections((prev) => {
+      const next = new Set(prev);
+      const key = `${pid}:${section}`;
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+
+  const [configSettings, setConfigSettings] = useState<ConfigurationSettings | null>(null);
 
   const [projectDocuments, setProjectDocuments] = useState<
-    Map<string, { quotations: QuotationRecord[]; chargeSlips: ChargeSlipRecord[]; loading: boolean }>
+    Map<string, { 
+      quotations: QuotationRecord[]; 
+      chargeSlips: ChargeSlipRecord[]; 
+      sampleForms: SampleFormSummary[];
+      serviceReports: any[];
+      officialReceipts: any[];
+      formSubmissions: number;
+      loading: boolean 
+    }>
   >(new Map());
 
   // ── Inquiry context state ─────────────────────────────────────
   const [currentInquiry, setCurrentInquiry] = useState<Inquiry | null>(null);
   const [inquiryQuotations, setInquiryQuotations] = useState<QuotationRecord[]>([]);
   const [loadingQuotations, setLoadingQuotations] = useState(false);
+
+  // Proceed with Service modal state
+  const [showProceedModal, setShowProceedModal] = useState(false);
+  const [selectedQuotationRef, setSelectedQuotationRef] = useState<string | null>(null);
+  const [showCancelInquiryModal, setShowCancelInquiryModal] = useState(false);
+  const [cancelInquiryReason, setCancelInquiryReason] = useState("");
+  const [cancelInquirySubmitting, setCancelInquirySubmitting] = useState(false);
 
   // ── Data state ────────────────────────────────────────────────
   const [members, setMembers] = useState<ClientMember[]>([]);
@@ -216,6 +380,26 @@ export default function ClientPortalPage() {
     // Even if pidParam is present, we start with empty set to follow user request
     setExpandedProjectDocs(new Set());
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadConfig = async () => {
+      try {
+        const data = await getConfigurationSettings();
+        if (isMounted) setConfigSettings(data);
+      } catch (error) {
+        console.error("Failed to load portal configuration:", error);
+      }
+    };
+
+    loadConfig();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const portalFeatures = configSettings?.portalFeatures ?? DEFAULT_PORTAL_FEATURES;
 
   const [selectedProjectPid, setSelectedProjectPid] = useState<string | null>(
     null
@@ -229,6 +413,11 @@ export default function ClientPortalPage() {
   const [currentProjectRequestId, setCurrentProjectRequestId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [activeSavingId, setActiveSavingId] = useState<string | null>(null);
+  const savingDraftIdsRef = useRef<Set<string>>(new Set());
+  // Tracks whether the clients Firestore subscription has fired at least once.
+  // Used to prevent falling back to draft data while clients are still loading.
+  const clientsLoadedRef = useRef(false);
 
   // ── Modal state ───────────────────────────────────────────────
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -368,6 +557,7 @@ export default function ClientPortalPage() {
     const clientsQ = query(collection(db, "clients"), where("inquiryId", "==", inquiryIdParam));
     const unsubClients = onSnapshot(clientsQ, (snapshot) => {
         const clients = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+        clientsLoadedRef.current = true;
         setFetchedClients(clients);
         setLoading(false); // Assume data is loaded once clients return (or empty)
     });
@@ -472,6 +662,12 @@ export default function ClientPortalPage() {
         // Sync project details but avoid infinite loops with deep comparison checks
         if (!projectDetails || projectDetails.pid !== selectedDetails.pid || projectDetails.status !== selectedDetails.status) {
            setProjectDetails(selectedDetails);
+           // Also expand project docs by default when selecting a project
+           setExpandedProjectDocs(prev => {
+             const next = new Set(prev);
+             if (selectedDetails) next.add(selectedDetails.pid);
+             return next;
+           });
         }
         
         if (selectedProjectPid !== selectedDetails.pid) {
@@ -486,20 +682,31 @@ export default function ClientPortalPage() {
     // 1. Find Primary Member
     let primaryMember: ClientMember | null = null;
     
-    // Check approved clients FIRST for primary
-    const primaryClientDoc = fetchedClients.find((c: any) => {
+    // Log for debugging
+    console.log("Merging members logic - clientsLoadedRef:", clientsLoadedRef.current, "fetchedClients count:", fetchedClients.length);
+    
+    // Check approved clients FIRST for primary.
+    // Try PID-specific match first; fall back to any approved doc with this email
+    // so that a PID mismatch (race condition / new project context) never drops
+    // a "Complete" member back to Draft.
+    const primaryClientDoc =
+      fetchedClients.find((c: any) => {
         const email = c.email?.toLowerCase();
         if (email !== emailParam?.toLowerCase()) return false;
-        
-        // If we have a selected project, prioritize the doc linked to that project
         if (selectedDetails) {
-            const memberPids = Array.isArray(c.pid) ? c.pid : (c.pid ? [c.pid] : []);
-            return memberPids.includes(selectedDetails.pid);
+          const memberPids = Array.isArray(c.pid) ? c.pid : (c.pid ? [c.pid] : []);
+          return memberPids.includes(selectedDetails.pid);
         }
         return true;
-    });
+      }) ??
+      // Fallback: email-only match – keeps the member "Complete" even when the
+      // PID array hasn't been updated yet or the context is a different project.
+      fetchedClients.find((c: any) =>
+        c.email?.toLowerCase() === emailParam?.toLowerCase() && !!c.haveSubmitted
+      );
     
     if (primaryClientDoc) {
+         console.log("Found primary from approved clients docs:", primaryClientDoc.id);
          primaryMember = {
             id: "primary",
             cid: primaryClientDoc.id,
@@ -508,7 +715,7 @@ export default function ClientPortalPage() {
               email: primaryClientDoc.email || emailParam || "",
               affiliation: primaryClientDoc.affiliation || "",
               designation: primaryClientDoc.designation || "",
-              sex: (primaryClientDoc.sex || "M") as any,
+              sex: normalizeSex(primaryClientDoc.sex),
               phoneNumber: primaryClientDoc.phoneNumber || "",
               affiliationAddress: primaryClientDoc.affiliationAddress || "",
             },
@@ -517,7 +724,7 @@ export default function ClientPortalPage() {
               email: primaryClientDoc.email || emailParam || "",
               affiliation: primaryClientDoc.affiliation || "",
               designation: primaryClientDoc.designation || "",
-              sex: (primaryClientDoc.sex || "M") as any,
+              sex: normalizeSex(primaryClientDoc.sex),
               phoneNumber: primaryClientDoc.phoneNumber || "",
               affiliationAddress: primaryClientDoc.affiliationAddress || "",
             },
@@ -525,31 +732,39 @@ export default function ClientPortalPage() {
             isSubmitted: !!primaryClientDoc.haveSubmitted,
             isPrimary: true,
         };
-    } else {
-        // Only if not found in approved, check drafts
+    } else if (clientsLoadedRef.current || fetchedClients.length > 0) {
+        // Only check drafts once the clients subscription has fired (even if empty) OR if we already have clients.
+        // This prevents briefly showing Draft/empty-sex while fetchedClients is still loading.
         // Prioritize draft for the current project if we have an ID
         const primaryDraftRequest = fetchedClientRequests.find(r => {
              const emailMatch = r.email.toLowerCase() === emailParam?.toLowerCase();
              if (!emailMatch) return false;
              
-             if (currentProjectRequestId) {
-                 return r.projectRequestId === currentProjectRequestId;
+             // If we have current project request ID, match it
+             if (currentProjectRequestId && r.projectRequestId === currentProjectRequestId) {
+                 return true;
              }
-             // If no project ID yet, take the most recent draft or specific one? 
-             // Without project ID, we might match wrong draft, but usually this happens during creation
+             
+             // If we have a selected project PID (for approved projects but still in request phase)
+             if (selectedProjectPid && r.projectRequestId === selectedProjectPid) {
+                 return true;
+             }
+
+             // Fallback to inquiry match if no specific project link found
              return true; 
         });
         
         if (primaryDraftRequest) {
+            console.log("Fallback: Found primary from draft requests:", primaryDraftRequest.id);
             primaryMember = {
-                id: "primary",
+                id: primaryDraftRequest.id || "primary",
                 cid: "draft",
                 formData: {
                   name: primaryDraftRequest.name || "",
                   email: primaryDraftRequest.email || emailParam || "",
                   affiliation: primaryDraftRequest.affiliation || "",
                   designation: primaryDraftRequest.designation || "",
-                  sex: (primaryDraftRequest.sex || "") as any,
+                  sex: normalizeSex(primaryDraftRequest.sex),
                   phoneNumber: primaryDraftRequest.phoneNumber || "",
                   affiliationAddress: primaryDraftRequest.affiliationAddress || "",
                 },
@@ -558,7 +773,7 @@ export default function ClientPortalPage() {
                   email: primaryDraftRequest.email || emailParam || "",
                   affiliation: primaryDraftRequest.affiliation || "",
                   designation: primaryDraftRequest.designation || "",
-                  sex: (primaryDraftRequest.sex || "") as any,
+                  sex: normalizeSex(primaryDraftRequest.sex),
                   phoneNumber: primaryDraftRequest.phoneNumber || "",
                   affiliationAddress: primaryDraftRequest.affiliationAddress || "",
                 },
@@ -566,11 +781,13 @@ export default function ClientPortalPage() {
                 isSubmitted: !!primaryDraftRequest.isValidated,
                 isPrimary: true,
                 isDraft: true,
+                status: primaryDraftRequest.status // Injecting real status from Firestore
             };
         }
     }
 
-    if (!primaryMember && emailParam) {
+    if (!primaryMember && emailParam && clientsLoadedRef.current) {
+         console.log("No primary found after loading clients, creating default pending primary");
          primaryMember = {
             id: "primary",
             cid: "pending",
@@ -620,7 +837,7 @@ export default function ClientPortalPage() {
               email: r.email?.includes("@temp.pgc") ? "" : r.email || "",
               affiliation: r.affiliation || "",
               designation: r.designation || "",
-              sex: (r.sex || "") as any,
+              sex: normalizeSex(r.sex),
               phoneNumber: r.phoneNumber || "",
               affiliationAddress: r.affiliationAddress || "",
             },
@@ -629,7 +846,7 @@ export default function ClientPortalPage() {
               email: r.email?.includes("@temp.pgc") ? "" : r.email || "",
               affiliation: r.affiliation || "",
               designation: r.designation || "",
-              sex: (r.sex || "") as any,
+              sex: normalizeSex(r.sex),
               phoneNumber: r.phoneNumber || "",
               affiliationAddress: r.affiliationAddress || "",
             },
@@ -686,7 +903,7 @@ export default function ClientPortalPage() {
                   email: data.email || "",
                   affiliation: data.affiliation || "",
                   designation: data.designation || "",
-                  sex: data.sex || "" as any,
+                  sex: normalizeSex(data.sex),
                   phoneNumber: data.phoneNumber || "",
                   affiliationAddress: data.affiliationAddress || "",
              },
@@ -695,7 +912,7 @@ export default function ClientPortalPage() {
                   email: data.email || "",
                   affiliation: data.affiliation || "",
                   designation: data.designation || "",
-                  sex: data.sex || "" as any,
+                  sex: normalizeSex(data.sex),
                   phoneNumber: data.phoneNumber || "",
                   affiliationAddress: data.affiliationAddress || "",
              },
@@ -969,7 +1186,7 @@ export default function ClientPortalPage() {
               ...member,
               formData: { ...member.formData, [field]: value },
               isSubmitted: false,
-              errors: { ...member.errors, [field]: undefined },
+              errors: (({ [field]: _removed, ...rest }) => rest)(member.errors),
             }
           : member
       )
@@ -1007,8 +1224,10 @@ export default function ClientPortalPage() {
     const member = members.find((m) => m.id === pendingMemberId);
     if (!member) return;
 
-    setShowConfirmModal(false);
+    // Start loading and set as saving to disable the background button
     setSubmitting(true);
+    savingDraftIdsRef.current.add(pendingMemberId);
+    setActiveSavingId(pendingMemberId);
 
     try {
       const result = clientFormSchema.safeParse(member.formData);
@@ -1023,30 +1242,56 @@ export default function ClientPortalPage() {
 
       if (isDraftProject && inquiryIdParam) {
         // For draft projects, save ALL members to clientRequests collection
-        const savedId = await saveClientRequest({
-          inquiryId: inquiryIdParam,
-          requestedBy: emailParam || "",
-          requestedByName: members.find((m) => m.isPrimary)?.formData.name || result.data.name,
-          name: result.data.name,
-          email: result.data.email,
-          affiliation: result.data.affiliation,
-          designation: result.data.designation,
-          sex: result.data.sex,
-          phoneNumber: result.data.phoneNumber,
-          affiliationAddress: result.data.affiliationAddress,
-          isPrimary: member.isPrimary,
-          isValidated: true,
-          status: "draft",
-          ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
-        });
+        // Primary member: if an existing clientRequests doc exists (member.id), update it instead of creating a new doc
+        let savedId: string;
+        if (member.isPrimary && pendingMemberId && pendingMemberId !== "primary" && !pendingMemberId.startsWith("draft-") && !pendingMemberId.startsWith("request-")) {
+          // Update existing clientRequests document
+          const docRef = doc(db, "clientRequests", pendingMemberId);
+          await setDoc(docRef, {
+            inquiryId: inquiryIdParam,
+            requestedBy: emailParam || "",
+            requestedByName: members.find((m) => m.isPrimary)?.formData.name || result.data.name,
+            name: result.data.name,
+            email: result.data.email,
+            affiliation: result.data.affiliation,
+            designation: result.data.designation,
+            sex: result.data.sex,
+            phoneNumber: result.data.phoneNumber,
+            affiliationAddress: result.data.affiliationAddress,
+            isPrimary: member.isPrimary,
+            isValidated: true,
+            status: "draft",
+            ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
+            updatedAt: serverTimestamp(),
+          }, { merge: true });
+          savedId = pendingMemberId;
+        } else {
+          // Create or update via saveClientRequest (uses inquiryId + email-based ID)
+          savedId = await saveClientRequest({
+            inquiryId: inquiryIdParam,
+            requestedBy: emailParam || "",
+            requestedByName: members.find((m) => m.isPrimary)?.formData.name || result.data.name,
+            name: result.data.name,
+            email: result.data.email,
+            affiliation: result.data.affiliation,
+            designation: result.data.designation,
+            sex: result.data.sex,
+            phoneNumber: result.data.phoneNumber,
+            affiliationAddress: result.data.affiliationAddress,
+            isPrimary: member.isPrimary,
+            isValidated: true,
+            status: (member.isPrimary || isDraftProject) ? "draft" : "pending",
+            ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
+          });
 
-        // Delete old draft if ID changed (e.g. from dummy email to real email)
-        if (pendingMemberId && pendingMemberId !== savedId && !pendingMemberId.startsWith("draft-") && !pendingMemberId.startsWith("request-")) {
-          try {
-            await deleteDoc(doc(db, "clientRequests", pendingMemberId));
-            console.log("Deleted old member draft record:", pendingMemberId);
-          } catch (delError) {
-            console.warn("Failed to delete old draft document (might not exist):", delError);
+          // Delete old draft if ID changed (e.g. from dummy email to real email)
+          if (pendingMemberId && pendingMemberId !== savedId && !pendingMemberId.startsWith("draft-") && !pendingMemberId.startsWith("request-")) {
+            try {
+              await deleteDoc(doc(db, "clientRequests", pendingMemberId));
+              console.log("Deleted old member draft record:", pendingMemberId);
+            } catch (delError) {
+              console.warn("Failed to delete old draft document (might not exist):", delError);
+            }
           }
         }
 
@@ -1141,7 +1386,7 @@ export default function ClientPortalPage() {
             affiliationAddress: result.data.affiliationAddress,
             isPrimary: false,
             isValidated: true,
-            status: "draft",
+            status: "pending",
             ...(selectedProjectPid && { projectRequestId: selectedProjectPid }),
           });
 
@@ -1177,12 +1422,17 @@ export default function ClientPortalPage() {
       const msg = error instanceof Error ? error.message : "Failed to save information";
       toast.error(msg);
     } finally {
+      setShowConfirmModal(false);
       setSubmitting(false);
+      savingDraftIdsRef.current.delete(pendingMemberId);
+      setActiveSavingId(null);
       setPendingMemberId(null);
     }
   };
 
   const handleSaveDraft = async (memberId: string) => {
+    if (savingDraftIdsRef.current.has(memberId)) return;
+
     const member = members.find((m) => m.id === memberId);
     if (!member) return;
 
@@ -1198,37 +1448,69 @@ export default function ClientPortalPage() {
       return;
     }
 
+    // For approved projects, we show a confirmation modal first
+    const isDraftProject = projectDetails?.isDraft || projectDetails?.pid === "DRAFT";
+    if (!isDraftProject) {
+      setPendingMemberId(memberId);
+      setShowConfirmModal(true);
+      // We don't disable yet, it will be disabled when handleConfirmSave is called
+      return;
+    }
+
+    savingDraftIdsRef.current.add(memberId);
     setSubmitting(true);
+    setActiveSavingId(memberId);
     try {
-      // Check if this is a draft project
-      const isDraftProject = projectDetails?.isDraft || projectDetails?.pid === "DRAFT";
-
-      if (isDraftProject && inquiryIdParam) {
+      if (inquiryIdParam) {
         // For draft projects, save to clientRequests collection (without validation)
-        const savedId = await saveClientRequest({
-          inquiryId: inquiryIdParam,
-          requestedBy: emailParam || "",
-          requestedByName: members.find((m) => m.isPrimary)?.formData.name || member.formData.name || "",
-          name: member.formData.name,
-          email: member.formData.email,
-          affiliation: member.formData.affiliation,
-          designation: member.formData.designation,
-          sex: member.formData.sex,
-          phoneNumber: member.formData.phoneNumber,
-          affiliationAddress: member.formData.affiliationAddress,
-          isPrimary: member.isPrimary,
-          isValidated: false,
-          status: "draft",
-          ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
-        });
+        // Primary member: if existing clientRequests doc exists, update it instead of creating new
+        let savedIdDraft: string;
+        if (member.isPrimary && memberId && memberId !== "primary" && !memberId.startsWith("draft-") && !memberId.startsWith("request-")) {
+          const docRef = doc(db, "clientRequests", memberId);
+          await setDoc(docRef, {
+            inquiryId: inquiryIdParam,
+            requestedBy: emailParam || "",
+            requestedByName: members.find((m) => m.isPrimary)?.formData.name || member.formData.name || "",
+            name: member.formData.name,
+            email: member.formData.email,
+            affiliation: member.formData.affiliation,
+            designation: member.formData.designation,
+            sex: member.formData.sex,
+            phoneNumber: member.formData.phoneNumber,
+            affiliationAddress: member.formData.affiliationAddress,
+            isPrimary: member.isPrimary,
+            isValidated: false,
+            status: "draft",
+            ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
+            updatedAt: serverTimestamp(),
+          }, { merge: true });
+          savedIdDraft = memberId;
+        } else {
+          savedIdDraft = await saveClientRequest({
+            inquiryId: inquiryIdParam,
+            requestedBy: emailParam || "",
+            requestedByName: members.find((m) => m.isPrimary)?.formData.name || member.formData.name || "",
+            name: member.formData.name,
+            email: member.formData.email,
+            affiliation: member.formData.affiliation,
+            designation: member.formData.designation,
+            sex: member.formData.sex,
+            phoneNumber: member.formData.phoneNumber,
+            affiliationAddress: member.formData.affiliationAddress,
+            isPrimary: member.isPrimary,
+            isValidated: false,
+            status: "draft",
+            ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
+          });
 
-        // Delete old draft if ID changed (e.g. from dummy email to real email)
-        if (memberId && memberId !== savedId && !memberId.startsWith("draft-") && !memberId.startsWith("request-")) {
-          try {
-            await deleteDoc(doc(db, "clientRequests", memberId));
-            console.log("Deleted old member draft record:", memberId);
-          } catch (delError) {
-            console.warn("Failed to delete old draft (might not exist):", delError);
+          // Delete old draft if ID changed
+          if (memberId && memberId !== savedIdDraft && !memberId.startsWith("draft-") && !memberId.startsWith("request-")) {
+            try {
+              await deleteDoc(doc(db, "clientRequests", memberId));
+              console.log("Deleted old member draft record:", memberId);
+            } catch (delError) {
+              console.warn("Failed to delete old draft (might not exist):", delError);
+            }
           }
         }
 
@@ -1237,7 +1519,7 @@ export default function ClientPortalPage() {
             m.id === memberId
               ? {
                   ...m,
-                  id: savedId,
+                  id: savedIdDraft,
                   isDraft: true,
                   cid: "draft",
                   initialData: { ...m.formData },
@@ -1328,7 +1610,9 @@ export default function ClientPortalPage() {
       console.error("Draft save error:", error);
       toast.error("Failed to save draft");
     } finally {
+      savingDraftIdsRef.current.delete(memberId);
       setSubmitting(false);
+      setActiveSavingId(null);
     }
   };
 
@@ -1445,12 +1729,14 @@ export default function ClientPortalPage() {
         projectDetails?.title || "",
         emailParam || "",
         members.find((m) => m.isPrimary)?.formData.name || "",
-        draftMembers.map((m) => ({
-          tempId: m.id,
-          isPrimary: false,
-          isValidated: true,
-          formData: m.formData,
-        }))
+        members
+          .filter((m) => m.isSubmitted || m.isDraft) // Include both primary and team members if they are submitted/draft
+          .map((m) => ({
+            tempId: m.id,
+            isPrimary: m.isPrimary,
+            isValidated: m.isSubmitted,
+            formData: m.formData,
+          }))
       );
 
       setApprovalStatus("pending");
@@ -1640,6 +1926,182 @@ export default function ClientPortalPage() {
     router.push(`/client/project-info?${params.toString()}`);
   };
 
+  const handleProceedWithService = (quotationRef: string) => {
+    setSelectedQuotationRef(quotationRef);
+    setShowProceedModal(true);
+  };
+
+  const handleConfirmProceedWithService = () => {
+    setShowProceedModal(false);
+    if (!emailParam ||!inquiryIdParam || !selectedQuotationRef) {
+      toast.error("Missing required parameters to proceed.");
+      return;
+    }
+    
+    // Store the selected quotation reference in sessionStorage for later status update
+    sessionStorage.setItem('selectedQuotationRef', selectedQuotationRef);
+    
+    const params = new URLSearchParams({
+      email: emailParam,
+      inquiryId: inquiryIdParam,
+      quotationRef: selectedQuotationRef,
+      new: "true",
+    });
+    router.push(`/client/project-info?${params.toString()}`);
+  };
+
+  const handleConfirmCancelInquiry = async () => {
+    if (!inquiryIdParam) {
+      toast.error("Missing inquiry ID.");
+      return;
+    }
+
+    setCancelInquirySubmitting(true);
+    try {
+      const trimmedReason = cancelInquiryReason.trim();
+      await cancelInquiryByClient(inquiryIdParam, trimmedReason.length > 0 ? trimmedReason : null);
+      toast.success("Request updated to Quotation Only.");
+      setShowCancelInquiryModal(false);
+      setCancelInquiryReason("");
+    } catch (error) {
+      console.error("Failed to update inquiry status:", error);
+      toast.error("Failed to update the request. Please try again.");
+    } finally {
+      setCancelInquirySubmitting(false);
+    }
+  };
+
+  const loadProjectDocuments = useCallback(async (project: ProjectDetails) => {
+    const pid = project.pid;
+    if (!pid || projectDocuments.has(pid)) return;
+
+    setProjectDocuments((prev) => new Map(prev).set(pid, {
+      quotations: [],
+      chargeSlips: [],
+      sampleForms: [],
+      serviceReports: [],
+      officialReceipts: [],
+      formSubmissions: 0,
+      loading: true,
+    }));
+
+    try {
+      const quotations = await getQuotationsByInquiryId(project.inquiryId);
+
+      const chargeSlips = project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
+        ? await getChargeSlipsByProjectId(project.pid)
+        : [];
+
+      const sampleForms = portalFeatures.sampleForms && project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
+        ? await getSampleFormsByProjectId(project.pid)
+        : [];
+
+      const formSubmissionsSnapshot = project.pid && project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
+        ? await getDocs(query(collection(db, "clientFormSubmissions"), where("projectId", "==", project.pid)))
+        : null;
+      const formSubmissions = formSubmissionsSnapshot ? formSubmissionsSnapshot.size : 0;
+
+      let officialReceipts: any[] = [];
+      if (portalFeatures.officialReceipts) {
+        try {
+          if (project.pid && project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")) {
+            const receiptsSnapshot = await getDocs(collection(db, "projects", project.pid, "officialReceipts"));
+            officialReceipts = receiptsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+          }
+        } catch (fetchReceiptError) {
+          console.warn(`Failed to load official receipts for project ${project.pid}:`, fetchReceiptError);
+          officialReceipts = [];
+        }
+      }
+
+      const serviceReports = portalFeatures.serviceReports && project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
+        ? await getServiceReportsByProjectId(project.pid).catch(() => [])
+        : [];
+
+      setProjectDocuments((prev) => new Map(prev).set(pid, {
+        quotations,
+        chargeSlips,
+        sampleForms,
+        serviceReports,
+        officialReceipts,
+        formSubmissions,
+        loading: false,
+      }));
+    } catch (error) {
+      console.error("Error fetching project documents:", error);
+      toast.error("Failed to load documents");
+      setProjectDocuments((prev) => new Map(prev).set(pid, {
+        quotations: [],
+        chargeSlips: [],
+        sampleForms: [],
+        serviceReports: [],
+        officialReceipts: [],
+        formSubmissions: 0,
+        loading: false,
+      }));
+    }
+  }, [portalFeatures.officialReceipts, portalFeatures.sampleForms, projectDocuments]);
+
+  // Real-time charge slip listener for all expanded projects
+  // When a charge slip's status changes (e.g. "pending" after OR upload), the UI updates instantly
+  useEffect(() => {
+    const expandedPids = [...expandedProjectDocs].filter(
+      (pid) => pid && pid !== "DRAFT" && !pid.startsWith("PENDING-")
+    );
+    if (expandedPids.length === 0) return;
+
+    const unsubscribers = expandedPids.map((pid) => {
+      const q = query(
+        collection(db, "chargeSlips"),
+        where("projectId", "==", pid)
+      );
+      return onSnapshot(q, (snapshot) => {
+        const chargeSlips = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as ChargeSlipRecord));
+        setProjectDocuments((prev) => {
+          const existing = prev.get(pid);
+          if (!existing || existing.loading) return prev;
+          return new Map(prev).set(pid, { ...existing, chargeSlips });
+        });
+      });
+    });
+
+    return () => unsubscribers.forEach((u) => u());
+  }, [expandedProjectDocs]);
+
+  const handleReceiveServiceReport = useCallback(async (pid: string, report: any) => {
+    const reportKey = `${pid}:${report.id}`;
+    setReceivingReportId(reportKey);
+    try {
+      await markServiceReportReceived(
+        pid,
+        report.id,
+        user?.email || "",
+        user?.displayName || user?.email || "Client"
+      );
+      setProjectDocuments((prev) => {
+        const next = new Map(prev);
+        const existing = next.get(pid);
+        if (existing) {
+          next.set(pid, {
+            ...existing,
+            serviceReports: existing.serviceReports.map((r: any) =>
+              r.id === report.id
+                ? { ...r, status: "received", receivedAt: { toDate: () => new Date() } }
+                : r
+            ),
+          });
+        }
+        return next;
+      });
+      toast.success(`"${report.fileName}" marked as received.`);
+    } catch (err) {
+      console.error("Failed to mark service report as received:", err);
+      toast.error("Failed to mark as received. Please try again.");
+    } finally {
+      setReceivingReportId(null);
+    }
+  }, [user]);
+
   const toggleProjectDocs = async (project: ProjectDetails) => {
     const pid = project.pid;
     const isExpanding = !expandedProjectDocs.has(pid);
@@ -1655,49 +2117,37 @@ export default function ClientPortalPage() {
     });
 
     // Fetch documents if expanding and not already loaded
-    if (isExpanding && !projectDocuments.has(pid)) {
-      setProjectDocuments((prev) => new Map(prev).set(pid, {
-        quotations: [],
-        chargeSlips: [],
-        loading: true,
-      }));
-
-      try {
-        // Fetch quotations by inquiry ID (since quotations are linked to inquiries)
-        const quotations = await getQuotationsByInquiryId(project.inquiryId);
-        
-        // Fetch charge slips by project ID
-        const chargeSlips = project.pid !== "DRAFT" && !project.pid.startsWith("PENDING-")
-          ? await getChargeSlipsByProjectId(project.pid)
-          : [];
-
-        setProjectDocuments((prev) => new Map(prev).set(pid, {
-          quotations,
-          chargeSlips,
-          loading: false,
-        }));
-      } catch (error) {
-        console.error("Error fetching project documents:", error);
-        toast.error("Failed to load documents");
-        setProjectDocuments((prev) => new Map(prev).set(pid, {
-          quotations: [],
-          chargeSlips: [],
-          loading: false,
-        }));
-      }
+    if (isExpanding) {
+      await loadProjectDocuments(project);
     }
   };
+
+  useEffect(() => {
+    if (!projectDetails?.pid) return;
+    if (projectDetails.pid === "DRAFT" || projectDetails.pid.startsWith("PENDING-")) return;
+    if (!projectDocuments.has(projectDetails.pid)) {
+      loadProjectDocuments(projectDetails);
+    }
+  }, [projectDetails?.pid, projectDocuments, loadProjectDocuments]);
 
   // ────────────────────────────────────────────────────────────────
   //  Helpers
   // ────────────────────────────────────────────────────────────────
 
   const getMemberStatus = (member: ClientMember) => {
-    // Check global project status first
+    // 1. Explicit Firestore status from member model (set during merging)
+    if (member.status === "pending" || member.status === "Pending Approval") {
+        return {
+          label: "Pending Approval",
+          color: "bg-blue-500", 
+        };
+    }
+    
+    // 2. Global project or specific approval status
     if ((projectDetails?.status === "Pending Approval" || approvalStatus === "pending") && member.isDraft) {
         return {
           label: "Pending Approval",
-          color: "bg-blue-500", // Blue to indicate info/waiting state rather than warning
+          color: "bg-blue-500", 
         };
     }
     
@@ -1713,7 +2163,7 @@ export default function ClientPortalPage() {
         label: member.isDraft ? "Ready" : "Complete",
         color: member.isDraft ? "bg-blue-500" : "bg-green-500",
       };
-    if (Object.keys(member.errors).length > 0)
+    if (Object.values(member.errors).some(Boolean))
       return { label: "Needs Attention", color: "bg-red-500" };
     return { label: "Draft", color: "bg-yellow-500" };
   };
@@ -1756,6 +2206,115 @@ export default function ClientPortalPage() {
     Completed: "bg-gray-100 text-gray-700 border-gray-200",
     Cancelled: "bg-red-100 text-red-700 border-red-200",
   };
+
+  const timelineSteps = useMemo(() => {
+    const docs = selectedProjectPid ? projectDocuments.get(selectedProjectPid) : undefined;
+    const hasInquiry = !!currentInquiry;
+    const hasQuotation = inquiryQuotations.length > 0;
+    const isApprovalComplete =
+      approvalStatus === "approved" ||
+      projectDetails?.status === "Ongoing" ||
+      projectDetails?.status === "Completed";
+    const isApprovalPending =
+      approvalStatus === "pending" || projectDetails?.status === "Pending Approval";
+    const hasChargeSlip = (docs?.chargeSlips?.length ?? 0) > 0;
+    const hasSampleForms = (docs?.sampleForms?.length ?? 0) > 0;
+    const hasOfficialReceipts = (docs?.officialReceipts?.length ?? 0) > 0;
+    const hasServiceReports = (docs?.serviceReports?.length ?? 0) > 0;
+
+    const steps = [
+      {
+        key: "inquiry",
+        label: "Inquiry Submission",
+        complete: hasInquiry,
+        detail: currentInquiry?.createdAt ? `Submitted ${formatDate(currentInquiry.createdAt)}` : "Submitted",
+      },
+      {
+        key: "quotation",
+        label: "Quotation",
+        complete: hasQuotation,
+        detail: hasQuotation
+          ? `${inquiryQuotations.length} quotation${inquiryQuotations.length > 1 ? "s" : ""} issued`
+          : "Awaiting quotation",
+      },
+      {
+        key: "approval",
+        label: "Project and Member Approval",
+        complete: isApprovalComplete,
+        inProgress: isApprovalPending,
+        detail: isApprovalComplete
+          ? "Approved"
+          : isApprovalPending
+          ? "Under review"
+          : "Not submitted",
+      },
+      {
+        key: "charge-slip",
+        label: "Charge Slip",
+        complete: hasChargeSlip,
+        detail: hasChargeSlip
+          ? `${docs?.chargeSlips?.length ?? 0} issued`
+          : "Not issued yet",
+      },
+      portalFeatures.sampleForms
+        ? {
+            key: "sample-forms",
+            label: "Sample Forms",
+            complete: hasSampleForms,
+            detail: hasSampleForms
+              ? `${docs?.sampleForms?.length ?? 0} submitted`
+              : "Awaiting sample form submission",
+          }
+        : null,
+      portalFeatures.officialReceipts
+        ? {
+            key: "official-receipt",
+            label: "Official Receipt",
+            complete: hasOfficialReceipts,
+            detail: hasOfficialReceipts
+              ? `${docs?.officialReceipts?.length ?? 0} uploaded`
+              : "Awaiting official receipt",
+          }
+        : null,
+      portalFeatures.serviceReports
+        ? {
+            key: "service-report",
+            label: "Service Report",
+            complete: hasServiceReports,
+            detail: hasServiceReports
+              ? `${docs?.serviceReports?.length ?? 0} released`
+              : "Pending service report",
+          }
+        : null,
+    ].filter(Boolean) as Array<{
+      key: string;
+      label: string;
+      complete: boolean;
+      inProgress?: boolean;
+      detail: string;
+    }>;
+
+    const firstIncompleteIndex = steps.findIndex((step) => !step.complete);
+
+    return steps.map((step, index) => ({
+      ...step,
+      state: step.complete
+        ? "complete"
+        : step.inProgress || index === firstIncompleteIndex
+        ? "current"
+        : "upcoming",
+    }));
+  }, [
+    approvalStatus,
+    currentInquiry,
+    inquiryQuotations,
+    portalFeatures.officialReceipts,
+    portalFeatures.sampleForms,
+    portalFeatures.serviceReports,
+    projectDetails?.status,
+    projectDocuments,
+    selectedProjectPid,
+  ]);
 
   // ────────────────────────────────────────────────────────────────
   //  Early returns (loading / error)
@@ -2004,6 +2563,7 @@ export default function ClientPortalPage() {
           onClick={() => handleSaveDraft(member.id)}
           disabled={
             member.isSubmitted ||
+            activeSavingId === member.id ||
             submitting ||
             projectDetails?.status === "Completed" ||
             projectDetails?.status === "Pending Approval"
@@ -2011,8 +2571,17 @@ export default function ClientPortalPage() {
           variant="outline"
           className="h-10 px-6 border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold disabled:opacity-50"
         >
-          <Save className="h-4 w-4 mr-2" />
-          Save Draft
+          {activeSavingId === member.id ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Save Draft
+            </>
+          )}
         </Button>
         <Button
           type="submit"
@@ -2212,6 +2781,22 @@ export default function ClientPortalPage() {
                 const docs = projectDocuments.get(project.pid);
                 const quotationCount = docs?.quotations.length || 0;
                 const chargeSlipCount = docs?.chargeSlips.length || 0;
+                const sampleFormCount = docs?.sampleForms?.length || 0;
+                const formSubmissionCount = docs?.formSubmissions || 0;
+                const serviceReportCount = docs?.serviceReports?.length || 0;
+                const officialReceiptCount = docs?.officialReceipts?.length || 0;
+                const sampleFormParams = new URLSearchParams();
+                if (emailParam) sampleFormParams.set("email", emailParam);
+                if (inquiryIdParam) sampleFormParams.set("inquiryId", inquiryIdParam);
+                if (project.pid) sampleFormParams.set("pid", project.pid);
+                if (project.title) sampleFormParams.set("projectTitle", project.title);
+                if (primaryMember?.formData?.name) {
+                  sampleFormParams.set("name", primaryMember.formData.name);
+                }
+                if (primaryMember?.cid) {
+                  sampleFormParams.set("clientId", primaryMember.cid);
+                }
+                const sampleFormBaseHref = `/client/sample-form?${sampleFormParams.toString()}`;
                 
                 return (
                   <div key={project.pid} className={cn(
@@ -2275,61 +2860,456 @@ export default function ClientPortalPage() {
                           <div className="p-3 pl-6 space-y-3">
                             {/* Quotations */}
                             <div>
-                              <div className="flex items-center gap-2 mb-1.5">
-                                <FileText className="h-3 w-3 text-purple-600" />
-                                <span className="text-sm font-semibold text-slate-700">
+                              <button
+                                type="button"
+                                className="flex items-center gap-2 mb-1.5 w-full text-left group/sec"
+                                onClick={(e) => { e.stopPropagation(); toggleDocSection(project.pid!, "quotations"); }}
+                              >
+                                <FileText className="h-3 w-3 text-purple-600 flex-shrink-0" />
+                                <span className="text-sm font-semibold text-slate-700 flex-1">
                                   Quotations
                                 </span>
-                                <span className="text-[10px] text-slate-500">({quotationCount})</span>
-                              </div>
-                              {quotationCount > 0 ? (
+                                <span className="text-[10px] text-slate-500 mr-1">({quotationCount})</span>
+                                <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:quotations`) && "rotate-180")} />
+                              </button>
+                              {expandedDocSections.has(`${project.pid}:quotations`) && quotationCount > 0 ? (
+                                <div className="space-y-2 ml-4">
+                                  {docs?.quotations.map((quotation) => {
+                                    const qCancelledSidebar = quotation.status === "cancelled";
+                                    const qTotal = typeof quotation.total === "number" ? quotation.total : 0;
+                                    const qRawDate = quotation.dateIssued;
+                                    const qIssuedDate = qRawDate
+                                      ? (qRawDate as any)?.toDate
+                                        ? formatDate((qRawDate as any).toDate())
+                                        : formatDate(qRawDate as string)
+                                      : null;
+                                    const qSidebarExpanded = expandedQuoteIds.has(quotation.referenceNumber + "_sidebar");
+                                    return (
+                                      <div
+                                        key={quotation.id}
+                                        className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        {/* Header — always visible */}
+                                        <div
+                                          className="flex items-center justify-between gap-2 p-2.5 cursor-pointer select-none hover:bg-slate-50 transition-colors"
+                                          onClick={() =>
+                                            setExpandedQuoteIds((prev) => {
+                                              const key = quotation.referenceNumber + "_sidebar";
+                                              const next = new Set(prev);
+                                              if (next.has(key)) next.delete(key);
+                                              else next.add(key);
+                                              return next;
+                                            })
+                                          }
+                                        >
+                                          <a
+                                            href={`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-1 text-xs font-semibold text-purple-700 hover:underline"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            <FileText className="h-3 w-3 flex-shrink-0" />
+                                            {quotation.referenceNumber}
+                                          </a>
+                                          <div className="flex items-center gap-1.5">
+                                            {qCancelledSidebar ? (
+                                              <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
+                                                Cancelled
+                                              </span>
+                                            ) : (quotation.status === "selected" || quotation.selectedForProject) ? (
+                                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 tracking-tight">
+                                                <CheckCircle2 className="h-3 w-3" strokeWidth={3} />
+                                                Selected
+                                              </span>
+                                            ) : null}
+                                            <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform", qSidebarExpanded && "rotate-180")} />
+                                          </div>
+                                        </div>
+
+                                        {/* Collapsible body */}
+                                        {qSidebarExpanded && (
+                                          <div className="px-2.5 pb-2.5 border-t border-slate-100">
+                                            <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-500 pt-2">
+                                              <span>
+                                                Total:{" "}
+                                                <span className="font-semibold text-slate-800">
+                                                  ₱{qTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </span>
+                                              </span>
+                                              {qIssuedDate && (
+                                                <span>
+                                                  Issued: <span className="font-medium text-slate-600">{qIssuedDate}</span>
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              ) : expandedDocSections.has(`${project.pid}:quotations`) ? (
+                                <p className="text-xs text-slate-400 ml-5">No quotations yet</p>
+                              ) : null}
+                            </div>
+
+                            {/* Sample Submission Form Downloads + Upload */}
+                            <div>
+                              {(() => {
+                                const isSampleFormDisabled = currentInquiry?.status === "In Progress";
+                                return (
+                                  <>
+                                    <button
+                                      type="button"
+                                      disabled={isSampleFormDisabled}
+                                      className={cn(
+                                        "flex items-center gap-2 mb-1.5 w-full text-left",
+                                        isSampleFormDisabled && "opacity-40 cursor-not-allowed"
+                                      )}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (!isSampleFormDisabled) {
+                                          toggleDocSection(project.pid!, "sampleForm");
+                                        }
+                                      }}
+                                    >
+                                      <FileText className="h-3 w-3 text-orange-500 flex-shrink-0" />
+                                      <span className="text-sm font-semibold text-slate-700 flex-1">Sample Submission Form</span>
+                                      <span className="text-[10px] text-slate-500 mr-1">({formSubmissionCount})</span>
+                                      <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:sampleForm`) && "rotate-180")} />
+                                    </button>
+                                    {expandedDocSections.has(`${project.pid}:sampleForm`) && !isSampleFormDisabled && (
+                                      <DownloadForms projectId={project.pid!} />
+                                    )}
+                                  </>
+                                );
+                              })()}
+                            </div>
+
+                            {/* Sample Forms (Moved below Quotations) */}
+                            {portalFeatures.sampleForms && (docs?.sampleForms?.length || 0) > 0 && (
+                              <div>
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <FileSpreadsheet className="h-3 w-3 text-orange-600" />
+                                  <span className="text-sm font-semibold text-slate-700">
+                                    Sample Forms
+                                  </span>
+                                  <span className="text-[10px] text-slate-500">({docs?.sampleForms?.length || 0})</span>
+                                </div>
                                 <div className="space-y-1 ml-5">
-                                  {docs?.quotations.map((quotation) => (
+                                  {docs?.sampleForms.map((item) => (
                                     <a
-                                      key={quotation.id}
-                                      href={`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="block text-xs text-slate-600 hover:text-purple-600 hover:underline truncate"
+                                      key={item.id}
+                                      href={`${sampleFormBaseHref}&formId=${item.id}`}
+                                      className="block text-xs text-slate-600 hover:text-orange-600 hover:underline truncate"
                                       onClick={(e) => e.stopPropagation()}
                                     >
-                                      • {quotation.referenceNumber}
+                                      • {item.id} ({item.totalNumberOfSamples || 0} samples)
                                     </a>
                                   ))}
                                 </div>
-                              ) : (
-                                <p className="text-xs text-slate-400 ml-5">No quotations yet</p>
-                              )}
-                            </div>
+                              </div>
+                            )}
 
                             {/* Charge Slips */}
                             <div>
-                              <div className="flex items-center gap-2 mb-1.5">
-                                <Receipt className="h-3 w-3 text-green-600" />
-                                <span className="text-sm font-semibold text-slate-700">
-                                  Charge Slips
-                                </span>
-                                <span className="text-[10px] text-slate-500">({chargeSlipCount})</span>
-                              </div>
-                              {chargeSlipCount > 0 ? (
-                                <div className="space-y-1 ml-5">
-                                  {docs?.chargeSlips.map((chargeSlip) => (
-                                    <a
-                                      key={chargeSlip.id}
-                                      href={`/client/view-document?type=charge-slip&ref=${chargeSlip.id}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="block text-xs text-slate-600 hover:text-green-600 hover:underline truncate"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      • {chargeSlip.chargeSlipNumber}
-                                    </a>
-                                  ))}
+                              {(() => {
+                                const isChargeSlipsDisabled = chargeSlipCount === 0;
+                                return (
+                                  <button
+                                    type="button"
+                                    disabled={isChargeSlipsDisabled}
+                                    className={cn(
+                                      "flex items-center gap-2 mb-1.5 w-full text-left",
+                                      isChargeSlipsDisabled && "opacity-40 cursor-not-allowed"
+                                    )}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (!isChargeSlipsDisabled) {
+                                        toggleDocSection(project.pid!, "chargeSlips");
+                                      }
+                                    }}
+                                  >
+                                    <Receipt className="h-3 w-3 text-green-600 flex-shrink-0" />
+                                    <span className="text-sm font-semibold text-slate-700 flex-1">
+                                      Charge Slips
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 mr-1">({chargeSlipCount})</span>
+                                    <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:chargeSlips`) && "rotate-180")} />
+                                  </button>
+                                );
+                              })()}
+                              {expandedDocSections.has(`${project.pid}:chargeSlips`) && chargeSlipCount > 0 ? (
+                                <div className="space-y-2 ml-4">
+                                  {docs?.chargeSlips.map((chargeSlip) => {
+                                    const csPaid = chargeSlip.status === "paid";
+                                    const csCancelled = chargeSlip.status === "cancelled";
+                                    const csPending = chargeSlip.status === "pending";
+                                    const csWaived = chargeSlip.status === "waived";
+                                    const csTotal = typeof chargeSlip.total === "number" ? chargeSlip.total : 0;
+                                    const csRawDate = chargeSlip.dateIssued;
+                                    const csIssuedDate = csRawDate
+                                      ? (csRawDate as any)?.toDate
+                                        ? formatDate((csRawDate as any).toDate())
+                                        : formatDate(csRawDate as string)
+                                      : null;
+                                    return (
+                                      <div
+                                        key={chargeSlip.id}
+                                        className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        {/* Header — always visible */}
+                                        <div className="p-2.5 space-y-1">
+                                          {/* Row 1: CS number + status badge */}
+                                          <div className="flex items-center gap-1.5 flex-wrap">
+                                            <a
+                                              href={`/client/view-document?type=charge-slip&ref=${chargeSlip.id}`}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="flex items-center gap-1 text-xs font-semibold text-green-700 hover:underline"
+                                              onClick={(e) => e.stopPropagation()}
+                                            >
+                                              <Receipt className="h-3 w-3 flex-shrink-0" />
+                                              {chargeSlip.chargeSlipNumber}
+                                            </a>
+                                            {csPaid ? (
+                                              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                                                <CheckCircle2 className="h-2.5 w-2.5" /> Paid
+                                              </span>
+                                            ) : csCancelled ? (
+                                              <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
+                                                Cancelled
+                                              </span>
+                                            ) : csWaived ? (
+                                              <span className="inline-flex text-[10px] font-semibold text-purple-700 bg-purple-50 border border-purple-200 rounded-full px-2 py-0.5">
+                                                Waived
+                                              </span>
+                                            ) : csPending ? (
+                                              <span className="inline-flex text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 animate-pulse">
+                                                Pending Validation
+                                              </span>
+                                            ) : (
+                                              <span className="inline-flex text-[10px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5">
+                                                Processing
+                                              </span>
+                                            )}
+                                          </div>
+                                          {/* Row 2: Total + Issued */}
+                                          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-500">
+                                            <span>
+                                              Total:{" "}
+                                              <span className="font-semibold text-slate-800">
+                                                ₱{csTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                              </span>
+                                            </span>
+                                            {csIssuedDate && (
+                                              <span>
+                                                Issued: <span className="font-medium text-slate-600">{csIssuedDate}</span>
+                                              </span>
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        {/* OR Upload — always visible */}
+                                        <div className="px-2.5 pb-2.5">
+                                          <UploadReceipt
+                                            projectId={project.pid}
+                                            hasChargeSlip={true}
+                                            chargeSlipNumber={chargeSlip.chargeSlipNumber}
+                                            uploadAllowed={!csPaid && !csCancelled}
+                                          />
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
-                              ) : (
+                              ) : expandedDocSections.has(`${project.pid}:chargeSlips`) ? (
                                 <p className="text-xs text-slate-400 ml-5">No charge slips yet</p>
-                              )}
+                              ) : null}
                             </div>
+
+                            {portalFeatures.sampleForms && (
+                              <div>
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <FileSpreadsheet className="h-3 w-3 text-orange-600" />
+                                  <span className="text-sm font-semibold text-slate-700">
+                                    Sample Forms
+                                  </span>
+                                  <span className="text-[10px] text-slate-500">({docs?.sampleForms?.length || 0})</span>
+                                </div>
+                                <a
+                                  href={sampleFormBaseHref}
+                                  className="inline-block text-xs text-[#166FB5] hover:underline ml-5 mb-2"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  + Fill out sample submission form
+                                </a>
+                                {(docs?.sampleForms?.length || 0) > 0 ? (
+                                  <div className="space-y-1 ml-5">
+                                    {docs?.sampleForms.map((item) => (
+                                      <a
+                                        key={item.id}
+                                        href={`${sampleFormBaseHref}&formId=${item.id}`}
+                                        className="block text-xs text-slate-600 hover:text-orange-600 hover:underline truncate"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        • {item.id} ({item.totalNumberOfSamples || 0} samples)
+                                      </a>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-xs text-slate-400 ml-5">No sample forms yet</p>
+                                )}
+                              </div>
+                            )}
+
+                            {portalFeatures.serviceReports && (
+                              <div>
+                                {(() => {
+                                  const hasServiceReports = (docs?.serviceReports?.length || 0) > 0;
+                                  // All charge slips must be paid, waived, or cancelled for the client to receive/view
+                                  // Receive is enabled only when at least one charge slip is paid or waived.
+                                  // If all charge slips are cancelled (or none exist), keep disabled.
+                                  const allChargeSlipsSettled =
+                                    chargeSlipCount > 0 &&
+                                    (docs?.chargeSlips?.some(
+                                      (cs) => cs.status === "paid" || cs.status === "waived"
+                                    ) ?? false);
+                                  const isServiceReportSectionDisabled = !hasServiceReports;
+                                  return (
+                                    <>
+                                      <button
+                                        type="button"
+                                        disabled={isServiceReportSectionDisabled}
+                                        className={cn(
+                                          "flex items-center gap-2 mb-1.5 w-full text-left",
+                                          isServiceReportSectionDisabled && "opacity-40 cursor-not-allowed"
+                                        )}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (!isServiceReportSectionDisabled) {
+                                            toggleDocSection(project.pid!, "serviceReports");
+                                          }
+                                        }}
+                                      >
+                                        <ShieldEllipsis className="h-3 w-3 text-blue-600 flex-shrink-0" />
+                                        <span className="text-sm font-semibold text-slate-700 flex-1">
+                                          Service Reports
+                                        </span>
+                                        <span className="text-[10px] text-slate-500 mr-1">({docs?.serviceReports?.length || 0})</span>
+                                        <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:serviceReports`) && "rotate-180")} />
+                                      </button>
+                                      {expandedDocSections.has(`${project.pid}:serviceReports`) && hasServiceReports ? (
+                                        <div className="space-y-2 ml-5">
+                                          {docs?.serviceReports.map((item: any) => {
+                                            const isReceived = item.status === "received";
+                                            const receivedDate = item.receivedAt?.toDate
+                                              ? format(item.receivedAt.toDate(), "MMM d, yyyy h:mm a")
+                                              : "";
+                                            const reportKey = `${project.pid}:${item.id}`;
+                                            const isReceiving = receivingReportId === reportKey;
+                                            return (
+                                              <div
+                                                key={item.id}
+                                                className="flex items-start justify-between gap-2 py-1.5 border-b border-slate-100 last:border-0"
+                                                onClick={(e) => e.stopPropagation()}
+                                              >
+                                                <div className="flex items-start gap-1.5 min-w-0">
+                                                  <FileText className="h-3 w-3 shrink-0 text-blue-500 mt-0.5" />
+                                                  <div className="min-w-0">
+                                                    {isReceived ? (
+                                                      <a
+                                                        href={item.fileUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-xs text-blue-700 hover:underline truncate block"
+                                                      >
+                                                        {item.fileName || item.id}
+                                                      </a>
+                                                    ) : (
+                                                      <span className="text-xs text-slate-600 truncate block">
+                                                        {item.fileName || item.id}
+                                                      </span>
+                                                    )}
+                                                    {isReceived && receivedDate && (
+                                                      <span className="text-[10px] text-green-600 block">
+                                                        Received {receivedDate}
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                                <div className="shrink-0">
+                                                  {isReceived ? (
+                                                    <div className="flex items-center gap-1">
+                                                      <Badge
+                                                        variant="outline"
+                                                        className="text-[10px] text-green-700 border-green-200 bg-green-50 gap-1 py-0.5 h-5"
+                                                      >
+                                                        <CheckCircle2 className="h-2.5 w-2.5" />
+                                                        Received
+                                                      </Badge>
+                                                      <a
+                                                        href={item.fileUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        title="Download"
+                                                      >
+                                                        <Download className="h-3 w-3 text-slate-400 hover:text-blue-600" />
+                                                      </a>
+                                                    </div>
+                                                  ) : allChargeSlipsSettled ? (
+                                                    <Button
+                                                      size="sm"
+                                                      variant="outline"
+                                                      className="h-6 text-[10px] px-2 gap-1 text-blue-700 border-blue-200 hover:bg-blue-50"
+                                                      disabled={isReceiving}
+                                                      onClick={() => handleReceiveServiceReport(project.pid, item)}
+                                                    >
+                                                      {isReceiving ? (
+                                                        <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                                                      ) : (
+                                                        <Download className="h-2.5 w-2.5" />
+                                                      )}
+                                                      Receive
+                                                    </Button>
+                                                  ) : (
+                                                    <TooltipProvider delayDuration={100}>
+                                                      <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                          <span className="inline-block">
+                                                            <Button
+                                                              size="sm"
+                                                              variant="outline"
+                                                              className="h-6 text-[10px] px-2 gap-1 text-slate-400 border-slate-200 cursor-not-allowed pointer-events-none"
+                                                              disabled
+                                                            >
+                                                              <Download className="h-2.5 w-2.5" />
+                                                              Receive
+                                                            </Button>
+                                                          </span>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="left" className="max-w-[180px] text-[10px] text-center">
+                                                          Please settle all outstanding charge slips to view and download the service report.
+                                                        </TooltipContent>
+                                                      </Tooltip>
+                                                    </TooltipProvider>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      ) : expandedDocSections.has(`${project.pid}:serviceReports`) ? (
+                                        <p className="text-xs text-slate-400 ml-5">No service reports yet</p>
+                                      ) : null}
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -2342,18 +3322,7 @@ export default function ClientPortalPage() {
         )}
       </div>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-slate-100">
-        <button
-          onClick={() => router.push("/portal")}
-          className="w-full flex items-center gap-3 px-4 py-3 text-[#B9273A] bg-red-50 hover:bg-red-100/80 rounded-xl transition-colors group"
-        >
-          <div className="p-1.5 bg-white rounded-lg shadow-sm group-hover:scale-105 transition-transform">
-             <LogOut className="h-4 w-4" />
-          </div>
-          <span className="font-semibold text-sm">Exit Portal</span>
-        </button>
-      </div>
+      {/* Footer deleted as requested */}
     </div>
   );
 
@@ -2386,7 +3355,7 @@ export default function ClientPortalPage() {
     <>
       <div className="flex h-[calc(100vh-73px)]">
         {/* ═════ LEFT SIDEBAR — Desktop ═════ */}
-        <aside className="hidden lg:flex w-[320px] min-w-[280px] bg-white border-r border-slate-200 flex-shrink-0 flex-col">
+        <aside className="hidden lg:flex w-[400px] min-w-[340px] bg-white border-r border-slate-200 flex-shrink-0 flex-col">
           {sidebarContent}
         </aside>
 
@@ -2397,7 +3366,7 @@ export default function ClientPortalPage() {
               className="fixed inset-0 bg-black/40 z-40 lg:hidden"
               onClick={() => setMobileSidebarOpen(false)}
             />
-            <aside className="fixed left-0 top-0 bottom-0 w-[320px] bg-white z-50 lg:hidden shadow-2xl flex flex-col">
+            <aside className="fixed left-0 top-0 bottom-0 w-[400px] bg-white z-50 lg:hidden shadow-2xl flex flex-col">
               {sidebarContent}
             </aside>
           </>
@@ -2493,63 +3462,65 @@ export default function ClientPortalPage() {
                 )}
               </div>
 
-              {/* ── Project Details Grid ──────────────────── */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <Card className="border border-slate-100 shadow-sm">
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <User className="h-3.5 w-3.5 text-[#166FB5]" />
-                      <span className="text-xs text-slate-500 font-medium">
-                        Project Lead
-                      </span>
-                    </div>
-                    <p className="text-sm font-semibold text-slate-800 truncate">
-                      {projectDetails.lead}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="border border-slate-100 shadow-sm">
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Calendar className="h-3.5 w-3.5 text-purple-600" />
-                      <span className="text-xs text-slate-500 font-medium">
-                        Start Date
-                      </span>
-                    </div>
-                    <p className="text-sm font-semibold text-slate-800">
-                      {formatDate(projectDetails.startDate)}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="border border-slate-100 shadow-sm">
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Building2 className="h-3.5 w-3.5 text-orange-600" />
-                      <span className="text-xs text-slate-500 font-medium">
-                        Sending Institution
-                      </span>
-                    </div>
-                    <p className="text-sm font-semibold text-slate-800 truncate">
-                      {projectDetails.sendingInstitution}
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="border border-slate-100 shadow-sm">
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Building2 className="h-3.5 w-3.5 text-green-600" />
-                      <span className="text-xs text-slate-500 font-medium">
-                        Funding Institution
-                      </span>
-                    </div>
-                    <p className="text-sm font-semibold text-slate-800 truncate">
-                      {projectDetails.fundingInstitution}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
+                {/* ── Request Progress Timeline ──────────────────── */}
+                {portalFeatures.requestProgressTimeline && (
+                  <Card className="border border-slate-100 shadow-sm">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-800">
+                            Request Progress
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            Track the current stage of your request from inquiry to delivery.
+                          </p>
+                        </div>
+                        {selectedProjectPid && projectDocuments.get(selectedProjectPid)?.loading && (
+                          <div className="flex items-center gap-2 text-xs text-slate-500">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <span>Loading documents</span>
+                          </div>
+                        )}
+                      </div>
 
-              {/* ── Team Members Section ──────────────────── */}
+                      <div className="mt-4 space-y-3">
+                        {timelineSteps.map((step) => (
+                          <div key={step.key} className="flex items-start gap-3">
+                            <div className="mt-0.5">
+                              {step.state === "complete" ? (
+                                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                              ) : step.state === "current" ? (
+                                <Clock className="h-4 w-4 text-blue-500" />
+                              ) : (
+                                <span className="h-4 w-4 rounded-full border border-slate-300 block" />
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="text-sm font-semibold text-slate-700">
+                                  {step.label}
+                                </p>
+                                {step.state === "current" && (
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                    In progress
+                                  </span>
+                                )}
+                                {step.state === "complete" && (
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                    Completed
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-slate-500 mt-0.5">
+                                {step.detail}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               <div className="space-y-4">
                 {/* Section header */}
                 <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -2727,6 +3698,73 @@ export default function ClientPortalPage() {
             /* ── Dashboard Overview (no project selected) ─────── */
             <div className="h-full overflow-y-auto bg-slate-50/30 p-4 lg:p-6">
               <div className="max-w-4xl mx-auto space-y-6">
+                {/* ── Request Progress Timeline ──────────────────── */}
+                {portalFeatures.requestProgressTimeline && (
+                  <Card className="border border-slate-100 shadow-sm">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-800">
+                            Request Progress
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            Track the current stage of your request from inquiry to delivery.
+                          </p>
+                        </div>
+                        {selectedProjectPid && projectDocuments.get(selectedProjectPid)?.loading && (
+                          <div className="flex items-center gap-2 text-xs text-slate-500">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <span>Loading documents</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-4 overflow-x-auto">
+                        <div className="flex items-start gap-6 min-w-max pb-1">
+                          {timelineSteps.map((step, index) => (
+                            <div key={step.key} className="flex items-center gap-4">
+                              <div className="flex items-start gap-3">
+                                <div className="mt-0.5">
+                                  {step.state === "complete" ? (
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                                  ) : step.state === "current" ? (
+                                    <Clock className="h-4 w-4 text-blue-500" />
+                                  ) : (
+                                    <span className="h-4 w-4 rounded-full border border-slate-300 block" />
+                                  )}
+                                </div>
+                                <div className="min-w-[160px]">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <p className="text-sm font-semibold text-slate-700">
+                                      {step.label}
+                                    </p>
+                                    {step.state === "current" && (
+                                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                        In progress
+                                      </span>
+                                    )}
+                                    {step.state === "complete" && (
+                                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                        Completed
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-slate-500 mt-0.5">
+                                    {step.detail}
+                                  </p>
+                                </div>
+                              </div>
+                              {index < timelineSteps.length - 1 && (
+                                <span className="h-px w-8 bg-slate-200" aria-hidden="true" />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Welcome & Status Header */}
                 <div className="bg-white rounded-2xl p-5 lg:p-6 shadow-sm border border-slate-100 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-bl-full -mr-8 -mt-8 opacity-50"></div>
@@ -2761,14 +3799,14 @@ export default function ClientPortalPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Left Column: Documents FIRST, then Summary */}
-                  <div className="lg:col-span-2 space-y-6">
+                <div className="space-y-6">
+                  {/* Documents FIRST, then Summary */}
+                  <div className="space-y-6">
                     {/* Official Documents (Quotations) - MOVED UP */}
                     <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                          <Receipt className="h-5 w-5 text-indigo-500" />
+                          <FileText className="h-5 w-5 text-indigo-500" />
                           Official Documents
                         </h3>
                         {inquiryQuotations.length > 0 && (
@@ -2789,37 +3827,70 @@ export default function ClientPortalPage() {
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          {inquiryQuotations.map((quote) => (
-                            <div 
-                              key={quote.id} 
-                              className="group flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-white rounded-xl border border-slate-100 hover:border-blue-200 hover:shadow-md transition-all duration-200 gap-3"
+                          {inquiryQuotations.map((quote) => {
+                            const qCancelled = quote.status === "cancelled";
+                            return (
+                            <div
+                              key={quote.id}
+                              className="rounded-xl border border-slate-100 bg-white shadow-sm p-2.5"
                             >
-                              <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-100 transition-colors">
-                                  <FileText className="h-4 w-4" />
+                              <div className="flex items-center justify-between gap-2 flex-wrap">
+                                {/* Left: icon + name + totals + status */}
+                                <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                                  <FileText className="h-3 w-3 text-indigo-500 flex-shrink-0" />
+                                  <span className="text-xs font-semibold text-indigo-700 truncate">
+                                    {quote.referenceNumber}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500">
+                                    Total:{" "}
+                                    <span className="font-semibold text-slate-800">
+                                      {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(quote.total)}
+                                    </span>
+                                  </span>
+                                  <span className="text-[10px] text-slate-500">
+                                    Issued:{" "}
+                                    <span className="font-medium text-slate-600">
+                                      {new Date(quote.dateIssued).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                                    </span>
+                                  </span>
+                                  {qCancelled ? (
+                                    <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
+                                      Cancelled
+                                    </span>
+                                  ) : (quote.status === "selected" || quote.selectedForProject) ? (
+                                    <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                                      <CheckCircle2 className="h-2.5 w-2.5" /> Selected
+                                    </span>
+                                  ) : null}
                                 </div>
-                                <div className="min-w-0">
-                                  <p className="font-bold text-slate-800 truncate text-sm">
-                                    Quotation: {quote.referenceNumber}
-                                  </p>
-                                  <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                                    <Calendar className="h-2.5 w-2.5" />
-                                    <span>{new Date(quote.dateIssued).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                                    <span>•</span>
-                                    <span>{new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(quote.total)}</span>
-                                  </div>
+                                {/* Right: action buttons */}
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => router.push(`/client/view-document?type=quotation&ref=${quote.referenceNumber}`)}
+                                    className="border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold h-8 text-xs"
+                                  >
+                                    View PDF
+                                  </Button>
+                                  {!qCancelled && 
+                                   fetchedApprovedProjects.length === 0 && 
+                                   currentInquiry?.status !== "Cancelled" && 
+                                   currentInquiry?.status !== "Quotation Only" && (
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleProceedWithService(quote.referenceNumber)}
+                                      className="bg-gradient-to-r from-[#166FB5] to-[#4038AF] text-white hover:opacity-90 font-bold h-8 text-xs"
+                                    >
+                                      <ArrowRight className="h-3 w-3 mr-1" />
+                                      Proceed with Service
+                                    </Button>
+                                  )}
                                 </div>
                               </div>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => router.push(`/client/view-document?type=quotation&ref=${quote.referenceNumber}`)}
-                                className="border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold h-8 text-xs"
-                              >
-                                View PDF
-                              </Button>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -2831,6 +3902,30 @@ export default function ClientPortalPage() {
 
                       {/* Quotation Request Details (previously Inquiry Details Summary) */}
                     {currentInquiry && (
+                      <div className="bg-amber-50/70 border border-amber-100 rounded-2xl p-5">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="space-y-1">
+                            <h4 className="text-sm font-bold text-amber-900">Not proceeding with the service?</h4>
+                            <p className="text-xs text-amber-800">
+                              If you decide to stop, you can update this request to "Quotation Only".
+                            </p>
+                          </div>
+                          <Button
+                            variant="outline"
+                            onClick={() => setShowCancelInquiryModal(true)}
+                            disabled={currentInquiry.status === "Cancelled" || currentInquiry.status === "Quotation Only" || cancelInquirySubmitting}
+                            className="border-amber-200 text-amber-900 hover:bg-amber-100 font-bold text-xs h-9"
+                          >
+                            Do Not Proceed
+                          </Button>
+                        </div>
+                        {(currentInquiry.status === "Cancelled" || currentInquiry.status === "Quotation Only") && (
+                          <p className="text-[11px] text-amber-700 mt-2">This request is already marked as {currentInquiry.status}.</p>
+                        )}
+                      </div>
+                    )}
+
+                    {currentInquiry && (
                       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
                         <div className="flex items-center justify-between mb-6">
                           <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -2840,65 +3935,242 @@ export default function ClientPortalPage() {
                         </div>
                         
                         <div className="space-y-6">
-                          {/* Top Section: Quick Stats */}
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                            {/* Service Type */}
-                            <div className="space-y-1.5">
-                              <div className="flex items-center gap-2">
-                                <FlaskConical className="h-4 w-4 text-slate-400" />
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Service Type</span>
-                              </div>
-                              <Badge className="w-fit capitalize bg-blue-50 text-blue-700 border-blue-100 text-xs px-2.5 py-0.5 font-bold">
-                                {formatServiceType(currentInquiry.serviceType)}
-                              </Badge>
-                            </div>
-
-                            {/* Sample Count */}
-                            {currentInquiry.sampleCount && (
-                              <div className="space-y-1.5">
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Quantity</span>
-                                <p className="text-sm font-bold text-slate-900">{currentInquiry.sampleCount} samples</p>
-                              </div>
-                            )}
-
-                            {/* Project Budget */}
-                            {currentInquiry.projectBudget && (
-                              <div className="space-y-1.5">
-                                <div className="flex items-center gap-1.5">
-                                  <DollarSign className="h-4 w-4 text-slate-400" />
-                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Estim. Budget</span>
+                          {/* Laboratory Service Details */}
+                          {currentInquiry.serviceType === "laboratory" ? (
+                            <div className="space-y-6 animate-in fade-in duration-500">
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                                {/* Service Type */}
+                                <div className="space-y-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <FlaskConical className="h-4 w-4 text-slate-400" />
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Service Type</span>
+                                  </div>
+                                  <Badge className="w-fit capitalize bg-blue-50 text-blue-700 border-blue-100 text-xs px-2.5 py-0.5 font-bold">
+                                    Laboratory
+                                  </Badge>
                                 </div>
-                                <p className="text-sm font-bold text-slate-900">{currentInquiry.projectBudget}</p>
-                              </div>
-                            )}
-                          </div>
 
-                          {/* Technical Block */}
-                          {(currentInquiry.species || currentInquiry.workflowType) && (
-                            <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              {currentInquiry.species && (
-                                <div className="space-y-1">
-                                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Species / Organism</span>
-                                  <p className="text-sm font-semibold text-slate-800 capitalize">
-                                    {(currentInquiry.species === 'other' || currentInquiry.species === 'animal') && currentInquiry.otherSpecies
-                                      ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}`
-                                      : currentInquiry.species}
+                                {/* Species */}
+                                <div className="space-y-1.5">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Species</span>
+                                  <p className="text-sm font-bold text-slate-900 capitalize italic">
+                                    {currentInquiry.species 
+                                      ? (currentInquiry.otherSpecies ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}` : currentInquiry.species)
+                                      : "—"}
                                   </p>
+                                </div>
+
+                                {/* Sample Count */}
+                                <div className="space-y-1.5">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Sample Count</span>
+                                  <p className="text-sm font-bold text-slate-900">{currentInquiry.sampleCount || "—"}</p>
+                                </div>
+                              </div>
+
+                              {/* Workflow */}
+                              <div className="space-y-2">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Workflow</span>
+                                <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100 text-sm text-slate-800 font-semibold shadow-inner">
+                                  {formatWorkflowType(currentInquiry.workflowType)}
+                                </div>
+                              </div>
+
+                              {/* Bioinformatics Analysis */}
+                              <div className="space-y-2">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Bioinformatics Analysis</span>
+                                {currentInquiry.bioinfoOptions && currentInquiry.bioinfoOptions.length > 0 ? (
+                                  <div className="flex flex-wrap gap-2 p-1">
+                                    {currentInquiry.bioinfoOptions.map((option) => (
+                                      <Badge 
+                                        key={option} 
+                                        variant="secondary" 
+                                        className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 transition-colors py-1 px-3 text-[11px] font-bold"
+                                      >
+                                        {formatBioinfoOption(option)}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-slate-400 px-1 italic">None selected</p>
+                                )}
+                              </div>
+
+                              {/* Research Overview */}
+                              <div className="space-y-2">
+                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Research Overview</span>
+                                <div className="p-4 bg-indigo-50/30 rounded-xl border border-indigo-100/30 text-sm text-slate-800 italic leading-relaxed font-medium">
+                                  {currentInquiry.researchOverview ? `"${currentInquiry.researchOverview}"` : "—"}
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            /* Other Services (Research, Training, Retail, etc.) */
+                            <div className="space-y-6 animate-in fade-in duration-500">
+                              {/* Top Section: Quick Stats */}
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                                {/* Service Type */}
+                                <div className="space-y-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <FlaskConical className="h-4 w-4 text-slate-400" />
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Service Type</span>
+                                  </div>
+                                  <Badge className="w-fit capitalize bg-blue-50 text-blue-700 border-blue-100 text-xs px-2.5 py-0.5 font-bold">
+                                    {formatServiceType(currentInquiry.serviceType)}
+                                  </Badge>
+                                </div>
+
+                                {/* Sample Count */}
+                                {currentInquiry.sampleCount && (
+                                  <div className="space-y-1.5">
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Quantity</span>
+                                    <p className="text-sm font-bold text-slate-900">{currentInquiry.sampleCount} samples</p>
+                                  </div>
+                                )}
+
+                                {/* Retail Sales Details Section */}
+                                {currentInquiry.serviceType === 'retail' && currentInquiry.retailItems && currentInquiry.retailItems.length > 0 && (
+                                  <div className="pt-4 border-t border-slate-100 space-y-4 sm:col-span-3">
+                                    <h3 className="text-sm font-semibold text-slate-700">Retail Sales Details</h3>
+                                    <div className="flex flex-col">
+                                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Requested Items</span>
+                                      <div className="grid grid-cols-1 gap-3 mt-2">
+                                        {currentInquiry.retailItems.map((item, idx) => (
+                                          <div key={`${item}-${idx}`} className="flex flex-col bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                            <span className="text-sm font-semibold text-slate-800">{item}</span>
+                                            {currentInquiry.retailItemDetails?.[item] && (
+                                              <div className="mt-1 flex items-center gap-2">
+                                                <span className="text-xs text-slate-500">Amount:</span>
+                                                <span className="text-sm text-[#166FB5] font-medium">{currentInquiry.retailItemDetails[item]}</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              {currentInquiry.serviceType === 'bioinformatics' && (
+                                <div className="space-y-4">
+                                  <div className="space-y-2">
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Type of Bioinformatics Service</span>
+                                    <div className="flex flex-wrap gap-2 p-1">
+                                      {(Array.isArray(currentInquiry.bioinformaticsDetails?.serviceTypes) ? currentInquiry.bioinformaticsDetails?.serviceTypes : []).length > 0 ? (
+                                        (currentInquiry.bioinformaticsDetails?.serviceTypes as string[]).map((serviceType) => (
+                                          <Badge
+                                            key={serviceType}
+                                            variant="secondary"
+                                            className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 transition-colors py-1 px-3 text-[11px] font-bold"
+                                          >
+                                            {serviceType}
+                                          </Badge>
+                                        ))
+                                      ) : (
+                                        <p className="text-sm text-slate-400 px-1 italic">None selected</p>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Provide Own Data</span>
+                                      <p className="text-sm font-semibold text-slate-800">{currentInquiry.bioinformaticsDetails?.dataProvideOwnData ? "Yes" : "No"}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Data Generated by PGC Visayas</span>
+                                      <p className="text-sm font-semibold text-slate-800">{currentInquiry.bioinformaticsDetails?.dataProvidedByPgc ? "Yes" : "No"}</p>
+                                    </div>
+                                  </div>
+
+                                  {currentInquiry.bioinformaticsDetails?.dataProvideOwnData && (
+                                    <div className="space-y-2">
+                                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Data Details</span>
+                                      <div className="p-3 bg-white rounded-xl border border-slate-100 text-sm text-slate-700 leading-relaxed shadow-sm space-y-1">
+                                        <p>File formats: {Array.isArray(currentInquiry.bioinformaticsDetails?.dataFileFormats) && currentInquiry.bioinformaticsDetails?.dataFileFormats.length > 0 ? currentInquiry.bioinformaticsDetails.dataFileFormats.join(', ') : '—'}</p>
+                                        {currentInquiry.bioinformaticsDetails?.dataOtherFormat && (
+                                          <p>Other format: {currentInquiry.bioinformaticsDetails.dataOtherFormat}</p>
+                                        )}
+                                        {currentInquiry.bioinformaticsDetails?.dataFileSizePerSample && (
+                                          <p>File size per sample: {currentInquiry.bioinformaticsDetails.dataFileSizePerSample}</p>
+                                        )}
+                                        {currentInquiry.bioinformaticsDetails?.dataTransferMode && (
+                                          <p>Preferred transfer mode: {currentInquiry.bioinformaticsDetails.dataTransferMode}</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  <div className="space-y-2">
+                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Overview of Research and Objectives</span>
+                                    <div className="p-4 bg-indigo-50/30 rounded-xl border border-indigo-100/30 text-sm text-slate-800 leading-relaxed font-medium whitespace-pre-wrap">
+                                      {currentInquiry.bioinformaticsDetails?.overviewObjectives || "—"}
+                                    </div>
+                                  </div>
+
+                                  {flattenBioinformaticsDetails(currentInquiry.bioinformaticsDetails).length > 0 && (
+                                    <div className="space-y-2">
+                                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">All Submitted Bioinformatics Entries</span>
+                                      <div className="p-3 bg-white rounded-xl border border-slate-100 text-sm text-slate-700 leading-relaxed shadow-sm">
+                                        <ul className="space-y-1 text-xs">
+                                          {flattenBioinformaticsDetails(currentInquiry.bioinformaticsDetails).map((entry) => (
+                                            <li key={`${entry.key}-${entry.value}`}>
+                                              <span className="font-semibold text-slate-600">{entry.key}:</span> {entry.value}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               )}
 
-                              {currentInquiry.workflowType && (
-                                <div className="space-y-1">
-                                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Analysis Strategy</span>
-                                  <p className="text-sm font-semibold text-slate-800">
-                                    {formatWorkflowType(currentInquiry.workflowType)}
-                                  </p>
+                              {/* Technical Block */}
+                              {(currentInquiry.species || currentInquiry.workflowType) && (
+                                <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  {currentInquiry.species && (
+                                    <div className="space-y-1">
+                                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Species / Organism</span>
+                                      <p className="text-sm font-semibold text-slate-800 capitalize">
+                                        {currentInquiry.otherSpecies 
+                                          ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}`
+                                          : currentInquiry.species}
+                                      </p>
+                                    </div>
+                                  )}
+
+                                  {currentInquiry.workflowType && (
+                                    <div className="space-y-1">
+                                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Analysis Strategy</span>
+                                      <p className="text-sm font-semibold text-slate-800">
+                                        {formatWorkflowType(currentInquiry.workflowType)}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Bioinformatics Options */}
+                              {currentInquiry.workflowType === 'complete-bioinfo' && currentInquiry.bioinfoOptions && currentInquiry.bioinfoOptions.length > 0 && (
+                                <div className="space-y-2">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Selected Bioinformatics Analysis</span>
+                                  <div className="flex flex-wrap gap-2 p-1">
+                                    {currentInquiry.bioinfoOptions.map((option) => (
+                                      <Badge 
+                                        key={option} 
+                                        variant="secondary" 
+                                        className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 transition-colors py-1 px-3 text-[11px] font-bold"
+                                      >
+                                        {formatBioinfoOption(option)}
+                                      </Badge>
+                                    ))}
+                                  </div>
                                 </div>
                               )}
                             </div>
                           )}
 
-                          {/* Specific Needs & Assays */}
+                          {/* Specific Needs & Assays (Common for all) */}
                           {currentInquiry.individualAssayDetails && (
                             <div className="space-y-2">
                               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Selected Assays</span>
@@ -2908,8 +4180,8 @@ export default function ClientPortalPage() {
                             </div>
                           )}
 
-                          {/* Research Narrative */}
-                          {currentInquiry.researchOverview && (
+                          {/* Research Narrative (Only for non-research, non-laboratory services) */}
+                          {currentInquiry.serviceType !== "research" && currentInquiry.serviceType !== "laboratory" && currentInquiry.researchOverview && (
                             <div className="space-y-2">
                               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Objectives & Brief Overview</span>
                               <div className="p-4 bg-indigo-50/30 rounded-xl border border-indigo-100/30 text-sm text-slate-800 italic leading-relaxed font-medium">
@@ -2918,9 +4190,55 @@ export default function ClientPortalPage() {
                             </div>
                           )}
 
-                          {/* Training & Logistics */}
-                          {(currentInquiry.projectBackground || currentInquiry.specificTrainingNeed || currentInquiry.targetTrainingDate) && (
+                          {/* Research & Collaboration Details */}
+                          {currentInquiry.serviceType === 'research' && (currentInquiry.researchOverview || currentInquiry.projectBackground || currentInquiry.molecularServicesBudget || currentInquiry.plannedSampleCount) && (
                             <div className="pt-4 border-t border-slate-100 space-y-4">
+                              {(currentInquiry.researchOverview || currentInquiry.projectBackground) && (
+                                <div className="space-y-2">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Overview of Research, Objectives, and Scope of Collaboration
+                                  </span>
+                                  <div className="p-3 bg-slate-50/50 rounded-lg text-sm text-slate-700 leading-relaxed border border-slate-100 whitespace-pre-wrap">
+                                    {currentInquiry.researchOverview || currentInquiry.projectBackground}
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {currentInquiry.molecularServicesBudget && (
+                                  <div className="space-y-1">
+                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Molecular Services Budget</span>
+                                    <p className="text-sm font-bold text-slate-800">{currentInquiry.molecularServicesBudget}</p>
+                                  </div>
+                                )}
+                                {currentInquiry.plannedSampleCount && (
+                                  <div className="space-y-1">
+                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">How Many Samples Are You Planning to Send?</span>
+                                    <p className="text-sm font-bold text-slate-800">{currentInquiry.plannedSampleCount}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Training Details */}
+                          {currentInquiry.serviceType === 'training' && ((currentInquiry.trainingPrograms && currentInquiry.trainingPrograms.length > 0) || currentInquiry.specificTrainingNeed || currentInquiry.targetTrainingDate || currentInquiry.numberOfParticipants) && (
+                            <div className="pt-4 border-t border-slate-100 space-y-4">
+                              {currentInquiry.trainingPrograms && currentInquiry.trainingPrograms.length > 0 && (
+                                <div className="space-y-2">
+                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Selected Training Programs
+                                  </span>
+                                  <div className="grid grid-cols-1 gap-2">
+                                    {currentInquiry.trainingPrograms.map((program, index) => (
+                                      <div key={`${program}-${index}`} className="text-sm text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                                        {program === "others-customized" ? "Others / Customized Training Program" : program}
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {currentInquiry.targetTrainingDate && (
                                   <div className="space-y-1">
@@ -2938,13 +4256,13 @@ export default function ClientPortalPage() {
                                 )}
                               </div>
 
-                              {(currentInquiry.projectBackground || currentInquiry.specificTrainingNeed) && (
+                              {currentInquiry.specificTrainingNeed && (
                                 <div className="space-y-2">
                                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                    {currentInquiry.specificTrainingNeed ? "Training Scope" : "Technical Background"}
+                                    Others / Customized Training Program Details
                                   </span>
                                   <div className="p-3 bg-slate-50/50 rounded-lg text-sm text-slate-700 leading-relaxed border border-slate-100 whitespace-pre-wrap">
-                                    {currentInquiry.projectBackground || currentInquiry.specificTrainingNeed}
+                                    {currentInquiry.specificTrainingNeed}
                                   </div>
                                 </div>
                               )}
@@ -2982,49 +4300,6 @@ export default function ClientPortalPage() {
                       </div>
                     )}
                   </div>
-
-                  {/* Right Column: Quick Actions & Projects */}
-                  <div className="space-y-6">
-                    {/* Quick Access Card - Tighter */}
-                    <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden group">
-                      <Sparkles className="absolute top-2 right-2 h-12 w-12 text-white/10 -rotate-12 transition-transform duration-700 group-hover:scale-125 group-hover:rotate-12" />
-                      <div className="relative">
-                        <h3 className="font-bold text-base mb-1">Start a New Project</h3>
-                        <p className="text-blue-100 text-xs mb-4 leading-normal">
-                          To proceed with our services, please submit your project and client information for approval.
-                        </p>
-                        <Button 
-                          onClick={handleCreateNewProject}
-                          className="w-full h-9 bg-white text-blue-700 hover:bg-blue-50 font-bold shadow-md text-xs"
-                        >
-                          <Plus className="h-3 w-3 mr-1.5" />
-                          Get Started 
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Project Status Summary if projects exist - Tighter */}
-                    {projects.length > 0 && (
-                      <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-                        <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2 text-sm">
-                          <FolderOpen className="h-4 w-4 text-amber-500" />
-                          Project Library
-                        </h3>
-                        <div className="space-y-3">
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-center">
-                              <p className="text-base font-bold text-slate-800">{projects.length}</p>
-                              <p className="text-[9px] uppercase font-bold text-slate-400">Total</p>
-                            </div>
-                            <div className="bg-green-50 p-2.5 rounded-xl border border-green-100 text-center">
-                              <p className="text-base font-bold text-green-700">{projects.filter(p => !p.isDraft).length}</p>
-                              <p className="text-[9px] uppercase font-bold text-green-400">Approved</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>
@@ -3041,6 +4316,11 @@ export default function ClientPortalPage() {
         onCancel={() => {
           setShowConfirmModal(false);
           setPendingMemberId(null);
+          // Re-enable draft button for this member if it was disabled
+          if (pendingMemberId) {
+            savingDraftIdsRef.current.delete(pendingMemberId);
+          }
+          setActiveSavingId(null);
         }}
         loading={submitting}
         title="Confirm Member Information"
@@ -3222,23 +4502,20 @@ export default function ClientPortalPage() {
           </div>
           
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800 font-medium mb-2">
-              {members.filter((m) => m.isDraft && !m.isPrimary).length}{" "}
-              member(s) will be submitted for review:
+            <p className="text-sm text-blue-800 font-bold mb-3 border-b border-blue-100 pb-1">
+              Other Member/s:
             </p>
-            <ul className="space-y-1">
+            <div className="space-y-4">
               {members
                 .filter((m) => m.isDraft && !m.isPrimary)
                 .map((m) => (
-                  <li
-                    key={m.id}
-                    className="text-sm text-blue-700 flex items-center gap-2"
-                  >
-                    <User className="h-3 w-3" />
-                    {m.formData.name || "Unnamed"} — {m.formData.email}
-                  </li>
+                  <div key={m.id} className="text-sm text-blue-700 space-y-1">
+                    <div><strong className="text-blue-900">Name:</strong> {m.formData.name || "—"}</div>
+                    <div><strong className="text-blue-900">Email:</strong> {m.formData.email || "—"}</div>
+                    <div><strong className="text-blue-900">Affiliation:</strong> {m.formData.affiliation || "—"}</div>
+                  </div>
                 ))}
-            </ul>
+            </div>
           </div>
         </div>
       </ConfirmationModalLayout>
@@ -3291,6 +4568,26 @@ export default function ClientPortalPage() {
               </div>
             </div>
           )}
+
+          {members.filter((m) => !m.isPrimary && m.isDraft).length > 0 && (
+            <div className="bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 rounded-lg p-4 space-y-3">
+              <p className="text-sm font-bold text-slate-900 border-b border-slate-200 pb-1">
+                Other Member/s:
+              </p>
+              <div className="space-y-4">
+                {members
+                  .filter((m) => !m.isDraft || !m.isPrimary) // Adjusted filter to be more reliable
+                  .filter((m) => !m.isPrimary && m.isDraft) // Keeping existing logic for clarity
+                  .map((m) => (
+                    <div key={m.id} className="space-y-1 text-xs text-slate-700">
+                      <div><strong className="text-slate-900">Name:</strong> {m.formData.name || "—"}</div>
+                      <div><strong className="text-slate-900">Email:</strong> {m.formData.email || "—"}</div>
+                      <div><strong className="text-slate-900">Affiliation:</strong> {m.formData.affiliation || "—"}</div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
         </div>
       </ConfirmationModalLayout>
 
@@ -3323,6 +4620,68 @@ export default function ClientPortalPage() {
         projectPid={selectedProjectPid ?? undefined}
         projectRequestId={currentProjectRequestId ?? undefined}
       />
+
+      {/* Proceed with Service Confirmation Modal */}
+      <AlertDialog open={showProceedModal} onOpenChange={setShowProceedModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Proceed with Service?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to proceed with the service using <strong>Quotation: {selectedQuotationRef}</strong>?
+              <br /><br />
+              You will be redirected to the Project Information Form to create your project.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowProceedModal(false);
+              setSelectedQuotationRef(null);
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmProceedWithService}>
+              Yes, Proceed
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Do Not Proceed Confirmation Modal */}
+      <AlertDialog open={showCancelInquiryModal} onOpenChange={setShowCancelInquiryModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change to "Quotation Only"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Select this if you only need the quotation for reference and do not wish to proceed with the service at this time.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="cancel-reason" className="text-xs text-slate-600">Reason (optional)</Label>
+            <Textarea
+              id="cancel-reason"
+              value={cancelInquiryReason}
+              onChange={(event) => setCancelInquiryReason(event.target.value)}
+              rows={3}
+              placeholder="e.g., Budgeting purposes, project deferred, etc."
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowCancelInquiryModal(false);
+              setCancelInquiryReason("");
+            }}>
+              Go Back
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmCancelInquiry}
+              className="bg-[#166FB5] hover:bg-[#166FB5]/90"
+              disabled={cancelInquirySubmitting}
+            >
+              Confirm Quotation Only
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

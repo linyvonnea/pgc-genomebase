@@ -8,7 +8,6 @@ import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { pdf, PDFViewer } from "@react-pdf/renderer";
-import { Timestamp } from "firebase/firestore";
 import { toast } from "sonner";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
 import { QuotationRecord } from "@/types/Quotation";
@@ -21,8 +20,8 @@ import {
 } from "@/services/clientProjectService";
 import {
   generateNextChargeSlipNumber,
-  saveChargeSlip,
 } from "@/services/chargeSlipService";
+import { saveChargeSlipAction } from "@/app/actions/chargeSlipActions";
 
 import { SelectedService as StrictSelectedService } from "@/types/SelectedService";
 import { ServiceItem } from "@/types/ServiceItem";
@@ -57,6 +56,9 @@ import {
 import { ChargeSlipPDF } from "./ChargeSlipPDF";
 import useAuth from "@/hooks/useAuth";
 import { GroupedServiceSelector } from "@/components/forms/GroupedServiceSelector";
+import { Loader2 } from "lucide-react";
+import { getActiveCatalogItems } from "@/services/catalogSettingsService";
+import { CatalogItem } from "@/types/CatalogSettings";
 
 export type EditableSelectedService = Omit<StrictSelectedService, "quantity"  | "price"> & {
   quantity: number | "";
@@ -84,6 +86,13 @@ function ChargeSlipBuilderInner({
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
   const [chargeSlipNumber, setChargeSlipNumber] = useState<string>("");
   const [orNumber, setOrNumber] = useState<string>("");
+  const [saving, setSaving] = useState(false);
+  const [clientInfo, setClientInfo] = useState({
+    name: "Unknown Client",
+    institution: "No Institution",
+    designation: "No Designation",
+    email: "",
+  });
 
   const { adminInfo } = useAuth();
   const queryClient = useQueryClient();
@@ -156,34 +165,9 @@ function ChargeSlipBuilderInner({
     setUseAffiliationAsClientName(false);
   };
 
-  const handleQuotationSelect = (quote: QuotationRecord) => {
-    const servicesFromQuotation: EditableSelectedService[] = quote.services.map((s) => ({
-      ...s,
-      id: s.id || `quote-${s.name}`,
-      quantity: s.quantity || 1,
-      price: s.price || 0,
-    }));
-    setSelectedServices(servicesFromQuotation);
-    setIsInternal(!!quote.useInternalPrice || !!quote.isInternal);
-    setUseAffiliationAsClientName(!!quote.useAffiliationAsClientName);
-    toast.info(`Populated options and services from ${quote.referenceNumber}`);
-  };
-
-  const handleQuotationDeselect = () => {
-    setSelectedServices([]);
-    setIsInternal(false);
-    setUseAffiliationAsClientName(false);
-  };
-
   const updateQuantity = (id: string, qty: number | "") => {
     setSelectedServices((prev) =>
       prev.map((svc) => (svc.id === id ? { ...svc, quantity: qty } : svc))
-    );
-  };
-// for new price textbox
-  const updatePrice = (id: string, price: number | "") => {
-    setSelectedServices((prev) =>
-      prev.map((svc) => (svc.id === id ? { ...svc, price: price === "" ? 0 : price } : svc))
     );
   };
 
@@ -193,16 +177,48 @@ function ChargeSlipBuilderInner({
     );
   };
 
+// for new price textbox
+  const updatePrice = (id: string, price: number | "") => {
+    const priceValue = typeof price === "number" ? price : 0;
+    setSelectedServices((prev) =>
+      prev.map((svc) => (svc.id === id ? { ...svc, price: priceValue } : svc))
+    );
+  };
+
   const updateParticipants = (id: string, participants: number | "") => {
     setSelectedServices((prev) =>
       prev.map((svc) => (svc.id === id ? { ...svc, participants } : svc))
     );
   };
+
+  const handleQuotationSelect = (quote: QuotationRecord) => {
+    // Sync pricing and formatting options from quotation
+    if (typeof quote.isInternal === 'boolean') {
+      setIsInternal(quote.isInternal);
+    }
+    if (typeof quote.useAffiliationAsClientName === 'boolean') {
+      setUseAffiliationAsClientName(quote.useAffiliationAsClientName);
+    }
+
+    setSelectedServices((prev) => {
+      const existingIds = new Set(prev.map((s) => s.id));
+      const additions = quote.services
+        .filter((s) => !existingIds.has(s.id))
+        .map((s) => ({ ...s, quantity: (s.quantity as number) || 1 }));
+      return [...prev, ...additions];
+    });
+  };
+
+  const handleQuotationDeselect = (quote: QuotationRecord) => {
+    // Reset flags when deselecting
+    setIsInternal(false);
+    setUseAffiliationAsClientName(false);
+    setSelectedServices((prev) => prev.filter((s) => !quote.services.some((qs) => qs.id === s.id)));
+  };
   const cleanedServices: StrictSelectedService[] = selectedServices
     .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
     .map((s) => ({ ...s, quantity: s.quantity as number }));
 
-  // Update the subtotal calculation to use samples or participants based on service type
   const subtotal = cleanedServices.reduce((sum, item) => {
     const serviceType = item.type.toLowerCase();
 
@@ -229,14 +245,6 @@ function ChargeSlipBuilderInner({
   }, 0);
   const discount = isInternal ? subtotal * 0.12 : 0;
   const total = subtotal - discount;
-
-
-  const [clientInfo, setClientInfo] = useState({
-    name: client?.name || "Unknown Client",
-    institution: client?.affiliation || "No Institution",
-    designation: client?.designation || "No Designation",
-    email: client?.email || "",
-  });
 
   useEffect(() => {
     setClientInfo({
@@ -301,32 +309,24 @@ function ChargeSlipBuilderInner({
               <TableCell>
                 <Input
                   type="number"
-                  min={0}
                   value={price}
-                  onChange={(e) =>
-                    updatePrice(
-                      item.id,
-                      e.target.value === "" ? "" : +e.target.value
-                    )
-                  }
+                  onChange={(e) => updateQuantity(item.id, Number(e.target.value))}
+                  className="w-24"
                   disabled={!isSelected}
                 />
               </TableCell>
               <TableCell>
                 <Input
                   type="number"
-                  min={0}
                   value={quantity}
-                  onChange={(e) =>
-                    updateQuantity(
-                      item.id,
-                      e.target.value === "" ? "" : +e.target.value
-                    )
-                  }
+                  onChange={(e) => updateQuantity(item.id, e.target.value === "" ? "" : Number(e.target.value))}
+                  className="w-20"
                   disabled={!isSelected}
                 />
               </TableCell>
-              <TableCell>{amount.toFixed(2)}</TableCell>
+              <TableCell className="text-right">
+                ₱{amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </TableCell>
             </TableRow>
           );
         })}
@@ -343,7 +343,9 @@ function ChargeSlipBuilderInner({
     if (lower.includes("training")) return "training";
     return lower; // fallback
   };
+
   const handleSaveAndDownload = async () => {
+    setSaving(true);
     try {
       const rawRecord = {
         id: chargeSlipNumber,
@@ -366,7 +368,7 @@ function ChargeSlipBuilderInner({
         },
         referenceNumber: chargeSlipNumber,
         clientInfo,
-        dateIssued: Timestamp.fromDate(new Date()),
+        dateIssued: new Date().toISOString(),
         subtotal,
         discount,
         total,
@@ -376,45 +378,33 @@ function ChargeSlipBuilderInner({
 
       const record = sanitizeObject(rawRecord) as ChargeSlipRecord;
 
-      // Save to Firestore first
-      await saveChargeSlip(record);
+      // Save to Firestore and send email notification
+      if (!adminInfo?.email) {
+        toast.error("User authentication required to save charge slip");
+        setSaving(false);
+        return;
+      }
 
-      // Generate PDF after save completes
-      const blob = await pdf(
-        <ChargeSlipPDF
-          services={cleanedServices}
-          client={client}
-          project={project}
-          chargeSlipNumber={chargeSlipNumber}
-          useAffiliationAsClientName={useAffiliationAsClientName}
-          orNumber={orNumber}
-          useInternalPrice={isInternal}
-          preparedBy={record.preparedBy}
-          approvedBy={record.approvedBy}
-          referenceNumber={chargeSlipNumber}
-          clientInfo={clientInfo}
-          dateIssued={new Date().toISOString()}
-          subtotal={subtotal}
-          discount={discount}
-          total={total}
-        />
-      ).toBlob();
+      const result = await saveChargeSlipAction(record, {
+        name: adminInfo.name || adminInfo.email!,
+        email: adminInfo.email!
+      });
 
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${chargeSlipNumber}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to save charge slip");
+      }
 
       // Invalidate charge slip history to refresh the list
       queryClient.invalidateQueries({ queryKey: ["chargeSlipHistory", effectiveProjectId] });
 
-      toast.success("Charge slip saved and downloaded successfully!");
+      toast.success("Charge slip saved successfully!");
+      setOpenPreview(false);
       onSubmit?.(record);
     } catch (error) {
       console.error("Failed to save charge slip:", error);
       toast.error(`Failed to save charge slip: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -588,44 +578,52 @@ function ChargeSlipBuilderInner({
               Preview Charge Slip
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl h-[90vh] overflow-auto">
+          <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
             <DialogHeader>
-              <DialogTitle>Preview Charge Slip PDF</DialogTitle>
+              <DialogTitle>Charge Slip Preview</DialogTitle>
             </DialogHeader>
-            <div className="mt-4">
+            <div className="flex-1 bg-slate-100 rounded-md overflow-hidden min-h-[500px] mt-4">
               <PDFViewer width="100%" height="600">
                 <ChargeSlipPDF
                   services={cleanedServices}
-                  client={client}
-                  project={project}
+                  client={client as any}
+                  project={project as any}
                   chargeSlipNumber={chargeSlipNumber}
                   orNumber={orNumber}
+                  isInternal={isInternal}
                   useInternalPrice={isInternal}
                   useAffiliationAsClientName={useAffiliationAsClientName}
                   preparedBy={{
                     name: adminInfo?.name || "—",
                     position: adminInfo?.position || "—",
                   }}
+                  referenceNumber={chargeSlipNumber}
+                  clientInfo={clientInfo}
                   approvedBy={{
                     name: "VICTOR MARCO EMMANUEL N. FERRIOLS, Ph.D",
                     position: "AED, PGC Visayas",
                   }}
-                  referenceNumber={chargeSlipNumber}
-                  clientInfo={clientInfo}
                   dateIssued={new Date().toISOString()}
                   subtotal={subtotal}
                   discount={discount}
                   total={total}
                 />
               </PDFViewer>
-              <div className="text-right mt-4">
-                <Button
-                  onClick={handleSaveAndDownload}
-                  disabled={cleanedServices.length === 0}
-                >
-                  Generate Final Charge Slip
-                </Button>
-              </div>
+            </div>
+            <div className="text-right mt-4">
+              <Button
+                onClick={handleSaveAndDownload}
+                disabled={cleanedServices.length === 0 || saving}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Generate Final Charge Slip"
+                )}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>

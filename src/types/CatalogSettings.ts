@@ -7,6 +7,7 @@ export interface CatalogItem {
   id: string;
   value: string;
   position?: string; // For personnel assigned
+  color?: string; // For inquiry statuses
   order: number;
   isActive: boolean;
   createdAt?: Date;
@@ -19,6 +20,8 @@ export interface CatalogSettings {
   fundingInstitutions: CatalogItem[];
   serviceRequested: CatalogItem[];
   personnelAssigned: CatalogItem[];
+  inquiryStatuses: CatalogItem[];
+  chargeSlipStatuses: CatalogItem[];
 }
 
 export type CatalogType = keyof CatalogSettings;
@@ -29,4 +32,6 @@ export const CATALOG_LABELS: Record<CatalogType, string> = {
   fundingInstitutions: "Funding Institutions",
   serviceRequested: "Service Requested",
   personnelAssigned: "Personnel Assigned",
+  inquiryStatuses: "Inquiry Statuses",
+  chargeSlipStatuses: "Charge Slip Statuses",
 };

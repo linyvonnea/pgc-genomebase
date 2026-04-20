@@ -3,6 +3,7 @@
 
 "use client"
 
+import { useEffect, useState } from "react"
 import { ColumnDef, Row } from "@tanstack/react-table"
 import { Project } from "@/types/Project"
 import { Button } from "@/components/ui/button"
@@ -16,6 +17,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { collection, onSnapshot, query, where } from "firebase/firestore"
+import { db } from "@/lib/firebase"
 
 // Professional colors for client names in tooltip
 const CLIENT_COLORS = [
@@ -27,6 +30,125 @@ const CLIENT_COLORS = [
   "text-indigo-600",
   "text-cyan-600",
 ];
+
+// Hook to track count of projects with unacknowledged form submissions
+export function useProjectFormNotifications() {
+  const [projectsWithUnacknowledged, setProjectsWithUnacknowledged] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const q = query(
+      collection(db, "clientFormSubmissions"),
+      where("acknowledgedByAdmin", "==", false)
+    );
+
+    const unsub = onSnapshot(q, (snap) => {
+      const projectIds = new Set<string>();
+      snap.forEach((doc) => {
+        const projectId = doc.data().projectId;
+        if (projectId) projectIds.add(projectId);
+      });
+      setProjectsWithUnacknowledged(projectIds);
+    });
+
+    return () => unsub();
+  }, []);
+
+  return projectsWithUnacknowledged;
+}
+
+// StatusCell: shows red blinking alert icon on "Ongoing" rows when client has unacknowledged form uploads
+function StatusCell({ projectId, status }: { projectId: string; status: string }) {
+  const [hasUnread, setHasUnread] = useState(false);
+
+  useEffect(() => {
+    if (status !== "Ongoing" || !projectId) return;
+
+    const q = query(
+      collection(db, "clientFormSubmissions"),
+      where("projectId", "==", projectId),
+      where("acknowledgedByAdmin", "==", false)
+    );
+
+    const unsub = onSnapshot(q, (snap) => {
+      setHasUnread(!snap.empty);
+    });
+
+    return () => unsub();
+  }, [projectId, status]);
+
+  let color = "bg-gray-100 text-gray-800";
+  let label: string = status || "";
+  switch (status) {
+    case "Pending":
+      color = "bg-blue-50 text-blue-700 border-blue-100";
+      label = "Pending";
+      break;
+    case "Ongoing":
+      color = "bg-amber-50 text-amber-700 border-amber-100";
+      label = "Ongoing";
+      break;
+    case "Completed":
+      color = "bg-emerald-50 text-emerald-700 border-emerald-100";
+      label = "Completed";
+      break;
+    case "Cancelled":
+      color = "bg-rose-50 text-rose-700 border-rose-100";
+      label = "Cancelled";
+      break;
+    default:
+      color = "bg-gray-50 text-gray-700 border-gray-100";
+      label = status || "";
+  }
+
+  return (
+    <div className="px-1 flex items-center gap-1.5 h-full">
+      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border whitespace-nowrap ${color}`}>
+        {label}
+      </span>
+      {status === "Ongoing" && hasUnread && (
+        <TooltipProvider delayDuration={100}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="relative flex h-2.5 w-2.5 shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-[10px]">
+              Client uploaded a new submission form
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </div>
+  );
+}
+
+// StatusHeader: shows count of projects with unacknowledged submissions
+function StatusHeader() {
+  const projectsWithUnacknowledged = useProjectFormNotifications();
+  const count = projectsWithUnacknowledged.size;
+
+  return (
+    <div className="px-1 text-[12px] font-semibold flex items-center gap-1.5">
+      <span>Status</span>
+      {count > 0 && (
+        <TooltipProvider delayDuration={100}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="relative flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-red-500 text-white text-[9px] font-bold px-1 animate-pulse">
+                {count > 9 ? "9+" : count}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-[10px]">
+              {count} {count === 1 ? "project has" : "projects have"} new uploaded forms
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </div>
+  );
+}
 
 // Proper React component for the actions cell so hooks are valid
 function ActionCell({ row, meta }: { row: Row<Project>; meta: { onSuccess?: () => void } | undefined }) {
@@ -56,7 +178,7 @@ export const columns: ColumnDef<Project>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="hover:bg-accent px-1 text-[11px] font-semibold"
         >
-          PID
+          Project ID
           <ArrowUpDown className="ml-1 h-3 w-3" />
         </Button>
       )
@@ -180,69 +302,15 @@ export const columns: ColumnDef<Project>[] = [
     },
   },
   {
-    accessorKey: "lead",
-    header: () => <div className="px-1 text-[12px] font-semibold">Lead</div>,
-    size: 110,
-    cell: ({ getValue }) => {
-      const lead = getValue() as string || "—";
-      return (
-        <div className="max-w-[110px] truncate text-left text-[11px] text-slate-500 px-1" title={lead}>
-          {lead}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "personnelAssigned",
-    header: () => <div className="px-1 text-[12px] font-semibold">Personnel</div>,
-    size: 110,
-    cell: ({ getValue }) => {
-      const personnel = getValue() as string || "—";
-      return (
-        <div className="max-w-[110px] truncate text-left text-[11px] text-slate-500 px-1" title={personnel}>
-          {personnel}
-        </div>
-      );
-    },
-  },
-  {
     accessorKey: "status",
-    header: () => <div className="px-1 text-[12px] font-semibold">Status</div>,
-    size: 90,
-    cell: ({ row }) => {
-      // Render status with color-coded badge
-      const status = row.original.status;
-      let color = "bg-gray-100 text-gray-800";
-      let label: string = status || "";
-      switch (status) {
-        case "Pending":
-          color = "bg-blue-50 text-blue-700 border-blue-100";
-          label = "Pending";
-          break;
-        case "Ongoing":
-          color = "bg-amber-50 text-amber-700 border-amber-100";
-          label = "Ongoing";
-          break;
-        case "Completed":
-          color = "bg-emerald-50 text-emerald-700 border-emerald-100";
-          label = "Completed";
-          break;
-        case "Cancelled":
-          color = "bg-rose-50 text-rose-700 border-rose-100";
-          label = "Cancelled";
-          break;
-        default:
-          color = "bg-gray-50 text-gray-700 border-gray-100";
-          label = status || "";
-      }
-      return (
-        <div className="px-1 flex items-center h-full">
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border whitespace-nowrap ${color}`}>
-            {label}
-          </span>
-        </div>
-      );
-    },
+    header: () => <StatusHeader />,
+    size: 110,
+    cell: ({ row }) => (
+      <StatusCell
+        projectId={row.original.pid ?? ""}
+        status={row.original.status ?? ""}
+      />
+    ),
   },
   {
     accessorKey: "sendingInstitution",

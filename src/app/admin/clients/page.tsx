@@ -16,6 +16,7 @@ import { ProjectFormModal } from "@/app/admin/projects/modalform"
 import { ClientFormModal } from "./modalform";
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
+import { ClientDetailSheet } from "@/components/admin/ClientDetailSheet";
 
 // Fetch and validate client data from Firestore
 async function getData(): Promise<Client[]> {
@@ -43,6 +44,7 @@ export default function ClientPage() {
 function ClientPageContent() {
   // State for client data
   const [data, setData] = useState<Client[]>([]);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
   const { adminInfo } = useAuth();
   const { canCreate } = usePermissions(adminInfo?.role);
@@ -101,8 +103,19 @@ function ClientPageContent() {
         </div>
 
         {/* Data Table with instant update on add/edit/delete */}
-        <DataTable columns={columns} data={data} meta={{ onSuccess: fetchData }} />
+        <DataTable
+          columns={columns}
+          data={data}
+          meta={{ onSuccess: fetchData }}
+          onRowClick={(row) => setSelectedClient(row)}
+        />
       </div>
+      <ClientDetailSheet
+        client={selectedClient}
+        open={!!selectedClient}
+        onClose={() => setSelectedClient(null)}
+        onClientUpdated={fetchData}
+      />
     </div>
   );
 }

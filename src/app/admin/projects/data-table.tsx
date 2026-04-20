@@ -38,6 +38,7 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   meta?: { onSuccess?: () => void };
+  onRowClick?: (row: TData) => void;
 }
 
 // Helper to parse the MM-DD-YYYY string into a Date
@@ -52,6 +53,7 @@ export function DataTable<TData extends Project, TValue>({
   columns,
   data,
   meta,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   // State for search, cards, and date filters
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -633,7 +635,27 @@ export function DataTable<TData extends Project, TValue>({
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    className="hover:bg-muted/50 transition-colors"
+                    className="hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={(event) => {
+                      const target = event.target as HTMLElement;
+                      if (
+                        target.closest("button") ||
+                        target.closest('[role="button"]') ||
+                        target.closest("a") ||
+                        target.closest("input") ||
+                        target.closest("textarea") ||
+                        target.closest("select") ||
+                        target.closest("label") ||
+                        target.closest('[role="textbox"]') ||
+                        target.closest('[role="combobox"]') ||
+                        target.closest('[role="dialog"]') ||
+                        target.closest('[contenteditable="true"]') ||
+                        target.closest('[data-stop-row-click="true"]')
+                      ) {
+                        return;
+                      }
+                      onRowClick?.(row.original);
+                    }}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell

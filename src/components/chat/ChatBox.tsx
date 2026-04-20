@@ -13,33 +13,176 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Send, Clock, AlertCircle } from "lucide-react";
+import { MessageCircle, Send, Clock, AlertCircle, Check, CheckCheck, Paperclip, FileText, FileSpreadsheet, File, X, Loader2, Download, Trash2 } from "lucide-react";
 import { ThreadMessage, MessageSenderRole } from "@/types/QuotationThread";
 import {
   subscribeToThreadMessages,
   addThreadMessage,
   markMessagesAsRead,
+  toggleReaction,
+  unsendMessage,
 } from "@/services/quotationThreadService";
+import { uploadFile } from "@/lib/fileUpload";
 import { format } from "date-fns";
 import { getAdminDisplayName, getClientInitials } from "@/lib/chatUtils";
+import EmojiPicker from "./EmojiPicker";
+
+// Allowed attachment types for chat
+const CHAT_MAX_SIZE_MB = 10;
+
+const ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "text/plain",
+];
+
+const ACCEPT_ATTR = [
+  "image/*",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "text/plain",
+].join(",");
+
+function isImageType(type: string) {
+  return type.startsWith("image/");
+}
+
+function getFileIcon(type: string) {
+  if (
+    type === "application/vnd.ms-excel" ||
+    type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  ) {
+    return FileSpreadsheet;
+  }
+  if (type === "text/plain") return File;
+  return FileText; // PDF, Word, PPT, etc.
+}
+
+async function downloadAttachment(url: string, name: string) {
+  try {
+    const response = await fetch(url, { mode: "cors" });
+    const blob = await response.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    // Delay revoke so the browser has time to start the download
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  } catch {
+    // Fallback: open in new tab which lets the user save manually
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+}
+
+function AttachmentBubble({
+  attachment,
+  isMe,
+}: {
+  attachment: { name: string; url: string; type: string };
+  isMe: boolean;
+}) {
+  const FileIcon = getFileIcon(attachment.type);
+
+  if (isImageType(attachment.type)) {
+    return (
+      <div className="relative mt-1.5 group/img">
+        <a
+          href={attachment.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block rounded-xl overflow-hidden border border-white/20 hover:opacity-90 transition-opacity"
+          title={`View ${attachment.name}`}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={attachment.url}
+            alt={attachment.name}
+            className="max-w-[220px] max-h-[180px] object-cover w-full"
+          />
+        </a>
+        {/* Download overlay button */}
+        <button
+          onClick={() => downloadAttachment(attachment.url, attachment.name)}
+          className="absolute top-1.5 right-1.5 opacity-0 group-hover/img:opacity-100 transition-opacity bg-black/40 hover:bg-black/60 rounded-full p-1"
+          title="Download"
+        >
+          <Download className="h-3.5 w-3.5 text-white" />
+        </button>
+      </div>
+    );
+  }
+
+  // Document / generic file — clicking forces download
+  return (
+    <button
+      type="button"
+      onClick={() => downloadAttachment(attachment.url, attachment.name)}
+      className={`flex items-center gap-2 mt-1.5 rounded-xl px-3 py-2 border transition-colors cursor-pointer ${
+        isMe
+          ? "bg-white/15 border-white/20 hover:bg-white/25 text-white"
+          : "bg-white border-slate-200 hover:bg-slate-50 text-slate-700"
+      }`}
+      title={`Download ${attachment.name}`}
+    >
+      <FileIcon className="h-5 w-5 flex-shrink-0" />
+      <span className="text-xs font-medium truncate max-w-[160px]">{attachment.name}</span>
+      <Download className="h-3.5 w-3.5 flex-shrink-0 ml-auto opacity-70" />
+    </button>
+  );
+}
 
 interface ChatBoxProps {
   inquiryId: string;
   role: MessageSenderRole; // "admin" or "client"
   variant?: "default" | "floating";
+  clientName?: string;
 }
 
 export default function ChatBox({
   inquiryId,
   role,
   variant = "default",
+  clientName,
 }: ChatBoxProps) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ThreadMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [unsendingId, setUnsendingId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const DEFAULT_REACTIONS = ["👍", "❤️", "😮", "😂", "😥"];
+
+  const normalizeIdentifier = (value: string | null | undefined) =>
+    (value || "").trim().toLowerCase();
+
+  const currentUserIdentifiers = new Set(
+    [normalizeIdentifier(user?.email), normalizeIdentifier(user?.uid)].filter(Boolean),
+  );
+
+  // Alias of the currently logged-in admin (used for own-message labels)
+  const currentAdminAlias =
+    role === "admin" && user ? getAdminDisplayName(user.email || user.uid) : "";
+
+  // Alias derived from the message senderId (email) — always reflects actual sender
+  const getMessageAdminAlias = (msg: ThreadMessage) =>
+    getAdminDisplayName(msg.senderId);
 
   useEffect(() => {
     if (!inquiryId || !user) return;
@@ -75,6 +218,15 @@ export default function ChatBox({
     }
   }, [inquiryId, user, role]);
 
+  const handleToggleReaction = async (messageId: string | undefined, emoji: string) => {
+    if (!messageId || !user) return;
+    try {
+      await toggleReaction(messageId, emoji, user.email || user.uid);
+    } catch (err) {
+      console.error("Failed to toggle reaction", err);
+    }
+  };
+
   // Auto-scroll to bottom on new message
   useEffect(() => {
     if (scrollRef.current) {
@@ -83,12 +235,40 @@ export default function ChatBox({
     }
   }, [messages]);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate size
+    if (file.size > CHAT_MAX_SIZE_MB * 1024 * 1024) {
+      setError(`File too large. Maximum size is ${CHAT_MAX_SIZE_MB} MB.`);
+      e.target.value = "";
+      return;
+    }
+
+    // Validate type
+    const isImage = file.type.startsWith("image/");
+    if (!isImage && !ALLOWED_MIME_TYPES.includes(file.type)) {
+      setError("Unsupported file type. Allowed: images, PDF, Word, Excel, PowerPoint, and text files.");
+      e.target.value = "";
+      return;
+    }
+
+    setError(null);
+    setPendingFile(file);
+    e.target.value = "";
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !user) return;
+    const hasText = newMessage.trim().length > 0;
+    const hasFile = !!pendingFile;
+    if ((!hasText && !hasFile) || !user) return;
 
     const messageContent = newMessage.trim();
-    setNewMessage(""); // Optimistic UI clear
+    setNewMessage("");
+    const fileToSend = pendingFile;
+    setPendingFile(null);
 
     try {
       if (!user.email && !user.uid) {
@@ -98,21 +278,47 @@ export default function ChatBox({
       const senderDisplayName =
         role === "admin"
           ? getAdminDisplayName(user.email || user.uid)
-          : user.displayName || user.email?.split("@")[0] || "Client";
+          : clientName || user.displayName || user.email?.split("@")[0] || "Client";
+
+      // Upload file first if present
+      let attachments: { name: string; url: string; type: string }[] | undefined;
+      if (fileToSend) {
+        setUploading(true);
+        try {
+          const url = await uploadFile(fileToSend, `chat-attachments/${inquiryId}`);
+          attachments = [{ name: fileToSend.name, url, type: fileToSend.type }];
+        } finally {
+          setUploading(false);
+        }
+      }
 
       await addThreadMessage({
         threadId: inquiryId,
         type: "text",
-        content: messageContent,
+        content: messageContent || (fileToSend ? fileToSend.name : ""),
         senderId: user.email || user.uid,
         senderName: senderDisplayName,
         senderRole: role,
         isRead: false,
+        ...(attachments ? { attachments } : {}),
       } as Omit<ThreadMessage, "id" | "createdAt">);
     } catch (error) {
       console.error("Failed to send message:", error);
       setError("Failed to send message. Please try again.");
-      setNewMessage(messageContent); // Restore on failure
+      setNewMessage(messageContent);
+      if (fileToSend) setPendingFile(fileToSend);
+    }
+  };
+
+  const handleUnsend = async (messageId: string) => {
+    setUnsendingId(messageId);
+    try {
+      await unsendMessage(messageId);
+    } catch (err) {
+      console.error("Failed to unsend message:", err);
+      setError("Failed to unsend message. Please try again.");
+    } finally {
+      setUnsendingId(null);
     }
   };
 
@@ -205,88 +411,209 @@ export default function ChatBox({
                 );
               }
 
+              // Unsent tombstone
+              if (msg.unsent) {
+                return (
+                  <div
+                    key={msg.id || idx}
+                    className={`flex w-full ${isMe ? "justify-end" : "justify-start"}`}
+                  >
+                    <p className="text-xs italic text-slate-400 px-3 py-1.5 rounded-2xl border border-dashed border-slate-200 bg-slate-50">
+                      {isMe ? "You unsent a message" : "Message was unsent"}
+                    </p>
+                  </div>
+                );
+              }
+
               return (
                 <div
                   key={msg.id || idx}
-                  className={`flex flex-col w-full ${isMe ? "items-end" : "items-start"}`}
+                  className={`flex flex-col w-full group ${isMe ? "items-end" : "items-start"}`}
                 >
                   <div
                     className={`flex flex-col max-w-[85%] ${isMe ? "items-end" : "items-start"}`}
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      {!isMe && msg.senderRole === "client" && role === "admin" ? (
-                        <Avatar className="h-5 w-5 border border-slate-200 bg-white shadow-sm">
-                          <AvatarFallback className="bg-blue-50 text-[9px] font-semibold tracking-wide text-blue-700">
-                            {getClientInitials(msg.senderName)}
-                          </AvatarFallback>
-                        </Avatar>
-                      ) : !isMe && msg.senderRole === "admin" ? (
-                        <>
-                          <Badge
-                            variant="outline"
-                            className="text-[9px] h-4 py-0 px-1.5 bg-blue-50 text-blue-700 border-blue-200"
-                          >
-                            Admin
-                          </Badge>
+                      {isMe ? (
+                        <div className="flex items-center gap-1.5 order-2">
+                          <Avatar className="h-4 w-4 border border-slate-100 bg-white order-2">
+                            <AvatarFallback className="bg-blue-50 text-[7px] font-bold text-blue-700">
+                              {role === "admin" ? "AD" : getClientInitials(msg.senderName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs font-semibold text-gray-600 order-1">
+                            {role === "admin" ? msg.senderName : "You"}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          {msg.senderRole === "client" ? (
+                            <Avatar className="h-4 w-4 border border-slate-100 bg-white">
+                              <AvatarFallback className="bg-blue-50 text-[7px] font-bold text-blue-700">
+                                {getClientInitials(msg.senderName)}
+                              </AvatarFallback>
+                            </Avatar>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="text-[8px] h-3.5 py-0 px-1 bg-blue-50 text-blue-700 border-blue-200"
+                            >
+                              Admin
+                            </Badge>
+                          )}
                           <span className="text-xs font-semibold text-gray-600">
                             {msg.senderName}
                           </span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-xs font-semibold text-gray-600">
-                            {isMe ? (role === "admin" ? msg.senderName : "You") : msg.senderName}
-                          </span>
-                        </>
+                        </div>
                       )}
-                      <span className="text-[10px] text-gray-400 flex items-center gap-1 ml-1">
-                        <Clock className="w-3 h-3" />
+                      <span className={`text-[10px] text-gray-400 flex items-center gap-1 ${isMe ? "mr-1 order-1" : "ml-1"}`}>
+                        <Clock className="w-2.5 h-2.5" />
                         {formatMessageTime(msg)}
                       </span>
                     </div>
 
-                    <div
+                      <div
                       className={`px-3.5 py-2.5 text-[14px] shadow-sm ${
                         isMe
                           ? "bg-blue-600 text-white rounded-2xl rounded-tr-sm"
                           : "bg-gray-100 text-gray-800 rounded-2xl rounded-tl-sm border border-gray-100"
                       }`}
                     >
-                      <p className="whitespace-pre-wrap leading-relaxed break-words">
-                        {msg.content}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
+                      {msg.content && (
+                        <p className="whitespace-pre-wrap leading-relaxed break-words">
+                          {msg.content}
+                        </p>
+                      )}
+
+                      {/* Attachments */}
+                      {msg.attachments && msg.attachments.length > 0 && (
+                        <div className="space-y-1">
+                          {msg.attachments.map((att, attIdx) => (
+                            <AttachmentBubble key={attIdx} attachment={att} isMe={isMe} />
+                          ))}
+                        </div>
+                      )}
+
+                        {isMe && (
+                          <div className="flex justify-end mt-1.5 -mb-0.5">
+                            {msg.isRead ? (
+                              <div className="flex items-center gap-1 group/seen bg-white/10 rounded-full px-1.5 py-0.5 ml-auto translate-x-1">
+                                <CheckCheck className="w-3 h-3 text-white" strokeWidth={3} />
+                                <span className="text-[8px] font-bold text-white uppercase tracking-tighter">
+                                  {role === "client" ? `Seen` : `Seen`}
+                                </span>
+                              </div>
+                            ) : (
+                              <Check className="w-3 h-3 text-white/50 ml-auto" strokeWidth={3} />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>                    {/* Unsend button — visible on hover for own messages only, within 24 hours */}
+                    {isMe && !msg.unsent && (() => {
+                      const sentAt = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date((msg.createdAt as any) ?? 0);
+                      const within24h = Date.now() - sentAt.getTime() < 24 * 60 * 60 * 1000;
+                      return within24h ? (
+                        <button
+                          type="button"
+                          onClick={() => msg.id && handleUnsend(msg.id)}
+                          disabled={unsendingId === msg.id}
+                          className="invisible group-hover:visible flex items-center gap-1 text-[10px] text-slate-400 hover:text-red-500 transition-colors mt-0.5 cursor-pointer disabled:opacity-50"
+                          title="Unsend message"
+                        >
+                          <Trash2 className="w-2.5 h-2.5" />
+                          {unsendingId === msg.id ? "Unsending…" : "Unsend"}
+                        </button>
+                      ) : null;
+                    })()}                  </div>
+                );
             })
           )}
         </div>
       </CardContent>
 
       <CardFooter className="p-3 bg-white border-t rounded-b-lg">
-        <form onSubmit={handleSendMessage} className="flex w-full gap-2 items-end">
-          <TextareaAutosize
-            placeholder={
-              role === "admin" ? "Message client..." : "Message admin..."
-            }
-            value={newMessage}
-            disabled={loading}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            minRows={2}
-            maxRows={10}
-            className="flex-1 w-full rounded-xl px-4 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-y-auto text-sm transition-all"
-          />
-          <Button
-            type="submit"
-            size="icon"
-            disabled={!newMessage.trim() || loading}
-            className="rounded-full bg-blue-600 hover:bg-blue-700 transition-colors h-10 w-10 flex-shrink-0 mb-1"
-          >
-            <Send className="w-[18px] h-[18px] ml-0.5" />
-          </Button>
-        </form>
+        <div className="flex flex-col gap-2 w-full">
+          {/* Pending file preview */}
+          {pendingFile && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 border border-blue-100">
+              {pendingFile.type.startsWith("image/") ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={URL.createObjectURL(pendingFile)}
+                  alt={pendingFile.name}
+                  className="h-10 w-10 rounded object-cover border border-blue-200 flex-shrink-0"
+                />
+              ) : (
+                (() => { const PendingIcon = getFileIcon(pendingFile.type); return <PendingIcon className="h-8 w-8 text-blue-500 flex-shrink-0" />; })()
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-slate-700 truncate">{pendingFile.name}</p>
+                <p className="text-[10px] text-slate-500">{(pendingFile.size / 1024).toFixed(1)} KB</p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-slate-400 hover:text-slate-600 flex-shrink-0"
+                onClick={() => setPendingFile(null)}
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
+          <form onSubmit={handleSendMessage} className="flex w-full gap-2 items-end">
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPT_ATTR}
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            {/* Attach file button */}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              disabled={uploading || loading}
+              onClick={() => fileInputRef.current?.click()}
+              className="h-10 w-10 flex-shrink-0 mb-1 text-slate-400 hover:text-slate-600 transition-colors"
+              title="Attach file (images, PDF, Word, Excel, PowerPoint)"
+            >
+              <Paperclip className="w-5 h-5" />
+            </Button>
+            <div className="flex-1 relative flex items-end">
+              <TextareaAutosize
+                placeholder={
+                  role === "admin" ? "Message client..." : "Message admin..."
+                }
+                value={newMessage}
+                disabled={loading || uploading}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                minRows={1}
+                maxRows={10}
+                className="flex-1 w-full rounded-xl pl-4 pr-10 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden text-sm transition-all"
+              />
+              <div className="absolute right-2 bottom-2.5">
+                <EmojiPicker onEmojiSelect={(emoji) => setNewMessage((prev) => prev + emoji)} />
+              </div>
+            </div>
+            <Button
+              type="submit"
+              size="icon"
+              disabled={(!newMessage.trim() && !pendingFile) || loading || uploading}
+              className="rounded-full bg-blue-600 hover:bg-blue-700 transition-colors h-10 w-10 flex-shrink-0 mb-1"
+            >
+              {uploading ? (
+                <Loader2 className="w-[18px] h-[18px] animate-spin" />
+              ) : (
+                <Send className="w-[18px] h-[18px] ml-0.5" />
+              )}
+            </Button>
+          </form>
+        </div>
       </CardFooter>
     </Card>
   );

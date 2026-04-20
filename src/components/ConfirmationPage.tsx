@@ -67,11 +67,11 @@ export default function ConfirmationPage({
                   If you have any inquiries, kindly email us at:
                 </p>
                 <a 
-                  href="mailto:pgc.upvisayas@up.edu.ph"
+                  href="mailto:sequencing.pgc.upvisayas@up.edu.ph"
                   className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors"
                 >
                   <Mail className="w-4 h-4" />
-                  pgc.upvisayas@up.edu.ph
+                  sequencing.pgc.upvisayas@up.edu.ph
                 </a>
               </div>
             )}

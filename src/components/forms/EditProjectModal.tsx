@@ -27,8 +27,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Pencil, Trash2, FileEdit, FileText, Banknote, Briefcase, Save } from "lucide-react";
 import { Project } from "@/types/Project";
-import { db } from "@/lib/firebase";
-import { doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
+import { db, storage } from "@/lib/firebase";
+import { deleteDoc, doc, getDoc, setDoc } from "firebase/firestore";
+import { ref, listAll, deleteObject } from "firebase/storage";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -157,7 +158,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
     } else {
       setServiceRequestedInput("");
     }
-  }, [isOpen, project.pid, form]); // Added project.pid to update when project changes
+  }, [isOpen, project.pid]); // Added project.pid to update when project changes
 
   const onSubmit = async (data: AdminProjectData) => {
     setIsLoading(true);
@@ -254,6 +255,17 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       const projectDoc = await getDoc(projectRef);
       const projectData = projectDoc.data();
 
+      // Delete associated Storage folders
+      for (const basePath of [`serviceReports/${project.pid}`, `client-form-submissions/${project.pid}`]) {
+        try {
+          const folderRef = ref(storage, basePath);
+          const listRes = await listAll(folderRef);
+          await Promise.all(listRes.items.map((item) => deleteObject(item)));
+        } catch (storageErr) {
+          console.warn(`Could not delete storage folder ${basePath}:`, storageErr);
+        }
+      }
+
       await deleteDoc(projectRef);
 
       // Log the activity
@@ -285,7 +297,12 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
           <Pencil className="h-4 w-4" />
         </Button>
       </DialogTrigger>
@@ -734,6 +751,7 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
                 </FormItem>
               )}
             />
+
             <Separator className="my-4" />
 
             <div className="flex justify-between items-center pt-2">

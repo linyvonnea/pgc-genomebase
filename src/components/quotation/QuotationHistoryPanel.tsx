@@ -9,7 +9,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FileTextIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { FileTextIcon, CheckCircle2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -36,21 +37,24 @@ export function QuotationHistoryPanel({
   showCheckboxes = false 
 }: QuotationHistoryPanelProps) {
   const [selectedQuotationId, setSelectedQuotationId] = useState<string | null>(null);
-  
-  const hasInquiryId = !!(Array.isArray(inquiryId) 
-    ? inquiryId.length > 0 
-    : (inquiryId && typeof inquiryId === 'string' && inquiryId.trim().length > 0));
-  const hasClientName = !!(clientName && typeof clientName === 'string' && clientName.trim().length > 0);
-  const shouldFetch = !!(hasInquiryId || hasClientName);
+
+  const normalizedInquiryId = Array.isArray(inquiryId) ? inquiryId[0] : inquiryId;
+  const hasInquiryId: boolean =
+    typeof normalizedInquiryId === "string" && normalizedInquiryId.trim().length > 0;
+  const hasClientName: boolean =
+    typeof clientName === "string" && clientName.trim().length > 0;
+  const shouldFetch: boolean = hasInquiryId || hasClientName;
   
   // Prioritize inquiryId if available, otherwise use clientName
   const useInquiryId = hasInquiryId;
   
   const { data: history = [], isLoading, error, isFetched } = useQuery<QuotationRecord[]>({
-    queryKey: useInquiryId ? ["quotationHistory", "inquiry", inquiryId] : ["quotationHistory", "client", clientName] as (string | undefined)[],
+    queryKey: useInquiryId
+      ? ["quotationHistory", "inquiry", normalizedInquiryId]
+      : ["quotationHistory", "client", clientName],
     queryFn: () => {
       if (useInquiryId) {
-        return getQuotationsByInquiryId(inquiryId!);
+        return getQuotationsByInquiryId(normalizedInquiryId!);
       } else if (hasClientName) {
         return getQuotationsByClientName(clientName!);
       }
@@ -111,7 +115,14 @@ export function QuotationHistoryPanel({
                 </div>
               )}
               <div className="flex-1">
-                <div className="font-medium text-sm">{quote.referenceNumber}</div>
+                <div className="flex items-center gap-2">
+                  <div className="font-medium text-sm">{quote.referenceNumber}</div>
+                  {quote.selectedForProject && (
+                    <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white text-xs px-1 py-0.5 flex items-center justify-center rounded-full w-5 h-5">
+                      <CheckCircle2 className="w-4 h-4" />
+                    </Badge>
+                  )}
+                </div>
                 <div className="text-xs text-muted-foreground">
                   Issued: {new Date(quote.dateIssued).toLocaleString()}
                 </div>

@@ -50,7 +50,13 @@ export function useMessageNotifications() {
             viewed: viewedRef.current.has(docSnap.id),
           };
         })
-        .filter((n) => n.unreadCount > 0 || !!n.lastMessageAt)
+        .filter((n) => {
+          // Hide manually dismissed threads from this recent list
+          const threadRaw = snapshot.docs.find(d => d.id === n.inquiryId)?.data() as any;
+          if (threadRaw?.dismissedByAdmin === true) return false;
+          
+          return n.unreadCount > 0 || !!n.lastMessageAt;
+        })
         .slice(0, 15); // limit to recent/unread to avoid huge list
 
       const total = threads.reduce((sum, t) => sum + t.unreadCount, 0);

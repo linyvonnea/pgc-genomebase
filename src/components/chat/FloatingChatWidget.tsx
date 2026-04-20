@@ -17,6 +17,25 @@ import useAuth from "@/hooks/useAuth";
 import { subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
 import { getClientInitials } from "@/lib/chatUtils";
+import { startPresence, subscribeToAnyAdminOnline } from "@/services/presenceService";
+import usePresenceStatus from "@/hooks/usePresenceStatus";
+import PresenceIndicator from "@/components/chat/PresenceIndicator";
+
+type NavigatorWithBadge = Navigator & {
+  setAppBadge?: (contents?: number) => Promise<void>;
+  clearAppBadge?: () => Promise<void>;
+};
+
+function base64ToUint8Array(base64: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64.length % 4)) % 4);
+  const normalized = (base64 + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(normalized);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
 
 interface FloatingChatWidgetProps {
   inquiryId: string;
@@ -36,6 +55,37 @@ export default function FloatingChatWidget({
   const pathname = usePathname();
   const { user } = useAuth();
   const [inquiryData, setInquiryData] = useState<Inquiry | null>(null);
+  const [lastNotifiedUnread, setLastNotifiedUnread] = useState(0);
+
+  // ---- Presence: client keyed by "client_{inquiryId}", admin by email ----
+  const clientPresenceId = `client_${inquiryId}`;
+  const adminPresenceId = user?.email ?? null;
+
+  // Subscribe to the other party's presence
+  // Admin view → watch the client's presence key
+  // Client view → handled separately via subscribeToAnyAdminOnline
+  const clientPresence = usePresenceStatus(role === "admin" ? clientPresenceId : null);
+
+  // For client view: subscribe to whether any admin is online
+  const [supportOnline, setSupportOnline] = useState(false);
+  useEffect(() => {
+    if (role !== "client") return;
+    return subscribeToAnyAdminOnline((online) => setSupportOnline(online));
+  }, [role]);
+
+  // Publish own presence
+  useEffect(() => {
+    if (role === "client") {
+      // Clients are identified by their inquiryId
+      return startPresence(clientPresenceId, "client");
+    }
+    // Admins: presence is already published by AdminChatWidget;
+    // publish here as fallback (idempotent — same key, same heartbeat behaviour)
+    if (adminPresenceId) {
+      return startPresence(adminPresenceId, "admin");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role, clientPresenceId, adminPresenceId]);
 
   useEffect(() => {
     if (!inquiryId) return;
@@ -99,6 +149,76 @@ export default function FloatingChatWidget({
     return () => unsubscribe();
   }, [inquiryId, role, isOpen, user]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (role !== "client") return;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    if (Notification.permission !== "granted") return;
+
+    const publicKey = process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY;
+    if (!publicKey) return;
+
+    const subscribe = async () => {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const existing = await registration.pushManager.getSubscription();
+        const subscription =
+          existing ||
+          (await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: base64ToUint8Array(publicKey) as unknown as BufferSource,
+          }));
+
+        await fetch("/api/push/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            threadId: inquiryId,
+            role: "client",
+            subscriberId: user?.email || inquiryData?.email || "unknown-client",
+            subscription: subscription.toJSON(),
+          }),
+        });
+      } catch (error) {
+        console.error("Push subscription failed:", error);
+      }
+    };
+
+    subscribe();
+  }, [inquiryData?.email, inquiryId, role, user?.email]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (role !== "client") return;
+
+    const nav = navigator as NavigatorWithBadge;
+    if (typeof nav.setAppBadge === "function" || typeof nav.clearAppBadge === "function") {
+      if (unreadCount > 0 && typeof nav.setAppBadge === "function") {
+        nav.setAppBadge(unreadCount).catch(() => {});
+      }
+      if (unreadCount === 0 && typeof nav.clearAppBadge === "function") {
+        nav.clearAppBadge().catch(() => {});
+      }
+    }
+
+    // Foreground web notification (while app/browser tab is open but hidden).
+    // Background push notifications when app is fully closed still need Web Push setup.
+    if (
+      document.visibilityState === "hidden" &&
+      unreadCount > lastNotifiedUnread &&
+      Notification.permission === "granted"
+    ) {
+      new Notification("New message from PGC Visayas", {
+        body: `You have ${unreadCount} unread message${unreadCount > 1 ? "s" : ""}.`,
+        icon: "/assets/pgc-logo.png",
+        badge: "/assets/pgc-logo.png",
+        tag: `inquiry-${inquiryId}`,
+      });
+    }
+
+    setLastNotifiedUnread(unreadCount);
+  }, [inquiryId, lastNotifiedUnread, role, unreadCount]);
+
   const toggleOpen = () => {
     const newOpenState = !isOpen;
     
@@ -108,6 +228,12 @@ export default function FloatingChatWidget({
     }
     
     setIsOpen(newOpenState);
+
+    if (newOpenState && role === "client" && typeof window !== "undefined") {
+      if ("Notification" in window && Notification.permission === "default") {
+        Notification.requestPermission().catch(() => {});
+      }
+    }
 
     // If opening, mark as read immediately
     if (newOpenState && inquiryId) {
@@ -154,8 +280,8 @@ export default function FloatingChatWidget({
             <div className="flex items-center justify-between bg-blue-600 px-4 py-3 text-white">
               <div className="flex items-center gap-3">
                 {role === "admin" ? (
-                  <Avatar className="h-10 w-10 border border-blue-500 bg-white shadow-sm">
-                    <AvatarFallback className="bg-blue-50 text-sm font-semibold tracking-wide text-blue-700">
+                  <Avatar className="h-10 w-10 border border-blue-500 bg-white shadow-sm shrink-0">
+                    <AvatarFallback className="bg-blue-50 text-base font-bold tracking-tight text-blue-700">
                       {getClientInitials(inquiryData?.name)}
                     </AvatarFallback>
                   </Avatar>
@@ -168,18 +294,22 @@ export default function FloatingChatWidget({
                   <span className="font-bold text-sm tracking-tight leading-tight">
                     {role === "admin" ? (inquiryData?.name || "Client") : "PGC Visayas Support"}
                   </span>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 mt-0.5">
                     {role === "admin" ? (
-                      <span className="text-[10px] font-medium text-blue-100 uppercase tracking-widest line-clamp-1">
-                        {inquiryData?.affiliation || "Inquiry Request"}
-                      </span>
+                      <PresenceIndicator
+                        isOnline={clientPresence.isOnline}
+                        lastSeen={clientPresence.lastSeen}
+                        offlineLabel={inquiryData?.affiliation || "Inquiry Request"}
+                        variant="light"
+                      />
                     ) : (
-                      <>
-                        <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
-                        <span className="text-[10px] font-medium text-blue-100 uppercase tracking-widest">
-                          Online
-                        </span>
-                      </>
+                      <PresenceIndicator
+                        isOnline={supportOnline}
+                        lastSeen={null}
+                        onlineLabel="Support Available"
+                        offlineLabel="Support Offline"
+                        variant="light"
+                      />
                     )}
                   </div>
                 </div>
@@ -193,7 +323,12 @@ export default function FloatingChatWidget({
             </div>
 
             <div className="h-[400px] w-full bg-white flex flex-col">
-              <ChatBox inquiryId={inquiryId} role={role} variant="floating" />
+              <ChatBox
+                inquiryId={inquiryId}
+                role={role}
+                variant="floating"
+                clientName={inquiryData?.name}
+              />
             </div>
           </motion.div>
         )}
@@ -203,7 +338,11 @@ export default function FloatingChatWidget({
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={toggleOpen}
-        className="relative flex items-center justify-center p-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+        className={`relative flex items-center justify-center p-4 text-white rounded-full shadow-lg transition-colors ${
+          !isOpen && unreadCount > 0
+            ? "bg-blue-600 hover:bg-blue-700 ring-4 ring-blue-300 ring-offset-1 animate-pulse"
+            : "bg-blue-600 hover:bg-blue-700"
+        }`}
       >
         {isOpen ? (
           <ChevronDown className="w-6 h-6" />
@@ -213,9 +352,13 @@ export default function FloatingChatWidget({
 
         {/* Unread Badge outside */}
         {!isOpen && unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-sm ring-2 ring-white">
-            {unreadCount > 9 ? "9+" : unreadCount}
-          </span>
+          <>
+            <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-sm ring-2 ring-white z-10">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+            {/* Outer ping ring for flashing effect */}
+            <span className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-red-400 animate-ping opacity-60 pointer-events-none" />
+          </>
         )}
       </motion.button>
     </div>

@@ -102,8 +102,12 @@ export interface ThreadMessage {
   
   // Metadata
   isRead: boolean;
+  // Reactions: mapping from emoji string to array of userIds/emails who reacted
+  reactions?: Record<string, string[]>;
   readAt?: Timestamp;
   readBy?: string;
+  /** Soft-delete: set to true when sender unsends a message. Content is blanked. */
+  unsent?: boolean;
   
   // Timestamps
   createdAt: Timestamp;
@@ -132,6 +136,12 @@ export interface QuotationThread {
     admin: number;
     client: number;
   };
+  adminTextMessageCount?: number;
+  /** Set to true once the one-time first-admin-message email has been sent. */
+  firstAdminChatEmailSent?: boolean;
+  
+  // Visibility
+  dismissedByAdmin?: boolean;
   
   // Assignment
   assignedTo?: string;         // Admin email/ID

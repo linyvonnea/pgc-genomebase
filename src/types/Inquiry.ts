@@ -3,7 +3,7 @@ export interface Inquiry {
   createdAt: Date;
   name: string;
   isApproved: boolean;
-  status: 'Pending' | 'Ongoing Quotation' | 'Approved Client' | 'Quotation Only' | 'Service Not Offered';
+  status: 'Pending' | 'Ongoing Quotation' | 'Approved Client' | 'Quotation Only' | 'Service Not Offered' | 'Cancelled' | 'In Progress';
   affiliation: string;
   designation: string;
   email?: string;
@@ -18,8 +18,17 @@ export interface Inquiry {
   methodologyFileUrl?: string | null;
   sampleCount?: number | null;
   workflowType?: 'complete-bioinfo' | 'complete' | 'individual' | null;
-  bioinfoOptions?: ('genome-assembly' | 'metabarcoding' | 'pre-processing' | 'transcriptomics' | 'phylogenetics' | 'assembly-annotation')[] | null;
+  bioinformaticsDetails?: Record<string, any> | null;
+  bioinfoOptions?: ('dna-extraction' | 'quantification' | 'library-preparation' | 'sequencing' | 'bioinformatics-analysis' | 'genome-assembly' | 'metabarcoding' | 'pre-processing' | 'transcriptomics' | 'phylogenetics' | 'assembly-annotation' | 'whole-genome-assembly' | 'metabarcoding-downstream' | 'metabarcoding-preprocessing' | 'whole-genome-assembly-annotation')[] | null;
   individualAssayDetails?: string | null;
+  
+  // Research and Collaboration - New fields
+  molecularServicesBudget?: string | null;
+  plannedSampleCount?: string | null;
+
+  // Retail Sales specific fields
+  retailItems?: string[] | null;
+  retailItemDetails?: Record<string, string> | null;
   
   // Legacy Service-specific fields
   workflows?: string[];
@@ -27,6 +36,7 @@ export interface Inquiry {
   projectBackground?: string | null;
   projectBudget?: string | null;
   specificTrainingNeed?: string | null;
+  trainingPrograms?: string[] | null;
   targetTrainingDate?: string | null;
   numberOfParticipants?: number | null;
   
@@ -34,6 +44,11 @@ export interface Inquiry {
   haveSubmitted?: boolean;
   hasOpenedQuotation?: boolean;
   hasLoggedIn?: boolean;
+
+  // Cancellation metadata
+  cancelledAt?: Date | null;
+  cancelledBy?: 'client' | 'admin' | null;
+  cancellationReason?: string | null;
 
   // Client info for chat/branding
   clientInfo?: {
