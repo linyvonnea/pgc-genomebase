@@ -32,7 +32,7 @@ const CLIENT_COLORS = [
 ];
 
 // Hook to track count of projects with unacknowledged form submissions
-function useProjectFormNotifications() {
+export function useProjectFormNotifications() {
   const [projectsWithUnacknowledged, setProjectsWithUnacknowledged] = useState<Set<string>>(new Set());
 
   useEffect(() => {
