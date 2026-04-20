@@ -201,25 +201,28 @@ export default function FAQPage() {
       </div>
 
       {/* Header Section */}
-      <div className="bg-blue-600 text-white py-12 mb-8 shadow-inner relative overflow-hidden">
+      <div className="bg-blue-600 text-white py-8 mb-6 shadow-inner relative overflow-hidden">
         {/* Background Decoration */}
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-blue-500 rounded-full opacity-20 blur-3xl"></div>
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-indigo-500 rounded-full opacity-20 blur-3xl"></div>
         
         <div className="container mx-auto px-4 max-w-5xl text-center relative z-10">
-          <div className="flex flex-col items-center justify-center mb-6 pt-8 md:pt-0">
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+          <div className="flex flex-col items-center justify-center mb-4 pt-10 md:pt-4">
+            <div className="mb-2 p-3 bg-white/10 rounded-full backdrop-blur-sm border border-white/20">
+              <HelpCircle className="w-8 h-8 md:w-10 md:h-10 text-white animate-pulse" />
+            </div>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
               Frequently Asked Questions
             </h1>
           </div>
           
           {/* Search Bar */}
           <div className="max-w-xl mx-auto relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-300 w-5 h-5 group-focus-within:text-white transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-300 w-4 h-4 group-focus-within:text-white transition-colors" />
             <input 
               type="text"
               placeholder="Search for questions or keywords..."
-              className="w-full bg-blue-700/50 border border-blue-400/50 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-blue-700/80 transition-all shadow-lg"
+              className="w-full bg-blue-700/50 border border-blue-400/50 rounded-xl py-3 pl-10 pr-4 text-white text-sm placeholder:text-blue-200 focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-blue-700/80 transition-all shadow-lg"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
