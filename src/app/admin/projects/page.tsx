@@ -4,8 +4,8 @@
 
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { columns, useProjectFormNotifications } from "./columns"
+import { useEffect, useState } from "react";
+import { columns } from "./columns"
 import { DataTable } from "./data-table"
 import { Project } from "@/types/Project"
 import { projectSchema } from "@/schemas/projectSchema"
@@ -49,18 +49,6 @@ function ProjectPageContent() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { adminInfo } = useAuth();
   const { canCreate } = usePermissions(adminInfo?.role);
-  const projectsWithUnacknowledged = useProjectFormNotifications();
-  const unreadCount = projectsWithUnacknowledged.size;
-
-  // Sort: projects with unacknowledged uploads float to top
-  const sortedData = useMemo(() => {
-    if (projectsWithUnacknowledged.size === 0) return data;
-    return [...data].sort((a, b) => {
-      const aFlagged = projectsWithUnacknowledged.has(a.pid ?? "") ? 0 : 1;
-      const bFlagged = projectsWithUnacknowledged.has(b.pid ?? "") ? 0 : 1;
-      return aFlagged - bFlagged;
-    });
-  }, [data, projectsWithUnacknowledged]);
 
   // Fetch data and update state
   const fetchData = async () => {
@@ -129,7 +117,7 @@ function ProjectPageContent() {
         {/* Data Table with instant update on add/edit/delete */}
         <DataTable
           columns={columns}
-          data={sortedData}
+          data={data}
           meta={{ onSuccess: fetchData }}
           onRowClick={(row) => setSelectedProject(row)}
         />

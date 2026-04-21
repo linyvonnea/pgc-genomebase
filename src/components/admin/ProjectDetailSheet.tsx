@@ -294,23 +294,30 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                   ) : (
                     <div className="space-y-1 ml-5">
                       {quotations.map((q) => (
-                        <div key={q.id} className="flex items-center justify-between gap-2 py-1 border-b border-slate-50 last:border-0">
+                        <div key={q.id} className="flex items-center gap-2 py-1 border-b border-slate-50 last:border-0">
                           <div className="flex items-center gap-2 min-w-0">
                             <span className="text-xs font-mono text-slate-600">{q.referenceNumber}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 text-xs"
+                              asChild
+                            >
+                              <a
+                                href={`/admin/quotations/${q.referenceNumber}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1"
+                              >
+                                View <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </Button>
                             {q.selectedForProject && q.status !== "cancelled" ? (
                               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-medium shrink-0">Selected</span>
                             ) : q.status === "cancelled" ? (
                               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-700 font-medium shrink-0">Cancelled</span>
                             ) : null}
                           </div>
-                          <a
-                            href={`/admin/quotations/${q.referenceNumber}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
-                          >
-                            View <ExternalLink className="h-3 w-3" />
-                          </a>
                         </div>
                       ))}
                     </div>
@@ -341,19 +348,26 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                           csStatus === "cancelled" ? "Cancelled" :
                           "Processing";
                         return (
-                          <div key={cs.id} className="flex items-center justify-between gap-2 py-1 border-b border-slate-50 last:border-0">
+                          <div key={cs.id} className="flex items-center gap-2 py-1 border-b border-slate-50 last:border-0">
                             <div className="flex items-center gap-2 min-w-0">
                               <span className="text-xs font-mono text-slate-600">{cs.chargeSlipNumber}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-xs"
+                                asChild
+                              >
+                                <a
+                                  href={`/admin/charge-slips/${cs.chargeSlipNumber}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1"
+                                >
+                                  View <ExternalLink className="h-3 w-3" />
+                                </a>
+                              </Button>
                               <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium shrink-0 ${csBadge}`}>{csLabel}</span>
                             </div>
-                            <a
-                              href={`/admin/charge-slips/${cs.chargeSlipNumber}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
-                            >
-                              View <ExternalLink className="h-3 w-3" />
-                            </a>
                           </div>
                         );
                       })}
