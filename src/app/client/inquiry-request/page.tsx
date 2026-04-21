@@ -840,8 +840,8 @@ export default function QuotationRequestForm() {
                                     { id: "metabarcoding-downstream", label: "Metabarcoding with Downstream Analysis" },
                                     { id: "metabarcoding-preprocessing", label: "Metabarcoding with Pre-processing Only" },
                                     { id: "transcriptomics", label: "Transcriptomics (QC to Annotation)" },
-                                    { id: "phylogenetics", label: "Phylogenetics (1 Marker)" },
-                                    { id: "whole-genome-assembly-annotation", label: "Whole Genome Assembly and Annotation" },
+                                    { id: "phylogenetics", label: "Phylogenetics (1 marker)" },
+                                    { id: "assembly-annotation", label: "Whole Genome Assembly and Annotation" }
                                   ].map((option) => (
                                     <div key={option.id} className="flex items-center space-x-3 p-2 bg-white rounded-lg border border-slate-100 hover:border-blue-200 transition-all shadow-sm">
                                       <input
