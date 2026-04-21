@@ -56,26 +56,8 @@ export function useProjectFormNotifications() {
   return projectsWithUnacknowledged;
 }
 
-// StatusCell: shows red blinking alert icon on "Ongoing" rows when client has unacknowledged form uploads
-function StatusCell({ projectId, status }: { projectId: string; status: string }) {
-  const [hasUnread, setHasUnread] = useState(false);
-
-  useEffect(() => {
-    if (status !== "Ongoing" || !projectId) return;
-
-    const q = query(
-      collection(db, "clientFormSubmissions"),
-      where("projectId", "==", projectId),
-      where("acknowledgedByAdmin", "==", false)
-    );
-
-    const unsub = onSnapshot(q, (snap) => {
-      setHasUnread(!snap.empty);
-    });
-
-    return () => unsub();
-  }, [projectId, status]);
-
+// StatusCell: status label only
+function StatusCell({ status }: { status: string }) {
   let color = "bg-gray-100 text-gray-800";
   let label: string = status || "";
   switch (status) {
@@ -105,21 +87,6 @@ function StatusCell({ projectId, status }: { projectId: string; status: string }
       <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border whitespace-nowrap ${color}`}>
         {label}
       </span>
-      {status === "Ongoing" && hasUnread && (
-        <TooltipProvider delayDuration={100}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="relative flex h-2.5 w-2.5 shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
-              </span>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="text-[10px]">
-              Client uploaded a new submission form
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
     </div>
   );
 }
@@ -286,7 +253,6 @@ export const columns: ColumnDef<Project>[] = [
     size: 110,
     cell: ({ row }) => (
       <StatusCell
-        projectId={row.original.pid ?? ""}
         status={row.original.status ?? ""}
       />
     ),
