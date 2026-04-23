@@ -273,9 +273,46 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                 Loading documents…
               </div>
             ) : (
+
               <div className="space-y-5">
 
-
+                {/* Inquiries */}
+                <div>
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <FileText className="h-3.5 w-3.5 text-purple-600" />
+                    <span className="text-xs font-semibold text-slate-700">Inquiries</span>
+                    <span className="text-[10px] text-slate-500">({linkedInquiries.length})</span>
+                  </div>
+                  {linkedInquiries.length === 0 ? (
+                    <p className="text-xs text-slate-400 ml-5">No linked inquiries</p>
+                  ) : (
+                    <div className="space-y-1 ml-5">
+                      {linkedInquiries.map((inq) => {
+                        const inqStatus = inq.status ?? "Pending";
+                        const inqColor =
+                          inqStatus === "Approved Client" ? "bg-emerald-50 border-emerald-200 text-emerald-700" :
+                          inqStatus === "Cancelled" ? "bg-rose-50 border-rose-200 text-rose-700" :
+                          inqStatus === "Ongoing Quotation" ? "bg-amber-50 border-amber-200 text-amber-700" :
+                          "bg-blue-50 border-blue-200 text-blue-700";
+                        return (
+                          <div key={inq.id} className="flex items-center gap-2 py-1 border-b border-slate-50 last:border-0">
+                            <a
+                              href={`/admin/inquiry/${inq.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs font-mono text-blue-600 hover:underline hover:text-blue-700"
+                            >
+                              {inq.id}
+                            </a>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium shrink-0 ${inqColor}`}>
+                              {inqStatus}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
 
                 {/* Quotations */}
                 <div>
