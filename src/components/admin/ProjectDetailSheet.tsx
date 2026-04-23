@@ -273,6 +273,7 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                 Loading documents…
               </div>
             ) : (
+
               <div className="space-y-5">
 
 
