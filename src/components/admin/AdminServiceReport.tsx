@@ -252,9 +252,13 @@ Philippine Genome Center Visayas`.trim();
       ) : (
         <div className="space-y-1 ml-5">
           {reports.map((report) => {
-            const uploadedAt =
+            const uploadedAtDate =
               report.uploadedAt?.toDate
                 ? format(report.uploadedAt.toDate(), "MMM d, yyyy")
+                : "";
+            const uploadedAtTime =
+              report.uploadedAt?.toDate
+                ? format(report.uploadedAt.toDate(), "h:mm a")
                 : "";
             const isReceived = report.status === "received";
             const receivedDate =
@@ -278,9 +282,9 @@ Philippine Genome Center Visayas`.trim();
                     >
                       {report.fileName}
                     </a>
-                    {uploadedAt && (
-                      <span className="text-[10px] text-slate-400">
-                        {uploadedAt} · {report.uploadedByName}
+                    {uploadedAtDate && (
+                      <span className="text-[10px] text-slate-400 block">
+                        {uploadedAtDate} {uploadedAtTime && <span className="text-slate-400">{uploadedAtTime}</span>} · {report.uploadedByName}
                       </span>
                     )}
                     {isReceived ? (
