@@ -6,9 +6,63 @@
  * data transformation between Firestore documents and TypeScript objects.
  */
 
-import { collection, getDocs, query, orderBy, doc, getDoc, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, doc, getDoc, onSnapshot, updateDoc, serverTimestamp, where, documentId } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Inquiry } from "@/types/Inquiry";
+
+/**
+ * Helper to map Firestore document data to Inquiry object
+ */
+function mapDocToInquiry(id: string, data: any): Inquiry {
+  return {
+    id: id,
+    createdAt: data.createdAt?.toDate?.() ?? (data.createdAt ? new Date(data.createdAt) : new Date()),
+    name: data.name || "Unknown",
+    status: data.status || "Pending",
+    isApproved: data.isApproved || false,
+    affiliation: data.affiliation || "",
+    designation: data.designation || "",
+    email: data.email ?? "", 
+    
+    // Include new service selection fields
+    serviceType: data.serviceType || null,
+    species: data.species || null,
+    otherSpecies: data.otherSpecies || null,
+    researchOverview: data.researchOverview || null,
+    methodologyFileUrl: data.methodologyFileUrl || null,
+    sampleCount: data.sampleCount || null,
+    workflowType: data.workflowType || null,
+    bioinformaticsDetails: data.bioinformaticsDetails || null,
+    bioinfoOptions: data.bioinfoOptions || null,
+    individualAssayDetails: data.individualAssayDetails || null,
+    
+    // Retail projects fields
+    retailItems: data.retailItems || null,
+    retailItemDetails: data.retailItemDetails || null,
+    
+    // Legacy/Service-specific fields
+    workflows: data.workflows || [],
+    additionalInfo: data.additionalInfo || null,
+    projectBackground: data.projectBackground || null,
+    projectBudget: data.projectBudget || null,
+    molecularServicesBudget: data.molecularServicesBudget || null,
+    plannedSampleCount: data.plannedSampleCount || null,
+    specificTrainingNeed: data.specificTrainingNeed || null,
+    trainingPrograms: data.trainingPrograms || null,
+    targetTrainingDate: data.targetTrainingDate || null,
+    numberOfParticipants: data.numberOfParticipants || null,
+    
+    // System fields
+    haveSubmitted: data.haveSubmitted || false,
+    hasOpenedQuotation: data.hasOpenedQuotation || false,
+    hasLoggedIn: data.hasLoggedIn || false,
+    messageState: data.messageState || 'none',
+    unreadMessageCount: data.unreadMessageCount || 0,
+    cancelledAt: data.cancelledAt?.toDate?.() ?? (data.cancelledAt ? new Date(data.cancelledAt) : null),
+    cancelledBy: data.cancelledBy || null,
+    cancellationReason: data.cancellationReason || null
+  };
+}
 
 /**
  * Retrieves all inquiries from Firestore, ordered by creation date (newest first)
@@ -35,73 +89,7 @@ export async function getInquiries(): Promise<Inquiry[]> {
     
     // Process each document in the query results
     querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      
-      // Handle Firestore Timestamp conversion to JavaScript Date
-      // Firestore stores dates as Timestamp objects with a toDate() method
-      let createdAt = data.createdAt;
-      if (data.createdAt && typeof data.createdAt.toDate === 'function') {
-        // Standard Firestore Timestamp object
-        createdAt = data.createdAt.toDate();
-      } else if (data.createdAt && typeof data.createdAt === 'string') {
-        // Handle string dates (edge case)
-        createdAt = new Date(data.createdAt);
-      } else {
-        // Fallback to current date if no valid date found
-        createdAt = new Date();
-      }
-      
-      // Create inquiry object with proper defaults to ensure type safety
-      // Uses fallback values for any missing or undefined fields
-      const inquiry: Inquiry = {
-        id: doc.id,
-        createdAt: createdAt,
-        name: data.name || 'Unknown',
-        status: data.status || 'Pending',
-        isApproved: data.isApproved || false,
-        affiliation: data.affiliation || '',
-        designation: data.designation || '',
-        email: data.email || undefined,
-        
-        // Include new service selection fields
-        serviceType: data.serviceType || null,
-        species: data.species || null,
-        otherSpecies: data.otherSpecies || null,
-        researchOverview: data.researchOverview || null,
-        methodologyFileUrl: data.methodologyFileUrl || null,
-        sampleCount: data.sampleCount || null,
-        workflowType: data.workflowType || null,
-        bioinformaticsDetails: data.bioinformaticsDetails || null,
-        bioinfoOptions: data.bioinfoOptions || null,
-        individualAssayDetails: data.individualAssayDetails || null,
-        
-        // Retail projects fields
-        retailItems: data.retailItems || null,
-        retailItemDetails: data.retailItemDetails || null,
-        
-        // Legacy/Service-specific fields
-        workflows: data.workflows || [],
-        additionalInfo: data.additionalInfo || null,
-        projectBackground: data.projectBackground || null,
-        projectBudget: data.projectBudget || null,
-        molecularServicesBudget: data.molecularServicesBudget || null,
-        plannedSampleCount: data.plannedSampleCount || null,
-        specificTrainingNeed: data.specificTrainingNeed || null,
-        trainingPrograms: data.trainingPrograms || null,
-        targetTrainingDate: data.targetTrainingDate || null,
-        numberOfParticipants: data.numberOfParticipants || null,
-        
-        // System fields
-        haveSubmitted: data.haveSubmitted || false,
-        hasOpenedQuotation: data.hasOpenedQuotation || false,
-        hasLoggedIn: data.hasLoggedIn || false,
-        messageState: data.messageState || 'none',
-        unreadMessageCount: data.unreadMessageCount || 0,
-        cancelledAt: data.cancelledAt?.toDate?.() ?? (data.cancelledAt ? new Date(data.cancelledAt) : null),
-        cancelledBy: data.cancelledBy || null,
-        cancellationReason: data.cancellationReason || null
-      };
-      inquiries.push(inquiry);
+      inquiries.push(mapDocToInquiry(doc.id, doc.data()));
     });
     
     // Additional sorting in memory as a backup (Firestore query should handle this)
@@ -136,61 +124,34 @@ export async function getInquiryById(id: string): Promise<Inquiry> {
     // Check if document exists in Firestore
     if (!snap.exists()) throw new Error("Inquiry not found");
 
-    const data = snap.data();
-
-    // Transform Firestore document to Inquiry object
-    // Uses optional chaining and nullish coalescing for safe property access
-    return {
-      id: snap.id,
-      createdAt: data.createdAt?.toDate?.() ?? new Date(), // Handle Timestamp conversion safely
-      name: data.name || "Unknown",
-      status: data.status || "Pending",
-      isApproved: data.isApproved || false,
-      affiliation: data.affiliation || "",
-      designation: data.designation || "",
-      email: data.email ?? "", 
-      
-      // Include new service selection fields
-      serviceType: data.serviceType || null,
-      species: data.species || null,
-      otherSpecies: data.otherSpecies || null,
-      researchOverview: data.researchOverview || null,
-      methodologyFileUrl: data.methodologyFileUrl || null,
-      sampleCount: data.sampleCount || null,
-      workflowType: data.workflowType || null,
-      bioinformaticsDetails: data.bioinformaticsDetails || null,
-      bioinfoOptions: data.bioinfoOptions || null,
-      individualAssayDetails: data.individualAssayDetails || null,
-      
-      // Retail projects fields
-      retailItems: data.retailItems || null,
-      retailItemDetails: data.retailItemDetails || null,
-      
-      // Legacy/Service-specific fields
-      workflows: data.workflows || [],
-      additionalInfo: data.additionalInfo || null,
-      projectBackground: data.projectBackground || null,
-      projectBudget: data.projectBudget || null,
-      molecularServicesBudget: data.molecularServicesBudget || null,
-      plannedSampleCount: data.plannedSampleCount || null,
-      specificTrainingNeed: data.specificTrainingNeed || null,
-      trainingPrograms: data.trainingPrograms || null,
-      targetTrainingDate: data.targetTrainingDate || null,
-      numberOfParticipants: data.numberOfParticipants || null,
-      
-      // System fields
-      haveSubmitted: data.haveSubmitted || false,
-      hasOpenedQuotation: data.hasOpenedQuotation || false,
-      hasLoggedIn: data.hasLoggedIn || false,
-      messageState: data.messageState || 'none',
-      unreadMessageCount: data.unreadMessageCount || 0,
-      cancelledAt: data.cancelledAt?.toDate?.() ?? (data.cancelledAt ? new Date(data.cancelledAt) : null),
-      cancelledBy: data.cancelledBy || null,
-      cancellationReason: data.cancellationReason || null
-    };
+    return mapDocToInquiry(snap.id, snap.data());
   } catch (error) {
     console.error(`Failed to fetch inquiry ${id}:`, error);
     throw error;
+  }
+}
+
+/**
+ * Retrieves full Inquiry objects for a list of IDs.
+ * Supports up to 30 IDs due to Firestore 'in' query limitations.
+ */
+export async function getInquiriesByIds(ids: string[]): Promise<Inquiry[]> {
+  if (!ids || ids.length === 0) return [];
+
+  try {
+    const validIds = ids.filter(id => id && id.trim().length > 0);
+    if (validIds.length === 0) return [];
+
+    // Firestore 'in' query limit is 30.
+    const constrainedIds = validIds.slice(0, 30);
+    const inquiriesRef = collection(db, "inquiries");
+    const q = query(inquiriesRef, where(documentId(), "in", constrainedIds));
+    const querySnapshot = await getDocs(q);
+
+    return querySnapshot.docs.map(doc => mapDocToInquiry(doc.id, doc.data()));
+  } catch (error) {
+    console.error("Error fetching inquiries by IDs:", error);
+    return [];
   }
 }
 
@@ -215,50 +176,7 @@ export function subscribeToInquiryById(
         return;
       }
 
-      const data = snapshot.data();
-      
-      const inquiry: Inquiry = {
-        id: snapshot.id,
-        createdAt: data.createdAt?.toDate?.() ?? new Date(),
-        name: data.name || "Unknown",
-        status: data.status || "Pending",
-        isApproved: data.isApproved || false,
-        affiliation: data.affiliation || "",
-        designation: data.designation || "",
-        email: data.email ?? "", 
-        serviceType: data.serviceType || null,
-        species: data.species || null,
-        otherSpecies: data.otherSpecies || null,
-        researchOverview: data.researchOverview || null,
-        methodologyFileUrl: data.methodologyFileUrl || null,
-        sampleCount: data.sampleCount || null,
-        workflowType: data.workflowType || null,
-        bioinformaticsDetails: data.bioinformaticsDetails || null,
-        bioinfoOptions: data.bioinfoOptions || null,
-        individualAssayDetails: data.individualAssayDetails || null,
-        retailItems: data.retailItems || null,
-        retailItemDetails: data.retailItemDetails || null,
-        workflows: data.workflows || [],
-        additionalInfo: data.additionalInfo || null,
-        projectBackground: data.projectBackground || null,
-        projectBudget: data.projectBudget || null,
-        molecularServicesBudget: data.molecularServicesBudget || null,
-        plannedSampleCount: data.plannedSampleCount || null,
-        specificTrainingNeed: data.specificTrainingNeed || null,
-        trainingPrograms: data.trainingPrograms || null,
-        targetTrainingDate: data.targetTrainingDate || null,
-        numberOfParticipants: data.numberOfParticipants || null,
-        haveSubmitted: data.haveSubmitted || false,
-        hasOpenedQuotation: data.hasOpenedQuotation || false,
-        hasLoggedIn: data.hasLoggedIn || false,
-        messageState: data.messageState || 'none',
-        unreadMessageCount: data.unreadMessageCount || 0,
-        cancelledAt: data.cancelledAt?.toDate?.() ?? (data.cancelledAt ? new Date(data.cancelledAt) : null),
-        cancelledBy: data.cancelledBy || null,
-        cancellationReason: data.cancellationReason || null
-      };
-      
-      callback(inquiry);
+      callback(mapDocToInquiry(snapshot.id, snapshot.data()));
     },
     (error) => {
       console.error(`Error in inquiry subscription for ${id}:`, error);
@@ -285,60 +203,7 @@ export function subscribeToInquiries(
   return onSnapshot(
     q,
     (snapshot) => {
-      const inquiries: Inquiry[] = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        
-        // Handle Firestore Timestamp conversion
-        let createdAt = data.createdAt;
-        if (data.createdAt && typeof data.createdAt.toDate === 'function') {
-          createdAt = data.createdAt.toDate();
-        } else if (data.createdAt && typeof data.createdAt === 'string') {
-          createdAt = new Date(data.createdAt);
-        } else {
-          createdAt = new Date();
-        }
-        
-        return {
-          id: doc.id,
-          createdAt: createdAt,
-          name: data.name || 'Unknown',
-          status: data.status || 'Pending',
-          isApproved: data.isApproved || false,
-          affiliation: data.affiliation || '',
-          designation: data.designation || '',
-          email: data.email || undefined,
-          serviceType: data.serviceType || null,
-          species: data.species || null,
-          otherSpecies: data.otherSpecies || null,
-          researchOverview: data.researchOverview || null,
-          methodologyFileUrl: data.methodologyFileUrl || null,
-          sampleCount: data.sampleCount || null,
-          workflowType: data.workflowType || null,
-          bioinformaticsDetails: data.bioinformaticsDetails || null,
-          bioinfoOptions: data.bioinfoOptions || null,
-          individualAssayDetails: data.individualAssayDetails || null,
-          retailItems: data.retailItems || null,
-          retailItemDetails: data.retailItemDetails || null,
-          workflows: data.workflows || [],
-          additionalInfo: data.additionalInfo || null,
-          projectBackground: data.projectBackground || null,
-          projectBudget: data.projectBudget || null,
-          molecularServicesBudget: data.molecularServicesBudget || null,
-          plannedSampleCount: data.plannedSampleCount || null,
-          specificTrainingNeed: data.specificTrainingNeed || null,
-          trainingPrograms: data.trainingPrograms || null,
-          targetTrainingDate: data.targetTrainingDate || null,
-          numberOfParticipants: data.numberOfParticipants || null,
-          haveSubmitted: data.haveSubmitted || false,
-          hasOpenedQuotation: data.hasOpenedQuotation || false,
-          hasLoggedIn: data.hasLoggedIn || false,
-          messageState: data.messageState || 'none',
-          unreadMessageCount: data.unreadMessageCount || 0,
-          cancelledAt: data.cancelledAt?.toDate?.() ?? (data.cancelledAt ? new Date(data.cancelledAt) : null),
-          cancelledBy: data.cancelledBy || null,
-          cancellationReason: data.cancellationReason || null
-        };
-      });
+      const inquiries: Inquiry[] = snapshot.docs.map((doc) => mapDocToInquiry(doc.id, doc.data()));
       
       // Sort in memory as backup
       inquiries.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
