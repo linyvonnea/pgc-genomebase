@@ -275,8 +275,7 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
             ) : (
 
               <div className="space-y-5">
-
-                {/* Inquiries */}
+                {/* Inquiries - always above Quotations */}
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
                     <FileText className="h-3.5 w-3.5 text-purple-600" />
