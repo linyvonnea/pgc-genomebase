@@ -205,6 +205,21 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
             )}
           </section>
 
+          {/* ── Inquiry IDs ── */}
+          {iids.length > 0 && (
+            <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
+              <SectionHeader icon={<FileText className="h-4 w-4 text-purple-600" />} label="Inquiry IDs" count={iids.length} />
+              <Separator />
+              <div className="flex flex-wrap gap-2">
+                {iids.map((id) => (
+                  <Badge key={id} variant="outline" className="font-mono text-purple-700 border-purple-200 bg-purple-50 text-xs">
+                    {id}
+                  </Badge>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* ── People ── */}
           <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
             <SectionHeader icon={<Users className="h-4 w-4 text-indigo-600" />} label="People" />
@@ -408,18 +423,18 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                     </div>
                     <AdminServiceReport
                       projectId={project.pid}
-                      clientEmail={chargeSlips[0]?.clientInfo?.email ?? quotations[0]?Completed Submission Forms</span>
-                    </div>
-                    <AdminFormSubmissions projectId={project.pid} />
+                      clientEmail={chargeSlips[0]?.clientInfo?.email ?? quotations[0]?.email}
+                      clientName={chargeSlips[0]?.clientInfo?.name ?? quotations[0]?.name}
+                    />
                   </div>
                 )}
 
-                {/* Service Reports — admin uploads */}
-                {project.pid && (
-                  <div>
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <ShieldEllipsis className="h-3.5 w-3.5 text-blue-600" />
-                      <span className="text-xs font-semibold text-slate-700">Service Reports
+
+              </div>
+            )}
+          </section>
+
+          {/* ── Metadata ── */}
           <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
             <SectionHeader icon={<CalendarDays className="h-4 w-4 text-slate-500" />} label="Metadata" />
             <Separator />
