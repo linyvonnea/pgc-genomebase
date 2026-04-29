@@ -19,7 +19,7 @@ import { doc, getDoc, collection, query, where, getDocs, or } from "firebase/fir
 import { getProjectRequest } from "@/services/projectRequestService";
 import { markInquiryAsLoggedIn } from "@/services/inquiryService";
 import { logActivity } from "@/services/activityLogService";
-import InstallPortalAppButton from "@/components/pwa/InstallPortalAppButton";
+
 import { 
   Shield,
   CheckCircle,
@@ -298,7 +298,7 @@ export default function ClientVerifyPage() {
 
             {/* Google Sign In Section */}
             <div className="space-y-2">
-              <InstallPortalAppButton />
+
               <Button
                 onClick={handleGoogleSignIn}
                 disabled={verifying || !!googleUser}
