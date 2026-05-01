@@ -578,14 +578,14 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
                 <div className="rounded-lg bg-white border border-slate-100 shadow-sm px-2.5 py-1.5 group hover:border-blue-200 hover:bg-blue-50/10 transition-colors">
                   {/* Row 1: OR No. · Date · file size */}
                   <div className="flex items-center justify-between gap-1">
-                    <span className="text-[9px] text-slate-500 truncate">
+                    <span className="text-[10px] font-medium text-slate-600 truncate">
                       {[
                         receipt.orNumber ? `OR No. ${receipt.orNumber}` : null,
-                        receipt.orDate,
+                        receipt.orDate ? format(new Date(receipt.orDate), "MMM d, yyyy") : null,
                         formatFileSize(receipt.size),
                       ]
                         .filter(Boolean)
-                        .join(" ·") || "\u00a0"}
+                        .join(" · ") || "\u00a0"}
                     </span>
                     {/* Action icon — top-right */}
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">

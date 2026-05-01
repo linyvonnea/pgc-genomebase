@@ -3429,29 +3429,34 @@ export default function ClientPortalPage() {
                             <div key={quotation.id} className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 flex items-center justify-between gap-3 flex-wrap hover:bg-slate-50 transition-colors">
                               <div className="flex items-center gap-2 flex-wrap min-w-0">
                                 <FileText className="h-3.5 w-3.5 text-purple-500 flex-shrink-0" />
-                                <span className="text-sm font-semibold text-purple-700">{quotation.referenceNumber}</span>
+                                <a
+                                  href={`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm font-semibold text-purple-700 hover:underline"
+                                >
+                                  {quotation.referenceNumber}
+                                </a>
                                 <span className="text-xs text-slate-500">
                                   Total: <span className="font-semibold text-slate-700">₱{qTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
                                 </span>
                                 {qIssuedDate && (
                                   <span className="text-xs text-slate-500">Issued: <span className="font-medium text-slate-600">{qIssuedDate}</span></span>
                                 )}
+                              </div>
+                              <div className="flex-shrink-0">
                                 {qCancelled ? (
                                   <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">Cancelled</span>
                                 ) : (quotation.status === "selected" || quotation.selectedForProject) ? (
                                   <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
                                     <CheckCircle2 className="h-3 w-3" /> Selected
                                   </span>
-                                ) : null}
+                                ) : (
+                                  <span className="inline-flex text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-100 rounded-full px-2 py-0.5">
+                                    Draft
+                                  </span>
+                                )}
                               </div>
-                              <a
-                                href={`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 border border-purple-100 text-purple-600 hover:bg-purple-50 h-8 text-xs px-3 rounded-md font-medium transition-colors flex-shrink-0"
-                              >
-                                <FileText className="h-3 w-3" /> View PDF
-                              </a>
                             </div>
                           );
                         })}
