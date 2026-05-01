@@ -3781,7 +3781,7 @@ export default function ClientPortalPage() {
                     {/* Official Documents (Quotations) - MOVED UP */}
                     <div className="bg-white rounded-2xl px-4 py-3 shadow-sm border border-slate-100">
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <h3 className="text-base font-semibold text-slate-800 flex items-center gap-2">
                           <FileText className="h-4 w-4 text-indigo-500" />
                           Official Documents
                         </h3>
