@@ -3444,14 +3444,14 @@ export default function ClientPortalPage() {
                                   </span>
                                 ) : null}
                               </div>
-                              <a
-                                href={`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 border border-purple-100 text-purple-600 hover:bg-purple-50 h-8 text-xs px-3 rounded-md font-medium transition-colors flex-shrink-0"
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => router.push(`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`)}
+                                className="border-purple-100 text-purple-600 hover:bg-purple-50 h-8 text-xs flex-shrink-0"
                               >
-                                <FileText className="h-3 w-3" /> View PDF
-                              </a>
+                                <FileText className="h-3 w-3 mr-1" /> View PDF
+                              </Button>
                             </div>
                           );
                         })}
@@ -3597,19 +3597,21 @@ export default function ClientPortalPage() {
                                     ) : (
                                       <span className="text-sm text-slate-600 truncate block">{item.fileName || item.id}</span>
                                     )}
+                                    {isReceived && receivedDate && (
+                                      <span className="text-xs text-green-600">Received {receivedDate}</span>
+                                    )}
                                   </div>
                                 </div>
-                                <div className="shrink-0 flex items-center">
+                                <div className="shrink-0">
                                   {isReceived ? (
-                                    <Badge variant="outline" className="text-xs text-green-700 border-green-200 bg-green-50 gap-1 h-6 shrink-0">
-                                      <CheckCircle2 className="h-3 w-3" />
-                                      Received
-                                      {receivedDate && (
-                                        <span className="font-normal text-green-600 opacity-80">
-                                          · {receivedDate}
-                                        </span>
-                                      )}
-                                    </Badge>
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="outline" className="text-xs text-green-700 border-green-200 bg-green-50 gap-1 h-6">
+                                        <CheckCircle2 className="h-3 w-3" /> Received
+                                      </Badge>
+                                      <a href={item.fileUrl} target="_blank" rel="noopener noreferrer" title="Download">
+                                        <Download className="h-4 w-4 text-slate-400 hover:text-blue-600" />
+                                      </a>
+                                    </div>
                                   ) : allChargeSlipsSettled ? (
                                     <Button
                                       size="sm"
