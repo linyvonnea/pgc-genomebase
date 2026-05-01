@@ -3776,11 +3776,6 @@ export default function ClientPortalPage() {
                           <FileText className="h-5 w-5 text-indigo-500" />
                           Official Documents
                         </h3>
-                        {inquiryQuotations.length > 0 && (
-                          <Badge className="bg-indigo-50 text-indigo-600 hover:bg-indigo-50 border-indigo-100">
-                            {inquiryQuotations.length} {inquiryQuotations.length === 1 ? 'Quotation' : 'Quotations'}
-                          </Badge>
-                        )}
                       </div>
 
                       {loadingQuotations ? (
@@ -3832,14 +3827,14 @@ export default function ClientPortalPage() {
                                 </div>
                                 {/* Right: action buttons */}
                                 <div className="flex items-center gap-2 flex-shrink-0">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => router.push(`/client/view-document?type=quotation&ref=${quote.referenceNumber}`)}
-                                    className="border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold h-8 text-xs"
+                                  <a
+                                    href={`/client/view-document?type=quotation&ref=${quote.referenceNumber}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center justify-center rounded-md border border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold h-8 text-xs px-3 transition-colors"
                                   >
                                     View PDF
-                                  </Button>
+                                  </a>
                                   {!qCancelled && 
                                    fetchedApprovedProjects.length === 0 && 
                                    currentInquiry?.status !== "Cancelled" && 
