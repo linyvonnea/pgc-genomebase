@@ -3588,6 +3588,9 @@ export default function ClientPortalPage() {
                             const receivedDate = item.receivedAt?.toDate
                               ? format(item.receivedAt.toDate(), "MMM d, yyyy h:mm a")
                               : "";
+                            const uploadedDate = item.uploadedAt?.toDate
+                              ? format(item.uploadedAt.toDate(), "MMM d, yyyy h:mm a")
+                              : "";
                             const reportKey = `${selectedProjectPid}:${item.id}`;
                             const isReceiving = receivingReportId === reportKey;
                             return (
@@ -3601,6 +3604,11 @@ export default function ClientPortalPage() {
                                       </a>
                                     ) : (
                                       <span className="text-sm text-slate-600 truncate block">{item.fileName || item.id}</span>
+                                    )}
+                                    {uploadedDate && (
+                                      <span className="text-[10px] text-slate-400 font-medium">
+                                        Uploaded: {uploadedDate}
+                                      </span>
                                     )}
                                   </div>
                                 </div>
