@@ -336,7 +336,7 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                             Pending
                           </span>
                         )}
-                        {f.uploadedAt && false && (
+                        {f.uploadedAt && (
                           <span className="text-[10px] text-slate-400 shrink-0">
                             {format(f.uploadedAt.toDate(), "MMM d")}
                           </span>
