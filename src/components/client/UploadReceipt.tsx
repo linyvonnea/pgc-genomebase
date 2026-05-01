@@ -50,6 +50,7 @@ interface Receipt {
   acknowledgedByAdmin?: boolean;
   returnedByAdmin?: boolean;
   chargeSlipNumber?: string;
+  acknowledgedAt?: Timestamp | null;
 }
 
 interface UploadReceiptProps {
@@ -626,11 +627,16 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
                     {/* Status badge */}
                     {isVerified && (
                       <span
-                        className="flex items-center gap-0.5 text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5 flex-shrink-0"
+                        className="flex items-center gap-1 text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5 flex-shrink-0"
                         title="Validated by admin"
                       >
                         <CheckCircle2 className="h-2.5 w-2.5" />
                         Verified
+                        {receipt.acknowledgedAt && (
+                          <span className="font-normal text-emerald-500">
+                            · {format(receipt.acknowledgedAt.toDate(), "MMM d, yyyy h:mm a")}
+                          </span>
+                        )}
                       </span>
                     )}
                     {isPending && (
