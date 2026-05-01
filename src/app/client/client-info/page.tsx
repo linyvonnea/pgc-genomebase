@@ -3893,39 +3893,35 @@ export default function ClientPortalPage() {
                     )}
 
                     {currentInquiry && (
-                      <div className="bg-white rounded-2xl px-4 py-3 shadow-sm border border-slate-100">
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                      <div className="bg-white rounded-2xl px-4 py-4 shadow-sm border border-slate-100">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-base font-semibold text-slate-800 flex items-center gap-2">
                             <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#6E308E] rounded-full"></div>
                             Quotation Request Details
                           </h3>
                         </div>
                         
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                           {/* Laboratory Service Details */}
                           {currentInquiry.serviceType === "laboratory" ? (
-                            <div className="space-y-3 animate-in fade-in duration-500">
-                              <div className="grid grid-cols-3 gap-3">
-                                {/* Service Type */}
-                                <div className="space-y-0.5">
-                                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Service Type</span>
-                                  <p className="text-sm font-semibold text-slate-800 capitalize">Laboratory</p>
+                            <div className="space-y-4 animate-in fade-in duration-500">
+                              {/* Quick stats row */}
+                              <div className="grid grid-cols-3 gap-4 pb-4 border-b border-slate-100">
+                                <div className="space-y-1">
+                                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Service Type</span>
+                                  <p className="text-sm font-semibold text-slate-900">Laboratory</p>
                                 </div>
-
-                                {/* Species */}
-                                <div className="space-y-0.5">
-                                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Species</span>
-                                  <p className="text-sm font-medium text-slate-800 capitalize italic">
-                                    {currentInquiry.species 
+                                <div className="space-y-1">
+                                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Species</span>
+                                  <p className="text-sm font-semibold text-slate-900 capitalize italic">
+                                    {currentInquiry.species
                                       ? (currentInquiry.otherSpecies ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}` : currentInquiry.species)
                                       : "—"}
                                   </p>
                                 </div>
-
-                                {/* Sample Count */}
-                                <div className="space-y-0.5">
-                                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Sample Count</span>
-                                  <p className="text-sm font-semibold text-slate-800">{currentInquiry.sampleCount || "—"}</p>
+                                <div className="space-y-1">
+                                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Sample Count</span>
+                                  <p className="text-sm font-semibold text-slate-900">{currentInquiry.sampleCount || "—"}</p>
                                 </div>
                               </div>
 
@@ -3934,19 +3930,19 @@ export default function ClientPortalPage() {
 
                               {/* Workflow */}
                               <div className="space-y-1">
-                                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Workflow</span>
-                                <p className="text-sm font-medium text-slate-800">{formatWorkflowType(currentInquiry.workflowType)}</p>
+                                <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Workflow / Analysis Strategy</span>
+                                <p className="text-sm font-semibold text-slate-900">{formatWorkflowType(currentInquiry.workflowType) || "—"}</p>
                               </div>
 
                               {/* Bioinformatics Analysis */}
-                              <div className="space-y-1.5">
-                                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Bioinformatics Analysis</span>
+                              <div className="space-y-2">
+                                <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Bioinformatics Analysis</span>
                                 {currentInquiry.bioinfoOptions && currentInquiry.bioinfoOptions.length > 0 ? (
-                                  <div className="flex flex-wrap gap-1.5">
+                                  <div className="flex flex-wrap gap-2">
                                     {currentInquiry.bioinfoOptions.map((option) => (
                                       <span
                                         key={option}
-                                        className="inline-block text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-100 rounded-md px-2 py-0.5"
+                                        className="inline-block text-xs font-medium text-blue-700 bg-blue-50 border border-blue-100 rounded px-2.5 py-1"
                                       >
                                         {formatBioinfoOption(option)}
                                       </span>
@@ -3958,36 +3954,36 @@ export default function ClientPortalPage() {
                               </div>
 
                               {/* Research Overview */}
-                              <div className="space-y-1">
-                                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Research Overview</span>
-                                <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                              <div className="space-y-1.5">
+                                <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Research Overview</span>
+                                <p className="text-sm text-slate-700 leading-6 bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100">
                                   {currentInquiry.researchOverview || "—"}
                                 </p>
                               </div>
                             </div>
                           ) : (
                             /* Other Services (Research, Training, Retail, etc.) */
-                            <div className="space-y-3 animate-in fade-in duration-500">
+                            <div className="space-y-4 animate-in fade-in duration-500">
                               {/* Top Section: Quick Stats */}
-                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pb-4 border-b border-slate-100">
                                 {/* Service Type */}
-                                <div className="space-y-0.5">
-                                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Service Type</span>
-                                  <p className="text-sm font-semibold text-slate-800 capitalize">{formatServiceType(currentInquiry.serviceType)}</p>
+                                <div className="space-y-1">
+                                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Service Type</span>
+                                  <p className="text-sm font-semibold text-slate-900 capitalize">{formatServiceType(currentInquiry.serviceType)}</p>
                                 </div>
 
                                 {/* Sample Count */}
                                 {currentInquiry.sampleCount && (
-                                  <div className="space-y-0.5">
-                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Quantity</span>
-                                    <p className="text-sm font-semibold text-slate-800">{currentInquiry.sampleCount} samples</p>
+                                  <div className="space-y-1">
+                                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Quantity</span>
+                                    <p className="text-sm font-semibold text-slate-900">{currentInquiry.sampleCount} samples</p>
                                   </div>
                                 )}
 
                                 {/* Retail Sales Details Section */}
                                 {currentInquiry.serviceType === 'retail' && currentInquiry.retailItems && currentInquiry.retailItems.length > 0 && (
-                                  <div className="pt-3 border-t border-slate-100 space-y-2 sm:col-span-3">
-                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Requested Items</span>
+                                  <div className="space-y-2 sm:col-span-3">
+                                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Requested Items</span>
                                     <div className="grid grid-cols-1 gap-2">
                                       {currentInquiry.retailItems.map((item, idx) => (
                                         <div key={`${item}-${idx}`} className="flex items-center justify-between bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
@@ -4003,15 +3999,15 @@ export default function ClientPortalPage() {
                               </div>
 
                               {currentInquiry.serviceType === 'bioinformatics' && (
-                                <div className="space-y-3">
-                                  <div className="space-y-1.5">
-                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Type of Bioinformatics Service</span>
-                                    <div className="flex flex-wrap gap-1.5">
+                                <div className="space-y-4">
+                                  <div className="space-y-2">
+                                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Type of Bioinformatics Service</span>
+                                    <div className="flex flex-wrap gap-2">
                                       {(Array.isArray(currentInquiry.bioinformaticsDetails?.serviceTypes) ? currentInquiry.bioinformaticsDetails?.serviceTypes : []).length > 0 ? (
                                         (currentInquiry.bioinformaticsDetails?.serviceTypes as string[]).map((serviceType) => (
                                           <span
                                             key={serviceType}
-                                            className="inline-block text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-100 rounded-md px-2 py-0.5"
+                                            className="inline-block text-xs font-medium text-blue-700 bg-blue-50 border border-blue-100 rounded px-2.5 py-1"
                                           >
                                             {serviceType}
                                           </span>
@@ -4022,51 +4018,51 @@ export default function ClientPortalPage() {
                                     </div>
                                   </div>
 
-                                  <div className="grid grid-cols-2 gap-3">
-                                    <div className="space-y-0.5">
-                                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Provide Own Data</span>
-                                      <p className="text-sm font-medium text-slate-800">{currentInquiry.bioinformaticsDetails?.dataProvideOwnData ? "Yes" : "No"}</p>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                      <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Provide Own Data</span>
+                                      <p className="text-sm font-semibold text-slate-900">{currentInquiry.bioinformaticsDetails?.dataProvideOwnData ? "Yes" : "No"}</p>
                                     </div>
-                                    <div className="space-y-0.5">
-                                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Data from PGC Visayas</span>
-                                      <p className="text-sm font-medium text-slate-800">{currentInquiry.bioinformaticsDetails?.dataProvidedByPgc ? "Yes" : "No"}</p>
+                                    <div className="space-y-1">
+                                      <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Data from PGC Visayas</span>
+                                      <p className="text-sm font-semibold text-slate-900">{currentInquiry.bioinformaticsDetails?.dataProvidedByPgc ? "Yes" : "No"}</p>
                                     </div>
                                   </div>
 
                                   {currentInquiry.bioinformaticsDetails?.dataProvideOwnData && (
-                                    <div className="space-y-1">
-                                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Data Details</span>
-                                      <div className="bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 text-sm text-slate-700 leading-relaxed space-y-0.5">
-                                        <p>File formats: {Array.isArray(currentInquiry.bioinformaticsDetails?.dataFileFormats) && currentInquiry.bioinformaticsDetails?.dataFileFormats.length > 0 ? currentInquiry.bioinformaticsDetails.dataFileFormats.join(', ') : '—'}</p>
+                                    <div className="space-y-1.5">
+                                      <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Data Details</span>
+                                      <div className="bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100 text-sm text-slate-700 leading-6 space-y-1">
+                                        <p><span className="font-medium text-slate-500">File formats:</span> {Array.isArray(currentInquiry.bioinformaticsDetails?.dataFileFormats) && currentInquiry.bioinformaticsDetails?.dataFileFormats.length > 0 ? currentInquiry.bioinformaticsDetails.dataFileFormats.join(', ') : '—'}</p>
                                         {currentInquiry.bioinformaticsDetails?.dataOtherFormat && (
-                                          <p>Other format: {currentInquiry.bioinformaticsDetails.dataOtherFormat}</p>
+                                          <p><span className="font-medium text-slate-500">Other format:</span> {currentInquiry.bioinformaticsDetails.dataOtherFormat}</p>
                                         )}
                                         {currentInquiry.bioinformaticsDetails?.dataFileSizePerSample && (
-                                          <p>File size per sample: {currentInquiry.bioinformaticsDetails.dataFileSizePerSample}</p>
+                                          <p><span className="font-medium text-slate-500">File size per sample:</span> {currentInquiry.bioinformaticsDetails.dataFileSizePerSample}</p>
                                         )}
                                         {currentInquiry.bioinformaticsDetails?.dataTransferMode && (
-                                          <p>Preferred transfer mode: {currentInquiry.bioinformaticsDetails.dataTransferMode}</p>
+                                          <p><span className="font-medium text-slate-500">Transfer mode:</span> {currentInquiry.bioinformaticsDetails.dataTransferMode}</p>
                                         )}
                                       </div>
                                     </div>
                                   )}
 
-                                  <div className="space-y-1">
-                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Research Overview & Objectives</span>
-                                    <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 whitespace-pre-wrap">
+                                  <div className="space-y-1.5">
+                                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Research Overview & Objectives</span>
+                                    <p className="text-sm text-slate-700 leading-6 bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100 whitespace-pre-wrap">
                                       {currentInquiry.bioinformaticsDetails?.overviewObjectives || "—"}
                                     </p>
                                   </div>
 
                                   {flattenBioinformaticsDetails(currentInquiry.bioinformaticsDetails).length > 0 && (
-                                    <div className="space-y-1">
-                                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">All Submitted Bioinformatics Entries</span>
-                                      <div className="bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
-                                        <ul className="space-y-0.5 text-xs">
+                                    <div className="space-y-1.5">
+                                      <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">All Submitted Bioinformatics Entries</span>
+                                      <div className="bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100">
+                                        <ul className="space-y-1 text-sm">
                                           {flattenBioinformaticsDetails(currentInquiry.bioinformaticsDetails).map((entry) => (
                                             <li key={`${entry.key}-${entry.value}`}>
-                                              <span className="font-semibold text-slate-500">{entry.key}:</span>{" "}
-                                              <span className="text-slate-700">{entry.value}</span>
+                                              <span className="font-medium text-slate-500">{entry.key}:</span>{" "}
+                                              <span className="text-slate-800">{entry.value}</span>
                                             </li>
                                           ))}
                                         </ul>
@@ -4078,12 +4074,12 @@ export default function ClientPortalPage() {
 
                               {/* Technical Block */}
                               {(currentInquiry.species || currentInquiry.workflowType) && (
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-2 gap-4">
                                   {currentInquiry.species && (
-                                    <div className="space-y-0.5">
-                                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Species / Organism</span>
-                                      <p className="text-sm font-medium text-slate-800 capitalize">
-                                        {currentInquiry.otherSpecies 
+                                    <div className="space-y-1">
+                                      <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Species / Organism</span>
+                                      <p className="text-sm font-semibold text-slate-900 capitalize">
+                                        {currentInquiry.otherSpecies
                                           ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}`
                                           : currentInquiry.species}
                                       </p>
@@ -4091,9 +4087,9 @@ export default function ClientPortalPage() {
                                   )}
 
                                   {currentInquiry.workflowType && (
-                                    <div className="space-y-0.5">
-                                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Analysis Strategy</span>
-                                      <p className="text-sm font-medium text-slate-800">
+                                    <div className="space-y-1">
+                                      <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Analysis Strategy</span>
+                                      <p className="text-sm font-semibold text-slate-900">
                                         {formatWorkflowType(currentInquiry.workflowType)}
                                       </p>
                                     </div>
@@ -4103,13 +4099,13 @@ export default function ClientPortalPage() {
 
                               {/* Bioinformatics Options */}
                               {currentInquiry.workflowType === 'complete-bioinfo' && currentInquiry.bioinfoOptions && currentInquiry.bioinfoOptions.length > 0 && (
-                                <div className="space-y-1.5">
-                                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Selected Bioinformatics Analysis</span>
-                                  <div className="flex flex-wrap gap-1.5">
+                                <div className="space-y-2">
+                                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Selected Bioinformatics Analysis</span>
+                                  <div className="flex flex-wrap gap-2">
                                     {currentInquiry.bioinfoOptions.map((option) => (
                                       <span
                                         key={option}
-                                        className="inline-block text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-100 rounded-md px-2 py-0.5"
+                                        className="inline-block text-xs font-medium text-blue-700 bg-blue-50 border border-blue-100 rounded px-2.5 py-1"
                                       >
                                         {formatBioinfoOption(option)}
                                       </span>
@@ -4122,9 +4118,9 @@ export default function ClientPortalPage() {
 
                           {/* Specific Needs & Assays (Common for all) */}
                           {currentInquiry.individualAssayDetails && (
-                            <div className="space-y-1">
-                              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Selected Assays</span>
-                              <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                            <div className="space-y-1.5">
+                              <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Selected Assays</span>
+                              <p className="text-sm text-slate-700 leading-6 bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100">
                                 {currentInquiry.individualAssayDetails}
                               </p>
                             </div>
@@ -4132,9 +4128,9 @@ export default function ClientPortalPage() {
 
                           {/* Research Narrative (Only for non-research, non-laboratory services) */}
                           {currentInquiry.serviceType !== "research" && currentInquiry.serviceType !== "laboratory" && currentInquiry.researchOverview && (
-                            <div className="space-y-1">
-                              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Objectives & Brief Overview</span>
-                              <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                            <div className="space-y-1.5">
+                              <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Objectives & Brief Overview</span>
+                              <p className="text-sm text-slate-700 leading-6 bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100">
                                 {currentInquiry.researchOverview}
                               </p>
                             </div>
@@ -4142,13 +4138,13 @@ export default function ClientPortalPage() {
 
                           {/* Research & Collaboration Details */}
                           {currentInquiry.serviceType === 'research' && (currentInquiry.researchOverview || currentInquiry.projectBackground || currentInquiry.molecularServicesBudget || currentInquiry.plannedSampleCount) && (
-                            <div className="space-y-3 border-t border-slate-100 pt-3">
+                            <div className="space-y-4 border-t border-slate-100 pt-4">
                               {(currentInquiry.researchOverview || currentInquiry.projectBackground) && (
-                                <div className="space-y-1">
-                                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">
+                                <div className="space-y-1.5">
+                                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">
                                     Overview of Research, Objectives & Scope
                                   </span>
-                                  <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 whitespace-pre-wrap">
+                                  <p className="text-sm text-slate-700 leading-6 bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100 whitespace-pre-wrap">
                                     {currentInquiry.researchOverview || currentInquiry.projectBackground}
                                   </p>
                                 </div>
@@ -4156,15 +4152,15 @@ export default function ClientPortalPage() {
 
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {currentInquiry.molecularServicesBudget && (
-                                  <div className="space-y-0.5">
-                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Molecular Services Budget</span>
-                                    <p className="text-sm font-medium text-slate-800">{currentInquiry.molecularServicesBudget}</p>
+                                  <div className="space-y-1">
+                                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Molecular Services Budget</span>
+                                    <p className="text-sm font-semibold text-slate-900">{currentInquiry.molecularServicesBudget}</p>
                                   </div>
                                 )}
                                 {currentInquiry.plannedSampleCount && (
-                                  <div className="space-y-0.5">
-                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Planned Sample Count</span>
-                                    <p className="text-sm font-medium text-slate-800">{currentInquiry.plannedSampleCount}</p>
+                                  <div className="space-y-1">
+                                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Planned Sample Count</span>
+                                    <p className="text-sm font-semibold text-slate-900">{currentInquiry.plannedSampleCount}</p>
                                   </div>
                                 )}
                               </div>
@@ -4173,13 +4169,13 @@ export default function ClientPortalPage() {
 
                           {/* Training Details */}
                           {currentInquiry.serviceType === 'training' && ((currentInquiry.trainingPrograms && currentInquiry.trainingPrograms.length > 0) || currentInquiry.specificTrainingNeed || currentInquiry.targetTrainingDate || currentInquiry.numberOfParticipants) && (
-                            <div className="space-y-3 border-t border-slate-100 pt-3">
+                            <div className="space-y-4 border-t border-slate-100 pt-4">
                               {currentInquiry.trainingPrograms && currentInquiry.trainingPrograms.length > 0 && (
-                                <div className="space-y-1.5">
-                                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Training Programs</span>
-                                  <div className="flex flex-wrap gap-1.5">
+                                <div className="space-y-2">
+                                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Training Programs</span>
+                                  <div className="flex flex-wrap gap-2">
                                     {currentInquiry.trainingPrograms.map((program, index) => (
-                                      <span key={`${program}-${index}`} className="inline-block text-[11px] font-medium text-slate-700 bg-slate-100 border border-slate-200 rounded-md px-2 py-0.5">
+                                      <span key={`${program}-${index}`} className="inline-block text-xs font-medium text-slate-700 bg-slate-100 border border-slate-200 rounded px-2.5 py-1">
                                         {program === "others-customized" ? "Others / Customized Training Program" : program}
                                       </span>
                                     ))}
@@ -4187,27 +4183,27 @@ export default function ClientPortalPage() {
                                 </div>
                               )}
 
-                              <div className="grid grid-cols-2 gap-3">
+                              <div className="grid grid-cols-2 gap-4">
                                 {currentInquiry.targetTrainingDate && (
-                                  <div className="space-y-0.5">
-                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Requested Date</span>
-                                    <p className="text-sm font-medium text-slate-800">
+                                  <div className="space-y-1">
+                                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Requested Date</span>
+                                    <p className="text-sm font-semibold text-slate-900">
                                       {new Date(currentInquiry.targetTrainingDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                                     </p>
                                   </div>
                                 )}
                                 {currentInquiry.numberOfParticipants && (
-                                  <div className="space-y-0.5">
-                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Attendance</span>
-                                    <p className="text-sm font-medium text-slate-800">{currentInquiry.numberOfParticipants} pax</p>
+                                  <div className="space-y-1">
+                                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Attendance</span>
+                                    <p className="text-sm font-semibold text-slate-900">{currentInquiry.numberOfParticipants} pax</p>
                                   </div>
                                 )}
                               </div>
 
                               {currentInquiry.specificTrainingNeed && (
-                                <div className="space-y-1">
-                                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Customized Training Details</span>
-                                  <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 whitespace-pre-wrap">
+                                <div className="space-y-1.5">
+                                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Customized Training Details</span>
+                                  <p className="text-sm text-slate-700 leading-6 bg-slate-50 rounded-lg px-3 py-2.5 border border-slate-100 whitespace-pre-wrap">
                                     {currentInquiry.specificTrainingNeed}
                                   </p>
                                 </div>
@@ -4217,16 +4213,16 @@ export default function ClientPortalPage() {
 
                           {/* Attachments Section */}
                           {currentInquiry.methodologyFileUrl && (
-                            <div className="flex items-center gap-3 pt-4 border-t border-dashed border-slate-100">
-                              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Documentation:</span>
+                            <div className="pt-4 border-t border-slate-100">
+                              <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block mb-2">Attached Documentation</span>
                               <a
                                 href={currentInquiry.methodologyFileUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-bold hover:bg-blue-100 transition-colors"
+                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors border border-blue-100"
                               >
                                 <FileText className="h-4 w-4" />
-                                View Concept/Methodology
+                                View Concept / Methodology
                               </a>
                             </div>
                           )}
@@ -4234,12 +4230,12 @@ export default function ClientPortalPage() {
                           {/* Submission Footer */}
                           <div className="pt-3 flex items-center justify-between gap-3 border-t border-slate-100">
                             <div className="flex items-center gap-1.5 text-slate-400">
-                              <Calendar className="h-3.5 w-3.5" />
+                              <Calendar className="h-3.5 w-3.5 shrink-0" />
                               <span className="text-xs">Submitted {currentInquiry.createdAt ? new Date(currentInquiry.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : "—"}</span>
                             </div>
-                            <div className="flex items-center gap-1.5 text-[#4038AF] text-xs font-semibold">
-                              <Building2 className="h-3.5 w-3.5" />
-                              <span className="truncate max-w-[200px]">{currentInquiry.affiliation}</span>
+                            <div className="flex items-center gap-1.5 text-slate-500 text-xs">
+                              <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                              <span className="truncate max-w-[200px] font-medium">{currentInquiry.affiliation}</span>
                             </div>
                           </div>
                         </div>
