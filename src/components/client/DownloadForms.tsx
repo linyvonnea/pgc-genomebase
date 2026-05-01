@@ -65,7 +65,6 @@ interface SubmittedFile {
   storagePath: string;
   uploadedAt: Timestamp | null;
   acknowledgedByAdmin?: boolean;
-  acknowledgedAt?: Timestamp | null;
 }
 
 interface DownloadFormsProps {
@@ -125,7 +124,6 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
             storagePath: data.storagePath,
             uploadedAt: data.uploadedAt ?? null,
             acknowledgedByAdmin: data.acknowledgedByAdmin ?? false,
-            acknowledgedAt: data.acknowledgedAt ?? null,
           });
         });
         // Sort each group newest-first
@@ -323,20 +321,15 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                           {f.fileName}
                         </a>
                         {f.acknowledgedByAdmin ? (
-                          <span className="flex items-center gap-1 text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0.5 shrink-0">
+                          <span className="text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0.5 shrink-0">
                             Acknowledged
-                            {f.acknowledgedAt && (
-                              <span className="font-normal text-emerald-500 text-[10px]">
-                                · {format(f.acknowledgedAt.toDate(), "yyyy h:mm a")}
-                              </span>
-                            )}
                           </span>
                         ) : (
                           <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5 shrink-0">
                             Pending
                           </span>
                         )}
-                        {f.uploadedAt && false && (
+                        {f.uploadedAt && (
                           <span className="text-[10px] text-slate-400 shrink-0">
                             {format(f.uploadedAt.toDate(), "MMM d")}
                           </span>
