@@ -363,9 +363,9 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                             fileInputRefs.current[form.formKey]?.click();
                           }}
                           disabled={isUploading}
-                          className="flex items-center gap-1.5 text-[11px] font-medium text-[#166FB5] bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-full px-2.5 py-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+                          className="flex items-center gap-1.5 text-sm font-semibold text-white bg-[#166FB5] hover:bg-[#166FB5]/90 border border-[#166FB5] rounded-full px-4 py-1.5 transition-all shadow-sm hover:shadow-md shrink-0"
                         >
-                          <Paperclip className="h-3 w-3" />
+                          <Paperclip className="h-4 w-4" />
                           Attach Form
                         </button>
                       </div>
