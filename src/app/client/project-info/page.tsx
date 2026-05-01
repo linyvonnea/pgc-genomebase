@@ -326,11 +326,11 @@ export default function ProjectForm() {
   // Main form UI
   return (
     <div className="min-h-screen p-6 bg-gradient-to-br from-slate-50/50 to-blue-50/30">
-      <div className="max-w-4xl mx-auto">
-        <div className="p-8 bg-white/80 rounded-2xl shadow-xl border border-white/50 backdrop-blur-sm">
+      <div className="max-w-2xl mx-auto">
+        <div className="p-6 bg-white/80 rounded-2xl shadow-xl border border-white/50 backdrop-blur-sm">
           {/* Header and instructions */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
+          <div className="mb-5">
+            <div className="flex items-center gap-3 mb-3">
               <div className="w-3 h-3 rounded-full bg-gradient-to-r from-[#F69122] to-[#912ABD]" />
               <h1 className="text-3xl font-bold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent">
                 Project Information Form
@@ -341,8 +341,8 @@ export default function ProjectForm() {
                 </div>
               )}
             </div>
-            <div className="p-6 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-              <p className="text-slate-700 leading-relaxed mb-2">
+            <div className="p-4 rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <p className="text-slate-700 leading-relaxed mb-1.5">
                 Thank you for partnering with Philippine Genome Center Visayas. To better understand and support your project, please fill out this form.
               </p>
               <p className="text-sm text-slate-600 italic">
@@ -352,36 +352,37 @@ export default function ProjectForm() {
           </div>
 
           {/* Project form fields */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Project Title */}
-              <div className="md:col-span-2">
-                <Label>Project Title <span className="text-[#B9273A]">*</span></Label>
-                <Input
-                  value={formData.title}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange("title", e.target.value)}
-                  placeholder="Enter your project title"
-                />
-                {errors.title && <p className="text-[#B9273A] text-sm mt-1">{errors.title}</p>}
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Project Title – full width */}
+            <div>
+              <Label className="text-sm font-medium text-slate-700">Project Title <span className="text-[#B9273A]">*</span></Label>
+              <Input
+                value={formData.title}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange("title", e.target.value)}
+                placeholder="Enter your project title"
+                className="mt-1"
+              />
+              {errors.title && <p className="text-[#B9273A] text-xs mt-0.5">{errors.title}</p>}
+            </div>
 
-              {/* Project Lead */}
+            {/* Project Lead + Start Date */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label>Project Lead <span className="text-[#B9273A]">*</span></Label>
+                <Label className="text-sm font-medium text-slate-700">Project Lead <span className="text-[#B9273A]">*</span></Label>
                 <Input
                   value={formData.projectLead}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange("projectLead", e.target.value)}
                   placeholder="Enter project lead name"
+                  className="mt-1"
                 />
-                {errors.projectLead && <p className="text-[#B9273A] text-sm mt-1">{errors.projectLead}</p>}
+                {errors.projectLead && <p className="text-[#B9273A] text-xs mt-0.5">{errors.projectLead}</p>}
               </div>
 
-              {/* Start Date */}
               <div>
-                <Label>Start Date <span className="text-[#B9273A]">*</span></Label>
+                <Label className="text-sm font-medium text-slate-700">Start Date <span className="text-[#B9273A]">*</span></Label>
                 <Popover open={startOpen} onOpenChange={setStartOpen}>
                   <PopoverTrigger asChild>
-                    <div className="relative w-full">
+                    <div className="relative w-full mt-1">
                       <Input
                         value={formatDate(formData.startDate)}
                         readOnly
@@ -409,56 +410,58 @@ export default function ProjectForm() {
                     />
                   </PopoverContent>
                 </Popover>
-                {errors.startDate && <p className="text-[#B9273A] text-sm mt-1">{errors.startDate}</p>}
+                {errors.startDate && <p className="text-[#B9273A] text-xs mt-0.5">{errors.startDate}</p>}
               </div>
             </div>
 
-            {/* Sending Institution */}
-            <div>
-              <Label>Sending Institution <span className="text-[#B9273A]">*</span></Label>
-              <Select
-                value={formData.sendingInstitution}
-                onValueChange={(val: string) => handleChange("sendingInstitution", val)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select sending institution" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="UP System">UP System</SelectItem>
-                  <SelectItem value="SUC/HEI">SUC/HEI</SelectItem>
-                  <SelectItem value="Government">Government</SelectItem>
-                  <SelectItem value="Private/Local">Private/Local</SelectItem>
-                  <SelectItem value="International">International</SelectItem>
-                  <SelectItem value="N/A">N/A</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.sendingInstitution && <p className="text-[#B9273A] text-sm mt-1">{errors.sendingInstitution}</p>}
+            {/* Sending Institution + Funding Institution */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium text-slate-700">Sending Institution <span className="text-[#B9273A]">*</span></Label>
+                <Select
+                  value={formData.sendingInstitution}
+                  onValueChange={(val: string) => handleChange("sendingInstitution", val)}
+                >
+                  <SelectTrigger className="w-full mt-1">
+                    <SelectValue placeholder="Select institution type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="UP System">UP System</SelectItem>
+                    <SelectItem value="SUC/HEI">SUC/HEI</SelectItem>
+                    <SelectItem value="Government">Government</SelectItem>
+                    <SelectItem value="Private/Local">Private/Local</SelectItem>
+                    <SelectItem value="International">International</SelectItem>
+                    <SelectItem value="N/A">N/A</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.sendingInstitution && <p className="text-[#B9273A] text-xs mt-0.5">{errors.sendingInstitution}</p>}
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium text-slate-700">Funding Institution <span className="text-[#B9273A]">*</span></Label>
+                <Input
+                  value={formData.fundingInstitution}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange("fundingInstitution", e.target.value)}
+                  placeholder="Enter funding institution"
+                  className="mt-1"
+                />
+                {errors.fundingInstitution && <p className="text-[#B9273A] text-xs mt-0.5">{errors.fundingInstitution}</p>}
+              </div>
             </div>
 
-            {/* Funding Institution */}
-            <div>
-              <Label>Funding Institution <span className="text-[#B9273A]">*</span></Label>
-              <Input
-                value={formData.fundingInstitution}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleChange("fundingInstitution", e.target.value)}
-                placeholder="Enter funding institution"
-              />
-              {errors.fundingInstitution && <p className="text-[#B9273A] text-sm mt-1">{errors.fundingInstitution}</p>}
-            </div>
-
-            {/* Submit Button */}
-            <div className="flex justify-end pt-6 border-t border-slate-100">
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
               <Button
                 type="button"
                 onClick={handleGoBack}
-                className="h-12 px-6 mr-3 bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition"
+                className="h-9 px-5 bg-white border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition"
               >
                 Go Back
               </Button>
               <Button
                 type="submit"
                 disabled={isDraftSaveLocked || isSavingDraft}
-                className="h-12 px-8 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                className="h-9 px-6 bg-gradient-to-r from-[#166FB5] to-[#4038AF] hover:from-[#166FB5]/90 hover:to-[#4038AF]/90 text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-300"
               >
                 Save Project Draft
               </Button>
