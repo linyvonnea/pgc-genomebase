@@ -344,6 +344,18 @@ export default function ClientPortalPage() {
       return next;
     });
 
+  // Active document panel shown in main content (below Team Members)
+  const [activeDocPanel, setActiveDocPanel] = useState<string | null>(null);
+  const handleSelectDocPanel = (pid: string, section: string) => {
+    const key = `${pid}:${section}`;
+    setActiveDocPanel(prev => prev === key ? null : key);
+    // Collapse all expanded member forms
+    setExpandedMembers(new Set());
+    if (typeof window !== "undefined") {
+      localStorage.setItem("expandedMembers", JSON.stringify([]));
+    }
+  };
+
   const [configSettings, setConfigSettings] = useState<ConfigurationSettings | null>(null);
 
   const [projectDocuments, setProjectDocuments] = useState<
@@ -2857,455 +2869,107 @@ export default function ClientPortalPage() {
                             <span>Loading…</span>
                           </div>
                         ) : (
-                          <div className="p-3 pl-6 space-y-3">
+                          <div className="p-3 pl-6 space-y-1">
                             {/* Quotations */}
                             <div>
                               <button
                                 type="button"
-                                className="flex items-center gap-2 mb-1.5 w-full text-left group/sec"
-                                onClick={(e) => { e.stopPropagation(); toggleDocSection(project.pid!, "quotations"); }}
+                                disabled={quotationCount === 0}
+                                className={cn(
+                                  "flex items-center gap-2 px-2 py-1.5 w-full text-left rounded-lg transition-colors",
+                                  activeDocPanel === `${project.pid}:quotations`
+                                    ? "bg-purple-50"
+                                    : quotationCount === 0 ? "opacity-40 cursor-not-allowed" : "hover:bg-slate-50"
+                                )}
+                                onClick={(e) => { e.stopPropagation(); if (quotationCount > 0) handleSelectDocPanel(project.pid!, "quotations"); }}
                               >
-                                <FileText className="h-3 w-3 text-purple-600 flex-shrink-0" />
-                                <span className="text-sm font-semibold text-slate-700 flex-1">
+                                <FileText className={cn("h-3 w-3 flex-shrink-0", activeDocPanel === `${project.pid}:quotations` ? "text-purple-600" : "text-purple-500")} />
+                                <span className={cn("text-sm font-semibold flex-1", activeDocPanel === `${project.pid}:quotations` ? "text-purple-700" : "text-slate-700")}>
                                   Quotations
                                 </span>
                                 <span className="text-[10px] text-slate-500 mr-1">({quotationCount})</span>
-                                <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:quotations`) && "rotate-180")} />
+                                <ChevronRight className={cn("h-3 w-3 flex-shrink-0 transition-transform", activeDocPanel === `${project.pid}:quotations` ? "text-purple-500 rotate-90" : "text-slate-400")} />
                               </button>
-                              {expandedDocSections.has(`${project.pid}:quotations`) && quotationCount > 0 ? (
-                                <div className="space-y-2 ml-4">
-                                  {docs?.quotations.map((quotation) => {
-                                    const qCancelledSidebar = quotation.status === "cancelled";
-                                    const qTotal = typeof quotation.total === "number" ? quotation.total : 0;
-                                    const qRawDate = quotation.dateIssued;
-                                    const qIssuedDate = qRawDate
-                                      ? (qRawDate as any)?.toDate
-                                        ? formatDate((qRawDate as any).toDate())
-                                        : formatDate(qRawDate as string)
-                                      : null;
-                                    const qSidebarExpanded = expandedQuoteIds.has(quotation.referenceNumber + "_sidebar");
-                                    return (
-                                      <div
-                                        key={quotation.id}
-                                        className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        {/* Header — always visible */}
-                                        <div
-                                          className="flex items-center justify-between gap-2 p-2.5 cursor-pointer select-none hover:bg-slate-50 transition-colors"
-                                          onClick={() =>
-                                            setExpandedQuoteIds((prev) => {
-                                              const key = quotation.referenceNumber + "_sidebar";
-                                              const next = new Set(prev);
-                                              if (next.has(key)) next.delete(key);
-                                              else next.add(key);
-                                              return next;
-                                            })
-                                          }
-                                        >
-                                          <a
-                                            href={`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-1 text-xs font-semibold text-purple-700 hover:underline"
-                                            onClick={(e) => e.stopPropagation()}
-                                          >
-                                            <FileText className="h-3 w-3 flex-shrink-0" />
-                                            {quotation.referenceNumber}
-                                          </a>
-                                          <div className="flex items-center gap-1.5">
-                                            {qCancelledSidebar ? (
-                                              <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
-                                                Cancelled
-                                              </span>
-                                            ) : (quotation.status === "selected" || quotation.selectedForProject) ? (
-                                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 tracking-tight">
-                                                <CheckCircle2 className="h-3 w-3" strokeWidth={3} />
-                                                Selected
-                                              </span>
-                                            ) : null}
-                                            <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform", qSidebarExpanded && "rotate-180")} />
-                                          </div>
-                                        </div>
-
-                                        {/* Collapsible body */}
-                                        {qSidebarExpanded && (
-                                          <div className="px-2.5 pb-2.5 border-t border-slate-100">
-                                            <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-500 pt-2">
-                                              <span>
-                                                Total:{" "}
-                                                <span className="font-semibold text-slate-800">
-                                                  ₱{qTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                </span>
-                                              </span>
-                                              {qIssuedDate && (
-                                                <span>
-                                                  Issued: <span className="font-medium text-slate-600">{qIssuedDate}</span>
-                                                </span>
-                                              )}
-                                            </div>
-                                          </div>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              ) : expandedDocSections.has(`${project.pid}:quotations`) ? (
-                                <p className="text-xs text-slate-400 ml-5">No quotations yet</p>
-                              ) : null}
                             </div>
 
-                            {/* Sample Submission Form Downloads + Upload */}
+                            {/* Sample Submission Form */}
                             <div>
                               {(() => {
                                 const isSampleFormDisabled = currentInquiry?.status === "In Progress";
+                                const isActive = activeDocPanel === `${project.pid}:sampleForm`;
                                 return (
-                                  <>
-                                    <button
-                                      type="button"
-                                      disabled={isSampleFormDisabled}
-                                      className={cn(
-                                        "flex items-center gap-2 mb-1.5 w-full text-left",
-                                        isSampleFormDisabled && "opacity-40 cursor-not-allowed"
-                                      )}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (!isSampleFormDisabled) {
-                                          toggleDocSection(project.pid!, "sampleForm");
-                                        }
-                                      }}
-                                    >
-                                      <FileText className="h-3 w-3 text-orange-500 flex-shrink-0" />
-                                      <span className="text-sm font-semibold text-slate-700 flex-1">Sample Submission Form</span>
-                                      <span className="text-[10px] text-slate-500 mr-1">({formSubmissionCount})</span>
-                                      <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:sampleForm`) && "rotate-180")} />
-                                    </button>
-                                    {expandedDocSections.has(`${project.pid}:sampleForm`) && !isSampleFormDisabled && (
-                                      <DownloadForms projectId={project.pid!} />
+                                  <button
+                                    type="button"
+                                    disabled={isSampleFormDisabled}
+                                    className={cn(
+                                      "flex items-center gap-2 px-2 py-1.5 w-full text-left rounded-lg transition-colors",
+                                      isActive ? "bg-orange-50" : isSampleFormDisabled ? "opacity-40 cursor-not-allowed" : "hover:bg-slate-50"
                                     )}
-                                  </>
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (!isSampleFormDisabled) handleSelectDocPanel(project.pid!, "sampleForm");
+                                    }}
+                                  >
+                                    <FileText className={cn("h-3 w-3 flex-shrink-0", isActive ? "text-orange-600" : "text-orange-500")} />
+                                    <span className={cn("text-sm font-semibold flex-1", isActive ? "text-orange-700" : "text-slate-700")}>Sample Submission Form</span>
+                                    <span className="text-[10px] text-slate-500 mr-1">({formSubmissionCount})</span>
+                                    <ChevronRight className={cn("h-3 w-3 flex-shrink-0 transition-transform", isActive ? "text-orange-500 rotate-90" : "text-slate-400")} />
+                                  </button>
                                 );
                               })()}
                             </div>
-
-                            {/* Sample Forms (Moved below Quotations) */}
-                            {portalFeatures.sampleForms && (docs?.sampleForms?.length || 0) > 0 && (
-                              <div>
-                                <div className="flex items-center gap-2 mb-1.5">
-                                  <FileSpreadsheet className="h-3 w-3 text-orange-600" />
-                                  <span className="text-sm font-semibold text-slate-700">
-                                    Sample Forms
-                                  </span>
-                                  <span className="text-[10px] text-slate-500">({docs?.sampleForms?.length || 0})</span>
-                                </div>
-                                <div className="space-y-1 ml-5">
-                                  {docs?.sampleForms.map((item) => (
-                                    <a
-                                      key={item.id}
-                                      href={`${sampleFormBaseHref}&formId=${item.id}`}
-                                      className="block text-xs text-slate-600 hover:text-orange-600 hover:underline truncate"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      • {item.id} ({item.totalNumberOfSamples || 0} samples)
-                                    </a>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
 
                             {/* Charge Slips */}
                             <div>
                               {(() => {
                                 const isChargeSlipsDisabled = chargeSlipCount === 0;
+                                const isActive = activeDocPanel === `${project.pid}:chargeSlips`;
                                 return (
                                   <button
                                     type="button"
                                     disabled={isChargeSlipsDisabled}
                                     className={cn(
-                                      "flex items-center gap-2 mb-1.5 w-full text-left",
-                                      isChargeSlipsDisabled && "opacity-40 cursor-not-allowed"
+                                      "flex items-center gap-2 px-2 py-1.5 w-full text-left rounded-lg transition-colors",
+                                      isActive ? "bg-green-50" : isChargeSlipsDisabled ? "opacity-40 cursor-not-allowed" : "hover:bg-slate-50"
                                     )}
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      if (!isChargeSlipsDisabled) {
-                                        toggleDocSection(project.pid!, "chargeSlips");
-                                      }
+                                      if (!isChargeSlipsDisabled) handleSelectDocPanel(project.pid!, "chargeSlips");
                                     }}
                                   >
-                                    <Receipt className="h-3 w-3 text-green-600 flex-shrink-0" />
-                                    <span className="text-sm font-semibold text-slate-700 flex-1">
-                                      Charge Slips
-                                    </span>
+                                    <Receipt className={cn("h-3 w-3 flex-shrink-0", isActive ? "text-green-600" : "text-green-500")} />
+                                    <span className={cn("text-sm font-semibold flex-1", isActive ? "text-green-700" : "text-slate-700")}>Charge Slips</span>
                                     <span className="text-[10px] text-slate-500 mr-1">({chargeSlipCount})</span>
-                                    <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:chargeSlips`) && "rotate-180")} />
+                                    <ChevronRight className={cn("h-3 w-3 flex-shrink-0 transition-transform", isActive ? "text-green-500 rotate-90" : "text-slate-400")} />
                                   </button>
                                 );
                               })()}
-                              {expandedDocSections.has(`${project.pid}:chargeSlips`) && chargeSlipCount > 0 ? (
-                                <div className="space-y-2 ml-4">
-                                  {docs?.chargeSlips.map((chargeSlip) => {
-                                    const csPaid = chargeSlip.status === "paid";
-                                    const csCancelled = chargeSlip.status === "cancelled";
-                                    const csPending = chargeSlip.status === "pending";
-                                    const csWaived = chargeSlip.status === "waived";
-                                    const csTotal = typeof chargeSlip.total === "number" ? chargeSlip.total : 0;
-                                    const csRawDate = chargeSlip.dateIssued;
-                                    const csIssuedDate = csRawDate
-                                      ? (csRawDate as any)?.toDate
-                                        ? formatDate((csRawDate as any).toDate())
-                                        : formatDate(csRawDate as string)
-                                      : null;
-                                    return (
-                                      <div
-                                        key={chargeSlip.id}
-                                        className="rounded-xl border border-slate-100 bg-white shadow-sm overflow-hidden"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        {/* Header — always visible */}
-                                        <div className="p-2.5 space-y-1">
-                                          {/* Row 1: CS number + status badge */}
-                                          <div className="flex items-center gap-1.5 flex-wrap">
-                                            <a
-                                              href={`/client/view-document?type=charge-slip&ref=${chargeSlip.id}`}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="flex items-center gap-1 text-xs font-semibold text-green-700 hover:underline"
-                                              onClick={(e) => e.stopPropagation()}
-                                            >
-                                              <Receipt className="h-3 w-3 flex-shrink-0" />
-                                              {chargeSlip.chargeSlipNumber}
-                                            </a>
-                                            {csPaid ? (
-                                              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
-                                                <CheckCircle2 className="h-2.5 w-2.5" /> Paid
-                                              </span>
-                                            ) : csCancelled ? (
-                                              <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
-                                                Cancelled
-                                              </span>
-                                            ) : csWaived ? (
-                                              <span className="inline-flex text-[10px] font-semibold text-purple-700 bg-purple-50 border border-purple-200 rounded-full px-2 py-0.5">
-                                                Waived
-                                              </span>
-                                            ) : csPending ? (
-                                              <span className="inline-flex text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 animate-pulse">
-                                                Pending Validation
-                                              </span>
-                                            ) : (
-                                              <span className="inline-flex text-[10px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-full px-2 py-0.5">
-                                                Processing
-                                              </span>
-                                            )}
-                                          </div>
-                                          {/* Row 2: Total + Issued */}
-                                          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-500">
-                                            <span>
-                                              Total:{" "}
-                                              <span className="font-semibold text-slate-800">
-                                                ₱{csTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                              </span>
-                                            </span>
-                                            {csIssuedDate && (
-                                              <span>
-                                                Issued: <span className="font-medium text-slate-600">{csIssuedDate}</span>
-                                              </span>
-                                            )}
-                                          </div>
-                                        </div>
-
-                                        {/* OR Upload — always visible */}
-                                        <div className="px-2.5 pb-2.5">
-                                          <UploadReceipt
-                                            projectId={project.pid}
-                                            hasChargeSlip={true}
-                                            chargeSlipNumber={chargeSlip.chargeSlipNumber}
-                                            uploadAllowed={!csPaid && !csCancelled}
-                                          />
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              ) : expandedDocSections.has(`${project.pid}:chargeSlips`) ? (
-                                <p className="text-xs text-slate-400 ml-5">No charge slips yet</p>
-                              ) : null}
                             </div>
-
-                            {portalFeatures.sampleForms && (
-                              <div>
-                                <div className="flex items-center gap-2 mb-1.5">
-                                  <FileSpreadsheet className="h-3 w-3 text-orange-600" />
-                                  <span className="text-sm font-semibold text-slate-700">
-                                    Sample Forms
-                                  </span>
-                                  <span className="text-[10px] text-slate-500">({docs?.sampleForms?.length || 0})</span>
-                                </div>
-                                <a
-                                  href={sampleFormBaseHref}
-                                  className="inline-block text-xs text-[#166FB5] hover:underline ml-5 mb-2"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  + Fill out sample submission form
-                                </a>
-                                {(docs?.sampleForms?.length || 0) > 0 ? (
-                                  <div className="space-y-1 ml-5">
-                                    {docs?.sampleForms.map((item) => (
-                                      <a
-                                        key={item.id}
-                                        href={`${sampleFormBaseHref}&formId=${item.id}`}
-                                        className="block text-xs text-slate-600 hover:text-orange-600 hover:underline truncate"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        • {item.id} ({item.totalNumberOfSamples || 0} samples)
-                                      </a>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <p className="text-xs text-slate-400 ml-5">No sample forms yet</p>
-                                )}
-                              </div>
-                            )}
 
                             {portalFeatures.serviceReports && (
                               <div>
                                 {(() => {
                                   const hasServiceReports = (docs?.serviceReports?.length || 0) > 0;
-                                  // All charge slips must be paid, waived, or cancelled for the client to receive/view
-                                  // Receive is enabled only when at least one charge slip is paid or waived.
-                                  // If all charge slips are cancelled (or none exist), keep disabled.
-                                  const allChargeSlipsSettled =
-                                    chargeSlipCount > 0 &&
-                                    (docs?.chargeSlips?.some(
-                                      (cs) => cs.status === "paid" || cs.status === "waived"
-                                    ) ?? false);
                                   const isServiceReportSectionDisabled = !hasServiceReports;
+                                  const isActive = activeDocPanel === `${project.pid}:serviceReports`;
                                   return (
-                                    <>
-                                      <button
-                                        type="button"
-                                        disabled={isServiceReportSectionDisabled}
-                                        className={cn(
-                                          "flex items-center gap-2 mb-1.5 w-full text-left",
-                                          isServiceReportSectionDisabled && "opacity-40 cursor-not-allowed"
-                                        )}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          if (!isServiceReportSectionDisabled) {
-                                            toggleDocSection(project.pid!, "serviceReports");
-                                          }
-                                        }}
-                                      >
-                                        <ShieldEllipsis className="h-3 w-3 text-blue-600 flex-shrink-0" />
-                                        <span className="text-sm font-semibold text-slate-700 flex-1">
-                                          Service Reports
-                                        </span>
-                                        <span className="text-[10px] text-slate-500 mr-1">({docs?.serviceReports?.length || 0})</span>
-                                        <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform flex-shrink-0", expandedDocSections.has(`${project.pid}:serviceReports`) && "rotate-180")} />
-                                      </button>
-                                      {expandedDocSections.has(`${project.pid}:serviceReports`) && hasServiceReports ? (
-                                        <div className="space-y-2 ml-5">
-                                          {docs?.serviceReports.map((item: any) => {
-                                            const isReceived = item.status === "received";
-                                            const receivedDate = item.receivedAt?.toDate
-                                              ? format(item.receivedAt.toDate(), "MMM d, yyyy h:mm a")
-                                              : "";
-                                            const reportKey = `${project.pid}:${item.id}`;
-                                            const isReceiving = receivingReportId === reportKey;
-                                            return (
-                                              <div
-                                                key={item.id}
-                                                className="flex items-start justify-between gap-2 py-1.5 border-b border-slate-100 last:border-0"
-                                                onClick={(e) => e.stopPropagation()}
-                                              >
-                                                <div className="flex items-start gap-1.5 min-w-0">
-                                                  <FileText className="h-3 w-3 shrink-0 text-blue-500 mt-0.5" />
-                                                  <div className="min-w-0">
-                                                    {isReceived ? (
-                                                      <a
-                                                        href={item.fileUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-xs text-blue-700 hover:underline truncate block"
-                                                      >
-                                                        {item.fileName || item.id}
-                                                      </a>
-                                                    ) : (
-                                                      <span className="text-xs text-slate-600 truncate block">
-                                                        {item.fileName || item.id}
-                                                      </span>
-                                                    )}
-                                                    {isReceived && receivedDate && (
-                                                      <span className="text-[10px] text-green-600 block">
-                                                        Received {receivedDate}
-                                                      </span>
-                                                    )}
-                                                  </div>
-                                                </div>
-                                                <div className="shrink-0">
-                                                  {isReceived ? (
-                                                    <div className="flex items-center gap-1">
-                                                      <Badge
-                                                        variant="outline"
-                                                        className="text-[10px] text-green-700 border-green-200 bg-green-50 gap-1 py-0.5 h-5"
-                                                      >
-                                                        <CheckCircle2 className="h-2.5 w-2.5" />
-                                                        Received
-                                                      </Badge>
-                                                      <a
-                                                        href={item.fileUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        title="Download"
-                                                      >
-                                                        <Download className="h-3 w-3 text-slate-400 hover:text-blue-600" />
-                                                      </a>
-                                                    </div>
-                                                  ) : allChargeSlipsSettled ? (
-                                                    <Button
-                                                      size="sm"
-                                                      variant="outline"
-                                                      className="h-6 text-[10px] px-2 gap-1 text-blue-700 border-blue-200 hover:bg-blue-50"
-                                                      disabled={isReceiving}
-                                                      onClick={() => handleReceiveServiceReport(project.pid, item)}
-                                                    >
-                                                      {isReceiving ? (
-                                                        <Loader2 className="h-2.5 w-2.5 animate-spin" />
-                                                      ) : (
-                                                        <Download className="h-2.5 w-2.5" />
-                                                      )}
-                                                      Receive
-                                                    </Button>
-                                                  ) : (
-                                                    <TooltipProvider delayDuration={100}>
-                                                      <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                          <span className="inline-block">
-                                                            <Button
-                                                              size="sm"
-                                                              variant="outline"
-                                                              className="h-6 text-[10px] px-2 gap-1 text-slate-400 border-slate-200 cursor-not-allowed pointer-events-none"
-                                                              disabled
-                                                            >
-                                                              <Download className="h-2.5 w-2.5" />
-                                                              Receive
-                                                            </Button>
-                                                          </span>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent side="left" className="max-w-[180px] text-[10px] text-center">
-                                                          Please settle all outstanding charge slips to view and download the service report.
-                                                        </TooltipContent>
-                                                      </Tooltip>
-                                                    </TooltipProvider>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            );
-                                          })}
-                                        </div>
-                                      ) : expandedDocSections.has(`${project.pid}:serviceReports`) ? (
-                                        <p className="text-xs text-slate-400 ml-5">No service reports yet</p>
-                                      ) : null}
-                                    </>
+                                    <button
+                                      type="button"
+                                      disabled={isServiceReportSectionDisabled}
+                                      className={cn(
+                                        "flex items-center gap-2 px-2 py-1.5 w-full text-left rounded-lg transition-colors",
+                                        isActive ? "bg-blue-50" : isServiceReportSectionDisabled ? "opacity-40 cursor-not-allowed" : "hover:bg-slate-50"
+                                      )}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (!isServiceReportSectionDisabled) handleSelectDocPanel(project.pid!, "serviceReports");
+                                      }}
+                                    >
+                                      <ShieldEllipsis className={cn("h-3 w-3 flex-shrink-0", isActive ? "text-blue-600" : "text-blue-500")} />
+                                      <span className={cn("text-sm font-semibold flex-1", isActive ? "text-blue-700" : "text-slate-700")}>Service Reports</span>
+                                      <span className="text-[10px] text-slate-500 mr-1">({serviceReportCount})</span>
+                                      <ChevronRight className={cn("h-3 w-3 flex-shrink-0 transition-transform", isActive ? "text-blue-500 rotate-90" : "text-slate-400")} />
+                                    </button>
                                   );
                                 })()}
                               </div>
@@ -3375,10 +3039,10 @@ export default function ClientPortalPage() {
         {/* ═════ RIGHT CONTENT ═════ */}
         <main className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50/50 to-blue-50/30">
           {projectDetails ? (
-            <div className="p-4 lg:p-6 max-w-5xl mx-auto space-y-6">
+            <div className="p-3 lg:p-4 max-w-5xl mx-auto space-y-3">
               {/* Draft/Pending/Approved status banner */}
               {(projectDetails?.isDraft || projectDetails?.status === "Ongoing" || projectDetails?.status === "Pending Approval" || projectDetails?.status === "Rejected") && (
-                <div className={`rounded-lg p-4 border ${
+                <div className={`rounded-lg p-3 border ${
                   projectDetails.status === "Draft" 
                     ? "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
                     : projectDetails.status === "Pending Approval"
@@ -3388,13 +3052,13 @@ export default function ClientPortalPage() {
                     : "bg-gradient-to-r from-red-50 to-pink-50 border-red-200"
                 }`}>
                   <div className="flex items-start">
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 space-y-1">
                       {projectDetails.status === "Draft" ? (
                         <>
-                          <p className="text-sm font-semibold text-orange-900 leading-none">
+                          <p className="text-xs font-semibold text-orange-900 leading-none">
                             Action Required: Complete Project Submission
                           </p>
-                          <p className="text-sm text-orange-700 leading-relaxed">
+                          <p className="text-xs text-orange-700 leading-relaxed">
                             {members.some(m => m.isPrimary && !m.isSubmitted) ? (
                               <>Please provide your details as the <strong>Primary Member</strong>. </>
                             ) : (
@@ -3405,28 +3069,28 @@ export default function ClientPortalPage() {
                         </>
                       ) : projectDetails.status === "Pending Approval" ? (
                         <>
-                          <p className="text-sm font-semibold text-blue-900 leading-none">
+                          <p className="text-xs font-semibold text-blue-900 leading-none">
                             Application Submitted & Under Review
                           </p>
-                          <p className="text-sm text-blue-700 leading-relaxed">
+                          <p className="text-xs text-blue-700 leading-relaxed">
                             Your project and team details have been successfully submitted. Our team is currently reviewing your application. Please check this portal dashboard for your <strong>Project ID</strong>, <strong>Client ID</strong>, and approval notification. <strong>No further action is required at this time.</strong>
                           </p>
                         </>
                       ) : projectDetails.status === "Ongoing" ? (
                         <>
-                          <p className="text-sm font-semibold text-green-900 leading-none">
+                          <p className="text-xs font-semibold text-green-900 leading-none">
                             Project Approved
                           </p>
-                          <p className="text-sm text-green-700 leading-relaxed">
+                          <p className="text-xs text-green-700 leading-relaxed">
                             Your project has been approved and is now active. You can now view your unique <strong>Project ID</strong> and <strong>Client IDs</strong>, and access all project documents below.
                           </p>
                         </>
                       ) : (
                         <>
-                          <p className="text-sm font-semibold text-red-900 leading-none">
+                          <p className="text-xs font-semibold text-red-900 leading-none">
                             Project Rejected
                           </p>
-                          <p className="text-sm text-red-700 leading-relaxed">
+                          <p className="text-xs text-red-700 leading-relaxed">
                             Your project submission was not approved. Please check your email or the feedback section for details on necessary corrections before resubmitting.
                           </p>
                         </>
@@ -3437,10 +3101,10 @@ export default function ClientPortalPage() {
               )}
 
               {/* ── Project Header ────────────────────────── */}
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                 <div className="min-w-0">
-                  <div className="flex items-center gap-3 flex-wrap mb-1">
-                    <h1 className="text-2xl font-bold text-slate-800">
+                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                    <h1 className="text-lg font-bold text-slate-800 leading-snug">
                       {projectDetails.title}
                     </h1>
                   </div>
@@ -3521,15 +3185,15 @@ export default function ClientPortalPage() {
                     </CardContent>
                   </Card>
                 )}
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {/* Section header */}
-                <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-3">
                     <div className="p-1.5 bg-[#166FB5]/10 rounded-lg">
                       <Users className="h-4 w-4 text-[#166FB5]" />
                     </div>
                     <div>
-                      <h2 className="text-base font-bold text-slate-800 leading-tight">
+                      <h2 className="text-sm font-bold text-slate-800 leading-tight">
                         Team Members
                       </h2>
                       <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
@@ -3546,6 +3210,7 @@ export default function ClientPortalPage() {
                       onClick={handleAddMember}
                       variant="outline"
                       size="sm"
+
                       disabled={projectDetails?.status === "Completed" || approvalStatus === "pending" || projectDetails?.status === "Pending Approval"}
                       className="border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white disabled:opacity-50"
                     >
@@ -3693,6 +3358,297 @@ export default function ClientPortalPage() {
                     </div>
                   )}
               </div>
+
+              {/* ── Document Panel (shown below Team Members when a doc section is selected) ── */}
+              {selectedProjectPid && activeDocPanel && activeDocPanel.startsWith(selectedProjectPid + ":") && (() => {
+                const panelSection = activeDocPanel.split(":").slice(1).join(":");
+                const panelDocs = projectDocuments.get(selectedProjectPid);
+                const panelChargeSlipCount = panelDocs?.chargeSlips.length || 0;
+                const allChargeSlipsSettled =
+                  panelChargeSlipCount > 0 &&
+                  (panelDocs?.chargeSlips?.some((cs) => cs.status === "paid" || cs.status === "waived") ?? false);
+                const sfParams = new URLSearchParams();
+                if (emailParam) sfParams.set("email", emailParam);
+                if (inquiryIdParam) sfParams.set("inquiryId", inquiryIdParam);
+                sfParams.set("pid", selectedProjectPid);
+                if (projectDetails?.title) sfParams.set("projectTitle", projectDetails.title);
+                if (primaryMember?.formData?.name) sfParams.set("name", primaryMember.formData.name);
+                if (primaryMember?.cid) sfParams.set("clientId", primaryMember.cid);
+                const sfBaseHref = `/client/sample-form?${sfParams.toString()}`;
+
+                const PANEL_META: Record<string, { icon: React.ReactNode; label: string; accent: string; iconBg: string }> = {
+                  quotations:     { icon: <FileText className="h-4 w-4 text-purple-600" />,    label: "Quotations",            accent: "text-purple-700", iconBg: "bg-purple-50" },
+                  sampleForm:     { icon: <FileText className="h-4 w-4 text-orange-600" />,    label: "Sample Submission Form", accent: "text-orange-700", iconBg: "bg-orange-50" },
+                  chargeSlips:    { icon: <Receipt className="h-4 w-4 text-green-600" />,      label: "Charge Slips",          accent: "text-green-700",  iconBg: "bg-green-50"  },
+                  serviceReports: { icon: <ShieldEllipsis className="h-4 w-4 text-blue-600" />, label: "Service Reports",      accent: "text-blue-700",   iconBg: "bg-blue-50"   },
+                };
+                const meta = PANEL_META[panelSection];
+                if (!meta) return null;
+
+                return (
+                  <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4">
+                    {/* Panel header */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={cn("p-1.5 rounded-lg", meta.iconBg)}>{meta.icon}</div>
+                        <div>
+                          <h2 className={cn("text-base font-bold leading-tight", meta.accent)}>{meta.label}</h2>
+                          <p className="text-xs text-slate-400">Project: {projectDetails?.pid || selectedProjectPid}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setActiveDocPanel(null)}
+                        className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                        title="Close panel"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    {/* Quotations panel */}
+                    {panelSection === "quotations" && (
+                      <div className="space-y-2">
+                        {panelDocs?.loading ? (
+                          <div className="flex items-center gap-2 py-6 justify-center text-slate-400">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span className="text-sm">Loading quotations…</span>
+                          </div>
+                        ) : (panelDocs?.quotations.length || 0) === 0 ? (
+                          <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                            <FileText className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                            <p className="text-sm text-slate-400 italic">No quotations issued for this project yet.</p>
+                          </div>
+                        ) : panelDocs?.quotations.map((quotation) => {
+                          const qCancelled = quotation.status === "cancelled";
+                          const qTotal = typeof quotation.total === "number" ? quotation.total : 0;
+                          const qRawDate = quotation.dateIssued;
+                          const qIssuedDate = qRawDate
+                            ? (qRawDate as any)?.toDate ? formatDate((qRawDate as any).toDate()) : formatDate(qRawDate as string)
+                            : null;
+                          return (
+                            <div key={quotation.id} className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 flex items-center justify-between gap-3 flex-wrap hover:bg-slate-50 transition-colors">
+                              <div className="flex items-center gap-2 flex-wrap min-w-0">
+                                <FileText className="h-3.5 w-3.5 text-purple-500 flex-shrink-0" />
+                                <span className="text-sm font-semibold text-purple-700">{quotation.referenceNumber}</span>
+                                <span className="text-xs text-slate-500">
+                                  Total: <span className="font-semibold text-slate-700">₱{qTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                                </span>
+                                {qIssuedDate && (
+                                  <span className="text-xs text-slate-500">Issued: <span className="font-medium text-slate-600">{qIssuedDate}</span></span>
+                                )}
+                                {qCancelled ? (
+                                  <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">Cancelled</span>
+                                ) : (quotation.status === "selected" || quotation.selectedForProject) ? (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                                    <CheckCircle2 className="h-3 w-3" /> Selected
+                                  </span>
+                                ) : null}
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => router.push(`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`)}
+                                className="border-purple-100 text-purple-600 hover:bg-purple-50 h-8 text-xs flex-shrink-0"
+                              >
+                                <FileText className="h-3 w-3 mr-1" /> View PDF
+                              </Button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Sample Submission Form panel */}
+                    {panelSection === "sampleForm" && (
+                      <div className="space-y-4">
+                        <DownloadForms projectId={selectedProjectPid} />
+                        {portalFeatures.sampleForms && (
+                          <>
+                            <div className="pt-2 border-t border-slate-100">
+                              <a
+                                href={sfBaseHref}
+                                className="inline-flex items-center gap-2 text-sm text-[#166FB5] hover:underline font-semibold"
+                              >
+                                <Plus className="h-4 w-4" /> Fill out Sample Submission Form
+                              </a>
+                            </div>
+                            {(panelDocs?.sampleForms?.length || 0) > 0 && (
+                              <div className="space-y-2">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Submitted Forms</p>
+                                {panelDocs?.sampleForms.map((item) => (
+                                  <a
+                                    key={item.id}
+                                    href={`${sfBaseHref}&formId=${item.id}`}
+                                    className="flex items-center gap-2 text-sm text-slate-600 hover:text-orange-600 hover:underline py-1.5 px-3 rounded-lg hover:bg-orange-50 transition-colors"
+                                  >
+                                    <FileSpreadsheet className="h-4 w-4 text-orange-500 flex-shrink-0" />
+                                    {item.id} — {item.totalNumberOfSamples || 0} samples
+                                  </a>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Charge Slips panel */}
+                    {panelSection === "chargeSlips" && (
+                      <div className="space-y-3">
+                        {panelDocs?.loading ? (
+                          <div className="flex items-center gap-2 py-6 justify-center text-slate-400">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span className="text-sm">Loading charge slips…</span>
+                          </div>
+                        ) : (panelDocs?.chargeSlips.length || 0) === 0 ? (
+                          <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                            <Receipt className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                            <p className="text-sm text-slate-400 italic">No charge slips issued for this project yet.</p>
+                          </div>
+                        ) : panelDocs?.chargeSlips.map((chargeSlip) => {
+                          const csPaid = chargeSlip.status === "paid";
+                          const csCancelled = chargeSlip.status === "cancelled";
+                          const csPending = chargeSlip.status === "pending";
+                          const csWaived = chargeSlip.status === "waived";
+                          const csTotal = typeof chargeSlip.total === "number" ? chargeSlip.total : 0;
+                          const csRawDate = chargeSlip.dateIssued;
+                          const csIssuedDate = csRawDate
+                            ? (csRawDate as any)?.toDate ? formatDate((csRawDate as any).toDate()) : formatDate(csRawDate as string)
+                            : null;
+                          return (
+                            <div key={chargeSlip.id} className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 space-y-3 hover:bg-slate-50 transition-colors">
+                              <div className="flex items-center justify-between gap-3 flex-wrap">
+                                <div className="flex items-center gap-2 flex-wrap min-w-0">
+                                  <a
+                                    href={`/client/view-document?type=charge-slip&ref=${chargeSlip.id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1.5 text-sm font-semibold text-green-700 hover:underline"
+                                  >
+                                    <Receipt className="h-4 w-4 flex-shrink-0" />
+                                    {chargeSlip.chargeSlipNumber}
+                                  </a>
+                                  <span className="text-xs text-slate-500">
+                                    Total: <span className="font-semibold text-slate-700">₱{csTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                                  </span>
+                                  {csIssuedDate && (
+                                    <span className="text-xs text-slate-500">Issued: <span className="font-medium text-slate-600">{csIssuedDate}</span></span>
+                                  )}
+                                </div>
+                                <div>
+                                  {csPaid ? (
+                                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-0.5">
+                                      <CheckCircle2 className="h-3 w-3" /> Paid
+                                    </span>
+                                  ) : csCancelled ? (
+                                    <span className="inline-flex text-xs font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-3 py-0.5">Cancelled</span>
+                                  ) : csWaived ? (
+                                    <span className="inline-flex text-xs font-semibold text-purple-700 bg-purple-50 border border-purple-200 rounded-full px-3 py-0.5">Waived</span>
+                                  ) : csPending ? (
+                                    <span className="inline-flex text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-0.5 animate-pulse">Pending Validation</span>
+                                  ) : (
+                                    <span className="inline-flex text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-full px-3 py-0.5">Processing</span>
+                                  )}
+                                </div>
+                              </div>
+                              <UploadReceipt
+                                projectId={selectedProjectPid}
+                                hasChargeSlip={true}
+                                chargeSlipNumber={chargeSlip.chargeSlipNumber}
+                                uploadAllowed={!csPaid && !csCancelled}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Service Reports panel */}
+                    {panelSection === "serviceReports" && portalFeatures.serviceReports && (() => {
+                      const hasServiceReports = (panelDocs?.serviceReports?.length || 0) > 0;
+                      return (
+                        <div className="space-y-2">
+                          {panelDocs?.loading ? (
+                            <div className="flex items-center gap-2 py-6 justify-center text-slate-400">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <span className="text-sm">Loading service reports…</span>
+                            </div>
+                          ) : !hasServiceReports ? (
+                            <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                              <ShieldEllipsis className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                              <p className="text-sm text-slate-400 italic">No service reports available yet.</p>
+                            </div>
+                          ) : panelDocs?.serviceReports.map((item: any) => {
+                            const isReceived = item.status === "received";
+                            const receivedDate = item.receivedAt?.toDate
+                              ? format(item.receivedAt.toDate(), "MMM d, yyyy h:mm a")
+                              : "";
+                            const reportKey = `${selectedProjectPid}:${item.id}`;
+                            const isReceiving = receivingReportId === reportKey;
+                            return (
+                              <div key={item.id} className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <FileText className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                                  <div className="min-w-0">
+                                    {isReceived ? (
+                                      <a href={item.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-700 hover:underline truncate block">
+                                        {item.fileName || item.id}
+                                      </a>
+                                    ) : (
+                                      <span className="text-sm text-slate-600 truncate block">{item.fileName || item.id}</span>
+                                    )}
+                                    {isReceived && receivedDate && (
+                                      <span className="text-xs text-green-600">Received {receivedDate}</span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="shrink-0">
+                                  {isReceived ? (
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="outline" className="text-xs text-green-700 border-green-200 bg-green-50 gap-1 h-6">
+                                        <CheckCircle2 className="h-3 w-3" /> Received
+                                      </Badge>
+                                      <a href={item.fileUrl} target="_blank" rel="noopener noreferrer" title="Download">
+                                        <Download className="h-4 w-4 text-slate-400 hover:text-blue-600" />
+                                      </a>
+                                    </div>
+                                  ) : allChargeSlipsSettled ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-8 text-xs px-3 gap-1 text-blue-700 border-blue-200 hover:bg-blue-50"
+                                      disabled={isReceiving}
+                                      onClick={() => handleReceiveServiceReport(selectedProjectPid, item)}
+                                    >
+                                      {isReceiving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+                                      Receive
+                                    </Button>
+                                  ) : (
+                                    <TooltipProvider delayDuration={100}>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <span>
+                                            <Button size="sm" variant="outline" className="h-8 text-xs px-3 gap-1 text-slate-400 border-slate-200 cursor-not-allowed pointer-events-none" disabled>
+                                              <Download className="h-3 w-3" /> Receive
+                                            </Button>
+                                          </span>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="left" className="max-w-[200px] text-xs text-center">
+                                          Please settle all outstanding charge slips first.
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                );
+              })()}
             </div>
           ) : (
             /* ── Dashboard Overview (no project selected) ─────── */
