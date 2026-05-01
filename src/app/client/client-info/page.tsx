@@ -3925,6 +3925,9 @@ export default function ClientPortalPage() {
                                 </div>
                               </div>
 
+                              {/* Divider */}
+                              <div className="border-t border-slate-100" />
+
                               {/* Workflow */}
                               <div className="space-y-1">
                                 <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Workflow / Analysis Strategy</span>
@@ -4147,7 +4150,7 @@ export default function ClientPortalPage() {
                                 </div>
                               )}
 
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {currentInquiry.molecularServicesBudget && (
                                   <div className="space-y-1">
                                     <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Molecular Services Budget</span>
