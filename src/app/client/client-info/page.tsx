@@ -3904,23 +3904,18 @@ export default function ClientPortalPage() {
                         <div className="space-y-4">
                           {/* Laboratory Service Details */}
                           {currentInquiry.serviceType === "laboratory" ? (
-                            <div className="space-y-6 animate-in fade-in duration-500">
-                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                            <div className="space-y-3 animate-in fade-in duration-500">
+                              <div className="grid grid-cols-3 gap-3">
                                 {/* Service Type */}
-                                <div className="space-y-1.5">
-                                  <div className="flex items-center gap-2">
-                                    <FlaskConical className="h-4 w-4 text-slate-400" />
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Service Type</span>
-                                  </div>
-                                  <Badge className="w-fit capitalize bg-blue-50 text-blue-700 border-blue-100 text-xs px-2.5 py-0.5 font-bold">
-                                    Laboratory
-                                  </Badge>
+                                <div className="space-y-0.5">
+                                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Service Type</span>
+                                  <p className="text-sm font-semibold text-slate-800 capitalize">Laboratory</p>
                                 </div>
 
                                 {/* Species */}
-                                <div className="space-y-1.5">
-                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Species</span>
-                                  <p className="text-sm font-bold text-slate-900 capitalize italic">
+                                <div className="space-y-0.5">
+                                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Species</span>
+                                  <p className="text-sm font-medium text-slate-800 capitalize italic">
                                     {currentInquiry.species 
                                       ? (currentInquiry.otherSpecies ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}` : currentInquiry.species)
                                       : "—"}
@@ -3928,132 +3923,120 @@ export default function ClientPortalPage() {
                                 </div>
 
                                 {/* Sample Count */}
-                                <div className="space-y-1.5">
-                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Sample Count</span>
-                                  <p className="text-sm font-bold text-slate-900">{currentInquiry.sampleCount || "—"}</p>
+                                <div className="space-y-0.5">
+                                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Sample Count</span>
+                                  <p className="text-sm font-semibold text-slate-800">{currentInquiry.sampleCount || "—"}</p>
                                 </div>
                               </div>
 
+                              {/* Divider */}
+                              <div className="border-t border-slate-100" />
+
                               {/* Workflow */}
-                              <div className="space-y-2">
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Workflow</span>
-                                <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100 text-sm text-slate-800 font-semibold shadow-inner">
-                                  {formatWorkflowType(currentInquiry.workflowType)}
-                                </div>
+                              <div className="space-y-1">
+                                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Workflow</span>
+                                <p className="text-sm font-medium text-slate-800">{formatWorkflowType(currentInquiry.workflowType)}</p>
                               </div>
 
                               {/* Bioinformatics Analysis */}
-                              <div className="space-y-2">
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Bioinformatics Analysis</span>
+                              <div className="space-y-1.5">
+                                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Bioinformatics Analysis</span>
                                 {currentInquiry.bioinfoOptions && currentInquiry.bioinfoOptions.length > 0 ? (
-                                  <div className="flex flex-wrap gap-2 p-1">
+                                  <div className="flex flex-wrap gap-1.5">
                                     {currentInquiry.bioinfoOptions.map((option) => (
-                                      <Badge 
-                                        key={option} 
-                                        variant="secondary" 
-                                        className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 transition-colors py-1 px-3 text-[11px] font-bold"
+                                      <span
+                                        key={option}
+                                        className="inline-block text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-100 rounded-md px-2 py-0.5"
                                       >
                                         {formatBioinfoOption(option)}
-                                      </Badge>
+                                      </span>
                                     ))}
                                   </div>
                                 ) : (
-                                  <p className="text-sm text-slate-400 px-1 italic">None selected</p>
+                                  <p className="text-sm text-slate-400 italic">None selected</p>
                                 )}
                               </div>
 
                               {/* Research Overview */}
-                              <div className="space-y-2">
-                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Research Overview</span>
-                                <div className="p-4 bg-indigo-50/30 rounded-xl border border-indigo-100/30 text-sm text-slate-800 italic leading-relaxed font-medium">
-                                  {currentInquiry.researchOverview ? `"${currentInquiry.researchOverview}"` : "—"}
-                                </div>
+                              <div className="space-y-1">
+                                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Research Overview</span>
+                                <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                                  {currentInquiry.researchOverview || "—"}
+                                </p>
                               </div>
                             </div>
                           ) : (
                             /* Other Services (Research, Training, Retail, etc.) */
-                            <div className="space-y-6 animate-in fade-in duration-500">
+                            <div className="space-y-3 animate-in fade-in duration-500">
                               {/* Top Section: Quick Stats */}
-                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 {/* Service Type */}
-                                <div className="space-y-1.5">
-                                  <div className="flex items-center gap-2">
-                                    <FlaskConical className="h-4 w-4 text-slate-400" />
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Service Type</span>
-                                  </div>
-                                  <Badge className="w-fit capitalize bg-blue-50 text-blue-700 border-blue-100 text-xs px-2.5 py-0.5 font-bold">
-                                    {formatServiceType(currentInquiry.serviceType)}
-                                  </Badge>
+                                <div className="space-y-0.5">
+                                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Service Type</span>
+                                  <p className="text-sm font-semibold text-slate-800 capitalize">{formatServiceType(currentInquiry.serviceType)}</p>
                                 </div>
 
                                 {/* Sample Count */}
                                 {currentInquiry.sampleCount && (
-                                  <div className="space-y-1.5">
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Quantity</span>
-                                    <p className="text-sm font-bold text-slate-900">{currentInquiry.sampleCount} samples</p>
+                                  <div className="space-y-0.5">
+                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Quantity</span>
+                                    <p className="text-sm font-semibold text-slate-800">{currentInquiry.sampleCount} samples</p>
                                   </div>
                                 )}
 
                                 {/* Retail Sales Details Section */}
                                 {currentInquiry.serviceType === 'retail' && currentInquiry.retailItems && currentInquiry.retailItems.length > 0 && (
-                                  <div className="pt-4 border-t border-slate-100 space-y-4 sm:col-span-3">
-                                    <h3 className="text-sm font-semibold text-slate-700">Retail Sales Details</h3>
-                                    <div className="flex flex-col">
-                                      <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Requested Items</span>
-                                      <div className="grid grid-cols-1 gap-3 mt-2">
-                                        {currentInquiry.retailItems.map((item, idx) => (
-                                          <div key={`${item}-${idx}`} className="flex flex-col bg-slate-50 p-3 rounded-lg border border-slate-100">
-                                            <span className="text-sm font-semibold text-slate-800">{item}</span>
-                                            {currentInquiry.retailItemDetails?.[item] && (
-                                              <div className="mt-1 flex items-center gap-2">
-                                                <span className="text-xs text-slate-500">Amount:</span>
-                                                <span className="text-sm text-[#166FB5] font-medium">{currentInquiry.retailItemDetails[item]}</span>
-                                              </div>
-                                            )}
-                                          </div>
-                                        ))}
-                                      </div>
+                                  <div className="pt-3 border-t border-slate-100 space-y-2 sm:col-span-3">
+                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Requested Items</span>
+                                    <div className="grid grid-cols-1 gap-2">
+                                      {currentInquiry.retailItems.map((item, idx) => (
+                                        <div key={`${item}-${idx}`} className="flex items-center justify-between bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
+                                          <span className="text-sm font-medium text-slate-800">{item}</span>
+                                          {currentInquiry.retailItemDetails?.[item] && (
+                                            <span className="text-sm text-[#166FB5] font-semibold">{currentInquiry.retailItemDetails[item]}</span>
+                                          )}
+                                        </div>
+                                      ))}
                                     </div>
                                   </div>
                                 )}
                               </div>
 
                               {currentInquiry.serviceType === 'bioinformatics' && (
-                                <div className="space-y-4">
-                                  <div className="space-y-2">
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Type of Bioinformatics Service</span>
-                                    <div className="flex flex-wrap gap-2 p-1">
+                                <div className="space-y-3">
+                                  <div className="space-y-1.5">
+                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Type of Bioinformatics Service</span>
+                                    <div className="flex flex-wrap gap-1.5">
                                       {(Array.isArray(currentInquiry.bioinformaticsDetails?.serviceTypes) ? currentInquiry.bioinformaticsDetails?.serviceTypes : []).length > 0 ? (
                                         (currentInquiry.bioinformaticsDetails?.serviceTypes as string[]).map((serviceType) => (
-                                          <Badge
+                                          <span
                                             key={serviceType}
-                                            variant="secondary"
-                                            className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 transition-colors py-1 px-3 text-[11px] font-bold"
+                                            className="inline-block text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-100 rounded-md px-2 py-0.5"
                                           >
                                             {serviceType}
-                                          </Badge>
+                                          </span>
                                         ))
                                       ) : (
-                                        <p className="text-sm text-slate-400 px-1 italic">None selected</p>
+                                        <p className="text-sm text-slate-400 italic">None selected</p>
                                       )}
                                     </div>
                                   </div>
 
-                                  <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Provide Own Data</span>
-                                      <p className="text-sm font-semibold text-slate-800">{currentInquiry.bioinformaticsDetails?.dataProvideOwnData ? "Yes" : "No"}</p>
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-0.5">
+                                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Provide Own Data</span>
+                                      <p className="text-sm font-medium text-slate-800">{currentInquiry.bioinformaticsDetails?.dataProvideOwnData ? "Yes" : "No"}</p>
                                     </div>
-                                    <div className="space-y-1">
-                                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Data Generated by PGC Visayas</span>
-                                      <p className="text-sm font-semibold text-slate-800">{currentInquiry.bioinformaticsDetails?.dataProvidedByPgc ? "Yes" : "No"}</p>
+                                    <div className="space-y-0.5">
+                                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Data from PGC Visayas</span>
+                                      <p className="text-sm font-medium text-slate-800">{currentInquiry.bioinformaticsDetails?.dataProvidedByPgc ? "Yes" : "No"}</p>
                                     </div>
                                   </div>
 
                                   {currentInquiry.bioinformaticsDetails?.dataProvideOwnData && (
-                                    <div className="space-y-2">
-                                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Data Details</span>
-                                      <div className="p-3 bg-white rounded-xl border border-slate-100 text-sm text-slate-700 leading-relaxed shadow-sm space-y-1">
+                                    <div className="space-y-1">
+                                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Data Details</span>
+                                      <div className="bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 text-sm text-slate-700 leading-relaxed space-y-0.5">
                                         <p>File formats: {Array.isArray(currentInquiry.bioinformaticsDetails?.dataFileFormats) && currentInquiry.bioinformaticsDetails?.dataFileFormats.length > 0 ? currentInquiry.bioinformaticsDetails.dataFileFormats.join(', ') : '—'}</p>
                                         {currentInquiry.bioinformaticsDetails?.dataOtherFormat && (
                                           <p>Other format: {currentInquiry.bioinformaticsDetails.dataOtherFormat}</p>
@@ -4068,21 +4051,22 @@ export default function ClientPortalPage() {
                                     </div>
                                   )}
 
-                                  <div className="space-y-2">
-                                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Overview of Research and Objectives</span>
-                                    <div className="p-4 bg-indigo-50/30 rounded-xl border border-indigo-100/30 text-sm text-slate-800 leading-relaxed font-medium whitespace-pre-wrap">
+                                  <div className="space-y-1">
+                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Research Overview & Objectives</span>
+                                    <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 whitespace-pre-wrap">
                                       {currentInquiry.bioinformaticsDetails?.overviewObjectives || "—"}
-                                    </div>
+                                    </p>
                                   </div>
 
                                   {flattenBioinformaticsDetails(currentInquiry.bioinformaticsDetails).length > 0 && (
-                                    <div className="space-y-2">
-                                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">All Submitted Bioinformatics Entries</span>
-                                      <div className="p-3 bg-white rounded-xl border border-slate-100 text-sm text-slate-700 leading-relaxed shadow-sm">
-                                        <ul className="space-y-1 text-xs">
+                                    <div className="space-y-1">
+                                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">All Submitted Bioinformatics Entries</span>
+                                      <div className="bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                                        <ul className="space-y-0.5 text-xs">
                                           {flattenBioinformaticsDetails(currentInquiry.bioinformaticsDetails).map((entry) => (
                                             <li key={`${entry.key}-${entry.value}`}>
-                                              <span className="font-semibold text-slate-600">{entry.key}:</span> {entry.value}
+                                              <span className="font-semibold text-slate-500">{entry.key}:</span>{" "}
+                                              <span className="text-slate-700">{entry.value}</span>
                                             </li>
                                           ))}
                                         </ul>
@@ -4094,11 +4078,11 @@ export default function ClientPortalPage() {
 
                               {/* Technical Block */}
                               {(currentInquiry.species || currentInquiry.workflowType) && (
-                                <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-2 gap-3">
                                   {currentInquiry.species && (
-                                    <div className="space-y-1">
-                                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Species / Organism</span>
-                                      <p className="text-sm font-semibold text-slate-800 capitalize">
+                                    <div className="space-y-0.5">
+                                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Species / Organism</span>
+                                      <p className="text-sm font-medium text-slate-800 capitalize">
                                         {currentInquiry.otherSpecies 
                                           ? `${currentInquiry.species}: ${currentInquiry.otherSpecies}`
                                           : currentInquiry.species}
@@ -4107,9 +4091,9 @@ export default function ClientPortalPage() {
                                   )}
 
                                   {currentInquiry.workflowType && (
-                                    <div className="space-y-1">
-                                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Analysis Strategy</span>
-                                      <p className="text-sm font-semibold text-slate-800">
+                                    <div className="space-y-0.5">
+                                      <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Analysis Strategy</span>
+                                      <p className="text-sm font-medium text-slate-800">
                                         {formatWorkflowType(currentInquiry.workflowType)}
                                       </p>
                                     </div>
@@ -4119,17 +4103,16 @@ export default function ClientPortalPage() {
 
                               {/* Bioinformatics Options */}
                               {currentInquiry.workflowType === 'complete-bioinfo' && currentInquiry.bioinfoOptions && currentInquiry.bioinfoOptions.length > 0 && (
-                                <div className="space-y-2">
-                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Selected Bioinformatics Analysis</span>
-                                  <div className="flex flex-wrap gap-2 p-1">
+                                <div className="space-y-1.5">
+                                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Selected Bioinformatics Analysis</span>
+                                  <div className="flex flex-wrap gap-1.5">
                                     {currentInquiry.bioinfoOptions.map((option) => (
-                                      <Badge 
-                                        key={option} 
-                                        variant="secondary" 
-                                        className="bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100 transition-colors py-1 px-3 text-[11px] font-bold"
+                                      <span
+                                        key={option}
+                                        className="inline-block text-[11px] font-medium text-blue-700 bg-blue-50 border border-blue-100 rounded-md px-2 py-0.5"
                                       >
                                         {formatBioinfoOption(option)}
-                                      </Badge>
+                                      </span>
                                     ))}
                                   </div>
                                 </div>
@@ -4139,49 +4122,49 @@ export default function ClientPortalPage() {
 
                           {/* Specific Needs & Assays (Common for all) */}
                           {currentInquiry.individualAssayDetails && (
-                            <div className="space-y-2">
-                              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Selected Assays</span>
-                              <div className="p-3 bg-white rounded-xl border border-slate-100 text-sm text-slate-700 leading-relaxed shadow-sm">
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Selected Assays</span>
+                              <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
                                 {currentInquiry.individualAssayDetails}
-                              </div>
+                              </p>
                             </div>
                           )}
 
                           {/* Research Narrative (Only for non-research, non-laboratory services) */}
                           {currentInquiry.serviceType !== "research" && currentInquiry.serviceType !== "laboratory" && currentInquiry.researchOverview && (
-                            <div className="space-y-2">
-                              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Objectives & Brief Overview</span>
-                              <div className="p-4 bg-indigo-50/30 rounded-xl border border-indigo-100/30 text-sm text-slate-800 italic leading-relaxed font-medium">
-                                "{currentInquiry.researchOverview}"
-                              </div>
+                            <div className="space-y-1">
+                              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Objectives & Brief Overview</span>
+                              <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                                {currentInquiry.researchOverview}
+                              </p>
                             </div>
                           )}
 
                           {/* Research & Collaboration Details */}
                           {currentInquiry.serviceType === 'research' && (currentInquiry.researchOverview || currentInquiry.projectBackground || currentInquiry.molecularServicesBudget || currentInquiry.plannedSampleCount) && (
-                            <div className="pt-4 border-t border-slate-100 space-y-4">
+                            <div className="space-y-3 border-t border-slate-100 pt-3">
                               {(currentInquiry.researchOverview || currentInquiry.projectBackground) && (
-                                <div className="space-y-2">
-                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                    Overview of Research, Objectives, and Scope of Collaboration
+                                <div className="space-y-1">
+                                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">
+                                    Overview of Research, Objectives & Scope
                                   </span>
-                                  <div className="p-3 bg-slate-50/50 rounded-lg text-sm text-slate-700 leading-relaxed border border-slate-100 whitespace-pre-wrap">
+                                  <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 whitespace-pre-wrap">
                                     {currentInquiry.researchOverview || currentInquiry.projectBackground}
-                                  </div>
+                                  </p>
                                 </div>
                               )}
 
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {currentInquiry.molecularServicesBudget && (
-                                  <div className="space-y-1">
-                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Molecular Services Budget</span>
-                                    <p className="text-sm font-bold text-slate-800">{currentInquiry.molecularServicesBudget}</p>
+                                  <div className="space-y-0.5">
+                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Molecular Services Budget</span>
+                                    <p className="text-sm font-medium text-slate-800">{currentInquiry.molecularServicesBudget}</p>
                                   </div>
                                 )}
                                 {currentInquiry.plannedSampleCount && (
-                                  <div className="space-y-1">
-                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">How Many Samples Are You Planning to Send?</span>
-                                    <p className="text-sm font-bold text-slate-800">{currentInquiry.plannedSampleCount}</p>
+                                  <div className="space-y-0.5">
+                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Planned Sample Count</span>
+                                    <p className="text-sm font-medium text-slate-800">{currentInquiry.plannedSampleCount}</p>
                                   </div>
                                 )}
                               </div>
@@ -4190,47 +4173,43 @@ export default function ClientPortalPage() {
 
                           {/* Training Details */}
                           {currentInquiry.serviceType === 'training' && ((currentInquiry.trainingPrograms && currentInquiry.trainingPrograms.length > 0) || currentInquiry.specificTrainingNeed || currentInquiry.targetTrainingDate || currentInquiry.numberOfParticipants) && (
-                            <div className="pt-4 border-t border-slate-100 space-y-4">
+                            <div className="space-y-3 border-t border-slate-100 pt-3">
                               {currentInquiry.trainingPrograms && currentInquiry.trainingPrograms.length > 0 && (
-                                <div className="space-y-2">
-                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                    Selected Training Programs
-                                  </span>
-                                  <div className="grid grid-cols-1 gap-2">
+                                <div className="space-y-1.5">
+                                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Training Programs</span>
+                                  <div className="flex flex-wrap gap-1.5">
                                     {currentInquiry.trainingPrograms.map((program, index) => (
-                                      <div key={`${program}-${index}`} className="text-sm text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                                      <span key={`${program}-${index}`} className="inline-block text-[11px] font-medium text-slate-700 bg-slate-100 border border-slate-200 rounded-md px-2 py-0.5">
                                         {program === "others-customized" ? "Others / Customized Training Program" : program}
-                                      </div>
+                                      </span>
                                     ))}
                                   </div>
                                 </div>
                               )}
 
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="grid grid-cols-2 gap-3">
                                 {currentInquiry.targetTrainingDate && (
-                                  <div className="space-y-1">
-                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Requested Date</span>
-                                    <p className="text-sm font-bold text-slate-800">
+                                  <div className="space-y-0.5">
+                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Requested Date</span>
+                                    <p className="text-sm font-medium text-slate-800">
                                       {new Date(currentInquiry.targetTrainingDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                                     </p>
                                   </div>
                                 )}
                                 {currentInquiry.numberOfParticipants && (
-                                  <div className="space-y-1">
-                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Attendance</span>
-                                    <p className="text-sm font-bold text-slate-800">{currentInquiry.numberOfParticipants} pax</p>
+                                  <div className="space-y-0.5">
+                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Attendance</span>
+                                    <p className="text-sm font-medium text-slate-800">{currentInquiry.numberOfParticipants} pax</p>
                                   </div>
                                 )}
                               </div>
 
                               {currentInquiry.specificTrainingNeed && (
-                                <div className="space-y-2">
-                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                    Others / Customized Training Program Details
-                                  </span>
-                                  <div className="p-3 bg-slate-50/50 rounded-lg text-sm text-slate-700 leading-relaxed border border-slate-100 whitespace-pre-wrap">
+                                <div className="space-y-1">
+                                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest block">Customized Training Details</span>
+                                  <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 whitespace-pre-wrap">
                                     {currentInquiry.specificTrainingNeed}
-                                  </div>
+                                  </p>
                                 </div>
                               )}
                             </div>
@@ -4253,12 +4232,12 @@ export default function ClientPortalPage() {
                           )}
 
                           {/* Submission Footer */}
-                          <div className="pt-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-slate-50">
-                            <div className="flex items-center gap-2 text-slate-400">
-                              <Calendar className="h-4 w-4" />
-                              <span className="text-xs font-medium">Submitted {currentInquiry.createdAt ? new Date(currentInquiry.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : "—"}</span>
+                          <div className="pt-3 flex items-center justify-between gap-3 border-t border-slate-100">
+                            <div className="flex items-center gap-1.5 text-slate-400">
+                              <Calendar className="h-3.5 w-3.5" />
+                              <span className="text-xs">Submitted {currentInquiry.createdAt ? new Date(currentInquiry.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : "—"}</span>
                             </div>
-                            <div className="flex items-center gap-2 text-[#4038AF] font-bold text-xs uppercase tracking-widest bg-indigo-50/50 px-3 py-1 rounded-full border border-indigo-100/50">
+                            <div className="flex items-center gap-1.5 text-[#4038AF] text-xs font-semibold">
                               <Building2 className="h-3.5 w-3.5" />
                               <span className="truncate max-w-[200px]">{currentInquiry.affiliation}</span>
                             </div>
