@@ -3452,8 +3452,8 @@ export default function ClientPortalPage() {
                                     <CheckCircle2 className="h-3 w-3" /> Selected
                                   </span>
                                 ) : (
-                                  <span className="inline-flex text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-100 rounded-full px-2 py-0.5">
-                                    Draft
+                                  <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+                                    <Clock className="h-2.5 w-2.5" /> For Review
                                   </span>
                                 )}
                               </div>
@@ -3733,15 +3733,15 @@ export default function ClientPortalPage() {
                 )}
 
                 {/* Welcome & Status Header */}
-                <div className="bg-white rounded-2xl p-5 lg:p-6 shadow-sm border border-slate-100 relative overflow-hidden">
+                <div className="bg-white rounded-2xl px-5 py-4 shadow-sm border border-slate-100 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-bl-full -mr-8 -mt-8 opacity-50"></div>
                   <div className="relative">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="space-y-1">
-                        <h2 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="space-y-0.5">
+                        <h2 className="text-base font-bold bg-gradient-to-r from-[#166FB5] to-[#4038AF] bg-clip-text text-transparent">
                           Welcome to your Workspace
                         </h2>
-                        <p className="text-slate-500 text-sm max-w-md">
+                        <p className="text-slate-500 text-xs whitespace-nowrap">
                           Review your official quotations and manage your research projects here.
                         </p>
                       </div>
@@ -3752,9 +3752,18 @@ export default function ClientPortalPage() {
                             "w-10 h-10 rounded-full flex items-center justify-center shadow-sm",
                             currentInquiry.status === "Approved Client" ? "bg-green-100 text-green-600" :
                             currentInquiry.status === "Quotation Only" ? "bg-blue-100 text-blue-600" :
+                            currentInquiry.status === "Cancelled" ? "bg-red-100 text-red-500" :
                             "bg-amber-100 text-amber-600"
                           )}>
-                            <Info className="h-5 w-5" />
+                            {currentInquiry.status === "Approved Client" ? (
+                              <CheckCircle2 className="h-5 w-5" />
+                            ) : currentInquiry.status === "Quotation Only" ? (
+                              <FileText className="h-5 w-5" />
+                            ) : currentInquiry.status === "Cancelled" ? (
+                              <XCircle className="h-5 w-5" />
+                            ) : (
+                              <Clock className="h-5 w-5" />
+                            )}
                           </div>
                           <div>
                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Inquiry Status</p>
@@ -3770,10 +3779,10 @@ export default function ClientPortalPage() {
                   {/* Documents FIRST, then Summary */}
                   <div className="space-y-6">
                     {/* Official Documents (Quotations) - MOVED UP */}
-                    <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                          <FileText className="h-5 w-5 text-indigo-500" />
+                    <div className="bg-white rounded-2xl px-4 py-3 shadow-sm border border-slate-100">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-indigo-500" />
                           Official Documents
                         </h3>
                       </div>
@@ -3797,12 +3806,16 @@ export default function ClientPortalPage() {
                               className="rounded-xl border border-slate-100 bg-white shadow-sm p-2.5"
                             >
                               <div className="flex items-center justify-between gap-2 flex-wrap">
-                                {/* Left: icon + name + totals + status */}
+                                {/* Left: clickable name + totals */}
                                 <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-                                  <FileText className="h-3 w-3 text-indigo-500 flex-shrink-0" />
-                                  <span className="text-xs font-semibold text-indigo-700 truncate">
+                                  <a
+                                    href={`/client/view-document?type=quotation&ref=${quote.referenceNumber}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-full px-2.5 py-0.5 transition-colors"
+                                  >
                                     {quote.referenceNumber}
-                                  </span>
+                                  </a>
                                   <span className="text-[10px] text-slate-500">
                                     Total:{" "}
                                     <span className="font-semibold text-slate-800">
@@ -3815,6 +3828,9 @@ export default function ClientPortalPage() {
                                       {new Date(quote.dateIssued).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                                     </span>
                                   </span>
+                                </div>
+                                {/* Right: status badge + action buttons */}
+                                <div className="flex items-center gap-2 flex-shrink-0">
                                   {qCancelled ? (
                                     <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
                                       Cancelled
@@ -3824,17 +3840,6 @@ export default function ClientPortalPage() {
                                       <CheckCircle2 className="h-2.5 w-2.5" /> Selected
                                     </span>
                                   ) : null}
-                                </div>
-                                {/* Right: action buttons */}
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                  <a
-                                    href={`/client/view-document?type=quotation&ref=${quote.referenceNumber}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center justify-center rounded-md border border-indigo-100 text-indigo-600 hover:bg-indigo-50 font-bold h-8 text-xs px-3 transition-colors"
-                                  >
-                                    View PDF
-                                  </a>
                                   {!qCancelled && 
                                    fetchedApprovedProjects.length === 0 && 
                                    currentInquiry?.status !== "Cancelled" && 
@@ -3864,39 +3869,39 @@ export default function ClientPortalPage() {
 
                       {/* Quotation Request Details (previously Inquiry Details Summary) */}
                     {currentInquiry && (
-                      <div className="bg-amber-50/70 border border-amber-100 rounded-2xl p-5">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                          <div className="space-y-1">
-                            <h4 className="text-sm font-bold text-amber-900">Not proceeding with the service?</h4>
-                            <p className="text-xs text-amber-800">
-                              If you decide to stop, you can update this request to "Quotation Only".
+                      <div className="bg-amber-50/70 border border-amber-100 rounded-xl px-4 py-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                          <div className="space-y-0.5">
+                            <h4 className="text-xs font-bold text-amber-900">Not proceeding with the service?</h4>
+                            <p className="text-[11px] text-amber-800">
+                              Update this request to "Quotation Only" if you decide to stop.
                             </p>
                           </div>
                           <Button
                             variant="outline"
                             onClick={() => setShowCancelInquiryModal(true)}
                             disabled={currentInquiry.status === "Cancelled" || currentInquiry.status === "Quotation Only" || cancelInquirySubmitting}
-                            className="border-amber-200 text-amber-900 hover:bg-amber-100 font-bold text-xs h-9"
+                            className="border-amber-200 text-amber-900 hover:bg-amber-100 font-bold text-xs h-7 shrink-0"
                           >
                             Do Not Proceed
                           </Button>
                         </div>
                         {(currentInquiry.status === "Cancelled" || currentInquiry.status === "Quotation Only") && (
-                          <p className="text-[11px] text-amber-700 mt-2">This request is already marked as {currentInquiry.status}.</p>
+                          <p className="text-[11px] text-amber-700 mt-1.5">This request is already marked as {currentInquiry.status}.</p>
                         )}
                       </div>
                     )}
 
                     {currentInquiry && (
-                      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                        <div className="flex items-center justify-between mb-6">
-                          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                            <div className="w-2.5 h-2.5 bg-gradient-to-r from-[#912ABD] to-[#6E308E] rounded-full"></div>
+                      <div className="bg-white rounded-2xl px-4 py-3 shadow-sm border border-slate-100">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <div className="w-2 h-2 bg-gradient-to-r from-[#912ABD] to-[#6E308E] rounded-full"></div>
                             Quotation Request Details
                           </h3>
                         </div>
                         
-                        <div className="space-y-6">
+                        <div className="space-y-4">
                           {/* Laboratory Service Details */}
                           {currentInquiry.serviceType === "laboratory" ? (
                             <div className="space-y-6 animate-in fade-in duration-500">
