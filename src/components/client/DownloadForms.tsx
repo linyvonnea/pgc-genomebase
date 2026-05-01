@@ -317,22 +317,22 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="text-[11px] font-medium text-[#166FB5] hover:underline truncate flex-1 min-w-0"
+                          className="text-sm font-medium text-[#166FB5] hover:underline truncate flex-1 min-w-0"
                           title={`View ${f.fileName}`}
                         >
                           {f.fileName}
                         </a>
                         {f.acknowledgedByAdmin ? (
-                          <span className="flex items-center gap-1 text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0.5 shrink-0">
+                          <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 shrink-0 h-6">
                             Acknowledged
                             {f.acknowledgedAt && (
-                              <span className="font-normal text-emerald-500 text-[10px]">
-                                · {format(f.acknowledgedAt.toDate(), "yyyy h:mm a")}
+                              <span className="font-normal text-emerald-500 opacity-80">
+                                · {format(f.acknowledgedAt.toDate(), "MMM d, yyyy h:mm a")}
                               </span>
                             )}
                           </span>
                         ) : (
-                          <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5 shrink-0">
+                          <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 shrink-0 h-6">
                             Pending
                           </span>
                         )}

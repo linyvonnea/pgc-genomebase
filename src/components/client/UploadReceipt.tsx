@@ -605,21 +605,21 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
 
                   {/* Row 2: file icon + filename link + status badge */}
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <FileText className="h-3 w-3 text-emerald-500 flex-shrink-0" />
+                    <FileText className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
                     {receipt.downloadURL ? (
                       <a
                         href={receipt.downloadURL}
                         target="_blank"
                         rel="noopener noreferrer"
                         title={receipt.fileName || receipt.id}
-                        className="text-[11px] font-semibold text-slate-700 hover:underline truncate flex-1 min-w-0"
+                        className="text-sm font-semibold text-slate-700 hover:underline truncate flex-1 min-w-0"
                       >
                         {receipt.fileName || receipt.id}
                       </a>
                     ) : (
                       <span
                         title={receipt.fileName || receipt.id}
-                        className="text-[11px] font-semibold text-slate-700 truncate flex-1 min-w-0"
+                        className="text-sm font-semibold text-slate-700 truncate flex-1 min-w-0"
                       >
                         {receipt.fileName || receipt.id}
                       </span>
@@ -627,13 +627,13 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
                     {/* Status badge */}
                     {isVerified && (
                       <span
-                        className="flex items-center gap-1 text-[9px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5 flex-shrink-0"
+                        className="flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 flex-shrink-0 h-6"
                         title="Validated by admin"
                       >
-                        <CheckCircle2 className="h-2.5 w-2.5" />
+                        <CheckCircle2 className="h-3 w-3" />
                         Verified
                         {receipt.acknowledgedAt && (
-                          <span className="font-normal text-emerald-500">
+                          <span className="font-normal text-emerald-500 opacity-80">
                             · {format(receipt.acknowledgedAt.toDate(), "MMM d, yyyy h:mm a")}
                           </span>
                         )}
@@ -641,7 +641,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
                     )}
                     {isPending && (
                       <span
-                        className="text-[9px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 font-semibold flex-shrink-0"
+                        className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 font-semibold flex-shrink-0 h-6"
                         title="Waiting for admin validation"
                       >
                         Pending
@@ -649,10 +649,10 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
                     )}
                     {isReturned && (
                       <span
-                        className="flex items-center gap-0.5 text-[9px] font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded px-1.5 py-0.5 flex-shrink-0"
+                        className="flex items-center gap-0.5 text-xs font-semibold text-rose-600 bg-rose-50 border border-rose-200 rounded-full px-2 py-0.5 flex-shrink-0 h-6"
                         title="Admin returned this receipt for correction"
                       >
-                        <RotateCcw className="h-2.5 w-2.5" />
+                        <RotateCcw className="h-3 w-3" />
                         Returned
                       </span>
                     )}
