@@ -351,17 +351,6 @@ export default function ClientPortalPage() {
   const handleSelectDocPanel = (pid: string, section: string) => {
     const key = `${pid}:${section}`;
     setActiveDocPanel(prev => prev === key ? null : key);
-    // Mark charge slips as seen for this project
-    if (section === "chargeSlips") {
-      setSeenChargeSlipPids(prev => {
-        const next = new Set(prev);
-        next.add(pid);
-        if (typeof window !== "undefined") {
-          localStorage.setItem("seenChargeSlipPids", JSON.stringify([...next]));
-        }
-        return next;
-      });
-    }
     // Collapse all expanded member forms
     setExpandedMembers(new Set());
     if (typeof window !== "undefined") {
