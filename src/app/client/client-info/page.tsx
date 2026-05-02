@@ -3428,7 +3428,6 @@ export default function ClientPortalPage() {
                           return (
                             <div key={quotation.id} className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 flex items-center justify-between gap-3 flex-wrap hover:bg-slate-50 transition-colors">
                               <div className="flex items-center gap-2 flex-wrap min-w-0">
-                                <FileText className="h-3.5 w-3.5 text-purple-500 flex-shrink-0" />
                                 <a
                                   href={`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`}
                                   target="_blank"
