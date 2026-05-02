@@ -347,9 +347,30 @@ export default function ClientPortalPage() {
 
   // Active document panel shown in main content (below Team Members)
   const [activeDocPanel, setActiveDocPanel] = useState<string | null>(null);
+
+  // Track which project pids the client has already clicked into "Charge Slips" — used for the notification dot
+  const [seenChargeSlipPids, setSeenChargeSlipPids] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const stored = localStorage.getItem("seenChargeSlipPids");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch { return new Set(); }
+  });
+
   const handleSelectDocPanel = (pid: string, section: string) => {
     const key = `${pid}:${section}`;
     setActiveDocPanel(prev => prev === key ? null : key);
+    // Mark charge slips as seen for this project
+    if (section === "chargeSlips") {
+      setSeenChargeSlipPids(prev => {
+        const next = new Set(prev);
+        next.add(pid);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("seenChargeSlipPids", JSON.stringify([...next]));
+        }
+        return next;
+      });
+    }
     // Collapse all expanded member forms
     setExpandedMembers(new Set());
     if (typeof window !== "undefined") {
@@ -2081,6 +2102,28 @@ export default function ClientPortalPage() {
     return () => unsubscribers.forEach((u) => u());
   }, [expandedProjectDocs]);
 
+  // Real-time service report listener — updates sidebar notification badge live
+  useEffect(() => {
+    const expandedPids = [...expandedProjectDocs].filter(
+      (pid) => pid && pid !== "DRAFT" && !pid.startsWith("PENDING-")
+    );
+    if (expandedPids.length === 0) return;
+
+    const unsubscribers = expandedPids.map((pid) => {
+      const q = query(collection(db, "projects", pid, "serviceReports"));
+      return onSnapshot(q, (snapshot) => {
+        const serviceReports = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setProjectDocuments((prev) => {
+          const existing = prev.get(pid);
+          if (!existing || existing.loading) return prev;
+          return new Map(prev).set(pid, { ...existing, serviceReports });
+        });
+      });
+    });
+
+    return () => unsubscribers.forEach((u) => u());
+  }, [expandedProjectDocs]);
+
   const handleReceiveServiceReport = useCallback(async (pid: string, report: any) => {
     const reportKey = `${pid}:${report.id}`;
     setReceivingReportId(reportKey);
@@ -2945,6 +2988,21 @@ export default function ClientPortalPage() {
                                   >
                                     <span className={cn("text-sm font-semibold flex-shrink-0 flex items-center justify-center w-5", isActive ? "text-green-600" : "text-slate-500")}>₱</span>
                                     <span className={cn("text-sm font-semibold flex-1", isActive ? "text-green-700" : "text-slate-700")}>Charge Slips</span>
+                                    {chargeSlipCount > 0 && !seenChargeSlipPids.has(project.pid!) && (
+                                      <TooltipProvider delayDuration={100}>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className="relative flex h-2 w-2 mr-1 cursor-default">
+                                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                                              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                                            </span>
+                                          </TooltipTrigger>
+                                          <TooltipContent side="right">
+                                            <p className="text-xs">Billing Available</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
                                     <span className="text-[10px] text-slate-500 mr-1">({chargeSlipCount})</span>
                                     <ChevronRight className={cn("h-3 w-3 flex-shrink-0 transition-transform", isActive ? "text-green-500 rotate-90" : "text-slate-400")} />
                                   </button>
@@ -2973,6 +3031,24 @@ export default function ClientPortalPage() {
                                     >
                                       <ShieldEllipsis className={cn("h-3 w-3 flex-shrink-0", isActive ? "text-blue-600" : "text-blue-500")} />
                                       <span className={cn("text-sm font-semibold flex-1", isActive ? "text-blue-700" : "text-slate-700")}>Service Reports</span>
+                                      {(() => {
+                                        const hasUnread = (docs?.serviceReports || []).some((r: any) => r.status !== "received");
+                                        return hasUnread ? (
+                                          <TooltipProvider delayDuration={100}>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <span className="relative flex h-2 w-2 mr-1 cursor-default">
+                                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+                                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                                                </span>
+                                              </TooltipTrigger>
+                                              <TooltipContent side="right">
+                                                <p className="text-xs">Service Report Available</p>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          </TooltipProvider>
+                                        ) : null;
+                                      })()}
                                       <span className="text-[10px] text-slate-500 mr-1">({serviceReportCount})</span>
                                       <ChevronRight className={cn("h-3 w-3 flex-shrink-0 transition-transform", isActive ? "text-blue-500 rotate-90" : "text-slate-400")} />
                                     </button>
