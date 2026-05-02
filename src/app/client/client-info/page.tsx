@@ -388,6 +388,10 @@ export default function ClientPortalPage() {
   const [members, setMembers] = useState<ClientMember[]>([]);
   const [projects, setProjects] = useState<ProjectDetails[]>([]);
 
+  // Dedicated notification state: charge slips for ALL projects (not just expanded ones)
+  // Used for the sidebar red-dot badge
+  const [notifChargeSlips, setNotifChargeSlips] = useState<Map<string, ChargeSlipRecord[]>>(new Map());
+
   // Initialize expandedProjectDocs when projects list is updated or pidParam changes
   useEffect(() => {
     // Completely removed auto-expansion logic to ensure projects are always collapsed by default
@@ -2082,6 +2086,29 @@ export default function ClientPortalPage() {
     return () => unsubscribers.forEach((u) => u());
   }, [expandedProjectDocs]);
 
+  // Notification-only charge slip listener — subscribes to ALL project pids
+  // so the sidebar red dot appears even before the user expands/opens that project
+  useEffect(() => {
+    const pids = projects
+      .map((p) => p.pid)
+      .filter((pid): pid is string => !!pid && pid !== "DRAFT" && !pid.startsWith("PENDING-"));
+    if (pids.length === 0) return;
+
+    const unsubscribers = pids.map((pid) => {
+      const q = query(collection(db, "chargeSlips"), where("projectId", "==", pid));
+      return onSnapshot(q, (snapshot) => {
+        const slips = snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as ChargeSlipRecord));
+        setNotifChargeSlips((prev) => {
+          const next = new Map(prev);
+          next.set(pid, slips);
+          return next;
+        });
+      });
+    });
+
+    return () => unsubscribers.forEach((u) => u());
+  }, [projects]);
+
   // Real-time service report listener — updates sidebar notification badge live
   useEffect(() => {
     const expandedPids = [...expandedProjectDocs].filter(
@@ -2969,10 +2996,11 @@ export default function ClientPortalPage() {
                                     <span className={cn("text-sm font-semibold flex-shrink-0 flex items-center justify-center w-5", isActive ? "text-green-600" : "text-slate-500")}>₱</span>
                                     <span className={cn("text-sm font-semibold flex-1", isActive ? "text-green-700" : "text-slate-700")}>Charge Slips</span>
                                     {(() => {
-                                      const hasUnsettled = (docs?.chargeSlips || []).some(
+                                      const slips = notifChargeSlips.get(project.pid!) || [];
+                                      const hasUnsettled = slips.some(
                                         (cs: any) => cs.status !== "paid" && cs.status !== "waived" && cs.status !== "cancelled"
                                       );
-                                      return chargeSlipCount > 0 && hasUnsettled ? (
+                                      return slips.length > 0 && hasUnsettled ? (
                                         <TooltipProvider delayDuration={100}>
                                           <Tooltip>
                                             <TooltipTrigger asChild>
