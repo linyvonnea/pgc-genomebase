@@ -2993,7 +2993,9 @@ export default function ClientPortalPage() {
                                       if (!isChargeSlipsDisabled) handleSelectDocPanel(project.pid!, "chargeSlips");
                                     }}
                                   >
-                                    <span className={cn("text-sm font-semibold flex-shrink-0 flex items-center justify-center w-5", isActive ? "text-green-600" : "text-slate-500")}>₱</span>
+                                    <div className="flex items-center justify-center w-3 h-3 flex-shrink-0">
+                                      <span className={cn("text-[13px] font-bold leading-none", isActive ? "text-green-600" : "text-green-500")}>₱</span>
+                                    </div>
                                     <span className={cn("text-sm font-semibold flex-1", isActive ? "text-green-700" : "text-slate-700")}>Charge Slips</span>
                                     {(() => {
                                       const slips = notifChargeSlips.get(project.pid!) || [];
