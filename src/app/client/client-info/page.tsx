@@ -137,6 +137,7 @@ import {
   Stamp,
   ArrowRight,
   Download,
+  Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -2106,6 +2107,11 @@ export default function ClientPortalPage() {
         return next;
       });
       toast.success(`"${report.fileName}" marked as received.`);
+      
+      // Auto-open PDF in new tab
+      if (report.fileUrl) {
+        window.open(report.fileUrl, "_blank", "noopener,noreferrer");
+      }
     } catch (err) {
       console.error("Failed to mark service report as received:", err);
       toast.error("Failed to mark as received. Please try again.");
@@ -3622,16 +3628,25 @@ export default function ClientPortalPage() {
                                       )}
                                     </Badge>
                                   ) : allChargeSlipsSettled ? (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-8 text-xs px-3 gap-1 text-blue-700 border-blue-200 hover:bg-blue-50"
-                                      disabled={isReceiving}
-                                      onClick={() => handleReceiveServiceReport(selectedProjectPid, item)}
-                                    >
-                                      {isReceiving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
-                                      Receive
-                                    </Button>
+                                    <TooltipProvider delayDuration={100}>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-8 text-xs px-3 gap-1 border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white disabled:opacity-50"
+                                            disabled={isReceiving}
+                                            onClick={() => handleReceiveServiceReport(selectedProjectPid, item)}
+                                          >
+                                            {isReceiving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
+                                            Receive
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="left">
+                                          <p className="text-xs">View the Service Report</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
                                   ) : (
                                     <TooltipProvider delayDuration={100}>
                                       <Tooltip>
