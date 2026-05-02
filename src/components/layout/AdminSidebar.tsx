@@ -21,6 +21,7 @@ import {
   Database,
   Bell,
   UserCheck,
+  CalendarDays,
 } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -48,6 +49,7 @@ const ROUTE_MODULE_MAP: Record<string, keyof RolePermissions> = {
   "/admin/services": "serviceCatalog",
   "/admin/catalog-settings": "catalogSettings",
   "/admin/configurations": "configurations",
+  "/admin/office-calendar": "officeCalendar",
   "/admin/member-approvals": "memberApprovals",
   "/admin/roles": "roleManagement",
   "/admin/admins": "usersPermissions",
@@ -155,6 +157,11 @@ export function AdminSidebar() {
           href: "/admin/configurations",
           label: "General Settings",
           icon: Sliders,
+        },
+        {
+          href: "/admin/office-calendar",
+          label: "Office Calendar",
+          icon: CalendarDays,
         },
       ]
     },
