@@ -16,7 +16,6 @@ import {
 import { storage, db } from "@/lib/firebase";
 import {
   FileText,
-  Download,
   Loader2,
   Upload,
   CheckCircle2,
@@ -253,7 +252,7 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
   };
 
   return (
-    <div className="ml-5 mb-2 space-y-3">
+    <div className="ml-5 mb-2 space-y-2">
       {PORTAL_FORMS.map((form, i) => {
         const { url, loading, error } = templateStates[i];
         const isDownloading = downloadingIdx === i;
@@ -265,51 +264,42 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
 
         return (
           <div key={form.formKey} className="rounded-lg border border-slate-100 bg-slate-50 overflow-hidden">
-            {/* Clickable header row — click anywhere (except download btn) to toggle upload panel */}
-            <div className="w-full flex items-start gap-2 px-3 py-2">
-              <FileText className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
+            {/* Header row */}
+            <div className="w-full flex items-center justify-between gap-2 px-3 py-1.5">
               <div className="min-w-0 flex-1">
-                <p className={`text-xs font-medium leading-snug ${url ? "text-slate-700" : "text-slate-400"}`}>
-                  {form.label}
-                </p>
-                <p className="text-[10px] text-slate-400 leading-snug">{form.description}</p>
-              </div>
-
-              <div className="flex items-center gap-1.5 mt-0.5 shrink-0">
                 {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+                  <span className="text-xs font-medium text-slate-400">{form.label}</span>
                 ) : error ? (
-                  <span className="text-[10px] text-red-400">Unavailable</span>
+                  <span className="text-xs font-medium text-slate-400">{form.label}</span>
                 ) : (
                   <a
                     href={url || "#"}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={(e) => { if (!url) e.preventDefault(); e.stopPropagation(); }}
-                    className="text-[#166FB5] hover:text-[#0e4f8a] transition-colors"
-                    title="Download template PDF"
+                    onClick={(e) => { if (!url) e.preventDefault(); }}
+                    className="inline-flex items-center gap-1.5 text-[11px] font-bold text-orange-600 border border-orange-200 bg-white rounded-md px-2 py-0.5 hover:bg-orange-50 transition-colors"
                   >
-                    {isDownloading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Download className="h-4 w-4" />
-                    )}
+                    {isDownloading ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                    {form.label}
                   </a>
                 )}
+                <p className="text-[10px] text-slate-400 mt-0.5 leading-snug">{form.description}</p>
               </div>
+              {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-300 shrink-0" />}
+              {error && <span className="text-[10px] text-red-400 shrink-0">Unavailable</span>}
             </div>
 
             {/* Upload panel */}
-            <div className="border-t border-slate-100 px-3 py-2.5 bg-white/60 space-y-2">
+            <div className="border-t border-slate-100 px-3 py-2 bg-white/60 space-y-1.5">
                 {/* Uploaded files listed ABOVE the upload button */}
                 {uploaded.length > 0 && (
                   <div className="space-y-1">
                     {uploaded.map((f) => (
-                      <div key={f.id} className="flex items-center gap-1.5 rounded-md bg-slate-50 border border-slate-100 px-2 py-1">
+                      <div key={f.id} className="flex items-center gap-1.5 rounded-md bg-slate-50 border border-slate-100 px-2 py-0.5">
                         {f.acknowledgedByAdmin ? (
-                          <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />
+                          <CheckCircle2 className="h-2.5 w-2.5 shrink-0 text-emerald-500" />
                         ) : (
-                          <Clock className="h-3 w-3 shrink-0 text-amber-400" />
+                          <Clock className="h-2.5 w-2.5 shrink-0 text-amber-400" />
                         )}
                         {/* Clickable filename */}
                         <a
@@ -317,22 +307,22 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="text-sm font-medium text-[#166FB5] hover:underline truncate flex-1 min-w-0"
+                          className="text-[11px] font-medium text-orange-600 hover:underline truncate flex-1 min-w-0"
                           title={`View ${f.fileName}`}
                         >
                           {f.fileName}
                         </a>
                         {f.acknowledgedByAdmin ? (
-                          <span className="flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5 shrink-0 h-6">
+                          <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0 shrink-0 h-5">
                             Acknowledged
                             {f.acknowledgedAt && (
                               <span className="font-normal text-emerald-500 opacity-80">
-                                · {format(f.acknowledgedAt.toDate(), "MMM d, yyyy h:mm a")}
+                                · {format(f.acknowledgedAt.toDate(), "MMM d, yyyy")}
                               </span>
                             )}
                           </span>
                         ) : (
-                          <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 shrink-0 h-6">
+                          <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0 shrink-0 h-5">
                             Pending
                           </span>
                         )}
@@ -343,7 +333,7 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
 
                 {/* Attach/Upload workflow — hidden while a pending (unacknowledged) file exists, and hidden for read-only forms */}
                 {!hasPendingUpload && form.formKey !== "ssreq" && (
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {!attachedFile ? (
                       <div className="flex items-center gap-2">
                         <input
@@ -363,9 +353,9 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
                             fileInputRefs.current[form.formKey]?.click();
                           }}
                           disabled={isUploading}
-                          className="flex items-center gap-1.5 text-sm font-semibold text-white bg-[#166FB5] hover:bg-[#166FB5]/90 border border-[#166FB5] rounded-full px-4 py-1.5 transition-all shadow-sm hover:shadow-md shrink-0"
+                          className="flex items-center gap-1.5 text-xs font-bold text-orange-600 bg-white hover:bg-orange-600 hover:text-white border border-orange-500 rounded-full px-3 py-1 transition-all shrink-0 disabled:opacity-50"
                         >
-                          <Paperclip className="h-4 w-4" />
+                          <Paperclip className="h-3.5 w-3.5" />
                           Attach Form
                         </button>
                       </div>
