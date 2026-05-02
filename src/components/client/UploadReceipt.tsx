@@ -841,11 +841,9 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
             disabled={uploading || !hasChargeSlip}
             onClick={() => fileInputRef.current?.click()}
             title={!hasChargeSlip ? "A Charge Slip must be issued first before attaching a receipt." : "Attach an official receipt"}
-            className="inline-flex items-center gap-2 text-sm font-semibold border border-[#166FB5] rounded-full px-4 py-1.5 transition-all shadow-sm hover:shadow-md
-              disabled:cursor-not-allowed disabled:opacity-50 disabled:border-slate-200 disabled:text-slate-400 disabled:bg-slate-50
-              enabled:text-white enabled:bg-[#166FB5] enabled:hover:bg-[#166FB5]/90"
+            className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-white hover:bg-emerald-600 hover:text-white border border-emerald-500 rounded-full px-3 py-1 transition-all shrink-0 disabled:opacity-50"
           >
-            <Paperclip className="h-4 w-4" />
+            <Paperclip className="h-3.5 w-3.5" />
             Attach Receipt
           </button>
           {!hasChargeSlip && (

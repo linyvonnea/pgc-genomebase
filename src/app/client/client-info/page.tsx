@@ -2937,7 +2937,7 @@ export default function ClientPortalPage() {
                                       if (!isChargeSlipsDisabled) handleSelectDocPanel(project.pid!, "chargeSlips");
                                     }}
                                   >
-                                    <Receipt className={cn("h-3 w-3 flex-shrink-0", isActive ? "text-green-600" : "text-green-500")} />
+                                    <span className={cn("text-sm font-semibold flex-shrink-0 flex items-center justify-center w-5", isActive ? "text-green-600" : "text-slate-500")}>₱</span>
                                     <span className={cn("text-sm font-semibold flex-1", isActive ? "text-green-700" : "text-slate-700")}>Charge Slips</span>
                                     <span className="text-[10px] text-slate-500 mr-1">({chargeSlipCount})</span>
                                     <ChevronRight className={cn("h-3 w-3 flex-shrink-0 transition-transform", isActive ? "text-green-500 rotate-90" : "text-slate-400")} />
@@ -3379,7 +3379,7 @@ export default function ClientPortalPage() {
                 const PANEL_META: Record<string, { icon: React.ReactNode; label: string; accent: string; iconBg: string }> = {
                   quotations:     { icon: <FileText className="h-4 w-4 text-purple-600" />,    label: "Quotations",            accent: "text-purple-700", iconBg: "bg-purple-50" },
                   sampleForm:     { icon: <FileText className="h-4 w-4 text-orange-600" />,    label: "Sample Submission Form", accent: "text-orange-700", iconBg: "bg-orange-50" },
-                  chargeSlips:    { icon: <Receipt className="h-4 w-4 text-green-600" />,      label: "Charge Slips",          accent: "text-green-700",  iconBg: "bg-green-50"  },
+                  chargeSlips:    { icon: <span className="text-sm font-bold text-green-600">₱</span>, label: "Charge Slips",          accent: "text-green-700",  iconBg: "bg-green-50"  },
                   serviceReports: { icon: <ShieldEllipsis className="h-4 w-4 text-blue-600" />, label: "Service Reports",      accent: "text-blue-700",   iconBg: "bg-blue-50"   },
                 };
                 const meta = PANEL_META[panelSection];
@@ -3527,9 +3527,8 @@ export default function ClientPortalPage() {
                                     href={`/client/view-document?type=charge-slip&ref=${chargeSlip.id}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-1.5 text-sm font-semibold text-green-700 hover:underline"
+                                    className="flex items-center gap-1 text-[11px] font-bold text-green-700 bg-white hover:bg-green-700 hover:text-white border border-green-600 rounded-full px-2.5 py-0.5 transition-all shadow-sm"
                                   >
-                                    <Receipt className="h-4 w-4 flex-shrink-0" />
                                     {chargeSlip.chargeSlipNumber}
                                   </a>
                                   <span className="text-xs text-slate-500">
