@@ -293,39 +293,46 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
             <div className="border-t border-slate-100 px-3 py-2 bg-white/60 space-y-1.5">
                 {/* Uploaded files listed ABOVE the upload button */}
                 {uploaded.length > 0 && (
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {uploaded.map((f) => (
-                      <div key={f.id} className="flex items-center gap-1.5 rounded-md bg-slate-50 border border-slate-100 px-2 py-0.5">
-                        {f.acknowledgedByAdmin ? (
-                          <CheckCircle2 className="h-2.5 w-2.5 shrink-0 text-emerald-500" />
-                        ) : (
-                          <Clock className="h-2.5 w-2.5 shrink-0 text-amber-400" />
-                        )}
-                        {/* Clickable filename */}
-                        <a
-                          href={f.downloadURL}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="text-[11px] font-medium text-orange-600 hover:underline truncate flex-1 min-w-0"
-                          title={`View ${f.fileName}`}
-                        >
-                          {f.fileName}
-                        </a>
-                        {f.acknowledgedByAdmin ? (
-                          <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0 shrink-0 h-5">
-                            Acknowledged
-                            {f.acknowledgedAt && (
-                              <span className="font-normal text-emerald-500 opacity-80">
-                                · {format(f.acknowledgedAt.toDate(), "MMM d, yyyy")}
-                              </span>
-                            )}
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0 shrink-0 h-5">
-                            Pending
-                          </span>
-                        )}
+                      <div key={f.id} className="space-y-1">
+                        <div className="flex items-center gap-1.5 rounded-md bg-slate-50 border border-slate-100 px-2 py-0.5">
+                          {f.acknowledgedByAdmin ? (
+                            <CheckCircle2 className="h-2.5 w-2.5 shrink-0 text-emerald-500" />
+                          ) : (
+                            <Clock className="h-2.5 w-2.5 shrink-0 text-amber-400" />
+                          )}
+                          {/* Clickable filename */}
+                          <div className="flex-1 min-w-0 flex items-center gap-2">
+                            <a
+                              href={f.downloadURL}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-[11px] font-medium text-orange-600 hover:underline truncate"
+                              title={`View ${f.fileName}`}
+                            >
+                              {f.fileName}
+                            </a>
+                            <span className="text-[9px] text-slate-400 shrink-0">
+                              {f.uploadedAt ? format(f.uploadedAt.toDate(), "MMM d, yyyy h:mm a") : "—"}
+                            </span>
+                          </div>
+                          {f.acknowledgedByAdmin ? (
+                            <span className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded-full px-1.5 py-0 shrink-0 h-5">
+                              Acknowledged
+                              {f.acknowledgedAt && (
+                                <span className="font-normal text-emerald-500 opacity-80">
+                                  · {format(f.acknowledgedAt.toDate(), "MMM d, yyyy h:mm a")}
+                                </span>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0 shrink-0 h-5">
+                              Pending
+                            </span>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
