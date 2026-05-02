@@ -3432,7 +3432,7 @@ export default function ClientPortalPage() {
                                   href={`/client/view-document?type=quotation&ref=${quotation.referenceNumber}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-sm font-semibold text-purple-700 hover:underline"
+                                  className="text-[11px] font-bold text-purple-700 border border-purple-200 bg-white rounded-md px-2 py-0.5 hover:bg-purple-50 transition-colors"
                                 >
                                   {quotation.referenceNumber}
                                 </a>
