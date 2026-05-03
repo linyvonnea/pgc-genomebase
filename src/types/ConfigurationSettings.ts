@@ -5,7 +5,8 @@ export type PortalFeatureKey =
   | "requestProgressTimeline"
   | "clientMenuSettings"
   | "clientMenuChangePassword"
-  | "clientMenuAbout";
+  | "clientMenuAbout"
+  | "chatAutoReply";
 
 export interface PortalFeatureVisibility {
   sampleForms: boolean;
@@ -15,6 +16,7 @@ export interface PortalFeatureVisibility {
   clientMenuSettings: boolean;
   clientMenuChangePassword: boolean;
   clientMenuAbout: boolean;
+  chatAutoReply: boolean;
 }
 
 export interface InquiryNotificationGroup {
