@@ -3547,11 +3547,7 @@ export default function ClientPortalPage() {
                                   <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
                                     <CheckCircle2 className="h-3 w-3" /> Selected
                                   </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
-                                    <Clock className="h-2.5 w-2.5" /> For Review
-                                  </span>
-                                )}
+                                ) : null}
                               </div>
                             </div>
                           );
