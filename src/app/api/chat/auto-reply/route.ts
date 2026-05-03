@@ -34,6 +34,7 @@ import {
   getOfficeCalendarSettings,
   getAllOfficeEvents,
 } from "@/services/officeCalendarService";
+import { getConfigurationSettings } from "@/services/configurationSettingsService";
 
 const THREADS_COLLECTION      = "quotationThreads";
 const MESSAGES_COLLECTION     = "threadMessages";
@@ -72,11 +73,17 @@ export async function POST(request: Request) {
       }
     }
 
-    // ── 4. Determine current availability ────────────────────────────────────
-    const [settings, allEvents] = await Promise.all([
+    // ── 4. Determine current availability & check global killswitch ──────────
+    const [settings, allEvents, appConfig] = await Promise.all([
       getOfficeCalendarSettings(),
       getAllOfficeEvents(),
+      getConfigurationSettings(),
     ]);
+
+    // Check if the feature is disabled in General Settings
+    if (appConfig.portalFeatures.chatAutoReply === false) {
+      return NextResponse.json({ ok: true, disabled: true });
+    }
 
     const availability = checkAvailabilityNow(allEvents, settings);
 

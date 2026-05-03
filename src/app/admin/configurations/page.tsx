@@ -243,6 +243,30 @@ function ConfigurationsContent() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Chat & Support</CardTitle>
+          <CardDescription>
+            Configure chat widget automated behaviors.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-700">Automated Office Hours Reply</p>
+              <p className="text-xs text-slate-500">
+                {portalFeatures.chatAutoReply ? "Enabled" : "Disabled"}. Automatically informs clients about office closures/holidays when they message.
+              </p>
+            </div>
+            <Switch
+              checked={portalFeatures.chatAutoReply}
+              onCheckedChange={() => updatePortalFeature("chatAutoReply")}
+              disabled={!canEdit("configurations")}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Email Notification Routing</CardTitle>
           <CardDescription>
             Add or remove recipients per inquiry category. Multiple recipients are supported.
