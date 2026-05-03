@@ -86,6 +86,7 @@ import {
   getOfficeCalendarSettings,
   saveOfficeCalendarSettings,
   DEFAULT_OFFICE_HOURS,
+  DEFAULT_WIDGET_TITLE,
 } from "@/services/officeCalendarService";
 import {
   OfficeDayEvent,
@@ -191,10 +192,11 @@ function OfficeCalendarContent() {
 
   // Sidebar collapse state
   const [sidebarOpen, setSidebarOpen] = useState({
-    weekends: true,
-    hours: true,
-    events: true,
-    info: true,
+    weekends: false,
+    hours: false,
+    events: false,
+    info: false,
+    widgetHeader: false,
   });
 
   // Dialog state
@@ -204,6 +206,10 @@ function OfficeCalendarContent() {
   const [editingEvent, setEditingEvent]     = useState<OfficeDayEvent | null>(null);
   const [saving, setSaving]                 = useState(false);
 
+  // Widget header state
+  const [widgetTitle, setWidgetTitle]       = useState(DEFAULT_WIDGET_TITLE);
+  const [savingWidget, setSavingWidget]     = useState(false);
+
   // Form state
   const [form, setForm] = useState<{
     type: OfficeEventType;
@@ -212,7 +218,8 @@ function OfficeCalendarContent() {
     recurringYearly: boolean;
     closedFrom: number;
     closedUntil: number;
-  }>({ type: "holiday", title: "", description: "", recurringYearly: false, closedFrom: 12, closedUntil: 13 });
+    customAutoReply: string;
+  }>({ type: "holiday", title: "", description: "", recurringYearly: false, closedFrom: 12, closedUntil: 13, customAutoReply: "" });
 
   // ── Real-time events subscription ─────────────────────────────────────────
   useEffect(() => {
@@ -225,6 +232,7 @@ function OfficeCalendarContent() {
     getOfficeCalendarSettings().then((s) => {
       setWeekendDays(s.weekendDays);
       setOfficeHours(s.officeHours ?? DEFAULT_OFFICE_HOURS);
+      setWidgetTitle(s.widgetHeader?.title ?? DEFAULT_WIDGET_TITLE);
       setLoadingSettings(false);
     });
   }, []);
@@ -282,16 +290,53 @@ function OfficeCalendarContent() {
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
+  /** Generate the system-default auto-reply for a given event form state. */
+  const generateDefaultAutoReply = useCallback((
+    type: OfficeEventType,
+    title: string,
+    description: string,
+    from?: number,
+    until?: number,
+  ): string => {
+    const fmtH = (h: number) => {
+      const s = h >= 12 ? "PM" : "AM";
+      const d = h === 0 ? 12 : h > 12 ? h - 12 : h;
+      return `${d}:00 ${s}`;
+    };
+    const openStr  = fmtH(officeHours.start);
+    const closeStr = fmtH(officeHours.end);
+    const hoursNote = `Office Hours: ${openStr} – ${closeStr}, Monday to Friday`;
+    const desc = description.trim() ? ` ${description.trim()}` : "";
+    const t = title.trim() || OFFICE_EVENT_LABELS[type];
+    switch (type) {
+      case "holiday":
+        return `🎉 Thank you for your message! Today is a holiday — **${t}**.${desc} The office is currently closed. Your message has been received and our team will get back to you on the next working day.\n\n📌 ${hoursNote}`;
+      case "closure":
+        return `🚫 Thank you for your message! The office is temporarily closed — **${t}**.${desc} Your message has been received and our team will respond as soon as we return.\n\n📌 ${hoursNote}`;
+      case "partial_closure": {
+        const fromStr  = typeof from  === "number" ? fmtH(from)  : "?";
+        const untilStr = typeof until === "number" ? fmtH(until) : "?";
+        return `🕐 Thank you for your message! The office is temporarily unavailable from **${fromStr}** to **${untilStr}** today — **${t}**.${desc} Your message has been received and our team will respond once we are back.\n\n📌 ${hoursNote}`;
+      }
+      case "activity":
+        return `📋 Thank you for your message! Please note that the office has the following activity today: **${t}**. Response times may be slightly delayed. Our team will get back to you as soon as possible.`;
+      default:
+        return "";
+    }
+  }, [officeHours]);
+
   const openAddDialog = useCallback((dateStr: string) => {
     setEditingEvent(null);
     setSelectedDate(dateStr);
-    setForm({ type: "holiday", title: "", description: "", recurringYearly: false, closedFrom: 12, closedUntil: 13 });
+    const defaultReply = generateDefaultAutoReply("holiday", "", "", 12, 13);
+    setForm({ type: "holiday", title: "", description: "", recurringYearly: false, closedFrom: 12, closedUntil: 13, customAutoReply: defaultReply });
     setDialogOpen(true);
-  }, []);
+  }, [generateDefaultAutoReply]);
 
   const openEditDialog = useCallback((ev: OfficeDayEvent) => {
     setEditingEvent(ev);
     setSelectedDate(ev.date);
+    const defaultReply = generateDefaultAutoReply(ev.type, ev.title, ev.description ?? "", ev.closedFrom, ev.closedUntil);
     setForm({
       type: ev.type,
       title: ev.title,
@@ -299,9 +344,10 @@ function OfficeCalendarContent() {
       recurringYearly: ev.recurringYearly ?? false,
       closedFrom: ev.closedFrom ?? 12,
       closedUntil: ev.closedUntil ?? 13,
+      customAutoReply: ev.customAutoReply ?? defaultReply,
     });
     setDialogOpen(true);
-  }, []);
+  }, [generateDefaultAutoReply]);
 
   const handleSaveEvent = async () => {
     if (!form.title.trim()) {
@@ -318,6 +364,7 @@ function OfficeCalendarContent() {
           title: form.title.trim(),
           description: form.description.trim() || undefined,
           recurringYearly: form.recurringYearly,
+          customAutoReply: form.customAutoReply.trim() || undefined,
           ...(form.type === "partial_closure"
             ? { closedFrom: form.closedFrom, closedUntil: form.closedUntil }
             : { closedFrom: undefined, closedUntil: undefined }),
@@ -330,6 +377,7 @@ function OfficeCalendarContent() {
           title: form.title.trim(),
           description: form.description.trim() || undefined,
           recurringYearly: form.recurringYearly,
+          customAutoReply: form.customAutoReply.trim() || undefined,
           ...(form.type === "partial_closure"
             ? { closedFrom: form.closedFrom, closedUntil: form.closedUntil }
             : {}),
@@ -389,6 +437,21 @@ function OfficeCalendarContent() {
       toast.error("Failed to save office hours.");
     } finally {
       setSavingHours(false);
+    }
+  };
+
+  const handleSaveWidgetHeader = async () => {
+    setSavingWidget(true);
+    try {
+      await saveOfficeCalendarSettings(
+        { widgetHeader: { title: widgetTitle.trim() || DEFAULT_WIDGET_TITLE } },
+        user?.email ?? "unknown"
+      );
+      toast.success("Chat widget header updated.");
+    } catch {
+      toast.error("Failed to save widget header.");
+    } finally {
+      setSavingWidget(false);
     }
   };
 
@@ -793,6 +856,50 @@ function OfficeCalendarContent() {
             )}
           </Card>
 
+          {/* Chat Widget Header */}
+          <Card className="shadow-sm flex-shrink-0">
+            <button
+              onClick={() => setSidebarOpen(s => ({ ...s, widgetHeader: !s.widgetHeader }))}
+              className="w-full"
+            >
+              <CardContent className="p-3 text-left hover:bg-slate-50 transition-colors cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-semibold text-slate-700">Chat Widget Header</CardTitle>
+                  {sidebarOpen.widgetHeader ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+                </div>
+              </CardContent>
+            </button>
+            {sidebarOpen.widgetHeader && (
+              <CardContent className="px-3 pt-0 pb-3 space-y-2">
+                <p className="text-xs text-slate-500">
+                  This is the title displayed in the client portal chat widget header.
+                </p>
+                <div className="space-y-1">
+                  <Label className="text-xs text-slate-600">Widget Title</Label>
+                  <Input
+                    value={widgetTitle}
+                    onChange={(e) => setWidgetTitle(e.target.value)}
+                    maxLength={60}
+                    placeholder="e.g. PGC Visayas Support"
+                    className="h-9 text-sm"
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  disabled={savingWidget}
+                  onClick={handleSaveWidgetHeader}
+                  className="w-full h-8 bg-[#166FB5] hover:bg-[#166FB5]/90"
+                >
+                  {savingWidget ? (
+                    <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />Saving…</>
+                  ) : (
+                    <><Save className="h-3.5 w-3.5 mr-1.5" />Save Header Title</>
+                  )}
+                </Button>
+              </CardContent>
+            )}
+          </Card>
+
           {/* Info card */}
           <Card className="shadow-sm border-blue-100 bg-blue-50/50 flex-shrink-0">
             <button
@@ -959,6 +1066,36 @@ function OfficeCalendarContent() {
                 )}
               </div>
             )}
+
+            {/* Auto-Reply Message */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold text-slate-700">Auto-Reply Message</Label>
+                <button
+                  type="button"
+                  className="text-xs text-[#166FB5] hover:underline flex items-center gap-1"
+                  onClick={() =>
+                    setForm((f) => ({
+                      ...f,
+                      customAutoReply: generateDefaultAutoReply(f.type, f.title, f.description, f.closedFrom, f.closedUntil),
+                    }))
+                  }
+                >
+                  ↺ Reset to default
+                </button>
+              </div>
+              <Textarea
+                value={form.customAutoReply}
+                onChange={(e) => setForm((f) => ({ ...f, customAutoReply: e.target.value }))}
+                rows={5}
+                maxLength={1000}
+                placeholder="This message will be sent to the client when they chat during this event."
+                className="text-sm resize-none"
+              />
+              <p className="text-xs text-slate-400">
+                Sent to clients who message during this event. Edit freely or reset to the system default.
+              </p>
+            </div>
 
             {/* Recurring yearly */}
             <div className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5">
