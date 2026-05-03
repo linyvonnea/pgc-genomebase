@@ -217,8 +217,9 @@ const MANILA_TZ = "Asia/Manila";
  * Convert a JS Date to its equivalent local time components in Asia/Manila.
  * Returns { dateStr: "YYYY-MM-DD", hour: 0-23, dayOfWeek: 0-6 }.
  *
- * Uses `toLocaleString` with timeZone option which is supported in all modern
- * environments (Node 18+, all evergreen browsers).
+ * Uses Intl.DateTimeFormat.formatToParts() — spec-compliant and reliable
+ * in all modern runtimes (Node 18+, Vercel, browsers) unlike the brittle
+ * `new Date(toLocaleString(...))` approach which can produce Invalid Date.
  */
 export function getPhilippineDateTime(now: Date = new Date()): {
   dateStr: string;
@@ -226,16 +227,35 @@ export function getPhilippineDateTime(now: Date = new Date()): {
   minute: number;
   dayOfWeek: number;
 } {
-  // Produce a locale string in en-US format so we can parse it reliably
-  const ph = new Date(now.toLocaleString("en-US", { timeZone: MANILA_TZ }));
-  const y = ph.getFullYear();
-  const m = String(ph.getMonth() + 1).padStart(2, "0");
-  const d = String(ph.getDate()).padStart(2, "0");
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone: MANILA_TZ,
+    year:    "numeric",
+    month:   "2-digit",
+    day:     "2-digit",
+    hour:    "2-digit",
+    minute:  "2-digit",
+    weekday: "short",
+    hour12:  false,
+  });
+
+  const parts = Object.fromEntries(
+    fmt.formatToParts(now).map((p) => [p.type, p.value])
+  );
+
+  // hour12:false can emit "24" for midnight — normalise to 0
+  let hour = parseInt(parts.hour ?? "0", 10);
+  if (hour === 24) hour = 0;
+
+  const WEEKDAY_INDEX: Record<string, number> = {
+    Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
+  };
+  const dayOfWeek = WEEKDAY_INDEX[parts.weekday ?? ""] ?? 0;
+
   return {
-    dateStr: `${y}-${m}-${d}`,
-    hour: ph.getHours(),
-    minute: ph.getMinutes(),
-    dayOfWeek: ph.getDay(),
+    dateStr: `${parts.year}-${parts.month}-${parts.day}`,
+    hour,
+    minute: parseInt(parts.minute ?? "0", 10),
+    dayOfWeek,
   };
 }
 
