@@ -21,6 +21,8 @@ import { startPresence, subscribeToAnyAdminOnline } from "@/services/presenceSer
 import usePresenceStatus from "@/hooks/usePresenceStatus";
 import PresenceIndicator from "@/components/chat/PresenceIndicator";
 import { useOfficeAvailability } from "@/hooks/useOfficeAvailability";
+import { getConfigurationSettings } from "@/services/configurationSettingsService";
+import { ConfigurationSettings } from "@/types/ConfigurationSettings";
 
 type NavigatorWithBadge = Navigator & {
   setAppBadge?: (contents?: number) => Promise<void>;
@@ -135,6 +137,12 @@ export default function FloatingChatWidget({
     if (role !== "client") return;
     return subscribeToAnyAdminOnline((online) => setSupportOnline(online));
   }, [role]);
+
+  // Load app config for feature flags
+  const [appConfig, setAppConfig] = useState<ConfigurationSettings | null>(null);
+  useEffect(() => {
+    getConfigurationSettings().then(setAppConfig);
+  }, []);
 
   // Office availability for client header status
   const officeAvailability = useOfficeAvailability();
@@ -370,7 +378,7 @@ export default function FloatingChatWidget({
                       />
                     ) : (
                       <OfficeStatusIndicator
-                        officeOpen={officeAvailability?.isOpen ?? null}
+                        officeOpen={(appConfig?.portalFeatures.chatHeaderStatus !== false) ? (officeAvailability?.isOpen ?? null) : true}
                         reason={officeAvailability?.reason ?? null}
                         autoReplyMessage={officeAvailability?.autoReplyMessage ?? null}
                         supportOnline={supportOnline}
