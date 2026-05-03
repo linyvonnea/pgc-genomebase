@@ -182,37 +182,6 @@ function ConfigurationsContent() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Client Portal Visibility</CardTitle>
-          <CardDescription>
-            Toggle access to in-progress modules in the client portal.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {([
-            { key: "requestProgressTimeline", label: "Request Progress Timeline" },
-            { key: "sampleForms", label: "Sample Forms" },
-            { key: "serviceReports", label: "Service Reports" },
-            { key: "officialReceipts", label: "Official Receipts" },
-          ] as Array<{ key: PortalFeatureKey; label: string }>).map((item) => (
-            <div key={item.key} className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-700">{item.label}</p>
-                <p className="text-xs text-slate-500">
-                  {portalFeatures[item.key] ? "Visible" : "Hidden"} to clients.
-                </p>
-              </div>
-              <Switch
-                checked={portalFeatures[item.key]}
-                onCheckedChange={() => updatePortalFeature(item.key)}
-                disabled={!canEdit("configurations")}
-              />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
           <CardTitle>Client Portal Menu</CardTitle>
           <CardDescription>
             Toggle visibility of items in the client portal menu.
