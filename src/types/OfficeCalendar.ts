@@ -9,18 +9,20 @@
  *   settings/officeCalendar    — weekend day configuration
  */
 
-export type OfficeEventType = "holiday" | "activity" | "closure";
+export type OfficeEventType = "holiday" | "activity" | "closure" | "partial_closure";
 
 export const OFFICE_EVENT_LABELS: Record<OfficeEventType, string> = {
   holiday: "Holiday",
   activity: "Office Activity",
   closure: "Office Closure",
+  partial_closure: "Partial Closure",
 };
 
 export const OFFICE_EVENT_COLORS: Record<OfficeEventType, { bg: string; text: string; border: string; dot: string }> = {
-  holiday:  { bg: "bg-red-50",    text: "text-red-700",    border: "border-red-200",    dot: "bg-red-500" },
-  activity: { bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200",  dot: "bg-amber-500" },
-  closure:  { bg: "bg-slate-100", text: "text-slate-600",  border: "border-slate-200",  dot: "bg-slate-500" },
+  holiday:         { bg: "bg-red-50",     text: "text-red-700",     border: "border-red-200",     dot: "bg-red-500" },
+  activity:        { bg: "bg-amber-50",   text: "text-amber-700",   border: "border-amber-200",   dot: "bg-amber-500" },
+  closure:         { bg: "bg-slate-100",  text: "text-slate-600",   border: "border-slate-200",   dot: "bg-slate-500" },
+  partial_closure: { bg: "bg-violet-50",  text: "text-violet-700",  border: "border-violet-200",  dot: "bg-violet-500" },
 };
 
 export interface OfficeDayEvent {
@@ -35,6 +37,16 @@ export interface OfficeDayEvent {
    * The stored `date` still serves as the canonical origin year.
    */
   recurringYearly?: boolean;
+  /**
+   * For partial_closure events: the hour (0–23, PST) when the closure starts.
+   * e.g. 13 means no office from 1:00 PM.
+   */
+  closedFrom?: number;
+  /**
+   * For partial_closure events: the hour (0–23, PST) when the closure ends.
+   * e.g. 17 means no office until 5:00 PM.
+   */
+  closedUntil?: number;
   createdBy: string; // admin email
   createdAt: any;    // Firestore Timestamp
   updatedAt: any;    // Firestore Timestamp
@@ -62,7 +74,7 @@ export interface OfficeCalendarSettings {
 export interface OfficeAvailabilityResult {
   isOpen: boolean;
   /** Reason code for programmatic use */
-  reason: "open" | "outside_hours" | "weekend" | "holiday" | "closure" | "activity";
+  reason: "open" | "outside_hours" | "weekend" | "holiday" | "closure" | "partial_closure" | "activity";
   /** Human-readable message ready to be sent to the client */
   autoReplyMessage: string;
 }

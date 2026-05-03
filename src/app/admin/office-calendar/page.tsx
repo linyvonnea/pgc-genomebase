@@ -99,9 +99,10 @@ const WEEKDAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const WEEKDAY_FULL  = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const EVENT_TYPE_ICONS: Record<OfficeEventType, React.ReactNode> = {
-  holiday:  <Flag      className="h-3 w-3" />,
-  activity: <PartyPopper className="h-3 w-3" />,
-  closure:  <AlertTriangle className="h-3 w-3" />,
+  holiday:         <Flag         className="h-3 w-3" />,
+  activity:        <PartyPopper  className="h-3 w-3" />,
+  closure:         <AlertTriangle className="h-3 w-3" />,
+  partial_closure: <Clock        className="h-3 w-3" />,
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -199,7 +200,9 @@ function OfficeCalendarContent() {
     title: string;
     description: string;
     recurringYearly: boolean;
-  }>({ type: "holiday", title: "", description: "", recurringYearly: false });
+    closedFrom: number;
+    closedUntil: number;
+  }>({ type: "holiday", title: "", description: "", recurringYearly: false, closedFrom: 12, closedUntil: 13 });
 
   // ── Real-time events subscription ─────────────────────────────────────────
   useEffect(() => {
@@ -272,7 +275,7 @@ function OfficeCalendarContent() {
   const openAddDialog = useCallback((dateStr: string) => {
     setEditingEvent(null);
     setSelectedDate(dateStr);
-    setForm({ type: "holiday", title: "", description: "", recurringYearly: false });
+    setForm({ type: "holiday", title: "", description: "", recurringYearly: false, closedFrom: 12, closedUntil: 13 });
     setDialogOpen(true);
   }, []);
 
@@ -284,6 +287,8 @@ function OfficeCalendarContent() {
       title: ev.title,
       description: ev.description ?? "",
       recurringYearly: ev.recurringYearly ?? false,
+      closedFrom: ev.closedFrom ?? 12,
+      closedUntil: ev.closedUntil ?? 13,
     });
     setDialogOpen(true);
   }, []);
@@ -303,6 +308,9 @@ function OfficeCalendarContent() {
           title: form.title.trim(),
           description: form.description.trim() || undefined,
           recurringYearly: form.recurringYearly,
+          ...(form.type === "partial_closure"
+            ? { closedFrom: form.closedFrom, closedUntil: form.closedUntil }
+            : { closedFrom: undefined, closedUntil: undefined }),
         });
         toast.success("Event updated.");
       } else {
@@ -312,6 +320,9 @@ function OfficeCalendarContent() {
           title: form.title.trim(),
           description: form.description.trim() || undefined,
           recurringYearly: form.recurringYearly,
+          ...(form.type === "partial_closure"
+            ? { closedFrom: form.closedFrom, closedUntil: form.closedUntil }
+            : {}),
           createdBy: user?.email ?? "unknown",
         });
         toast.success("Event added.");
@@ -698,6 +709,13 @@ function OfficeCalendarContent() {
                       </div>
                       <p className="text-slate-500 mt-0.5">
                         {format(parseISO(ev.date), "MMM d, yyyy")} · {OFFICE_EVENT_LABELS[ev.type]}
+                        {ev.type === "partial_closure" && typeof ev.closedFrom === "number" && typeof ev.closedUntil === "number" && (
+                          <span className="text-violet-500 ml-1">
+                            ({ev.closedFrom === 0 ? "12:00 AM" : ev.closedFrom < 12 ? `${ev.closedFrom}:00 AM` : ev.closedFrom === 12 ? "12:00 PM" : `${ev.closedFrom - 12}:00 PM`}
+                            {" – "}
+                            {ev.closedUntil === 0 ? "12:00 AM" : ev.closedUntil < 12 ? `${ev.closedUntil}:00 AM` : ev.closedUntil === 12 ? "12:00 PM" : `${ev.closedUntil - 12}:00 PM`})
+                          </span>
+                        )}
                       </p>
                       {ev.description && (
                         <p className="text-slate-400 mt-0.5 line-clamp-2">{ev.description}</p>
@@ -782,6 +800,9 @@ function OfficeCalendarContent() {
                         <div className="flex items-center gap-2">
                           <span className={cn("h-2 w-2 rounded-full", c.dot)} />
                           {label}
+                          {val === "partial_closure" && (
+                            <span className="text-[10px] text-slate-400 ml-1">(specific hours)</span>
+                          )}
                         </div>
                       </SelectItem>
                     );
@@ -803,6 +824,8 @@ function OfficeCalendarContent() {
                     ? "e.g. Independence Day"
                     : form.type === "activity"
                     ? "e.g. Team Building Day"
+                    : form.type === "partial_closure"
+                    ? "e.g. Half Day — Morning Off"
                     : "e.g. Office Maintenance"
                 }
                 className="h-9"
@@ -825,6 +848,60 @@ function OfficeCalendarContent() {
               />
             </div>
 
+            {/* Partial closure time range */}
+            {form.type === "partial_closure" && (
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-violet-500" />
+                  No Office Hours <span className="text-red-500">*</span>
+                </Label>
+                <p className="text-xs text-slate-400">
+                  The office will be unavailable during this time window on the selected day.
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs text-slate-500 mb-1 block">From</Label>
+                    <Select
+                      value={String(form.closedFrom)}
+                      onValueChange={(v) => setForm((f) => ({ ...f, closedFrom: Number(v) }))}
+                    >
+                      <SelectTrigger className="h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 24 }, (_, i) => (
+                          <SelectItem key={i} value={String(i)}>
+                            {i === 0 ? "12:00 AM" : i < 12 ? `${i}:00 AM` : i === 12 ? "12:00 PM" : `${i - 12}:00 PM`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-500 mb-1 block">Until</Label>
+                    <Select
+                      value={String(form.closedUntil)}
+                      onValueChange={(v) => setForm((f) => ({ ...f, closedUntil: Number(v) }))}
+                    >
+                      <SelectTrigger className="h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 24 }, (_, i) => (
+                          <SelectItem key={i} value={String(i)} disabled={i <= form.closedFrom}>
+                            {i === 0 ? "12:00 AM" : i < 12 ? `${i}:00 AM` : i === 12 ? "12:00 PM" : `${i - 12}:00 PM`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                {form.closedFrom >= form.closedUntil && (
+                  <p className="text-xs text-red-500">End time must be after start time.</p>
+                )}
+              </div>
+            )}
+
             {/* Recurring yearly */}
             <div className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5">
               <div>
@@ -844,7 +921,7 @@ function OfficeCalendarContent() {
             </Button>
             <Button
               onClick={handleSaveEvent}
-              disabled={saving || !form.title.trim()}
+              disabled={saving || !form.title.trim() || (form.type === "partial_closure" && form.closedFrom >= form.closedUntil)}
               className="h-9 bg-[#166FB5] hover:bg-[#166FB5]/90"
             >
               {saving ? (

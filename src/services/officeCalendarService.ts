@@ -340,7 +340,29 @@ export function checkAvailabilityNow(
     };
   }
 
-  // 5. Open but has activities — still respond, but note possible delays
+  // 5. Partial closure — a specific time window when the office is closed today
+  const partial = events.find(
+    (e) => e.type === "partial_closure" &&
+      typeof e.closedFrom === "number" &&
+      typeof e.closedUntil === "number" &&
+      hour >= e.closedFrom! &&
+      hour < e.closedUntil!
+  );
+  if (partial) {
+    const fromStr  = formatHours(partial.closedFrom!);
+    const untilStr = formatHours(partial.closedUntil!);
+    const desc = partial.description ? ` ${partial.description}` : "";
+    return {
+      isOpen: false,
+      reason: "partial_closure",
+      autoReplyMessage:
+        `🕐 Thank you for your message! The office is temporarily unavailable from **${fromStr}** to **${untilStr}** today — **${partial.title}**.${desc} ` +
+        `Your message has been received and our team will respond once we are back.\n\n` +
+        `📌 ${hoursNote}`,
+    };
+  }
+
+  // 6. Open but has activities — still respond, but note possible delays
   const activities = events.filter((e) => e.type === "activity");
   if (activities.length > 0) {
     const list = activities.map((a) => a.title).join(", ");
