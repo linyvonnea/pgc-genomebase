@@ -49,10 +49,12 @@ const CALENDAR_SETTINGS_DOC = "officeCalendar";
 
 const DEFAULT_WEEKEND_DAYS: number[] = [0, 6]; // 0=Sunday, 6=Saturday
 export const DEFAULT_OFFICE_HOURS = { start: 8, end: 17 }; // 08:00–17:00
+export const DEFAULT_WIDGET_TITLE = "PGC Visayas Support";
 
 export const DEFAULT_OFFICE_CALENDAR_SETTINGS: OfficeCalendarSettings = {
   weekendDays: DEFAULT_WEEKEND_DAYS,
   officeHours: DEFAULT_OFFICE_HOURS,
+  widgetHeader: { title: DEFAULT_WIDGET_TITLE },
 };
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
@@ -67,6 +69,7 @@ export async function getOfficeCalendarSettings(): Promise<OfficeCalendarSetting
       return {
         weekendDays: Array.isArray(data.weekendDays) ? data.weekendDays : DEFAULT_WEEKEND_DAYS,
         officeHours: data.officeHours ?? DEFAULT_OFFICE_HOURS,
+        widgetHeader: data.widgetHeader ?? { title: DEFAULT_WIDGET_TITLE },
         updatedAt: data.updatedAt,
         updatedBy: data.updatedBy,
       };
@@ -80,7 +83,7 @@ export async function getOfficeCalendarSettings(): Promise<OfficeCalendarSetting
 
 /** Persist schedule settings (supports partial updates). */
 export async function saveOfficeCalendarSettings(
-  settings: Partial<Pick<OfficeCalendarSettings, "weekendDays" | "officeHours">>,
+  settings: Partial<Pick<OfficeCalendarSettings, "weekendDays" | "officeHours" | "widgetHeader">>,
   updatedBy: string
 ): Promise<void> {
   const ref = doc(db, SETTINGS_COLLECTION, CALENDAR_SETTINGS_DOC);
@@ -294,7 +297,7 @@ export function checkAvailabilityNow(
     return {
       isOpen: false,
       reason: "holiday",
-      autoReplyMessage:
+      autoReplyMessage: holiday.customAutoReply?.trim() ||
         `🎉 Thank you for your message! Today is a holiday — **${holiday.title}**.${desc} ` +
         `The office is currently closed. Your message has been received and our team will get back to you on the next working day.\n\n` +
         `📌 ${hoursNote}`,
@@ -308,7 +311,7 @@ export function checkAvailabilityNow(
     return {
       isOpen: false,
       reason: "closure",
-      autoReplyMessage:
+      autoReplyMessage: closure.customAutoReply?.trim() ||
         `🚫 Thank you for your message! The office is temporarily closed — **${closure.title}**.${desc} ` +
         `Your message has been received and our team will respond as soon as we return.\n\n` +
         `📌 ${hoursNote}`,
@@ -355,7 +358,7 @@ export function checkAvailabilityNow(
     return {
       isOpen: false,
       reason: "partial_closure",
-      autoReplyMessage:
+      autoReplyMessage: partial.customAutoReply?.trim() ||
         `🕐 Thank you for your message! The office is temporarily unavailable from **${fromStr}** to **${untilStr}** today — **${partial.title}**.${desc} ` +
         `Your message has been received and our team will respond once we are back.\n\n` +
         `📌 ${hoursNote}`,
@@ -366,15 +369,16 @@ export function checkAvailabilityNow(
   const activities = events.filter((e) => e.type === "activity");
   if (activities.length > 0) {
     const list = activities.map((a) => a.title).join(", ");
+    const customMsg = activities.find(a => a.customAutoReply?.trim())?.customAutoReply?.trim();
     return {
       isOpen: true,
       reason: "activity",
-      autoReplyMessage:
+      autoReplyMessage: customMsg ||
         `📋 Thank you for your message! Please note that the office has the following activity today: **${list}**. ` +
         `Response times may be slightly delayed. Our team will get back to you as soon as possible.`,
     };
   }
 
-  // 6. Open and no special conditions
+  // 7. Open and no special conditions
   return { isOpen: true, reason: "open", autoReplyMessage: "" };
 }
