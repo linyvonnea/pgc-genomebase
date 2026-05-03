@@ -6,7 +6,8 @@ export type PortalFeatureKey =
   | "clientMenuSettings"
   | "clientMenuChangePassword"
   | "clientMenuAbout"
-  | "chatAutoReply";
+  | "chatAutoReply"
+  | "chatHeaderStatus";
 
 export interface PortalFeatureVisibility {
   sampleForms: boolean;
@@ -17,6 +18,7 @@ export interface PortalFeatureVisibility {
   clientMenuChangePassword: boolean;
   clientMenuAbout: boolean;
   chatAutoReply: boolean;
+  chatHeaderStatus: boolean;
 }
 
 export interface InquiryNotificationGroup {

@@ -262,6 +262,22 @@ function ConfigurationsContent() {
               disabled={!canEdit("configurations")}
             />
           </div>
+
+          <Separator className="my-2" />
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-slate-700">Chat Header Availability Status</p>
+              <p className="text-xs text-slate-500">
+                {portalFeatures.chatHeaderStatus ? "Enabled" : "Disabled"}. Shows "Outside Office Hours", "Weekend", etc. in the chat widget header.
+              </p>
+            </div>
+            <Switch
+              checked={portalFeatures.chatHeaderStatus}
+              onCheckedChange={() => updatePortalFeature("chatHeaderStatus")}
+              disabled={!canEdit("configurations")}
+            />
+          </div>
         </CardContent>
       </Card>
 
