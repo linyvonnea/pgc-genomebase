@@ -23,7 +23,6 @@ import PresenceIndicator from "@/components/chat/PresenceIndicator";
 import { useOfficeAvailability } from "@/hooks/useOfficeAvailability";
 import { getConfigurationSettings } from "@/services/configurationSettingsService";
 import { ConfigurationSettings } from "@/types/ConfigurationSettings";
-import { getOfficeCalendarSettings, DEFAULT_WIDGET_TITLE } from "@/services/officeCalendarService";
 
 type NavigatorWithBadge = Navigator & {
   setAppBadge?: (contents?: number) => Promise<void>;
@@ -145,15 +144,6 @@ export default function FloatingChatWidget({
   useEffect(() => {
     getConfigurationSettings().then(setAppConfig);
   }, []);
-
-  // Load widget title from office calendar settings (client-facing)
-  const [widgetTitle, setWidgetTitle] = useState(DEFAULT_WIDGET_TITLE);
-  useEffect(() => {
-    if (role !== "client") return;
-    getOfficeCalendarSettings().then((s) =>
-      setWidgetTitle(s.widgetHeader?.title ?? DEFAULT_WIDGET_TITLE)
-    );
-  }, [role]);
 
   // Office availability for client header status
   const officeAvailability = useOfficeAvailability();
@@ -377,7 +367,7 @@ export default function FloatingChatWidget({
                 )}
                 <div className="flex flex-col">
                   <span className="font-bold text-sm tracking-tight leading-tight">
-                    {role === "admin" ? (inquiryData?.name || "Client") : widgetTitle}
+                    {role === "admin" ? (inquiryData?.name || "Client") : "PGC Visayas Support"}
                   </span>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     {role === "admin" ? (

@@ -47,11 +47,6 @@ export interface OfficeDayEvent {
    * e.g. 17 means no office until 5:00 PM.
    */
   closedUntil?: number;
-  /**
-   * Optional admin-customized auto-reply message for this specific event.
-   * When set, overrides the system-generated message in checkAvailabilityNow.
-   */
-  customAutoReply?: string;
   createdBy: string; // admin email
   createdAt: any;    // Firestore Timestamp
   updatedAt: any;    // Firestore Timestamp
@@ -71,11 +66,6 @@ export interface OfficeCalendarSettings {
   weekendDays: number[];
   /** Office working hours in Asia/Manila timezone */
   officeHours: OfficeHours;
-  /** Customizable chat widget header shown to clients */
-  widgetHeader?: {
-    /** Title shown in the chat widget header. Defaults to "PGC Visayas Support" */
-    title: string;
-  };
   updatedAt?: any;
   updatedBy?: string;
 }
