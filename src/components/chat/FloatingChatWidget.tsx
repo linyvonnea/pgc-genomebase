@@ -84,10 +84,11 @@ function OfficeStatusIndicator({
   const label: string = (() => {
     switch (reason) {
       case "outside_hours": return "Outside Office Hours";
-      case "weekend":       return "Weekend — Office Closed";
-      case "holiday":       return "Holiday — Office Closed";
-      case "closure":       return "Office Closure";
-      case "activity":      return "Office Activity Today";
+      case "weekend":         return "Weekend — Office Closed";
+      case "holiday":         return "Holiday — Office Closed";
+      case "closure":         return "Office Closure";
+      case "partial_closure": return "Temporarily Unavailable";
+      case "activity":        return "Office Activity Today";
       default:              return "Support Offline";
     }
   })();
