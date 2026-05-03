@@ -431,7 +431,7 @@ export default function ChatBox({
                         </div>
                       </div>
                       <div className="flex-1 rounded-2xl rounded-tl-sm border border-amber-200 bg-amber-50 px-3.5 py-2.5">
-                        <p className="text-[11px] font-semibold text-amber-700 mb-1 uppercase tracking-wide">Automated Notice · PGC Support</p>
+                        <p className="text-[11px] font-semibold text-amber-700 mb-1 uppercase tracking-wide">Automated Notice</p>
                         <p className="text-[13px] text-amber-900 whitespace-pre-wrap leading-relaxed">
                           {msg.content}
                         </p>
