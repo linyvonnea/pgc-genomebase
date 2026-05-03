@@ -70,6 +70,7 @@ import {
   Flag,
   PartyPopper,
   AlertTriangle,
+  Clock,
 } from "lucide-react";
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -82,10 +83,12 @@ import {
   deleteOfficeEvent,
   getOfficeCalendarSettings,
   saveOfficeCalendarSettings,
+  DEFAULT_OFFICE_HOURS,
 } from "@/services/officeCalendarService";
 import {
   OfficeDayEvent,
   OfficeEventType,
+  OfficeHours,
   OFFICE_EVENT_LABELS,
   OFFICE_EVENT_COLORS,
 } from "@/types/OfficeCalendar";
@@ -178,7 +181,9 @@ function OfficeCalendarContent() {
   const [currentMonth, setCurrentMonth] = useState<Date>(() => startOfMonth(new Date()));
   const [allEvents, setAllEvents]         = useState<OfficeDayEvent[]>([]);
   const [weekendDays, setWeekendDays]     = useState<number[]>([0, 6]);
+  const [officeHours, setOfficeHours]     = useState<OfficeHours>(DEFAULT_OFFICE_HOURS);
   const [savingWeekends, setSavingWeekends] = useState(false);
+  const [savingHours, setSavingHours]     = useState(false);
   const [loadingSettings, setLoadingSettings] = useState(true);
 
   // Dialog state
@@ -206,6 +211,7 @@ function OfficeCalendarContent() {
   useEffect(() => {
     getOfficeCalendarSettings().then((s) => {
       setWeekendDays(s.weekendDays);
+      setOfficeHours(s.officeHours ?? DEFAULT_OFFICE_HOURS);
       setLoadingSettings(false);
     });
   }, []);
@@ -346,6 +352,22 @@ function OfficeCalendarContent() {
       toast.error("Failed to save weekend settings.");
     } finally {
       setSavingWeekends(false);
+    }
+  };
+
+  const handleSaveOfficeHours = async () => {
+    if (officeHours.start >= officeHours.end) {
+      toast.error("Opening time must be before closing time.");
+      return;
+    }
+    setSavingHours(true);
+    try {
+      await saveOfficeCalendarSettings({ officeHours }, user?.email ?? "unknown");
+      toast.success("Office hours saved.");
+    } catch {
+      toast.error("Failed to save office hours.");
+    } finally {
+      setSavingHours(false);
     }
   };
 
@@ -552,6 +574,82 @@ function OfficeCalendarContent() {
                     <><RefreshCw className="h-3 w-3 mr-1.5 animate-spin" />Saving…</>
                   ) : (
                     <><Save className="h-3 w-3 mr-1.5" />Save Weekend Settings</>
+                  )}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Office Hours Configuration */}
+          <Card className="shadow-sm border-slate-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 text-slate-500" />
+                Office Hours
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Working hours in Philippine Standard Time (PST). Used for chat auto-replies.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs text-slate-500 mb-1 block">Opens at</Label>
+                  <Select
+                    value={String(officeHours.start)}
+                    onValueChange={(v) =>
+                      canEdit("officeCalendar") && setOfficeHours((h) => ({ ...h, start: Number(v) }))
+                    }
+                    disabled={!canEdit("officeCalendar")}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 24 }, (_, i) => (
+                        <SelectItem key={i} value={String(i)}>
+                          {i === 0 ? "12:00 AM" : i < 12 ? `${i}:00 AM` : i === 12 ? "12:00 PM" : `${i - 12}:00 PM`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs text-slate-500 mb-1 block">Closes at</Label>
+                  <Select
+                    value={String(officeHours.end)}
+                    onValueChange={(v) =>
+                      canEdit("officeCalendar") && setOfficeHours((h) => ({ ...h, end: Number(v) }))
+                    }
+                    disabled={!canEdit("officeCalendar")}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 24 }, (_, i) => (
+                        <SelectItem key={i} value={String(i)}>
+                          {i === 0 ? "12:00 AM" : i < 12 ? `${i}:00 AM` : i === 12 ? "12:00 PM" : `${i - 12}:00 PM`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-400">
+                Clients messaging outside these hours will receive an automated notice.
+              </p>
+              {canEdit("officeCalendar") && (
+                <Button
+                  size="sm"
+                  onClick={handleSaveOfficeHours}
+                  disabled={savingHours}
+                  className="w-full h-8 text-xs bg-[#166FB5] hover:bg-[#166FB5]/90"
+                >
+                  {savingHours ? (
+                    <><RefreshCw className="h-3 w-3 mr-1.5 animate-spin" />Saving…</>
+                  ) : (
+                    <><Save className="h-3 w-3 mr-1.5" />Save Office Hours</>
                   )}
                 </Button>
               )}
