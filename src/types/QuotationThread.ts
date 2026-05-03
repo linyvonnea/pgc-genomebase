@@ -30,7 +30,8 @@ export type MessageType =
   | "quotation"         // Quotation attachment
   | "revision_request"  // Client requesting changes
   | "approval"          // Client approval
-  | "system";           // System-generated message
+  | "system"            // System-generated message (small pill)
+  | "auto_reply";       // Automated availability notice (styled banner)
 
 export interface QuotationItem {
   id: string;

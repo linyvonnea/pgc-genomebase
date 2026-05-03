@@ -13,7 +13,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Send, Clock, AlertCircle, Check, CheckCheck, Paperclip, FileText, FileSpreadsheet, File, X, Loader2, Download, Trash2 } from "lucide-react";
+import { MessageCircle, Send, Clock, AlertCircle, Check, CheckCheck, Paperclip, FileText, FileSpreadsheet, File, X, Loader2, Download, Trash2, Info } from "lucide-react";
 import { ThreadMessage, MessageSenderRole } from "@/types/QuotationThread";
 import {
   subscribeToThreadMessages,
@@ -302,6 +302,15 @@ export default function ChatBox({
         isRead: false,
         ...(attachments ? { attachments } : {}),
       } as Omit<ThreadMessage, "id" | "createdAt">);
+
+      // Trigger availability auto-reply only for client messages
+      if (role === "client") {
+        fetch("/api/chat/auto-reply", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ threadId: inquiryId }),
+        }).catch(() => { /* non-critical — ignore network errors */ });
+      }
     } catch (error) {
       console.error("Failed to send message:", error);
       setError("Failed to send message. Please try again.");
@@ -407,6 +416,31 @@ export default function ChatBox({
                     <span className="text-[11px] font-medium bg-gray-100 text-gray-500 px-3 py-1 rounded-full">
                       {msg.content}
                     </span>
+                  </div>
+                );
+              }
+
+              // Auto-reply availability notice
+              if (msg.type === "auto_reply") {
+                return (
+                  <div key={msg.id || idx} className="flex justify-start my-3 px-1">
+                    <div className="flex gap-2.5 max-w-[90%]">
+                      <div className="flex-shrink-0 mt-0.5">
+                        <div className="h-7 w-7 rounded-full bg-amber-100 border border-amber-200 flex items-center justify-center">
+                          <Info className="h-3.5 w-3.5 text-amber-600" />
+                        </div>
+                      </div>
+                      <div className="flex-1 rounded-2xl rounded-tl-sm border border-amber-200 bg-amber-50 px-3.5 py-2.5">
+                        <p className="text-[11px] font-semibold text-amber-700 mb-1 uppercase tracking-wide">Automated Notice · PGC Support</p>
+                        <p className="text-[13px] text-amber-900 whitespace-pre-wrap leading-relaxed">
+                          {msg.content}
+                        </p>
+                        <p className="text-[10px] text-amber-500 mt-1.5 flex items-center gap-1">
+                          <Clock className="w-2.5 h-2.5" />
+                          {formatMessageTime(msg)}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 );
               }

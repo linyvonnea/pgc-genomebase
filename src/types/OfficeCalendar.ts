@@ -40,12 +40,31 @@ export interface OfficeDayEvent {
   updatedAt: any;    // Firestore Timestamp
 }
 
+/** Configurable office hours (24-hour format, e.g. { start: 8, end: 17 }). */
+export interface OfficeHours {
+  /** Hour of day when office opens, 0–23 (e.g. 8) */
+  start: number;
+  /** Hour of day when office closes, 0–23, exclusive (e.g. 17 means up to 16:59) */
+  end: number;
+}
+
 /** Persisted in settings/officeCalendar. Defines which day-of-week numbers are non-working. */
 export interface OfficeCalendarSettings {
   /** 0 = Sunday … 6 = Saturday */
   weekendDays: number[];
+  /** Office working hours in Asia/Manila timezone */
+  officeHours: OfficeHours;
   updatedAt?: any;
   updatedBy?: string;
+}
+
+/** Structured result from checkAvailabilityNow() */
+export interface OfficeAvailabilityResult {
+  isOpen: boolean;
+  /** Reason code for programmatic use */
+  reason: "open" | "outside_hours" | "weekend" | "holiday" | "closure" | "activity";
+  /** Human-readable message ready to be sent to the client */
+  autoReplyMessage: string;
 }
 
 /** Shape returned by the service — combines events + settings for a given month range */
