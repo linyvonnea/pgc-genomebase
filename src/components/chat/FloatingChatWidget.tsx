@@ -20,6 +20,7 @@ import { getClientInitials } from "@/lib/chatUtils";
 import { startPresence, subscribeToAnyAdminOnline } from "@/services/presenceService";
 import usePresenceStatus from "@/hooks/usePresenceStatus";
 import PresenceIndicator from "@/components/chat/PresenceIndicator";
+import { useOfficeAvailability } from "@/hooks/useOfficeAvailability";
 
 type NavigatorWithBadge = Navigator & {
   setAppBadge?: (contents?: number) => Promise<void>;
@@ -36,6 +37,68 @@ function base64ToUint8Array(base64: string): Uint8Array {
   }
   return outputArray;
 }
+
+// ── Office header status for client role ─────────────────────────────────────
+
+interface OfficeStatusIndicatorProps {
+  officeOpen: boolean | null;
+  reason: string | null;
+  autoReplyMessage: string | null;
+  supportOnline: boolean;
+}
+
+function OfficeStatusIndicator({
+  officeOpen,
+  reason,
+  supportOnline,
+}: OfficeStatusIndicatorProps) {
+  // While loading, fall back to presence indicator
+  if (officeOpen === null) {
+    return (
+      <PresenceIndicator
+        isOnline={supportOnline}
+        lastSeen={null}
+        onlineLabel="Support Available"
+        offlineLabel="Support Offline"
+        variant="light"
+      />
+    );
+  }
+
+  if (officeOpen) {
+    // Office open — show real admin presence
+    return (
+      <PresenceIndicator
+        isOnline={supportOnline}
+        lastSeen={null}
+        onlineLabel="Support Available"
+        offlineLabel="Support Offline"
+        variant="light"
+      />
+    );
+  }
+
+  // Office closed — show reason without a green dot
+  const label: string = (() => {
+    switch (reason) {
+      case "outside_hours": return "Outside Office Hours";
+      case "weekend":       return "Weekend — Office Closed";
+      case "holiday":       return "Holiday — Office Closed";
+      case "closure":       return "Office Closure";
+      case "activity":      return "Office Activity Today";
+      default:              return "Support Offline";
+    }
+  })();
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="h-2 w-2 rounded-full flex-shrink-0 bg-white/30" />
+      <span className="text-[10px] text-white/60">{label}</span>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface FloatingChatWidgetProps {
   inquiryId: string;
@@ -72,6 +135,9 @@ export default function FloatingChatWidget({
     if (role !== "client") return;
     return subscribeToAnyAdminOnline((online) => setSupportOnline(online));
   }, [role]);
+
+  // Office availability for client header status
+  const officeAvailability = useOfficeAvailability();
 
   // Publish own presence
   useEffect(() => {
@@ -303,12 +369,11 @@ export default function FloatingChatWidget({
                         variant="light"
                       />
                     ) : (
-                      <PresenceIndicator
-                        isOnline={supportOnline}
-                        lastSeen={null}
-                        onlineLabel="Support Available"
-                        offlineLabel="Support Offline"
-                        variant="light"
+                      <OfficeStatusIndicator
+                        officeOpen={officeAvailability?.isOpen ?? null}
+                        reason={officeAvailability?.reason ?? null}
+                        autoReplyMessage={officeAvailability?.autoReplyMessage ?? null}
+                        supportOnline={supportOnline}
                       />
                     )}
                   </div>
