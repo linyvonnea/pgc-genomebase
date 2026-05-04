@@ -329,12 +329,12 @@ export function checkAvailabilityNow(
 
   // 4. Outside office hours (weekday but wrong time)
   if (hour < officeHours.start || hour >= officeHours.end) {
-    const timeOfDay = hour < officeHours.start ? "yet open" : "closed";
+    const timeOfDay = hour < officeHours.start ? "not yet open" : "already closed";
     return {
       isOpen: false,
       reason: "outside_hours",
       autoReplyMessage:
-        `🕐 Thank you for your message! Our office is not ${timeOfDay} at this time. ` +
+        `🕐 Thank you for your message! Our office is ${timeOfDay} at this time. ` +
         `Your message has been received and our team will respond during the next available working hours.\n\n` +
         `📌 ${hoursNote}`,
     };
