@@ -222,15 +222,17 @@ export default function AdminFormSubmissions({ projectId }: AdminFormSubmissions
                     {isAcknowledging ? "Saving…" : "Acknowledge"}
                   </button>
                 )}
-                {/* Delete button */}
-                <button
-                  onClick={() => setDeleteTarget(f)}
-                  className="inline-flex items-center gap-1 text-[10px] font-medium text-red-500 hover:text-red-700 hover:bg-red-50 border border-red-200 rounded-full px-2 py-0.5 transition-colors ml-auto"
-                  title="Delete this submission"
-                >
-                  <Trash2 className="h-2.5 w-2.5" />
-                  Delete
-                </button>
+                {/* Delete button (only if not acknowledged, or if Super Admin) */}
+                {( !f.acknowledgedByAdmin || adminInfo?.role?.toLowerCase().replace(/\s+/g, '') === 'superadmin') && (
+                  <button
+                    onClick={() => setDeleteTarget(f)}
+                    className="inline-flex items-center gap-1 text-[10px] font-medium text-red-500 hover:text-red-700 hover:bg-red-50 border border-red-200 rounded-full px-2 py-0.5 transition-colors ml-auto"
+                    title={f.acknowledgedByAdmin ? "Acknowledge files can only be deleted by a Super Admin" : "Delete this submission"}
+                  >
+                    <Trash2 className="h-2.5 w-2.5" />
+                    Delete
+                  </button>
+                )}
               </div>
             </div>
           );
