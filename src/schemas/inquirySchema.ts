@@ -224,7 +224,11 @@ export const inquiryFormSchema = inquirySchema
   // Conditional validation: At least one bioinformatics analysis is required for complete-bioinfo workflow
   .refine((data) => {
     if (data.workflowType === "complete-bioinfo") {
-      return !!data.bioinfoOptions && data.bioinfoOptions.length > 0;
+      // Check the new modal field (serviceTypes) first, then fall back to legacy bioinfoOptions
+      const serviceTypes = (data.bioinformaticsDetails as Record<string, unknown> | undefined)?.serviceTypes;
+      const hasServiceTypes = Array.isArray(serviceTypes) && serviceTypes.length > 0;
+      const hasBioinfoOptions = !!data.bioinfoOptions && data.bioinfoOptions.length > 0;
+      return hasServiceTypes || hasBioinfoOptions;
     }
     return true;
   }, {
