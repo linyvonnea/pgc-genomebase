@@ -253,12 +253,9 @@ function InquiryDetailContent() {
                   <span className="text-xs font-medium text-slate-500 uppercase tracking-wide">Email</span>
                 </div>
                 <span className="text-sm font-medium text-slate-800">
-                  {typeof inquiry.email === 'string' 
-                    ? inquiry.email 
-                    : (Array.isArray(inquiry.email) && inquiry.email.length > 0
-                        ? inquiry.email.join(", ")
-                        : "—")
-                  }
+                  {Array.isArray(inquiry.email) && inquiry.email.length > 0
+                    ? inquiry.email.join(", ")
+                    : "—"}
                 </span>
               </div>
 
