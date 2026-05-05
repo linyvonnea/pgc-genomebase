@@ -689,16 +689,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData & { id?: 
               <p style="margin: 0; color: #64748b; font-size: 13px;"><strong>Research Overview:</strong></p>
               <p style="margin: 4px 0; font-size: 14px;">${inquiryData.researchOverview}</p>
             </div>` : ''}
-            ${(inquiryData.service === 'bioinformatics' && inquiryData.bioinformaticsDetails?.overviewObjectives) ? `
-            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9;">
-              <p style="margin: 0; color: #64748b; font-size: 13px;"><strong>Overview of Research and Objectives:</strong></p>
-              <p style="margin: 4px 0; font-size: 14px; white-space: pre-wrap;">${inquiryData.bioinformaticsDetails.overviewObjectives}</p>
-            </div>` : ''}
-            ${(inquiryData.workflowType === 'complete-bioinfo' && inquiryData.bioinformaticsDetails?.overviewObjectives) ? `
-            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9;">
-              <p style="margin: 0; color: #64748b; font-size: 13px;"><strong>Overview of Research and Objectives (Bioinformatics Analysis):</strong></p>
-              <p style="margin: 4px 0; font-size: 14px; white-space: pre-wrap;">${inquiryData.bioinformaticsDetails.overviewObjectives}</p>
-            </div>` : ''}
+
             
             ${inquiryData.methodologyFileUrl ? `
             <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9;">
@@ -738,7 +729,6 @@ ${inquiryData.researchOverview ? `Research Overview: ${inquiryData.researchOverv
 ${inquiryData.service === 'research' && inquiryData.molecularServicesBudget ? `Budget for Molecular Services: ${inquiryData.molecularServicesBudget}\n` : ''}
 ${inquiryData.service === 'research' && inquiryData.plannedSampleCount ? `Planned Sample Count: ${inquiryData.plannedSampleCount}\n` : ''}
 ${inquiryData.service === 'bioinformatics' ? `${formatBioinformaticsDetailsText(inquiryData.bioinformaticsDetails as Record<string, any> | undefined)}\n` : ''}
-${inquiryData.service === 'bioinformatics' && inquiryData.bioinformaticsDetails?.overviewObjectives ? `Overview of Research and Objectives: ${inquiryData.bioinformaticsDetails.overviewObjectives}\n` : ''}
 ${inquiryData.methodologyFileUrl ? `Methodology File: ${inquiryData.methodologyFileUrl}\n` : ''}
 ${inquiryData.individualAssayDetails ? `Individual Assay Details: ${inquiryData.individualAssayDetails}\n` : ''}
 ${inquiryData.service === 'retail' && inquiryData.retailItems && inquiryData.retailItems.length > 0 ? `Retail Items: \n${inquiryData.retailItems.map(item => `- ${item}${inquiryData.retailItemDetails?.[item] ? `: ${inquiryData.retailItemDetails?.[item]}` : ''}`).join('\n')}\n` : ''}
