@@ -107,12 +107,12 @@ const formatBioinformaticsDetailsHtml = (details: Record<string, any> | undefine
   };
   const fileFormats = Array.isArray(details.dataFileFormats) ? details.dataFileFormats.join(", ") : "";
 
-  const row = (label, value) => {
+  const row = (label: string, value: unknown) => {
     if (value == null || value === "") return "";
     return "<tr><td style=\"padding:4px 8px 4px 0;color:#64748b;vertical-align:top;width:230px;\">" + label + ":</td><td style=\"padding:4px 0;\">" + value + "</td></tr>";
   };
 
-  const subhead = (title) =>
+  const subhead = (title: string) =>
     "<tr><td colspan=\"2\" style=\"padding:10px 0 4px 0;color:#166FB5;font-weight:600;font-size:13px;border-top:1px solid #e2e8f0;\">" + title + "</td></tr>";
 
   let html = "";
