@@ -63,6 +63,7 @@ export const getDefaultConfigurationSettings = (): ConfigurationSettings => ({
     recipients: [...group.recipients],
   })),
   receiptNotifications: [...DEFAULT_RECEIPT_NOTIFICATION_EMAILS],
+  bioinformaticsWorkflowNotifications: [],
 });
 
 export async function getConfigurationSettings(): Promise<ConfigurationSettings> {
@@ -96,6 +97,10 @@ export async function getConfigurationSettings(): Promise<ConfigurationSettings>
         Array.isArray(data.receiptNotifications)
           ? data.receiptNotifications
           : defaults.receiptNotifications,
+      bioinformaticsWorkflowNotifications:
+        Array.isArray(data.bioinformaticsWorkflowNotifications)
+          ? data.bioinformaticsWorkflowNotifications
+          : [],
     };
   } catch (error) {
     console.error("Error fetching configuration settings:", error);
