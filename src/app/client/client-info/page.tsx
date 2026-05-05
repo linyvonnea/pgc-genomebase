@@ -4700,21 +4700,6 @@ export default function ClientPortalPage() {
                             </div>
                           )}
 
-                          {/* Attachments Section */}
-                          {currentInquiry.methodologyFileUrl && (
-                            <div className="pt-4 border-t border-slate-100">
-                              <a
-                                href={currentInquiry.methodologyFileUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors border border-blue-100"
-                              >
-                                <FileText className="h-4 w-4" />
-                                Review Uploaded Methodology/Concept
-                              </a>
-                            </div>
-                          )}
-
                           {/* Submission Footer */}
                           <div className="pt-3 flex items-center justify-between gap-3 border-t border-slate-100">
                             <div className="flex items-center gap-1.5 text-slate-400">
