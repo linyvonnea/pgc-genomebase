@@ -535,6 +535,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData & { id?: 
                 <td style="padding: 4px 0; color: #64748b;">Bioinformatics Analysis:</td>
                 <td style="padding: 4px 0;">${inquiryData.bioinfoOptions.map(formatBioinfoOption).join(', ')}</td>
               </tr>` : ''}
+              ${inquiryData.workflowType === 'complete-bioinfo' && inquiryData.bioinformaticsDetails ? formatBioinformaticsDetailsHtml(inquiryData.bioinformaticsDetails as Record<string, any>) : ''}
               ${inquiryData.individualAssayDetails ? `
               <tr>
                 <td style="padding: 4px 0; color: #64748b;">Equipment/Workflow:</td>
@@ -584,6 +585,11 @@ export async function createInquiryAction(inquiryData: InquiryFormData & { id?: 
               <p style="margin: 0; color: #64748b; font-size: 13px;"><strong>Overview of Research and Objectives:</strong></p>
               <p style="margin: 4px 0; font-size: 14px; white-space: pre-wrap;">${inquiryData.bioinformaticsDetails.overviewObjectives}</p>
             </div>` : ''}
+            ${(inquiryData.workflowType === 'complete-bioinfo' && inquiryData.bioinformaticsDetails?.overviewObjectives) ? `
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9;">
+              <p style="margin: 0; color: #64748b; font-size: 13px;"><strong>Overview of Research and Objectives (Bioinformatics Analysis):</strong></p>
+              <p style="margin: 4px 0; font-size: 14px; white-space: pre-wrap;">${inquiryData.bioinformaticsDetails.overviewObjectives}</p>
+            </div>` : ''}
             
             ${inquiryData.methodologyFileUrl ? `
             <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f1f5f9;">
@@ -618,6 +624,7 @@ ${inquiryData.species ? `Species: ${formatSpecies(inquiryData.species, inquiryDa
 ${inquiryData.sampleCount ? `Sample Count: ${inquiryData.sampleCount}\n` : ''}
 ${inquiryData.workflowType ? `Workflow: ${formatWorkflowType(inquiryData.workflowType)}\n` : ''}
 ${inquiryData.bioinfoOptions && inquiryData.bioinfoOptions.length > 0 ? `Bioinformatics Analysis: ${inquiryData.bioinfoOptions.map(formatBioinfoOption).join(', ')}\n` : ''}
+${inquiryData.workflowType === 'complete-bioinfo' && inquiryData.bioinformaticsDetails ? `${formatBioinformaticsDetailsText(inquiryData.bioinformaticsDetails as Record<string, any>)}\n` : ''}
 ${inquiryData.researchOverview ? `Research Overview: ${inquiryData.researchOverview}\n` : ''}
 ${inquiryData.service === 'research' && inquiryData.molecularServicesBudget ? `Budget for Molecular Services: ${inquiryData.molecularServicesBudget}\n` : ''}
 ${inquiryData.service === 'research' && inquiryData.plannedSampleCount ? `Planned Sample Count: ${inquiryData.plannedSampleCount}\n` : ''}

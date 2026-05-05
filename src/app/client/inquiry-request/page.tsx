@@ -862,7 +862,15 @@ export default function QuotationRequestForm() {
                                     others: "Others",
                                   }
                                   if (selectedTypes.length === 0) return (
-                                    <p className="text-xs text-slate-500 italic">No analysis configured yet. Click above to set up.</p>
+                                    <>
+                                      <p className="text-xs text-slate-500 italic">No analysis configured yet. Click above to set up.</p>
+                                      {errors.bioinfoOptions && (
+                                        <p className="text-[#B9273A] text-sm flex items-center gap-1">
+                                          <span className="w-1 h-1 bg-[#B9273A] rounded-full"></span>
+                                          {errors.bioinfoOptions.message}
+                                        </p>
+                                      )}
+                                    </>
                                   )
                                   return (
                                     <div className="flex flex-wrap gap-1.5">
