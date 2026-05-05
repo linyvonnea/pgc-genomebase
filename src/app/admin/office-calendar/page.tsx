@@ -429,30 +429,30 @@ function OfficeCalendarContent() {
         {/* ── Left sidebar ─────────────────────────────────────────────────── */}
         <div className="flex flex-col gap-4 overflow-y-auto pr-1">
           {/* Office Hours Configuration (Moved to top-left-most) */}
-          <Card className="shadow-sm border-slate-200 order-first">
+          <Card className="shadow-none border-slate-200 order-first overflow-hidden">
             <button
               onClick={() => setSidebarOpen(s => ({ ...s, hours: !s.hours }))}
               className="w-full"
             >
-              <CardHeader className="pb-2 text-left hover:bg-slate-50 transition-colors cursor-pointer">
+              <CardHeader className="py-2.5 px-4 text-left hover:bg-slate-50 transition-colors cursor-pointer border-b border-transparent">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-semibold text-slate-700">
+                  <CardTitle className="text-sm font-bold text-slate-800 tracking-tight">
                     Office Hours
                   </CardTitle>
                   {sidebarOpen.hours ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
                 </div>
                 {sidebarOpen.hours && (
-                  <CardDescription className="text-xs">
+                  <CardDescription className="text-[11px] leading-tight mt-1 text-slate-500">
                     Working hours in Philippine Standard Time (PST). Used for chat auto-replies.
                   </CardDescription>
                 )}
               </CardHeader>
             </button>
             {sidebarOpen.hours && (
-              <CardContent className="space-y-3">
+              <CardContent className="p-4 pt-3 space-y-3">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <Label className="text-xs text-slate-500 mb-1 block">Opens at</Label>
+                    <Label className="text-[11px] font-medium text-slate-500 mb-1 block">Opens at</Label>
                     <Select
                       value={String(officeHours.start)}
                       onValueChange={(v) =>
@@ -460,7 +460,7 @@ function OfficeCalendarContent() {
                       }
                       disabled={!canEdit("officeCalendar")}
                     >
-                      <SelectTrigger className="h-8 text-xs">
+                      <SelectTrigger className="h-8 text-xs bg-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -473,7 +473,7 @@ function OfficeCalendarContent() {
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs text-slate-500 mb-1 block">Closes at</Label>
+                    <Label className="text-[11px] font-medium text-slate-500 mb-1 block">Closes at</Label>
                     <Select
                       value={String(officeHours.end)}
                       onValueChange={(v) =>
@@ -481,7 +481,7 @@ function OfficeCalendarContent() {
                       }
                       disabled={!canEdit("officeCalendar")}
                     >
-                      <SelectTrigger className="h-8 text-xs">
+                      <SelectTrigger className="h-8 text-xs bg-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -494,7 +494,7 @@ function OfficeCalendarContent() {
                     </Select>
                   </div>
                 </div>
-                <p className="text-[10px] text-slate-400">
+                <p className="text-[10px] text-slate-400 italic">
                   Clients messaging outside these hours will receive an automated notice.
                 </p>
                 {canEdit("officeCalendar") && (
@@ -502,7 +502,7 @@ function OfficeCalendarContent() {
                     size="sm"
                     onClick={handleSaveOfficeHours}
                     disabled={savingHours}
-                    className="w-full h-8 text-xs bg-[#166FB5] hover:bg-[#166FB5]/90"
+                    className="w-full h-8 text-xs bg-[#166FB5] hover:bg-[#166FB5]/90 font-medium"
                   >
                     {savingHours ? (
                       <><RefreshCw className="h-3 w-3 mr-1.5 animate-spin" />Saving…</>
@@ -516,35 +516,35 @@ function OfficeCalendarContent() {
           </Card>
 
           {/* Weekend Configuration */}
-          <Card className="shadow-sm border-slate-200">
+          <Card className="shadow-none border-slate-200 overflow-hidden">
             <button
               onClick={() => setSidebarOpen(s => ({ ...s, weekends: !s.weekends }))}
               className="w-full"
             >
-              <CardHeader className="pb-2 text-left hover:bg-slate-50 transition-colors cursor-pointer">
+              <CardHeader className="py-2.5 px-4 text-left hover:bg-slate-50 transition-colors cursor-pointer">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-semibold text-slate-700">
+                  <CardTitle className="text-sm font-bold text-slate-800 tracking-tight">
                     Weekend / Non-Working Days
                   </CardTitle>
                   {sidebarOpen.weekends ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
                 </div>
                 {sidebarOpen.weekends && (
-                  <CardDescription className="text-xs">
+                  <CardDescription className="text-[11px] leading-tight mt-1 text-slate-500">
                     Select which days of the week are non-working. These days will appear highlighted on the calendar.
                   </CardDescription>
                 )}
               </CardHeader>
             </button>
             {sidebarOpen.weekends && (
-              <CardContent className="space-y-3">
+              <CardContent className="p-4 pt-3 space-y-3">
                 <div className="grid grid-cols-2 gap-2">
                   {WEEKDAY_FULL.map((name, i) => (
                     <label
                       key={name}
                       className={cn(
-                        "flex items-center gap-2 px-2.5 py-1.5 rounded-lg border cursor-pointer text-xs transition-colors select-none",
+                        "flex items-center gap-2 px-2 py-1 rounded-md border cursor-pointer text-xs transition-colors select-none",
                         weekendDays.includes(i)
-                          ? "border-sky-300 bg-sky-50 text-sky-700 font-medium"
+                          ? "border-sky-300 bg-sky-50 text-sky-700 font-semibold"
                           : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
                       )}
                     >
@@ -557,8 +557,8 @@ function OfficeCalendarContent() {
                       />
                       <span
                         className={cn(
-                          "h-3.5 w-3.5 rounded border-2 flex items-center justify-center flex-shrink-0",
-                          weekendDays.includes(i) ? "border-sky-400 bg-sky-400" : "border-slate-300"
+                          "h-3 w-3 rounded-sm border flex items-center justify-center flex-shrink-0",
+                          weekendDays.includes(i) ? "border-sky-500 bg-sky-500" : "border-slate-300"
                         )}
                       >
                         {weekendDays.includes(i) && (
@@ -576,7 +576,7 @@ function OfficeCalendarContent() {
                     size="sm"
                     onClick={handleSaveWeekends}
                     disabled={savingWeekends}
-                    className="w-full h-8 text-xs bg-[#166FB5] hover:bg-[#166FB5]/90"
+                    className="w-full h-8 text-xs bg-[#166FB5] hover:bg-[#166FB5]/90 font-medium"
                   >
                     {savingWeekends ? (
                       <><RefreshCw className="h-3 w-3 mr-1.5 animate-spin" />Saving…</>
@@ -590,33 +590,33 @@ function OfficeCalendarContent() {
           </Card>
 
           {/* Month Events List */}
-          <Card className="shadow-sm border-slate-200">
+          <Card className="shadow-none border-slate-200 overflow-hidden">
             <button
               onClick={() => setSidebarOpen(s => ({ ...s, events: !s.events }))}
               className="w-full"
             >
-              <CardHeader className="pb-2 text-left hover:bg-slate-50 transition-colors cursor-pointer">
+              <CardHeader className="py-2.5 px-4 text-left hover:bg-slate-50 transition-colors cursor-pointer">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-semibold text-slate-700">
+                  <CardTitle className="text-sm font-bold text-slate-800 tracking-tight">
                     {format(currentMonth, "MMMM yyyy")} Events
                   </CardTitle>
                   {sidebarOpen.events ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
                 </div>
                 {sidebarOpen.events && (
-                  <CardDescription className="text-xs">
+                  <CardDescription className="text-[11px] leading-tight mt-1 text-slate-500">
                     {monthEvents.length === 0 ? "No events this month." : `${monthEvents.length} event${monthEvents.length > 1 ? "s" : ""} scheduled.`}
                   </CardDescription>
                 )}
               </CardHeader>
             </button>
             {sidebarOpen.events && (
-              <CardContent className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+              <CardContent className="p-4 pt-3 space-y-2 max-h-[420px] overflow-y-auto custom-scrollbar">
                 {monthEvents.length === 0 && (
-                  <div className="text-center py-8 text-slate-400">
-                    <CalendarDays className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    <p className="text-xs">No events this month</p>
+                  <div className="text-center py-6 text-slate-400">
+                    <CalendarDays className="h-6 w-6 mx-auto mb-2 opacity-20" />
+                    <p className="text-[11px]">No events this month</p>
                     {canCreate("officeCalendar") && (
-                      <p className="text-xs mt-1">Click a day on the calendar to add one.</p>
+                      <p className="text-[10px] mt-0.5 opacity-80">Click a day on the calendar to add one.</p>
                     )}
                   </div>
                 )}
@@ -626,46 +626,46 @@ function OfficeCalendarContent() {
                     <div
                       key={ev.id}
                       className={cn(
-                        "flex items-start gap-2.5 p-2.5 rounded-lg border text-xs",
+                        "flex items-start gap-2 p-2 rounded-md border text-[11px]",
                         c.bg, c.border
                       )}
                     >
-                      <span className={cn("h-2 w-2 rounded-full mt-1 flex-shrink-0", c.dot)} />
+                      <span className={cn("h-1.5 w-1.5 rounded-full mt-1.5 flex-shrink-0", c.dot)} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1">
-                          <span className={cn("font-semibold truncate", c.text)}>{ev.title}</span>
+                          <span className={cn("font-bold truncate", c.text)}>{ev.title}</span>
                           {ev.recurringYearly && (
-                            <Badge variant="outline" className="h-4 text-[9px] px-1 py-0 flex-shrink-0">
+                            <Badge variant="outline" className="h-3.5 text-[8px] px-1 py-0 flex-shrink-0 font-normal">
                               Yearly
                             </Badge>
                           )}
                         </div>
-                        <p className="text-slate-500 mt-0.5">
-                          {format(parseISO(ev.date), "MMM d, yyyy")} · {OFFICE_EVENT_LABELS[ev.type]}
-                          {ev.type === "partial_closure" && typeof ev.closedFrom === "number" && typeof ev.closedUntil === "number" && (
-                            <span className="text-violet-500 ml-1">
-                              ({ev.closedFrom === 0 ? "12:00 AM" : ev.closedFrom < 12 ? `${ev.closedFrom}:00 AM` : ev.closedFrom === 12 ? "12:00 PM" : `${ev.closedFrom - 12}:00 PM`}
-                              {" – "}
-                              {ev.closedUntil === 0 ? "12:00 AM" : ev.closedUntil < 12 ? `${ev.closedUntil}:00 AM` : ev.closedUntil === 12 ? "12:00 PM" : `${ev.closedUntil - 12}:00 PM`})
-                            </span>
-                          )}
+                        <p className="text-slate-500 font-medium">
+                          {format(parseISO(ev.date), "MMM d")} · {OFFICE_EVENT_LABELS[ev.type]}
                         </p>
+                        {ev.type === "partial_closure" && typeof ev.closedFrom === "number" && typeof ev.closedUntil === "number" && (
+                          <div className="text-violet-600 font-bold mt-0.5">
+                            {ev.closedFrom === 0 ? "12:00 AM" : ev.closedFrom < 12 ? `${ev.closedFrom}:00 AM` : ev.closedFrom === 12 ? "12:00 PM" : `${ev.closedFrom - 12}:00 PM`}
+                            {" – "}
+                            {ev.closedUntil === 0 ? "12:00 AM" : ev.closedUntil < 12 ? `${ev.closedUntil}:00 AM` : ev.closedUntil === 12 ? "12:00 PM" : `${ev.closedUntil - 12}:00 PM`}
+                          </div>
+                        )}
                         {ev.description && (
-                          <p className="text-slate-400 mt-0.5 line-clamp-2">{ev.description}</p>
+                          <p className="text-slate-400 mt-1 line-clamp-2 leading-tight italic">{ev.description}</p>
                         )}
                       </div>
                       {canEdit("officeCalendar") && (
-                        <div className="flex items-center gap-1 flex-shrink-0">
+                        <div className="flex flex-col gap-1 ml-1 opacity-40 hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => openEditDialog(ev)}
-                            className="p-1 rounded hover:bg-white/60 text-slate-400 hover:text-blue-600 transition-colors"
+                            className="p-1 rounded hover:bg-white/60 text-slate-500 hover:text-blue-600 transition-colors"
                           >
                             <Pencil className="h-3 w-3" />
                           </button>
                           {canDelete("officeCalendar") && (
                             <button
                               onClick={() => setDeleteTarget(ev)}
-                              className="p-1 rounded hover:bg-white/60 text-slate-400 hover:text-red-600 transition-colors"
+                              className="p-1 rounded hover:bg-white/60 text-slate-500 hover:text-red-600 transition-colors"
                             >
                               <Trash2 className="h-3 w-3" />
                             </button>
@@ -680,20 +680,20 @@ function OfficeCalendarContent() {
           </Card>
 
           {/* Info card */}
-          <Card className="shadow-sm border-blue-100 bg-blue-50/50 flex-shrink-0">
+          <Card className="shadow-none border-blue-100 bg-blue-50/50 flex-shrink-0 overflow-hidden">
             <button
               onClick={() => setSidebarOpen(s => ({ ...s, info: !s.info }))}
               className="w-full"
             >
-              <CardContent className="p-3 text-left hover:bg-blue-100/50 transition-colors cursor-pointer">
+              <CardContent className="py-2.5 px-4 text-left hover:bg-blue-100/30 transition-colors cursor-pointer">
                 <div className="flex items-center justify-between">
-                  <div className="flex gap-2 text-xs text-blue-700">
-                    <span className="font-semibold">How this is used</span>
+                  <div className="flex gap-2 text-xs text-blue-800">
+                    <span className="font-bold tracking-tight">How this is used</span>
                   </div>
                   {sidebarOpen.info ? <ChevronUp className="h-4 w-4 text-blue-400" /> : <ChevronDown className="h-4 w-4 text-blue-400" />}
                 </div>
                 {sidebarOpen.info && (
-                  <div className="mt-2 text-xs text-blue-600">
+                  <div className="mt-2 text-[11px] text-blue-700 leading-relaxed">
                     <ul className="space-y-1 list-disc list-inside">
                       <li>Chat widget auto-informs clients when they message on holidays or closures.</li>
                       <li>Activities trigger a delay-notice message to clients.</li>
