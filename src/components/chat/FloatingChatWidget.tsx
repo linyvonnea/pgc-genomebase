@@ -60,7 +60,7 @@ function OfficeStatusIndicator({
       <PresenceIndicator
         isOnline={supportOnline}
         lastSeen={null}
-        onlineLabel="Support Available"
+        onlineLabel="Available"
         offlineLabel="Support Offline"
         variant="light"
       />
@@ -73,7 +73,7 @@ function OfficeStatusIndicator({
       <PresenceIndicator
         isOnline={supportOnline}
         lastSeen={null}
-        onlineLabel="Support Available"
+        onlineLabel="Available"
         offlineLabel="Support Offline"
         variant="light"
       />
