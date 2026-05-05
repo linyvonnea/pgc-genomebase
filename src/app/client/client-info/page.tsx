@@ -4703,7 +4703,6 @@ export default function ClientPortalPage() {
                           {/* Attachments Section */}
                           {currentInquiry.methodologyFileUrl && (
                             <div className="pt-4 border-t border-slate-100">
-                              <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block mb-2">Attached Documentation</span>
                               <a
                                 href={currentInquiry.methodologyFileUrl}
                                 target="_blank"
@@ -4711,7 +4710,7 @@ export default function ClientPortalPage() {
                                 className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors border border-blue-100"
                               >
                                 <FileText className="h-4 w-4" />
-                                View Concept / Methodology
+                                Review Uploaded Methodology/Concept
                               </a>
                             </div>
                           )}
