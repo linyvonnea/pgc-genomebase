@@ -34,4 +34,5 @@ export interface ConfigurationSettings {
   portalFeatures: PortalFeatureVisibility;
   inquiryNotifications: InquiryNotificationGroup[];
   receiptNotifications?: string[];
+  bioinformaticsWorkflowNotifications?: string[];
 }

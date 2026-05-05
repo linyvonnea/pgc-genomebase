@@ -578,11 +578,21 @@ export async function createInquiryAction(inquiryData: InquiryFormData & { id?: 
     
     const config = await getConfigurationSettings();
     const fallbackConfig = getDefaultConfigurationSettings();
-    const emailRecipients = getInquiryNotificationRecipients(
+    const baseRecipients = getInquiryNotificationRecipients(
       config.inquiryNotifications.length > 0
         ? config.inquiryNotifications
         : fallbackConfig.inquiryNotifications,
       inquiryData.service,
+    );
+
+    // If this is a complete-bioinfo workflow, also notify the bioinformatics workflow recipients
+    const bioinfoWorkflowRecipients =
+      inquiryData.workflowType === 'complete-bioinfo' && inquiryData.bioinformaticsDetails
+        ? (config.bioinformaticsWorkflowNotifications || [])
+        : [];
+
+    const emailRecipients = Array.from(
+      new Set([...baseRecipients, ...bioinfoWorkflowRecipients])
     );
 
     console.log("EMAIL DEBUG: Creating email for recipients:", emailRecipients.join(", "));
