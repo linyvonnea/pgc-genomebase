@@ -301,35 +301,6 @@ const formatBioinformaticsDetailsText = (details: Record<string, any> | undefine
 
   return lines.filter(Boolean).join("\n");
 };
-const flattenBioinformaticsDetails = (
-  input: Record<string, any>,
-  prefix = ""
-): Array<{ key: string; value: string }> => {
-  const rows: Array<{ key: string; value: string }> = [];
-
-  Object.entries(input).forEach(([key, value]) => {
-    if (value === null || value === undefined || value === "") return;
-
-    const path = prefix ? `${prefix}.${key}` : key;
-
-    if (Array.isArray(value)) {
-      if (value.length > 0) {
-        rows.push({ key: path, value: value.join(", ") });
-      }
-      return;
-    }
-
-    if (typeof value === "object") {
-      rows.push(...flattenBioinformaticsDetails(value as Record<string, any>, path));
-      return;
-    }
-
-    rows.push({ key: path, value: String(value) });
-  });
-
-  return rows;
-};
-
 /**
  * Test function to validate email system configuration
  * This function helps diagnose email delivery issues by creating a simple test email
@@ -614,10 +585,6 @@ export async function createInquiryAction(inquiryData: InquiryFormData & { id?: 
       inquiryData.service,
     );
 
-    const flattenedBioinfoDetails = inquiryData.bioinformaticsDetails
-      ? flattenBioinformaticsDetails(inquiryData.bioinformaticsDetails as Record<string, any>)
-      : [];
-    
     console.log("EMAIL DEBUG: Creating email for recipients:", emailRecipients.join(", "));
     
     // Create a comprehensive HTML email body
@@ -715,15 +682,6 @@ export async function createInquiryAction(inquiryData: InquiryFormData & { id?: 
                 <td style="padding: 4px 0;">${inquiryData.plannedSampleCount}</td>
               </tr>` : ''}
               ${inquiryData.service === 'bioinformatics' ? formatBioinformaticsDetailsHtml(inquiryData.bioinformaticsDetails as Record<string, any> | undefined) : ''}
-              ${(inquiryData.service === 'bioinformatics' && flattenedBioinfoDetails.length > 0) ? `
-              <tr>
-                <td style="padding: 4px 0; color: #64748b; vertical-align: top;">Detailed Bioinformatics Entries:</td>
-                <td style="padding: 4px 0;">
-                  <ul style="margin: 0; padding-left: 18px; color: #334155;">
-                    ${flattenedBioinfoDetails.map((entry) => `<li><strong>${entry.key}</strong>: ${entry.value}</li>`).join('')}
-                  </ul>
-                </td>
-              </tr>` : ''}
             </table>
             
             ${inquiryData.researchOverview ? `
@@ -781,7 +739,6 @@ ${inquiryData.service === 'research' && inquiryData.molecularServicesBudget ? `B
 ${inquiryData.service === 'research' && inquiryData.plannedSampleCount ? `Planned Sample Count: ${inquiryData.plannedSampleCount}\n` : ''}
 ${inquiryData.service === 'bioinformatics' ? `${formatBioinformaticsDetailsText(inquiryData.bioinformaticsDetails as Record<string, any> | undefined)}\n` : ''}
 ${inquiryData.service === 'bioinformatics' && inquiryData.bioinformaticsDetails?.overviewObjectives ? `Overview of Research and Objectives: ${inquiryData.bioinformaticsDetails.overviewObjectives}\n` : ''}
-${inquiryData.service === 'bioinformatics' && flattenedBioinfoDetails.length > 0 ? `Detailed Bioinformatics Entries:\n${flattenedBioinfoDetails.map((entry) => `- ${entry.key}: ${entry.value}`).join('\n')}\n` : ''}
 ${inquiryData.methodologyFileUrl ? `Methodology File: ${inquiryData.methodologyFileUrl}\n` : ''}
 ${inquiryData.individualAssayDetails ? `Individual Assay Details: ${inquiryData.individualAssayDetails}\n` : ''}
 ${inquiryData.service === 'retail' && inquiryData.retailItems && inquiryData.retailItems.length > 0 ? `Retail Items: \n${inquiryData.retailItems.map(item => `- ${item}${inquiryData.retailItemDetails?.[item] ? `: ${inquiryData.retailItemDetails?.[item]}` : ''}`).join('\n')}\n` : ''}
