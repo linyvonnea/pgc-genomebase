@@ -4031,24 +4031,7 @@ export default function ClientPortalPage() {
                                 <p className="text-sm font-semibold text-slate-900">{formatWorkflowType(currentInquiry.workflowType) || "—"}</p>
                               </div>
 
-                              {/* Bioinformatics Analysis badges */}
-                              <div className="space-y-2">
-                                <span className="text-xs font-medium text-slate-400 uppercase tracking-wide block">Bioinformatics Analysis</span>
-                                {currentInquiry.bioinfoOptions && currentInquiry.bioinfoOptions.length > 0 ? (
-                                  <div className="flex flex-wrap gap-2">
-                                    {currentInquiry.bioinfoOptions.map((option) => (
-                                      <span
-                                        key={option}
-                                        className="inline-block text-xs font-medium text-blue-700 bg-blue-50 border border-blue-100 rounded px-2.5 py-1"
-                                      >
-                                        {formatBioinfoOption(option)}
-                                      </span>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <p className="text-sm text-slate-400 italic">None selected</p>
-                                )}
-                              </div>
+                              {/* Bioinformatics Analysis badges removed as requested */}
 
                               {/* complete-bioinfo: full bioinformaticsDetails breakdown */}
                               {currentInquiry.workflowType === 'complete-bioinfo' && currentInquiry.bioinformaticsDetails && (
