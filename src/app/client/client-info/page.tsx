@@ -332,6 +332,9 @@ export default function ClientPortalPage() {
   });
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [receivingReportId, setReceivingReportId] = useState<string | null>(null);
+  // Tracks which service report IDs the client has already opened the Google feedback form for.
+  // Intentionally session-scoped (not persisted) so the form cannot be trivially bypassed on refresh.
+  const [formOpenedReports, setFormOpenedReports] = useState<Set<string>>(new Set());
   const [expandedProjectDocs, setExpandedProjectDocs] = useState<Set<string>>(new Set());
   const [expandedCsIds, setExpandedCsIds] = useState<Set<string>>(new Set());
   const [expandedQuoteIds, setExpandedQuoteIds] = useState<Set<string>>(new Set());
@@ -3684,8 +3687,9 @@ export default function ClientPortalPage() {
                               : "";
                             const reportKey = `${selectedProjectPid}:${item.id}`;
                             const isReceiving = receivingReportId === reportKey;
-                            return (
-                              <div key={item.id} className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                          return (
+                              <div key={item.id} className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 flex flex-col gap-2 hover:bg-slate-50 transition-colors">
+                                {/* File meta row */}
                                 <div className="flex items-center gap-2 min-w-0">
                                   <FileText className="h-4 w-4 text-blue-500 flex-shrink-0" />
                                   <div className="min-w-0">
@@ -3703,7 +3707,9 @@ export default function ClientPortalPage() {
                                     )}
                                   </div>
                                 </div>
-                                <div className="shrink-0 flex items-center">
+
+                                {/* Action row */}
+                                <div className="flex items-center justify-end">
                                   {isReceived ? (
                                     <Badge variant="outline" className="text-xs text-green-700 border-green-200 bg-green-50 gap-1 h-6 shrink-0">
                                       <CheckCircle2 className="h-3 w-3" />
@@ -3714,27 +3720,7 @@ export default function ClientPortalPage() {
                                         </span>
                                       )}
                                     </Badge>
-                                  ) : allChargeSlipsSettled ? (
-                                    <TooltipProvider delayDuration={100}>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="h-8 text-xs px-3 gap-1 border-[#166FB5] text-[#166FB5] hover:bg-[#166FB5] hover:text-white disabled:opacity-50"
-                                            disabled={isReceiving}
-                                            onClick={() => handleReceiveServiceReport(selectedProjectPid, item)}
-                                          >
-                                            {isReceiving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Eye className="h-3.5 w-3.5" />}
-                                            Receive
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="left">
-                                          <p className="text-xs">View the Service Report</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  ) : (
+                                  ) : !allChargeSlipsSettled ? (
                                     <TooltipProvider delayDuration={100}>
                                       <Tooltip>
                                         <TooltipTrigger asChild>
@@ -3749,6 +3735,43 @@ export default function ClientPortalPage() {
                                         </TooltipContent>
                                       </Tooltip>
                                     </TooltipProvider>
+                                  ) : formOpenedReports.has(item.id) ? (
+                                    /* Step 2 — confirm form was submitted then unlock PDF */
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[11px] text-slate-500 italic">Form opened — confirm below to access the file.</span>
+                                      <Button
+                                        size="sm"
+                                        className="h-8 text-xs px-3 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50"
+                                        disabled={isReceiving}
+                                        onClick={() => handleReceiveServiceReport(selectedProjectPid, item)}
+                                      >
+                                        {isReceiving ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                                        Confirm & Access Report
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    /* Step 1 — prompt client to fill the Google feedback form first */
+                                    <div className="flex items-center gap-2">
+                                      <div className="flex flex-col items-end gap-0.5">
+                                        <span className="text-[11px] text-amber-700 font-medium">Please complete the feedback form to access this file.</span>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="h-8 text-xs px-3 gap-1 border-amber-400 text-amber-700 hover:bg-amber-50"
+                                          onClick={() => {
+                                            window.open(
+                                              "https://docs.google.com/forms/d/e/1FAIpQLSfSI8p9Bo1DvHVxA7efSsKuBzXyQ7Wi4Lxl-2jKL5SN4zkDkw/viewform",
+                                              "_blank",
+                                              "noopener,noreferrer"
+                                            );
+                                            setFormOpenedReports((prev) => new Set(prev).add(item.id));
+                                          }}
+                                        >
+                                          <ArrowRight className="h-3.5 w-3.5" />
+                                          Open Feedback Form
+                                        </Button>
+                                      </div>
+                                    </div>
                                   )}
                                 </div>
                               </div>
