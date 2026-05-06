@@ -788,7 +788,7 @@ export default function ClientPortalPage() {
       // with a new pending inquiry see the Workspace view first instead of jumping to
       // an old project automatically.
       const currentInquiryProjects = [...fetchedDraftProjects, ...fetchedApprovedProjects];
-      if (currentInquiryProjects.length > 0) {
+      if (currentInquiryProjects.length > 0 && currentInquiry?.status !== "Pending") {
         selectedDetails = currentInquiryProjects[0];
       }
     }
