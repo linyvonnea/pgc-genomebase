@@ -70,6 +70,8 @@ type UIChargeSlipRecord = {
     name: string;
     position: string;
   };
+  /** OR validation status — real-time merged in this component */
+  orStatus?: "Pending" | "Validated" | null;
 };
 
 interface Props {
@@ -84,6 +86,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("__all");
+  const [orStatusFilter, setOrStatusFilter] = useState<"__all" | "validated" | "not_validated">("__all");
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [yearFilter, setYearFilter] = useState("all");
@@ -104,6 +107,16 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     const unsub = onSnapshot(q, (snap) => {
       setPendingCsNums(new Set(snap.docs.map((d) => d.id)));
     }, (err) => console.error("Pending CS listener error:", err));
+    return () => unsub();
+  }, []);
+
+  // Real-time set of charge slip numbers with a validated official receipt
+  const [validatedOrCsNumbers, setValidatedOrCsNumbers] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const q = query(collection(db, "chargeSlips"), where("orStatus", "==", "Validated"));
+    const unsub = onSnapshot(q, (snap) => {
+      setValidatedOrCsNumbers(new Set(snap.docs.map((d) => d.id)));
+    }, (err) => console.error("Validated OR listener error:", err));
     return () => unsub();
   }, []);
 
@@ -180,13 +193,22 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       const matchesYear = yearFilter === "all" || (date && date.getFullYear().toString() === yearFilter);
       const matchesMonth = monthFilter === "all" || (date && (date.getMonth() + 1).toString() === monthFilter);
 
-      return matchesSearch && matchesStatus && matchesCategory && matchesYear && matchesMonth;
+      // 5. OR Status Filter
+      const liveOrStatus = validatedOrCsNumbers.has(item.chargeSlipNumber) ? "Validated" : item.orStatus;
+      const matchesOrStatus =
+        orStatusFilter === "__all" ||
+        (orStatusFilter === "validated" && liveOrStatus === "Validated") ||
+        (orStatusFilter === "not_validated" && liveOrStatus !== "Validated");
+
+      return matchesSearch && matchesStatus && matchesCategory && matchesYear && matchesMonth && matchesOrStatus;
     }).map((item) => {
       const liveStatus = pendingCsNums.has(item.chargeSlipNumber) ? ("pending" as const) : item.status;
+      const liveOrStatus = validatedOrCsNumbers.has(item.chargeSlipNumber) ? "Validated" : item.orStatus;
       return {
         ...item,
         status: liveStatus,
         hasNewOR: liveStatus === "pending",
+        orStatus: liveOrStatus,
       };
     });
 
@@ -201,7 +223,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
     }
 
     return filtered;
-  }, [data, globalFilter, statusFilter, categoryFilter, yearFilter, monthFilter, newOrCsNumbers, pendingCsNums, sorting]);
+  }, [data, globalFilter, statusFilter, orStatusFilter, categoryFilter, yearFilter, monthFilter, newOrCsNumbers, pendingCsNums, validatedOrCsNumbers, sorting]);
 
   // Total Summary for the filtered data
   const filteredTotalValue = useMemo(() => {
@@ -210,23 +232,26 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
 
   const activeFiltersCount = useMemo(() => [
     statusFilter !== "__all",
+    orStatusFilter !== "__all",
     categoryFilter.length > 0,
     yearFilter !== "all",
     monthFilter !== "all",
     globalFilter !== "",
-  ].filter(Boolean).length, [statusFilter, categoryFilter, yearFilter, monthFilter, globalFilter]);
+  ].filter(Boolean).length, [statusFilter, orStatusFilter, categoryFilter, yearFilter, monthFilter, globalFilter]);
 
   // Reset to first page when filters change
-  const prevFilterRef = useState({ globalFilter, statusFilter, categoryFilter, yearFilter, monthFilter })[0];
+  const prevFilterRef = useState({ globalFilter, statusFilter, orStatusFilter, categoryFilter, yearFilter, monthFilter })[0];
   if (
     prevFilterRef.globalFilter !== globalFilter ||
     prevFilterRef.statusFilter !== statusFilter ||
+    prevFilterRef.orStatusFilter !== orStatusFilter ||
     JSON.stringify(prevFilterRef.categoryFilter) !== JSON.stringify(categoryFilter) ||
     prevFilterRef.yearFilter !== yearFilter ||
     prevFilterRef.monthFilter !== monthFilter
   ) {
     prevFilterRef.globalFilter = globalFilter;
     prevFilterRef.statusFilter = statusFilter;
+    prevFilterRef.orStatusFilter = orStatusFilter;
     prevFilterRef.categoryFilter = categoryFilter;
     prevFilterRef.yearFilter = yearFilter;
     prevFilterRef.monthFilter = monthFilter;
@@ -300,13 +325,16 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       const s = statuses.find(st => st.id === statusFilter);
       if (s) filters.push(s.label);
     }
+    if (orStatusFilter !== "__all") {
+      filters.push(orStatusFilter === "validated" ? "OR Validated" : "OR Not Validated");
+    }
     if (yearFilter !== "all") filters.push(yearFilter);
     if (monthFilter !== "all") {
       const mIndex = parseInt(monthFilter) - 1;
       filters.push(monthNames[mIndex]);
     }
     return filters.length > 0 ? filters.join(" + ") : "All Records";
-  }, [categoryFilter, statusFilter, yearFilter, monthFilter, statuses, monthNames]);
+  }, [categoryFilter, statusFilter, orStatusFilter, yearFilter, monthFilter, statuses, monthNames]);
 
   // Pagination Controls Component
   const PaginationControls = () => {
@@ -451,6 +479,35 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                   })}
                 </div>
               </div>
+
+              {/* OR Receipt Status */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">OR Receipt Status</label>
+                <div className="grid grid-cols-1 gap-1">
+                  {([
+                    { id: "validated" as const, label: "Validated", color: "text-emerald-700", border: "border-emerald-200", bg: "bg-emerald-50" },
+                    { id: "not_validated" as const, label: "Not Validated", color: "text-amber-700", border: "border-amber-200", bg: "bg-amber-50" },
+                  ]).map((opt) => {
+                    const isActive = orStatusFilter === opt.id;
+                    const count = opt.id === "validated"
+                      ? data.filter(i => validatedOrCsNumbers.has(i.chargeSlipNumber)).length
+                      : data.filter(i => !validatedOrCsNumbers.has(i.chargeSlipNumber)).length;
+                    return (
+                      <button
+                        key={opt.id}
+                        onClick={() => setOrStatusFilter(isActive ? "__all" : opt.id)}
+                        className={`rounded-md border px-2 py-2 text-[10px] font-medium transition-all duration-200 hover:shadow-sm ${
+                          isActive
+                            ? `${opt.bg} ${opt.border} font-semibold ${opt.color}`
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
+                        {opt.label} ({count})
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
             
             {/* Search Tools & Summary Row */}
@@ -502,6 +559,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                     setCategoryFilter([]);
                     setGlobalFilter("");
                     setStatusFilter("__all");
+                    setOrStatusFilter("__all");
                     setYearFilter("all");
                     setMonthFilter("all");
                   }}
@@ -509,6 +567,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                     categoryFilter.length === 0 && 
                     globalFilter === "" && 
                     statusFilter === "__all" &&
+                    orStatusFilter === "__all" &&
                     yearFilter === "all" &&
                     monthFilter === "all"
                       ? "ring-1 ring-primary ring-offset-1 bg-slate-50 border-slate-200 shadow-sm"

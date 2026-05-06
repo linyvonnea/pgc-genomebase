@@ -5,7 +5,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { UIChargeSlipRecord } from "@/types/UIChargeSlipRecord";
 import { Badge } from "@/components/ui/badge";
 import { ValidCategory } from "@/types/ValidCategory";
-import { Trash2, FileWarning } from "lucide-react";
+import { Trash2, FileWarning, Stamp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteChargeSlip } from "@/services/chargeSlipService";
 import { storage } from "@/lib/firebase";
@@ -169,6 +169,8 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
       const color = statusColors[raw] || "bg-gray-100 text-gray-800";
       const isPending = raw === "pending";
       const label = raw.charAt(0).toUpperCase() + raw.slice(1);
+      const orStatus = (row.original as any).orStatus;
+      const isOrValidated = orStatus === "Validated";
 
       return (
         <div className="flex items-center gap-2">
@@ -188,6 +190,20 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
                 </TooltipTrigger>
                 <TooltipContent side="right" className="bg-rose-600 text-white border-none text-[11px] font-medium py-1.5 px-3">
                   <p>The client has uploaded an Official Receipt, pending admin validation or status update.</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          {isOrValidated && !isPending && (
+            <TooltipProvider>
+              <Tooltip delayDuration={100}>
+                <TooltipTrigger asChild>
+                  <span className="shrink-0 flex items-center justify-center">
+                    <Stamp className="h-3.5 w-3.5 text-emerald-500" />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="text-[10px] max-w-[180px]">
+                  Official Receipt validated
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>

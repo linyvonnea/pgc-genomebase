@@ -56,6 +56,9 @@ export interface UIChargeSlipRecord {
     position: string;
   };
 
+  /** OR validation status: "Validated" once admin acknowledges the uploaded official receipt */
+  orStatus?: "Pending" | "Validated" | null;
+
   // Runtime-only flag: set in ChargeSlipClientTable when this charge slip has an unacknowledged OR upload
   hasNewOR?: boolean;
 }

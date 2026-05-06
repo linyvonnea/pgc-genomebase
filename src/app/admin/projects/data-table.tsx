@@ -9,11 +9,13 @@ import {
   SortingState,
   getPaginationRowModel,
 } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Project } from "@/types/Project";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import {
   Table,
   TableBody,
@@ -67,6 +69,34 @@ export function DataTable<TData extends Project, TValue>({
   const [monthFilter, setMonthFilter] = useState("all");
   const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(true);
   const [filterOrder, setFilterOrder] = useState<Array<{type: string, value: string}>>([]);
+  const [formFilter, setFormFilter] = useState<"__all" | "to_acknowledge" | "acknowledged">("__all");
+  const [projectsWithPendingForms, setProjectsWithPendingForms] = useState<Set<string>>(new Set());
+  const [projectsWithAcknowledgedForms, setProjectsWithAcknowledgedForms] = useState<Set<string>>(new Set());
+
+  // Real-time listeners for form submission acknowledgement status
+  useEffect(() => {
+    const qPending = query(
+      collection(db, "clientFormSubmissions"),
+      where("acknowledgedByAdmin", "==", false)
+    );
+    const unsubPending = onSnapshot(qPending, (snap) => {
+      const ids = new Set<string>();
+      snap.forEach((doc) => { const pid = doc.data().projectId; if (pid) ids.add(pid); });
+      setProjectsWithPendingForms(ids);
+    });
+
+    const qAcknowledged = query(
+      collection(db, "clientFormSubmissions"),
+      where("acknowledgedByAdmin", "==", true)
+    );
+    const unsubAcknowledged = onSnapshot(qAcknowledged, (snap) => {
+      const ids = new Set<string>();
+      snap.forEach((doc) => { const pid = doc.data().projectId; if (pid) ids.add(pid); });
+      setProjectsWithAcknowledgedForms(ids);
+    });
+
+    return () => { unsubPending(); unsubAcknowledged(); };
+  }, []);
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
@@ -99,8 +129,10 @@ export function DataTable<TData extends Project, TValue>({
       if (m) orderedFilters.push(m);
     }
     
+    if (formFilter !== "__all") orderedFilters.push(formFilter === "to_acknowledge" ? "To Acknowledge" : "Acknowledged");
+    
     return orderedFilters.length > 0 ? orderedFilters.join(" + ") : "No filters applied";
-  }, [statusFilter, institutionFilter, serviceRequestedFilter, fundingCategoryFilter, globalFilter, yearFilter, monthFilter, filterOrder, monthNames]);
+  }, [statusFilter, institutionFilter, serviceRequestedFilter, fundingCategoryFilter, globalFilter, yearFilter, monthFilter, formFilter, filterOrder, monthNames]);
 
   // Derive available years
   const availableYears = useMemo(() => {
@@ -179,9 +211,16 @@ export function DataTable<TData extends Project, TValue>({
         (date && (date.getMonth() + 1).toString() === monthFilter) ||
         (!item.startDate && monthFilter === "all");
 
-      return matchesSearch && matchesStatus && matchesInstitution && matchesServiceRequested && matchesFundingCategory && matchesYear && matchesMonth;
+      // 7. Form Submission Status Filter
+      const pid = item.pid ?? "";
+      const matchesFormFilter =
+        formFilter === "__all" ||
+        (formFilter === "to_acknowledge" && projectsWithPendingForms.has(pid)) ||
+        (formFilter === "acknowledged" && projectsWithAcknowledgedForms.has(pid) && !projectsWithPendingForms.has(pid));
+
+      return matchesSearch && matchesStatus && matchesInstitution && matchesServiceRequested && matchesFundingCategory && matchesYear && matchesMonth && matchesFormFilter;
     });
-  }, [data, globalFilter, statusFilter, institutionFilter, serviceRequestedFilter, fundingCategoryFilter, yearFilter, monthFilter]);
+  }, [data, globalFilter, statusFilter, institutionFilter, serviceRequestedFilter, fundingCategoryFilter, yearFilter, monthFilter, formFilter, projectsWithPendingForms, projectsWithAcknowledgedForms]);
   // Service Requested and Funding Category card definitions
   const serviceRequestedOptions = [
     { id: "Laboratory Services", label: "Laboratory Services", color: "text-blue-600", border: "border-blue-200", bg: "bg-blue-50" },
@@ -255,6 +294,7 @@ export function DataTable<TData extends Project, TValue>({
     institutionFilter.length > 0,
     serviceRequestedFilter.length > 0,
     fundingCategoryFilter.length > 0,
+    formFilter !== "__all",
     yearFilter !== "all",
     monthFilter !== "all",
     globalFilter !== "",
@@ -282,7 +322,7 @@ export function DataTable<TData extends Project, TValue>({
         {!isFiltersCollapsed && (
           <div className="bg-white rounded-lg border border-gray-200 p-3 space-y-3">
             {/* Primary Content Filters Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
               {/* Institution Type */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Institution Type</label>
@@ -406,6 +446,46 @@ export function DataTable<TData extends Project, TValue>({
                   })}
                 </div>
               </div>
+
+              {/* Submission Status */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Submission Status</label>
+                <div className="grid grid-cols-1 gap-1">
+                  {([
+                    {
+                      id: "to_acknowledge" as const,
+                      label: "To Acknowledge",
+                      color: "text-red-600",
+                      border: "border-red-200",
+                      bg: "bg-red-50",
+                      count: data.filter(i => projectsWithPendingForms.has(i.pid ?? "")).length,
+                    },
+                    {
+                      id: "acknowledged" as const,
+                      label: "Acknowledged",
+                      color: "text-emerald-700",
+                      border: "border-emerald-200",
+                      bg: "bg-emerald-50",
+                      count: data.filter(i => projectsWithAcknowledgedForms.has(i.pid ?? "") && !projectsWithPendingForms.has(i.pid ?? "")).length,
+                    },
+                  ]).map((opt) => {
+                    const isActive = formFilter === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        onClick={() => setFormFilter(isActive ? "__all" : opt.id)}
+                        className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                          isActive
+                            ? `${opt.bg} ${opt.border} font-semibold ${opt.color}`
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
+                        {opt.label} ({opt.count})
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             {/* Search Tools & Summary Row */}
@@ -497,6 +577,7 @@ export function DataTable<TData extends Project, TValue>({
                           institutionFilter.length > 0 || 
                           serviceRequestedFilter.length > 0 || 
                           fundingCategoryFilter.length > 0 || 
+                          formFilter !== "__all" ||
                           globalFilter || 
                           yearFilter !== "all" || 
                           monthFilter !== "all") {
@@ -505,6 +586,7 @@ export function DataTable<TData extends Project, TValue>({
                         setInstitutionFilter([]);
                         setServiceRequestedFilter([]);
                         setFundingCategoryFilter([]);
+                        setFormFilter("__all");
                         setYearFilter("all");
                         setMonthFilter("all");
                         setFilterOrder([]);
@@ -512,9 +594,10 @@ export function DataTable<TData extends Project, TValue>({
                     }}
                     className={`p-3 rounded-lg border transition-all duration-200 ${
                       (statusFilter !== "__all" || 
-                       institutionFilter.length > 0 || 
-                       serviceRequestedFilter.length > 0 || 
-                       fundingCategoryFilter.length > 0 || 
+                       institutionFilter.length > 0 ||
+                       serviceRequestedFilter.length > 0 ||
+                       fundingCategoryFilter.length > 0 ||
+                       formFilter !== "__all" ||
                        globalFilter || 
                        yearFilter !== "all" || 
                        monthFilter !== "all")
