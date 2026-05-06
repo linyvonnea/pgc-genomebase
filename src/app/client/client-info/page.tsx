@@ -312,6 +312,7 @@ export default function ClientPortalPage() {
 
   // ── UI state ──────────────────────────────────────────────────
   const [showProjectsList, setShowProjectsList] = useState(true);
+  const [showInquiriesList, setShowInquiriesList] = useState(true);
   // Load member expansion state from localStorage for persistence across refreshes
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(() => {
     if (typeof window !== 'undefined') {
@@ -2973,59 +2974,38 @@ export default function ClientPortalPage() {
 
       {/* Projects Section */}
       <div className="flex-1 overflow-y-auto px-3 py-6">
-        {/* My Inquiry — only visible when inquiry is Pending */}
+        {/* My Inquiries — collapsible, only visible when current inquiry is Pending */}
         {currentInquiry?.status === "Pending" && (
           <div className="mb-3">
-            <button
-              onClick={() => { setSelectedProjectPid(null); setProjectDetails(null); }}
-              className={cn(
-                "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
-                !selectedProjectPid
-                  ? "bg-[#166FB5]/10 text-[#166FB5]"
-                  : "text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
-              )}
+            <div
+              className="mb-1 px-3 flex items-center justify-between group cursor-pointer"
+              onClick={() => setShowInquiriesList(!showInquiriesList)}
             >
-              <FileText className="h-4 w-4" />
-              My Inquiry
-            </button>
-            {currentInquiry.serviceType && (
-              <div className="ml-6 mt-1 px-3 py-1.5 rounded-lg flex items-center justify-between bg-amber-50 border border-amber-100">
-                <span className="text-xs font-medium text-amber-800 capitalize">
-                  {formatServiceType(currentInquiry.serviceType)}
-                </span>
-                <Badge className="text-[10px] h-4 px-1.5 rounded-md font-semibold border-0 bg-amber-100 text-amber-700">
-                  Pending
-                </Badge>
+              <div className="flex items-center gap-2 text-slate-600 group-hover:text-[#166FB5] transition-colors">
+                <FileText className="h-4 w-4" />
+                <span className="text-sm font-bold">My Inquiries</span>
+              </div>
+              <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform", showInquiriesList && "rotate-180")} />
+            </div>
+
+            {showInquiriesList && currentInquiry.serviceType && (
+              <div className="ml-6 mt-1">
+                <button
+                  onClick={() => { setSelectedProjectPid(null); setProjectDetails(null); }}
+                  className={cn(
+                    "w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+                    !selectedProjectPid
+                      ? "bg-amber-50 text-amber-800 border border-amber-100"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-amber-700"
+                  )}
+                >
+                  <span className="capitalize">{formatServiceType(currentInquiry.serviceType)}</span>
+                  <Badge className="text-[10px] h-4 px-1.5 rounded-md font-semibold border-0 bg-amber-100 text-amber-700 shrink-0 ml-2">
+                    Pending
+                  </Badge>
+                </button>
               </div>
             )}
-          </div>
-        )}
-
-        {/* Other pending inquiries — each gets its own Workspace entry */}
-        {otherPendingInquiries.length > 0 && (
-          <div className="mb-3 space-y-1">
-            {otherPendingInquiries.map((inq) => (
-              <button
-                key={inq.id}
-                onClick={() => {
-                  const params = new URLSearchParams();
-                  if (emailParam) params.set("email", emailParam);
-                  params.set("inquiryId", inq.id);
-                  router.push(`/client/client-info?${params.toString()}`);
-                }}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
-              >
-                <FileText className="h-4 w-4 shrink-0 text-amber-500" />
-                <span className="flex-1 text-left truncate">
-                  {inq.serviceType
-                    ? `${inq.serviceType.charAt(0).toUpperCase() + inq.serviceType.slice(1)} Inquiry`
-                    : "New Inquiry"}
-                </span>
-                <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5 shrink-0">
-                  Pending
-                </span>
-              </button>
-            ))}
           </div>
         )}
 
