@@ -30,10 +30,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ChevronsLeft, ChevronsRight, Filter, X, ChevronDown, Bell, ClipboardCheck } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, Filter, X, ChevronDown } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 
 // Props for the generic DataTable component
 interface DataTableProps<TData, TValue> {
@@ -67,41 +65,8 @@ export function DataTable<TData extends Project, TValue>({
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
   const [yearFilter, setYearFilter] = useState("all");
   const [monthFilter, setMonthFilter] = useState("all");
-  const [submissionFilter, setSubmissionFilter] = useState<"all" | "to-acknowledge" | "acknowledged">("all");
   const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(true);
-
-  // States for real-time submission counts
-  const [pidsToAcknowledge, setPidsToAcknowledge] = useState<Set<string>>(new Set());
-  const [pidsAcknowledged, setPidsAcknowledged] = useState<Set<string>>(new Set());
-
-  // Listen for submission states
-  useState(() => {
-    const qAcknowledge = query(
-      collection(db, "clientFormSubmissions"),
-      where("acknowledgedByAdmin", "==", false)
-    );
-    const qAcknowledged = query(
-      collection(db, "clientFormSubmissions"),
-      where("acknowledgedByAdmin", "==", true)
-    );
-
-    const unsubAcknowledge = onSnapshot(qAcknowledge, (snap) => {
-      const set = new Set<string>();
-      snap.forEach(doc => { if (doc.data().projectId) set.add(doc.data().projectId); });
-      setPidsToAcknowledge(set);
-    });
-
-    const unsubAcknowledged = onSnapshot(qAcknowledged, (snap) => {
-      const set = new Set<string>();
-      snap.forEach(doc => { if (doc.data().projectId) set.add(doc.data().projectId); });
-      setPidsAcknowledged(set);
-    });
-
-    return () => {
-      unsubAcknowledge();
-      unsubAcknowledged();
-    };
-  });
+  const [filterOrder, setFilterOrder] = useState<Array<{type: string, value: string}>>([]);
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
@@ -214,15 +179,9 @@ export function DataTable<TData extends Project, TValue>({
         (date && (date.getMonth() + 1).toString() === monthFilter) ||
         (!item.startDate && monthFilter === "all");
 
-      // 7. Submission Filter
-      const matchesSubmission =
-        submissionFilter === "all" ||
-        (submissionFilter === "to-acknowledge" && pidsToAcknowledge.has(item.pid || "")) ||
-        (submissionFilter === "acknowledged" && pidsAcknowledged.has(item.pid || ""));
-
-      return matchesSearch && matchesStatus && matchesInstitution && matchesServiceRequested && matchesFundingCategory && matchesYear && matchesMonth && matchesSubmission;
+      return matchesSearch && matchesStatus && matchesInstitution && matchesServiceRequested && matchesFundingCategory && matchesYear && matchesMonth;
     });
-  }, [data, globalFilter, statusFilter, institutionFilter, serviceRequestedFilter, fundingCategoryFilter, yearFilter, monthFilter, submissionFilter, pidsToAcknowledge, pidsAcknowledged]);
+  }, [data, globalFilter, statusFilter, institutionFilter, serviceRequestedFilter, fundingCategoryFilter, yearFilter, monthFilter]);
   // Service Requested and Funding Category card definitions
   const serviceRequestedOptions = [
     { id: "Laboratory Services", label: "Laboratory Services", color: "text-blue-600", border: "border-blue-200", bg: "bg-blue-50" },
@@ -299,7 +258,6 @@ export function DataTable<TData extends Project, TValue>({
     yearFilter !== "all",
     monthFilter !== "all",
     globalFilter !== "",
-    submissionFilter !== "all",
   ].filter(Boolean).length;
 
   return (
@@ -415,37 +373,6 @@ export function DataTable<TData extends Project, TValue>({
                       </button>
                     );
                   })}
-                </div>
-              </div>
-
-              {/* Submission Forms Status */}
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Submission Forms</label>
-                <div className="grid grid-cols-1 gap-1">
-                  <button
-                    onClick={() => setSubmissionFilter(submissionFilter === "to-acknowledge" ? "all" : "to-acknowledge")}
-                    className={cn(
-                      "flex items-center gap-2 rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm",
-                      submissionFilter === "to-acknowledge"
-                        ? "bg-amber-50 border-amber-200 font-semibold text-amber-700"
-                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                    )}
-                  >
-                    <Bell className="h-3 w-3" />
-                    To Acknowledge ({pidsToAcknowledge.size})
-                  </button>
-                  <button
-                    onClick={() => setSubmissionFilter(submissionFilter === "acknowledged" ? "all" : "acknowledged")}
-                    className={cn(
-                      "flex items-center gap-2 rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm",
-                      submissionFilter === "acknowledged"
-                        ? "bg-emerald-50 border-emerald-200 font-semibold text-emerald-700"
-                        : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                    )}
-                  >
-                    <ClipboardCheck className="h-3 w-3" />
-                    Acknowledged ({pidsAcknowledged.size})
-                  </button>
                 </div>
               </div>
 
