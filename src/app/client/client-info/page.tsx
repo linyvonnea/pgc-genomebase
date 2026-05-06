@@ -2996,48 +2996,32 @@ export default function ClientPortalPage() {
 
             {showInquiriesList && (
               <div className="ml-6 mt-1 space-y-1">
-                {/* Current inquiry — if pending */}
-                {currentInquiry?.status === "Pending" && currentInquiry.serviceType && (
-                  <button
-                    onClick={() => { userWantsWorkspaceRef.current = true; setSelectedProjectPid(null); setProjectDetails(null); }}
-                    className={cn(
-                      "w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
-                      !selectedProjectPid
-                        ? "bg-amber-50 text-amber-800 border border-amber-100"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-amber-700"
-                    )}
-                  >
-                    <span className="capitalize">{formatServiceType(currentInquiry.serviceType)}</span>
-                    <Badge className="text-[10px] h-4 px-1.5 rounded-md font-semibold border-0 bg-amber-100 text-amber-700 shrink-0 ml-2">
-                      Pending
-                    </Badge>
-                  </button>
-                )}
-
-                {/* Other pending inquiries by same user email */}
-                {otherPendingInquiries.map((inq) => (
-                  <button
-                    key={inq.id}
-                    onClick={() => {
-                      const params = new URLSearchParams();
-                      if (emailParam) params.set("email", emailParam);
-                      params.set("inquiryId", inq.id);
-                      // Lock workspace view before navigating so auto-select doesn't override it
-                      userWantsWorkspaceRef.current = true;
-                      setSelectedProjectPid(null);
-                      setProjectDetails(null);
-                      router.push(`/client/client-info?${params.toString()}`);
-                    }}
-                    className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-colors text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
-                  >
-                    <span className="capitalize truncate flex-1 text-left">
-                      {formatServiceType(inq.serviceType)}
-                    </span>
-                    <Badge className="text-[10px] h-4 px-1.5 rounded-md font-semibold border-0 bg-amber-100 text-amber-700 shrink-0 ml-2">
-                      Pending
-                    </Badge>
-                  </button>
-                ))}
+                {/* Other pending inquiries by same user email (excluding the current one already loaded) */}
+                {otherPendingInquiries
+                  .filter(inq => inq.id !== inquiryIdParam)
+                  .map((inq) => (
+                    <button
+                      key={inq.id}
+                      onClick={() => {
+                        const params = new URLSearchParams();
+                        if (emailParam) params.set("email", emailParam);
+                        params.set("inquiryId", inq.id);
+                        // Lock workspace view before navigating so auto-select doesn't override it
+                        userWantsWorkspaceRef.current = true;
+                        setSelectedProjectPid(null);
+                        setProjectDetails(null);
+                        router.push(`/client/client-info?${params.toString()}`);
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-colors text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
+                    >
+                      <span className="capitalize truncate flex-1 text-left">
+                        {formatServiceType(inq.serviceType)}
+                      </span>
+                      <Badge className="text-[10px] h-4 px-1.5 rounded-md font-semibold border-0 bg-amber-100 text-amber-700 shrink-0 ml-2">
+                        Pending
+                      </Badge>
+                    </button>
+                  ))}
               </div>
             )}
           </div>
