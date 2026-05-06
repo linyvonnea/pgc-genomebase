@@ -3238,6 +3238,8 @@ export default function ClientPortalPage() {
           onClick={() => {
             const params = new URLSearchParams();
             if (emailParam) params.set("email", emailParam);
+            // Pass the original inquiry ID so login password stays unchanged after redirect
+            if (inquiryIdParam) params.set("returnInquiryId", inquiryIdParam);
             params.set("returnToPortal", "true");
             router.push(`/client/inquiry-request?${params.toString()}`);
           }}
@@ -4087,13 +4089,6 @@ export default function ClientPortalPage() {
                             <p className="text-xs text-amber-700 leading-relaxed">
                               Your inquiry has been submitted and is currently under review. An official quotation will appear here once the admin has processed your request.
                             </p>
-                            <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-3 py-1 mt-1">
-                              <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
-                              </span>
-                              Status: Pending Review
-                            </div>
                           </div>
                         ) : (
                           <div className="text-center py-8 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
