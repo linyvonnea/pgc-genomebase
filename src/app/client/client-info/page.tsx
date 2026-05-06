@@ -441,6 +441,9 @@ export default function ClientPortalPage() {
   // Tracks whether the clients Firestore subscription has fired at least once.
   // Used to prevent falling back to draft data while clients are still loading.
   const clientsLoadedRef = useRef(false);
+  // When the user explicitly navigates to the workspace view (by clicking a pending
+  // inquiry item), block auto-project-selection until they actively pick a project.
+  const userWantsWorkspaceRef = useRef(false);
 
   // ── Modal state ───────────────────────────────────────────────
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -783,7 +786,7 @@ export default function ClientPortalPage() {
        selectedDetails = allProjects.find(p => (p as any).originalRequestId === currentProjectRequestId || p.pid === currentProjectRequestId) || null;
     } 
 
-    if (!selectedDetails && allProjects.length > 0) {
+    if (!selectedDetails && !userWantsWorkspaceRef.current && allProjects.length > 0) {
       // Only auto-select from the CURRENT inquiry's projects so that returning clients
       // with a new pending inquiry see the Workspace view first instead of jumping to
       // an old project automatically.
@@ -2060,6 +2063,9 @@ export default function ClientPortalPage() {
     
     console.log("Selecting project:", project.pid);
     
+    // User explicitly picked a project — clear the workspace lock
+    userWantsWorkspaceRef.current = false;
+
     // Simply update selection state - the useEffect will handle merging all state
     setSelectedProjectPid(project.pid || "");
     setProjectDetails(project);
@@ -2993,7 +2999,7 @@ export default function ClientPortalPage() {
                 {/* Current inquiry — if pending */}
                 {currentInquiry?.status === "Pending" && currentInquiry.serviceType && (
                   <button
-                    onClick={() => { setSelectedProjectPid(null); setProjectDetails(null); }}
+                    onClick={() => { userWantsWorkspaceRef.current = true; setSelectedProjectPid(null); setProjectDetails(null); }}
                     className={cn(
                       "w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
                       !selectedProjectPid
@@ -3016,7 +3022,8 @@ export default function ClientPortalPage() {
                       const params = new URLSearchParams();
                       if (emailParam) params.set("email", emailParam);
                       params.set("inquiryId", inq.id);
-                      // Clear selection so the "Welcome" workspace is shown for the new inquiry
+                      // Lock workspace view before navigating so auto-select doesn't override it
+                      userWantsWorkspaceRef.current = true;
                       setSelectedProjectPid(null);
                       setProjectDetails(null);
                       router.push(`/client/client-info?${params.toString()}`);
