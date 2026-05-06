@@ -45,7 +45,7 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner" 
 import useAuth from "@/hooks/useAuth"
 import ConfirmationModalLayout from "@/components/modal/ConfirmationModalLayout"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 const TRAINING_PROGRAM_OPTIONS = [
   "Basic Molecular Biology Techniques: Applications in Next Generation Sequencing",
@@ -99,6 +99,9 @@ export default function QuotationRequestForm() {
   // Get authenticated user information
   const { user } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnToPortal = searchParams.get("returnToPortal") === "true"
+  const returnEmail = searchParams.get("email") || user?.email || ""
 
   // Show logged-in email at the top (best practice: clear, non-intrusive, accessible)
   // Only show if user is authenticated
@@ -384,7 +387,15 @@ export default function QuotationRequestForm() {
           setSelectedService("laboratory") 
           setTrainingDate(undefined)
           setMethodologyFile(null)
-          router.push("/client/inquiry-request/submitted")
+          if (returnToPortal && result.inquiryId) {
+            // Returning client — go back to portal with new inquiry context
+            const portalParams = new URLSearchParams();
+            if (returnEmail) portalParams.set("email", returnEmail);
+            portalParams.set("inquiryId", result.inquiryId);
+            router.push(`/client/client-info?${portalParams.toString()}`);
+          } else {
+            router.push("/client/inquiry-request/submitted")
+          }
         }, 2000)
         return
       }

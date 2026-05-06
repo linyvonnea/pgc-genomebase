@@ -20,6 +20,7 @@ import {
   deleteDoc,
   Timestamp,
   or,
+  limit,
 } from "firebase/firestore";
 import { clientFormSchema, ClientFormData } from "@/schemas/clientSchema";
 import { Input } from "@/components/ui/input";
@@ -1342,8 +1343,17 @@ export default function ClientPortalPage() {
 
           let cidToUse = member.cid;
           if (!cidToUse || cidToUse === "pending" || cidToUse === "draft") {
-            const year = new Date().getFullYear();
-            cidToUse = await getNextCid(year);
+            // Preserve existing CID if this client already has one from a previous inquiry
+            const existingSnap = await getDocs(
+              query(collection(db, "clients"), where("email", "==", result.data.email), limit(1))
+            );
+            if (!existingSnap.empty) {
+              const existingDoc = existingSnap.docs[0];
+              cidToUse = existingDoc.data().cid || existingDoc.id;
+            } else {
+              const year = new Date().getFullYear();
+              cidToUse = await getNextCid(year);
+            }
           }
 
           if (!cidToUse) throw new Error("Could not generate a valid Client ID");
@@ -1558,8 +1568,17 @@ export default function ClientPortalPage() {
 
           let cidToUse = member.cid;
           if (!cidToUse || cidToUse === "pending" || cidToUse === "draft") {
-            const year = new Date().getFullYear();
-            cidToUse = await getNextCid(year);
+            // Preserve existing CID if this client already has one from a previous inquiry
+            const existingSnap = await getDocs(
+              query(collection(db, "clients"), where("email", "==", member.formData.email), limit(1))
+            );
+            if (!existingSnap.empty) {
+              const existingDoc = existingSnap.docs[0];
+              cidToUse = existingDoc.data().cid || existingDoc.id;
+            } else {
+              const year = new Date().getFullYear();
+              cidToUse = await getNextCid(year);
+            }
           }
 
           await setDoc(
@@ -3087,6 +3106,21 @@ export default function ClientPortalPage() {
       </div>
 
       {/* Footer deleted as requested */}
+      {/* New Inquiry CTA */}
+      <div className="px-4 py-4 border-t border-slate-100 bg-slate-50/60">
+        <button
+          onClick={() => {
+            const params = new URLSearchParams();
+            if (emailParam) params.set("email", emailParam);
+            params.set("returnToPortal", "true");
+            router.push(`/client/inquiry-request?${params.toString()}`);
+          }}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-[#166FB5]/50 text-[#166FB5] hover:bg-[#166FB5]/5 hover:border-[#166FB5] transition-all text-sm font-semibold"
+        >
+          <Plus className="h-4 w-4" />
+          New Inquiry
+        </button>
+      </div>
     </div>
   );
 
