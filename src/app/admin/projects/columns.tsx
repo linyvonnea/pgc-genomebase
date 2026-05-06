@@ -138,7 +138,7 @@ function StatusCell({ projectId, status }: { projectId: string; status: string }
           </Tooltip>
         </TooltipProvider>
       )}
-      {hasAcknowledged && !hasUnread && (
+      {hasAcknowledged && (
         <TooltipProvider delayDuration={100}>
           <Tooltip>
             <TooltipTrigger asChild>
