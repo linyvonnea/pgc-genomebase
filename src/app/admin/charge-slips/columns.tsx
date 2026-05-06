@@ -5,7 +5,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { UIChargeSlipRecord } from "@/types/UIChargeSlipRecord";
 import { Badge } from "@/components/ui/badge";
 import { ValidCategory } from "@/types/ValidCategory";
-import { Trash2, FileWarning, Stamp } from "lucide-react";
+import { Trash2, FileWarning, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { deleteChargeSlip } from "@/services/chargeSlipService";
 import { storage } from "@/lib/firebase";
@@ -199,7 +199,7 @@ export const columns: ColumnDef<UIChargeSlipRecord, any>[] = [
               <Tooltip delayDuration={100}>
                 <TooltipTrigger asChild>
                   <span className="shrink-0 flex items-center justify-center">
-                    <Stamp className="h-3.5 w-3.5 text-emerald-500" />
+                    <BadgeCheck className="h-3.5 w-3.5 text-emerald-500" />
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="right" className="text-[10px] max-w-[180px]">
