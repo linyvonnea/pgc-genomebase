@@ -2973,19 +2973,33 @@ export default function ClientPortalPage() {
 
       {/* Projects Section */}
       <div className="flex-1 overflow-y-auto px-3 py-6">
-        {/* My Workspace — always visible; clicking shows the Welcome/quotations right pane */}
-        <button
-          onClick={() => { setSelectedProjectPid(null); setProjectDetails(null); }}
-          className={cn(
-            "w-full mb-3 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
-            !selectedProjectPid
-              ? "bg-[#166FB5]/10 text-[#166FB5]"
-              : "text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
-          )}
-        >
-          <FileText className="h-4 w-4" />
-          My Workspace
-        </button>
+        {/* My Inquiry — only visible when inquiry is Pending */}
+        {currentInquiry?.status === "Pending" && (
+          <div className="mb-3">
+            <button
+              onClick={() => { setSelectedProjectPid(null); setProjectDetails(null); }}
+              className={cn(
+                "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
+                !selectedProjectPid
+                  ? "bg-[#166FB5]/10 text-[#166FB5]"
+                  : "text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
+              )}
+            >
+              <FileText className="h-4 w-4" />
+              My Inquiry
+            </button>
+            {currentInquiry.serviceType && (
+              <div className="ml-6 mt-1 px-3 py-1.5 rounded-lg flex items-center justify-between bg-amber-50 border border-amber-100">
+                <span className="text-xs font-medium text-amber-800 capitalize">
+                  {formatServiceType(currentInquiry.serviceType)}
+                </span>
+                <Badge className="text-[10px] h-4 px-1.5 rounded-md font-semibold border-0 bg-amber-100 text-amber-700">
+                  Pending
+                </Badge>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mb-2 px-3 flex items-center justify-between group cursor-pointer" onClick={() => setShowProjectsList(!showProjectsList)}>
           <div className="flex items-center gap-2 text-slate-600 group-hover:text-[#166FB5] transition-colors">
