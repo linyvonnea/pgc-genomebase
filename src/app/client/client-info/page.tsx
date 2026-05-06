@@ -2974,8 +2974,8 @@ export default function ClientPortalPage() {
 
       {/* Projects Section */}
       <div className="flex-1 overflow-y-auto px-3 py-6">
-        {/* My Inquiries — collapsible, only visible when current inquiry is Pending */}
-        {currentInquiry?.status === "Pending" && (
+        {/* My Inquiries — collapsible, visible when current inquiry is Pending OR when otherPendingInquiries exist */}
+        {(currentInquiry?.status === "Pending" || otherPendingInquiries.length > 0) && (
           <div className="mb-3">
             <div
               className="mb-1 px-3 flex items-center justify-between group cursor-pointer"
@@ -2988,22 +2988,46 @@ export default function ClientPortalPage() {
               <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform", showInquiriesList && "rotate-180")} />
             </div>
 
-            {showInquiriesList && currentInquiry.serviceType && (
-              <div className="ml-6 mt-1">
-                <button
-                  onClick={() => { setSelectedProjectPid(null); setProjectDetails(null); }}
-                  className={cn(
-                    "w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
-                    !selectedProjectPid
-                      ? "bg-amber-50 text-amber-800 border border-amber-100"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-amber-700"
-                  )}
-                >
-                  <span className="capitalize">{formatServiceType(currentInquiry.serviceType)}</span>
-                  <Badge className="text-[10px] h-4 px-1.5 rounded-md font-semibold border-0 bg-amber-100 text-amber-700 shrink-0 ml-2">
-                    Pending
-                  </Badge>
-                </button>
+            {showInquiriesList && (
+              <div className="ml-6 mt-1 space-y-1">
+                {/* Current inquiry — if pending */}
+                {currentInquiry?.status === "Pending" && currentInquiry.serviceType && (
+                  <button
+                    onClick={() => { setSelectedProjectPid(null); setProjectDetails(null); }}
+                    className={cn(
+                      "w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+                      !selectedProjectPid
+                        ? "bg-amber-50 text-amber-800 border border-amber-100"
+                        : "text-slate-600 hover:bg-slate-100 hover:text-amber-700"
+                    )}
+                  >
+                    <span className="capitalize">{formatServiceType(currentInquiry.serviceType)}</span>
+                    <Badge className="text-[10px] h-4 px-1.5 rounded-md font-semibold border-0 bg-amber-100 text-amber-700 shrink-0 ml-2">
+                      Pending
+                    </Badge>
+                  </button>
+                )}
+
+                {/* Other pending inquiries by same user email */}
+                {otherPendingInquiries.map((inq) => (
+                  <button
+                    key={inq.id}
+                    onClick={() => {
+                      const params = new URLSearchParams();
+                      if (emailParam) params.set("email", emailParam);
+                      params.set("inquiryId", inq.id);
+                      router.push(`/client/client-info?${params.toString()}`);
+                    }}
+                    className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-colors text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
+                  >
+                    <span className="capitalize truncate flex-1 text-left">
+                      {formatServiceType(inq.serviceType)}
+                    </span>
+                    <Badge className="text-[10px] h-4 px-1.5 rounded-md font-semibold border-0 bg-amber-100 text-amber-700 shrink-0 ml-2">
+                      Pending
+                    </Badge>
+                  </button>
+                ))}
               </div>
             )}
           </div>
