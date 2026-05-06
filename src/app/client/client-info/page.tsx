@@ -766,8 +766,13 @@ export default function ClientPortalPage() {
     } 
 
     if (!selectedDetails && allProjects.length > 0) {
-      // Default to first if nothing selected
-      selectedDetails = allProjects[0];
+      // Only auto-select from the CURRENT inquiry's projects so that returning clients
+      // with a new pending inquiry see the Workspace view first instead of jumping to
+      // an old project automatically.
+      const currentInquiryProjects = [...fetchedDraftProjects, ...fetchedApprovedProjects];
+      if (currentInquiryProjects.length > 0) {
+        selectedDetails = currentInquiryProjects[0];
+      }
     }
     
     if (selectedDetails) {
@@ -2951,19 +2956,22 @@ export default function ClientPortalPage() {
 
       {/* Projects Section */}
       <div className="flex-1 overflow-y-auto px-3 py-6">
-        {/* My Workspace nav item */}
-        <button
-          onClick={() => { setSelectedProjectPid(null); setProjectDetails(null); }}
-          className={cn(
-            "w-full mb-3 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
-            !selectedProjectPid
-              ? "bg-[#166FB5]/10 text-[#166FB5]"
-              : "text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
-          )}
-        >
-          <FileText className="h-4 w-4" />
-          My Workspace
-        </button>
+        {/* My Workspace nav item — only shown when the current inquiry has no projects yet
+             (i.e. it is a new/pending inquiry waiting for a quotation from admin) */}
+        {currentInquiry && fetchedDraftProjects.length === 0 && fetchedApprovedProjects.length === 0 && (
+          <button
+            onClick={() => { setSelectedProjectPid(null); setProjectDetails(null); }}
+            className={cn(
+              "w-full mb-3 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
+              !selectedProjectPid
+                ? "bg-[#166FB5]/10 text-[#166FB5]"
+                : "text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
+            )}
+          >
+            <FileText className="h-4 w-4" />
+            My Workspace
+          </button>
+        )}
 
         <div className="mb-2 px-3 flex items-center justify-between group cursor-pointer" onClick={() => setShowProjectsList(!showProjectsList)}>
           <div className="flex items-center gap-2 text-slate-600 group-hover:text-[#166FB5] transition-colors">
@@ -4068,9 +4076,30 @@ export default function ClientPortalPage() {
                           <p className="text-xs font-medium">Fetching documents...</p>
                         </div>
                       ) : inquiryQuotations.length === 0 ? (
-                        <div className="text-center py-8 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-                          <p className="text-xs text-slate-500 italic">No official quotations found for this inquiry yet.</p>
-                        </div>
+                        currentInquiry?.status === "Pending" ? (
+                          <div className="rounded-xl border border-amber-100 bg-amber-50/60 px-4 py-6 text-center space-y-2">
+                            <div className="flex justify-center">
+                              <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-100 text-amber-600">
+                                <Clock className="h-6 w-6" />
+                              </span>
+                            </div>
+                            <p className="text-sm font-bold text-amber-900">Awaiting Quotation from Admin</p>
+                            <p className="text-xs text-amber-700 leading-relaxed">
+                              Your inquiry has been submitted and is currently under review. An official quotation will appear here once the admin has processed your request.
+                            </p>
+                            <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-700 bg-amber-100 border border-amber-200 rounded-full px-3 py-1 mt-1">
+                              <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75" />
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+                              </span>
+                              Status: Pending Review
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                            <p className="text-xs text-slate-500 italic">No official quotations found for this inquiry yet.</p>
+                          </div>
+                        )
                       ) : (
                         <div className="space-y-2">
                           {inquiryQuotations.map((quote) => {
