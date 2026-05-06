@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/tooltip"
 import { collection, onSnapshot, query, where } from "firebase/firestore"
 import { db } from "@/lib/firebase"
+import { ClipboardCheck } from "lucide-react"
 
 // Professional colors for client names in tooltip
 const CLIENT_COLORS = [
@@ -57,23 +58,38 @@ export function useProjectFormNotifications() {
 }
 
 // StatusCell: shows red blinking alert icon on "Ongoing" rows when client has unacknowledged form uploads
+// and a green check icon when at least one submission has been acknowledged
 function StatusCell({ projectId, status }: { projectId: string; status: string }) {
   const [hasUnread, setHasUnread] = useState(false);
+  const [hasAcknowledged, setHasAcknowledged] = useState(false);
 
   useEffect(() => {
     if (status !== "Ongoing" || !projectId) return;
 
-    const q = query(
+    const qUnread = query(
       collection(db, "clientFormSubmissions"),
       where("projectId", "==", projectId),
       where("acknowledgedByAdmin", "==", false)
     );
 
-    const unsub = onSnapshot(q, (snap) => {
+    const qAcknowledged = query(
+      collection(db, "clientFormSubmissions"),
+      where("projectId", "==", projectId),
+      where("acknowledgedByAdmin", "==", true)
+    );
+
+    const unsubUnread = onSnapshot(qUnread, (snap) => {
       setHasUnread(!snap.empty);
     });
 
-    return () => unsub();
+    const unsubAcknowledged = onSnapshot(qAcknowledged, (snap) => {
+      setHasAcknowledged(!snap.empty);
+    });
+
+    return () => {
+      unsubUnread();
+      unsubAcknowledged();
+    };
   }, [projectId, status]);
 
   let color = "bg-gray-100 text-gray-800";
@@ -115,7 +131,21 @@ function StatusCell({ projectId, status }: { projectId: string; status: string }
               </span>
             </TooltipTrigger>
             <TooltipContent side="right" className="text-[10px]">
-              Client uploaded a new submission form
+              Client uploaded a new submission form — pending review
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+      {status === "Ongoing" && hasAcknowledged && !hasUnread && (
+        <TooltipProvider delayDuration={100}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="shrink-0 flex items-center justify-center">
+                <ClipboardCheck className="h-3.5 w-3.5 text-emerald-500" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-[10px] max-w-[160px]">
+              Sample submission form acknowledged
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
