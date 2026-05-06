@@ -2973,22 +2973,19 @@ export default function ClientPortalPage() {
 
       {/* Projects Section */}
       <div className="flex-1 overflow-y-auto px-3 py-6">
-        {/* My Workspace nav item — only shown when the current inquiry has no projects yet
-             (i.e. it is a new/pending inquiry waiting for a quotation from admin) */}
-        {currentInquiry && fetchedDraftProjects.length === 0 && fetchedApprovedProjects.length === 0 && (
-          <button
-            onClick={() => { setSelectedProjectPid(null); setProjectDetails(null); }}
-            className={cn(
-              "w-full mb-1 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
-              !selectedProjectPid
-                ? "bg-[#166FB5]/10 text-[#166FB5]"
-                : "text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
-            )}
-          >
-            <FileText className="h-4 w-4" />
-            My Workspace
-          </button>
-        )}
+        {/* My Workspace — always visible; clicking shows the Welcome/quotations right pane */}
+        <button
+          onClick={() => { setSelectedProjectPid(null); setProjectDetails(null); }}
+          className={cn(
+            "w-full mb-3 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
+            !selectedProjectPid
+              ? "bg-[#166FB5]/10 text-[#166FB5]"
+              : "text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
+          )}
+        >
+          <FileText className="h-4 w-4" />
+          My Workspace
+        </button>
 
         {/* Other pending inquiries — each gets its own Workspace entry */}
         {otherPendingInquiries.length > 0 && (
