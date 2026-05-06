@@ -455,6 +455,8 @@ export default function ClientPortalPage() {
   
   const [fetchedClientRequests, setFetchedClientRequests] = useState<ClientRequest[]>([]);
   const [fetchedClients, setFetchedClients] = useState<any[]>([]); // Using any for raw client doc data for now
+  // Clients fetched specifically for the currently selected project (handles previous-inquiry projects)
+  const [fetchedSelectedProjectClients, setFetchedSelectedProjectClients] = useState<any[]>([]);
   const [fetchedMemberApprovals, setFetchedMemberApprovals] = useState<any[]>([]);
   
   const [showSubmitForApprovalModal, setShowSubmitForApprovalModal] =
@@ -593,6 +595,23 @@ export default function ClientPortalPage() {
       unsubClients();
     };
   }, [emailParam, inquiryIdParam, projectRequestIdParam, router, authLoading, user]);
+
+  // 1.1c. Subscribe to clients for the selected project (needed for previous-inquiry projects)
+  //  so members correctly show "Complete" instead of "Draft" when they have real client IDs.
+  useEffect(() => {
+    if (!selectedProjectPid || selectedProjectPid.startsWith("inquiry-") || selectedProjectPid === "DRAFT") {
+      setFetchedSelectedProjectClients([]);
+      return;
+    }
+    const q = query(
+      collection(db, "clients"),
+      where("pid", "array-contains", selectedProjectPid)
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      setFetchedSelectedProjectClients(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return () => unsub();
+  }, [selectedProjectPid]);
 
   // 1.1b. Load projects from previous inquiries for the same email
   useEffect(() => {
@@ -769,8 +788,16 @@ export default function ClientPortalPage() {
     }
 
     // Process Members
-    // 0. Get set of approved emails for filtering duplicates
-    const approvedEmails = new Set(fetchedClients.map((c: any) => c.email?.toLowerCase()).filter(Boolean));
+    // 0. Merge base clients (current inquiry) with project-specific clients (previous inquiries)
+    //    Deduplicate by doc ID so the same client never appears twice.
+    const allApprovedClients = [
+      ...fetchedClients,
+      ...fetchedSelectedProjectClients.filter(
+        (sc: any) => !fetchedClients.some((c: any) => c.id === sc.id)
+      ),
+    ];
+
+    const approvedEmails = new Set(allApprovedClients.map((c: any) => c.email?.toLowerCase()).filter(Boolean));
 
     // 1. Find Primary Member
     let primaryMember: ClientMember | null = null;
@@ -783,7 +810,7 @@ export default function ClientPortalPage() {
     // so that a PID mismatch (race condition / new project context) never drops
     // a "Complete" member back to Draft.
     const primaryClientDoc =
-      fetchedClients.find((c: any) => {
+      allApprovedClients.find((c: any) => {
         const email = c.email?.toLowerCase();
         if (email !== emailParam?.toLowerCase()) return false;
         if (selectedDetails) {
@@ -794,7 +821,7 @@ export default function ClientPortalPage() {
       }) ??
       // Fallback: email-only match – keeps the member "Complete" even when the
       // PID array hasn't been updated yet or the context is a different project.
-      fetchedClients.find((c: any) =>
+      allApprovedClients.find((c: any) =>
         c.email?.toLowerCase() === emailParam?.toLowerCase() && !!c.haveSubmitted
       );
     
@@ -979,7 +1006,7 @@ export default function ClientPortalPage() {
         }));
 
     // 2c. Approved members from Clients collection
-    const approvedMembers: ClientMember[] = fetchedClients
+    const approvedMembers: ClientMember[] = allApprovedClients
         .filter((c: any) => {
             if (!c.email || c.email.toLowerCase() === emailParam?.toLowerCase()) return false;
             
@@ -1037,7 +1064,8 @@ export default function ClientPortalPage() {
     fetchedApprovedProjects,
     fetchedPreviousProjects,
     fetchedClientRequests, 
-    fetchedClients, 
+    fetchedClients,
+    fetchedSelectedProjectClients,
     fetchedMemberApprovals, 
     emailParam, 
     currentProjectRequestId, 
