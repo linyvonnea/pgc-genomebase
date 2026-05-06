@@ -2973,50 +2973,19 @@ export default function ClientPortalPage() {
 
       {/* Projects Section */}
       <div className="flex-1 overflow-y-auto px-3 py-6">
-        {/* My Workspace nav item — only shown when the current inquiry has no projects yet
-             (i.e. it is a new/pending inquiry waiting for a quotation from admin) */}
-        {currentInquiry && fetchedDraftProjects.length === 0 && fetchedApprovedProjects.length === 0 && (
-          <button
-            onClick={() => { setSelectedProjectPid(null); setProjectDetails(null); }}
-            className={cn(
-              "w-full mb-1 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
-              !selectedProjectPid
-                ? "bg-[#166FB5]/10 text-[#166FB5]"
-                : "text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
-            )}
-          >
-            <FileText className="h-4 w-4" />
-            My Workspace
-          </button>
-        )}
-
-        {/* Other pending inquiries — each gets its own Workspace entry */}
-        {otherPendingInquiries.length > 0 && (
-          <div className="mb-3 space-y-1">
-            {otherPendingInquiries.map((inq) => (
-              <button
-                key={inq.id}
-                onClick={() => {
-                  const params = new URLSearchParams();
-                  if (emailParam) params.set("email", emailParam);
-                  params.set("inquiryId", inq.id);
-                  router.push(`/client/client-info?${params.toString()}`);
-                }}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
-              >
-                <FileText className="h-4 w-4 shrink-0 text-amber-500" />
-                <span className="flex-1 text-left truncate">
-                  {inq.serviceType
-                    ? `${inq.serviceType.charAt(0).toUpperCase() + inq.serviceType.slice(1)} Inquiry`
-                    : "New Inquiry"}
-                </span>
-                <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0.5 shrink-0">
-                  Pending
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
+        {/* My Workspace — always visible; clicking shows the Welcome/quotations right pane */}
+        <button
+          onClick={() => { setSelectedProjectPid(null); setProjectDetails(null); }}
+          className={cn(
+            "w-full mb-3 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors",
+            !selectedProjectPid
+              ? "bg-[#166FB5]/10 text-[#166FB5]"
+              : "text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
+          )}
+        >
+          <FileText className="h-4 w-4" />
+          My Workspace
+        </button>
 
         <div className="mb-2 px-3 flex items-center justify-between group cursor-pointer" onClick={() => setShowProjectsList(!showProjectsList)}>
           <div className="flex items-center gap-2 text-slate-600 group-hover:text-[#166FB5] transition-colors">
