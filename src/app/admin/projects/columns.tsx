@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/tooltip"
 import { collection, onSnapshot, query, where } from "firebase/firestore"
 import { db } from "@/lib/firebase"
-import { ClipboardCheck } from "lucide-react"
+import { ClipboardCheck, FileUp, FileCheck2 } from "lucide-react"
 
 // Professional colors for client names in tooltip
 const CLIENT_COLORS = [
@@ -57,11 +57,12 @@ export function useProjectFormNotifications() {
   return projectsWithUnacknowledged;
 }
 
-// StatusCell: shows red blinking alert icon on "Ongoing" rows when client has unacknowledged form uploads
-// and a green check icon when at least one submission has been acknowledged (any status)
+// StatusCell: shows status icon, form submission indicators, and service report delivery indicators
 function StatusCell({ projectId, status }: { projectId: string; status: string }) {
   const [hasUnread, setHasUnread] = useState(false);
   const [hasAcknowledged, setHasAcknowledged] = useState(false);
+  const [hasServiceReport, setHasServiceReport] = useState(false);
+  const [serviceReportReceived, setServiceReportReceived] = useState(false);
 
   useEffect(() => {
     if (!projectId) return;
@@ -88,9 +89,18 @@ function StatusCell({ projectId, status }: { projectId: string; status: string }
       setHasAcknowledged(!snap.empty);
     });
 
+    // Service report subcollection listener
+    const qReports = collection(db, "projects", projectId, "serviceReports");
+    const unsubReports = onSnapshot(qReports, (snap) => {
+      const docs = snap.docs.map((d) => d.data());
+      setHasServiceReport(docs.length > 0);
+      setServiceReportReceived(docs.some((d) => d.status === "received"));
+    });
+
     return () => {
       unsubUnread();
       unsubAcknowledged();
+      unsubReports();
     };
   }, [projectId, status]);
 
@@ -148,6 +158,34 @@ function StatusCell({ projectId, status }: { projectId: string; status: string }
             </TooltipTrigger>
             <TooltipContent side="right" className="text-[10px] max-w-[160px]">
               Sample submission form acknowledged
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+      {hasServiceReport && !serviceReportReceived && (
+        <TooltipProvider delayDuration={100}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="shrink-0 flex items-center justify-center">
+                <FileUp className="h-3.5 w-3.5 text-sky-500" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-[10px] max-w-[180px]">
+              Service report uploaded — awaiting client receipt
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+      {serviceReportReceived && (
+        <TooltipProvider delayDuration={100}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="shrink-0 flex items-center justify-center">
+                <FileCheck2 className="h-3.5 w-3.5 text-emerald-600" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-[10px] max-w-[180px]">
+              Client confirmed receipt of service report
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

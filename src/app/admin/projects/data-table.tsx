@@ -14,7 +14,7 @@ import { Project } from "@/types/Project";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, collectionGroup, onSnapshot, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   Table,
@@ -72,6 +72,9 @@ export function DataTable<TData extends Project, TValue>({
   const [formFilter, setFormFilter] = useState<"__all" | "to_acknowledge" | "acknowledged">("__all");
   const [projectsWithPendingForms, setProjectsWithPendingForms] = useState<Set<string>>(new Set());
   const [projectsWithAcknowledgedForms, setProjectsWithAcknowledgedForms] = useState<Set<string>>(new Set());
+  const [serviceReportFilter, setServiceReportFilter] = useState<"__all" | "uploaded" | "received">("__all");
+  const [projectsWithReports, setProjectsWithReports] = useState<Set<string>>(new Set());
+  const [projectsWithReceivedReports, setProjectsWithReceivedReports] = useState<Set<string>>(new Set());
 
   // Real-time listeners for form submission acknowledgement status
   useEffect(() => {
@@ -96,6 +99,24 @@ export function DataTable<TData extends Project, TValue>({
     });
 
     return () => { unsubPending(); unsubAcknowledged(); };
+  }, []);
+
+  // Real-time listener for service report delivery status (collectionGroup across all projects)
+  useEffect(() => {
+    const qReports = collectionGroup(db, "serviceReports");
+    const unsub = onSnapshot(qReports, (snap) => {
+      const uploaded = new Set<string>();
+      const received = new Set<string>();
+      snap.forEach((docSnap) => {
+        const pid = docSnap.ref.parent.parent?.id;
+        if (!pid) return;
+        uploaded.add(pid);
+        if (docSnap.data().status === "received") received.add(pid);
+      });
+      setProjectsWithReports(uploaded);
+      setProjectsWithReceivedReports(received);
+    });
+    return () => unsub();
   }, []);
 
   const monthNames = [
@@ -130,9 +151,10 @@ export function DataTable<TData extends Project, TValue>({
     }
     
     if (formFilter !== "__all") orderedFilters.push(formFilter === "to_acknowledge" ? "To Acknowledge" : "Acknowledged");
+    if (serviceReportFilter !== "__all") orderedFilters.push(serviceReportFilter === "uploaded" ? "Report Uploaded" : "Client Received");
     
     return orderedFilters.length > 0 ? orderedFilters.join(" + ") : "No filters applied";
-  }, [statusFilter, institutionFilter, serviceRequestedFilter, fundingCategoryFilter, globalFilter, yearFilter, monthFilter, formFilter, filterOrder, monthNames]);
+  }, [statusFilter, institutionFilter, serviceRequestedFilter, fundingCategoryFilter, globalFilter, yearFilter, monthFilter, formFilter, serviceReportFilter, filterOrder, monthNames]);
 
   // Derive available years
   const availableYears = useMemo(() => {
@@ -218,9 +240,15 @@ export function DataTable<TData extends Project, TValue>({
         (formFilter === "to_acknowledge" && projectsWithPendingForms.has(pid)) ||
         (formFilter === "acknowledged" && projectsWithAcknowledgedForms.has(pid) && !projectsWithPendingForms.has(pid));
 
-      return matchesSearch && matchesStatus && matchesInstitution && matchesServiceRequested && matchesFundingCategory && matchesYear && matchesMonth && matchesFormFilter;
+      // 8. Service Report Filter
+      const matchesServiceReportFilter =
+        serviceReportFilter === "__all" ||
+        (serviceReportFilter === "uploaded" && projectsWithReports.has(pid) && !projectsWithReceivedReports.has(pid)) ||
+        (serviceReportFilter === "received" && projectsWithReceivedReports.has(pid));
+
+      return matchesSearch && matchesStatus && matchesInstitution && matchesServiceRequested && matchesFundingCategory && matchesYear && matchesMonth && matchesFormFilter && matchesServiceReportFilter;
     });
-  }, [data, globalFilter, statusFilter, institutionFilter, serviceRequestedFilter, fundingCategoryFilter, yearFilter, monthFilter, formFilter, projectsWithPendingForms, projectsWithAcknowledgedForms]);
+  }, [data, globalFilter, statusFilter, institutionFilter, serviceRequestedFilter, fundingCategoryFilter, yearFilter, monthFilter, formFilter, projectsWithPendingForms, projectsWithAcknowledgedForms, serviceReportFilter, projectsWithReports, projectsWithReceivedReports]);
   // Service Requested and Funding Category card definitions
   const serviceRequestedOptions = [
     { id: "Laboratory Services", label: "Laboratory Services", color: "text-blue-600", border: "border-blue-200", bg: "bg-blue-50" },
@@ -295,6 +323,7 @@ export function DataTable<TData extends Project, TValue>({
     serviceRequestedFilter.length > 0,
     fundingCategoryFilter.length > 0,
     formFilter !== "__all",
+    serviceReportFilter !== "__all",
     yearFilter !== "all",
     monthFilter !== "all",
     globalFilter !== "",
@@ -322,7 +351,7 @@ export function DataTable<TData extends Project, TValue>({
         {!isFiltersCollapsed && (
           <div className="bg-white rounded-lg border border-gray-200 p-3 space-y-3">
             {/* Primary Content Filters Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
               {/* Institution Type */}
               <div className="space-y-2">
                 <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Institution Type</label>
@@ -486,6 +515,46 @@ export function DataTable<TData extends Project, TValue>({
                   })}
                 </div>
               </div>
+
+              {/* Service Report Status */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Service Report</label>
+                <div className="grid grid-cols-1 gap-1">
+                  {([
+                    {
+                      id: "uploaded" as const,
+                      label: "Report Uploaded",
+                      color: "text-sky-700",
+                      border: "border-sky-200",
+                      bg: "bg-sky-50",
+                      count: data.filter(i => projectsWithReports.has(i.pid ?? "") && !projectsWithReceivedReports.has(i.pid ?? "")).length,
+                    },
+                    {
+                      id: "received" as const,
+                      label: "Client Received",
+                      color: "text-emerald-700",
+                      border: "border-emerald-200",
+                      bg: "bg-emerald-50",
+                      count: data.filter(i => projectsWithReceivedReports.has(i.pid ?? "")).length,
+                    },
+                  ]).map((opt) => {
+                    const isActive = serviceReportFilter === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        onClick={() => setServiceReportFilter(isActive ? "__all" : opt.id)}
+                        className={`rounded-md border px-2 py-2 text-[9px] font-medium transition-all duration-200 hover:shadow-sm ${
+                          isActive
+                            ? `${opt.bg} ${opt.border} font-semibold ${opt.color}`
+                            : "bg-white border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50"
+                        }`}
+                      >
+                        {opt.label} ({opt.count})
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             {/* Search Tools & Summary Row */}
@@ -578,6 +647,7 @@ export function DataTable<TData extends Project, TValue>({
                           serviceRequestedFilter.length > 0 || 
                           fundingCategoryFilter.length > 0 || 
                           formFilter !== "__all" ||
+                          serviceReportFilter !== "__all" ||
                           globalFilter || 
                           yearFilter !== "all" || 
                           monthFilter !== "all") {
@@ -587,6 +657,7 @@ export function DataTable<TData extends Project, TValue>({
                         setServiceRequestedFilter([]);
                         setFundingCategoryFilter([]);
                         setFormFilter("__all");
+                        setServiceReportFilter("__all");
                         setYearFilter("all");
                         setMonthFilter("all");
                         setFilterOrder([]);
@@ -598,6 +669,7 @@ export function DataTable<TData extends Project, TValue>({
                        serviceRequestedFilter.length > 0 ||
                        fundingCategoryFilter.length > 0 ||
                        formFilter !== "__all" ||
+                       serviceReportFilter !== "__all" ||
                        globalFilter || 
                        yearFilter !== "all" || 
                        monthFilter !== "all")
