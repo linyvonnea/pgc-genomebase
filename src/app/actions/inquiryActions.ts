@@ -402,7 +402,7 @@ export async function testEmailSystem() {
  * This function processes form data, transforms it for database storage,
  * saves it to Firestore, and triggers automated email notifications.
  */
-export async function createInquiryAction(inquiryData: InquiryFormData & { id?: string }) {
+export async function createInquiryAction(inquiryData: InquiryFormData & { id?: string; returnToPortal?: boolean }) {
   try {
     // Check Firebase configuration first
     if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
@@ -838,12 +838,14 @@ Submitted: ${new Date().toLocaleString()}
                   <p style="margin: 0;"><a href="https://pgc-genomebase.vercel.app/portal" style="background-color: #1e40af; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 14px; transition: background-color 0.2s;">Access Client Portal</a></p>
                 </div>
 
+                ${!inquiryData.returnToPortal ? `
                 <!-- Credentials Info -->
                 <div style="margin: 24px 0; padding: 16px 0; border-top: 1px solid #f1f5f9;">
                   <h4 style="margin: 0 0 12px 0; color: #64748b; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">Access Credentials</h4>
                   <p style="margin: 6px 0; font-size: 15px;"><strong style="color: #475569; width: 80px; display: inline-block;">Email:</strong> <span style="color: #1e40af; text-decoration: none;">${inquiryData.email}</span></p>
                   <p style="margin: 6px 0; font-size: 15px;"><strong style="color: #475569; width: 80px; display: inline-block;">Password:</strong> <code style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 14px; color: #334155;">${finalInquiryId}</code></p>
                 </div>
+                ` : ''}
 
                 <p style="margin: 32px 0 24px 0; font-size: 15px;">One of our researchers will contact you shortly if additional information is needed. In the meantime, if you have any questions, you may reply through the chatbox in the client portal.</p>
                 
@@ -872,11 +874,7 @@ Thank you for reaching out to PGC Visayas for your research needs. Our team will
 NEXT STEPS:
 You may monitor the status of your request and view your quotation once available through our Client Portal: https://pgc-genomebase.vercel.app/portal
 
-ACCESS CREDENTIALS:
-Email: ${inquiryData.email}
-Password: ${finalInquiryId}
-
-One of our researchers will contact you shortly if additional information is needed. In the meantime, if you have any questions, you may reply through the chatbox in the client portal.
+${!inquiryData.returnToPortal ? `ACCESS CREDENTIALS:\nEmail: ${inquiryData.email}\nPassword: ${finalInquiryId}\n\n` : ''}One of our researchers will contact you shortly if additional information is needed. In the meantime, if you have any questions, you may reply through the chatbox in the client portal.
 
 Yours in utilizing OMICS for a better Philippines,
 Philippine Genome Center Visayas

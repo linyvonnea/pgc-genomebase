@@ -357,6 +357,7 @@ export default function QuotationRequestForm() {
         email: user?.email || "",
         methodologyFileUrl,
         id: inquiryId, // Pass the pre-generated ID
+        returnToPortal, // Skip credentials in email for returning clients
       }
       
       // Submit to server action
