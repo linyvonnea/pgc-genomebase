@@ -312,7 +312,7 @@ export default function ClientPortalPage() {
 
   // ── UI state ──────────────────────────────────────────────────
   const [showProjectsList, setShowProjectsList] = useState(true);
-  const [showInquiriesList, setShowInquiriesList] = useState(false);
+  const [showInquiriesList, setShowInquiriesList] = useState(true);
   // Load member expansion state from localStorage for persistence across refreshes
   const [expandedMembers, setExpandedMembers] = useState<Set<string>>(() => {
     if (typeof window !== 'undefined') {
