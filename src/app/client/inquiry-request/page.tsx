@@ -102,6 +102,8 @@ export default function QuotationRequestForm() {
   const searchParams = useSearchParams()
   const returnToPortal = searchParams.get("returnToPortal") === "true"
   const returnEmail = searchParams.get("email") || user?.email || ""
+  // Original inquiry ID to redirect back to (so the client's portal "password" doesn't change)
+  const returnInquiryId = searchParams.get("returnInquiryId") || ""
 
   // Show logged-in email at the top (best practice: clear, non-intrusive, accessible)
   // Only show if user is authenticated
@@ -389,10 +391,11 @@ export default function QuotationRequestForm() {
           setTrainingDate(undefined)
           setMethodologyFile(null)
           if (returnToPortal && result.inquiryId) {
-            // Returning client — go back to portal with new inquiry context
+            // Returning client — go back to portal using the ORIGINAL inquiry ID
+            // so the client's portal password (=inquiryId) stays unchanged.
             const portalParams = new URLSearchParams();
             if (returnEmail) portalParams.set("email", returnEmail);
-            portalParams.set("inquiryId", result.inquiryId);
+            portalParams.set("inquiryId", returnInquiryId || result.inquiryId);
             router.push(`/client/client-info?${portalParams.toString()}`);
           } else {
             router.push("/client/inquiry-request/submitted")
