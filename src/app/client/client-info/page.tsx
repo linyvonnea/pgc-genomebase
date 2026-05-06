@@ -724,8 +724,8 @@ export default function ClientPortalPage() {
   // ────────────────────────────────────────────────────────────────
   
   useEffect(() => {
-    // Combine projects
-    const allProjects = [...fetchedDraftProjects, ...fetchedApprovedProjects];
+    // Combine projects (current inquiry + previous inquiries)
+    const allProjects = [...fetchedDraftProjects, ...fetchedApprovedProjects, ...fetchedPreviousProjects];
     setProjects(allProjects);
 
     // Determine currently selected project details
@@ -822,8 +822,10 @@ export default function ClientPortalPage() {
               affiliationAddress: primaryClientDoc.affiliationAddress || "",
             },
             errors: {},
-            isSubmitted: !!primaryClientDoc.haveSubmitted,
+            // Client exists in the approved collection → treat as complete regardless of haveSubmitted flag
+            isSubmitted: true,
             isPrimary: true,
+            isDraft: false,
         };
     } else if (clientsLoadedRef.current || fetchedClients.length > 0) {
         // Only check drafts once the clients subscription has fired (even if empty) OR if we already have clients.
@@ -1032,7 +1034,8 @@ export default function ClientPortalPage() {
 
   }, [
     fetchedDraftProjects, 
-    fetchedApprovedProjects, 
+    fetchedApprovedProjects,
+    fetchedPreviousProjects,
     fetchedClientRequests, 
     fetchedClients, 
     fetchedMemberApprovals, 
@@ -2962,7 +2965,8 @@ export default function ClientPortalPage() {
                 const officialReceiptCount = docs?.officialReceipts?.length || 0;
                 const sampleFormParams = new URLSearchParams();
                 if (emailParam) sampleFormParams.set("email", emailParam);
-                if (inquiryIdParam) sampleFormParams.set("inquiryId", inquiryIdParam);
+                // Use project's own inquiryId so previous-inquiry projects link correctly
+                sampleFormParams.set("inquiryId", project.inquiryId || inquiryIdParam || "");
                 if (project.pid) sampleFormParams.set("pid", project.pid);
                 if (project.title) sampleFormParams.set("projectTitle", project.title);
                 if (primaryMember?.formData?.name) {
@@ -3189,132 +3193,6 @@ export default function ClientPortalPage() {
            </div>
         )}
 
-        {/* Previous Projects Section */}
-        {fetchedPreviousProjects.length > 0 && (
-          <div className="mt-4 px-3">
-            <div
-              className="mb-2 px-0 flex items-center justify-between group cursor-pointer"
-              onClick={() => setShowPreviousProjectsList(!showPreviousProjectsList)}
-            >
-              <div className="flex items-center gap-2 text-slate-500 group-hover:text-[#166FB5] transition-colors">
-                <Clock className="h-4 w-4" />
-                <span className="text-sm font-bold">Previous Projects</span>
-                <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full font-medium">
-                  {fetchedPreviousProjects.length}
-                </span>
-              </div>
-              <ChevronDown className={cn("h-3 w-3 text-slate-400 transition-transform", showPreviousProjectsList && "rotate-180")} />
-            </div>
-
-            {showPreviousProjectsList && (
-              <div className="space-y-2 mt-2 ml-6">
-                {fetchedPreviousProjects.map((project) => {
-                  if (!project || !project.pid) return null;
-                  const isSelected = selectedProjectPid === project.pid;
-                  const isDocsExpanded = expandedProjectDocs.has(project.pid);
-                  const docs = projectDocuments.get(project.pid);
-                  const quotationCount = docs?.quotations.length || 0;
-                  const chargeSlipCount = docs?.chargeSlips.length || 0;
-                  const serviceReportCount = docs?.serviceReports?.length || 0;
-                  return (
-                    <div key={project.pid} className={cn(
-                      "rounded-xl border transition-all duration-200 overflow-hidden",
-                      isSelected
-                        ? "bg-blue-50/50 border-[#166FB5] shadow-sm"
-                        : "bg-white border-slate-200 hover:border-blue-200 hover:shadow-sm"
-                    )}>
-                      <div className="flex items-center bg-white hover:bg-slate-50">
-                        <div
-                          className="flex-1 min-w-0 p-3 cursor-pointer"
-                          onClick={() => handleSelectProject(project)}
-                        >
-                          <div className="flex flex-col gap-1">
-                            <p className="text-sm text-slate-700 font-medium truncate leading-tight" title={project.title || "Untitled Project"}>
-                              {project.title || "Untitled Project"}
-                            </p>
-                            <Badge className={cn(
-                              "text-[10px] h-4 px-1.5 rounded-md font-semibold border-0 w-fit",
-                              statusColors[project.status] || "bg-slate-100 text-slate-500"
-                            )}>
-                              {project.status || "Draft"}
-                            </Badge>
-                          </div>
-                        </div>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); toggleProjectDocs(project); }}
-                          className={cn(
-                            "flex-shrink-0 px-3 py-4 hover:bg-slate-100 transition-colors border-l border-slate-200 h-full",
-                            isDocsExpanded && "bg-blue-50"
-                          )}
-                          title="View documents"
-                          aria-label="Toggle documents"
-                        >
-                          <ChevronRight className={cn("h-5 w-5 text-[#166FB5] transition-all duration-200", isDocsExpanded && "rotate-90")} />
-                        </button>
-                      </div>
-                      {isDocsExpanded && (
-                        <div className="bg-slate-50 border-t">
-                          {docs?.loading ? (
-                            <div className="flex items-center gap-2 px-3 py-3 text-xs text-slate-500">
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                              <span>Loading…</span>
-                            </div>
-                          ) : (
-                            <div className="p-3 pl-6 space-y-1">
-                              <button
-                                type="button"
-                                disabled={quotationCount === 0}
-                                className={cn(
-                                  "flex items-center gap-2 px-2 py-1.5 w-full text-left rounded-lg transition-colors",
-                                  activeDocPanel === `${project.pid}:quotations` ? "bg-purple-50" : quotationCount === 0 ? "opacity-40 cursor-not-allowed" : "hover:bg-slate-50"
-                                )}
-                                onClick={(e) => { e.stopPropagation(); if (quotationCount > 0) handleSelectDocPanel(project.pid!, "quotations"); }}
-                              >
-                                <FileText className={cn("h-3 w-3 flex-shrink-0", activeDocPanel === `${project.pid}:quotations` ? "text-purple-600" : "text-purple-500")} />
-                                <span className={cn("text-sm font-semibold flex-1", activeDocPanel === `${project.pid}:quotations` ? "text-purple-700" : "text-slate-700")}>Quotations</span>
-                                <span className="text-[10px] text-slate-500 mr-1">({quotationCount})</span>
-                                <ChevronRight className={cn("h-3 w-3 flex-shrink-0 transition-transform", activeDocPanel === `${project.pid}:quotations` ? "text-purple-500 rotate-90" : "text-slate-400")} />
-                              </button>
-                              <button
-                                type="button"
-                                disabled={chargeSlipCount === 0}
-                                className={cn(
-                                  "flex items-center gap-2 px-2 py-1.5 w-full text-left rounded-lg transition-colors",
-                                  activeDocPanel === `${project.pid}:chargeSlips` ? "bg-green-50" : chargeSlipCount === 0 ? "opacity-40 cursor-not-allowed" : "hover:bg-slate-50"
-                                )}
-                                onClick={(e) => { e.stopPropagation(); if (chargeSlipCount > 0) handleSelectDocPanel(project.pid!, "chargeSlips"); }}
-                              >
-                                <span className={cn("text-[13px] font-bold leading-none", activeDocPanel === `${project.pid}:chargeSlips` ? "text-green-600" : "text-green-500")}>₱</span>
-                                <span className={cn("text-sm font-semibold flex-1", activeDocPanel === `${project.pid}:chargeSlips` ? "text-green-700" : "text-slate-700")}>Charge Slips</span>
-                                <span className="text-[10px] text-slate-500 mr-1">({chargeSlipCount})</span>
-                                <ChevronRight className={cn("h-3 w-3 flex-shrink-0 transition-transform", activeDocPanel === `${project.pid}:chargeSlips` ? "text-green-500 rotate-90" : "text-slate-400")} />
-                              </button>
-                              {portalFeatures.serviceReports && serviceReportCount > 0 && (
-                                <button
-                                  type="button"
-                                  className={cn(
-                                    "flex items-center gap-2 px-2 py-1.5 w-full text-left rounded-lg transition-colors",
-                                    activeDocPanel === `${project.pid}:serviceReports` ? "bg-blue-50" : "hover:bg-slate-50"
-                                  )}
-                                  onClick={(e) => { e.stopPropagation(); handleSelectDocPanel(project.pid!, "serviceReports"); }}
-                                >
-                                  <ShieldEllipsis className={cn("h-3 w-3 flex-shrink-0", activeDocPanel === `${project.pid}:serviceReports` ? "text-blue-600" : "text-blue-500")} />
-                                  <span className={cn("text-sm font-semibold flex-1", activeDocPanel === `${project.pid}:serviceReports` ? "text-blue-700" : "text-slate-700")}>Service Reports</span>
-                                  <span className="text-[10px] text-slate-500 mr-1">({serviceReportCount})</span>
-                                  <ChevronRight className={cn("h-3 w-3 flex-shrink-0 transition-transform", activeDocPanel === `${project.pid}:serviceReports` ? "text-blue-500 rotate-90" : "text-slate-400")} />
-                                </button>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Footer deleted as requested */}
