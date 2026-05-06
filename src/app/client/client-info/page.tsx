@@ -613,26 +613,43 @@ export default function ClientPortalPage() {
           setFetchedPreviousProjects([]);
           return;
         }
-        // Firestore `in` supports up to 30 values
+        // Firestore `in` / `array-contains-any` each support up to 30 values
         const chunkIds = otherIds.slice(0, 30);
-        const prevQ = query(collection(db, "projects"), where("iid", "in", chunkIds));
+        // Handle both string and array-stored iid fields (mirrors current-projects subscription)
+        const prevQ = query(
+          collection(db, "projects"),
+          or(
+            where("iid", "in", chunkIds),
+            where("iid", "array-contains-any", chunkIds)
+          )
+        );
         unsubPrev = onSnapshot(prevQ, (snap) => {
           if (cancelled) return;
-          setFetchedPreviousProjects(
-            snap.docs.map(d => {
-              const data = d.data();
-              return {
-                pid: data.pid || d.id,
-                title: data.title || "Untitled Project",
-                lead: data.lead || "Not specified",
-                startDate: data.startDate?.toDate?.() || new Date(),
-                sendingInstitution: data.sendingInstitution || "Not specified",
-                fundingInstitution: data.fundingInstitution || "Not specified",
-                status: data.status || "Pending",
-                inquiryId: data.iid || "",
-              } as ProjectDetails;
-            })
-          );
+          // De-duplicate in case both clauses match the same project
+          const seen = new Set<string>();
+          const previous: ProjectDetails[] = [];
+          for (const d of snap.docs) {
+            const pid = d.data().pid || d.id;
+            if (seen.has(pid)) continue;
+            seen.add(pid);
+            const data = d.data();
+            // Resolve inquiryId: pick matching id from chunkIds when iid is an array
+            const rawIid = data.iid;
+            const resolvedIid = Array.isArray(rawIid)
+              ? (rawIid.find((id: string) => chunkIds.includes(id)) ?? rawIid[0] ?? "")
+              : rawIid || "";
+            previous.push({
+              pid,
+              title: data.title || "Untitled Project",
+              lead: data.lead || "Not specified",
+              startDate: data.startDate?.toDate?.() || new Date(),
+              sendingInstitution: data.sendingInstitution || "Not specified",
+              fundingInstitution: data.fundingInstitution || "Not specified",
+              status: data.status || "Pending",
+              inquiryId: resolvedIid,
+            } as ProjectDetails);
+          }
+          setFetchedPreviousProjects(previous);
         });
       } catch (err) {
         console.warn("Could not load previous projects:", err);
