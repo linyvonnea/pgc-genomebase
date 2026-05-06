@@ -3738,7 +3738,7 @@ export default function ClientPortalPage() {
                                   ) : formOpenedReports.has(item.id) ? (
                                     /* Step 2 — confirm form was submitted then unlock PDF */
                                     <div className="flex items-center gap-2">
-                                      <span className="text-[11px] text-slate-500 italic">Form opened — confirm below to access the file.</span>
+                                      <span className="text-xs text-slate-500 italic">Form opened — confirm below to access the file.</span>
                                       <Button
                                         size="sm"
                                         className="h-8 text-xs px-3 gap-1 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50"
@@ -3753,7 +3753,7 @@ export default function ClientPortalPage() {
                                     /* Step 1 — prompt client to fill the Google feedback form first */
                                     <div className="flex items-center gap-2">
                                       <div className="flex flex-col items-end gap-0.5">
-                                        <span className="text-[11px] text-amber-700 font-medium">Please complete the feedback form to access this file.</span>
+                                        <span className="text-xs text-amber-700 font-medium">Please complete the feedback form to access this file.</span>
                                         <Button
                                           size="sm"
                                           variant="outline"
