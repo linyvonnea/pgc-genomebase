@@ -198,7 +198,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       const matchesOrStatus =
         orStatusFilter === "__all" ||
         (orStatusFilter === "validated" && liveOrStatus === "Validated") ||
-        (orStatusFilter === "not_validated" && liveOrStatus !== "Validated");
+        (orStatusFilter === "not_validated" && newOrCsNumbers.has(item.chargeSlipNumber));
 
       return matchesSearch && matchesStatus && matchesCategory && matchesYear && matchesMonth && matchesOrStatus;
     }).map((item) => {
@@ -326,7 +326,7 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
       if (s) filters.push(s.label);
     }
     if (orStatusFilter !== "__all") {
-      filters.push(orStatusFilter === "validated" ? "OR Validated" : "OR Not Validated");
+      filters.push(orStatusFilter === "validated" ? "OR Validated" : "OR Pending Review");
     }
     if (yearFilter !== "all") filters.push(yearFilter);
     if (monthFilter !== "all") {
@@ -486,12 +486,12 @@ export function ChargeSlipClientTable({ data, columns = defaultColumns }: Props)
                 <div className="grid grid-cols-1 gap-1">
                   {([
                     { id: "validated" as const, label: "Validated", color: "text-emerald-700", border: "border-emerald-200", bg: "bg-emerald-50" },
-                    { id: "not_validated" as const, label: "Not Validated", color: "text-amber-700", border: "border-amber-200", bg: "bg-amber-50" },
+                    { id: "not_validated" as const, label: "Pending Review", color: "text-amber-700", border: "border-amber-200", bg: "bg-amber-50" },
                   ]).map((opt) => {
                     const isActive = orStatusFilter === opt.id;
                     const count = opt.id === "validated"
                       ? data.filter(i => validatedOrCsNumbers.has(i.chargeSlipNumber)).length
-                      : data.filter(i => !validatedOrCsNumbers.has(i.chargeSlipNumber)).length;
+                      : data.filter(i => newOrCsNumbers.has(i.chargeSlipNumber)).length;
                     return (
                       <button
                         key={opt.id}

@@ -58,30 +58,32 @@ export function useProjectFormNotifications() {
 }
 
 // StatusCell: shows red blinking alert icon on "Ongoing" rows when client has unacknowledged form uploads
-// and a green check icon when at least one submission has been acknowledged
+// and a green check icon when at least one submission has been acknowledged (any status)
 function StatusCell({ projectId, status }: { projectId: string; status: string }) {
   const [hasUnread, setHasUnread] = useState(false);
   const [hasAcknowledged, setHasAcknowledged] = useState(false);
 
   useEffect(() => {
-    if (status !== "Ongoing" || !projectId) return;
+    if (!projectId) return;
 
-    const qUnread = query(
-      collection(db, "clientFormSubmissions"),
-      where("projectId", "==", projectId),
-      where("acknowledgedByAdmin", "==", false)
-    );
+    // Unread listener only applies to Ongoing projects
+    let unsubUnread = () => {};
+    if (status === "Ongoing") {
+      const qUnread = query(
+        collection(db, "clientFormSubmissions"),
+        where("projectId", "==", projectId),
+        where("acknowledgedByAdmin", "==", false)
+      );
+      unsubUnread = onSnapshot(qUnread, (snap) => {
+        setHasUnread(!snap.empty);
+      });
+    }
 
     const qAcknowledged = query(
       collection(db, "clientFormSubmissions"),
       where("projectId", "==", projectId),
       where("acknowledgedByAdmin", "==", true)
     );
-
-    const unsubUnread = onSnapshot(qUnread, (snap) => {
-      setHasUnread(!snap.empty);
-    });
-
     const unsubAcknowledged = onSnapshot(qAcknowledged, (snap) => {
       setHasAcknowledged(!snap.empty);
     });
@@ -136,7 +138,7 @@ function StatusCell({ projectId, status }: { projectId: string; status: string }
           </Tooltip>
         </TooltipProvider>
       )}
-      {status === "Ongoing" && hasAcknowledged && !hasUnread && (
+      {hasAcknowledged && !hasUnread && (
         <TooltipProvider delayDuration={100}>
           <Tooltip>
             <TooltipTrigger asChild>
