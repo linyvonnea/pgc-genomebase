@@ -3016,6 +3016,9 @@ export default function ClientPortalPage() {
                       const params = new URLSearchParams();
                       if (emailParam) params.set("email", emailParam);
                       params.set("inquiryId", inq.id);
+                      // Clear selection so the "Welcome" workspace is shown for the new inquiry
+                      setSelectedProjectPid(null);
+                      setProjectDetails(null);
                       router.push(`/client/client-info?${params.toString()}`);
                     }}
                     className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-colors text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
