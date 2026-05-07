@@ -646,8 +646,8 @@ export default function ClientPortalPage() {
         );
         if (cancelled) return;
 
-        // Collect other pending inquiries (submitted but no projects yet)
-        const pendingStatuses = ["Pending", "In Progress"];
+        // Collect other pending/ongoing inquiries (submitted but no projects yet)
+        const pendingStatuses = ["Pending", "In Progress", "Ongoing Quotation"];
         const pending = inquiriesSnap.docs
           .filter(d => d.id !== inquiryIdParam && pendingStatuses.includes(d.data().status || ""))
           .map(d => ({
