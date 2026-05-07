@@ -444,6 +444,9 @@ export default function ClientPortalPage() {
   // When the user explicitly navigates to the workspace view (by clicking a pending
   // inquiry item), block auto-project-selection until they actively pick a project.
   const userWantsWorkspaceRef = useRef(false);
+  // Tracks whether the "Pending" inquiry auto-init (show workspace, collapse projects)
+  // has already been applied for the current inquiry ID, so it only fires once per load.
+  const pendingInitHandledRef = useRef<string | null>(null);
 
   // ── Modal state ───────────────────────────────────────────────
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -702,6 +705,21 @@ export default function ClientPortalPage() {
       unsubPrev?.();
     };
   }, [emailParam, inquiryIdParam, authLoading, user]);
+
+  // Auto-init: when a Pending inquiry is first detected, show workspace and collapse My Projects.
+  useEffect(() => {
+    if (
+      currentInquiry?.status === "Pending" &&
+      inquiryIdParam &&
+      pendingInitHandledRef.current !== inquiryIdParam
+    ) {
+      pendingInitHandledRef.current = inquiryIdParam;
+      userWantsWorkspaceRef.current = true;
+      setSelectedProjectPid(null);
+      setProjectDetails(null);
+      setShowProjectsList(false);
+    }
+  }, [currentInquiry?.status, inquiryIdParam]);
 
   // 1.2. Subscribe to Inquiry and Quotations
   useEffect(() => {
