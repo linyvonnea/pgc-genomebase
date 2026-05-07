@@ -156,6 +156,15 @@ const formatServiceType = (type: string | null | undefined): string => {
   return type.charAt(0).toUpperCase() + type.slice(1);
 };
 
+// Format a Firestore Timestamp or Date to "MMM dd, yyyy"
+const formatCreatedAt = (val: Date | any): string => {
+  if (!val) return "";
+  try {
+    const date = val?.toDate ? val.toDate() : (val instanceof Date ? val : new Date(val));
+    return isNaN(date.getTime()) ? "" : format(date, "MMM dd, yyyy");
+  } catch { return ""; }
+};
+
 // Format workflow type for display
 const formatWorkflowType = (type: string | null | undefined): string => {
   if (!type) return "—";
@@ -461,7 +470,7 @@ export default function ClientPortalPage() {
   const [showPreviousProjectsList, setShowPreviousProjectsList] = useState(false);
   // Other submitted inquiries from this email that are still pending (no projects yet)
   const [otherPendingInquiries, setOtherPendingInquiries] = useState<
-    { id: string; status: string; serviceType?: string; name?: string }[]
+    { id: string; status: string; serviceType?: string; name?: string; createdAt?: Date | any }[]
   >([]);
   
   const [fetchedClientRequests, setFetchedClientRequests] = useState<ClientRequest[]>([]);
@@ -646,6 +655,7 @@ export default function ClientPortalPage() {
             status: d.data().status || "Pending",
             serviceType: d.data().serviceType || d.data().service || undefined,
             name: d.data().name || undefined,
+            createdAt: d.data().createdAt || undefined,
           }));
         setOtherPendingInquiries(pending);
 
@@ -2998,11 +3008,11 @@ export default function ClientPortalPage() {
 
       {/* Projects Section */}
       <div className="flex-1 overflow-y-auto px-3 py-6">
-        {/* My Inquiries — collapsible, visible when current inquiry is Pending OR when otherPendingInquiries exist */}
-        {(currentInquiry?.status === "Pending" || otherPendingInquiries.length > 0) && (
+        {/* My Inquiries — collapsible, visible when there is an active inquiry OR when otherPendingInquiries exist */}
+        {((currentInquiry && currentInquiry.status !== "Cancelled") || otherPendingInquiries.length > 0) && (
           <div className="mb-3">
             <div
-              className="mb-1 px-3 flex items-center justify-between group cursor-pointer"
+              className="mb-2 px-3 flex items-center justify-between group cursor-pointer"
               onClick={() => setShowInquiriesList(!showInquiriesList)}
             >
               <div className="flex items-center gap-2 text-slate-600 group-hover:text-[#166FB5] transition-colors">
@@ -3014,21 +3024,23 @@ export default function ClientPortalPage() {
 
             {showInquiriesList && (
               <div className="ml-6 mt-1 space-y-1">
-                {/* Current inquiry — if pending, always show it as the first item */}
-                {currentInquiry?.status === "Pending" && currentInquiry.serviceType && (
+                {/* Current inquiry — always show it as the first item */}
+                {currentInquiry && currentInquiry.serviceType && (
                   <button
                     onClick={() => { userWantsWorkspaceRef.current = true; setSelectedProjectPid(null); setProjectDetails(null); }}
                     className={cn(
-                      "w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+                      "w-full flex items-start px-3 py-1.5 rounded-lg text-xs font-medium transition-colors text-left",
                       !selectedProjectPid
                         ? "bg-amber-50 text-amber-800 border border-amber-100"
                         : "text-slate-600 hover:bg-slate-100 hover:text-amber-700"
                     )}
                   >
-                    <span className="capitalize truncate flex-1 text-left">{formatServiceType(currentInquiry.serviceType)}</span>
-                    <Badge className="text-[10px] h-4 px-1.5 rounded-md font-semibold border-0 bg-amber-100 text-amber-700 shrink-0 ml-2">
-                      Pending
-                    </Badge>
+                    <span className="capitalize truncate flex-1">
+                      {formatServiceType(currentInquiry.serviceType)}
+                      {currentInquiry.createdAt && (
+                        <span className="ml-1 font-normal">{formatCreatedAt(currentInquiry.createdAt)}</span>
+                      )}
+                    </span>
                   </button>
                 )}
 
@@ -3047,14 +3059,14 @@ export default function ClientPortalPage() {
                         setProjectDetails(null);
                         router.push(`/client/client-info?${params.toString()}`);
                       }}
-                      className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-colors text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
+                      className="w-full flex items-start px-3 py-1.5 rounded-lg text-xs font-medium transition-colors text-left text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
                     >
-                      <span className="capitalize truncate flex-1 text-left">
+                      <span className="capitalize truncate flex-1">
                         {formatServiceType(inq.serviceType)}
+                        {inq.createdAt && (
+                          <span className="ml-1 font-normal">{formatCreatedAt(inq.createdAt)}</span>
+                        )}
                       </span>
-                      <Badge className="text-[10px] h-4 px-1.5 rounded-md font-semibold border-0 bg-amber-100 text-amber-700 shrink-0 ml-2">
-                        Pending
-                      </Badge>
                     </button>
                   ))}
               </div>
