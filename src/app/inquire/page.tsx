@@ -290,17 +290,10 @@ export default function InquirePage() {
             </DialogDescription>
           </DialogHeader>
 
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              onClick={handleSubmitNewInquiry}
-              className="w-full sm:w-auto"
-            >
-              Submit New Inquiry
-            </Button>
+          <DialogFooter>
             <Button
               onClick={handleOpenClientPortal}
-              className="w-full sm:w-auto bg-[#166FB5] hover:bg-[#166FB5]/90"
+              className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90"
             >
               Go to Client Portal
             </Button>
