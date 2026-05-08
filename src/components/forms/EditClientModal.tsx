@@ -235,6 +235,71 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
           await batch.commit();
         }
       }
+
+      const clientEmail = client.email?.trim();
+
+      if (clientEmail) {
+        const maxBatchOps = 450;
+        let cleanupBatch = writeBatch(db);
+        let cleanupBatchOps = 0;
+
+        const queueCleanupOperation = async (operation: () => void) => {
+          operation();
+          cleanupBatchOps += 1;
+
+          if (cleanupBatchOps >= maxBatchOps) {
+            await cleanupBatch.commit();
+            cleanupBatch = writeBatch(db);
+            cleanupBatchOps = 0;
+          }
+        };
+
+        // Delete client portal request records for the client email.
+        const clientRequestsRef = collection(db, "clientRequests");
+        const clientRequestsQuery = query(clientRequestsRef, where("email", "==", clientEmail));
+        const clientRequestsSnapshot = await getDocs(clientRequestsQuery);
+
+        for (const clientRequestDoc of clientRequestsSnapshot.docs) {
+          await queueCleanupOperation(() => {
+            cleanupBatch.delete(clientRequestDoc.ref);
+          });
+        }
+
+        // Remove matching members from portal approval drafts; delete drafts that become empty.
+        type MemberApprovalMember = {
+          formData?: {
+            email?: string;
+          };
+        };
+
+        const memberApprovalsRef = collection(db, "memberApprovals");
+        const memberApprovalsSnapshot = await getDocs(memberApprovalsRef);
+
+        for (const memberApprovalDoc of memberApprovalsSnapshot.docs) {
+          const memberApprovalData = memberApprovalDoc.data();
+          const existingMembers = Array.isArray(memberApprovalData.members)
+            ? (memberApprovalData.members as MemberApprovalMember[])
+            : [];
+
+          const filteredMembers = existingMembers.filter(
+            (member) => member?.formData?.email !== clientEmail
+          );
+
+          if (filteredMembers.length !== existingMembers.length) {
+            await queueCleanupOperation(() => {
+              if (filteredMembers.length === 0) {
+                cleanupBatch.delete(memberApprovalDoc.ref);
+              } else {
+                cleanupBatch.update(memberApprovalDoc.ref, { members: filteredMembers });
+              }
+            });
+          }
+        }
+
+        if (cleanupBatchOps > 0) {
+          await cleanupBatch.commit();
+        }
+      }
       
       await deleteDoc(clientRef);
       
