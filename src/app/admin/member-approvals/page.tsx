@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -53,6 +54,7 @@ import {
   Filter,
   FileText,
   Calendar,
+  Search,
 } from "lucide-react";
 
 type FilterStatus = "all" | ApprovalStatus;
@@ -89,10 +91,59 @@ export default function MemberApprovalsPage() {
   const [approvals, setApprovals] = useState<CombinedApproval[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("pending");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedApproval, setSelectedApproval] = useState<CombinedApproval | null>(null);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [reviewNotes, setReviewNotes] = useState("");
   const [processing, setProcessing] = useState(false);
+
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const filteredApprovals = normalizedSearchQuery
+    ? approvals.filter((approval) => {
+        const memberFields = (approval.members || []).flatMap((member: any) => [
+          member?.formData?.name,
+          member?.formData?.email,
+          member?.formData?.affiliation,
+          member?.formData?.designation,
+          member?.formData?.phoneNumber,
+          member?.formData?.affiliationAddress,
+        ]);
+
+        const clientRequestFields = (approval.clientRequests || []).flatMap((request) => [
+          request?.name,
+          request?.email,
+          request?.affiliation,
+          request?.designation,
+          request?.phoneNumber,
+          request?.affiliationAddress,
+        ]);
+
+        const combinedText = [
+          approval.type,
+          approval.status,
+          approval.id,
+          approval.inquiryId,
+          approval.projectTitle,
+          approval.projectPid,
+          approval.submittedBy,
+          approval.submittedByName,
+          approval.reviewedBy,
+          approval.reviewedByName,
+          approval.reviewNotes,
+          approval.projectData?.title,
+          approval.projectData?.projectLead,
+          approval.projectData?.sendingInstitution,
+          approval.projectData?.fundingInstitution,
+          ...memberFields,
+          ...clientRequestFields,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+
+        return combinedText.includes(normalizedSearchQuery);
+      })
+    : approvals;
 
   const fetchApprovals = useCallback(async () => {
     setLoading(true);
@@ -601,8 +652,19 @@ export default function MemberApprovalsPage() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex gap-2">
+      {/* Filters */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="relative w-full md:max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search all fields: name, email, project title, PID, institution..."
+            className="pl-9"
+          />
+        </div>
+
+        <div className="flex gap-2 flex-wrap">
         {(["pending", "approved", "cancelled", "draft", "all"] as FilterStatus[]).map(
           (status) => (
             <Button
@@ -625,6 +687,7 @@ export default function MemberApprovalsPage() {
             </Button>
           )
         )}
+        </div>
       </div>
 
       {/* Approval Cards */}
@@ -633,7 +696,7 @@ export default function MemberApprovalsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-[#166FB5]" />
           <span className="ml-3 text-slate-600">Loading approvals...</span>
         </div>
-      ) : approvals.length === 0 ? (
+      ) : filteredApprovals.length === 0 ? (
         <Card className="border-2 border-dashed border-slate-300">
           <CardContent className="p-12 text-center">
             <div className="flex flex-col items-center space-y-4">
@@ -641,10 +704,14 @@ export default function MemberApprovalsPage() {
                 <ShieldCheck className="h-12 w-12 text-slate-400" />
               </div>
               <h3 className="text-lg font-semibold text-slate-700">
-                No {filterStatus !== "all" ? filterStatus : ""} approval requests
+                {searchQuery.trim()
+                  ? "No approval requests match your search"
+                  : `No ${filterStatus !== "all" ? filterStatus : ""} approval requests`}
               </h3>
               <p className="text-slate-500 max-w-md">
-                {filterStatus === "pending"
+                {searchQuery.trim()
+                  ? "Try a different keyword or clear the search input."
+                  : filterStatus === "pending"
                   ? "There are no pending project or member approvals at this time."
                   : "No approval requests match the current filter."}
               </p>
@@ -653,7 +720,7 @@ export default function MemberApprovalsPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {approvals.map((approval) => (
+          {filteredApprovals.map((approval) => (
             <Card
               key={approval.id}
               className="hover:shadow-md transition-shadow border border-slate-200"
