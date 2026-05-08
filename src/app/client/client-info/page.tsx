@@ -3042,6 +3042,9 @@ export default function ClientPortalPage() {
                       {currentInquiry.createdAt && (
                         <span className="ml-1 font-normal">{formatCreatedAt(currentInquiry.createdAt)}</span>
                       )}
+                      <span className="ml-1 px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-semibold">
+                        {currentInquiry.status}
+                      </span>
                     </span>
                   </button>
                 )}
@@ -3068,6 +3071,9 @@ export default function ClientPortalPage() {
                         {inq.createdAt && (
                           <span className="ml-1 font-normal">{formatCreatedAt(inq.createdAt)}</span>
                         )}
+                        <span className="ml-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 text-[10px] font-semibold">
+                          {inq.status}
+                        </span>
                       </span>
                     </button>
                   ))}
@@ -3137,12 +3143,6 @@ export default function ClientPortalPage() {
                           >
                             {project.title || "Untitled Project"}
                           </p>
-                          <Badge className={cn(
-                            "text-[10px] h-4 px-1.5 rounded-md font-semibold border-0 w-fit",
-                            statusColors[project.status] || "bg-slate-100 text-slate-500"
-                          )}>
-                            {project.status || "Draft"}
-                          </Badge>
                         </div>
                       </div>
 
@@ -3610,55 +3610,7 @@ export default function ClientPortalPage() {
                   </div>
                 )}
 
-                {/* ── Approval Banners ────────────────────── */}
-                {showApprovalCelebration &&
-                  approvalStatus === "approved" && (
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6 shadow-sm animate-in slide-in-from-top duration-500">
-                      <div className="flex items-start gap-4">
-                        <div className="p-3 bg-green-100 rounded-lg flex-shrink-0 border border-green-200">
-                          <CheckCircle2 className="h-6 w-6 text-green-600" />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h4 className="font-bold text-lg text-green-900 leading-tight">
-                              Project & Team Approved
-                            </h4>
-                          </div>
-                          <p className="text-green-800/90 mb-3 text-sm leading-relaxed">
-                            Your project and team members have been approved and are now active. 
-                            You can now view your unique **Project ID**, **Client IDs**, and access all project documents in this portal.
-                          </p>
-                          {approvalStatusData.reviewNotes && (
-                            <div className="bg-white/50 rounded-lg p-3 mt-2 border border-green-100 italic">
-                              <p className="text-xs font-bold text-green-900 mb-1 uppercase tracking-wider not-italic">
-                                Administrator Remarks
-                              </p>
-                              <p className="text-sm text-green-800">
-                                "{approvalStatusData.reviewNotes}"
-                              </p>
-                            </div>
-                          )}
-                          <div className="mt-4 flex items-center gap-3">
-                            <Badge className="bg-green-600 text-white border-0 text-[10px] px-2.5 h-6">
-                              <CheckCircle2 className="h-3 w-3 mr-1" />
-                              Members Registered
-                            </Badge>
-                            <Badge className="bg-blue-600 text-white border-0 text-[10px] px-2.5 h-6">
-                              Project Active
-                            </Badge>
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setShowApprovalCelebration(false)}
-                          className="text-green-600 hover:text-green-800 hover:bg-green-200/50 -mt-1 -mr-1"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                {/* ── Approval Banners (REMOVED) ────────────────────── */}
 
                 {approvalStatus === "rejected" && (
                   <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-5">
