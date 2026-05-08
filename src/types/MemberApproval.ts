@@ -5,6 +5,7 @@ import { ClientFormData } from "@/schemas/clientSchema";
 
 export interface DraftMember {
   tempId: string;
+  cid?: string;
   isPrimary: boolean;
   isValidated: boolean;
   formData: {

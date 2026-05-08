@@ -1926,9 +1926,11 @@ export default function ClientPortalPage() {
         emailParam || "",
         members.find((m) => m.isPrimary)?.formData.name || "",
         members
-          .filter((m) => m.isSubmitted || m.isDraft) // Include both primary and team members if they are submitted/draft
+          // Keep primary member context + only pending/draft additions to avoid resubmitting already approved members.
+          .filter((m) => m.isPrimary || m.isDraft)
           .map((m) => ({
             tempId: m.id,
+            cid: m.cid,
             isPrimary: m.isPrimary,
             isValidated: m.isSubmitted,
             formData: m.formData,
