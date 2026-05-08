@@ -7,10 +7,20 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import useAuth from "@/hooks/useAuth";
+import { db } from "@/lib/firebase";
+import { collection, getDocs, limit, query, where } from "firebase/firestore";
 import { 
   Shield,
   ArrowRight,
@@ -24,9 +34,12 @@ import {
 
 export default function InquirePage() {
   const [agreed, setAgreed] = useState(false);
+  const [checkingExistingPortal, setCheckingExistingPortal] = useState(false);
+  const [showExistingPortalModal, setShowExistingPortalModal] = useState(false);
+  const [existingPortalInquiryId, setExistingPortalInquiryId] = useState<string | null>(null);
   const { signIn, user, isAdmin, loading } = useAuth();
   const router = useRouter();
-  const isLoginDisabled = !agreed || loading;
+  const isLoginDisabled = !agreed || loading || checkingExistingPortal;
 
   const handleLogin = async () => {
     if (!agreed) {
@@ -43,14 +56,78 @@ export default function InquirePage() {
   };
 
   useEffect(() => {
-    if (!loading && user) {
+    let cancelled = false;
+
+    const handleClientPostLogin = async () => {
+      if (loading || !user || !user.email) return;
+
       if (isAdmin) {
         router.replace("/admin/dashboard");
-      } else {
-        router.replace("/client/inquiry-request");
+        return;
       }
-    }
+
+      setCheckingExistingPortal(true);
+      try {
+        const inquiriesRef = collection(db, "inquiries");
+        const existingInquiriesSnap = await getDocs(
+          query(inquiriesRef, where("email", "==", user.email), limit(50))
+        );
+
+        if (cancelled) return;
+
+        if (!existingInquiriesSnap.empty) {
+          const latestDoc = existingInquiriesSnap.docs
+            .slice()
+            .sort((a, b) => {
+              const aCreated = a.data()?.createdAt?.toDate
+                ? a.data().createdAt.toDate().getTime()
+                : new Date(a.data()?.createdAt || 0).getTime();
+              const bCreated = b.data()?.createdAt?.toDate
+                ? b.data().createdAt.toDate().getTime()
+                : new Date(b.data()?.createdAt || 0).getTime();
+              return bCreated - aCreated;
+            })[0];
+
+          setExistingPortalInquiryId(latestDoc?.id || null);
+          setShowExistingPortalModal(true);
+          return;
+        }
+
+        router.replace("/client/inquiry-request");
+      } catch (error) {
+        console.error("Failed to check existing inquiries:", error);
+        toast.error("We could not check your existing account. Continuing to inquiry form.");
+        router.replace("/client/inquiry-request");
+      } finally {
+        if (!cancelled) setCheckingExistingPortal(false);
+      }
+    };
+
+    handleClientPostLogin();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user, isAdmin, loading, router]);
+
+  const handleOpenClientPortal = () => {
+    const params = new URLSearchParams();
+    if (user?.email) params.set("email", user.email);
+    if (existingPortalInquiryId) params.set("inquiryId", existingPortalInquiryId);
+
+    setShowExistingPortalModal(false);
+    router.replace(`/client/client-info?${params.toString()}`);
+  };
+
+  const handleSubmitNewInquiry = () => {
+    const params = new URLSearchParams();
+    if (user?.email) params.set("email", user.email);
+    if (existingPortalInquiryId) params.set("returnInquiryId", existingPortalInquiryId);
+    params.set("returnToPortal", "true");
+
+    setShowExistingPortalModal(false);
+    router.replace(`/client/inquiry-request?${params.toString()}`);
+  };
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4 relative overflow-hidden">
@@ -191,6 +268,45 @@ export default function InquirePage() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog
+        open={showExistingPortalModal}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleOpenClientPortal();
+            return;
+          }
+          setShowExistingPortalModal(open);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-slate-900">
+              Existing Client Portal Account Found
+            </DialogTitle>
+            <DialogDescription className="text-sm text-slate-600 leading-relaxed">
+              We found a previous inquiry linked to your email. Please continue to your Client Portal account.
+              You can submit a new inquiry there anytime using the New Inquiry option.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={handleSubmitNewInquiry}
+              className="w-full sm:w-auto"
+            >
+              Submit New Inquiry
+            </Button>
+            <Button
+              onClick={handleOpenClientPortal}
+              className="w-full sm:w-auto bg-[#166FB5] hover:bg-[#166FB5]/90"
+            >
+              Go to Client Portal
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
