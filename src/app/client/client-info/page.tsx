@@ -1371,45 +1371,6 @@ export default function ClientPortalPage() {
     );
   };
 
-  // Auto-fill fields from existing inquiry when a known email is entered.
-  const handleEmailBlur = async (memberId: string, email: string) => {
-    const member = members.find((m) => m.id === memberId);
-    if (!member || member.isPrimary || !email || !email.includes("@")) return;
-
-    try {
-      const snap = await getDocs(
-        query(collection(db, "inquiries"), where("email", "==", email.trim()), limit(1))
-      );
-      if (snap.empty) return;
-
-      const inqData = snap.docs[0].data();
-      const hasNewData =
-        (!member.formData.name && inqData.name) ||
-        (!member.formData.affiliation && inqData.affiliation) ||
-        (!member.formData.designation && inqData.designation);
-      if (!hasNewData) return;
-
-      setMembers((prev) =>
-        prev.map((m) =>
-          m.id === memberId
-            ? {
-                ...m,
-                formData: {
-                  ...m.formData,
-                  name: m.formData.name || inqData.name || "",
-                  affiliation: m.formData.affiliation || inqData.affiliation || "",
-                  designation: m.formData.designation || inqData.designation || "",
-                },
-              }
-            : m
-        )
-      );
-      toast.info("Details pre-filled from existing inquiry. Please review and complete remaining fields.");
-    } catch (err) {
-      console.warn("Email inquiry lookup failed:", err);
-    }
-  };
-
   const handleSubmitMember = (memberId: string) => {
     const member = members.find((m) => m.id === memberId);
     if (!member) return;
@@ -2696,7 +2657,6 @@ export default function ClientPortalPage() {
           <Input
             value={member.formData.email}
             onChange={(e) => handleChange(member.id, "email", e.target.value)}
-            onBlur={() => handleEmailBlur(member.id, member.formData.email)}
             placeholder={
               member.isPrimary
                 ? "Your verified email"
