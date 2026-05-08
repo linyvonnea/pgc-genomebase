@@ -38,7 +38,7 @@ import { Project } from "@/types/Project";
 import { getProjects } from "@/services/projectsService";
 import { updateClientAndProjectName } from "@/services/updateClientAndProjectName";
 import { toast } from "sonner";
-import { deleteDoc, doc, getDoc } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDoc, getDocs, query, where, writeBatch } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
@@ -210,6 +210,31 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
       const clientRef = doc(db, "clients", client.cid);
       const clientDoc = await getDoc(clientRef);
       const clientData = clientDoc.data();
+
+      const clientName = (client.name || "").trim();
+
+      // Remove the client name from all matching projects before deleting the client document.
+      if (clientName) {
+        const projectsRef = collection(db, "projects");
+        const projectsQuery = query(projectsRef, where("clientNames", "array-contains", clientName));
+        const projectsSnapshot = await getDocs(projectsQuery);
+
+        if (!projectsSnapshot.empty) {
+          const batch = writeBatch(db);
+
+          for (const projectDoc of projectsSnapshot.docs) {
+            const projectData = projectDoc.data();
+            const existingNames = Array.isArray(projectData.clientNames) ? projectData.clientNames : [];
+            const updatedNames = existingNames.filter((name: string) => name !== clientName);
+
+            if (updatedNames.length !== existingNames.length) {
+              batch.update(projectDoc.ref, { clientNames: updatedNames });
+            }
+          }
+
+          await batch.commit();
+        }
+      }
       
       await deleteDoc(clientRef);
       
@@ -232,7 +257,7 @@ export function EditClientModal({ client, onSuccess }: EditClientModalProps) {
       onSuccess?.();
     } catch (error) {
       console.error("Error deleting client:", error);
-      toast.error("Failed to delete client. Please try again.");
+      toast.error("Failed to delete client and clean up project references. Please try again.");
     }
   };
 
