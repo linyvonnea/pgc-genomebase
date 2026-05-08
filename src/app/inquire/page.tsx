@@ -113,10 +113,9 @@ export default function InquirePage() {
   const handleOpenClientPortal = () => {
     const params = new URLSearchParams();
     if (user?.email) params.set("email", user.email);
-    if (existingPortalInquiryId) params.set("inquiryId", existingPortalInquiryId);
-
+    // Redirect to the Portal login page so they can enter their password
     setShowExistingPortalModal(false);
-    router.replace(`/client/client-info?${params.toString()}`);
+    router.replace(`/portal?${params.toString()}`);
   };
 
   const handleSubmitNewInquiry = () => {
