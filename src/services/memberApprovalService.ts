@@ -171,9 +171,71 @@ export async function approveMemberApproval(
   const year = new Date().getFullYear();
   const generatedCids: string[] = [];
 
+  const isExistingCid = (cid?: string) =>
+    !!cid && cid !== "draft" && cid !== "pending";
+
+  async function findExistingClientCid(email?: string): Promise<string | null> {
+    if (!email) return null;
+
+    const normalized = email.trim().toLowerCase();
+    if (!normalized) return null;
+
+    const clientsQ = query(collection(db, "clients"), where("email", "==", normalized));
+    const clientsSnap = await getDocs(clientsQ);
+
+    let fallbackCid: string | null = null;
+
+    for (const clientDoc of clientsSnap.docs) {
+      const clientData = clientDoc.data() as { cid?: string; pid?: string | string[] };
+      const pidList = Array.isArray(clientData.pid)
+        ? clientData.pid
+        : clientData.pid
+        ? [clientData.pid]
+        : [];
+
+      const cid = clientData.cid || clientDoc.id;
+      if (!fallbackCid && cid) {
+        fallbackCid = cid;
+      }
+
+      if (pidList.includes(approval.projectPid) && cid) {
+        return cid;
+      }
+    }
+
+    return fallbackCid;
+  }
+
   // Generate CIDs and create client records for each non-primary member
   for (const member of approval.members) {
     if (member.isPrimary) continue; // Primary member already in clients
+
+    if (isExistingCid(member.cid)) {
+      continue;
+    }
+
+    const existingCid = await findExistingClientCid(member.formData?.email);
+    if (existingCid) {
+      if (member.formData?.email) {
+        try {
+          const { approveClientRequest } = await import("@/services/clientRequestService");
+          await approveClientRequest(
+            approval.inquiryId,
+            member.formData.email,
+            existingCid,
+            reviewedBy
+          );
+        } catch (error) {
+          console.warn(`Could not update clientRequest for ${member.formData.email}:`, error);
+        }
+      }
+      continue;
+    }
+
+    if (!member.formData?.email || !member.formData?.name) {
+      console.warn("Skipping member with incomplete data during approval", member);
+      continue;
+    }
 
     const newCid = await getNextCid(year);
     generatedCids.push(newCid);

@@ -35,6 +35,8 @@ import { sendProjectApprovalEmail } from "@/app/actions/inquiryActions";
 import { ApprovalStatus } from "@/types/MemberApproval";
 import useAuth from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import {
   Users,
   CheckCircle2,
@@ -96,6 +98,26 @@ export default function MemberApprovalsPage() {
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [reviewNotes, setReviewNotes] = useState("");
   const [processing, setProcessing] = useState(false);
+
+  const normalizeEmail = (value?: string) => value?.trim().toLowerCase() || "";
+
+  const getExistingProjectMemberEmails = useCallback(async (projectPid?: string) => {
+    if (!projectPid) return new Set<string>();
+
+    const clientsQ = query(
+      collection(db, "clients"),
+      where("pid", "array-contains", projectPid)
+    );
+    const clientsSnap = await getDocs(clientsQ);
+
+    const emails = new Set<string>();
+    clientsSnap.forEach((docSnap) => {
+      const email = normalizeEmail((docSnap.data() as { email?: string }).email);
+      if (email) emails.add(email);
+    });
+
+    return emails;
+  }, []);
 
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const filteredApprovals = normalizedSearchQuery
@@ -336,6 +358,29 @@ export default function MemberApprovalsPage() {
   // Open review dialog and ensure we have up-to-date clientRequests/members
   const handleOpenReview = async (approval: CombinedApproval) => {
     try {
+      if (approval.type === "member") {
+        const existingEmails = await getExistingProjectMemberEmails(approval.projectPid);
+
+        const additionalMembers = (approval.members || []).filter((member: any) => {
+          if (member.isPrimary) return false;
+
+          const cid = String(member.cid || "").trim();
+          if (cid && cid !== "draft" && cid !== "pending") return false;
+
+          const memberEmail = normalizeEmail(member.formData?.email);
+          return memberEmail ? !existingEmails.has(memberEmail) : true;
+        });
+
+        setSelectedApproval({
+          ...approval,
+          members: additionalMembers,
+          clientRequests: [],
+        });
+        setReviewNotes(approval.reviewNotes || "");
+        setShowReviewDialog(true);
+        return;
+      }
+
       // Map 'cancelled' UI status to clientRequests 'cancelled'
       const clientStatus = approval.status === "cancelled" ? "cancelled" : undefined;
       const clientRequests = await getClientRequestsByInquiry(approval.inquiryId, clientStatus as any);
@@ -1004,6 +1049,14 @@ export default function MemberApprovalsPage() {
                         }, new Map())
                       ).map((entry: any) => entry[1])
                     : (selectedApproval.members || []).filter((m: any) => !m.isPrimary);
+
+                  if (items.length === 0) {
+                    return (
+                      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
+                        No additional members pending CID issuance for this submission.
+                      </div>
+                    );
+                  }
 
                   return (items as any[]).map((member, idx) => (
                     <Card key={member.tempId || idx} className="border border-slate-200">
