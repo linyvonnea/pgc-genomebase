@@ -503,10 +503,13 @@ export default function MemberApprovalsPage() {
         const { doc: firestoreDoc, updateDoc: firestoreUpdateDoc, serverTimestamp: firestoreTimestamp, arrayUnion } = await import("firebase/firestore");
         await firestoreUpdateDoc(firestoreDoc(db, "clients", cid), {
           name: clientReq.name,
-          affiliation: clientReq.affiliation,
-          phoneNumber: clientReq.phoneNumber,
-          affiliationAddress: clientReq.affiliationAddress,
+          affiliation: clientReq.affiliation || "",
+          designation: clientReq.designation || "",
+          sex: clientReq.sex || "",
+          phoneNumber: clientReq.phoneNumber || "",
+          affiliationAddress: clientReq.affiliationAddress || "",
           pid: arrayUnion(pid),
+          haveSubmitted: true,
           updatedAt: firestoreTimestamp(),
         });
       } else {

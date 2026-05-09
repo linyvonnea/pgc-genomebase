@@ -15,6 +15,7 @@ import {
   onSnapshot,
   deleteDoc,
   updateDoc,
+  arrayUnion,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { MemberApproval, DraftMember, ApprovalStatus } from "@/types/MemberApproval";
@@ -256,9 +257,13 @@ export async function approveMemberApproval(
         try {
           await updateDoc(doc(db, "clients", existingCid), {
             name: member.formData.name,
-            affiliation: member.formData.affiliation,
-            phoneNumber: member.formData.phoneNumber,
-            affiliationAddress: member.formData.affiliationAddress,
+            affiliation: member.formData.affiliation || "",
+            designation: member.formData.designation || "",
+            sex: member.formData.sex || "",
+            phoneNumber: member.formData.phoneNumber || "",
+            affiliationAddress: member.formData.affiliationAddress || "",
+            pid: arrayUnion(approval.projectPid),
+            haveSubmitted: true,
             updatedAt: serverTimestamp(),
           });
           console.log(`✅ Updated existing client record ${existingCid} for ${normalizedEmail}`);
