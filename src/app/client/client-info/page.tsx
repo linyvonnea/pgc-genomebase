@@ -1012,7 +1012,14 @@ export default function ClientPortalPage() {
             // Skip if completely empty and not just added
             if (!email && !name) return false;
 
-                 return email !== emailParam?.toLowerCase() && 
+            // When a specific approved project is selected, only show client requests
+            // that belong to that project. This prevents members from other projects
+            // (under the same inquiry) from leaking into this project's member list.
+            if (selectedDetails?.pid && selectedDetails.pid !== "DRAFT") {
+                if (r.projectRequestId && r.projectRequestId !== selectedDetails.pid) return false;
+            }
+
+            return email !== emailParam?.toLowerCase() && 
                    (!email || !approvedEmailsForSelectedProject.has(email)) &&
                    (r.status === "draft" || r.status === "pending" || r.status === "rejected");
         })
