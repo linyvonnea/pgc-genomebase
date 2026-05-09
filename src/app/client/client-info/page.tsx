@@ -283,6 +283,7 @@ interface ProjectDetails {
   status: string;
   inquiryId: string;
   isDraft?: boolean; // Flag for draft project requests
+  originalRequestId?: string;
 }
 
 // ────────────────────────────────────────────────────────────────
@@ -443,6 +444,48 @@ export default function ClientPortalPage() {
     null
   );
   const [currentProjectRequestId, setCurrentProjectRequestId] = useState<string | null>(null);
+
+  // Canonical member scope for clientRequests.projectRequestId.
+  // Approved project: selected PID.
+  // Draft project: draft request ID context.
+  const canonicalMemberScopeId = useMemo(() => {
+    const isDraftSelection = !!projectDetails?.isDraft || selectedProjectPid === "DRAFT";
+
+    if (!isDraftSelection) {
+      return selectedProjectPid && selectedProjectPid.trim().length > 0 ? selectedProjectPid : null;
+    }
+
+    const draftScopeCandidates = [
+      currentProjectRequestId,
+      projectDetails?.originalRequestId,
+      projectRequest?.id,
+      selectedProjectPid && selectedProjectPid !== "DRAFT" ? selectedProjectPid : null,
+    ];
+
+    return (
+      draftScopeCandidates.find((id): id is string => !!id && id.trim().length > 0) ?? null
+    );
+  }, [
+    selectedProjectPid,
+    projectDetails?.isDraft,
+    projectDetails?.originalRequestId,
+    currentProjectRequestId,
+    projectRequest?.id,
+  ]);
+
+  const getMemberScopeOrToast = useCallback((actionName: string): string | null => {
+    if (canonicalMemberScopeId) return canonicalMemberScopeId;
+
+    console.warn(`[client-info] Missing member scope for ${actionName}`, {
+      selectedProjectPid,
+      currentProjectRequestId,
+      projectDetails,
+      projectRequestId: projectRequest?.id,
+    });
+    toast.error("Unable to determine project scope. Please reselect the project and try again.");
+    return null;
+  }, [canonicalMemberScopeId, selectedProjectPid, currentProjectRequestId, projectDetails, projectRequest?.id]);
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [activeSavingId, setActiveSavingId] = useState<string | null>(null);
@@ -1012,11 +1055,16 @@ export default function ClientPortalPage() {
             // Skip if completely empty and not just added
             if (!email && !name) return false;
 
-            // When a specific approved project is selected, only show client requests
-            // that belong to that project. This prevents members from other projects
-            // (under the same inquiry) from leaking into this project's member list.
-            if (selectedDetails?.pid && selectedDetails.pid !== "DRAFT") {
-                if (r.projectRequestId && r.projectRequestId !== selectedDetails.pid) return false;
+        // Approved project view: strict exact projectRequestId match only.
+        // Never allow unscoped docs to appear under approved projects.
+        if (selectedDetails?.pid && !selectedDetails.isDraft && selectedDetails.pid !== "DRAFT") {
+          if (r.projectRequestId !== selectedDetails.pid) return false;
+        }
+
+        // Draft context: keep backward compatibility by allowing legacy unscoped docs,
+        // but filter out records explicitly scoped to a different draft/project.
+        if (selectedDetails?.isDraft && canonicalMemberScopeId) {
+          if (r.projectRequestId && r.projectRequestId !== canonicalMemberScopeId) return false;
             }
 
             return email !== emailParam?.toLowerCase() && 
@@ -1142,7 +1190,8 @@ export default function ClientPortalPage() {
     emailParam, 
     currentProjectRequestId, 
     pidParam,
-    selectedProjectPid
+    selectedProjectPid,
+    canonicalMemberScopeId
   ]);
 
 
@@ -1216,6 +1265,9 @@ export default function ClientPortalPage() {
       return;
     }
 
+    const memberScopeId = getMemberScopeOrToast("add member");
+    if (!memberScopeId) return;
+
     const uniqueDraftId = `draft-${Date.now()}`;
     const dummyEmail = `${uniqueDraftId}@temp.pgc`;
 
@@ -1233,7 +1285,7 @@ export default function ClientPortalPage() {
       isPrimary: false,
       isValidated: false,
       status: "draft" as const,
-      ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
+      projectRequestId: memberScopeId,
     };
 
     try {
@@ -1437,6 +1489,9 @@ export default function ClientPortalPage() {
       const isDraftProject = projectDetails?.isDraft || projectDetails?.pid === "DRAFT";
 
       if (isDraftProject && inquiryIdParam) {
+        const memberScopeId = getMemberScopeOrToast("save draft project member");
+        if (!memberScopeId) return;
+
         // For draft projects, save ALL members to clientRequests collection
         // Primary member: if an existing clientRequests doc exists (member.id), update it instead of creating a new doc
         let savedId: string;
@@ -1457,7 +1512,7 @@ export default function ClientPortalPage() {
             isPrimary: member.isPrimary,
             isValidated: true,
             status: "draft",
-            ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
+            projectRequestId: memberScopeId,
             updatedAt: serverTimestamp(),
           }, { merge: true });
           savedId = pendingMemberId;
@@ -1477,7 +1532,7 @@ export default function ClientPortalPage() {
             isPrimary: member.isPrimary,
             isValidated: true,
             status: (member.isPrimary || isDraftProject) ? "draft" : "pending",
-            ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
+            projectRequestId: memberScopeId,
           });
 
           // Delete old draft if ID changed (e.g. from dummy email to real email)
@@ -1577,6 +1632,9 @@ export default function ClientPortalPage() {
           );
           toast.success("Your information saved successfully!");
         } else {
+          const memberScopeId = getMemberScopeOrToast("save team member for approved project");
+          if (!memberScopeId) return;
+
           // Other members: save as validated draft in clientRequests (needs admin approval)
           const savedId = await saveClientRequest({
             inquiryId: inquiryIdParam!,
@@ -1592,7 +1650,7 @@ export default function ClientPortalPage() {
             isPrimary: false,
             isValidated: true,
             status: "pending",
-            ...(selectedProjectPid && { projectRequestId: selectedProjectPid }),
+            projectRequestId: memberScopeId,
           });
 
           // Delete old draft if ID changed
@@ -1667,6 +1725,9 @@ export default function ClientPortalPage() {
     setActiveSavingId(memberId);
     try {
       if (inquiryIdParam) {
+        const memberScopeId = getMemberScopeOrToast("save member draft");
+        if (!memberScopeId) return;
+
         // For draft projects, save to clientRequests collection (without validation)
         // Primary member: if existing clientRequests doc exists, update it instead of creating new
         let savedIdDraft: string;
@@ -1686,7 +1747,7 @@ export default function ClientPortalPage() {
             isPrimary: member.isPrimary,
             isValidated: false,
             status: "draft",
-            ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
+            projectRequestId: memberScopeId,
             updatedAt: serverTimestamp(),
           }, { merge: true });
           savedIdDraft = memberId;
@@ -1705,7 +1766,7 @@ export default function ClientPortalPage() {
             isPrimary: member.isPrimary,
             isValidated: false,
             status: "draft",
-            ...(currentProjectRequestId && { projectRequestId: currentProjectRequestId }),
+            projectRequestId: memberScopeId,
           });
 
           // Delete old draft if ID changed
@@ -1776,6 +1837,9 @@ export default function ClientPortalPage() {
           );
           toast.success("Draft saved for your information");
         } else {
+          const memberScopeId = getMemberScopeOrToast("save team member draft for approved project");
+          if (!memberScopeId) return;
+
           // Other members: save as draft in clientRequests (same as draft projects)
           const savedId = await saveClientRequest({
             inquiryId: inquiryIdParam!,
@@ -1791,7 +1855,7 @@ export default function ClientPortalPage() {
             isPrimary: false,
             isValidated: false,
             status: "draft",
-            ...(selectedProjectPid && { projectRequestId: selectedProjectPid }),
+            projectRequestId: memberScopeId,
           });
 
           // Delete old draft if ID changed
