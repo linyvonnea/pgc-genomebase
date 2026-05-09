@@ -957,8 +957,9 @@ export default function ClientPortalPage() {
               affiliationAddress: primaryClientDoc.affiliationAddress || "",
             },
             errors: {},
-            // Client exists in the approved collection → treat as complete regardless of haveSubmitted flag
-            isSubmitted: true,
+            // haveSubmitted:false means the user saved a draft in the clients collection
+            // and can still edit; true means they have formally confirmed.
+            isSubmitted: !!primaryClientDoc.haveSubmitted,
             isPrimary: true,
             isDraft: false,
         };
@@ -1704,36 +1705,88 @@ export default function ClientPortalPage() {
       return;
     }
 
-    // Check if any changes were made
     const isChanged = JSON.stringify(member.formData) !== JSON.stringify(member.initialData);
     if (!isChanged) {
       toast.info("No changes have been made");
       return;
     }
 
-    // For approved projects, we show a confirmation modal first
-    const isDraftProject = projectDetails?.isDraft || projectDetails?.pid === "DRAFT";
-    if (!isDraftProject) {
-      setPendingMemberId(memberId);
-      setShowConfirmModal(true);
-      // We don't disable yet, it will be disabled when handleConfirmSave is called
-      return;
-    }
-
     savingDraftIdsRef.current.add(memberId);
     setSubmitting(true);
     setActiveSavingId(memberId);
-    try {
-      if (inquiryIdParam) {
-        const memberScopeId = getMemberScopeOrToast("save member draft");
-        if (!memberScopeId) return;
 
-        // For draft projects, save to clientRequests collection (without validation)
-        // Primary member: if existing clientRequests doc exists, update it instead of creating new
-        let savedIdDraft: string;
-        if (member.isPrimary && memberId && memberId !== "primary" && !memberId.startsWith("draft-") && !memberId.startsWith("request-")) {
-          const docRef = doc(db, "clientRequests", memberId);
-          await setDoc(docRef, {
+    try {
+      const isDraftProject = projectDetails?.isDraft || projectDetails?.pid === "DRAFT";
+
+      // ── Primary member on APPROVED project ──────────────────────────
+      // Save/update directly in `clients` with haveSubmitted: false so the
+      // form remains editable after refresh/re-login.
+      if (member.isPrimary && !isDraftProject) {
+        let pids: string[] = projects.map((p) => p.pid).filter((pid) => pid !== "DRAFT");
+        if (pids.length === 0 && pidParam) pids = [pidParam];
+
+        let cidToUse = member.cid;
+        if (!cidToUse || cidToUse === "pending" || cidToUse === "draft") {
+          const existingSnap = await getDocs(
+            query(collection(db, "clients"), where("email", "==", member.formData.email), limit(1))
+          );
+          if (!existingSnap.empty) {
+            const existingDoc = existingSnap.docs[0];
+            cidToUse = existingDoc.data().cid || existingDoc.id;
+          } else {
+            cidToUse = await getNextCid(new Date().getFullYear());
+          }
+        }
+        if (!cidToUse) throw new Error("Could not generate a valid Client ID");
+
+        await setDoc(
+          doc(db, "clients", cidToUse),
+          {
+            ...member.formData,
+            cid: cidToUse,
+            pid: pids,
+            inquiryId: inquiryIdParam,
+            isContactPerson: true,
+            haveSubmitted: false,
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+
+        setMembers((prev) =>
+          prev.map((m) =>
+            m.id === memberId
+              ? { ...m, cid: cidToUse, isSubmitted: false, initialData: { ...m.formData } }
+              : m
+          )
+        );
+        toast.success("Draft saved. You can continue editing and confirm when ready.");
+        return;
+      }
+
+      // ── All other cases (clientRequests as draft) ────────────────────
+      // Covers: primary on draft project, other members on any project type.
+      if (!inquiryIdParam) {
+        toast.error("Missing inquiry ID. Please reload the page.");
+        return;
+      }
+      const memberScopeId = getMemberScopeOrToast("save member draft");
+      if (!memberScopeId) return;
+
+      let savedId: string;
+
+      // Primary member with an existing doc: update in-place
+      if (
+        member.isPrimary &&
+        memberId &&
+        memberId !== "primary" &&
+        !memberId.startsWith("draft-") &&
+        !memberId.startsWith("request-")
+      ) {
+        const docRef = doc(db, "clientRequests", memberId);
+        await setDoc(
+          docRef,
+          {
             inquiryId: inquiryIdParam,
             requestedBy: emailParam || "",
             requestedByName: members.find((m) => m.isPrimary)?.formData.name || member.formData.name || "",
@@ -1749,141 +1802,54 @@ export default function ClientPortalPage() {
             status: "draft",
             projectRequestId: memberScopeId,
             updatedAt: serverTimestamp(),
-          }, { merge: true });
-          savedIdDraft = memberId;
-        } else {
-          savedIdDraft = await saveClientRequest({
-            inquiryId: inquiryIdParam,
-            requestedBy: emailParam || "",
-            requestedByName: members.find((m) => m.isPrimary)?.formData.name || member.formData.name || "",
-            name: member.formData.name,
-            email: member.formData.email,
-            affiliation: member.formData.affiliation,
-            designation: member.formData.designation,
-            sex: member.formData.sex,
-            phoneNumber: member.formData.phoneNumber,
-            affiliationAddress: member.formData.affiliationAddress,
-            isPrimary: member.isPrimary,
-            isValidated: false,
-            status: "draft",
-            projectRequestId: memberScopeId,
-          });
-
-          // Delete old draft if ID changed
-          if (memberId && memberId !== savedIdDraft && !memberId.startsWith("draft-") && !memberId.startsWith("request-")) {
-            try {
-              await deleteDoc(doc(db, "clientRequests", memberId));
-              console.log("Deleted old member draft record:", memberId);
-            } catch (delError) {
-              console.warn("Failed to delete old draft (might not exist):", delError);
-            }
-          }
-        }
-
-        setMembers((prev) =>
-          prev.map((m) =>
-            m.id === memberId
-              ? {
-                  ...m,
-                  id: savedIdDraft,
-                  isDraft: true,
-                  cid: "draft",
-                  initialData: { ...m.formData },
-                }
-              : m
-          )
+          },
+          { merge: true }
         );
-        toast.success("Member details saved as draft");
+        savedId = memberId;
       } else {
-        // For approved projects
-        if (member.isPrimary) {
-          // Primary member: save to clients collection
-          let pids: string[] = projects.map((p) => p.pid).filter(pid => pid !== "DRAFT");
-          if (pids.length === 0 && pidParam) pids = [pidParam];
+        // Create/update via saveClientRequest (uses inquiryId + email-based ID)
+        savedId = await saveClientRequest({
+          inquiryId: inquiryIdParam,
+          requestedBy: emailParam || "",
+          requestedByName: members.find((m) => m.isPrimary)?.formData.name || member.formData.name || "",
+          name: member.formData.name,
+          email: member.formData.email,
+          affiliation: member.formData.affiliation,
+          designation: member.formData.designation,
+          sex: member.formData.sex,
+          phoneNumber: member.formData.phoneNumber,
+          affiliationAddress: member.formData.affiliationAddress,
+          isPrimary: member.isPrimary,
+          isValidated: false,
+          status: "draft",
+          projectRequestId: memberScopeId,
+        });
 
-          let cidToUse = member.cid;
-          if (!cidToUse || cidToUse === "pending" || cidToUse === "draft") {
-            // Preserve existing CID if this client already has one from a previous inquiry
-            const existingSnap = await getDocs(
-              query(collection(db, "clients"), where("email", "==", member.formData.email), limit(1))
-            );
-            if (!existingSnap.empty) {
-              const existingDoc = existingSnap.docs[0];
-              cidToUse = existingDoc.data().cid || existingDoc.id;
-            } else {
-              const year = new Date().getFullYear();
-              cidToUse = await getNextCid(year);
-            }
+        // Delete stale doc when email changed and document ID shifted
+        if (memberId && memberId !== savedId && !memberId.startsWith("draft-") && !memberId.startsWith("request-")) {
+          try {
+            await deleteDoc(doc(db, "clientRequests", memberId));
+          } catch (delError) {
+            console.warn("Failed to delete old draft (might not exist):", delError);
           }
-
-          await setDoc(
-            doc(db, "clients", cidToUse),
-            {
-              ...member.formData,
-              cid: cidToUse,
-              pid: pids,
-              inquiryId: inquiryIdParam,
-              isContactPerson: true,
-              haveSubmitted: false,
-              updatedAt: serverTimestamp(),
-            },
-            { merge: true }
-          );
-
-          setMembers((prev) =>
-            prev.map((m) =>
-              m.id === memberId ? { ...m, cid: cidToUse } : m
-            )
-          );
-          toast.success("Draft saved for your information");
-        } else {
-          const memberScopeId = getMemberScopeOrToast("save team member draft for approved project");
-          if (!memberScopeId) return;
-
-          // Other members: save as draft in clientRequests (same as draft projects)
-          const savedId = await saveClientRequest({
-            inquiryId: inquiryIdParam!,
-            requestedBy: emailParam || "",
-            requestedByName: members.find((m) => m.isPrimary)?.formData.name || member.formData.name || "",
-            name: member.formData.name,
-            email: member.formData.email,
-            affiliation: member.formData.affiliation,
-            designation: member.formData.designation,
-            sex: member.formData.sex,
-            phoneNumber: member.formData.phoneNumber,
-            affiliationAddress: member.formData.affiliationAddress,
-            isPrimary: false,
-            isValidated: false,
-            status: "draft",
-            projectRequestId: memberScopeId,
-          });
-
-          // Delete old draft if ID changed
-          if (memberId && memberId !== savedId && !memberId.startsWith("draft-") && !memberId.startsWith("request-")) {
-            try {
-              await deleteDoc(doc(db, "clientRequests", memberId));
-              console.log("Deleted old member draft record:", memberId);
-            } catch (delError) {
-              console.warn("Failed to delete old draft (might not exist):", delError);
-            }
-          }
-
-          setMembers((prev) =>
-            prev.map((m) =>
-              m.id === memberId
-                ? {
-                    ...m,
-                    id: savedId,
-                    isDraft: true,
-                    cid: "draft",
-                    initialData: { ...m.formData },
-                  }
-                : m
-            )
-          );
-          toast.success("Member details saved as draft");
         }
       }
+
+      setMembers((prev) =>
+        prev.map((m) =>
+          m.id === memberId
+            ? {
+                ...m,
+                id: savedId,
+                isDraft: true,
+                cid: "draft",
+                isSubmitted: false,   // keep form editable after refresh
+                initialData: { ...m.formData },
+              }
+            : m
+        )
+      );
+      toast.success("Draft saved. You can continue editing and confirm when ready.");
     } catch (error) {
       console.error("Draft save error:", error);
       toast.error("Failed to save draft");
@@ -2715,7 +2681,7 @@ export default function ClientPortalPage() {
             onChange={(e) => handleChange(member.id, "name", e.target.value)}
             placeholder="Enter full name"
             disabled={
-              member.isSubmitted ||
+              (!member.isDraft && member.isSubmitted) ||
               projectDetails?.status === "Completed" ||
               projectDetails?.status === "Pending Approval"
             }
@@ -2746,7 +2712,7 @@ export default function ClientPortalPage() {
             }
             disabled={
               member.isPrimary ||
-              member.isSubmitted ||
+              (!member.isDraft && member.isSubmitted) ||
               projectDetails?.status === "Completed" ||
               projectDetails?.status === "Pending Approval"
             }
@@ -2772,7 +2738,7 @@ export default function ClientPortalPage() {
             }
             placeholder="e.g. Division of Biological Sciences - UPV CAS"
             disabled={
-              member.isSubmitted ||
+              (!member.isDraft && member.isSubmitted) ||
               projectDetails?.status === "Completed" ||
               projectDetails?.status === "Pending Approval"
             }
@@ -2797,7 +2763,7 @@ export default function ClientPortalPage() {
             }
             placeholder="e.g. Research Assistant, Professor"
             disabled={
-              member.isSubmitted ||
+              (!member.isDraft && member.isSubmitted) ||
               projectDetails?.status === "Completed" ||
               projectDetails?.status === "Pending Approval"
             }
@@ -2819,7 +2785,7 @@ export default function ClientPortalPage() {
             value={member.formData.sex}
             onValueChange={(val) => handleChange(member.id, "sex", val)}
             disabled={
-              member.isSubmitted ||
+              (!member.isDraft && member.isSubmitted) ||
               projectDetails?.status === "Completed" ||
               projectDetails?.status === "Pending Approval"
             }
@@ -2850,7 +2816,7 @@ export default function ClientPortalPage() {
             }
             placeholder="e.g. 09091234567"
             disabled={
-              member.isSubmitted ||
+              (!member.isDraft && member.isSubmitted) ||
               projectDetails?.status === "Completed" ||
               projectDetails?.status === "Pending Approval"
             }
@@ -2875,7 +2841,7 @@ export default function ClientPortalPage() {
             }
             placeholder="Enter complete address of your institution/organization"
             disabled={
-              member.isSubmitted ||
+              (!member.isDraft && member.isSubmitted) ||
               projectDetails?.status === "Completed" ||
               projectDetails?.status === "Pending Approval"
             }
@@ -2895,7 +2861,6 @@ export default function ClientPortalPage() {
           type="button"
           onClick={() => handleSaveDraft(member.id)}
           disabled={
-            member.isSubmitted ||
             activeSavingId === member.id ||
             submitting ||
             projectDetails?.status === "Completed" ||
@@ -2919,7 +2884,7 @@ export default function ClientPortalPage() {
         <Button
           type="submit"
           disabled={
-            member.isSubmitted ||
+            (!member.isDraft && member.isSubmitted) ||
             submitting ||
             projectDetails?.status === "Completed" ||
             projectDetails?.status === "Pending Approval"
