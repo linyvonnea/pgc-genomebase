@@ -851,7 +851,18 @@ export default function ClientPortalPage() {
       ),
     ];
 
-    const approvedEmails = new Set(allApprovedClients.map((c: any) => c.email?.toLowerCase()).filter(Boolean));
+    const approvedEmailsForSelectedProject = new Set(
+      allApprovedClients
+        .filter((c: any) => {
+          if (!c.email || c.email.toLowerCase() === emailParam?.toLowerCase()) return false;
+          if (selectedDetails) {
+            const memberPids = Array.isArray(c.pid) ? c.pid : (c.pid ? [c.pid] : []);
+            return memberPids.includes(selectedDetails.pid);
+          }
+          return true;
+        })
+        .map((c: any) => c.email.toLowerCase())
+    );
 
     // 1. Find Primary Member
     let primaryMember: ClientMember | null = null;
@@ -1001,8 +1012,8 @@ export default function ClientPortalPage() {
             // Skip if completely empty and not just added
             if (!email && !name) return false;
 
-            return email !== emailParam?.toLowerCase() && 
-                   (!email || !approvedEmails.has(email)) &&
+                 return email !== emailParam?.toLowerCase() && 
+                   (!email || !approvedEmailsForSelectedProject.has(email)) &&
                    (r.status === "draft" || r.status === "pending" || r.status === "rejected");
         })
         .map((r, index) => ({
@@ -1038,7 +1049,7 @@ export default function ClientPortalPage() {
             if (m.isPrimary) return false;
             // Also filter out if already approved
             const email = m.formData?.email?.toLowerCase();
-            return email && !approvedEmails.has(email);
+            return email && !approvedEmailsForSelectedProject.has(email);
         })
         .map((m, index) => ({
             id: m.tempId || `pending-member-${index + 1}`,
@@ -1369,45 +1380,6 @@ export default function ClientPortalPage() {
           : member
       )
     );
-  };
-
-  // Auto-fill fields from existing inquiry when a known email is entered.
-  const handleEmailBlur = async (memberId: string, email: string) => {
-    const member = members.find((m) => m.id === memberId);
-    if (!member || member.isPrimary || !email || !email.includes("@")) return;
-
-    try {
-      const snap = await getDocs(
-        query(collection(db, "inquiries"), where("email", "==", email.trim()), limit(1))
-      );
-      if (snap.empty) return;
-
-      const inqData = snap.docs[0].data();
-      const hasNewData =
-        (!member.formData.name && inqData.name) ||
-        (!member.formData.affiliation && inqData.affiliation) ||
-        (!member.formData.designation && inqData.designation);
-      if (!hasNewData) return;
-
-      setMembers((prev) =>
-        prev.map((m) =>
-          m.id === memberId
-            ? {
-                ...m,
-                formData: {
-                  ...m.formData,
-                  name: m.formData.name || inqData.name || "",
-                  affiliation: m.formData.affiliation || inqData.affiliation || "",
-                  designation: m.formData.designation || inqData.designation || "",
-                },
-              }
-            : m
-        )
-      );
-      toast.info("Details pre-filled from existing inquiry. Please review and complete remaining fields.");
-    } catch (err) {
-      console.warn("Email inquiry lookup failed:", err);
-    }
   };
 
   const handleSubmitMember = (memberId: string) => {
@@ -2696,7 +2668,6 @@ export default function ClientPortalPage() {
           <Input
             value={member.formData.email}
             onChange={(e) => handleChange(member.id, "email", e.target.value)}
-            onBlur={() => handleEmailBlur(member.id, member.formData.email)}
             placeholder={
               member.isPrimary
                 ? "Your verified email"
