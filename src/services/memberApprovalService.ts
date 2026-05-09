@@ -155,7 +155,8 @@ export async function approveMemberApproval(
   approvalId: string,
   reviewedBy: string,
   reviewedByName: string,
-  reviewNotes?: string
+  reviewNotes?: string,
+  cidDecisions?: Record<string, 'update' | 'new'>
 ): Promise<string[]> {
   const docRef = doc(db, COLLECTION, approvalId);
   const snap = await getDoc(docRef);
@@ -214,8 +215,57 @@ export async function approveMemberApproval(
       continue;
     }
 
+    const normalizedEmail = member.formData?.email?.trim().toLowerCase() || "";
+    const decision = normalizedEmail ? cidDecisions?.[normalizedEmail] : undefined;
+
+    // Admin chose to always assign a new CID for this member
+    if (decision === 'new') {
+      if (!member.formData?.email || !member.formData?.name) {
+        console.warn("Skipping member with incomplete data during approval", member);
+        continue;
+      }
+      const newCid = await getNextCid(year);
+      generatedCids.push(newCid);
+      await setDoc(doc(db, "clients", newCid), {
+        cid: newCid,
+        ...member.formData,
+        pid: [approval.projectPid],
+        inquiryId: approval.inquiryId,
+        isContactPerson: false,
+        haveSubmitted: true,
+        createdAt: serverTimestamp(),
+        approvedAt: serverTimestamp(),
+        approvedBy: reviewedBy,
+      });
+      if (member.formData.email) {
+        try {
+          const { approveClientRequest } = await import("@/services/clientRequestService");
+          await approveClientRequest(approval.inquiryId, member.formData.email, newCid, reviewedBy);
+          console.log(`✅ New CID ${newCid} assigned to ${member.formData.email}`);
+        } catch (error) {
+          console.warn(`Could not update clientRequest for ${member.formData.email}:`, error);
+        }
+      }
+      continue;
+    }
+
     const existingCid = await findExistingClientCid(member.formData?.email);
     if (existingCid) {
+      // Admin chose to update (or default) — update existing client record with submitted data
+      if (decision === 'update' && member.formData?.name) {
+        try {
+          await updateDoc(doc(db, "clients", existingCid), {
+            name: member.formData.name,
+            affiliation: member.formData.affiliation,
+            phoneNumber: member.formData.phoneNumber,
+            affiliationAddress: member.formData.affiliationAddress,
+            updatedAt: serverTimestamp(),
+          });
+          console.log(`✅ Updated existing client record ${existingCid} for ${normalizedEmail}`);
+        } catch (error) {
+          console.warn(`Could not update existing client record ${existingCid}:`, error);
+        }
+      }
       if (member.formData?.email) {
         try {
           const { approveClientRequest } = await import("@/services/clientRequestService");

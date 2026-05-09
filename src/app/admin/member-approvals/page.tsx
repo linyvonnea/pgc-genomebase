@@ -99,7 +99,35 @@ export default function MemberApprovalsPage() {
   const [reviewNotes, setReviewNotes] = useState("");
   const [processing, setProcessing] = useState(false);
 
+  // Email → existing Firestore client data (populated when review dialog opens)
+  const [existingClientsByEmail, setExistingClientsByEmail] = useState<
+    Record<string, { cid: string; name: string; affiliation: string; phoneNumber: string; affiliationAddress: string }>
+  >({});
+  // Email → admin decision: 'update' existing CID or assign 'new' CID
+  const [memberCidDecisions, setMemberCidDecisions] = useState<Record<string, 'update' | 'new'>>({});
+
   const normalizeEmail = (value?: string) => value?.trim().toLowerCase() || "";
+
+  // Fetch existing client records from Firestore for a list of emails
+  const fetchExistingClientsByEmails = useCallback(async (emails: string[]) => {
+    const unique = [...new Set(emails.map(normalizeEmail).filter(Boolean))];
+    if (unique.length === 0) return {};
+    const result: Record<string, { cid: string; name: string; affiliation: string; phoneNumber: string; affiliationAddress: string }> = {};
+    // Firestore 'in' supports up to 30 values
+    const chunks: string[][] = [];
+    for (let i = 0; i < unique.length; i += 30) chunks.push(unique.slice(i, i + 30));
+    for (const chunk of chunks) {
+      const snap = await getDocs(query(collection(db, "clients"), where("email", "in", chunk)));
+      snap.forEach((d) => {
+        const data = d.data() as any;
+        const email = normalizeEmail(data.email);
+        if (email && !result[email]) {
+          result[email] = { cid: data.cid || d.id, name: data.name || "", affiliation: data.affiliation || "", phoneNumber: data.phoneNumber || "", affiliationAddress: data.affiliationAddress || "" };
+        }
+      });
+    }
+    return result;
+  }, [normalizeEmail]);
 
   const getExistingProjectMemberEmails = useCallback(async (projectPid?: string) => {
     if (!projectPid) return new Set<string>();
@@ -324,12 +352,13 @@ export default function MemberApprovalsPage() {
     
     try {
       if (selectedApproval.type === "member") {
-        // Traditional member approval
+        // Traditional member approval — pass admin's per-member CID decisions
         const generatedCids = await approveMemberApproval(
           selectedApproval.id,
           user?.email || "",
           adminInfo?.name || user?.displayName || "",
-          reviewNotes
+          reviewNotes,
+          memberCidDecisions
         );
         toast.success(
           `Approved! ${generatedCids.length} client ID(s) generated: ${generatedCids.join(", ")}`
@@ -371,6 +400,15 @@ export default function MemberApprovalsPage() {
           return memberEmail ? !existingEmails.has(memberEmail) : true;
         });
 
+        // Fetch existing client data for all member emails
+        const memberEmails = additionalMembers.map((m: any) => m.formData?.email).filter(Boolean);
+        const existingData = await fetchExistingClientsByEmails(memberEmails);
+        setExistingClientsByEmail(existingData);
+        // Default decision for each matched email: 'update'
+        const defaults: Record<string, 'update' | 'new'> = {};
+        Object.keys(existingData).forEach((email) => { defaults[email] = 'update'; });
+        setMemberCidDecisions(defaults);
+
         setSelectedApproval({
           ...approval,
           members: additionalMembers,
@@ -400,6 +438,14 @@ export default function MemberApprovalsPage() {
           affiliationAddress: cr.affiliationAddress,
         },
       }));
+
+      // Fetch existing client data for project-type members too
+      const projectMemberEmails = clientRequests.map((cr) => cr.email).filter(Boolean);
+      const existingProjectData = await fetchExistingClientsByEmails(projectMemberEmails);
+      setExistingClientsByEmail(existingProjectData);
+      const projectDefaults: Record<string, 'update' | 'new'> = {};
+      Object.keys(existingProjectData).forEach((email) => { projectDefaults[email] = 'update'; });
+      setMemberCidDecisions(projectDefaults);
 
       setSelectedApproval({ ...approval, clientRequests, members });
       setReviewNotes(approval.reviewNotes || "");
@@ -445,30 +491,47 @@ export default function MemberApprovalsPage() {
         throw new Error(`Invalid member data: missing email or name`);
       }
 
-      const cid = await getNextCid(year);
-      memberCids.push({
-        email: clientReq.email,
-        cid,
-        isPrimary: clientReq.isPrimary || false,
-      });
+      const normalizedReqEmail = clientReq.email.trim().toLowerCase();
+      const existingClient = existingClientsByEmail[normalizedReqEmail];
+      const decision = memberCidDecisions[normalizedReqEmail];
 
-      // Create client document
-      await setDoc(doc(db, "clients", cid), {
-        cid,
-        pid: [pid],
-        inquiryId: approval.inquiryId,
-        name: clientReq.name || "",
-        email: clientReq.email || "",
-        affiliation: clientReq.affiliation || "",
-        designation: clientReq.designation || "",
-        sex: clientReq.sex || "",
-        phoneNumber: clientReq.phoneNumber || "",
-        affiliationAddress: clientReq.affiliationAddress || "",
-        isContactPerson: clientReq.isPrimary || false,
-        haveSubmitted: true,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+      let cid: string;
+      if (existingClient && decision !== 'new') {
+        // Reuse existing CID
+        cid = existingClient.cid;
+        // Update existing client record with submitted data
+        const { doc: firestoreDoc, updateDoc: firestoreUpdateDoc, serverTimestamp: firestoreTimestamp, arrayUnion } = await import("firebase/firestore");
+        await firestoreUpdateDoc(firestoreDoc(db, "clients", cid), {
+          name: clientReq.name,
+          affiliation: clientReq.affiliation,
+          phoneNumber: clientReq.phoneNumber,
+          affiliationAddress: clientReq.affiliationAddress,
+          pid: arrayUnion(pid),
+          updatedAt: firestoreTimestamp(),
+        });
+      } else {
+        // Generate a fresh CID
+        cid = await getNextCid(year);
+        // Create client document
+        await setDoc(doc(db, "clients", cid), {
+          cid,
+          pid: [pid],
+          inquiryId: approval.inquiryId,
+          name: clientReq.name || "",
+          email: clientReq.email || "",
+          affiliation: clientReq.affiliation || "",
+          designation: clientReq.designation || "",
+          sex: clientReq.sex || "",
+          phoneNumber: clientReq.phoneNumber || "",
+          affiliationAddress: clientReq.affiliationAddress || "",
+          isContactPerson: clientReq.isPrimary || false,
+          haveSubmitted: true,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      }
+
+      memberCids.push({ email: clientReq.email, cid, isPrimary: clientReq.isPrimary || false });
 
       // Update clientRequest status
       await approveClientRequest(
@@ -1058,9 +1121,68 @@ export default function MemberApprovalsPage() {
                     );
                   }
 
-                  return (items as any[]).map((member, idx) => (
-                    <Card key={member.tempId || idx} className="border border-slate-200">
+                  return (items as any[]).map((member, idx) => {
+                    const memberEmail = normalizeEmail(member.formData?.email);
+                    const existingClient = memberEmail ? existingClientsByEmail[memberEmail] : undefined;
+                    const decision = memberEmail ? memberCidDecisions[memberEmail] ?? 'update' : undefined;
+
+                    return (
+                    <Card
+                      key={member.tempId || idx}
+                      className={existingClient ? "border-2 border-amber-400 bg-amber-50/30" : "border border-slate-200"}
+                    >
                       <CardContent className="p-4">
+                        {/* Existing client banner */}
+                        {existingClient && (
+                          <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 space-y-2">
+                            <div className="flex items-center gap-2">
+                              <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                              <span className="text-sm font-semibold text-amber-800">
+                                Existing client found —{" "}
+                                <span className="font-mono text-amber-900">{existingClient.cid}</span>
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-amber-700 pl-6">
+                              <span><span className="font-semibold">Name:</span> {existingClient.name || "—"}</span>
+                              <span><span className="font-semibold">Affiliation:</span> {existingClient.affiliation || "—"}</span>
+                              <span><span className="font-semibold">Phone:</span> {existingClient.phoneNumber || "—"}</span>
+                              <span className="col-span-2"><span className="font-semibold">Address:</span> {existingClient.affiliationAddress || "—"}</span>
+                            </div>
+                            {/* Admin decision radio */}
+                            <div className="pl-6 flex flex-col gap-1.5 pt-1 border-t border-amber-200">
+                              <p className="text-xs font-semibold text-amber-800 mb-0.5">How should this member be registered?</p>
+                              <label className="flex items-start gap-2 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name={`cid-decision-${memberEmail}`}
+                                  value="update"
+                                  checked={decision === 'update'}
+                                  onChange={() => setMemberCidDecisions((prev) => ({ ...prev, [memberEmail]: 'update' }))}
+                                  className="mt-0.5 accent-amber-600"
+                                />
+                                <span className="text-xs text-amber-900">
+                                  <span className="font-semibold">Update existing CID ({existingClient.cid})</span>
+                                  {" "}— overwrite name, affiliation, phone &amp; address with submitted data
+                                </span>
+                              </label>
+                              <label className="flex items-start gap-2 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name={`cid-decision-${memberEmail}`}
+                                  value="new"
+                                  checked={decision === 'new'}
+                                  onChange={() => setMemberCidDecisions((prev) => ({ ...prev, [memberEmail]: 'new' }))}
+                                  className="mt-0.5 accent-amber-600"
+                                />
+                                <span className="text-xs text-amber-900">
+                                  <span className="font-semibold">Assign a new CID</span>
+                                  {" "}— create a separate client record (e.g. different affiliation or project)
+                                </span>
+                              </label>
+                            </div>
+                          </div>
+                        )}
+
                         <div className="flex items-start justify-between mb-3">
                           <h4 className="font-semibold text-slate-800 flex items-center gap-2">
                             <User className="h-4 w-4 text-[#166FB5]" />
@@ -1121,7 +1243,8 @@ export default function MemberApprovalsPage() {
                         </div>
                       </CardContent>
                     </Card>
-                  ));
+                    );
+                  });
                 })()}
               </div>
 
@@ -1167,6 +1290,8 @@ export default function MemberApprovalsPage() {
                 setShowReviewDialog(false);
                 setSelectedApproval(null);
                 setReviewNotes("");
+                setExistingClientsByEmail({});
+                setMemberCidDecisions({});
               }}
               disabled={processing}
             >
