@@ -155,7 +155,12 @@ export async function approveMemberApproval(
   approvalId: string,
   reviewedBy: string,
   reviewedByName: string,
-  reviewNotes?: string
+  reviewNotes?:
+    | string
+    | {
+        notes?: string;
+        existingClientActions?: Record<string, "update-existing" | "create-new">;
+      }
 ): Promise<string[]> {
   const docRef = doc(db, COLLECTION, approvalId);
   const snap = await getDoc(docRef);
@@ -174,7 +179,15 @@ export async function approveMemberApproval(
   const isExistingCid = (cid?: string) =>
     !!cid && cid !== "draft" && cid !== "pending";
 
-  async function findExistingClientCid(email?: string): Promise<string | null> {
+  const reviewNotesValue = typeof reviewNotes === "string" ? reviewNotes : reviewNotes?.notes || "";
+  const existingClientActions =
+    typeof reviewNotes === "string" ? undefined : reviewNotes?.existingClientActions;
+
+  async function findExistingClientByEmail(email?: string): Promise<{
+    cid: string;
+    ref: ReturnType<typeof doc>;
+    data: { cid?: string; pid?: string | string[]; email?: string };
+  } | null> {
     if (!email) return null;
 
     const normalized = email.trim().toLowerCase();
@@ -183,10 +196,14 @@ export async function approveMemberApproval(
     const clientsQ = query(collection(db, "clients"), where("email", "==", normalized));
     const clientsSnap = await getDocs(clientsQ);
 
-    let fallbackCid: string | null = null;
+    let fallbackClient: {
+      cid: string;
+      ref: ReturnType<typeof doc>;
+      data: { cid?: string; pid?: string | string[]; email?: string };
+    } | null = null;
 
     for (const clientDoc of clientsSnap.docs) {
-      const clientData = clientDoc.data() as { cid?: string; pid?: string | string[] };
+      const clientData = clientDoc.data() as { cid?: string; pid?: string | string[]; email?: string };
       const pidList = Array.isArray(clientData.pid)
         ? clientData.pid
         : clientData.pid
@@ -194,16 +211,24 @@ export async function approveMemberApproval(
         : [];
 
       const cid = clientData.cid || clientDoc.id;
-      if (!fallbackCid && cid) {
-        fallbackCid = cid;
+      if (!fallbackClient && cid) {
+        fallbackClient = {
+          cid,
+          ref: doc(db, "clients", cid),
+          data: clientData,
+        };
       }
 
       if (pidList.includes(approval.projectPid) && cid) {
-        return cid;
+        return {
+          cid,
+          ref: doc(db, "clients", cid),
+          data: clientData,
+        };
       }
     }
 
-    return fallbackCid;
+    return fallbackClient;
   }
 
   // Generate CIDs and create client records for each non-primary member
@@ -214,15 +239,46 @@ export async function approveMemberApproval(
       continue;
     }
 
-    const existingCid = await findExistingClientCid(member.formData?.email);
-    if (existingCid) {
+    const memberEmail = member.formData?.email?.trim().toLowerCase() || "";
+    const existingAction = memberEmail
+      ? existingClientActions?.[memberEmail]
+      : undefined;
+
+    const existingClient = await findExistingClientByEmail(member.formData?.email);
+    if (existingClient && existingAction !== "create-new") {
+      const existingPidList = Array.isArray(existingClient.data.pid)
+        ? existingClient.data.pid
+        : existingClient.data.pid
+        ? [existingClient.data.pid]
+        : [];
+      const nextPid = existingPidList.includes(approval.projectPid)
+        ? existingPidList
+        : [...existingPidList, approval.projectPid];
+
+      // Default behavior: update existing client record with latest member data.
+      await setDoc(
+        existingClient.ref,
+        {
+          name: member.formData?.name || existingClient.data?.name || "",
+          email: member.formData?.email || existingClient.data?.email || "",
+          affiliation: member.formData?.affiliation || "",
+          designation: member.formData?.designation || "",
+          phoneNumber: member.formData?.phoneNumber || "",
+          affiliationAddress: member.formData?.affiliationAddress || "",
+          pid: nextPid,
+          haveSubmitted: true,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
       if (member.formData?.email) {
         try {
           const { approveClientRequest } = await import("@/services/clientRequestService");
           await approveClientRequest(
             approval.inquiryId,
             member.formData.email,
-            existingCid,
+            existingClient.cid,
             reviewedBy
           );
         } catch (error) {
@@ -279,7 +335,7 @@ export async function approveMemberApproval(
       reviewedBy,
       reviewedByName,
       reviewedAt: serverTimestamp(),
-      reviewNotes: reviewNotes || "",
+      reviewNotes: reviewNotesValue,
       updatedAt: serverTimestamp(),
     },
     { merge: true }

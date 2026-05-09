@@ -98,8 +98,92 @@ export default function MemberApprovalsPage() {
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [reviewNotes, setReviewNotes] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [existingClientsByEmail, setExistingClientsByEmail] = useState<
+    Record<string, { cid: string; data: any }>
+  >({});
+  const [memberCidActions, setMemberCidActions] = useState<
+    Record<string, "update-existing" | "create-new">
+  >({});
 
   const normalizeEmail = (value?: string) => value?.trim().toLowerCase() || "";
+
+  const fetchExistingClientByEmail = useCallback(
+    async (email: string, projectPid?: string) => {
+      const normalized = normalizeEmail(email);
+      if (!normalized) return null;
+
+      const clientsQ = query(collection(db, "clients"), where("email", "==", normalized));
+      const clientsSnap = await getDocs(clientsQ);
+      if (clientsSnap.empty) return null;
+
+      let fallback: { cid: string; data: any } | null = null;
+
+      for (const clientDoc of clientsSnap.docs) {
+        const clientData = clientDoc.data() as { cid?: string; pid?: string | string[] };
+        const pidList = Array.isArray(clientData.pid)
+          ? clientData.pid
+          : clientData.pid
+          ? [clientData.pid]
+          : [];
+        const cid = clientData.cid || clientDoc.id;
+
+        if (!fallback && cid) {
+          fallback = { cid, data: clientData };
+        }
+
+        if (projectPid && pidList.includes(projectPid) && cid) {
+          return { cid, data: clientData };
+        }
+      }
+
+      return fallback;
+    },
+    [normalizeEmail]
+  );
+
+  const loadExistingClientMatches = useCallback(
+    async (members: any[], projectPid?: string) => {
+      const uniqueEmails = Array.from(
+        new Set(
+          members
+            .map((member) => normalizeEmail(member.formData?.email))
+            .filter(Boolean)
+        )
+      );
+
+      if (uniqueEmails.length === 0) {
+        setExistingClientsByEmail({});
+        setMemberCidActions({});
+        return;
+      }
+
+      const matches = await Promise.all(
+        uniqueEmails.map(async (email) => {
+          const existing = await fetchExistingClientByEmail(email, projectPid);
+          return { email, existing };
+        })
+      );
+
+      const nextExisting: Record<string, { cid: string; data: any }> = {};
+      const nextActions: Record<string, "update-existing" | "create-new"> = {};
+
+      for (const match of matches) {
+        if (!match.existing) continue;
+        nextExisting[match.email] = match.existing;
+        nextActions[match.email] = memberCidActions[match.email] || "update-existing";
+      }
+
+      setExistingClientsByEmail(nextExisting);
+      setMemberCidActions(nextActions);
+    },
+    [fetchExistingClientByEmail, memberCidActions, normalizeEmail]
+  );
+
+  const setMemberCidAction = (email: string, action: "update-existing" | "create-new") => {
+    const normalized = normalizeEmail(email);
+    if (!normalized) return;
+    setMemberCidActions((prev) => ({ ...prev, [normalized]: action }));
+  };
 
   const getExistingProjectMemberEmails = useCallback(async (projectPid?: string) => {
     if (!projectPid) return new Set<string>();
@@ -329,7 +413,7 @@ export default function MemberApprovalsPage() {
           selectedApproval.id,
           user?.email || "",
           adminInfo?.name || user?.displayName || "",
-          reviewNotes
+          { notes: reviewNotes, existingClientActions: memberCidActions }
         );
         toast.success(
           `Approved! ${generatedCids.length} client ID(s) generated: ${generatedCids.join(", ")}`
@@ -343,6 +427,8 @@ export default function MemberApprovalsPage() {
       setShowReviewDialog(false);
       setSelectedApproval(null);
       setReviewNotes("");
+      setExistingClientsByEmail({});
+      setMemberCidActions({});
       
       // Then refresh the list
       await fetchApprovals();
@@ -376,6 +462,7 @@ export default function MemberApprovalsPage() {
           members: additionalMembers,
           clientRequests: [],
         });
+        await loadExistingClientMatches(additionalMembers, approval.projectPid);
         setReviewNotes(approval.reviewNotes || "");
         setShowReviewDialog(true);
         return;
@@ -402,6 +489,8 @@ export default function MemberApprovalsPage() {
       }));
 
       setSelectedApproval({ ...approval, clientRequests, members });
+      setExistingClientsByEmail({});
+      setMemberCidActions({});
       setReviewNotes(approval.reviewNotes || "");
       setShowReviewDialog(true);
     } catch (error) {
@@ -1058,8 +1147,20 @@ export default function MemberApprovalsPage() {
                     );
                   }
 
-                  return (items as any[]).map((member, idx) => (
-                    <Card key={member.tempId || idx} className="border border-slate-200">
+                  return (items as any[]).map((member, idx) => {
+                    const memberEmail = normalizeEmail(member.formData?.email);
+                    const existingClient = memberEmail ? existingClientsByEmail[memberEmail] : undefined;
+                    const selectedAction = memberEmail ? memberCidActions[memberEmail] : undefined;
+
+                    return (
+                    <Card
+                      key={member.tempId || idx}
+                      className={
+                        existingClient
+                          ? "border border-amber-200 bg-amber-50/40"
+                          : "border border-slate-200"
+                      }
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-3">
                           <h4 className="font-semibold text-slate-800 flex items-center gap-2">
@@ -1119,9 +1220,44 @@ export default function MemberApprovalsPage() {
                             </span>
                           </div>
                         </div>
+                        {existingClient && (
+                          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 space-y-2">
+                            <div className="flex items-center justify-between gap-3 flex-wrap">
+                              <div>
+                                <p className="font-semibold text-amber-800">Existing client found</p>
+                                <p className="text-amber-700">CID: {existingClient.cid}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant={selectedAction !== "create-new" ? "default" : "outline"}
+                                  className={selectedAction !== "create-new" ? "bg-amber-600 hover:bg-amber-700" : "border-amber-300 text-amber-700"}
+                                  onClick={() => setMemberCidAction(memberEmail, "update-existing")}
+                                >
+                                  Update existing CID
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant={selectedAction === "create-new" ? "default" : "outline"}
+                                  className={selectedAction === "create-new" ? "bg-slate-700 hover:bg-slate-800" : "border-slate-300 text-slate-600"}
+                                  onClick={() => setMemberCidAction(memberEmail, "create-new")}
+                                >
+                                  Create new CID
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="text-amber-800">
+                              <span className="font-semibold">Current record:</span>{" "}
+                              {existingClient.data?.name || "—"} · {existingClient.data?.affiliation || "—"} · {existingClient.data?.phoneNumber || "—"}
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
-                  ));
+                    );
+                  });
                 })()}
               </div>
 
@@ -1167,6 +1303,8 @@ export default function MemberApprovalsPage() {
                 setShowReviewDialog(false);
                 setSelectedApproval(null);
                 setReviewNotes("");
+                setExistingClientsByEmail({});
+                setMemberCidActions({});
               }}
               disabled={processing}
             >
