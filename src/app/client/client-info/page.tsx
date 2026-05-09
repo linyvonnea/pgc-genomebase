@@ -851,7 +851,18 @@ export default function ClientPortalPage() {
       ),
     ];
 
-    const approvedEmails = new Set(allApprovedClients.map((c: any) => c.email?.toLowerCase()).filter(Boolean));
+    const approvedEmailsForSelectedProject = new Set(
+      allApprovedClients
+        .filter((c: any) => {
+          if (!c.email || c.email.toLowerCase() === emailParam?.toLowerCase()) return false;
+          if (selectedDetails) {
+            const memberPids = Array.isArray(c.pid) ? c.pid : (c.pid ? [c.pid] : []);
+            return memberPids.includes(selectedDetails.pid);
+          }
+          return true;
+        })
+        .map((c: any) => c.email.toLowerCase())
+    );
 
     // 1. Find Primary Member
     let primaryMember: ClientMember | null = null;
@@ -1001,8 +1012,8 @@ export default function ClientPortalPage() {
             // Skip if completely empty and not just added
             if (!email && !name) return false;
 
-            return email !== emailParam?.toLowerCase() && 
-                   (!email || !approvedEmails.has(email)) &&
+                 return email !== emailParam?.toLowerCase() && 
+                   (!email || !approvedEmailsForSelectedProject.has(email)) &&
                    (r.status === "draft" || r.status === "pending" || r.status === "rejected");
         })
         .map((r, index) => ({
@@ -1038,7 +1049,7 @@ export default function ClientPortalPage() {
             if (m.isPrimary) return false;
             // Also filter out if already approved
             const email = m.formData?.email?.toLowerCase();
-            return email && !approvedEmails.has(email);
+            return email && !approvedEmailsForSelectedProject.has(email);
         })
         .map((m, index) => ({
             id: m.tempId || `pending-member-${index + 1}`,
