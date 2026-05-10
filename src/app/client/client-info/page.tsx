@@ -682,11 +682,11 @@ export default function ClientPortalPage() {
     let cancelled = false;
     let unsubPrev: (() => void) | null = null;
 
-    const loadPrevious = async () => {
-      try {
-        const inquiriesSnap = await getDocs(
-          query(collection(db, "inquiries"), where("email", "==", emailParam))
-        );
+    // Real-time listener for all inquiries by this email so that a newly submitted
+    // inquiry appears in the sidebar immediately without a page reload.
+    const unsubInquiriesList = onSnapshot(
+      query(collection(db, "inquiries"), where("email", "==", emailParam)),
+      (inquiriesSnap) => {
         if (cancelled) return;
 
         // Collect other pending/ongoing inquiries (submitted but no projects yet)
@@ -705,8 +705,12 @@ export default function ClientPortalPage() {
         const otherIds = inquiriesSnap.docs
           .map(d => d.id)
           .filter(id => id !== inquiryIdParam);
+
+        // Re-subscribe to the previous projects query whenever the inquiry ID list changes
+        unsubPrev?.();
         if (otherIds.length === 0) {
           setFetchedPreviousProjects([]);
+          unsubPrev = null;
           return;
         }
         // Firestore `in` / `array-contains-any` each support up to 30 values
@@ -747,15 +751,16 @@ export default function ClientPortalPage() {
           }
           setFetchedPreviousProjects(previous);
         });
-      } catch (err) {
-        console.warn("Could not load previous projects:", err);
+      },
+      (err) => {
+        console.warn("Could not load previous inquiries:", err);
       }
-    };
+    );
 
-    loadPrevious();
     return () => {
       cancelled = true;
       unsubPrev?.();
+      unsubInquiriesList();
     };
   }, [emailParam, inquiryIdParam, authLoading, user]);
 
