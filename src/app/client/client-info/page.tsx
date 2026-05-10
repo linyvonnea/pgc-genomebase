@@ -21,6 +21,7 @@ import {
   Timestamp,
   or,
   limit,
+  arrayUnion,
 } from "firebase/firestore";
 import { clientFormSchema, ClientFormData } from "@/schemas/clientSchema";
 import { Input } from "@/components/ui/input";
@@ -922,21 +923,23 @@ export default function ClientPortalPage() {
     // Try PID-specific match first; fall back to any approved doc with this email
     // so that a PID mismatch (race condition / new project context) never drops
     // a "Complete" member back to Draft.
-    const primaryClientDoc =
-      allApprovedClients.find((c: any) => {
-        const email = c.email?.toLowerCase();
-        if (email !== emailParam?.toLowerCase()) return false;
-        if (selectedDetails) {
-          const memberPids = Array.isArray(c.pid) ? c.pid : (c.pid ? [c.pid] : []);
-          return memberPids.includes(selectedDetails.pid);
-        }
-        return true;
-      }) ??
-      // Fallback: email-only match – keeps the member "Complete" even when the
-      // PID array hasn't been updated yet or the context is a different project.
-      allApprovedClients.find((c: any) =>
-        c.email?.toLowerCase() === emailParam?.toLowerCase() && !!c.haveSubmitted
-      );
+    const primaryClientDocByPid = allApprovedClients.find((c: any) => {
+      const email = c.email?.toLowerCase();
+      if (email !== emailParam?.toLowerCase()) return false;
+      if (selectedDetails) {
+        const memberPids = Array.isArray(c.pid) ? c.pid : (c.pid ? [c.pid] : []);
+        return memberPids.includes(selectedDetails.pid);
+      }
+      return true;
+    });
+    // Email-only fallback: pre-fills the form from an existing client doc but keeps
+    // it editable when the current project isn't in their pid array yet (new project context).
+    const primaryClientDocByEmail = !primaryClientDocByPid
+      ? allApprovedClients.find((c: any) =>
+          c.email?.toLowerCase() === emailParam?.toLowerCase()
+        )
+      : null;
+    const primaryClientDoc = primaryClientDocByPid ?? primaryClientDocByEmail;
     
     if (primaryClientDoc) {
          console.log("Found primary from approved clients docs:", primaryClientDoc.id);
@@ -962,9 +965,10 @@ export default function ClientPortalPage() {
               affiliationAddress: primaryClientDoc.affiliationAddress || "",
             },
             errors: {},
-            // haveSubmitted:false means the user saved a draft in the clients collection
-            // and can still edit; true means they have formally confirmed.
-            isSubmitted: !!primaryClientDoc.haveSubmitted,
+            // PID-specific match: respect haveSubmitted (locked when confirmed).
+            // Email-only fallback (new project context): always editable so the
+            // client can save their info for this project too.
+            isSubmitted: primaryClientDocByPid ? !!primaryClientDoc.haveSubmitted : false,
             isPrimary: true,
             isDraft: false,
         };
@@ -1598,7 +1602,7 @@ export default function ClientPortalPage() {
             {
               ...result.data,
               cid: cidToUse,
-              pid: pids,
+              pid: arrayUnion(...pids),
               inquiryId: inquiryIdParam,
               isContactPerson: true,
               haveSubmitted: true,
@@ -1749,7 +1753,7 @@ export default function ClientPortalPage() {
           {
             ...member.formData,
             cid: cidToUse,
-            pid: pids,
+            pid: arrayUnion(...pids),
             inquiryId: inquiryIdParam,
             isContactPerson: true,
             haveSubmitted: false,
