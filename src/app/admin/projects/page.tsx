@@ -14,22 +14,13 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Plus, FolderPlus } from "lucide-react"
 import { ProjectFormModal } from "@/app/admin/projects/modalform"
-import { getProjects } from "@/services/projectsService"
+import { subscribeToProjects } from "@/services/projectsService"
 import useAuth from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { ProjectDetailSheet } from "@/components/admin/ProjectDetailSheet";
 
 // Fetch all projects from Firestore
-async function getData(): Promise<Project[]> {
-  try {
-    const projects = await getProjects();
-    return projects;
-  } catch (error) {
-    console.error("Failed to fetch inquiries:", error);
-    // Return empty array if there's an error
-    return [];
-  }
-}
+// (kept for handleFormSuccess fallback; live data comes from subscribeToProjects)
 
 import { PermissionGuard } from "@/components/PermissionGuard";
 
@@ -62,19 +53,16 @@ function ProjectPageContent() {
     });
   }, [data, projectsWithUnacknowledged]);
 
-  // Fetch data and update state
-  const fetchData = async () => {
-    const projects = await getData();
-    setData(projects);
-  };
+  // Real-time subscription — automatically reflects client deletions/updates
   useEffect(() => {
-    fetchData();
+    const unsubscribe = subscribeToProjects(setData);
+    return unsubscribe;
   }, []);
 
   // Handle successful form submission
-  const handleFormSuccess = async () => {
+  const handleFormSuccess = () => {
     setIsDialogOpen(false);
-    await fetchData();
+    // data refreshes automatically via the onSnapshot listener
   };
 
 
@@ -123,7 +111,7 @@ function ProjectPageContent() {
         <DataTable
           columns={columns}
           data={sortedData}
-          meta={{ onSuccess: fetchData }}
+          meta={{ onSuccess: () => {} }}
           onRowClick={(row) => setSelectedProject(row)}
         />
       </div>
@@ -131,7 +119,7 @@ function ProjectPageContent() {
         project={selectedProject}
         open={!!selectedProject}
         onClose={() => setSelectedProject(null)}
-        onProjectUpdated={fetchData}
+        onProjectUpdated={() => {}}
       />
     </div>
   );

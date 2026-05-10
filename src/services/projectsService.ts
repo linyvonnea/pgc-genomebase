@@ -6,6 +6,9 @@ import {
   query,
   orderBy,
   where,
+  onSnapshot,
+  QueryDocumentSnapshot,
+  DocumentData,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Project } from "@/types/Project";
@@ -24,137 +27,168 @@ function formatDateToMMDDYYYY(date: Date): string {
  * Converts Firestore Timestamps to JS Dates, maps legacy service codes, and validates with Zod schema.
  * Returns only valid project records.
  */
+
+// ── Module-level transformation helpers ──────────────────────────────────────
+
+const SERVICE_MAP: Record<string, string> = {
+  bio: "Bioinformatics Analysis",
+  info: "Bioinformatics Analysis",
+  lab: "Laboratory Services",
+  retail: "Retail Sales",
+  equip: "Equipment Use",
+  equipment: "Equipment Use",
+  "Bioinformatics Analysis": "Bioinformatics Analysis",
+  "Laboratory Services": "Laboratory Services",
+  "Retail Services": "Retail Sales",
+  "Retail Sales": "Retail Sales",
+  "Equipment Use": "Equipment Use",
+};
+
+const VALID_SERVICES = [
+  "Laboratory Services",
+  "Retail Sales",
+  "Equipment Use",
+  "Bioinformatics Analysis",
+  "Training",
+  "N/A",
+];
+
+function normalizeSendingInstitution(
+  value: any
+): "UP System" | "SUC/HEI" | "Government" | "Private/Local" | "International" | "N/A" | undefined {
+  if (!value) return undefined;
+  const n = value.toString().trim().toLowerCase();
+  if (["government", "gov", "govt", "govenment"].includes(n)) return "Government";
+  if (["up system", "upsystem", "u.p. system"].includes(n)) return "UP System";
+  if (["suc/hei", "suc", "hei", "suc hei"].includes(n)) return "SUC/HEI";
+  if (["private/local", "private", "local", "private local"].includes(n)) return "Private/Local";
+  if (["international", "intl", "int'l"].includes(n)) return "International";
+  if (["n/a", "na", "none", "not applicable"].includes(n)) return "N/A";
+  const exact = ["UP System", "SUC/HEI", "Government", "Private/Local", "International", "N/A"];
+  return exact.includes(value) ? value : undefined;
+}
+
+function normalizeStatus(
+  value: any
+): "Pending" | "Ongoing" | "Completed" | "Cancelled" | undefined {
+  if (!value) return undefined;
+  const n = value.toString().trim().toLowerCase();
+  if (n === "pending") return "Pending";
+  if (n === "ongoing") return "Ongoing";
+  if (n === "completed") return "Completed";
+  if (["cancelled", "canceled"].includes(n)) return "Cancelled";
+  return ["Pending", "Ongoing", "Completed", "Cancelled"].includes(value) ? value : undefined;
+}
+
+function normalizeFunding(value: any): "External" | "In-House" | undefined {
+  if (!value) return undefined;
+  const n = value.toString().trim().toLowerCase();
+  if (n === "external") return "External";
+  if (["in-house", "inhouse"].includes(n)) return "In-House";
+  return ["External", "In-House"].includes(value) ? value : undefined;
+}
+
+/** Transform a single Firestore project document into a typed Project object. */
+function processProjectDoc(
+  doc: QueryDocumentSnapshot<DocumentData>
+): Project | null {
+  const data = doc.data();
+
+  if (data.createdAt && typeof data.createdAt.toDate === "function") {
+    data.createdAt = data.createdAt.toDate();
+  }
+  if (data.startDate && typeof data.startDate.toDate === "function") {
+    data.startDate = data.startDate.toDate();
+  }
+
+  if (Array.isArray(data.serviceRequested)) {
+    data.serviceRequested = data.serviceRequested
+      .map((code: string) => SERVICE_MAP[code] || code)
+      .filter(
+        (val: string, idx: number, arr: string[]) =>
+          VALID_SERVICES.includes(val) && arr.indexOf(val) === idx
+      );
+  }
+
+  const candidate: any = { id: doc.id, ...data };
+
+  try {
+    return {
+      pid: candidate.pid || "",
+      iid: candidate.iid ?? "",
+      year: candidate.year || undefined,
+      title: candidate.title || "",
+      lead: candidate.lead || "",
+      projectTag: candidate.projectTag || "",
+      notes: candidate.notes || "",
+      personnelAssigned: candidate.personnelAssigned || "",
+      fundingInstitution: candidate.fundingInstitution || "",
+      createdAt:
+        candidate.createdAt instanceof Date
+          ? candidate.createdAt
+          : candidate.createdAt
+          ? new Date(candidate.createdAt)
+          : undefined,
+      startDate: candidate.startDate
+        ? formatDateToMMDDYYYY(
+            candidate.startDate instanceof Date
+              ? candidate.startDate
+              : new Date(candidate.startDate)
+          )
+        : undefined,
+      clientNames: Array.isArray(candidate.clientNames)
+        ? candidate.clientNames.map((s: any) => s.toString().trim())
+        : candidate.clientNames
+        ? [candidate.clientNames.toString().trim()]
+        : undefined,
+      serviceRequested: Array.isArray(candidate.serviceRequested)
+        ? candidate.serviceRequested
+        : candidate.serviceRequested
+        ? [candidate.serviceRequested]
+        : undefined,
+      sendingInstitution: normalizeSendingInstitution(candidate.sendingInstitution),
+      status: normalizeStatus(candidate.status),
+      fundingCategory: normalizeFunding(candidate.fundingCategory),
+    };
+  } catch (error) {
+    console.error("Failed to process project:", candidate.pid || doc.id, error);
+    return null;
+  }
+}
+
 export async function getProjects(): Promise<Project[]> {
   try {
-    const projectsRef = collection(db, "projects");
-    const querySnapshot = await getDocs(projectsRef);
-
+    const querySnapshot = await getDocs(collection(db, "projects"));
     const projects: Project[] = [];
-
     querySnapshot.forEach((doc) => {
-      const data = doc.data();
-
-      // Convert Firestore Timestamps to JS Dates
-      if (data.createdAt && typeof data.createdAt.toDate === "function") {
-        data.createdAt = data.createdAt.toDate();
-      }
-      if (data.startDate && typeof data.startDate.toDate === "function") {
-        data.startDate = data.startDate.toDate();
-      }
-
-      // Map legacy/invalid serviceRequested codes to valid enum values
-      if (Array.isArray(data.serviceRequested)) {
-        const serviceMap: Record<string, string> = {
-          bio: "Bioinformatics Analysis",
-          info: "Bioinformatics Analysis",
-          lab: "Laboratory Services",
-          retail: "Retail Sales",
-          equip: "Equipment Use",
-          equipment: "Equipment Use",
-          "Bioinformatics Analysis": "Bioinformatics Analysis",
-          "Laboratory Services": "Laboratory Services",
-          "Retail Services": "Retail Sales",
-          "Retail Sales": "Retail Sales",
-          "Equipment Use": "Equipment Use",
-        };
-        data.serviceRequested = data.serviceRequested
-          .map((code: string) => serviceMap[code] || code)
-          // Only keep valid, unique service names
-          .filter(
-            (val: string, idx: number, arr: string[]) =>
-              [
-                "Laboratory Services",
-                "Retail Sales",
-                "Equipment Use",
-                "Bioinformatics Analysis",
-                "Training",
-                "N/A"
-              ].includes(val) && arr.indexOf(val) === idx
-          );
-      }
-
-      const candidate: any = {
-        id: doc.id,
-        ...data,
-      };
-
-      // Helper function to normalize sendingInstitution
-      const normalizeSendingInstitution = (value: any): "UP System" | "SUC/HEI" | "Government" | "Private/Local" | "International" | "N/A" | undefined => {
-        if (!value) return undefined;
-        const normalized = value.toString().trim().toLowerCase();
-        if (["government", "gov", "govt", "govenment"].includes(normalized)) return "Government";
-        if (["up system", "upsystem", "u.p. system"].includes(normalized)) return "UP System";
-        if (["suc/hei", "suc", "hei", "suc hei"].includes(normalized)) return "SUC/HEI";
-        if (["private/local", "private", "local", "private local"].includes(normalized)) return "Private/Local";
-        if (["international", "intl", "int'l"].includes(normalized)) return "International";
-        if (["n/a", "na", "none", "not applicable"].includes(normalized)) return "N/A";
-        // Return as-is if it matches exactly, otherwise undefined
-        const exact = ["UP System", "SUC/HEI", "Government", "Private/Local", "International", "N/A"];
-        return exact.includes(value) ? value : undefined;
-      };
-
-      // Helper function to normalize status
-      const normalizeStatus = (value: any): "Pending" | "Ongoing" | "Completed" | "Cancelled" | undefined => {
-        if (!value) return undefined;
-        const normalized = value.toString().trim().toLowerCase();
-        if (normalized === "pending") return "Pending";
-        if (normalized === "ongoing") return "Ongoing";
-        if (normalized === "completed") return "Completed";
-        if (["cancelled", "canceled"].includes(normalized)) return "Cancelled";
-        // Return as-is if it matches exactly, otherwise undefined
-        return ["Pending", "Ongoing", "Completed", "Cancelled"].includes(value) ? value : undefined;
-      };
-
-      // Helper function to normalize funding category
-      const normalizeFunding = (value: any): "External" | "In-House" | undefined => {
-        if (!value) return undefined;
-        const normalized = value.toString().trim().toLowerCase();
-        if (normalized === "external") return "External";
-        if (["in-house", "inhouse"].includes(normalized)) return "In-House";
-        // Return as-is if it matches exactly, otherwise undefined
-        return ["External", "In-House"].includes(value) ? value : undefined;
-      };
-
-      // Always include the record, with or without schema validation
-      try {
-        const project: Project = {
-          pid: candidate.pid || '',
-          iid: candidate.iid ?? '',
-          year: candidate.year || undefined,
-          title: candidate.title || '',
-          lead: candidate.lead || '',
-          projectTag: candidate.projectTag || '',
-          notes: candidate.notes || '',
-          personnelAssigned: candidate.personnelAssigned || '',
-          fundingInstitution: candidate.fundingInstitution || '',
-          createdAt: candidate.createdAt instanceof Date 
-            ? candidate.createdAt 
-            : candidate.createdAt ? new Date(candidate.createdAt) : undefined,
-          startDate: candidate.startDate 
-            ? formatDateToMMDDYYYY(candidate.startDate instanceof Date ? candidate.startDate : new Date(candidate.startDate))
-            : undefined,
-          clientNames: Array.isArray(candidate.clientNames) 
-            ? candidate.clientNames.map((s: any) => s.toString().trim())
-            : candidate.clientNames ? [candidate.clientNames.toString().trim()] : undefined,
-          serviceRequested: Array.isArray(candidate.serviceRequested) 
-            ? candidate.serviceRequested 
-            : candidate.serviceRequested ? [candidate.serviceRequested] : undefined,
-          sendingInstitution: normalizeSendingInstitution(candidate.sendingInstitution),
-          status: normalizeStatus(candidate.status),
-          fundingCategory: normalizeFunding(candidate.fundingCategory),
-        };
-        projects.push(project);
-      } catch (error) {
-        console.error('Failed to process project:', candidate.pid || doc.id, error);
-      }
+      const p = processProjectDoc(doc);
+      if (p) projects.push(p);
     });
-
-    // Sort by pid descending (fall back to empty string)
     projects.sort((a, b) => (b.pid || "").localeCompare(a.pid || ""));
     return projects;
   } catch (error) {
     throw new Error("Failed to fetch projects from database");
   }
+}
+
+/**
+ * Subscribe to real-time project updates from Firestore.
+ * Calls `callback` immediately with the current list and again on every change.
+ * Returns an unsubscribe function — call it in your cleanup to stop listening.
+ */
+export function subscribeToProjects(
+  callback: (projects: Project[]) => void
+): () => void {
+  const projectsRef = collection(db, "projects");
+  return onSnapshot(projectsRef, (snapshot) => {
+    const projects: Project[] = [];
+    snapshot.forEach((doc) => {
+      const p = processProjectDoc(doc);
+      if (p) projects.push(p);
+    });
+    projects.sort((a, b) => (b.pid || "").localeCompare(a.pid || ""));
+    callback(projects);
+  });
 }
 
 /**
