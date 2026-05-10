@@ -2662,7 +2662,13 @@ export default function ClientPortalPage() {
   const otherMembers = members.filter((m) => !m.isPrimary);
 
   /** Renders the full member form (used inside expandable cards) */
-  const renderMemberForm = (member: ClientMember) => (
+  const renderMemberForm = (member: ClientMember) => {
+    const isProjectLocked =
+      projectDetails?.status === "Completed" ||
+      projectDetails?.status === "Pending Approval";
+    const isFormLocked = member.isSubmitted || isProjectLocked;
+
+    return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
@@ -2670,6 +2676,21 @@ export default function ClientPortalPage() {
       }}
       className="space-y-4 pt-3"
     >
+      {/* ── Lock banner ── */}
+      {member.isSubmitted && (
+        <div className="flex items-center gap-2.5 bg-green-50 border border-green-200 rounded-lg px-3 py-2.5">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <p className="text-xs font-medium text-green-700">
+            Information confirmed and locked. Contact the administrator if you need to make changes.
+          </p>
+        </div>
+      )}
+
+      {/* ── All form fields wrapped in a fieldset so the browser natively disables every input/button inside ── */}
+      <fieldset disabled={isFormLocked} className="contents">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Name */}
         <div className="md:col-span-2">
@@ -2907,8 +2928,10 @@ export default function ClientPortalPage() {
           )}
         </Button>
       </div>
+      </fieldset>
     </form>
-  );
+    );
+  };
 
   /** Renders a single member card (expandable) */
   const renderMemberCard = (member: ClientMember) => {
