@@ -5023,9 +5023,9 @@ export default function ClientPortalPage() {
         }}
         loading={submitting}
         title="Confirm Member Information"
-        description="Please review the details below to ensure accuracy before saving."
-        confirmLabel="Confirm & Save"
-        cancelLabel="Edit Details"
+        description="Review the details below carefully. Once confirmed, the form will be locked and can no longer be edited directly."
+        confirmLabel="Yes, Confirm & Lock"
+        cancelLabel="Not Yet — Go Back"
         className="max-w-2xl"
       >
         {pendingMemberId &&
@@ -5115,11 +5115,20 @@ export default function ClientPortalPage() {
                   </div>
                 </div>
 
-                <div className="bg-blue-50/50 p-2.5 rounded-lg border border-blue-100 flex items-start gap-2">
-                  <Info className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
-                  <p className="text-[11px] text-blue-600 leading-snug">
-                    Please ensure all details are correct. This information will be used for official communications.
-                  </p>
+                <div className="bg-amber-50 p-3 rounded-lg border border-amber-200 flex items-start gap-2.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                  <div className="space-y-1">
+                    <p className="text-[11px] font-semibold text-amber-700 leading-snug">
+                      This action will lock the form.
+                    </p>
+                    <p className="text-[11px] text-amber-600 leading-snug">
+                      Once confirmed, all fields will be read-only and cannot be edited. If you&apos;re not yet sure, click <span className="font-semibold">&quot;Not Yet — Go Back&quot;</span> and use the <span className="font-semibold">&quot;Save Draft&quot;</span> button instead to save your progress without locking.
+                    </p>
+                  </div>
                 </div>
               </div>
             );
