@@ -2735,7 +2735,7 @@ export default function ClientPortalPage() {
             onChange={(e) => handleChange(member.id, "name", e.target.value)}
             placeholder="Enter full name"
             disabled={
-              member.isSubmitted ||
+              (!member.isDraft && member.isSubmitted) ||
               projectDetails?.status === "Completed" ||
               projectDetails?.status === "Pending Approval"
             }
@@ -2766,7 +2766,7 @@ export default function ClientPortalPage() {
             }
             disabled={
               member.isPrimary ||
-              member.isSubmitted ||
+              (!member.isDraft && member.isSubmitted) ||
               projectDetails?.status === "Completed" ||
               projectDetails?.status === "Pending Approval"
             }
@@ -2792,7 +2792,7 @@ export default function ClientPortalPage() {
             }
             placeholder="e.g. Division of Biological Sciences - UPV CAS"
             disabled={
-              member.isSubmitted ||
+              (!member.isDraft && member.isSubmitted) ||
               projectDetails?.status === "Completed" ||
               projectDetails?.status === "Pending Approval"
             }
@@ -2817,7 +2817,7 @@ export default function ClientPortalPage() {
             }
             placeholder="e.g. Research Assistant, Professor"
             disabled={
-              member.isSubmitted ||
+              (!member.isDraft && member.isSubmitted) ||
               projectDetails?.status === "Completed" ||
               projectDetails?.status === "Pending Approval"
             }
@@ -2839,7 +2839,7 @@ export default function ClientPortalPage() {
             value={member.formData.sex}
             onValueChange={(val) => handleChange(member.id, "sex", val)}
             disabled={
-              member.isSubmitted ||
+              (!member.isDraft && member.isSubmitted) ||
               projectDetails?.status === "Completed" ||
               projectDetails?.status === "Pending Approval"
             }
@@ -2870,7 +2870,7 @@ export default function ClientPortalPage() {
             }
             placeholder="e.g. 09091234567"
             disabled={
-              member.isSubmitted ||
+              (!member.isDraft && member.isSubmitted) ||
               projectDetails?.status === "Completed" ||
               projectDetails?.status === "Pending Approval"
             }
@@ -2895,7 +2895,7 @@ export default function ClientPortalPage() {
             }
             placeholder="Enter complete address of your institution/organization"
             disabled={
-              member.isSubmitted ||
+              (!member.isDraft && member.isSubmitted) ||
               projectDetails?.status === "Completed" ||
               projectDetails?.status === "Pending Approval"
             }
@@ -2915,7 +2915,6 @@ export default function ClientPortalPage() {
           type="button"
           onClick={() => handleSaveDraft(member.id)}
           disabled={
-            member.isSubmitted ||
             activeSavingId === member.id ||
             submitting ||
             projectDetails?.status === "Completed" ||
@@ -2939,7 +2938,7 @@ export default function ClientPortalPage() {
         <Button
           type="submit"
           disabled={
-            member.isSubmitted ||
+            (!member.isDraft && member.isSubmitted) ||
             submitting ||
             projectDetails?.status === "Completed" ||
             projectDetails?.status === "Pending Approval"
