@@ -2011,7 +2011,7 @@ export default function ClientPortalPage() {
   // Project Submission (Project + Primary Member)
   // ────────────────────────────────────────────────────────────────
 
-  const handleSubmitProjectForApproval = () => {
+  const handleSubmitProjectForApproval = async () => {
     // Validate primary member data
     const primaryMember = members.find((m) => m.isPrimary);
     if (!primaryMember) {
@@ -2040,7 +2040,19 @@ export default function ClientPortalPage() {
       return;
     }
 
-    if (!projectRequest) {
+    // If projectRequest was cleared by a prior navigation to a non-draft project,
+    // restore it from the draft project details before checking.
+    let resolvedProjectRequest = projectRequest;
+    if (!resolvedProjectRequest && canonicalMemberScopeId) {
+      try {
+        resolvedProjectRequest = await getProjectRequestById(canonicalMemberScopeId);
+        if (resolvedProjectRequest) setProjectRequest(resolvedProjectRequest);
+      } catch {
+        // ignore — handled by the null check below
+      }
+    }
+
+    if (!resolvedProjectRequest) {
       toast.error("No draft project found");
       return;
     }
@@ -2161,6 +2173,18 @@ export default function ClientPortalPage() {
     // projectRequest and approvalStatus will be updated by their respective effects/subscriptions
     if (!project.isDraft) {
         setProjectRequest(null);
+    } else {
+        // Switching back to a draft project: the Firestore subscription won't re-fire
+        // unless the document actually changes, so projectRequest may still be null
+        // from a previous navigation to a non-draft project. Restore it eagerly.
+        const draftRequestId = (project as any).originalRequestId || project.pid;
+        if (draftRequestId && draftRequestId !== "DRAFT") {
+          getProjectRequestById(draftRequestId).then((req) => {
+            if (req) setProjectRequest(req);
+          }).catch((err) => {
+            console.warn("Could not restore draft project request:", err);
+          });
+        }
     }
     
     // Preserve current expanded members state - don't force primary to expand
