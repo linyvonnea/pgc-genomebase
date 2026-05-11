@@ -4251,6 +4251,7 @@ export default function ClientPortalPage() {
                         <div className="space-y-2">
                           {inquiryQuotations.map((quote) => {
                             const qCancelled = quote.status === "cancelled";
+                            const isSelected = quote.status === "selected" || quote.selectedForProject;
                             return (
                             <div
                               key={quote.id}
@@ -4286,12 +4287,13 @@ export default function ClientPortalPage() {
                                     <span className="inline-flex text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5">
                                       Cancelled
                                     </span>
-                                  ) : (quote.status === "selected" || quote.selectedForProject) ? (
+                                  ) : isSelected ? (
                                     <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
                                       <CheckCircle2 className="h-2.5 w-2.5" /> Selected
                                     </span>
                                   ) : null}
                                   {!qCancelled && 
+                                   !isSelected &&
                                    fetchedApprovedProjects.length === 0 && 
                                    currentInquiry?.status !== "Cancelled" && 
                                    currentInquiry?.status !== "Quotation Only" && (
