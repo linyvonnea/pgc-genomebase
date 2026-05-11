@@ -1230,15 +1230,16 @@ export default function ClientPortalPage() {
     // Don't automatically expand primary member - respect user's saved preference from localStorage
 
   }, [
-    fetchedDraftProjects, 
+    fetchedDraftProjects,
     fetchedApprovedProjects,
     fetchedPreviousProjects,
-    fetchedClientRequests, 
+    fetchedClientRequests,
     fetchedClients,
     fetchedSelectedProjectClients,
-    fetchedMemberApprovals, 
-    emailParam, 
-    currentProjectRequestId, 
+    fetchedMemberApprovals,
+    allInquiries,
+    emailParam,
+    currentProjectRequestId,
     pidParam,
     selectedProjectPid,
     canonicalMemberScopeId
@@ -3178,6 +3179,7 @@ export default function ClientPortalPage() {
                         if (inq.id === inquiryIdParam) return;
                         setSelectedProjectPid(null);
                         setProjectDetails(null);
+                        setShowProjectsList(true);
                         const params = new URLSearchParams();
                         if (emailParam) params.set("email", emailParam);
                         params.set("inquiryId", inq.id);
