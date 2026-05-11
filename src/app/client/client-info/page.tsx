@@ -846,7 +846,12 @@ export default function ClientPortalPage() {
   
   useEffect(() => {
     // Combine projects (current inquiry + previous inquiries)
-    const allProjects = [...fetchedDraftProjects, ...fetchedApprovedProjects, ...fetchedPreviousProjects];
+    const currentInquiryProjects = [...fetchedDraftProjects, ...fetchedApprovedProjects];
+    const previousInquiryProjects = [...fetchedPreviousProjects];
+    const allProjects =
+      previousInquiryProjects.length > 0 && currentInquiryProjects.length > 0
+        ? [previousInquiryProjects[0], ...currentInquiryProjects, ...previousInquiryProjects.slice(1)]
+        : [...currentInquiryProjects, ...previousInquiryProjects];
     setProjects(allProjects);
 
     // Determine currently selected project details
@@ -867,16 +872,6 @@ export default function ClientPortalPage() {
        selectedDetails = allProjects.find(p => (p as any).originalRequestId === currentProjectRequestId || p.pid === currentProjectRequestId) || null;
     } 
 
-    if (!selectedDetails && !userWantsWorkspaceRef.current && allProjects.length > 0) {
-      // Only auto-select from the CURRENT inquiry's projects so that returning clients
-      // with a new pending inquiry see the Workspace view first instead of jumping to
-      // an old project automatically.
-      const currentInquiryProjects = [...fetchedDraftProjects, ...fetchedApprovedProjects];
-      if (currentInquiryProjects.length > 0 && currentInquiry?.status !== "Pending") {
-        selectedDetails = currentInquiryProjects[0];
-      }
-    }
-    
     if (selectedDetails) {
         // Sync project details but avoid infinite loops with deep comparison checks
         if (!projectDetails || projectDetails.pid !== selectedDetails.pid || projectDetails.status !== selectedDetails.status) {
@@ -892,6 +887,9 @@ export default function ClientPortalPage() {
         if (selectedProjectPid !== selectedDetails.pid) {
            setSelectedProjectPid(selectedDetails.pid);
         }
+    } else if (projectDetails || selectedProjectPid) {
+        setProjectDetails(null);
+        if (selectedProjectPid) setSelectedProjectPid(null);
     }
 
     // Process Members
@@ -3139,10 +3137,9 @@ export default function ClientPortalPage() {
                     <button
                       key={inq.id}
                       onClick={() => {
-                        userWantsWorkspaceRef.current = true;
+                        if (inq.id === inquiryIdParam) return;
                         setSelectedProjectPid(null);
                         setProjectDetails(null);
-                        if (inq.id === inquiryIdParam) return;
                         const params = new URLSearchParams();
                         if (emailParam) params.set("email", emailParam);
                         params.set("inquiryId", inq.id);
@@ -4333,13 +4330,13 @@ export default function ClientPortalPage() {
                           <Button
                             variant="outline"
                             onClick={() => setShowCancelInquiryModal(true)}
-                            disabled={currentInquiry.status === "Cancelled" || currentInquiry.status === "Quotation Only" || cancelInquirySubmitting}
+                            disabled={currentInquiry.status === "Cancelled" || currentInquiry.status === "Quotation Only" || currentInquiry.status === "Approved Client" || cancelInquirySubmitting}
                             className="border-amber-200 text-amber-900 hover:bg-amber-100 font-bold text-xs h-7 shrink-0"
                           >
                             Do Not Proceed
                           </Button>
                         </div>
-                        {(currentInquiry.status === "Cancelled" || currentInquiry.status === "Quotation Only") && (
+                        {(currentInquiry.status === "Cancelled" || currentInquiry.status === "Quotation Only" || currentInquiry.status === "Approved Client") && (
                           <p className="text-[11px] text-amber-700 mt-1.5">This request is already marked as {currentInquiry.status}.</p>
                         )}
                       </div>

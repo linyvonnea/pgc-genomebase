@@ -15,8 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { signInWithPopup, GoogleAuthProvider, getAuth } from "firebase/auth";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, collection, query, where, getDocs, or } from "firebase/firestore";
-import { getProjectRequest } from "@/services/projectRequestService";
+import { doc, getDoc } from "firebase/firestore";
 import { markInquiryAsLoggedIn } from "@/services/inquiryService";
 import { logActivity } from "@/services/activityLogService";
 
@@ -147,22 +146,6 @@ export default function ClientVerifyPage() {
         return;
       }
 
-      // Check if project already exists for this inquiry
-      let projectPid = "";
-      const projectsRef = collection(db, "projects");
-      const projectQuery = query(
-        projectsRef, 
-        or(
-          where("iid", "==", inquiryId),
-          where("iid", "array-contains", inquiryId)
-        )
-      );
-      const projectSnapshot = await getDocs(projectQuery);
-      
-      if (!projectSnapshot.empty) {
-        projectPid = projectSnapshot.docs[0].data().pid;
-      }
-
       // When master admin logs in, impersonate the inquiry's email to see their data accurately
       const activeEmail = isMasterAdmin ? inquiry.email : googleUser.email;
 
@@ -170,21 +153,7 @@ export default function ClientVerifyPage() {
       if (activeEmail) params.set("email", activeEmail);
       if (inquiryId) params.set("inquiryId", inquiryId);
       
-      // Check for any existing project (draft, pending, or approved)
-      const projectRequest = await getProjectRequest(inquiryId);
-      const hasProjectRequest = projectRequest && (
-        projectRequest.status === "draft" || 
-        projectRequest.status === "pending" ||
-        projectRequest.status === "approved"
-      );
-      
-      // Always redirect to Client Portal (Dashboard)
-      if (projectPid) {
-        params.set("pid", projectPid);
-      } else if (hasProjectRequest && projectRequest.id) {
-        // If it's a project request draft, pass that info
-        params.set("projectRequestId", projectRequest.id);
-      }
+      // Default to workspace view; do not preselect a project on login.
       
       // Mark as logged in if not admin
       // Check if it's a client login (not an admin bypass)
