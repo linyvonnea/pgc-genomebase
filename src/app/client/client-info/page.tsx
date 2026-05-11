@@ -68,12 +68,9 @@ import {
   getMemberApproval,
 } from "@/services/memberApprovalService";
 import {
-  getProjectRequest,
   getProjectRequestById,
-  getProjectRequestsByInquiry,
   saveProjectRequest,
   submitProjectForApproval,
-  subscribeToProjectRequest,
   subscribeToProjectRequestsByInquiry,
   ProjectRequest,
 } from "@/services/projectRequestService";
@@ -577,39 +574,21 @@ export default function ClientPortalPage() {
       setCurrentProjectRequestId(projectRequestIdParam);
     }
 
-    // 1. Subscribe to Draft/Pending Project Requests
+    // 1. Subscribe to Project Request for the current inquiry
     const unsubDraftProjects = subscribeToProjectRequestsByInquiry(inquiryIdParam, (requests) => {
-      // Filter for draft/pending/rejected
-      const drafts = requests
-        .filter(r => ["draft", "pending", "rejected"].includes(r.status))
-        .map((draftProjectRequest) => {
-           console.log(`Found ${draftProjectRequest.status} project request: ${draftProjectRequest.id}`);
-           const statusLabel = draftProjectRequest.status === "draft" ? "Draft" : 
-                            draftProjectRequest.status === "pending" ? "Pending Approval" :
-                            "Rejected";
-           return {
-            pid: draftProjectRequest.id || inquiryIdParam, // Always use inquiryId for consistency in drafts
-            title: draftProjectRequest.title || "Draft Project",
-            lead: draftProjectRequest.projectLead || "Not specified",
-            startDate: draftProjectRequest.startDate?.toDate?.() || new Date(),
-            sendingInstitution: draftProjectRequest.sendingInstitution || "Not specified",
-            fundingInstitution: draftProjectRequest.fundingInstitution || "Not specified",
-            status: statusLabel,
-            inquiryId: inquiryIdParam,
-            isDraft: true,
-            // Store original request ID for selection matching
-            originalRequestId: draftProjectRequest.id
-           } as ProjectDetails;
-        });
-      setFetchedDraftProjects(drafts);
-      
       // Update selected project request object if needed
       if (currentProjectRequestId) {
         const match = requests.find(r => r.id === currentProjectRequestId);
-        if (match) setProjectRequest(match);
+        if (match) {
+          setProjectRequest(match);
+        } else if (requests.length === 0) {
+          setProjectRequest(null);
+        }
       } else if (requests.length > 0) {
         // Default to first usually
         setProjectRequest(requests[0]);
+      } else {
+        setProjectRequest(null);
       }
     });
 
@@ -659,6 +638,44 @@ export default function ClientPortalPage() {
       unsubClients();
     };
   }, [emailParam, inquiryIdParam, projectRequestIdParam, router, authLoading, user]);
+
+  // 1.1a. Subscribe to draft/pending/rejected project requests for all inquiries (by email)
+  useEffect(() => {
+    if (!emailParam || authLoading || !user) return;
+
+    const draftQuery = query(
+      collection(db, "projectRequests"),
+      where("requestedBy", "==", emailParam)
+    );
+
+    const unsub = onSnapshot(draftQuery, (snapshot) => {
+      const drafts = snapshot.docs
+        .map((docSnap) => {
+          const draftProjectRequest = docSnap.data() as ProjectRequest;
+          if (!["draft", "pending", "rejected"].includes(draftProjectRequest.status)) return null;
+          const statusLabel = draftProjectRequest.status === "draft" ? "Draft" :
+            draftProjectRequest.status === "pending" ? "Pending Approval" :
+            "Rejected";
+          return {
+            pid: draftProjectRequest.id || docSnap.id || draftProjectRequest.inquiryId,
+            title: draftProjectRequest.title || "Draft Project",
+            lead: draftProjectRequest.projectLead || "Not specified",
+            startDate: draftProjectRequest.startDate?.toDate?.() || new Date(),
+            sendingInstitution: draftProjectRequest.sendingInstitution || "Not specified",
+            fundingInstitution: draftProjectRequest.fundingInstitution || "Not specified",
+            status: statusLabel,
+            inquiryId: draftProjectRequest.inquiryId || docSnap.id,
+            isDraft: true,
+            originalRequestId: docSnap.id,
+          } as ProjectDetails;
+        })
+        .filter((project): project is ProjectDetails => !!project);
+
+      setFetchedDraftProjects(drafts);
+    });
+
+    return () => unsub();
+  }, [emailParam, authLoading, user]);
 
   // 1.1c. Subscribe to clients for the selected project (needed for previous-inquiry projects)
   //  so members correctly show "Complete" instead of "Draft" when they have real client IDs.
@@ -769,7 +786,7 @@ export default function ClientPortalPage() {
     };
   }, [emailParam, inquiryIdParam, authLoading, user]);
 
-  // Auto-init: when a Pending inquiry is first detected, show workspace without auto-selecting a project.
+  // Auto-init: when a Pending inquiry is first detected, show workspace.
   useEffect(() => {
     if (
       currentInquiry?.status === "Pending" &&
@@ -780,7 +797,6 @@ export default function ClientPortalPage() {
       userWantsWorkspaceRef.current = true;
       setSelectedProjectPid(null);
       setProjectDetails(null);
-      setShowProjectsList(true);
     }
   }, [currentInquiry?.status, inquiryIdParam]);
 
@@ -845,26 +861,34 @@ export default function ClientPortalPage() {
   // ────────────────────────────────────────────────────────────────
   
   useEffect(() => {
-    // Combine projects (current inquiry + previous inquiries)
-    const currentInquiryProjects = [...fetchedDraftProjects, ...fetchedApprovedProjects];
-    const previousInquiryProjects = [...fetchedPreviousProjects];
-    const inquiryCreatedAtById = new Map(
-      allInquiries.map((inq) => {
-        const raw = inq.createdAt as any;
-        const date = raw?.toDate ? raw.toDate() : (raw instanceof Date ? raw : raw ? new Date(raw) : null);
-        const ts = date && !isNaN(date.getTime()) ? date.getTime() : 0;
-        return [inq.id, ts] as const;
-      })
-    );
-    const getProjectTimestamp = (project: ProjectDetails): number => {
-      const inquiryTs = project.inquiryId ? inquiryCreatedAtById.get(project.inquiryId) : undefined;
-      if (inquiryTs && inquiryTs > 0) return inquiryTs;
+    // Combine projects and sort newest first for the sidebar list
+    const combinedProjects = [
+      ...fetchedDraftProjects,
+      ...fetchedApprovedProjects,
+      ...fetchedPreviousProjects,
+    ];
+
+    const byPid = new Map<string, ProjectDetails>();
+    for (const project of combinedProjects) {
+      if (!project?.pid) continue;
+      const existing = byPid.get(project.pid);
+      if (!existing || (existing.isDraft && !project.isDraft)) {
+        byPid.set(project.pid, project);
+      }
+    }
+
+    const getProjectTime = (project: ProjectDetails): number => {
       const raw = project.startDate as any;
-      const date = raw?.toDate ? raw.toDate() : (raw instanceof Date ? raw : raw ? new Date(raw) : null);
-      return date && !isNaN(date.getTime()) ? date.getTime() : 0;
+      const date = raw instanceof Date
+        ? raw
+        : raw?.toDate
+          ? raw.toDate()
+          : new Date(raw);
+      return isNaN(date.getTime()) ? 0 : date.getTime();
     };
-    const allProjects = [...currentInquiryProjects, ...previousInquiryProjects].sort(
-      (a, b) => getProjectTimestamp(b) - getProjectTimestamp(a)
+
+    const allProjects = Array.from(byPid.values()).sort(
+      (a, b) => getProjectTime(b) - getProjectTime(a)
     );
     setProjects(allProjects);
 
