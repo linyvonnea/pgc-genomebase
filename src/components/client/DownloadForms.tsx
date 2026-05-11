@@ -34,23 +34,20 @@ interface FormEntry {
   description: string;
   storagePath: string;
   formKey: string;
-  isLocal?: boolean;
 }
 
 const PORTAL_FORMS: FormEntry[] = [
   {
     label: "Sample Submission Requirements",
     description: "VSF-LR-SSR Rev. 005 — Read before submitting samples",
-    storagePath: "/forms/VSF-LR-SSR_Sample Submission Requirements and Form_v6.pdf",
+    storagePath: "forms/VSF-LR-SSR_Sample Submission Requirements and Form_v6.pdf",
     formKey: "ssreq",
-    isLocal: true,
   },
   {
     label: "Sample Submission Form",
     description: "PGCV-LF-SSF Rev. 001 — Fill out and include with shipment",
-    storagePath: "/forms/Sample_Submission_Form.pdf",
+    storagePath: "forms/Sample_Submission_Form.pdf",
     formKey: "ssf",
-    isLocal: true,
   },
 ];
 
@@ -88,15 +85,6 @@ export default function DownloadForms({ projectId }: DownloadFormsProps) {
   // Load template download URLs
   useEffect(() => {
     PORTAL_FORMS.forEach((form, i) => {
-      if (form.isLocal) {
-        setTemplateStates((prev) =>
-          prev.map((s, idx) =>
-            idx === i ? { url: form.storagePath, loading: false, error: false } : s
-          )
-        );
-        return;
-      }
-
       getDownloadURL(ref(storage, form.storagePath))
         .then((url) =>
           setTemplateStates((prev) =>
