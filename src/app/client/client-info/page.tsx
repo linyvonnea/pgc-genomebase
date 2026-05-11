@@ -512,8 +512,8 @@ export default function ClientPortalPage() {
   const [fetchedApprovedProjects, setFetchedApprovedProjects] = useState<ProjectDetails[]>([]);
   const [fetchedPreviousProjects, setFetchedPreviousProjects] = useState<ProjectDetails[]>([]);
   const [showPreviousProjectsList, setShowPreviousProjectsList] = useState(false);
-  // Other submitted inquiries from this email that are still pending (no projects yet)
-  const [otherPendingInquiries, setOtherPendingInquiries] = useState<
+  // All submitted inquiries for this email (for sidebar history)
+  const [allInquiries, setAllInquiries] = useState<
     { id: string; status: string; serviceType?: string; name?: string; createdAt?: Date | any }[]
   >([]);
   
@@ -690,18 +690,22 @@ export default function ClientPortalPage() {
       (inquiriesSnap) => {
         if (cancelled) return;
 
-        // Collect other pending/ongoing inquiries (submitted but no projects yet)
-        const pendingStatuses = ["Pending", "In Progress", "Ongoing Quotation"];
-        const pending = inquiriesSnap.docs
-          .filter(d => d.id !== inquiryIdParam && pendingStatuses.includes(d.data().status || ""))
-          .map(d => ({
-            id: d.id,
-            status: d.data().status || "Pending",
-            serviceType: d.data().serviceType || d.data().service || undefined,
-            name: d.data().name || undefined,
-            createdAt: d.data().createdAt || undefined,
-          }));
-        setOtherPendingInquiries(pending);
+        const inquiries = inquiriesSnap.docs.map((d) => ({
+          id: d.id,
+          status: d.data().status || "Pending",
+          serviceType: d.data().serviceType || d.data().service || undefined,
+          name: d.data().name || undefined,
+          createdAt: d.data().createdAt || undefined,
+        }));
+        const getTime = (val: Date | any): number => {
+          if (!val) return 0;
+          const date = val?.toDate ? val.toDate() : (val instanceof Date ? val : new Date(val));
+          return isNaN(date.getTime()) ? 0 : date.getTime();
+        };
+        const sortedInquiries = inquiries.sort(
+          (a, b) => getTime(b.createdAt) - getTime(a.createdAt)
+        );
+        setAllInquiries(sortedInquiries);
 
         const otherIds = inquiriesSnap.docs
           .map(d => d.id)
@@ -3113,8 +3117,8 @@ export default function ClientPortalPage() {
 
       {/* Projects Section */}
       <div className="flex-1 overflow-y-auto px-3 py-6">
-        {/* My Inquiries — collapsible, visible when there is an active inquiry OR when otherPendingInquiries exist */}
-        {((currentInquiry && currentInquiry.status !== "Cancelled") || otherPendingInquiries.length > 0) && (
+        {/* My Inquiries — collapsible, visible when there are any inquiries */}
+        {allInquiries.length > 0 && (
           <div className="mb-3">
             <div
               className="mb-2 px-3 flex items-center justify-between group cursor-pointer"
@@ -3129,57 +3133,47 @@ export default function ClientPortalPage() {
 
             {showInquiriesList && (
               <div className="ml-6 mt-1 space-y-1">
-                {/* Current inquiry — always show it as the first item */}
-                {currentInquiry && currentInquiry.serviceType && (
-                  <button
-                    onClick={() => { userWantsWorkspaceRef.current = true; setSelectedProjectPid(null); setProjectDetails(null); }}
-                    className={cn(
-                      "w-full flex items-start px-3 py-1.5 rounded-lg text-xs font-medium transition-colors text-left",
-                      !selectedProjectPid
-                        ? "bg-amber-50 text-amber-800 border border-amber-100"
-                        : "text-slate-600 hover:bg-slate-100 hover:text-amber-700"
-                    )}
-                  >
-                    <span className="capitalize truncate flex-1">
-                      {formatServiceType(currentInquiry.serviceType)}
-                      {currentInquiry.createdAt && (
-                        <span className="ml-1 font-normal">{formatCreatedAt(currentInquiry.createdAt)}</span>
-                      )}
-                      <span className="ml-1 px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-semibold">
-                        {currentInquiry.status}
-                      </span>
-                    </span>
-                  </button>
-                )}
-
-                {/* Other pending inquiries by same user email (excluding the current one) */}
-                {otherPendingInquiries
-                  .filter(inq => inq.id !== inquiryIdParam)
-                  .map((inq) => (
+                {allInquiries.map((inq) => {
+                  const isActive = inq.id === inquiryIdParam;
+                  return (
                     <button
                       key={inq.id}
                       onClick={() => {
-                        const params = new URLSearchParams();
-                        if (emailParam) params.set("email", emailParam);
-                        params.set("inquiryId", inq.id);
                         userWantsWorkspaceRef.current = true;
                         setSelectedProjectPid(null);
                         setProjectDetails(null);
+                        if (inq.id === inquiryIdParam) return;
+                        const params = new URLSearchParams();
+                        if (emailParam) params.set("email", emailParam);
+                        params.set("inquiryId", inq.id);
                         router.push(`/client/client-info?${params.toString()}`);
                       }}
-                      className="w-full flex items-start px-3 py-1.5 rounded-lg text-xs font-medium transition-colors text-left text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
+                      className={cn(
+                        "w-full flex items-start px-3 py-1.5 rounded-lg text-xs font-medium transition-colors text-left",
+                        isActive
+                          ? "bg-amber-50 text-amber-800 border border-amber-100"
+                          : "text-slate-600 hover:bg-slate-100 hover:text-[#166FB5]"
+                      )}
                     >
                       <span className="capitalize truncate flex-1">
                         {formatServiceType(inq.serviceType)}
                         {inq.createdAt && (
                           <span className="ml-1 font-normal">{formatCreatedAt(inq.createdAt)}</span>
                         )}
-                        <span className="ml-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-600 text-[10px] font-semibold">
+                        <span
+                          className={cn(
+                            "ml-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold",
+                            isActive
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-amber-50 text-amber-600"
+                          )}
+                        >
                           {inq.status}
                         </span>
                       </span>
                     </button>
-                  ))}
+                  );
+                })}
               </div>
             )}
           </div>

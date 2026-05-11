@@ -391,10 +391,11 @@ export default function QuotationRequestForm() {
           setTrainingDate(undefined)
           setMethodologyFile(null)
           if (returnToPortal && result.inquiryId) {
-            // Redirect to the newly created inquiry's workspace
+            // Redirect back to the original inquiry (portal password) when provided
             const portalParams = new URLSearchParams();
             if (returnEmail) portalParams.set("email", returnEmail);
-            portalParams.set("inquiryId", result.inquiryId);
+            const targetInquiryId = returnInquiryId || result.inquiryId;
+            portalParams.set("inquiryId", targetInquiryId);
             router.push(`/client/client-info?${portalParams.toString()}`);
           } else {
             router.push("/client/inquiry-request/submitted")
