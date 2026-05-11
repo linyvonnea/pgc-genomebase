@@ -769,7 +769,7 @@ export default function ClientPortalPage() {
     };
   }, [emailParam, inquiryIdParam, authLoading, user]);
 
-  // Auto-init: when a Pending inquiry is first detected, show workspace without auto-selecting a project.
+  // Auto-init: when a Pending inquiry is first detected, show workspace and collapse My Projects.
   useEffect(() => {
     if (
       currentInquiry?.status === "Pending" &&
@@ -780,7 +780,7 @@ export default function ClientPortalPage() {
       userWantsWorkspaceRef.current = true;
       setSelectedProjectPid(null);
       setProjectDetails(null);
-      setShowProjectsList(true);
+      setShowProjectsList(false);
     }
   }, [currentInquiry?.status, inquiryIdParam]);
 
@@ -848,24 +848,10 @@ export default function ClientPortalPage() {
     // Combine projects (current inquiry + previous inquiries)
     const currentInquiryProjects = [...fetchedDraftProjects, ...fetchedApprovedProjects];
     const previousInquiryProjects = [...fetchedPreviousProjects];
-    const inquiryCreatedAtById = new Map(
-      allInquiries.map((inq) => {
-        const raw = inq.createdAt as any;
-        const date = raw?.toDate ? raw.toDate() : (raw instanceof Date ? raw : raw ? new Date(raw) : null);
-        const ts = date && !isNaN(date.getTime()) ? date.getTime() : 0;
-        return [inq.id, ts] as const;
-      })
-    );
-    const getProjectTimestamp = (project: ProjectDetails): number => {
-      const inquiryTs = project.inquiryId ? inquiryCreatedAtById.get(project.inquiryId) : undefined;
-      if (inquiryTs && inquiryTs > 0) return inquiryTs;
-      const raw = project.startDate as any;
-      const date = raw?.toDate ? raw.toDate() : (raw instanceof Date ? raw : raw ? new Date(raw) : null);
-      return date && !isNaN(date.getTime()) ? date.getTime() : 0;
-    };
-    const allProjects = [...currentInquiryProjects, ...previousInquiryProjects].sort(
-      (a, b) => getProjectTimestamp(b) - getProjectTimestamp(a)
-    );
+    const allProjects =
+      previousInquiryProjects.length > 0 && currentInquiryProjects.length > 0
+        ? [previousInquiryProjects[0], ...currentInquiryProjects, ...previousInquiryProjects.slice(1)]
+        : [...currentInquiryProjects, ...previousInquiryProjects];
     setProjects(allProjects);
 
     // Determine currently selected project details
@@ -1206,16 +1192,15 @@ export default function ClientPortalPage() {
     // Don't automatically expand primary member - respect user's saved preference from localStorage
 
   }, [
-    fetchedDraftProjects,
+    fetchedDraftProjects, 
     fetchedApprovedProjects,
     fetchedPreviousProjects,
-    fetchedClientRequests,
+    fetchedClientRequests, 
     fetchedClients,
     fetchedSelectedProjectClients,
-    fetchedMemberApprovals,
-    allInquiries,
-    emailParam,
-    currentProjectRequestId,
+    fetchedMemberApprovals, 
+    emailParam, 
+    currentProjectRequestId, 
     pidParam,
     selectedProjectPid,
     canonicalMemberScopeId
@@ -3155,7 +3140,6 @@ export default function ClientPortalPage() {
                         if (inq.id === inquiryIdParam) return;
                         setSelectedProjectPid(null);
                         setProjectDetails(null);
-                        setShowProjectsList(true);
                         const params = new URLSearchParams();
                         if (emailParam) params.set("email", emailParam);
                         params.set("inquiryId", inq.id);
