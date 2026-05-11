@@ -494,6 +494,10 @@ export default function ClientPortalPage() {
   // When the user explicitly navigates to the workspace view (by clicking a pending
   // inquiry item), block auto-project-selection until they actively pick a project.
   const userWantsWorkspaceRef = useRef(false);
+  // Prevent auto-redirect from overriding manual inquiry selection.
+  const userSelectedInquiryRef = useRef(false);
+  // Ensure we only apply the default inquiry redirect once after login.
+  const autoInquiryRedirectHandledRef = useRef(false);
   // Tracks whether the "Pending" inquiry auto-init (show workspace, collapse projects)
   // has already been applied for the current inquiry ID, so it only fires once per load.
   const pendingInitHandledRef = useRef<string | null>(null);
@@ -572,6 +576,8 @@ export default function ClientPortalPage() {
     // Initialize projectRequestId from URL if provided
     if (projectRequestIdParam) {
       setCurrentProjectRequestId(projectRequestIdParam);
+    } else {
+      setCurrentProjectRequestId(null);
     }
 
     // 1. Subscribe to Project Request for the current inquiry
@@ -785,6 +791,32 @@ export default function ClientPortalPage() {
       unsubInquiriesList();
     };
   }, [emailParam, inquiryIdParam, authLoading, user]);
+
+  // Default to the latest active inquiry on initial login
+  useEffect(() => {
+    if (autoInquiryRedirectHandledRef.current) return;
+    if (allInquiries.length < 2) return;
+    if (userSelectedInquiryRef.current) return;
+
+    const preferredStatuses = new Set(["Pending", "Ongoing Quotation", "In Progress"]);
+    const preferredInquiry = allInquiries.find((inq) => preferredStatuses.has(inq.status));
+
+    if (!preferredInquiry) {
+      autoInquiryRedirectHandledRef.current = true;
+      return;
+    }
+
+    if (preferredInquiry.id === inquiryIdParam) {
+      autoInquiryRedirectHandledRef.current = true;
+      return;
+    }
+
+    const params = new URLSearchParams();
+    if (emailParam) params.set("email", emailParam);
+    params.set("inquiryId", preferredInquiry.id);
+    autoInquiryRedirectHandledRef.current = true;
+    router.replace(`/client/client-info?${params.toString()}`);
+  }, [allInquiries, emailParam, inquiryIdParam, router]);
 
   // Auto-init: when a Pending inquiry is first detected, show workspace.
   useEffect(() => {
@@ -3176,8 +3208,11 @@ export default function ClientPortalPage() {
                       key={inq.id}
                       onClick={() => {
                         if (inq.id === inquiryIdParam) return;
+                        userSelectedInquiryRef.current = true;
                         setSelectedProjectPid(null);
                         setProjectDetails(null);
+                        setCurrentProjectRequestId(null);
+                        setProjectRequest(null);
                         const params = new URLSearchParams();
                         if (emailParam) params.set("email", emailParam);
                         params.set("inquiryId", inq.id);
