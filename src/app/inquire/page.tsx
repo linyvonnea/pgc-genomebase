@@ -121,7 +121,8 @@ export default function InquirePage() {
   const handleUseDifferentEmail = async () => {
     setShowExistingPortalModal(false);
     await signOut();
-    // User is now signed out and can click "Sign in with Google" again with a different account
+    // Full page navigation resets all state and lets the user sign in with a different Google account
+    window.location.href = "/inquire";
   };
 
   const handleSubmitNewInquiry = () => {
@@ -290,7 +291,9 @@ export default function InquirePage() {
               Existing Client Portal Account Found
             </DialogTitle>
             <DialogDescription className="text-sm text-slate-600 leading-relaxed">
-              We found a previous inquiry linked to your email. Please continue to your Client Portal account.
+              We found a previous inquiry linked to your email{user?.email ? (
+                <> (<span className="font-semibold text-slate-800">{user.email}</span>)</>
+              ) : null}. Please continue to your Client Portal account.
               You can submit a new inquiry there anytime using the New Inquiry option.
             </DialogDescription>
           </DialogHeader>
