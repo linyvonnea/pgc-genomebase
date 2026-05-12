@@ -388,7 +388,7 @@ function ChargeSlipDetailContent() {
     if (!record?.id) return;
 
     try {
-      const updates: Record<string, unknown> = {
+      const updates: Partial<ChargeSlipRecord> = {
         dvNumber,
         orNumber,
         notes,
