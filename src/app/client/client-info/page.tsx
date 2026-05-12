@@ -3291,9 +3291,7 @@ export default function ClientPortalPage() {
                 
                 const handleProjectItemClick = () => {
                   handleSelectProject(project);
-                  if (!isDocsExpanded) {
-                    void toggleProjectDocs(project);
-                  }
+                  void toggleProjectDocs(project);
                 };
 
                 return (
@@ -3331,7 +3329,7 @@ export default function ClientPortalPage() {
                           "flex-shrink-0 px-3 py-4 hover:bg-slate-100 transition-colors border-l border-slate-200 group/chevron h-full",
                           isDocsExpanded && "bg-blue-50"
                         )}
-                        title="View documents"
+                        title={isDocsExpanded ? "Hide the documents" : "View documents"}
                         aria-label="Toggle documents"
                       >
                         <ChevronRight className={cn(
