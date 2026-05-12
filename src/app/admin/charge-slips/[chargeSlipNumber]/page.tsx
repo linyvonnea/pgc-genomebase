@@ -166,9 +166,10 @@ function ChargeSlipDetailContent() {
       const rawDate = chargeSlipData.dateOfOR;
       if (isTimestamp(rawDate)) {
         setDateOfOR(rawDate);
-      } else if (rawDate instanceof Date) {
-        if (!isNaN(rawDate.getTime())) {
-          setDateOfOR(Timestamp.fromDate(rawDate));
+      } else if ((rawDate as unknown) instanceof Date) {
+        const d = rawDate as unknown as Date;
+        if (!isNaN(d.getTime())) {
+          setDateOfOR(Timestamp.fromDate(d));
         } else {
           setDateOfOR(undefined);
         }
