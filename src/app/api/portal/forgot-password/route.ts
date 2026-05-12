@@ -1,10 +1,10 @@
 // API Route: POST /api/portal/forgot-password
 // Looks up inquiries by the client's Google-authenticated email and
 // sends them an email listing their inquiry ID(s) / passwords.
-export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
-import { adminDb } from "@/lib/firebase-admin";
+import { collection, getDocs, query, where, addDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const PORTAL_URL = "https://pgc-genomebase.vercel.app/portal";
 
@@ -26,13 +26,6 @@ function isRateLimited(email: string): boolean {
 }
 
 export async function POST(request: NextRequest) {
-  if (!adminDb) {
-    return NextResponse.json(
-      { error: "Server configuration error. Please try again later." },
-      { status: 500 }
-    );
-  }
-
   try {
     const body = await request.json();
     const email: string = (body?.email || "").trim().toLowerCase();
@@ -49,11 +42,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Query inquiries matching this email
-    const snapshot = await adminDb
-      .collection("inquiries")
-      .where("email", "==", email)
-      .get();
+    // Query inquiries matching this email using the client SDK (same pattern as notify-first-admin)
+    const snapshot = await getDocs(
+      query(collection(db, "inquiries"), where("email", "==", email))
+    );
 
     // Always return success to prevent email enumeration
     if (snapshot.empty) {
@@ -160,8 +152,8 @@ Philippine Genome Center Visayas`;
       </div>
     `;
 
-    // Queue email via the Firestore mail extension
-    await adminDb.collection("mail").add({
+    // Queue email via the Firestore mail extension (same as notify-first-admin)
+    await addDoc(collection(db, "mail"), {
       to: [email],
       message: {
         subject: "Client Portal — Password Recovery",
