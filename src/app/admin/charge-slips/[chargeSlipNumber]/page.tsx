@@ -90,7 +90,7 @@ export default function ChargeSlipDetailPage() {
 }
 
 function ChargeSlipDetailContent() {
-  const { adminInfo } = useAuth();
+  const { adminInfo, user } = useAuth();
   const { chargeSlipNumber } = useParams() as { chargeSlipNumber: string };
   const router = useRouter();
 
@@ -396,11 +396,14 @@ function ChargeSlipDetailContent() {
         dateOfOR,
       };
 
+      const paidValidatorEmail = adminInfo?.email ?? user?.email ?? null;
+      const paidValidatorName = adminInfo?.name ?? user?.displayName ?? null;
+
       // When admin confirms payment as validated, record who and when
       if (status === "paid" && confirmPaidStatus && !paidValidatedAt) {
         updates.paidValidatedAt = Timestamp.now();
-        updates.paidValidatedBy = adminInfo?.email || "unknown";
-        updates.paidValidatedByName = adminInfo?.name || "";
+        if (paidValidatorEmail) updates.paidValidatedBy = paidValidatorEmail;
+        if (paidValidatorName) updates.paidValidatedByName = paidValidatorName;
       }
 
       await updateChargeSlip(record.id, updates);
@@ -421,7 +424,8 @@ function ChargeSlipDetailContent() {
 
       toast.success("Charge slip updated successfully.");
     } catch (error) {
-      toast.error("Failed to update charge slip.");
+      console.error("Failed to update charge slip:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to update charge slip.");
     }
   };
 
