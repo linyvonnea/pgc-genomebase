@@ -53,7 +53,33 @@ export default function ClientVerifyPage() {
   const [verifying, setVerifying] = useState(false);
   const [googleUser, setGoogleUser] = useState<{ email: string } | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [forgotSending, setForgotSending] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
   const router = useRouter();
+
+  const handleForgotPassword = async () => {
+    if (!googleUser?.email) return;
+    setForgotSending(true);
+    setForgotSent(false);
+    try {
+      const res = await fetch("/api/portal/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: googleUser.email }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to send recovery email.");
+      }
+      setForgotSent(true);
+      toast.success("Recovery email sent! Check your inbox.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to send recovery email.";
+      toast.error(message);
+    } finally {
+      setForgotSending(false);
+    }
+  };
 
   // Handle Google sign-in and set user
   const handleGoogleSignIn = async () => {
@@ -283,6 +309,26 @@ export default function ClientVerifyPage() {
                 <div className="flex items-center gap-2 text-[10px] text-green-600 bg-green-50/50 p-2 rounded-md border border-green-100">
                   <CheckCircle className="w-3 h-3 flex-shrink-0" />
                   <span>Successfully authenticated</span>
+                </div>
+              )}
+
+              {/* Forgot password — only shown after Google sign-in */}
+              {googleUser && (
+                <div className="text-center">
+                  {forgotSent ? (
+                    <p className="text-[10px] text-green-600">
+                      ✓ Recovery email sent to <strong>{googleUser.email}</strong>. Check your inbox.
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      disabled={forgotSending}
+                      className="text-[10px] text-[#166FB5] hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {forgotSending ? "Sending recovery email…" : "Forgot your password?"}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
