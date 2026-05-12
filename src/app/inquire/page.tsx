@@ -187,7 +187,7 @@ export default function InquirePage() {
                 Sign in to proceed with your service request
               </CardDescription>
               <div className="pt-1">
-                <Link href="/faqs" className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-1 rounded-full transition-colors border border-blue-100">
+                <Link href="/faqs" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-1 rounded-full transition-colors border border-blue-100">
                   <HelpCircle className="h-3 w-3" />
                   Have questions? View our FAQs
                 </Link>
