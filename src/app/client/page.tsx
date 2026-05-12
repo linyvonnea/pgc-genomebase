@@ -23,6 +23,8 @@ export default function ClientLandingPage() {
       <div className="pt-2">
         <Link
           href="/faqs"
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-slate-700 hover:border-[#166FB5] hover:text-[#166FB5] hover:shadow-sm transition-all"
         >
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#166FB5]/10 text-[#166FB5]">
