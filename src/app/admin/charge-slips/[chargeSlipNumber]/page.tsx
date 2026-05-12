@@ -33,7 +33,7 @@ import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import ChargeSlipPreviewButton from "@/components/charge-slip/ChargeSlipPreviewButton";
-import { CheckCircle2, Loader2 as ReceiptLoader, RotateCcw, Stamp, Trash2, CheckSquare } from "lucide-react";
+import { CheckCircle2, Loader2 as ReceiptLoader, RotateCcw, Stamp, Trash2 } from "lucide-react";
 import { getActiveCatalogItems } from "@/services/catalogSettingsService";
 import { CatalogItem } from "@/types/CatalogSettings";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -102,7 +102,7 @@ function ChargeSlipDetailContent() {
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState<string>("processing");
   const [availableStatuses, setAvailableStatuses] = useState<CatalogItem[]>([]);
-  const [autoMarkAsPaid, setAutoMarkAsPaid] = useState<boolean>(false);
+  const [confirmPaidStatus, setConfirmPaidStatus] = useState<boolean>(false);
   const [dateOfOR, setDateOfOR] = useState<Timestamp | undefined>(undefined);
   const [officialReceipts, setOfficialReceipts] = useState<OfficialReceipt[]>([]);
   const [validating, setValidating] = useState<string | null>(null);
@@ -153,7 +153,6 @@ function ChargeSlipDetailContent() {
       setDvNumber(chargeSlipData.dvNumber ?? "");
       setNotes(chargeSlipData.notes ?? "");
       setStatus((chargeSlipData.status ?? "processing").toLowerCase());
-      setAutoMarkAsPaid(chargeSlipData.autoMarkAsPaid ?? false);
 
       const rawDate = chargeSlipData.dateOfOR;
       if (isTimestamp(rawDate)) setDateOfOR(rawDate);
@@ -213,6 +212,12 @@ function ChargeSlipDetailContent() {
     return () => unsubscribeReceipts();
   }, [record?.projectId, record?.project, record?.chargeSlipNumber]);
 
+  useEffect(() => {
+    if (status !== "paid" && confirmPaidStatus) {
+      setConfirmPaidStatus(false);
+    }
+  }, [status, confirmPaidStatus]);
+
   const handleReturn = async (receipt: OfficialReceipt) => {
     if (!record) return;
     setReturning(receipt.id);
@@ -268,27 +273,19 @@ function ChargeSlipDetailContent() {
         acknowledgedBy: adminInfo?.email || "unknown",
         acknowledgedByName: adminInfo?.name || "",
       };
-
-      const chargeSlipUpdates: any = {
+      await updateChargeSlip(record.id, {
         orNumber: orVal,
         dateOfOR: orDateVal,
-      };
-
-      if (autoMarkAsPaid) {
-        chargeSlipUpdates.status = "paid";
-      }
-
-      await updateChargeSlip(record.id, chargeSlipUpdates);
+      });
       // Append to orEntries history (arrayUnion prevents duplicates)
       await updateDoc(doc(db, "chargeSlips", record.id), {
         orEntries: arrayUnion(orEntry),
       });
       // Mark the charge slip orStatus as Validated
       await updateDoc(doc(db, "chargeSlips", record.chargeSlipNumber), { orStatus: "Validated" });
-      // Sync local UI state (status unchanged unless autoMarkAsPaid is true)
+      // Sync local UI state (status unchanged)
       if (orVal) setOrNumber(orVal);
       if (orDateVal) setDateOfOR(orDateVal);
-      if (autoMarkAsPaid) setStatus("paid");
       setOfficialReceipts((prev) =>
         prev.map((r) => (r.id === receipt.id ? { ...r, acknowledgedByAdmin: true } : r))
       );
@@ -300,9 +297,9 @@ function ChargeSlipDetailContent() {
         entityType: "charge_slip",
         entityId: record.referenceNumber || record.chargeSlipNumber,
         entityName: `Charge Slip ${record.chargeSlipNumber}`,
-        description: `Validated official receipt: ${receipt.fileName || receipt.id} (OR No. ${orVal || "—"}). OR details saved.${autoMarkAsPaid ? " Status updated to PAID automatically." : ""}`,
+        description: `Validated official receipt: ${receipt.fileName || receipt.id} (OR No. ${orVal || "—"}). OR details saved.`,
       });
-      toast.success(autoMarkAsPaid ? "Receipt validated and status updated to Paid." : "Receipt validated. OR details saved.");
+      toast.success("Receipt validated. OR details saved.");
     } catch {
       toast.error("Failed to validate receipt.");
     } finally {
@@ -387,7 +384,6 @@ function ChargeSlipDetailContent() {
         notes,
         status,
         dateOfOR,
-        autoMarkAsPaid,
       };
       
       await updateChargeSlip(record.id, updates);
@@ -570,19 +566,21 @@ function ChargeSlipDetailContent() {
                 </Select>
               </div>
 
-              <div className="flex items-center space-x-2 pt-2">
-                <Checkbox 
-                  id="autoMarkAsPaid" 
-                  checked={autoMarkAsPaid} 
-                  onCheckedChange={(checked) => setAutoMarkAsPaid(checked === true)}
-                />
-                <label
-                  htmlFor="autoMarkAsPaid"
-                  className="text-xs font-medium text-slate-600 cursor-pointer select-none"
-                >
-                  Auto-update status to "Paid" upon validating receipt
-                </label>
-              </div>
+              {status === "paid" && (
+                <div className="flex items-center space-x-2 pt-2">
+                  <Checkbox
+                    id="confirmPaidStatus"
+                    checked={confirmPaidStatus}
+                    onCheckedChange={(checked) => setConfirmPaidStatus(checked === true)}
+                  />
+                  <label
+                    htmlFor="confirmPaidStatus"
+                    className="text-xs font-medium text-slate-600 cursor-pointer select-none"
+                  >
+                    Confirm payment has been validated
+                  </label>
+                </div>
+              )}
             </div>
 
             <div className="space-y-4">
