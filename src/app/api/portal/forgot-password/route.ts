@@ -55,9 +55,11 @@ export async function POST(request: NextRequest) {
       query(collection(db, "inquiries"), where("email", "==", email))
     );
 
-    // Always return success to prevent email enumeration
     if (snapshot.empty) {
-      return NextResponse.json({ ok: true });
+      return NextResponse.json(
+        { error: "No account was found linked to this email address. Please make sure you're signed in with the same Google account you used when submitting your inquiry." },
+        { status: 404 }
+      );
     }
 
     // Filter to portal-eligible inquiries only
@@ -66,7 +68,10 @@ export async function POST(request: NextRequest) {
     );
 
     if (eligible.length === 0) {
-      return NextResponse.json({ ok: true });
+      return NextResponse.json(
+        { error: "Your account is not currently eligible for portal access. Please contact PGC Visayas for assistance." },
+        { status: 403 }
+      );
     }
 
     // Determine the single active password:

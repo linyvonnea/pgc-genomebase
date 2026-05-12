@@ -37,7 +37,7 @@ export default function InquirePage() {
   const [checkingExistingPortal, setCheckingExistingPortal] = useState(false);
   const [showExistingPortalModal, setShowExistingPortalModal] = useState(false);
   const [existingPortalInquiryId, setExistingPortalInquiryId] = useState<string | null>(null);
-  const { signIn, user, isAdmin, loading } = useAuth();
+  const { signIn, signOut, user, isAdmin, loading } = useAuth();
   const router = useRouter();
   const isLoginDisabled = !agreed || loading || checkingExistingPortal;
 
@@ -116,6 +116,12 @@ export default function InquirePage() {
     // Redirect to the Portal login page so they can enter their password
     setShowExistingPortalModal(false);
     router.replace(`/portal?${params.toString()}`);
+  };
+
+  const handleUseDifferentEmail = async () => {
+    setShowExistingPortalModal(false);
+    await signOut();
+    // User is now signed out and can click "Sign in with Google" again with a different account
   };
 
   const handleSubmitNewInquiry = () => {
@@ -290,12 +296,21 @@ export default function InquirePage() {
           </DialogHeader>
 
           <DialogFooter>
-            <Button
-              onClick={handleOpenClientPortal}
-              className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90"
-            >
-              Go to Client Portal
-            </Button>
+            <div className="flex flex-col gap-2 w-full">
+              <Button
+                onClick={handleOpenClientPortal}
+                className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90"
+              >
+                Go to Client Portal
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleUseDifferentEmail}
+                className="w-full border-slate-200 text-slate-600 hover:bg-slate-50"
+              >
+                Use a Different Email
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
