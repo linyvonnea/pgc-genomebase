@@ -164,8 +164,24 @@ function ChargeSlipDetailContent() {
       setPaidValidatedByName((data as any).paidValidatedByName ?? null);
 
       const rawDate = chargeSlipData.dateOfOR;
-      if (isTimestamp(rawDate)) setDateOfOR(rawDate);
-      else if (typeof rawDate === "string") setDateOfOR(Timestamp.fromDate(new Date(rawDate)));
+      if (isTimestamp(rawDate)) {
+        setDateOfOR(rawDate);
+      } else if (rawDate instanceof Date) {
+        if (!isNaN(rawDate.getTime())) {
+          setDateOfOR(Timestamp.fromDate(rawDate));
+        } else {
+          setDateOfOR(undefined);
+        }
+      } else if (typeof rawDate === "string") {
+        const parsed = new Date(rawDate);
+        if (!isNaN(parsed.getTime())) {
+          setDateOfOR(Timestamp.fromDate(parsed));
+        } else {
+          setDateOfOR(undefined);
+        }
+      } else {
+        setDateOfOR(undefined);
+      }
 
       // Load official receipts for the project
       const pid = chargeSlipData.projectId || (chargeSlipData.project as any)?.pid;

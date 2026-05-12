@@ -15,7 +15,9 @@ export function convertToDate(input: unknown): Date | undefined {
 export function convertToTimestamp(input: unknown): Timestamp | undefined {
   if (!input) return undefined;
   if (input instanceof Timestamp) return input;
-  if (input instanceof Date) return Timestamp.fromDate(input);
+  if (input instanceof Date) {
+    return isNaN(input.getTime()) ? undefined : Timestamp.fromDate(input);
+  }
   const parsed = new Date(input as string);
   return isNaN(parsed.getTime()) ? undefined : Timestamp.fromDate(parsed);
 }

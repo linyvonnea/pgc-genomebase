@@ -209,9 +209,10 @@ export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRe
   }
 
   if ("dateOfOR" in updates) {
-    updatedData.dateOfOR = updates.dateOfOR
+    const convertedDateOfOR = updates.dateOfOR
       ? convertToTimestamp(updates.dateOfOR)
       : null;
+    updatedData.dateOfOR = convertedDateOfOR ?? null;
   }
 
   // Support accumulating OR entries and updating the latest OR number
