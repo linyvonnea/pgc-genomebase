@@ -73,6 +73,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
             <Link
               href="/faqs"
               target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-slate-600 hover:text-[#166FB5] hover:bg-slate-100 rounded-lg transition-colors border border-slate-100"
               title="Frequently Asked Questions"
             >

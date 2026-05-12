@@ -83,7 +83,7 @@ export default function Home() {
                     <UserCheck className="w-3.5 h-3.5 ml-1.5 transition-transform group-hover:scale-110" />
                   </Button>
                 </Link>
-                <Link href="/faqs">
+                <Link href="/faqs" target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" className="h-10 px-5 bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold shadow-sm hover:shadow-md transition-all duration-300 text-xs group whitespace-nowrap">
                     <HelpCircle className="w-3.5 h-3.5 mr-1.5" />
                     View FAQs
