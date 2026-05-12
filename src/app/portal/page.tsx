@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { signInWithPopup, GoogleAuthProvider, getAuth } from "firebase/auth";
 import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, getDocs, collection, query, where } from "firebase/firestore";
 import { markInquiryAsLoggedIn } from "@/services/inquiryService";
 import { logActivity } from "@/services/activityLogService";
 
@@ -140,38 +140,45 @@ export default function ClientVerifyPage() {
         setVerifying(false);
         return;
       }
-      // Fetch inquiry document from Firestore
-      const inquiryDoc = await getDoc(doc(db, "inquiries", inquiryId));
-      if (!inquiryDoc.exists()) {
-        const message = "Password not found.";
-        setVerifyError(message);
-        toast.error(message);
-        setVerifying(false);
-        return;
-      }
-      const inquiry = inquiryDoc.data() as PortalInquiryRecord;
-      
-      // Verify email matches Google User email (except for master admins)
+      // ── Step 1: Try direct lookup by treating the entered value as an inquiry ID ──
+      let resolvedInquiryId: string = inquiryId;
+      let inquiry: PortalInquiryRecord | null = null;
       const isMasterAdmin = googleUser.email ? MASTER_EMAILS.includes(googleUser.email) : false;
-      
-      if (!isMasterAdmin && inquiry.email?.toLowerCase() !== googleUser.email.toLowerCase()) {
-        const message = "The password provided does not match the email associated with this account.";
-        setVerifyError(message);
-        toast.error(message);
-        setVerifying(false);
-        return;
+
+      const directDoc = await getDoc(doc(db, "inquiries", inquiryId));
+      if (directDoc.exists()) {
+        const data = directDoc.data() as PortalInquiryRecord;
+        const emailOk = isMasterAdmin || data.email?.toLowerCase() === googleUser.email.toLowerCase();
+        if (emailOk) {
+          const expectedPw = data.customPassword || directDoc.id;
+          if (inquiryId === expectedPw || isMasterAdmin) {
+            inquiry = data;
+            resolvedInquiryId = directDoc.id;
+          }
+        }
       }
 
-      // Verify password: check customPassword if set, otherwise the inquiry ID is the password
-      if (!isMasterAdmin) {
-        const expectedPassword = inquiry.customPassword || inquiryId;
-        if (inquiryId !== expectedPassword) {
-          const message = "Incorrect password. Please check your credentials or use 'Forgot your password?'.";
-          setVerifyError(message);
-          toast.error(message);
-          setVerifying(false);
-          return;
+      // ── Step 2: If direct lookup didn't match, search by email for a customPassword match ──
+      if (!inquiry && !isMasterAdmin) {
+        const snap = await getDocs(
+          query(collection(db, "inquiries"), where("email", "==", googleUser.email.toLowerCase()))
+        );
+        for (const d of snap.docs) {
+          const data = d.data() as PortalInquiryRecord;
+          if (data.customPassword && inquiryId === data.customPassword) {
+            inquiry = data;
+            resolvedInquiryId = d.id;
+            break;
+          }
         }
+      }
+
+      if (!inquiry) {
+        const message = "Incorrect password. Please check your credentials or use \u2018Forgot your password?\u2019.";
+        setVerifyError(message);
+        toast.error(message);
+        setVerifying(false);
+        return;
       }
 
       // Allow login for Pending, Approved Client (isApproved), Quotation Only, Ongoing Quotation, In Progress, and Service Not Offered
@@ -190,7 +197,7 @@ export default function ClientVerifyPage() {
 
       const params = new URLSearchParams();
       if (activeEmail) params.set("email", activeEmail);
-      if (inquiryId) params.set("inquiryId", inquiryId);
+      params.set("inquiryId", resolvedInquiryId);
       
       // Default to workspace view; do not preselect a project on login.
       
@@ -199,8 +206,8 @@ export default function ClientVerifyPage() {
       const isClientLogin = !isMasterAdmin;
       
       if (isClientLogin) {
-        console.log(`[Portal] Client login detected for inquiry ${inquiryId}. Marking as logged in.`);
-        await markInquiryAsLoggedIn(inquiryId);
+        console.log(`[Portal] Client login detected for inquiry ${resolvedInquiryId}. Marking as logged in.`);
+        await markInquiryAsLoggedIn(resolvedInquiryId);
         
         // Log the successful login
         await logActivity({
@@ -210,9 +217,9 @@ export default function ClientVerifyPage() {
           userRole: "client",
           action: "LOGIN",
           entityType: "inquiry",
-          entityId: inquiryId,
+          entityId: resolvedInquiryId,
           entityName: inquiry.name,
-          description: `Client logged into portal using Inquiry ID: ${inquiryId}`,
+          description: `Client logged into portal using password for Inquiry ID: ${resolvedInquiryId}`,
         });
       }
       
