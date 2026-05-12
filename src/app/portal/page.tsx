@@ -56,12 +56,14 @@ export default function ClientVerifyPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [forgotSending, setForgotSending] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleForgotPassword = async () => {
     if (!googleUser?.email) return;
     setForgotSending(true);
     setForgotSent(false);
+    setForgotError(null);
     try {
       const res = await fetch("/api/portal/forgot-password", {
         method: "POST",
@@ -70,13 +72,15 @@ export default function ClientVerifyPage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to send recovery email.");
+        const message = data.error || "Failed to send recovery email.";
+        setForgotError(message);
+        return;
       }
       setForgotSent(true);
       toast.success("Recovery email sent! Check your inbox.");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to send recovery email.";
-      toast.error(message);
+      setForgotError(message);
     } finally {
       setForgotSending(false);
     }
@@ -355,7 +359,7 @@ export default function ClientVerifyPage() {
 
               {/* Forgot password — only shown after Google sign-in */}
               {googleUser && (
-                <div className="text-center">
+                <div className="text-center space-y-1">
                   {forgotSent ? (
                     <p className="text-[10px] text-green-600">
                       ✓ Recovery email sent to <strong>{googleUser.email}</strong>. Check your inbox.
@@ -369,6 +373,9 @@ export default function ClientVerifyPage() {
                     >
                       {forgotSending ? "Sending recovery email…" : "Forgot your password?"}
                     </button>
+                  )}
+                  {forgotError && (
+                    <p className="text-[10px] text-red-600 leading-snug">{forgotError}</p>
                   )}
                 </div>
               )}
