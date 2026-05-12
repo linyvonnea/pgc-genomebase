@@ -3216,6 +3216,7 @@ export default function ClientPortalPage() {
                         if (emailParam) params.set("email", emailParam);
                         params.set("inquiryId", inq.id);
                         router.push(`/client/client-info?${params.toString()}`);
+                        setMobileSidebarOpen(false);
                       }}
                       className={cn(
                         "w-full flex items-start px-3 py-1.5 rounded-lg text-xs font-medium transition-colors text-left",
@@ -3288,6 +3289,13 @@ export default function ClientPortalPage() {
                 }
                 const sampleFormBaseHref = `/client/sample-form?${sampleFormParams.toString()}`;
                 
+                const handleProjectItemClick = () => {
+                  handleSelectProject(project);
+                  if (!isDocsExpanded) {
+                    void toggleProjectDocs(project);
+                  }
+                };
+
                 return (
                   <div key={project.pid} className={cn(
                     "rounded-xl border transition-all duration-200 overflow-hidden group",
@@ -3296,12 +3304,12 @@ export default function ClientPortalPage() {
                       : "bg-white border-slate-200 hover:border-blue-200 hover:shadow-sm"
                   )}>
                     {/* Project Header */}
-                    <div className="flex items-center bg-white hover:bg-slate-50">
+                    <div 
+                      className="flex items-center bg-white hover:bg-slate-50 cursor-pointer"
+                      onClick={handleProjectItemClick}
+                    >
                       {/* Main project content - clickable */}
-                      <div 
-                        className="flex-1 min-w-0 p-3 cursor-pointer"
-                        onClick={() => handleSelectProject(project)}
-                      >
+                      <div className="flex-1 min-w-0 p-3">
                         <div className="flex flex-col gap-1">
                           <p 
                             className="text-sm text-slate-700 font-medium truncate leading-tight"
@@ -3316,7 +3324,8 @@ export default function ClientPortalPage() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleProjectDocs(project);
+                          handleSelectProject(project);
+                          void toggleProjectDocs(project);
                         }}
                         className={cn(
                           "flex-shrink-0 px-3 py-4 hover:bg-slate-100 transition-colors border-l border-slate-200 group/chevron h-full",
