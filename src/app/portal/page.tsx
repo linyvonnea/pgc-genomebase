@@ -12,6 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { signInWithPopup, GoogleAuthProvider, getAuth } from "firebase/auth";
 import { db } from "@/lib/firebase";
@@ -56,14 +64,14 @@ export default function ClientVerifyPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [forgotSending, setForgotSending] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
-  const [forgotError, setForgotError] = useState<string | null>(null);
+  const [forgotErrorModal, setForgotErrorModal] = useState<string | null>(null);
   const router = useRouter();
 
   const handleForgotPassword = async () => {
     if (!googleUser?.email) return;
     setForgotSending(true);
     setForgotSent(false);
-    setForgotError(null);
+    setForgotErrorModal(null);
     try {
       const res = await fetch("/api/portal/forgot-password", {
         method: "POST",
@@ -73,14 +81,14 @@ export default function ClientVerifyPage() {
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         const message = data.error || "Failed to send recovery email.";
-        setForgotError(message);
+        setForgotErrorModal(message);
         return;
       }
       setForgotSent(true);
       toast.success("Recovery email sent! Check your inbox.");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to send recovery email.";
-      setForgotError(message);
+      setForgotErrorModal(message);
     } finally {
       setForgotSending(false);
     }
@@ -374,9 +382,6 @@ export default function ClientVerifyPage() {
                       {forgotSending ? "Sending recovery email…" : "Forgot your password?"}
                     </button>
                   )}
-                  {forgotError && (
-                    <p className="text-[10px] text-red-600 leading-snug">{forgotError}</p>
-                  )}
                 </div>
               )}
             </div>
@@ -428,6 +433,36 @@ export default function ClientVerifyPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Forgot Password — Email Not Found Modal */}
+      <Dialog open={!!forgotErrorModal} onOpenChange={(open) => { if (!open) setForgotErrorModal(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base font-bold text-slate-900">
+              <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+              Account Not Found
+            </DialogTitle>
+            <DialogDescription className="text-sm text-slate-600 leading-relaxed pt-1">
+              {forgotErrorModal}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col gap-2 sm:flex-col">
+            <Button
+              onClick={() => { window.location.href = "/inquire"; }}
+              className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90"
+            >
+              Try a Different Email
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setForgotErrorModal(null)}
+              className="w-full"
+            >
+              Dismiss
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
