@@ -218,6 +218,9 @@ export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRe
   if ("orNumber" in updates) updatedData.orNumber = updates.orNumber;
   if ("orEntries" in updates) updatedData.orEntries = updates.orEntries;
   if ("showOfficialReceipts" in updates) updatedData.showOfficialReceipts = updates.showOfficialReceipts;
+  if ("paidValidatedAt" in updates) updatedData.paidValidatedAt = updates.paidValidatedAt ?? null;
+  if ("paidValidatedBy" in updates) updatedData.paidValidatedBy = updates.paidValidatedBy ?? null;
+  if ("paidValidatedByName" in updates) updatedData.paidValidatedByName = updates.paidValidatedByName ?? null;
 
   if ("createdAt" in updates) {
     updatedData.createdAt = safeTimestamp(updates.createdAt);
