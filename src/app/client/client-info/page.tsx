@@ -394,6 +394,15 @@ export default function ClientPortalPage() {
   const [showProceedModal, setShowProceedModal] = useState(false);
   const [selectedQuotationRef, setSelectedQuotationRef] = useState<string | null>(null);
   const [showCancelInquiryModal, setShowCancelInquiryModal] = useState(false);
+
+  // Change Password modal state
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [changePwCurrent, setChangePwCurrent] = useState("");
+  const [changePwNew, setChangePwNew] = useState("");
+  const [changePwConfirm, setChangePwConfirm] = useState("");
+  const [changePwLoading, setChangePwLoading] = useState(false);
+  const [changePwError, setChangePwError] = useState<string | null>(null);
+  const [changePwSuccess, setChangePwSuccess] = useState(false);
   const [cancelInquiryReason, setCancelInquiryReason] = useState("");
   const [cancelInquirySubmitting, setCancelInquirySubmitting] = useState(false);
 
@@ -3180,6 +3189,20 @@ export default function ClientPortalPage() {
             <div className="text-xs text-slate-500 truncate">
               {user?.email || emailParam || "merlito.dayon@gmail.com"}
             </div>
+            <button
+              onClick={() => {
+                setChangePwCurrent("");
+                setChangePwNew("");
+                setChangePwConfirm("");
+                setChangePwError(null);
+                setChangePwSuccess(false);
+                setShowChangePasswordModal(true);
+              }}
+              className="mt-1 text-xs text-[#166FB5] hover:underline flex items-center gap-1"
+            >
+              <Key className="h-3 w-3" />
+              Change Password
+            </button>
           </div>
         </div>
       </div>
@@ -5515,6 +5538,162 @@ export default function ClientPortalPage() {
             >
               Confirm Quotation Only
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Change Password Modal */}
+      <AlertDialog
+        open={showChangePasswordModal}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowChangePasswordModal(false);
+            setChangePwCurrent("");
+            setChangePwNew("");
+            setChangePwConfirm("");
+            setChangePwError(null);
+            setChangePwSuccess(false);
+          }
+        }}
+      >
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Key className="h-4 w-4 text-[#166FB5]" />
+              Change Password
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Enter your current password and choose a new one. Use letters and numbers (6–40 characters).
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {changePwSuccess ? (
+            <div className="flex flex-col items-center gap-3 py-4 text-center">
+              <CheckCircle2 className="h-10 w-10 text-emerald-500" />
+              <p className="text-sm font-medium text-slate-800">Password updated successfully!</p>
+              <p className="text-xs text-slate-500">Use your new password the next time you log in.</p>
+            </div>
+          ) : (
+            <div className="space-y-3 py-2">
+              {changePwError && (
+                <div className="flex items-start gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                  <span>{changePwError}</span>
+                </div>
+              )}
+              <div className="space-y-1">
+                <Label htmlFor="cp-current" className="text-xs text-slate-600">Current Password</Label>
+                <Input
+                  id="cp-current"
+                  type="password"
+                  autoComplete="current-password"
+                  value={changePwCurrent}
+                  onChange={(e) => setChangePwCurrent(e.target.value)}
+                  placeholder="Your current password"
+                  disabled={changePwLoading}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="cp-new" className="text-xs text-slate-600">New Password</Label>
+                <Input
+                  id="cp-new"
+                  type="password"
+                  autoComplete="new-password"
+                  value={changePwNew}
+                  onChange={(e) => setChangePwNew(e.target.value)}
+                  placeholder="Letters and numbers, 6–40 chars"
+                  disabled={changePwLoading}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="cp-confirm" className="text-xs text-slate-600">Confirm New Password</Label>
+                <Input
+                  id="cp-confirm"
+                  type="password"
+                  autoComplete="new-password"
+                  value={changePwConfirm}
+                  onChange={(e) => setChangePwConfirm(e.target.value)}
+                  placeholder="Re-enter new password"
+                  disabled={changePwLoading}
+                />
+              </div>
+            </div>
+          )}
+
+          <AlertDialogFooter>
+            {changePwSuccess ? (
+              <AlertDialogAction
+                onClick={() => {
+                  setShowChangePasswordModal(false);
+                  setChangePwSuccess(false);
+                }}
+                className="bg-[#166FB5] hover:bg-[#166FB5]/90"
+              >
+                Done
+              </AlertDialogAction>
+            ) : (
+              <>
+                <AlertDialogCancel disabled={changePwLoading}>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  disabled={changePwLoading}
+                  className="bg-[#166FB5] hover:bg-[#166FB5]/90"
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    setChangePwError(null);
+
+                    const current = changePwCurrent.trim();
+                    const next = changePwNew.trim();
+                    const confirm = changePwConfirm.trim();
+
+                    if (!current || !next || !confirm) {
+                      setChangePwError("All fields are required.");
+                      return;
+                    }
+                    if (next !== confirm) {
+                      setChangePwError("New passwords do not match.");
+                      return;
+                    }
+                    if (!/^[a-zA-Z0-9]{6,40}$/.test(next)) {
+                      setChangePwError("Password must be 6–40 letters and numbers only.");
+                      return;
+                    }
+
+                    setChangePwLoading(true);
+                    try {
+                      const res = await fetch("/api/portal/change-password", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          inquiryId: inquiryIdParam,
+                          currentPassword: current,
+                          newPassword: next,
+                          googleEmail: user?.email || emailParam,
+                        }),
+                      });
+                      const data = (await res.json()) as { ok?: boolean; error?: string };
+                      if (!res.ok || !data.ok) {
+                        setChangePwError(data.error || "Failed to change password. Please try again.");
+                      } else {
+                        setChangePwSuccess(true);
+                      }
+                    } catch {
+                      setChangePwError("Network error. Please check your connection and try again.");
+                    } finally {
+                      setChangePwLoading(false);
+                    }
+                  }}
+                >
+                  {changePwLoading ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Updating…
+                    </span>
+                  ) : (
+                    "Update Password"
+                  )}
+                </AlertDialogAction>
+              </>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
