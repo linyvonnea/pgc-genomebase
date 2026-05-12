@@ -103,6 +103,9 @@ function ChargeSlipDetailContent() {
   const [status, setStatus] = useState<string>("processing");
   const [availableStatuses, setAvailableStatuses] = useState<CatalogItem[]>([]);
   const [confirmPaidStatus, setConfirmPaidStatus] = useState<boolean>(false);
+  const [paidValidatedAt, setPaidValidatedAt] = useState<Timestamp | null>(null);
+  const [paidValidatedBy, setPaidValidatedBy] = useState<string | null>(null);
+  const [paidValidatedByName, setPaidValidatedByName] = useState<string | null>(null);
   const [dateOfOR, setDateOfOR] = useState<Timestamp | undefined>(undefined);
   const [officialReceipts, setOfficialReceipts] = useState<OfficialReceipt[]>([]);
   const [validating, setValidating] = useState<string | null>(null);
@@ -153,6 +156,12 @@ function ChargeSlipDetailContent() {
       setDvNumber(chargeSlipData.dvNumber ?? "");
       setNotes(chargeSlipData.notes ?? "");
       setStatus((chargeSlipData.status ?? "processing").toLowerCase());
+
+      // Load paid validation info
+      const pvAt = (data as any).paidValidatedAt;
+      setPaidValidatedAt(isTimestamp(pvAt) ? pvAt : null);
+      setPaidValidatedBy((data as any).paidValidatedBy ?? null);
+      setPaidValidatedByName((data as any).paidValidatedByName ?? null);
 
       const rawDate = chargeSlipData.dateOfOR;
       if (isTimestamp(rawDate)) setDateOfOR(rawDate);
@@ -379,14 +388,21 @@ function ChargeSlipDetailContent() {
     if (!record?.id) return;
 
     try {
-      const updates = {
+      const updates: Record<string, unknown> = {
         dvNumber,
         orNumber,
         notes,
         status,
         dateOfOR,
       };
-      
+
+      // When admin confirms payment as validated, record who and when
+      if (status === "paid" && confirmPaidStatus && !paidValidatedAt) {
+        updates.paidValidatedAt = Timestamp.now();
+        updates.paidValidatedBy = adminInfo?.email || "unknown";
+        updates.paidValidatedByName = adminInfo?.name || "";
+      }
+
       await updateChargeSlip(record.id, updates);
 
       // Log UPDATE activity
@@ -568,18 +584,46 @@ function ChargeSlipDetailContent() {
               </div>
 
               {status === "paid" && (
-                <div className="flex items-center space-x-2 pt-2">
-                  <Checkbox
-                    id="confirmPaidStatus"
-                    checked={confirmPaidStatus}
-                    onCheckedChange={(checked) => setConfirmPaidStatus(checked === true)}
-                  />
-                  <label
-                    htmlFor="confirmPaidStatus"
-                    className="text-xs font-medium text-slate-600 cursor-pointer select-none"
-                  >
-                    Confirm payment has been validated
-                  </label>
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="confirmPaidStatus"
+                      checked={confirmPaidStatus}
+                      disabled={!!paidValidatedAt}
+                      onCheckedChange={(checked) => setConfirmPaidStatus(checked === true)}
+                    />
+                    <label
+                      htmlFor="confirmPaidStatus"
+                      className="text-xs font-medium text-slate-600 cursor-pointer select-none"
+                    >
+                      Confirm payment has been validated
+                    </label>
+                  </div>
+                  {paidValidatedAt && (
+                    <div className="ml-6 rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2 space-y-0.5">
+                      <p className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" /> Payment Validated
+                      </p>
+                      <p className="text-[10px] text-emerald-600">
+                        By:{" "}
+                        <span className="font-medium">
+                          {paidValidatedByName || paidValidatedBy || "Admin"}
+                        </span>
+                      </p>
+                      <p className="text-[10px] text-emerald-600">
+                        On:{" "}
+                        <span className="font-medium">
+                          {paidValidatedAt.toDate().toLocaleString("en-PH", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

@@ -72,6 +72,10 @@ export interface ChargeSlipRecord {
   showOfficialReceipts?: boolean; // Toggle visibility of uploaded official receipts
   /** Accumulated OR entries from partial payments, appended on each admin acknowledgment */
   orEntries?: Array<{ orNumber: string; orDate: string; acknowledgedAt: Timestamp }>;
-  /** When true, validating a client receipt automatically sets the status to "paid" */
-  autoMarkAsPaid?: boolean;
+  /** Timestamp when an admin manually confirmed the payment as validated */
+  paidValidatedAt?: Timestamp | null;
+  /** Email of the admin who confirmed payment */
+  paidValidatedBy?: string | null;
+  /** Display name of the admin who confirmed payment */
+  paidValidatedByName?: string | null;
 }
