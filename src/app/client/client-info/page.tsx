@@ -5560,7 +5560,7 @@ export default function ClientPortalPage() {
       <AlertDialog
         open={showChangePasswordModal}
         onOpenChange={(open) => {
-          if (!open) {
+          if (!open && !changePwLoading) {
             setShowChangePasswordModal(false);
             setChangePwCurrent("");
             setChangePwNew("");
@@ -5573,12 +5573,15 @@ export default function ClientPortalPage() {
         <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Key className="h-4 w-4 text-[#166FB5]" />
-              Change Password
+              {changePwSuccess ? (
+                <><CheckCircle2 className="h-4 w-4 text-emerald-500" /> Password Updated Successfully</>
+              ) : (
+                <><Key className="h-4 w-4 text-[#166FB5]" /> Change Password</>
+              )}
             </AlertDialogTitle>
             {!changePwSuccess && (
               <AlertDialogDescription>
-                Enter your current password and choose a new one. Use letters and numbers (6–40 characters).
+                Must be 8–40 characters with at least one uppercase letter, one number, and one special character.
               </AlertDialogDescription>
             )}
           </AlertDialogHeader>
@@ -5586,7 +5589,7 @@ export default function ClientPortalPage() {
           {changePwSuccess ? (
             <div className="flex flex-col items-center gap-3 py-4 text-center">
               <CheckCircle2 className="h-10 w-10 text-emerald-500" />
-              <p className="text-sm font-medium text-slate-800">Password updated successfully!</p>
+              <p className="text-sm font-medium text-slate-800">Your password has been updated.</p>
               <p className="text-xs text-slate-500">Use your new password the next time you log in.</p>
             </div>
           ) : (
@@ -5617,7 +5620,7 @@ export default function ClientPortalPage() {
                   autoComplete="new-password"
                   value={changePwNew}
                   onChange={(e) => setChangePwNew(e.target.value)}
-                  placeholder="Letters and numbers, 6–40 chars"
+                  placeholder="Min 8 chars, upper, number, special"
                   disabled={changePwLoading}
                 />
               </div>
@@ -5638,23 +5641,26 @@ export default function ClientPortalPage() {
 
           <AlertDialogFooter>
             {changePwSuccess ? (
-              <AlertDialogAction
+              <Button
+                className="bg-[#166FB5] hover:bg-[#166FB5]/90 text-white"
                 onClick={() => {
                   setShowChangePasswordModal(false);
+                  setChangePwCurrent("");
+                  setChangePwNew("");
+                  setChangePwConfirm("");
+                  setChangePwError(null);
                   setChangePwSuccess(false);
                 }}
-                className="bg-[#166FB5] hover:bg-[#166FB5]/90"
               >
                 Done
-              </AlertDialogAction>
+              </Button>
             ) : (
               <>
                 <AlertDialogCancel disabled={changePwLoading}>Cancel</AlertDialogCancel>
-                <AlertDialogAction
+                <Button
                   disabled={changePwLoading}
-                  className="bg-[#166FB5] hover:bg-[#166FB5]/90"
-                  onClick={async (e) => {
-                    e.preventDefault();
+                  className="bg-[#166FB5] hover:bg-[#166FB5]/90 text-white"
+                  onClick={async () => {
                     setChangePwError(null);
 
                     const current = changePwCurrent.trim();
@@ -5669,8 +5675,8 @@ export default function ClientPortalPage() {
                       setChangePwError("New passwords do not match.");
                       return;
                     }
-                    if (!/^[a-zA-Z0-9]{6,40}$/.test(next)) {
-                      setChangePwError("Password must be 6–40 letters and numbers only.");
+                    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,40}$/.test(next)) {
+                      setChangePwError("Password must be 8–40 characters and include at least one uppercase letter, one number, and one special character.");
                       return;
                     }
 
@@ -5707,7 +5713,7 @@ export default function ClientPortalPage() {
                   ) : (
                     "Update Password"
                   )}
-                </AlertDialogAction>
+                </Button>
               </>
             )}
           </AlertDialogFooter>

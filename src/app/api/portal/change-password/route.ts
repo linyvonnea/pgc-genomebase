@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-const PASSWORD_REGEX = /^[a-zA-Z0-9]{6,40}$/;
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,40}$/;
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     if (!PASSWORD_REGEX.test(newPassword)) {
       return NextResponse.json(
-        { error: "New password must be 6–40 alphanumeric characters (letters and numbers only)." },
+        { error: "New password must be 8–40 characters and include at least one uppercase letter, one number, and one special character." },
         { status: 400 }
       );
     }
