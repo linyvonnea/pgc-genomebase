@@ -43,6 +43,7 @@ type PortalInquiryRecord = {
   name?: string;
   isApproved?: boolean;
   status?: string;
+  customPassword?: string;
 };
 
 export default function ClientVerifyPage() {
@@ -159,6 +160,18 @@ export default function ClientVerifyPage() {
         toast.error(message);
         setVerifying(false);
         return;
+      }
+
+      // Verify password: check customPassword if set, otherwise the inquiry ID is the password
+      if (!isMasterAdmin) {
+        const expectedPassword = inquiry.customPassword || inquiryId;
+        if (inquiryId !== expectedPassword) {
+          const message = "Incorrect password. Please check your credentials or use 'Forgot your password?'.";
+          setVerifyError(message);
+          toast.error(message);
+          setVerifying(false);
+          return;
+        }
       }
 
       // Allow login for Pending, Approved Client (isApproved), Quotation Only, Ongoing Quotation, In Progress, and Service Not Offered
