@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { signInWithPopup, GoogleAuthProvider, getAuth } from "firebase/auth";
+import { signInWithPopup, signOut as firebaseSignOut, GoogleAuthProvider, getAuth } from "firebase/auth";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, getDocs, collection, query, where } from "firebase/firestore";
 import { markInquiryAsLoggedIn } from "@/services/inquiryService";
@@ -438,27 +438,24 @@ export default function ClientVerifyPage() {
       <Dialog open={!!forgotErrorModal} onOpenChange={(open) => { if (!open) setForgotErrorModal(null); }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base font-bold text-slate-900">
-              <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+            <DialogTitle className="text-base font-bold text-slate-900">
               Account Not Found
             </DialogTitle>
             <DialogDescription className="text-sm text-slate-600 leading-relaxed pt-1">
-              {forgotErrorModal}
+              No account was found linked to this email address{googleUser?.email ? (
+                <> (<span className="font-semibold text-slate-800">{googleUser.email}</span>)</>
+              ) : null}. Please make sure you&apos;re signed in with the same Google account you used when submitting your inquiry.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex flex-col gap-2 sm:flex-col">
             <Button
-              onClick={() => { window.location.href = "/inquire"; }}
+              onClick={async () => {
+                try { await firebaseSignOut(getAuth()); } catch { /* ignore */ }
+                window.location.href = "/portal";
+              }}
               className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90"
             >
               Try a Different Email
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setForgotErrorModal(null)}
-              className="w-full"
-            >
-              Dismiss
             </Button>
           </DialogFooter>
         </DialogContent>
