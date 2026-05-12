@@ -421,6 +421,20 @@ export default function ClientPortalPage() {
     setExpandedProjectDocs(new Set());
   }, []);
 
+  // Open change-password modal via custom event dispatched from the header burger menu
+  useEffect(() => {
+    const handleOpenChangePw = () => {
+      setChangePwCurrent("");
+      setChangePwNew("");
+      setChangePwConfirm("");
+      setChangePwError(null);
+      setChangePwSuccess(false);
+      setShowChangePasswordModal(true);
+    };
+    window.addEventListener("open-change-password", handleOpenChangePw);
+    return () => window.removeEventListener("open-change-password", handleOpenChangePw);
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
     const loadConfig = async () => {
@@ -5562,9 +5576,11 @@ export default function ClientPortalPage() {
               <Key className="h-4 w-4 text-[#166FB5]" />
               Change Password
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              Enter your current password and choose a new one. Use letters and numbers (6–40 characters).
-            </AlertDialogDescription>
+            {!changePwSuccess && (
+              <AlertDialogDescription>
+                Enter your current password and choose a new one. Use letters and numbers (6–40 characters).
+              </AlertDialogDescription>
+            )}
           </AlertDialogHeader>
 
           {changePwSuccess ? (
