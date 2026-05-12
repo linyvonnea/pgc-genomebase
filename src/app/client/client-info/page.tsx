@@ -5686,7 +5686,6 @@ export default function ClientPortalPage() {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                          inquiryId: inquiryIdParam,
                           currentPassword: current,
                           newPassword: next,
                           googleEmail: user?.email || emailParam,

@@ -140,36 +140,57 @@ export default function ClientVerifyPage() {
         setVerifying(false);
         return;
       }
-      // ── Step 1: Try direct lookup by treating the entered value as an inquiry ID ──
+      // Determine the active password and resolve the primary inquiry
+      const isMasterAdmin = googleUser.email ? MASTER_EMAILS.includes(googleUser.email) : false;
       let resolvedInquiryId: string = inquiryId;
       let inquiry: PortalInquiryRecord | null = null;
-      const isMasterAdmin = googleUser.email ? MASTER_EMAILS.includes(googleUser.email) : false;
 
-      const directDoc = await getDoc(doc(db, "inquiries", inquiryId));
-      if (directDoc.exists()) {
-        const data = directDoc.data() as PortalInquiryRecord;
-        const emailOk = isMasterAdmin || data.email?.toLowerCase() === googleUser.email.toLowerCase();
-        if (emailOk) {
-          const expectedPw = data.customPassword || directDoc.id;
-          if (inquiryId === expectedPw || isMasterAdmin) {
-            inquiry = data;
-            resolvedInquiryId = directDoc.id;
-          }
+      if (isMasterAdmin) {
+        // Master admins: direct document lookup, no password restriction
+        const directDoc = await getDoc(doc(db, "inquiries", inquiryId));
+        if (directDoc.exists()) {
+          inquiry = directDoc.data() as PortalInquiryRecord;
+          resolvedInquiryId = directDoc.id;
         }
-      }
-
-      // ── Step 2: If direct lookup didn't match, search by email for a customPassword match ──
-      if (!inquiry && !isMasterAdmin) {
+      } else {
+        // Regular clients: search all inquiries by Google email
         const snap = await getDocs(
           query(collection(db, "inquiries"), where("email", "==", googleUser.email.toLowerCase()))
         );
-        for (const d of snap.docs) {
-          const data = d.data() as PortalInquiryRecord;
-          if (data.customPassword && inquiryId === data.customPassword) {
-            inquiry = data;
-            resolvedInquiryId = d.id;
-            break;
+
+        const allDocs = snap.docs;
+
+        // Sort ascending by createdAt — oldest = primary / original inquiry
+        const sorted = [...allDocs].sort((a, b) => {
+          const tsA = a.data().createdAt;
+          const tsB = b.data().createdAt;
+          const msA = tsA?.toMillis?.() ?? (tsA ? Number(tsA) : 0);
+          const msB = tsB?.toMillis?.() ?? (tsB ? Number(tsB) : 0);
+          return msA - msB;
+        });
+
+        let authenticated = false;
+
+        // 1. Check if any inquiry has a customPassword matching the entered value
+        const withCustomPw = allDocs.find(
+          (d) => d.data().customPassword && inquiryId === (d.data().customPassword as string)
+        );
+
+        if (withCustomPw) {
+          authenticated = true;
+        } else if (sorted.length > 0) {
+          // 2. Only the original (first/oldest) inquiry ID is a valid password —
+          //    new inquiry IDs created inside the portal are NOT accepted.
+          const primary = sorted[0];
+          if (!primary.data().customPassword && inquiryId === primary.id) {
+            authenticated = true;
           }
+        }
+
+        if (authenticated && sorted.length > 0) {
+          // Always navigate to the primary inquiry after login
+          resolvedInquiryId = sorted[0].id;
+          inquiry = sorted[0].data() as PortalInquiryRecord;
         }
       }
 
