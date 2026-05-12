@@ -102,7 +102,7 @@ function ChargeSlipDetailContent() {
   const [notes, setNotes] = useState("");
   const [status, setStatus] = useState<string>("processing");
   const [availableStatuses, setAvailableStatuses] = useState<CatalogItem[]>([]);
-  const [autoMarkAsPaid, setAutoMarkAsPaid] = useState<boolean>(false);
+  const [confirmPaidStatus, setConfirmPaidStatus] = useState<boolean>(false);
   const [dateOfOR, setDateOfOR] = useState<Timestamp | undefined>(undefined);
   const [officialReceipts, setOfficialReceipts] = useState<OfficialReceipt[]>([]);
   const [validating, setValidating] = useState<string | null>(null);
@@ -212,6 +212,12 @@ function ChargeSlipDetailContent() {
 
     return () => unsubscribeReceipts();
   }, [record?.projectId, record?.project, record?.chargeSlipNumber]);
+
+  useEffect(() => {
+    if (status !== "paid" && confirmPaidStatus) {
+      setConfirmPaidStatus(false);
+    }
+  }, [status, confirmPaidStatus]);
 
   const handleReturn = async (receipt: OfficialReceipt) => {
     if (!record) return;
@@ -570,19 +576,21 @@ function ChargeSlipDetailContent() {
                 </Select>
               </div>
 
-              <div className="flex items-center space-x-2 pt-2">
-                <Checkbox 
-                  id="autoMarkAsPaid" 
-                  checked={autoMarkAsPaid} 
-                  onCheckedChange={(checked) => setAutoMarkAsPaid(checked === true)}
-                />
-                <label
-                  htmlFor="autoMarkAsPaid"
-                  className="text-xs font-medium text-slate-600 cursor-pointer select-none"
-                >
-                  Auto-update status to "Paid" upon validating receipt
-                </label>
-              </div>
+              {status === "paid" && (
+                <div className="flex items-center space-x-2 pt-2">
+                  <Checkbox
+                    id="confirmPaidStatus"
+                    checked={confirmPaidStatus}
+                    onCheckedChange={(checked) => setConfirmPaidStatus(checked === true)}
+                  />
+                  <label
+                    htmlFor="confirmPaidStatus"
+                    className="text-xs font-medium text-slate-600 cursor-pointer select-none"
+                  >
+                    Confirm payment has been validated
+                  </label>
+                </div>
+              )}
             </div>
 
             <div className="space-y-4">
