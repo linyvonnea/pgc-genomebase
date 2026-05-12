@@ -1,10 +1,10 @@
 // API Route: POST /api/portal/change-password
-// Allows a client to set or update a custom portal password.
-// The custom password is stored as `customPassword` on their inquiry document.
-// Validation: alphanumeric only, 6–40 characters.
+// Allows a client to update their portal password.
+// The active password source of truth is stored as `customPassword` on the primary
+// (oldest) inquiry. If no customPassword exists yet, the primary inquiry ID is the password.
 
 import { NextRequest, NextResponse } from "next/server";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, query, where, doc, updateDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,40}$/;
@@ -13,12 +13,10 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const googleEmail: string = (body?.googleEmail || "").trim().toLowerCase();
-    const inquiryId: string = (body?.inquiryId || "").trim();
     const currentPassword: string = (body?.currentPassword || "").trim();
     const newPassword: string = (body?.newPassword || "").trim();
 
-    // Basic input validation
-    if (!googleEmail || !inquiryId || !currentPassword || !newPassword) {
+    if (!googleEmail || !currentPassword || !newPassword) {
       return NextResponse.json({ error: "All fields are required." }, { status: 400 });
     }
 
@@ -29,25 +27,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch the inquiry document
-    const inquiryRef = doc(db, "inquiries", inquiryId);
-    const inquirySnap = await getDoc(inquiryRef);
+    // Find all inquiries for this email
+    const snap = await getDocs(
+      query(collection(db, "inquiries"), where("email", "==", googleEmail))
+    );
 
-    if (!inquirySnap.exists()) {
-      return NextResponse.json({ error: "Inquiry not found." }, { status: 404 });
-    }
-
-    const data = inquirySnap.data();
-
-    // Verify the Google email matches the inquiry owner
-    const inquiryEmail: string = (data.email || "").toLowerCase();
-    if (inquiryEmail !== googleEmail) {
+    if (snap.empty) {
       return NextResponse.json({ error: "Unauthorized." }, { status: 403 });
     }
 
-    // Verify the current password:
-    // If a customPassword is already set, check against it; otherwise check against the inquiry ID.
-    const storedPassword: string = data.customPassword || inquiryId;
+    // Sort ascending by createdAt — the oldest inquiry is the primary auth source
+    const sorted = [...snap.docs].sort((a, b) => {
+      const tsA = a.data().createdAt;
+      const tsB = b.data().createdAt;
+      const msA = tsA instanceof Timestamp ? tsA.toMillis() : (tsA ? Number(tsA) : 0);
+      const msB = tsB instanceof Timestamp ? tsB.toMillis() : (tsB ? Number(tsB) : 0);
+      return msA - msB;
+    });
+
+    // The inquiry that holds the customPassword (if any) is the auth source of truth.
+    // Fall back to the primary (oldest) inquiry if no customPassword has been set.
+    const withCustomPw = snap.docs.find((d) => !!d.data().customPassword);
+    const primaryDoc = withCustomPw ?? sorted[0];
+    const primaryData = primaryDoc.data();
+
+    // Verify current password
+    const storedPassword: string = primaryData.customPassword || primaryDoc.id;
     if (currentPassword !== storedPassword) {
       return NextResponse.json({ error: "Current password is incorrect." }, { status: 400 });
     }
@@ -60,8 +65,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update the customPassword field on the inquiry document
-    await updateDoc(inquiryRef, { customPassword: newPassword });
+    // Write customPassword to the primary inquiry only
+    await updateDoc(doc(db, "inquiries", primaryDoc.id), { customPassword: newPassword });
 
     return NextResponse.json({ ok: true });
   } catch (error) {
