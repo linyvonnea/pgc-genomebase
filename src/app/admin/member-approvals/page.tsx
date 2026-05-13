@@ -640,18 +640,11 @@ export default function MemberApprovalsPage() {
           reviewNotes
         );
       } else if (selectedApproval.type === "project") {
-        // Project rejection (now "cancelled")
-        const { updateProjectRequestStatus } = await import("@/services/projectRequestService");
-        await updateProjectRequestStatus(
-          selectedApproval.inquiryId,
-          "cancelled",
-          user?.email || "",
-          undefined,
-          undefined,
-          reviewNotes
-        );
+        // Delete the project request entirely so client re-selects quotation and re-fills project info
+        const { deleteProjectRequest } = await import("@/services/projectRequestService");
+        await deleteProjectRequest(selectedApproval.inquiryId);
 
-        // Reset all pending client requests back to "draft" so client can re-edit
+        // Reset client requests to draft (keeps member info so client doesn't re-type everything)
         const { cancelAllClientRequestsByInquiry } = await import("@/services/clientRequestService");
         await cancelAllClientRequestsByInquiry(
           selectedApproval.inquiryId,
@@ -665,6 +658,14 @@ export default function MemberApprovalsPage() {
           await resetSelectedQuotationForInquiry(selectedApproval.inquiryId);
         } catch (qError) {
           console.warn("Could not reset quotation selected status:", qError);
+        }
+
+        // Revert the inquiry status back to "Ongoing Quotation" so "Proceed with Service" reappears
+        try {
+          const { updateInquiryStatus } = await import("@/app/actions/inquiryActions");
+          await updateInquiryStatus(selectedApproval.inquiryId, "Ongoing Quotation");
+        } catch (iqError) {
+          console.warn("Could not reset inquiry status:", iqError);
         }
       }
       

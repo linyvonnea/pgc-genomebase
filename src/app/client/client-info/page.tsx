@@ -681,10 +681,9 @@ export default function ClientPortalPage() {
       const drafts = snapshot.docs
         .map((docSnap) => {
           const draftProjectRequest = docSnap.data() as ProjectRequest;
-          if (!["draft", "pending", "rejected", "cancelled"].includes(draftProjectRequest.status)) return null;
+          if (!["draft", "pending", "rejected"].includes(draftProjectRequest.status)) return null;
           const statusLabel = draftProjectRequest.status === "draft" ? "Draft" :
             draftProjectRequest.status === "pending" ? "Pending Approval" :
-            draftProjectRequest.status === "cancelled" ? "Returned for Revision" :
             "Rejected";
           return {
             pid: draftProjectRequest.id || docSnap.id || draftProjectRequest.inquiryId,

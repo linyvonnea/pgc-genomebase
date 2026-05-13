@@ -325,6 +325,29 @@ export async function rejectClientRequest(
 }
 
 /**
+ * Delete all client requests for a given inquiry ID.
+ * Used when admin cancels a project submission so the client starts fresh.
+ */
+export async function deleteAllClientRequestsByInquiry(
+  inquiryId: string
+): Promise<void> {
+  const q = query(
+    collection(db, COLLECTION),
+    where("inquiryId", "==", inquiryId)
+  );
+
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) return;
+
+  const batch = writeBatch(db);
+  snapshot.docs.forEach((docSnap) => {
+    batch.delete(docSnap.ref);
+  });
+
+  await batch.commit();
+}
+
+/**
  * Cancel all pending client requests for a given inquiry ID.
  * Used when project submission is cancelled/rejected at the project level.
  */
