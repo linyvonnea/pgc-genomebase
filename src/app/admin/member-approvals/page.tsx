@@ -419,8 +419,9 @@ export default function MemberApprovalsPage() {
         return;
       }
 
-      // Map 'cancelled' UI status to clientRequests 'cancelled'
-      const clientStatus = approval.status === "cancelled" ? "cancelled" : undefined;
+      // For cancelled submissions, members are now reset to "draft" (so client can re-edit).
+      // Fetch all members regardless of status so admin can still review them.
+      const clientStatus = undefined;
       const clientRequests = await getClientRequestsByInquiry(approval.inquiryId, clientStatus as any);
 
       // Map clientRequests into members array for display
@@ -650,13 +651,21 @@ export default function MemberApprovalsPage() {
           reviewNotes
         );
 
-        // Cancel all pending client requests for this inquiry
+        // Reset all pending client requests back to "draft" so client can re-edit
         const { cancelAllClientRequestsByInquiry } = await import("@/services/clientRequestService");
         await cancelAllClientRequestsByInquiry(
           selectedApproval.inquiryId,
           user?.email || "",
           reviewNotes
         );
+
+        // Remove "selected" status from the associated quotation so client can choose again
+        try {
+          const { resetSelectedQuotationForInquiry } = await import("@/services/quotationService");
+          await resetSelectedQuotationForInquiry(selectedApproval.inquiryId);
+        } catch (qError) {
+          console.warn("Could not reset quotation selected status:", qError);
+        }
       }
       
       // Send cancellation email

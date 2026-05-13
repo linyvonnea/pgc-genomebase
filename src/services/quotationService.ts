@@ -165,6 +165,30 @@ export async function markQuotationAsSelected(
 }
 
 /**
+ * Reset the selected quotation for a given inquiry back to "pending".
+ * Called when admin cancels a project submission so the client can choose again.
+ */
+export async function resetSelectedQuotationForInquiry(
+  inquiryId: string
+): Promise<void> {
+  const q = query(
+    collection(db, "quotations"),
+    where("selectedForProject", "==", inquiryId)
+  );
+  const snapshot = await getDocs(q);
+  if (snapshot.empty) return;
+  await Promise.all(
+    snapshot.docs.map((docSnap) =>
+      setDoc(
+        docSnap.ref,
+        { status: "pending", selectedForProject: "" },
+        { merge: true }
+      )
+    )
+  );
+}
+
+/**
  * Delete a quotation by its reference number.
  */
 export async function deleteQuotation(refNumber: string): Promise<void> {

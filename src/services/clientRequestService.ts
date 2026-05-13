@@ -345,7 +345,7 @@ export async function cancelAllClientRequestsByInquiry(
   const batch = writeBatch(db);
   snapshot.docs.forEach((docSnap) => {
     batch.update(docSnap.ref, {
-      status: "cancelled",
+      status: "draft",
       rejectionReason: reason,
       reviewedBy,
       reviewedAt: serverTimestamp(),
