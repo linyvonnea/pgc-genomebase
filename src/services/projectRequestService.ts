@@ -154,6 +154,7 @@ export async function submitProjectForApproval(
       status: "pending" as ProjectRequestStatus,
       submittedAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
+      rejectionReason: "",
     },
     { merge: true }
   );
