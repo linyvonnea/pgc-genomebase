@@ -3617,7 +3617,7 @@ export default function ClientPortalPage() {
           {projectDetails ? (
             <div className="p-3 lg:p-4 max-w-5xl mx-auto space-y-3">
               {/* Draft/Pending/Approved status banner */}
-              {(projectDetails?.isDraft || projectDetails?.status === "Ongoing" || projectDetails?.status === "Pending Approval" || projectDetails?.status === "Rejected") && (
+              {(projectDetails?.isDraft || projectDetails?.status === "Ongoing" || projectDetails?.status === "Pending Approval" || projectDetails?.status === "Rejected" || projectDetails?.status === "Returned for Revision") && (
                 <div className={`rounded-lg p-3 border ${
                   projectDetails.status === "Draft" 
                     ? "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200"
@@ -3659,6 +3659,17 @@ export default function ClientPortalPage() {
                           </p>
                           <p className="text-xs text-green-700 leading-relaxed">
                             Your project has been approved and is now active. You can now view your unique <strong>Project ID</strong> and <strong>Client IDs</strong>, and access all project documents below.
+                          </p>
+                        </>
+                      ) : projectDetails.status === "Returned for Revision" ? (
+                        <>
+                          <p className="text-xs font-semibold text-red-900 leading-none">
+                            Project Cancelled
+                          </p>
+                          <p className="text-xs text-red-700 leading-relaxed">
+                            Your project submission was not approved for the following reason:{" "}
+                            <strong>&ldquo;{projectRequest?.rejectionReason || "No reason provided. Please contact the administrator for details."}&rdquo;</strong>
+                            {" "}Please update your information and resubmit.
                           </p>
                         </>
                       ) : (
