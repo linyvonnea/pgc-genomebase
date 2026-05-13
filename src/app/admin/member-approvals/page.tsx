@@ -640,24 +640,13 @@ export default function MemberApprovalsPage() {
           reviewNotes
         );
       } else if (selectedApproval.type === "project") {
-        // Project rejection (now "cancelled")
-        const { updateProjectRequestStatus } = await import("@/services/projectRequestService");
-        await updateProjectRequestStatus(
-          selectedApproval.inquiryId,
-          "cancelled",
-          user?.email || "",
-          undefined,
-          undefined,
-          reviewNotes
-        );
+        // Delete the project request entirely so client can start fresh
+        const { deleteProjectRequest } = await import("@/services/projectRequestService");
+        await deleteProjectRequest(selectedApproval.inquiryId);
 
-        // Reset all pending client requests back to "draft" so client can re-edit
-        const { cancelAllClientRequestsByInquiry } = await import("@/services/clientRequestService");
-        await cancelAllClientRequestsByInquiry(
-          selectedApproval.inquiryId,
-          user?.email || "",
-          reviewNotes
-        );
+        // Delete all associated client requests so client re-fills them
+        const { deleteAllClientRequestsByInquiry } = await import("@/services/clientRequestService");
+        await deleteAllClientRequestsByInquiry(selectedApproval.inquiryId);
 
         // Remove "selected" status from the associated quotation so client can choose again
         try {
@@ -665,6 +654,14 @@ export default function MemberApprovalsPage() {
           await resetSelectedQuotationForInquiry(selectedApproval.inquiryId);
         } catch (qError) {
           console.warn("Could not reset quotation selected status:", qError);
+        }
+
+        // Revert the inquiry status back to "Ongoing Quotation" so "Proceed with Service" reappears
+        try {
+          const { updateInquiryStatus } = await import("@/app/actions/inquiryActions");
+          await updateInquiryStatus(selectedApproval.inquiryId, "Ongoing Quotation");
+        } catch (iqError) {
+          console.warn("Could not reset inquiry status:", iqError);
         }
       }
       
