@@ -640,13 +640,17 @@ export default function MemberApprovalsPage() {
           reviewNotes
         );
       } else if (selectedApproval.type === "project") {
-        // Delete the project request entirely so client can start fresh
+        // Delete the project request entirely so client re-selects quotation and re-fills project info
         const { deleteProjectRequest } = await import("@/services/projectRequestService");
         await deleteProjectRequest(selectedApproval.inquiryId);
 
-        // Delete all associated client requests so client re-fills them
-        const { deleteAllClientRequestsByInquiry } = await import("@/services/clientRequestService");
-        await deleteAllClientRequestsByInquiry(selectedApproval.inquiryId);
+        // Reset client requests to draft (keeps member info so client doesn't re-type everything)
+        const { cancelAllClientRequestsByInquiry } = await import("@/services/clientRequestService");
+        await cancelAllClientRequestsByInquiry(
+          selectedApproval.inquiryId,
+          user?.email || "",
+          reviewNotes
+        );
 
         // Remove "selected" status from the associated quotation so client can choose again
         try {
