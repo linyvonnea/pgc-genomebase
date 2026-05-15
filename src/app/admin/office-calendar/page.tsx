@@ -316,7 +316,7 @@ function OfficeCalendarContent() {
         await updateOfficeEvent(editingEvent.id, {
           type: form.type,
           title: form.title.trim(),
-          description: form.description.trim() || undefined,
+          description: form.description.trim(),
           recurringYearly: form.recurringYearly,
           ...(form.type === "partial_closure"
             ? { closedFrom: form.closedFrom, closedUntil: form.closedUntil }
@@ -328,7 +328,7 @@ function OfficeCalendarContent() {
           date: selectedDate,
           type: form.type,
           title: form.title.trim(),
-          description: form.description.trim() || undefined,
+          description: form.description.trim(),
           recurringYearly: form.recurringYearly,
           ...(form.type === "partial_closure"
             ? { closedFrom: form.closedFrom, closedUntil: form.closedUntil }
