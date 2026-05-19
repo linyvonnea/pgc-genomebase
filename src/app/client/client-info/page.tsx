@@ -2288,6 +2288,18 @@ export default function ClientPortalPage() {
     
     // Close mobile sidebar if open
     setMobileSidebarOpen(false);
+
+    // If this project belongs to a different inquiry, update the URL so the
+    // correct inquiry is selected in "My Inquiries" and all data re-scopes.
+    const projectInquiryId = project.inquiryId;
+    if (projectInquiryId && projectInquiryId !== inquiryIdParam) {
+      userSelectedInquiryRef.current = true;
+      const params = new URLSearchParams();
+      if (emailParam) params.set("email", emailParam);
+      params.set("inquiryId", projectInquiryId);
+      if (project.pid) params.set("pid", project.pid);
+      router.replace(`/client/client-info?${params.toString()}`);
+    }
   };
 
   const handleCreateNewProject = () => {
