@@ -699,7 +699,8 @@ export async function markMessagesAsRead(
   userRole: MessageSenderRole,
   userEmail: string,
   senderId?: string,
-  senderName?: string
+  senderName?: string,
+  viewerDisplayName?: string,
 ): Promise<void> {
   try {
     const thread = await getQuotationThread(threadId);
@@ -736,11 +737,19 @@ export async function markMessagesAsRead(
 
       if (shouldMark && msg.id) {
         const msgRef = doc(db, MESSAGES_COLLECTION, msg.id);
-        batch.update(msgRef, {
+        const updatePayload: Record<string, unknown> = {
           isRead: true,
           readAt: serverTimestamp(),
           readBy: userEmail,
-        });
+        };
+        // Track which admins viewed each client message
+        if (userRole === "admin" && msg.senderRole === "client") {
+          updatePayload.viewedBy = arrayUnion({
+            name: viewerDisplayName || userEmail,
+            email: userEmail,
+          });
+        }
+        batch.update(msgRef, updatePayload);
       }
     });
     

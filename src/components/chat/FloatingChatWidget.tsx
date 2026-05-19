@@ -16,7 +16,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import { subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
-import { getClientInitials } from "@/lib/chatUtils";
+import { getClientInitials, getAdminDisplayName } from "@/lib/chatUtils";
 import { startPresence, subscribeToAnyAdminOnline } from "@/services/presenceService";
 import usePresenceStatus from "@/hooks/usePresenceStatus";
 import PresenceIndicator from "@/components/chat/PresenceIndicator";
@@ -187,12 +187,16 @@ export default function FloatingChatWidget({
     if (searchParams.get("focus") === "messages" && searchParams.get("inquiryId") === inquiryId) {
       setIsOpen(true);
       if (inquiryId) {
+        const viewerName = role === "admin" && user?.email
+          ? getAdminDisplayName(user.email)
+          : undefined;
         markMessagesAsRead(
           inquiryId, 
           role, 
           user?.email || "admin",
           inquiryData?.email || undefined,
-          inquiryData?.name || undefined
+          inquiryData?.name || undefined,
+          viewerName,
         ).catch(console.error);
       }
     }
@@ -209,12 +213,16 @@ export default function FloatingChatWidget({
 
       // If the chat widget is currently open or messages are being continuously viewed, mark them as read immediately
       if (isOpen && unread > 0) {
+        const viewerName = role === "admin" && user?.email
+          ? getAdminDisplayName(user.email)
+          : undefined;
         markMessagesAsRead(
           inquiryId, 
           role, 
           user?.email || "admin",
           inquiryData?.email || undefined,
-          inquiryData?.name || undefined
+          inquiryData?.name || undefined,
+          viewerName,
         ).catch(console.error);
       }
 
@@ -312,12 +320,16 @@ export default function FloatingChatWidget({
 
     // If opening, mark as read immediately
     if (newOpenState && inquiryId) {
+      const viewerName = role === "admin" && user?.email
+        ? getAdminDisplayName(user.email)
+        : undefined;
       markMessagesAsRead(
         inquiryId, 
         role, 
         user?.email || "admin",
         inquiryData?.email || undefined,
-        inquiryData?.name || undefined
+        inquiryData?.name || undefined,
+        viewerName,
       ).catch(console.error);
     }
   };

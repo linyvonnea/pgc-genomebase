@@ -165,6 +165,8 @@ export default function ChatBox({
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [unsendingId, setUnsendingId] = useState<string | null>(null);
+  // ID of the client message whose viewer list is currently expanded
+  const [expandedViewersId, setExpandedViewersId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const DEFAULT_REACTIONS = ["👍", "❤️", "😮", "😂", "😥"];
@@ -203,9 +205,17 @@ export default function ChatBox({
             .filter(Boolean);
 
           if (unreadIds.length > 0) {
-            markMessagesAsRead(inquiryId, role, user.email || "unknown").catch(
-              console.error,
-            );
+            const viewerName = role === "admin"
+              ? getAdminDisplayName(user.email || user.uid)
+              : undefined;
+            markMessagesAsRead(
+              inquiryId,
+              role,
+              user.email || "unknown",
+              undefined,
+              undefined,
+              viewerName,
+            ).catch(console.error);
           }
         },
       );
@@ -459,6 +469,17 @@ export default function ChatBox({
                 );
               }
 
+              // Deduplicate viewers by email for display
+              const uniqueViewers = msg.viewedBy
+                ? Array.from(
+                    new Map(msg.viewedBy.map((v) => [v.email, v])).values()
+                  )
+                : [];
+              const isViewersExpanded = expandedViewersId === msg.id;
+              // Only client messages shown to admin are clickable
+              const isClickableForViewers =
+                role === "admin" && msg.senderRole === "client" && !!msg.id;
+
               return (
                 <div
                   key={msg.id || idx}
@@ -506,12 +527,19 @@ export default function ChatBox({
                       </span>
                     </div>
 
-                      <div
+                    {/* Message bubble — clickable for admin to reveal who viewed it */}
+                    <div
+                      onClick={isClickableForViewers
+                        ? () => setExpandedViewersId(
+                            isViewersExpanded ? null : (msg.id ?? null)
+                          )
+                        : undefined
+                      }
                       className={`px-3.5 py-2.5 text-[14px] shadow-sm ${
                         isMe
                           ? "bg-blue-600 text-white rounded-2xl rounded-tr-sm"
                           : "bg-gray-100 text-gray-800 rounded-2xl rounded-tl-sm border border-gray-100"
-                      }`}
+                      }${isClickableForViewers ? " cursor-pointer hover:brightness-95 transition-all select-none" : ""}`}
                     >
                       {msg.content && (
                         <p className="whitespace-pre-wrap leading-relaxed break-words">
@@ -528,39 +556,75 @@ export default function ChatBox({
                         </div>
                       )}
 
-                        {isMe && (
-                          <div className="flex justify-end mt-1.5 -mb-0.5">
-                            {msg.isRead ? (
-                              <div className="flex items-center gap-1 group/seen bg-white/10 rounded-full px-1.5 py-0.5 ml-auto translate-x-1">
-                                <CheckCheck className="w-3 h-3 text-white" strokeWidth={3} />
-                                <span className="text-[8px] font-bold text-white uppercase tracking-tighter">
-                                  {role === "client" ? `Seen` : `Seen`}
+                      {isMe && (
+                        <div className="flex justify-end mt-1.5 -mb-0.5">
+                          {msg.isRead ? (
+                            <div className="flex items-center gap-1 group/seen bg-white/10 rounded-full px-1.5 py-0.5 ml-auto translate-x-1">
+                              <CheckCheck className="w-3 h-3 text-white" strokeWidth={3} />
+                              <span className="text-[8px] font-bold text-white uppercase tracking-tighter">
+                                Seen
+                              </span>
+                            </div>
+                          ) : (
+                            <Check className="w-3 h-3 text-white/50 ml-auto" strokeWidth={3} />
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Viewer list — shown on click, admin role only */}
+                    {isClickableForViewers && (
+                      <div
+                        className={`overflow-hidden transition-all duration-200 ${
+                          isViewersExpanded ? "max-h-24 opacity-100 mt-1.5" : "max-h-0 opacity-0"
+                        }`}
+                      >
+                        {uniqueViewers.length > 0 ? (
+                          <div className="flex flex-wrap items-center gap-1">
+                            <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wide mr-0.5">
+                              Seen by
+                            </span>
+                            {uniqueViewers.map((v) => (
+                              <span
+                                key={v.email}
+                                title={v.email}
+                                className="inline-flex items-center gap-1 text-[10px] font-medium text-slate-600 bg-slate-100 border border-slate-200 rounded-full px-2 py-0.5"
+                              >
+                                <span className="h-3.5 w-3.5 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center text-[7px] font-bold flex-shrink-0">
+                                  {v.name.charAt(0).toUpperCase()}
                                 </span>
-                              </div>
-                            ) : (
-                              <Check className="w-3 h-3 text-white/50 ml-auto" strokeWidth={3} />
-                            )}
+                                {v.name}
+                              </span>
+                            ))}
                           </div>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 italic">
+                            Not yet viewed by any admin
+                          </span>
                         )}
                       </div>
-                    </div>                    {/* Unsend button — visible on hover for own messages only, within 24 hours */}
-                    {isMe && !msg.unsent && (() => {
-                      const sentAt = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date((msg.createdAt as any) ?? 0);
-                      const within24h = Date.now() - sentAt.getTime() < 24 * 60 * 60 * 1000;
-                      return within24h ? (
-                        <button
-                          type="button"
-                          onClick={() => msg.id && handleUnsend(msg.id)}
-                          disabled={unsendingId === msg.id}
-                          className="invisible group-hover:visible flex items-center gap-1 text-[10px] text-slate-400 hover:text-red-500 transition-colors mt-0.5 cursor-pointer disabled:opacity-50"
-                          title="Unsend message"
-                        >
-                          <Trash2 className="w-2.5 h-2.5" />
-                          {unsendingId === msg.id ? "Unsending…" : "Unsend"}
-                        </button>
-                      ) : null;
-                    })()}                  </div>
-                );
+                    )}
+                  </div>
+
+                  {/* Unsend button — visible on hover for own messages only, within 24 hours */}
+                  {isMe && !msg.unsent && (() => {
+                    const sentAt = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date((msg.createdAt as any) ?? 0);
+                    const within24h = Date.now() - sentAt.getTime() < 24 * 60 * 60 * 1000;
+                    return within24h ? (
+                      <button
+                        type="button"
+                        onClick={() => msg.id && handleUnsend(msg.id)}
+                        disabled={unsendingId === msg.id}
+                        className="invisible group-hover:visible flex items-center gap-1 text-[10px] text-slate-400 hover:text-red-500 transition-colors mt-0.5 cursor-pointer disabled:opacity-50"
+                        title="Unsend message"
+                      >
+                        <Trash2 className="w-2.5 h-2.5" />
+                        {unsendingId === msg.id ? "Unsending…" : "Unsend"}
+                      </button>
+                    ) : null;
+                  })()}
+                </div>
+              );
             })
           )}
         </div>
