@@ -193,7 +193,7 @@ export default function FloatingChatWidget({
         markMessagesAsRead(
           inquiryId, 
           role, 
-          user?.email || "admin",
+          user?.email || user?.uid || "unknown",
           inquiryData?.email || undefined,
           inquiryData?.name || undefined,
           viewerName,
@@ -219,7 +219,7 @@ export default function FloatingChatWidget({
         markMessagesAsRead(
           inquiryId, 
           role, 
-          user?.email || "admin",
+          user?.email || user?.uid || "unknown",
           inquiryData?.email || undefined,
           inquiryData?.name || undefined,
           viewerName,
@@ -326,7 +326,7 @@ export default function FloatingChatWidget({
       markMessagesAsRead(
         inquiryId, 
         role, 
-        user?.email || "admin",
+        user?.email || user?.uid || "unknown",
         inquiryData?.email || undefined,
         inquiryData?.name || undefined,
         viewerName,

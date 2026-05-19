@@ -205,13 +205,13 @@ export default function ChatBox({
             .filter(Boolean);
 
           if (unreadIds.length > 0) {
-            const viewerName = role === "admin"
+            const viewerName = role === "admin" && user.email
               ? getAdminDisplayNameWithIcon(user.email || user.uid)
               : undefined;
             markMessagesAsRead(
               inquiryId,
               role,
-              user.email || "unknown",
+              user.email || user.uid || "unknown",
               undefined,
               undefined,
               viewerName,
