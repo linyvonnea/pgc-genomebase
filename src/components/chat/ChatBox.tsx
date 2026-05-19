@@ -211,7 +211,7 @@ export default function ChatBox({
             markMessagesAsRead(
               inquiryId,
               role,
-              user.email || user.uid || "unknown",
+              user.email || user.uid || "SYSTEM",
               undefined,
               undefined,
               viewerName,
