@@ -24,7 +24,7 @@ import {
 } from "@/services/quotationThreadService";
 import { uploadFile } from "@/lib/fileUpload";
 import { format } from "date-fns";
-import { getAdminDisplayName, getClientInitials } from "@/lib/chatUtils";
+import { getAdminDisplayName, getAdminDisplayNameWithIcon, getClientInitials } from "@/lib/chatUtils";
 import EmojiPicker from "./EmojiPicker";
 
 // Allowed attachment types for chat
@@ -180,7 +180,7 @@ export default function ChatBox({
 
   // Alias of the currently logged-in admin (used for own-message labels)
   const currentAdminAlias =
-    role === "admin" && user ? getAdminDisplayName(user.email || user.uid) : "";
+    role === "admin" && user ? getAdminDisplayNameWithIcon(user.email || user.uid) : "";
 
   // Alias derived from the message senderId (email) — always reflects actual sender
   const getMessageAdminAlias = (msg: ThreadMessage) =>
@@ -206,7 +206,7 @@ export default function ChatBox({
 
           if (unreadIds.length > 0) {
             const viewerName = role === "admin"
-              ? getAdminDisplayName(user.email || user.uid)
+              ? getAdminDisplayNameWithIcon(user.email || user.uid)
               : undefined;
             markMessagesAsRead(
               inquiryId,
@@ -287,7 +287,7 @@ export default function ChatBox({
 
       const senderDisplayName =
         role === "admin"
-          ? getAdminDisplayName(user.email || user.uid)
+          ? getAdminDisplayNameWithIcon(user.email || user.uid)
           : clientName || user.displayName || user.email?.split("@")[0] || "Client";
 
       // Upload file first if present
@@ -497,7 +497,7 @@ export default function ChatBox({
                             </AvatarFallback>
                           </Avatar>
                           <span className="text-xs font-semibold text-gray-600 order-1">
-                            {role === "admin" ? msg.senderName : "You"}
+                            {role === "admin" ? getAdminDisplayNameWithIcon(user.email || user.uid) : "You"}
                           </span>
                         </div>
                       ) : (
@@ -517,7 +517,7 @@ export default function ChatBox({
                             </Badge>
                           )}
                           <span className="text-xs font-semibold text-gray-600">
-                            {msg.senderName}
+                            {msg.senderRole === "admin" ? getAdminDisplayNameWithIcon(msg.senderId) : msg.senderName}
                           </span>
                         </div>
                       )}

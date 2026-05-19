@@ -16,7 +16,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import { subscribeToInquiryById } from "@/services/inquiryService";
 import { Inquiry } from "@/types/Inquiry";
-import { getClientInitials, getAdminDisplayName } from "@/lib/chatUtils";
+import { getClientInitials, getAdminDisplayNameWithIcon } from "@/lib/chatUtils";
 import { startPresence, subscribeToAnyAdminOnline } from "@/services/presenceService";
 import usePresenceStatus from "@/hooks/usePresenceStatus";
 import PresenceIndicator from "@/components/chat/PresenceIndicator";
@@ -188,7 +188,7 @@ export default function FloatingChatWidget({
       setIsOpen(true);
       if (inquiryId) {
         const viewerName = role === "admin" && user?.email
-          ? getAdminDisplayName(user.email)
+          ? getAdminDisplayNameWithIcon(user.email)
           : undefined;
         markMessagesAsRead(
           inquiryId, 
@@ -214,7 +214,7 @@ export default function FloatingChatWidget({
       // If the chat widget is currently open or messages are being continuously viewed, mark them as read immediately
       if (isOpen && unread > 0) {
         const viewerName = role === "admin" && user?.email
-          ? getAdminDisplayName(user.email)
+          ? getAdminDisplayNameWithIcon(user.email)
           : undefined;
         markMessagesAsRead(
           inquiryId, 
@@ -321,7 +321,7 @@ export default function FloatingChatWidget({
     // If opening, mark as read immediately
     if (newOpenState && inquiryId) {
       const viewerName = role === "admin" && user?.email
-        ? getAdminDisplayName(user.email)
+        ? getAdminDisplayNameWithIcon(user.email)
         : undefined;
       markMessagesAsRead(
         inquiryId, 
