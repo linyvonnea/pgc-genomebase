@@ -955,13 +955,13 @@ export default function ClientPortalPage() {
        selectedDetails = allProjects.find(p => p.pid === selectedProjectPid) || null;
     }
     
-    // 2. Next Priority to PID from URL Param
-    if (!selectedDetails && pidParam) {
+    // 2. Next Priority to PID from URL Param — skip if user explicitly chose an inquiry
+    if (!selectedDetails && pidParam && !userWantsWorkspaceRef.current) {
        selectedDetails = allProjects.find(p => p.pid === pidParam) || null;
     }
     
-    // 3. Next Priority to Current Project Request ID
-    if (!selectedDetails && currentProjectRequestId) {
+    // 3. Next Priority to Current Project Request ID — skip if user explicitly chose an inquiry
+    if (!selectedDetails && currentProjectRequestId && !userWantsWorkspaceRef.current) {
        selectedDetails = allProjects.find(p => (p as any).originalRequestId === currentProjectRequestId || p.pid === currentProjectRequestId) || null;
     } 
 
@@ -3259,6 +3259,7 @@ export default function ClientPortalPage() {
                       onClick={() => {
                         if (inq.id === inquiryIdParam) return;
                         userSelectedInquiryRef.current = true;
+                        userWantsWorkspaceRef.current = true;
                         setSelectedProjectPid(null);
                         setProjectDetails(null);
                         const params = new URLSearchParams();
