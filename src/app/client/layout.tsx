@@ -12,7 +12,6 @@ import {
   getConfigurationSettings,
 } from "@/services/configurationSettingsService";
 import { ConfigurationSettings } from "@/types/ConfigurationSettings";
-import ClientNotificationBell from "@/components/client/ClientNotificationBell";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, signIn, signOut, loading } = useAuth();
@@ -66,9 +65,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         menuVisibility={configSettings?.portalFeatures ?? DEFAULT_PORTAL_FEATURES}
         extras={
           <div className="flex items-center gap-1">
-            {/* Notification Bell */}
-            <ClientNotificationBell userEmail={user.email} />
-
             {/* FAQs shortcut */}
             <Link
               href="/faqs"

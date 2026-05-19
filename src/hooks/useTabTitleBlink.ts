@@ -1,28 +1,29 @@
 /**
  * useTabTitleBlink
  *
- * Alerts the admin when they switch away from the tab and there are pending
- * notifications.
+ * Alerts the admin when there are pending notifications — regardless of
+ * whether the tab is visible or hidden.
  *
- * Effects applied when the tab is hidden AND count > 0:
- *  1. Tab favicon swaps to a red-dot SVG (visually "lights up" the tab).
- *  2. Tab title runs a marquee — the notification message scrolls left
- *     character-by-character so it catches the eye without just blinking.
+ * Effects applied when count > 0:
+ *  1. Tab favicon alternates between a light-red filled SVG and the original
+ *     favicon every BLINK_INTERVAL_MS, creating a visible "blinking" effect
+ *     in the browser tab strip.
+ *  2. Tab title alternates between the notification message and the original
+ *     title in sync with the favicon blink.
  *
- * Everything is restored the moment the admin returns to the tab or count → 0.
+ * Everything is restored the moment count → 0 or the component unmounts.
  */
 
 import { useEffect, useRef } from "react";
 
 const ORIGINAL_TITLE = "PGC Visayas Admin";
-const MARQUEE_SPEED_MS = 120; // ms per character step
+const BLINK_INTERVAL_MS = 600; // ms per blink phase
 
-/** Generates an inline SVG data-URI for a red notification dot favicon */
-function redDotFaviconUrl(): string {
+/** Generates an inline SVG data-URI for a light-red filled tab favicon */
+function redFaviconUrl(): string {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-    <circle cx="16" cy="16" r="16" fill="#dc2626"/>
-    <circle cx="16" cy="16" r="9" fill="#ffffff"/>
-    <circle cx="16" cy="16" r="6"  fill="#dc2626"/>
+    <rect width="32" height="32" rx="4" fill="#fca5a5"/>
+    <circle cx="16" cy="16" r="8" fill="#dc2626"/>
   </svg>`;
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
@@ -39,9 +40,10 @@ function getFaviconEl(): HTMLLinkElement {
 }
 
 export function useTabTitleBlink(count: number): void {
-  const intervalRef     = useRef<ReturnType<typeof setInterval> | null>(null);
-  const originalFavRef  = useRef<string>("");
-  const isActiveRef     = useRef(false);
+  const intervalRef    = useRef<ReturnType<typeof setInterval> | null>(null);
+  const originalFavRef = useRef<string>("");
+  const isActiveRef    = useRef(false);
+  const phaseRef       = useRef(false); // false = notification state, true = original state
 
   const stop = () => {
     if (intervalRef.current !== null) {
@@ -53,57 +55,58 @@ export function useTabTitleBlink(count: number): void {
       const favEl = getFaviconEl();
       if (originalFavRef.current) favEl.href = originalFavRef.current;
       isActiveRef.current = false;
+      phaseRef.current = false;
     }
   };
 
   const start = (notifCount: number) => {
-    if (isActiveRef.current) return;
+    // Always restart so the label reflects the latest count
+    if (intervalRef.current !== null) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
     isActiveRef.current = true;
 
-    // Capture original favicon so we can restore it
+    // Capture the original favicon on first activation
     const favEl = getFaviconEl();
-    originalFavRef.current = favEl.href;
-    favEl.href = redDotFaviconUrl();
+    if (!originalFavRef.current) {
+      originalFavRef.current = favEl.href;
+    }
 
-    // Build the marquee string — long enough to scroll visibly
-    const label =
+    const notifTitle =
       notifCount === 1
         ? `🔴 1 new notification — PGC Visayas Admin`
         : `🔴 ${notifCount} new notifications — PGC Visayas Admin`;
-    // Pad so the text wraps cleanly as it scrolls
-    const padded = `${label}     `;
-    let pos = 0;
+
+    const redFav = redFaviconUrl();
+
+    // Start in the "alert" phase immediately
+    document.title = notifTitle;
+    favEl.href = redFav;
+    phaseRef.current = false;
 
     intervalRef.current = setInterval(() => {
-      // Rotate: take characters from pos onward, wrap around
-      const rotated = padded.slice(pos) + padded.slice(0, pos);
-      document.title = rotated.slice(0, padded.length);
-      pos = (pos + 1) % padded.length;
-    }, MARQUEE_SPEED_MS);
+      phaseRef.current = !phaseRef.current;
+      if (phaseRef.current) {
+        // "Off" phase — show original
+        document.title = ORIGINAL_TITLE;
+        favEl.href = originalFavRef.current;
+      } else {
+        // "On" phase — show alert
+        document.title = notifTitle;
+        favEl.href = redFav;
+      }
+    }, BLINK_INTERVAL_MS);
   };
 
   useEffect(() => {
-    const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        stop();
-      } else if (count > 0) {
-        start(count);
-      }
-    };
-
-    document.addEventListener("visibilitychange", onVisibilityChange);
-
-    // If already hidden when count changes (e.g. count just became > 0), start now.
-    if (count > 0 && document.visibilityState === "hidden") {
-      // Restart with updated count even if already running
-      stop();
+    if (count > 0) {
       start(count);
-    } else if (count === 0) {
+    } else {
       stop();
     }
 
     return () => {
-      document.removeEventListener("visibilitychange", onVisibilityChange);
       stop();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
