@@ -13,11 +13,48 @@ import {
 } from "@/services/configurationSettingsService";
 import { ConfigurationSettings } from "@/types/ConfigurationSettings";
 import ClientNotificationBell from "@/components/client/ClientNotificationBell";
+import { useClientNotifications } from "@/hooks/useClientNotifications";
+import { useTabBlink } from "@/hooks/useTabBlink";
+import { db } from "@/lib/firebase";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const { user, isAdmin, signIn, signOut, loading } = useAuth();
   const router = useRouter();
   const [configSettings, setConfigSettings] = useState<ConfigurationSettings | null>(null);
+
+  // --- Unread notification counts for tab blinking ---
+  const { unreadCount: bellUnread } = useClientNotifications(user?.email ?? null);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  useEffect(() => {
+    if (!user?.email) return;
+    // Listen for threads where this client has unread messages from admin
+    const q = query(
+      collection(db, "quotationThreads"),
+      where("clientEmail", "==", user.email),
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      const total = snap.docs.reduce((sum, d) => {
+        const data = d.data();
+        return sum + (data.unreadCount?.client ?? 0);
+      }, 0);
+      setUnreadMessages(total);
+    });
+    return unsub;
+  }, [user?.email]);
+
+  const totalUnread = bellUnread + unreadMessages;
+
+  // Build a descriptive blink message
+  const blinkLabel = (() => {
+    const parts: string[] = [];
+    if (unreadMessages > 0) parts.push(`${unreadMessages} new message${unreadMessages > 1 ? "s" : ""}`);
+    if (bellUnread > 0) parts.push(`${bellUnread} notification${bellUnread > 1 ? "s" : ""}`);
+    return parts.length > 0 ? `🔔 ${parts.join(" & ")} – PGC Visayas` : "";
+  })();
+
+  useTabBlink(totalUnread, blinkLabel);
 
   useEffect(() => {
     let isMounted = true;
