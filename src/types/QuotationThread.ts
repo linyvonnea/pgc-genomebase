@@ -107,6 +107,8 @@ export interface ThreadMessage {
   reactions?: Record<string, string[]>;
   readAt?: Timestamp;
   readBy?: string;
+  /** Admins who have viewed this message. Only populated for client-sent messages. */
+  viewedBy?: { name: string; email: string }[];
   /** Soft-delete: set to true when sender unsends a message. Content is blanked. */
   unsent?: boolean;
   
