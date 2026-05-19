@@ -42,6 +42,20 @@ export function getAdminDisplayName(identifier: string | null | undefined): stri
     : identifier.toLowerCase();
 
   const displayName = ADMIN_NAME_MAP[username] || (username.charAt(0).toUpperCase() + username.slice(1));
+  return displayName;
+}
+
+/**
+ * Returns a formal or informal name for an admin with icon.
+ */
+export function getAdminDisplayNameWithIcon(identifier: string | null | undefined): string {
+  if (!identifier) return "👋 Admin";
+
+  const username = identifier.includes("@") 
+    ? identifier.split("@")[0].toLowerCase() 
+    : identifier.toLowerCase();
+
+  const displayName = getAdminDisplayName(username);
   const icon = ADMIN_ICON_MAP[username] || "👋";
 
   return `${icon} ${displayName}`;
