@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import useAuth from "@/hooks/useAuth";
 import Header from "@/components/ui/header";
 import Link from "next/link";
@@ -12,10 +12,9 @@ import {
   getConfigurationSettings,
 } from "@/services/configurationSettingsService";
 import { ConfigurationSettings } from "@/types/ConfigurationSettings";
-import ClientNotificationBell from "@/components/client/ClientNotificationBell";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
-  const { user, isAdmin, signIn, signOut, loading } = useAuth();
+  const { user, isAdmin, signOut, loading } = useAuth();
   const router = useRouter();
   const [configSettings, setConfigSettings] = useState<ConfigurationSettings | null>(null);
 
@@ -66,9 +65,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
         menuVisibility={configSettings?.portalFeatures ?? DEFAULT_PORTAL_FEATURES}
         extras={
           <div className="flex items-center gap-1">
-            {/* Notification Bell */}
-            <ClientNotificationBell userEmail={user.email} />
-
             {/* FAQs shortcut */}
             <Link
               href="/faqs"
