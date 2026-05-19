@@ -5,6 +5,7 @@ import { AdminSidebar } from "@/components/layout/AdminSidebar";
 import { TabBar } from "@/components/layout/TabBar";
 import { TabContent } from "@/components/layout/TabContent";
 import { MessageNotificationCenter } from "@/components/layout/MessageNotificationCenter";
+import { AdminTabNotifier } from "@/components/layout/AdminTabNotifier";
 import GlobalChatWidget from "@/components/chat/GlobalChatWidget";
 import AdminChatWidget from "@/components/chat/AdminChatWidget";
 import { TabProvider } from "@/contexts/TabContext";
@@ -146,6 +147,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
         <GlobalChatWidget />
         <AdminChatWidget />
+        <AdminTabNotifier />
         <Toaster />
       </div>
     </TabProvider>
