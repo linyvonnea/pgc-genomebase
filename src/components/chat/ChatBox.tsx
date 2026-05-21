@@ -418,10 +418,12 @@ export default function ChatBox({
           ) : (
             messages.map((msg, idx) => {
               const normalizedSenderId = normalizeIdentifier(msg.senderId);
-              // isMe: client sees their own messages; admins see only messages they personally sent
+              // Layout: client messages on the left, admin messages on the right.
+              // When the admin panel is open, all admin messages (regardless of sender)
+              // are right-aligned to distinguish the support team from the client.
               const isMe = role === "client"
                 ? msg.senderRole === "client"
-                : msg.senderRole === "admin" && currentUserIdentifiers.has(normalizedSenderId);
+                : msg.senderRole === "admin";
 
               // Handle system messages dynamically
               if (msg.type === "system") {
