@@ -496,20 +496,8 @@ export default function ChatBox({
                   >
                     <div className="flex items-center gap-2 mb-1">
                       {isMe ? (
-                        /* Own messages: time then badge+name, all right-aligned */
+                        /* Own/Admin messages: Name, Avatar, then time right-aligned */
                         <>
-                          <span className="text-[10px] text-gray-400 flex items-center gap-1 mr-1">
-                            <Clock className="w-2.5 h-2.5" />
-                            {formatMessageTime(msg)}
-                          </span>
-                          {role === "admin" && (
-                            <Badge
-                              variant="outline"
-                              className="text-[8px] h-3.5 py-0 px-1 bg-blue-50 text-blue-700 border-blue-200"
-                            >
-                              Admin
-                            </Badge>
-                          )}
                           <span className="text-xs font-semibold text-gray-600">
                             {role === "admin" ? msg.senderName : "You"}
                           </span>
@@ -518,6 +506,10 @@ export default function ChatBox({
                               {role === "admin" ? "AD" : getClientInitials(msg.senderName)}
                             </AvatarFallback>
                           </Avatar>
+                          <span className="text-[10px] text-gray-400 flex items-center gap-1 ml-1">
+                            <Clock className="w-2.5 h-2.5" />
+                            {formatMessageTime(msg)}
+                          </span>
                         </>
                       ) : (
                         <>
