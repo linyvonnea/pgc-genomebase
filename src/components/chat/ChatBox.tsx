@@ -417,7 +417,11 @@ export default function ChatBox({
             </div>
           ) : (
             messages.map((msg, idx) => {
-              const isMe = msg.senderRole === role;
+              const normalizedSenderId = normalizeIdentifier(msg.senderId);
+              // isMe: client sees their own messages; admins see only messages they personally sent
+              const isMe = role === "client"
+                ? msg.senderRole === "client"
+                : msg.senderRole === "admin" && currentUserIdentifiers.has(normalizedSenderId);
 
               // Handle system messages dynamically
               if (msg.type === "system") {
@@ -497,7 +501,7 @@ export default function ChatBox({
                             </AvatarFallback>
                           </Avatar>
                           <span className="text-xs font-semibold text-gray-600 order-1">
-                            {role === "admin" ? getAdminDisplayNameWithIcon(user.email || user.uid) : "You"}
+                            {role === "admin" ? msg.senderName : "You"}
                           </span>
                         </div>
                       ) : (
