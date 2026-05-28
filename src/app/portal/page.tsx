@@ -116,8 +116,22 @@ export default function ClientVerifyPage() {
       }
       setGoogleUser({ email: user.email });
     } catch (err: any) {
-      console.error("Google sign-in error details:", err);
-      const message = "Google sign-in failed. Please try again.";
+      const code: string = err?.code ?? "";
+      console.error("Google sign-in error:", code, err);
+
+      let message = "Google sign-in failed. Please try again.";
+      if (code === "auth/popup-blocked") {
+        message = "Your browser blocked the sign-in popup. Please allow popups for this site and try again.";
+      } else if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
+        message = "Sign-in was cancelled. Please try again.";
+      } else if (code === "auth/unauthorized-domain") {
+        message = "This domain is not authorized for Google sign-in. Please contact support.";
+      } else if (code === "auth/internal-error" || code === "auth/invalid-api-key") {
+        message = "Configuration error. Please contact support.";
+      } else if (code) {
+        message = `Google sign-in failed (${code}). Please try again.`;
+      }
+
       setVerifyError(message);
       toast.error(message);
     } finally {
