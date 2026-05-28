@@ -41,6 +41,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Secrets and sensitive data
 .envserviceAccount.json
 serviceAccountKey.json
 admins_test_converted.json
