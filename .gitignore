@@ -41,11 +41,18 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Secrets and sensitive data
 .envserviceAccount.json
-
 serviceAccountKey.json
+admins_test_converted.json
+price_catalog.json
+*.xlsx
+*.csv
+*.log
+temp-upload-test.pdf
+scripts/serviceAccountKey.json
 
+# PGC Specific
 clientscripts/
-
 projectscripts/
 .env*.local
