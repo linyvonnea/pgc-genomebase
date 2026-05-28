@@ -21,8 +21,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { signInWithPopup, signOut as firebaseSignOut } from "firebase/auth";
-import { auth, googleProvider, db } from "@/lib/firebase";
+import { signInWithPopup, signOut as firebaseSignOut, GoogleAuthProvider } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
 import { doc, getDoc, getDocs, collection, query, where } from "firebase/firestore";
 import { markInquiryAsLoggedIn } from "@/services/inquiryService";
 import { logActivity } from "@/services/activityLogService";
@@ -105,31 +105,33 @@ export default function ClientVerifyPage() {
     setVerifyError("");
     setVerifying(true);
     try {
-      const result = await signInWithPopup(auth, googleProvider);
+      const provider = new GoogleAuthProvider();
+      // Forces account selection to ensure a fresh session and better error reporting
+      provider.setCustomParameters({ prompt: "select_account" });
+      
+      const result = await signInWithPopup(auth, provider);
       const user = result.user;
+      
       if (!user.email) {
-        const message = "Google account has no email.";
-        setVerifyError(message);
-        toast.error(message);
-        setVerifying(false);
-        return;
+        throw new Error("Google account has no email.");
       }
       setGoogleUser({ email: user.email });
     } catch (err: any) {
       const code: string = err?.code ?? "";
       console.error("Google sign-in error:", code, err);
+      const domain = typeof window !== "undefined" ? window.location.hostname : "unknown";
 
       let message = "Google sign-in failed. Please try again.";
       if (code === "auth/popup-blocked") {
-        message = "Your browser blocked the sign-in popup. Please allow popups for this site and try again.";
+        message = "Popup blocked! Please allow popups for this site.";
       } else if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
-        message = "Sign-in was cancelled. Please try again.";
+        message = "Sign-in was cancelled.";
       } else if (code === "auth/unauthorized-domain") {
-        message = "This domain is not authorized for Google sign-in. Please contact support.";
-      } else if (code === "auth/internal-error" || code === "auth/invalid-api-key") {
-        message = "Configuration error. Please contact support.";
+        message = `Domain "${domain}" is not authorized in Firebase Console.`;
       } else if (code) {
-        message = `Google sign-in failed (${code}). Please try again.`;
+        message = `Google sign-in failed (${code}).`;
+      } else if (err?.message) {
+        message = err.message;
       }
 
       setVerifyError(message);
