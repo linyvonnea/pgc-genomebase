@@ -21,8 +21,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { signInWithPopup, signOut as firebaseSignOut, GoogleAuthProvider, getAuth } from "firebase/auth";
-import { db } from "@/lib/firebase";
+import { signInWithPopup, signOut as firebaseSignOut } from "firebase/auth";
+import { auth, googleProvider, db } from "@/lib/firebase";
 import { doc, getDoc, getDocs, collection, query, where } from "firebase/firestore";
 import { markInquiryAsLoggedIn } from "@/services/inquiryService";
 import { logActivity } from "@/services/activityLogService";
@@ -105,9 +105,7 @@ export default function ClientVerifyPage() {
     setVerifyError("");
     setVerifying(true);
     try {
-      const auth = getAuth();
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       if (!user.email) {
         const message = "Google account has no email.";
@@ -117,7 +115,8 @@ export default function ClientVerifyPage() {
         return;
       }
       setGoogleUser({ email: user.email });
-    } catch {
+    } catch (err: any) {
+      console.error("Google sign-in error details:", err);
       const message = "Google sign-in failed. Please try again.";
       setVerifyError(message);
       toast.error(message);
@@ -450,7 +449,7 @@ export default function ClientVerifyPage() {
           <DialogFooter className="flex flex-col gap-2 sm:flex-col">
             <Button
               onClick={async () => {
-                try { await firebaseSignOut(getAuth()); } catch { /* ignore */ }
+                try { await firebaseSignOut(auth); } catch { /* ignore */ }
                 window.location.href = "/portal";
               }}
               className="w-full bg-[#166FB5] hover:bg-[#166FB5]/90"
