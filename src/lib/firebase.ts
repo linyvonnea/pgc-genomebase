@@ -1,5 +1,5 @@
 // src/lib/firebase.ts 
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getStorage } from "firebase/storage";
@@ -19,7 +19,8 @@ if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
   console.error("Firebase configuration is missing. Please check your environment variables.");
 }
 
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase once for Next.js
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
 const db = getFirestore(app);
 const auth = getAuth(app);
