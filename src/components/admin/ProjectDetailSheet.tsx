@@ -193,11 +193,6 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
               <InfoRow label="Year" value={project.year?.toString()} />
               <InfoRow label="Start Date" value={formatDate(project.startDate)} />
               <InfoRow label="Project Tag" value={project.projectTag} />
-              <InfoRow label="Status" value={
-                <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${statusColor[status] ?? ""}`}>
-                  {status}
-                </span>
-              } />
             </div>
             <InfoRow label="Project Title" value={<span className="text-sm">{project.title}</span>} />
             {project.notes && (

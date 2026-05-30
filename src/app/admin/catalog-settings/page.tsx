@@ -36,7 +36,6 @@ function CatalogManagementContent() {
   const [newItemValue, setNewItemValue] = useState<Record<CatalogType, string>>({
     sendingInstitutions: "",
     fundingCategories: "",
-    fundingInstitutions: "",
     serviceRequested: "",
     personnelAssigned: "",
     inquiryStatuses: "",
@@ -590,7 +589,6 @@ function CatalogManagementContent() {
           <>
             {renderCatalogSection("sendingInstitutions", catalogs.sendingInstitutions)}
             {renderCatalogSection("fundingCategories", catalogs.fundingCategories)}
-            {renderCatalogSection("fundingInstitutions", catalogs.fundingInstitutions)}
             {renderCatalogSection("serviceRequested", catalogs.serviceRequested)}
             {renderCatalogSection("personnelAssigned", catalogs.personnelAssigned)}
             {renderCatalogSection("inquiryStatuses", catalogs.inquiryStatuses)}

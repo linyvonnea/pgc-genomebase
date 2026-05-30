@@ -17,7 +17,6 @@ export interface CatalogItem {
 export interface CatalogSettings {
   sendingInstitutions: CatalogItem[];
   fundingCategories: CatalogItem[];
-  fundingInstitutions: CatalogItem[];
   serviceRequested: CatalogItem[];
   personnelAssigned: CatalogItem[];
   inquiryStatuses: CatalogItem[];
@@ -29,7 +28,6 @@ export type CatalogType = keyof CatalogSettings;
 export const CATALOG_LABELS: Record<CatalogType, string> = {
   sendingInstitutions: "Sending Institutions",
   fundingCategories: "Funding Categories",
-  fundingInstitutions: "Funding Institutions",
   serviceRequested: "Service Requested",
   personnelAssigned: "Personnel Assigned",
   inquiryStatuses: "Inquiry Statuses",

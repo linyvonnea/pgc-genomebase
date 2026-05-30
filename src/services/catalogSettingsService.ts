@@ -30,7 +30,6 @@ export async function getCatalogSettings(): Promise<CatalogSettings> {
       return {
         sendingInstitutions: data.sendingInstitutions || getDefaultSendingInstitutions(),
         fundingCategories: data.fundingCategories || getDefaultFundingCategories(),
-        fundingInstitutions: data.fundingInstitutions || [],
         serviceRequested: data.serviceRequested || getDefaultServiceRequested(),
         personnelAssigned: data.personnelAssigned || [],
         inquiryStatuses: data.inquiryStatuses || getDefaultInquiryStatuses(),
@@ -249,7 +248,6 @@ function getDefaultCatalogSettings(): CatalogSettings {
   return {
     sendingInstitutions: getDefaultSendingInstitutions(),
     fundingCategories: getDefaultFundingCategories(),
-    fundingInstitutions: [],
     serviceRequested: getDefaultServiceRequested(),
     personnelAssigned: [],
     inquiryStatuses: getDefaultInquiryStatuses(),
