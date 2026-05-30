@@ -864,20 +864,6 @@ export default function MemberApprovalsPage() {
           ))}
         </div>
       </div>
-              onClick={() => setFilterStatus(status)}
-              className={filterStatus === status ? "bg-[#166FB5] text-white" : "text-slate-600 bg-white"}
-            >
-              {status === "pending" && <Clock className="h-3.5 w-3.5 mr-1.5" />}
-              {status === "approved" && <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />}
-              {(status === "rejected" || status === "cancelled") && <XCircle className="h-3.5 w-3.5 mr-1.5" />}
-              {status === "draft" && <AlertCircle className="h-3.5 w-3.5 mr-1.5" />}
-              {status === "all" && <Filter className="h-3.5 w-3.5 mr-1.5" />}
-              <span className="capitalize">{status === "rejected" ? "Cancelled" : status}</span>
-            </Button>
-          ))}
->>>>>>> main
-        </div>
-      </div>
 
       {/* Approval Cards */}
       {loading ? (
