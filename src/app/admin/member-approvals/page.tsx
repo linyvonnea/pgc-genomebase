@@ -57,7 +57,17 @@ import {
   FileText,
   Calendar,
   Search,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type FilterStatus = "all" | ApprovalStatus;
 
@@ -98,6 +108,8 @@ export default function MemberApprovalsPage() {
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [reviewNotes, setReviewNotes] = useState("");
   const [processing, setProcessing] = useState(false);
+  const [sortBy, setSortBy] = useState<"date" | "title" | "status">("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   // Email → existing Firestore client data (populated when review dialog opens)
   const [existingClientsByEmail, setExistingClientsByEmail] = useState<
@@ -194,6 +206,25 @@ export default function MemberApprovalsPage() {
         return combinedText.includes(normalizedSearchQuery);
       })
     : approvals;
+
+  const statusOrder: Record<string, number> = { pending: 0, draft: 1, approved: 2, cancelled: 3, rejected: 3 };
+  const sortedApprovals = [...filteredApprovals].sort((a, b) => {
+    let cmp = 0;
+    if (sortBy === "date") {
+      const aTime = a.submittedAt
+        ? (typeof a.submittedAt.toDate === "function" ? a.submittedAt.toDate() : new Date(a.submittedAt)).getTime()
+        : 0;
+      const bTime = b.submittedAt
+        ? (typeof b.submittedAt.toDate === "function" ? b.submittedAt.toDate() : new Date(b.submittedAt)).getTime()
+        : 0;
+      cmp = aTime - bTime;
+    } else if (sortBy === "title") {
+      cmp = (a.projectTitle || "").localeCompare(b.projectTitle || "");
+    } else if (sortBy === "status") {
+      cmp = (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99);
+    }
+    return sortOrder === "asc" ? cmp : -cmp;
+  });
 
   const fetchApprovals = useCallback(async () => {
     setLoading(true);
@@ -785,29 +816,60 @@ export default function MemberApprovalsPage() {
           />
         </div>
 
-        <div className="flex gap-2 flex-wrap">
-        {(["pending", "approved", "cancelled", "draft", "all"] as FilterStatus[]).map(
-          (status) => (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center flex-wrap">
+          {/* Sort controls */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm text-slate-500 whitespace-nowrap">Sort:</span>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as "date" | "title" | "status")}>
+              <SelectTrigger className="h-9 w-[152px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date">Date Submitted</SelectItem>
+                <SelectItem value="title">Project Title</SelectItem>
+                <SelectItem value="status">Status</SelectItem>
+              </SelectContent>
+            </Select>
             <Button
-              key={status}
-              variant={filterStatus === status ? "default" : "outline"}
+              variant="outline"
               size="sm"
-              onClick={() => setFilterStatus(status)}
-              className={
-                filterStatus === status
-                  ? "bg-[#166FB5] text-white"
-                  : "text-slate-600"
-              }
+              onClick={() => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))}
+              className="h-9 w-9 p-0 shrink-0"
+              title={sortOrder === "asc" ? "Currently ascending — click for descending" : "Currently descending — click for ascending"}
             >
-              {status === "pending" && <Clock className="h-3.5 w-3.5 mr-1.5" />}
-              {status === "approved" && <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />}
-              {(status === "rejected" || status === "cancelled") && <XCircle className="h-3.5 w-3.5 mr-1.5" />}
-              {status === "draft" && <AlertCircle className="h-3.5 w-3.5 mr-1.5" />}
-              {status === "all" && <Filter className="h-3.5 w-3.5 mr-1.5" />}
-              <span className="capitalize">{status === "rejected" ? "Cancelled" : status}</span>
+              {sortOrder === "asc" ? (
+                <ArrowUp className="h-4 w-4" />
+              ) : (
+                <ArrowDown className="h-4 w-4" />
+              )}
             </Button>
-          )
-        )}
+          </div>
+
+          {/* Status filter buttons */}
+          <div className="flex gap-2 flex-wrap">
+          {(["pending", "approved", "cancelled", "draft", "all"] as FilterStatus[]).map(
+            (status) => (
+              <Button
+                key={status}
+                variant={filterStatus === status ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterStatus(status)}
+                className={
+                  filterStatus === status
+                    ? "bg-[#166FB5] text-white"
+                    : "text-slate-600"
+                }
+              >
+                {status === "pending" && <Clock className="h-3.5 w-3.5 mr-1.5" />}
+                {status === "approved" && <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />}
+                {(status === "rejected" || status === "cancelled") && <XCircle className="h-3.5 w-3.5 mr-1.5" />}
+                {status === "draft" && <AlertCircle className="h-3.5 w-3.5 mr-1.5" />}
+                {status === "all" && <Filter className="h-3.5 w-3.5 mr-1.5" />}
+                <span className="capitalize">{status === "rejected" ? "Cancelled" : status}</span>
+              </Button>
+            )
+          )}
+          </div>
         </div>
       </div>
 
@@ -817,7 +879,7 @@ export default function MemberApprovalsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-[#166FB5]" />
           <span className="ml-3 text-slate-600">Loading approvals...</span>
         </div>
-      ) : filteredApprovals.length === 0 ? (
+      ) : sortedApprovals.length === 0 ? (
         <Card className="border-2 border-dashed border-slate-300">
           <CardContent className="p-12 text-center">
             <div className="flex flex-col items-center space-y-4">
@@ -841,7 +903,7 @@ export default function MemberApprovalsPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {filteredApprovals.map((approval) => (
+          {sortedApprovals.map((approval) => (
             <Card
               key={approval.id}
               className="hover:shadow-md transition-shadow border border-slate-200"
