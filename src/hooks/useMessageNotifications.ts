@@ -57,7 +57,7 @@ export function useMessageNotifications() {
           
           return n.unreadCount > 0 || !!n.lastMessageAt;
         })
-        .slice(0, 15); // limit to recent/unread to avoid huge list
+        .slice(0, 50); // keep more recent threads visible in the admin client messages list
 
       const total = threads.reduce((sum, t) => sum + t.unreadCount, 0);
       setTotalUnread(total);
