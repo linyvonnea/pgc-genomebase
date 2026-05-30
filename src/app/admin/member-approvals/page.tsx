@@ -816,35 +816,7 @@ export default function MemberApprovalsPage() {
           />
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center flex-wrap">
-          {/* Sort controls */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm text-slate-500 whitespace-nowrap">Sort:</span>
-            <Select value={sortBy} onValueChange={(v) => setSortBy(v as "date" | "title" | "status")}>
-              <SelectTrigger className="h-9 w-[152px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="date">Date Submitted</SelectItem>
-                <SelectItem value="title">Project Title</SelectItem>
-                <SelectItem value="status">Status</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))}
-              className="h-9 w-9 p-0 shrink-0"
-              title={sortOrder === "asc" ? "Currently ascending — click for descending" : "Currently descending — click for ascending"}
-            >
-              {sortOrder === "asc" ? (
-                <ArrowUp className="h-4 w-4" />
-              ) : (
-                <ArrowDown className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between flex-wrap">
           {/* Status filter buttons */}
           <div className="flex gap-2 flex-wrap">
           {(["pending", "approved", "cancelled", "draft", "all"] as FilterStatus[]).map(
@@ -869,6 +841,34 @@ export default function MemberApprovalsPage() {
               </Button>
             )
           )}
+          </div>
+
+          {/* Sort controls */}
+          <div className="flex items-center gap-1.5 ml-auto sm:ml-0">
+            <span className="text-sm text-slate-500 whitespace-nowrap">Sort:</span>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as "date" | "title" | "status")}>
+              <SelectTrigger className="h-9 w-[152px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date">Date Submitted</SelectItem>
+                <SelectItem value="title">Project Title</SelectItem>
+                <SelectItem value="status">Status</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))}
+              className="h-9 w-9 p-0 shrink-0"
+              title={sortOrder === "asc" ? "Currently ascending — click for descending" : "Currently descending — click for ascending"}
+            >
+              {sortOrder === "asc" ? (
+                <ArrowUp className="h-4 w-4" />
+              ) : (
+                <ArrowDown className="h-4 w-4" />
+              )}
+            </Button>
           </div>
         </div>
       </div>
