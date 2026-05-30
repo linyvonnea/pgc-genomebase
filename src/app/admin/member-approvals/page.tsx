@@ -805,49 +805,22 @@ export default function MemberApprovalsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="relative w-full md:max-w-md">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search all fields: name, email, project title, PID, institution..."
-            className="pl-9"
-          />
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between flex-wrap">
-          {/* Status filter buttons */}
-          <div className="flex gap-2 flex-wrap">
-          {(["pending", "approved", "cancelled", "draft", "all"] as FilterStatus[]).map(
-            (status) => (
-              <Button
-                key={status}
-                variant={filterStatus === status ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterStatus(status)}
-                className={
-                  filterStatus === status
-                    ? "bg-[#166FB5] text-white"
-                    : "text-slate-600"
-                }
-              >
-                {status === "pending" && <Clock className="h-3.5 w-3.5 mr-1.5" />}
-                {status === "approved" && <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />}
-                {(status === "rejected" || status === "cancelled") && <XCircle className="h-3.5 w-3.5 mr-1.5" />}
-                {status === "draft" && <AlertCircle className="h-3.5 w-3.5 mr-1.5" />}
-                {status === "all" && <Filter className="h-3.5 w-3.5 mr-1.5" />}
-                <span className="capitalize">{status === "rejected" ? "Cancelled" : status}</span>
-              </Button>
-            )
-          )}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+        <div className="flex flex-col gap-3 w-full lg:max-w-md">
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search all fields: name, email, project title, PID, institution..."
+              className="pl-9"
+            />
           </div>
 
-          {/* Sort controls */}
-          <div className="flex items-center gap-1.5 ml-auto sm:ml-0">
-            <span className="text-sm text-slate-500 whitespace-nowrap">Sort:</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm text-slate-500 whitespace-nowrap">Sort by:</span>
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as "date" | "title" | "status")}>
-              <SelectTrigger className="h-9 w-[152px]">
+              <SelectTrigger className="h-9 w-[140px] bg-white">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -860,16 +833,49 @@ export default function MemberApprovalsPage() {
               variant="outline"
               size="sm"
               onClick={() => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))}
-              className="h-9 w-9 p-0 shrink-0"
-              title={sortOrder === "asc" ? "Currently ascending — click for descending" : "Currently descending — click for ascending"}
+              className="h-9 w-9 p-0 shrink-0 bg-white"
+              title={
+                sortOrder === "asc"
+                  ? "Currently ascending — click for descending"
+                  : "Currently descending — click for ascending"
+              }
             >
-              {sortOrder === "asc" ? (
-                <ArrowUp className="h-4 w-4" />
-              ) : (
-                <ArrowDown className="h-4 w-4" />
-              )}
+              {sortOrder === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
             </Button>
           </div>
+        </div>
+
+        <div className="flex gap-2 flex-wrap items-center">
+          {(["pending", "approved", "cancelled", "draft", "all"] as FilterStatus[]).map((status) => (
+            <Button
+              key={status}
+              variant={filterStatus === status ? "default" : "outline"}
+              size="sm"
+              onClick={() => setFilterStatus(status)}
+              className={filterStatus === status ? "bg-[#166FB5] text-white" : "text-slate-600 bg-white"}
+            >
+              {status === "pending" && <Clock className="h-3.5 w-3.5 mr-1.5" />}
+              {status === "approved" && <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />}
+              {(status === "rejected" || status === "cancelled") && <XCircle className="h-3.5 w-3.5 mr-1.5" />}
+              {status === "draft" && <AlertCircle className="h-3.5 w-3.5 mr-1.5" />}
+              {status === "all" && <Filter className="h-3.5 w-3.5 mr-1.5" />}
+              <span className="capitalize">{status === "rejected" ? "Cancelled" : status}</span>
+            </Button>
+          ))}
+        </div>
+      </div>
+              onClick={() => setFilterStatus(status)}
+              className={filterStatus === status ? "bg-[#166FB5] text-white" : "text-slate-600 bg-white"}
+            >
+              {status === "pending" && <Clock className="h-3.5 w-3.5 mr-1.5" />}
+              {status === "approved" && <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />}
+              {(status === "rejected" || status === "cancelled") && <XCircle className="h-3.5 w-3.5 mr-1.5" />}
+              {status === "draft" && <AlertCircle className="h-3.5 w-3.5 mr-1.5" />}
+              {status === "all" && <Filter className="h-3.5 w-3.5 mr-1.5" />}
+              <span className="capitalize">{status === "rejected" ? "Cancelled" : status}</span>
+            </Button>
+          ))}
+>>>>>>> main
         </div>
       </div>
 
