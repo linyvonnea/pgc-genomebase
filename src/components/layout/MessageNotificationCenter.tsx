@@ -14,6 +14,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -41,6 +51,8 @@ export function MessageNotificationCenter() {
   const [searchQuery, setSearchQuery] = useState("");
   const [markingUnseenId, setMarkingUnseenId] = useState<string | null>(null);
   const [dismissingId, setDismissingId] = useState<string | null>(null);
+  const [confirmDismissOpen, setConfirmDismissOpen] = useState(false);
+  const [pendingDismissId, setPendingDismissId] = useState<string | null>(null);
   const { notifications, totalUnread, markViewed, markAllViewed } =
     useMessageNotifications();
 
@@ -66,14 +78,23 @@ export function MessageNotificationCenter() {
     router.push(`/admin/inquiry?inquiryId=${inquiryId}&focus=messages`);
   };
 
-  const handleDismiss = async (event: React.MouseEvent, inquiryId: string) => {
+  const requestDismiss = (event: React.MouseEvent, inquiryId: string) => {
     event.stopPropagation();
     if (dismissingId) return;
 
+    setPendingDismissId(inquiryId);
+    setConfirmDismissOpen(true);
+  };
+
+  const confirmDismiss = async () => {
+    if (!pendingDismissId || dismissingId) return;
+
     try {
-      setDismissingId(inquiryId);
-      await dismissThreadNotification(inquiryId);
+      setDismissingId(pendingDismissId);
+      await dismissThreadNotification(pendingDismissId);
       toast.success("Notification dismissed");
+      setConfirmDismissOpen(false);
+      setPendingDismissId(null);
     } catch (error) {
       toast.error("Failed to dismiss notification");
     } finally {
@@ -188,7 +209,7 @@ export function MessageNotificationCenter() {
                   key={n.inquiryId}
                   notification={n}
                   onClick={() => handleNotificationClick(n.inquiryId)}
-                  handleDismiss={handleDismiss}
+                  handleDismiss={requestDismiss}
                   handleMarkAsUnseen={handleMarkAsUnseen}
                   dismissingId={dismissingId}
                   markingUnseenId={markingUnseenId}
@@ -198,6 +219,35 @@ export function MessageNotificationCenter() {
           )}
         </ScrollArea>
       </PopoverContent>
+
+      <AlertDialog
+        open={confirmDismissOpen}
+        onOpenChange={(nextOpen) => {
+          setConfirmDismissOpen(nextOpen);
+          if (!nextOpen) {
+            setPendingDismissId(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Dismiss client message?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the client message from the admin list. You can only restore it if a new message arrives.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={dismissingId !== null}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDismiss}
+              disabled={!pendingDismissId || dismissingId !== null}
+              className="bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600"
+            >
+              {dismissingId ? "Dismissing..." : "Dismiss message"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Popover>
   );
 }
