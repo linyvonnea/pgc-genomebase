@@ -5187,6 +5187,54 @@ export default function ClientPortalPage() {
                         </div>
                       </div>
                     )}
+
+                    {/* Personal Information of Submitter */}
+                    {currentInquiry && (
+                      <div className="bg-white rounded-2xl px-4 py-4 shadow-sm border border-slate-100">
+                        <div className="flex items-center gap-2 mb-4">
+                          <div className="w-2 h-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"></div>
+                          <h3 className="text-base font-semibold text-slate-800">Personal Information</h3>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* Full Name */}
+                          <div className="space-y-1">
+                            <span className="text-xs font-medium text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
+                              <User className="h-3 w-3" />
+                              Full Name
+                            </span>
+                            <p className="text-sm font-semibold text-slate-900">{currentInquiry.name || "—"}</p>
+                          </div>
+
+                          {/* Email */}
+                          <div className="space-y-1">
+                            <span className="text-xs font-medium text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
+                              <Mail className="h-3 w-3" />
+                              Email Address
+                            </span>
+                            <p className="text-sm font-semibold text-slate-900 break-all">{currentInquiry.email || "—"}</p>
+                          </div>
+
+                          {/* Designation */}
+                          <div className="space-y-1">
+                            <span className="text-xs font-medium text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
+                              <Briefcase className="h-3 w-3" />
+                              Designation / Title
+                            </span>
+                            <p className="text-sm font-semibold text-slate-900">{currentInquiry.designation || "—"}</p>
+                          </div>
+
+                          {/* Affiliation */}
+                          <div className="space-y-1">
+                            <span className="text-xs font-medium text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
+                              <Building2 className="h-3 w-3" />
+                              Institution / Affiliation
+                            </span>
+                            <p className="text-sm font-semibold text-slate-900">{currentInquiry.affiliation || "—"}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
