@@ -355,15 +355,28 @@ export default function FloatingChatWidget({
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            className="mb-2 mr-2 bg-white px-3 py-1.5 rounded-full shadow-lg border border-blue-100 flex items-center gap-2 pointer-events-none"
+            className={`mb-2 mr-2 rounded-full shadow-lg border flex items-center pointer-events-none overflow-hidden ${
+              unreadCount > 0
+                ? "bg-red-500 border-red-400 w-56 py-1.5"
+                : "bg-white border-blue-100 px-3 py-1.5 gap-2"
+            }`}
           >
-            <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">
-              Talk to us
-            </span>
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-            </span>
+            {unreadCount > 0 ? (
+              /* Running marquee text when there are new admin messages */
+              <span className="text-xs font-bold text-white whitespace-nowrap animate-marquee inline-block px-4">
+                💬 New message from PGC Visayas
+              </span>
+            ) : (
+              <>
+                <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">
+                  Talk to us
+                </span>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                </span>
+              </>
+            )}
           </motion.div>
         )}
 
