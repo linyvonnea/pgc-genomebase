@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { MessageCircle, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -123,6 +123,14 @@ export default function FloatingChatWidget({
   const [inquiryData, setInquiryData] = useState<Inquiry | null>(null);
   const [lastNotifiedUnread, setLastNotifiedUnread] = useState(0);
 
+  // Refs so stable effects can read the latest values without being deps
+  const isOpenRef = useRef(false);
+  const inquiryDataRef = useRef<Inquiry | null>(null);
+  const userRef = useRef(user);
+  useEffect(() => { isOpenRef.current = isOpen; }, [isOpen]);
+  useEffect(() => { inquiryDataRef.current = inquiryData; }, [inquiryData]);
+  useEffect(() => { userRef.current = user; }, [user]);
+
   // ---- Presence: client keyed by "client_{inquiryId}", admin by email ----
   const clientPresenceId = `client_${inquiryId}`;
   const adminPresenceId = user?.email ?? null;
@@ -183,25 +191,36 @@ export default function FloatingChatWidget({
     }
   };
 
+  // Open widget and mark messages as read when navigated here via URL focus param.
+  // Only re-runs when the URL params or inquiryId change — NOT when inquiryData/user
+  // change (those are read via refs to prevent auto-dismissing the badge on every
+  // incoming admin message).
   useEffect(() => {
     if (searchParams.get("focus") === "messages" && searchParams.get("inquiryId") === inquiryId) {
       setIsOpen(true);
       if (inquiryId) {
-        const viewerName = role === "admin" && user?.email
-          ? getAdminDisplayNameWithIcon(user.email)
+        const currentUser = userRef.current;
+        const currentInquiryData = inquiryDataRef.current;
+        const viewerName = role === "admin" && currentUser?.email
+          ? getAdminDisplayNameWithIcon(currentUser.email)
           : undefined;
         markMessagesAsRead(
-          inquiryId, 
-          role, 
-          user?.email || user?.uid || "SYSTEM",
-          inquiryData?.email || undefined,
-          inquiryData?.name || undefined,
+          inquiryId,
+          role,
+          currentUser?.email || currentUser?.uid || "SYSTEM",
+          currentInquiryData?.email || undefined,
+          currentInquiryData?.name || undefined,
           viewerName,
         ).catch(console.error);
       }
     }
-  }, [searchParams, inquiryId, user, role, inquiryData]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, inquiryId, role]);
 
+  // Stable subscription — only recreated when inquiryId or role changes.
+  // isOpen is intentionally read via ref so the subscription is not torn down
+  // and recreated every time the chat opens/closes (which would cause Firestore
+  // to fire an immediate snapshot that could mark messages as read prematurely).
   useEffect(() => {
     if (!inquiryId) return;
 
@@ -211,17 +230,19 @@ export default function FloatingChatWidget({
         (m) => !m.isRead && m.senderRole !== role,
       ).length;
 
-      // If the chat widget is currently open or messages are being continuously viewed, mark them as read immediately
-      if (isOpen && unread > 0) {
-        const viewerName = role === "admin" && user?.email
-          ? getAdminDisplayNameWithIcon(user.email)
+      // Only auto-mark as read when the widget is visibly open (user has clicked to open it)
+      if (isOpenRef.current && unread > 0) {
+        const currentUser = userRef.current;
+        const currentInquiryData = inquiryDataRef.current;
+        const viewerName = role === "admin" && currentUser?.email
+          ? getAdminDisplayNameWithIcon(currentUser.email)
           : undefined;
         markMessagesAsRead(
-          inquiryId, 
-          role, 
-          user?.email || user?.uid || "SYSTEM",
-          inquiryData?.email || undefined,
-          inquiryData?.name || undefined,
+          inquiryId,
+          role,
+          currentUser?.email || currentUser?.uid || "SYSTEM",
+          currentInquiryData?.email || undefined,
+          currentInquiryData?.name || undefined,
           viewerName,
         ).catch(console.error);
       }
@@ -230,7 +251,8 @@ export default function FloatingChatWidget({
     });
 
     return () => unsubscribe();
-  }, [inquiryId, role, isOpen, user]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inquiryId, role]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
