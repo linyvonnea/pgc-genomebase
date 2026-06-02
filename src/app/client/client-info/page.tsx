@@ -3559,22 +3559,46 @@ export default function ClientPortalPage() {
 
       {/* Footer deleted as requested */}
       {/* New Inquiry CTA */}
-      <div className="px-4 py-4 border-t border-slate-100 bg-slate-50/60">
-        <button
-          onClick={() => {
-            const params = new URLSearchParams();
-            if (emailParam) params.set("email", emailParam);
-            // Pass the original inquiry ID so login password stays unchanged after redirect
-            if (inquiryIdParam) params.set("returnInquiryId", inquiryIdParam);
-            params.set("returnToPortal", "true");
-            router.push(`/client/inquiry-request?${params.toString()}`);
-          }}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-[#166FB5]/50 text-[#166FB5] hover:bg-[#166FB5]/5 hover:border-[#166FB5] transition-all text-sm font-semibold"
-        >
-          <Plus className="h-4 w-4" />
-          New Inquiry
-        </button>
-      </div>
+      {(() => {
+        const DISABLED_STATUSES = new Set<string>(["Pending", "Ongoing Quotation"]);
+        const isNewInquiryDisabled = currentInquiry
+          ? DISABLED_STATUSES.has(currentInquiry.status)
+          : false;
+        return (
+          <div className="px-4 py-4 border-t border-slate-100 bg-slate-50/60">
+            <button
+              disabled={isNewInquiryDisabled}
+              onClick={() => {
+                if (isNewInquiryDisabled) return;
+                const params = new URLSearchParams();
+                if (emailParam) params.set("email", emailParam);
+                // Pass the original inquiry ID so login password stays unchanged after redirect
+                if (inquiryIdParam) params.set("returnInquiryId", inquiryIdParam);
+                params.set("returnToPortal", "true");
+                router.push(`/client/inquiry-request?${params.toString()}`);
+              }}
+              title={
+                isNewInquiryDisabled
+                  ? `Cannot create a new inquiry while status is "${currentInquiry?.status}"`
+                  : "Submit a new inquiry"
+              }
+              className={`w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-dashed text-sm font-semibold transition-all ${
+                isNewInquiryDisabled
+                  ? "border-slate-200 text-slate-400 bg-slate-50 cursor-not-allowed"
+                  : "border-[#166FB5]/50 text-[#166FB5] hover:bg-[#166FB5]/5 hover:border-[#166FB5] cursor-pointer"
+              }`}
+            >
+              <Plus className="h-4 w-4" />
+              New Inquiry
+            </button>
+            {isNewInquiryDisabled && (
+              <p className="mt-1.5 text-center text-xs text-slate-400">
+                Unavailable while inquiry is <span className="font-medium">{currentInquiry?.status}</span>
+              </p>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 
