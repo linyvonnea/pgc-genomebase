@@ -23,6 +23,7 @@ import PresenceIndicator from "@/components/chat/PresenceIndicator";
 import { useOfficeAvailability } from "@/hooks/useOfficeAvailability";
 import { getConfigurationSettings } from "@/services/configurationSettingsService";
 import { ConfigurationSettings } from "@/types/ConfigurationSettings";
+import { useTabBlink } from "@/hooks/useTabBlink";
 
 type NavigatorWithBadge = Navigator & {
   setAppBadge?: (contents?: number) => Promise<void>;
@@ -122,6 +123,16 @@ export default function FloatingChatWidget({
   const { user } = useAuth();
   const [inquiryData, setInquiryData] = useState<Inquiry | null>(null);
   const [lastNotifiedUnread, setLastNotifiedUnread] = useState(0);
+
+  // Tab blink — only for client role; stops when the tab is re-focused or the
+  // chat widget is opened (unreadCount drops to 0 when messages are marked read)
+  const tabBlinkCount = role === "client" && !isOpen ? unreadCount : 0;
+  useTabBlink(
+    tabBlinkCount,
+    tabBlinkCount > 0
+      ? `💬 New message from PGC Visayas — ${tabBlinkCount} unread`
+      : "New message from PGC Visayas",
+  );
 
   // ---- Presence: client keyed by "client_{inquiryId}", admin by email ----
   const clientPresenceId = `client_${inquiryId}`;
