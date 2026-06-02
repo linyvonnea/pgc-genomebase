@@ -3558,12 +3558,11 @@ export default function ClientPortalPage() {
       </div>
 
       {/* Footer deleted as requested */}
-      {/* New Inquiry CTA */}
+      {/* New Inquiry CTA — disabled while any inquiry is Pending or Ongoing Quotation */}
       {(() => {
         const DISABLED_STATUSES = new Set<string>(["Pending", "Ongoing Quotation"]);
-        const isNewInquiryDisabled = currentInquiry
-          ? DISABLED_STATUSES.has(currentInquiry.status)
-          : false;
+        const blockingInquiry = allInquiries.find((inq) => DISABLED_STATUSES.has(inq.status));
+        const isNewInquiryDisabled = Boolean(blockingInquiry);
         return (
           <div className="px-4 py-4 border-t border-slate-100 bg-slate-50/60">
             <button
@@ -3579,7 +3578,7 @@ export default function ClientPortalPage() {
               }}
               title={
                 isNewInquiryDisabled
-                  ? `Cannot create a new inquiry while status is "${currentInquiry?.status}"`
+                  ? `Cannot create a new inquiry while an inquiry is still "${blockingInquiry?.status}"`
                   : "Submit a new inquiry"
               }
               className={`w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-dashed text-sm font-semibold transition-all ${
@@ -3593,7 +3592,7 @@ export default function ClientPortalPage() {
             </button>
             {isNewInquiryDisabled && (
               <p className="mt-1.5 text-center text-xs text-slate-400">
-                Unavailable while inquiry is <span className="font-medium">{currentInquiry?.status}</span>
+                Unavailable while an inquiry is <span className="font-medium">{blockingInquiry?.status}</span>
               </p>
             )}
           </div>
