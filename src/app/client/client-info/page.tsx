@@ -137,6 +137,7 @@ import {
   ArrowRight,
   Download,
   Eye,
+  Pencil,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -536,6 +537,16 @@ export default function ClientPortalPage() {
   const [fetchedApprovedProjects, setFetchedApprovedProjects] = useState<ProjectDetails[]>([]);
   const [fetchedPreviousProjects, setFetchedPreviousProjects] = useState<ProjectDetails[]>([]);
   const [showPreviousProjectsList, setShowPreviousProjectsList] = useState(false);
+  const [isProjectInfoExpanded, setIsProjectInfoExpanded] = useState(false);
+  const [isProjectInfoEditing, setIsProjectInfoEditing] = useState(false);
+  const [projectInfoForm, setProjectInfoForm] = useState({
+    title: "",
+    lead: "",
+    startDate: "",
+    sendingInstitution: "",
+    fundingInstitution: "",
+  });
+  const [isSavingProjectInfo, setIsSavingProjectInfo] = useState(false);
   // All submitted inquiries for this email (for sidebar history)
   const [allInquiries, setAllInquiries] = useState<
     { id: string; status: string; serviceType?: string; name?: string; createdAt?: Date | any }[]
@@ -2245,12 +2256,59 @@ export default function ClientPortalPage() {
     }
   };
 
+  const handleStartEditProjectInfo = () => {
+    if (!projectDetails) return;
+    let dateStr = "";
+    try {
+      const d = projectDetails.startDate instanceof Date
+        ? projectDetails.startDate
+        : new Date(projectDetails.startDate as string);
+      if (!isNaN(d.getTime())) dateStr = format(d, "yyyy-MM-dd");
+    } catch { /* ignore */ }
+    setProjectInfoForm({
+      title: projectDetails.title || "",
+      lead: projectDetails.lead || "",
+      startDate: dateStr,
+      sendingInstitution: projectDetails.sendingInstitution || "",
+      fundingInstitution: projectDetails.fundingInstitution || "",
+    });
+    setIsProjectInfoEditing(true);
+  };
+
+  const handleSaveProjectInfo = async () => {
+    if (!projectDetails || !user) return;
+    setIsSavingProjectInfo(true);
+    try {
+      await saveProjectRequest({
+        inquiryId: projectDetails.inquiryId,
+        requestedBy: user.email!,
+        requestedByName: user.displayName || user.email!,
+        title: projectInfoForm.title.trim(),
+        projectLead: projectInfoForm.lead.trim(),
+        startDate: projectInfoForm.startDate
+          ? Timestamp.fromDate(new Date(projectInfoForm.startDate))
+          : (projectRequest?.startDate ?? Timestamp.now()),
+        sendingInstitution: projectInfoForm.sendingInstitution.trim(),
+        fundingInstitution: projectInfoForm.fundingInstitution.trim(),
+        status: projectRequest?.status ?? "draft",
+        primaryMember: projectRequest?.primaryMember,
+      });
+      toast.success("Project information saved.");
+      setIsProjectInfoEditing(false);
+    } catch (err) {
+      console.error("Failed to save project info:", err);
+      toast.error("Failed to save project information.");
+    } finally {
+      setIsSavingProjectInfo(false);
+    }
+  };
+
   const handleSelectProject = (project: ProjectDetails) => {
     if (!emailParam || !inquiryIdParam) {
       toast.error("Missing required parameters.");
       return;
     }
-    
+
     if (!project) {
       toast.error("Invalid project selected.");
       return;
@@ -3724,29 +3782,192 @@ export default function ClientPortalPage() {
 
               {/* ── Project Header ────────────────────────── */}
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                    <h1 className="text-lg font-bold text-slate-800 leading-snug">
-                      {projectDetails.title}
-                    </h1>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {/* Only show Project ID badge for officially approved projects, not drafts (inquiry ID is temporary password) */}
-                    {projectDetails.status !== "Draft" && projectDetails.status !== "Pending Approval" && (
-                      <Badge
-                        variant="outline"
-                        className="font-mono text-[10px] bg-blue-50 text-[#166FB5] border-blue-200 px-2 py-0.5"
-                      >
-                        Project ID: {projectDetails.pid}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
                 {/* Message widget for project view */}
                 {currentInquiry && (
                   <FloatingChatWidget inquiryId={currentInquiry.id} role="client" />
                 )}
               </div>
+
+                {/* ── Project Information (collapsible) ────────────── */}
+                {(() => {
+                  const canEditProjectInfo = !!projectDetails?.isDraft &&
+                    (projectDetails?.status === "Draft" || projectDetails?.status === "Rejected");
+                  return (
+                <div className="border border-slate-100 rounded-2xl bg-white shadow-sm overflow-hidden">
+                  {/* Header row — use a div to allow an Edit button alongside the toggle */}
+                  <div
+                    className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors cursor-pointer select-none"
+                    onClick={() => setIsProjectInfoExpanded((prev) => !prev)}
+                    role="button"
+                    aria-expanded={isProjectInfoExpanded}
+                  >
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-semibold text-slate-800">{projectDetails.title || "Project Information"}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {canEditProjectInfo && isProjectInfoExpanded && !isProjectInfoEditing && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleStartEditProjectInfo(); }}
+                          className="p-1 rounded hover:bg-slate-200 transition-colors text-slate-400 hover:text-slate-600"
+                          title="Edit project information"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                      <ChevronDown
+                        className={cn(
+                          "h-4 w-4 text-slate-400 transition-transform duration-200",
+                          isProjectInfoExpanded && "rotate-180"
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {isProjectInfoExpanded && (
+                    <div className="px-4 pb-4 pt-3 border-t border-slate-100">
+                      {isProjectInfoEditing ? (
+                        /* ── Edit mode ─────────────────────────── */
+                        <div className="space-y-3">
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Project Title</Label>
+                            <Input
+                              value={projectInfoForm.title}
+                              onChange={(e) => setProjectInfoForm((prev) => ({ ...prev, title: e.target.value }))}
+                              className="h-8 text-xs"
+                              placeholder="Enter project title"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Project Lead</Label>
+                            <Input
+                              value={projectInfoForm.lead}
+                              onChange={(e) => setProjectInfoForm((prev) => ({ ...prev, lead: e.target.value }))}
+                              className="h-8 text-xs"
+                              placeholder="Enter project lead name"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Start Date</Label>
+                            <Input
+                              type="date"
+                              value={projectInfoForm.startDate}
+                              onChange={(e) => setProjectInfoForm((prev) => ({ ...prev, startDate: e.target.value }))}
+                              className="h-8 text-xs"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Sending Institution</Label>
+                            <Input
+                              value={projectInfoForm.sendingInstitution}
+                              onChange={(e) => setProjectInfoForm((prev) => ({ ...prev, sendingInstitution: e.target.value }))}
+                              className="h-8 text-xs"
+                              placeholder="Enter sending institution"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Funding Institution</Label>
+                            <Input
+                              value={projectInfoForm.fundingInstitution}
+                              onChange={(e) => setProjectInfoForm((prev) => ({ ...prev, fundingInstitution: e.target.value }))}
+                              className="h-8 text-xs"
+                              placeholder="Enter funding institution"
+                            />
+                          </div>
+                          <div className="flex items-center gap-2 pt-1">
+                            <Button
+                              size="sm"
+                              onClick={handleSaveProjectInfo}
+                              disabled={isSavingProjectInfo}
+                              className="h-7 text-xs gap-1"
+                            >
+                              {isSavingProjectInfo
+                                ? <Loader2 className="h-3 w-3 animate-spin" />
+                                : <Save className="h-3 w-3" />}
+                              Save
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setIsProjectInfoEditing(false)}
+                              disabled={isSavingProjectInfo}
+                              className="h-7 text-xs"
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        /* ── Read-only view ──────────────────────── */
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                          {projectDetails.status !== "Draft" && projectDetails.status !== "Pending Approval" && (
+                            <div className="flex items-start gap-2">
+                              <Info className="h-3.5 w-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Project ID</p>
+                                <p className="text-xs font-mono text-slate-700">{projectDetails.pid || "—"}</p>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex items-start gap-2">
+                            <User className="h-3.5 w-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Project Lead</p>
+                              <p className="text-xs text-slate-700 font-medium">{projectDetails.lead || "—"}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-2">
+                            <ShieldCheck className="h-3.5 w-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Status</p>
+                              <p className="text-xs text-slate-700 font-medium">{projectDetails.status || "—"}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-2">
+                            <Calendar className="h-3.5 w-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Start Date</p>
+                              <p className="text-xs text-slate-700 font-medium">
+                                {projectDetails.startDate
+                                  ? (() => {
+                                      try {
+                                        const d = projectDetails.startDate instanceof Date
+                                          ? projectDetails.startDate
+                                          : new Date(projectDetails.startDate as string);
+                                        return isNaN(d.getTime()) ? "—" : format(d, "MMM d, yyyy");
+                                      } catch { return "—"; }
+                                    })()
+                                  : "—"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-2">
+                            <Building2 className="h-3.5 w-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Sending Institution</p>
+                              <p className="text-xs text-slate-700 font-medium">{projectDetails.sendingInstitution || "—"}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-2">
+                            <Briefcase className="h-3.5 w-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Funding Institution</p>
+                              <p className="text-xs text-slate-700 font-medium">{projectDetails.fundingInstitution || "—"}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                  );
+                })()}
 
                 {/* ── Request Progress Timeline ──────────────────── */}
                 {portalFeatures.requestProgressTimeline && (
