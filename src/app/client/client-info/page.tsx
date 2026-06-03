@@ -10,6 +10,7 @@ import useAuth from "@/hooks/useAuth";
 import {
   doc,
   setDoc,
+  updateDoc,
   serverTimestamp,
   getDoc,
   collection,
@@ -308,6 +309,15 @@ function normalizeSex(val?: string): "M" | "F" | "Other" | "" {
 // ────────────────────────────────────────────────────────────────
 //  Component
 // ────────────────────────────────────────────────────────────────
+
+const SENDING_INSTITUTIONS = [
+  "UP System",
+  "SUC/HEI",
+  "Government",
+  "Private/Local",
+  "International",
+  "N/A",
+] as const;
 
 export default function ClientPortalPage() {
   const searchParams = useSearchParams();
@@ -2279,22 +2289,53 @@ export default function ClientPortalPage() {
     if (!projectDetails || !user) return;
     setIsSavingProjectInfo(true);
     try {
-      await saveProjectRequest({
-        inquiryId: projectDetails.inquiryId,
-        requestedBy: user.email!,
-        requestedByName: user.displayName || user.email!,
+      const docRef = doc(db, "projectRequests", projectDetails.inquiryId);
+      const startDateTimestamp = projectInfoForm.startDate
+        ? Timestamp.fromDate(new Date(projectInfoForm.startDate))
+        : (projectRequest?.startDate ?? Timestamp.now());
+      await updateDoc(docRef, {
         title: projectInfoForm.title.trim(),
         projectLead: projectInfoForm.lead.trim(),
-        startDate: projectInfoForm.startDate
-          ? Timestamp.fromDate(new Date(projectInfoForm.startDate))
-          : (projectRequest?.startDate ?? Timestamp.now()),
-        sendingInstitution: projectInfoForm.sendingInstitution.trim(),
+        startDate: startDateTimestamp,
+        sendingInstitution: projectInfoForm.sendingInstitution,
         fundingInstitution: projectInfoForm.fundingInstitution.trim(),
-        status: projectRequest?.status ?? "draft",
-        primaryMember: projectRequest?.primaryMember,
+        // Reset rejected projects back to draft so they can be resubmitted
+        status: projectRequest?.status === "rejected" ? "draft" : (projectRequest?.status ?? "draft"),
+        updatedAt: serverTimestamp(),
       });
       toast.success("Project information saved.");
       setIsProjectInfoEditing(false);
+      // Optimistically update local state so the card reflects changes immediately
+      // without waiting for the Firestore subscription to propagate.
+      const newStartDate = projectInfoForm.startDate
+        ? new Date(projectInfoForm.startDate)
+        : (projectDetails.startDate instanceof Date ? projectDetails.startDate : new Date(projectDetails.startDate as string));
+      setProjectDetails((prev) =>
+        prev
+          ? {
+              ...prev,
+              title: projectInfoForm.title.trim(),
+              lead: projectInfoForm.lead.trim(),
+              startDate: newStartDate,
+              sendingInstitution: projectInfoForm.sendingInstitution,
+              fundingInstitution: projectInfoForm.fundingInstitution.trim(),
+            }
+          : prev
+      );
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.inquiryId === projectDetails.inquiryId
+            ? {
+                ...p,
+                title: projectInfoForm.title.trim(),
+                lead: projectInfoForm.lead.trim(),
+                startDate: newStartDate,
+                sendingInstitution: projectInfoForm.sendingInstitution,
+                fundingInstitution: projectInfoForm.fundingInstitution.trim(),
+              }
+            : p
+        )
+      );
     } catch (err) {
       console.error("Failed to save project info:", err);
       toast.error("Failed to save project information.");
@@ -3859,12 +3900,21 @@ export default function ClientPortalPage() {
                           </div>
                           <div className="space-y-1">
                             <Label className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Sending Institution</Label>
-                            <Input
+                            <Select
                               value={projectInfoForm.sendingInstitution}
-                              onChange={(e) => setProjectInfoForm((prev) => ({ ...prev, sendingInstitution: e.target.value }))}
-                              className="h-8 text-xs"
-                              placeholder="Enter sending institution"
-                            />
+                              onValueChange={(val) => setProjectInfoForm((prev) => ({ ...prev, sendingInstitution: val }))}
+                            >
+                              <SelectTrigger className="h-8 text-xs">
+                                <SelectValue placeholder="Select sending institution" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {SENDING_INSTITUTIONS.map((inst) => (
+                                  <SelectItem key={inst} value={inst} className="text-xs">
+                                    {inst}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                           <div className="space-y-1">
                             <Label className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Funding Institution</Label>
