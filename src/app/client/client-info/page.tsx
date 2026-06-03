@@ -532,6 +532,8 @@ export default function ClientPortalPage() {
   const userSelectedInquiryRef = useRef(false);
   // Ensure we only apply the default inquiry redirect once after login.
   const autoInquiryRedirectHandledRef = useRef(false);
+  // Ensure the pid-based inquiry correction only fires once per load.
+  const pidInquiryCorrectedRef = useRef(false);
   // Tracks whether the "Pending" inquiry auto-init (show workspace, collapse projects)
   // has already been applied for the current inquiry ID, so it only fires once per load.
   const pendingInitHandledRef = useRef<string | null>(null);
@@ -841,6 +843,12 @@ export default function ClientPortalPage() {
     if (autoInquiryRedirectHandledRef.current) return;
     if (allInquiries.length < 2) return;
     if (userSelectedInquiryRef.current) return;
+    // A pid in the URL means the user (or a previous redirect) explicitly targeted a
+    // specific project — don't override the inquiry that owns that project.
+    if (pidParam) {
+      autoInquiryRedirectHandledRef.current = true;
+      return;
+    }
 
     const preferredStatuses = new Set(["Pending", "Ongoing Quotation", "In Progress"]);
     const preferredInquiry = allInquiries.find((inq) => preferredStatuses.has(inq.status));
@@ -860,7 +868,30 @@ export default function ClientPortalPage() {
     params.set("inquiryId", preferredInquiry.id);
     autoInquiryRedirectHandledRef.current = true;
     router.replace(`/client/client-info?${params.toString()}`);
-  }, [allInquiries, emailParam, inquiryIdParam, router]);
+  }, [allInquiries, emailParam, inquiryIdParam, pidParam, router]);
+
+  // Corrective redirect: if a pid is in the URL but inquiryId doesn't match the
+  // project's actual inquiry (e.g. stale URL), silently fix the URL so the correct
+  // inquiry's member/document data is loaded.
+  useEffect(() => {
+    if (pidInquiryCorrectedRef.current) return;
+    if (!pidParam || !emailParam || projects.length === 0) return;
+
+    const targetProject = projects.find((p) => p.pid === pidParam);
+    if (!targetProject) return; // not loaded yet — wait for next render
+
+    pidInquiryCorrectedRef.current = true;
+
+    if (targetProject.inquiryId && targetProject.inquiryId !== inquiryIdParam) {
+      const params = new URLSearchParams();
+      params.set("email", emailParam);
+      params.set("inquiryId", targetProject.inquiryId);
+      params.set("pid", pidParam);
+      userSelectedInquiryRef.current = true;
+      autoInquiryRedirectHandledRef.current = true;
+      router.replace(`/client/client-info?${params.toString()}`);
+    }
+  }, [projects, pidParam, inquiryIdParam, emailParam, router]);
 
   // Auto-init: when a Pending inquiry is first detected, show workspace.
   useEffect(() => {
