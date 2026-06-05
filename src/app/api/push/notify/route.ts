@@ -26,11 +26,34 @@ export async function POST(req: NextRequest) {
     }
 
     const targetRole = senderRole === "admin" ? "client" : "admin";
-    const subscriptionsSnap = await db
-      .collection("pushSubscriptions")
-      .where("threadId", "==", threadId)
-      .where("role", "==", targetRole)
-      .get();
+
+    // When the admin sends a message, notify ALL push subscriptions associated with
+    // the client's email address — not just those registered for this specific thread.
+    // This ensures clients with multiple inquiries receive notifications on all devices
+    // regardless of which thread their push subscription was originally registered for.
+    let subscriptionsSnap;
+    if (targetRole === "client") {
+      const threadSnap = await db.collection("quotationThreads").doc(threadId).get();
+      const clientEmail = threadSnap.exists ? (threadSnap.data() as { clientEmail?: string }).clientEmail : null;
+
+      if (!clientEmail) {
+        return NextResponse.json({ ok: true, sent: 0 });
+      }
+
+      subscriptionsSnap = await db
+        .collection("pushSubscriptions")
+        .where("subscriberId", "==", clientEmail)
+        .where("role", "==", "client")
+        .get();
+    } else {
+      // Admin is the target (client messaged) — keep per-thread lookup since admins
+      // manage specific threads and may want per-inquiry notification granularity.
+      subscriptionsSnap = await db
+        .collection("pushSubscriptions")
+        .where("threadId", "==", threadId)
+        .where("role", "==", targetRole)
+        .get();
+    }
 
     if (subscriptionsSnap.empty) {
       return NextResponse.json({ ok: true, sent: 0 });
