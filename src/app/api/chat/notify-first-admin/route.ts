@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { addDoc, collection, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-const PORTAL_URL = "https://pgc-genomebase.vercel.app/portal";
+const PORTAL_URL = "https://omics.pgcvisayas.upv.edu.ph/portal";
 
 export async function POST(request: Request) {
   try {

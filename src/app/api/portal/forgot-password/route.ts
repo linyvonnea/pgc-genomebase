@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { collection, getDocs, query, where, addDoc, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-const PORTAL_URL = "https://pgc-genomebase.vercel.app/portal";
+const PORTAL_URL = "https://omics.pgcvisayas.upv.edu.ph/portal";
 
 const ALLOWED_STATUSES = [
   "Pending",

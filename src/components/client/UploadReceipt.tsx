@@ -422,7 +422,7 @@ export default function UploadReceipt({ projectId, hasChargeSlip, chargeSlipNumb
                   </div>
 
                   <div style="margin-top: 20px;">
-                    <a href="https://pgc-genomebase.vercel.app/admin/charge-slips/${csNum}" style="background-color: #1e40af; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 14px;">Review in Admin Panel</a>
+                    <a href="https://omics.pgcvisayas.upv.edu.ph/admin/charge-slips/${csNum}" style="background-color: #1e40af; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 14px;">Review in Admin Panel</a>
                   </div>
 
                   <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8;">
