@@ -3888,9 +3888,16 @@ export default function ClientPortalPage() {
                     role="button"
                     aria-expanded={isProjectInfoExpanded}
                   >
-                    <div className="flex items-center gap-2">
-                      <FolderOpen className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm font-semibold text-slate-800">{projectDetails.title || "Project Information"}</span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FolderOpen className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-semibold text-slate-800 truncate">{projectDetails.title || "Project Information"}</span>
+                        {projectDetails.pid && projectDetails.status !== "Draft" && projectDetails.status !== "Pending Approval" && (
+                          <span className="text-[11px] font-mono text-[#166FB5]/70 bg-blue-50/50 px-1.5 rounded border border-blue-100/30 w-fit">
+                            Project ID: {projectDetails.pid}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-1">
                       {canEditProjectInfo && isProjectInfoExpanded && !isProjectInfoEditing && (
