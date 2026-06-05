@@ -79,10 +79,12 @@ export async function getInquiries(): Promise<Inquiry[]> {
   try {
     console.log("Attempting to connect to Firestore...");
     
-    // Create a reference to the 'inquiries' collection and set up query
-    // Orders by 'createdAt' field in descending order (newest first)
+    // Create a reference to the 'inquiries' collection
+    // NOTE: Do NOT use orderBy here — Firestore silently excludes documents
+    // that are missing the ordered field, which would hide older inquiries.
+    // Sorting is done in-memory below instead.
     const inquiriesRef = collection(db, "inquiries");
-    const q = query(inquiriesRef, orderBy("createdAt", "desc"));
+    const q = query(inquiriesRef);
     const querySnapshot = await getDocs(q);
     
     const inquiries: Inquiry[] = [];
@@ -198,14 +200,17 @@ export function subscribeToInquiries(
   callback: (inquiries: Inquiry[]) => void
 ): () => void {
   const inquiriesRef = collection(db, "inquiries");
-  const q = query(inquiriesRef, orderBy("createdAt", "desc"));
+  // NOTE: Do NOT use orderBy here — Firestore silently excludes documents
+  // that are missing the ordered field, which would hide older inquiries.
+  // Sorting is done in-memory below instead.
+  const q = query(inquiriesRef);
 
   return onSnapshot(
     q,
     (snapshot) => {
       const inquiries: Inquiry[] = snapshot.docs.map((doc) => mapDocToInquiry(doc.id, doc.data()));
       
-      // Sort in memory as backup
+      // Sort in memory: newest first
       inquiries.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
       
       callback(inquiries);

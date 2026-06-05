@@ -52,7 +52,7 @@ export function MessageNotificationCenter() {
   const [markingUnseenId, setMarkingUnseenId] = useState<string | null>(null);
   const [dismissingId, setDismissingId] = useState<string | null>(null);
   const [confirmDismissOpen, setConfirmDismissOpen] = useState(false);
-  const [pendingDismissId, setPendingDismissId] = useState<string | null>(null);
+  const [pendingDismiss, setPendingDismiss] = useState<{ id: string; name: string } | null>(null);
   const { notifications, totalUnread, markViewed, markAllViewed } =
     useMessageNotifications();
 
@@ -78,23 +78,23 @@ export function MessageNotificationCenter() {
     router.push(`/admin/inquiry?inquiryId=${inquiryId}&focus=messages`);
   };
 
-  const requestDismiss = (event: React.MouseEvent, inquiryId: string) => {
+  const requestDismiss = (event: React.MouseEvent, inquiryId: string, clientName: string) => {
     event.stopPropagation();
     if (dismissingId) return;
 
-    setPendingDismissId(inquiryId);
+    setPendingDismiss({ id: inquiryId, name: clientName });
     setConfirmDismissOpen(true);
   };
 
   const confirmDismiss = async () => {
-    if (!pendingDismissId || dismissingId) return;
+    if (!pendingDismiss || dismissingId) return;
 
     try {
-      setDismissingId(pendingDismissId);
-      await dismissThreadNotification(pendingDismissId);
+      setDismissingId(pendingDismiss.id);
+      await dismissThreadNotification(pendingDismiss.id);
       toast.success("Notification dismissed");
       setConfirmDismissOpen(false);
-      setPendingDismissId(null);
+      setPendingDismiss(null);
     } catch (error) {
       toast.error("Failed to dismiss notification");
     } finally {
@@ -225,7 +225,7 @@ export function MessageNotificationCenter() {
         onOpenChange={(nextOpen) => {
           setConfirmDismissOpen(nextOpen);
           if (!nextOpen) {
-            setPendingDismissId(null);
+            setPendingDismiss(null);
           }
         }}
       >
@@ -233,14 +233,18 @@ export function MessageNotificationCenter() {
           <AlertDialogHeader>
             <AlertDialogTitle>Dismiss client message?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove the client message from the admin list. You can only restore it if a new message arrives.
+              This will remove the notification for{" "}
+              <span className="font-semibold text-foreground">
+                {pendingDismiss?.name || "this client"}
+              </span>{" "}
+              from the admin list. You can only restore it if a new message arrives.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={dismissingId !== null}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDismiss}
-              disabled={!pendingDismissId || dismissingId !== null}
+              disabled={!pendingDismiss || dismissingId !== null}
               className="bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600"
             >
               {dismissingId ? "Dismissing..." : "Dismiss message"}
@@ -259,7 +263,7 @@ export function MessageNotificationCenter() {
 interface NotificationItemProps {
   notification: any;
   onClick: () => void;
-  handleDismiss: (e: React.MouseEvent, inquiryId: string) => void;
+  handleDismiss: (e: React.MouseEvent, inquiryId: string, clientName: string) => void;
   handleMarkAsUnseen: (e: React.MouseEvent, inquiryId: string) => void;
   dismissingId: string | null;
   markingUnseenId: string | null;
@@ -347,7 +351,7 @@ function NotificationItem({
                 <DropdownMenuContent align="end" className="w-32">
                   {n.unreadCount > 0 ? (
                     <DropdownMenuItem 
-                      onClick={(e) => handleDismiss(e, n.inquiryId)}
+                      onClick={(e) => handleDismiss(e, n.inquiryId, n.clientName)}
                       disabled={dismissingId === n.inquiryId}
                       className="text-[11px] cursor-pointer text-red-600 focus:text-red-700 focus:bg-red-50"
                     >
@@ -365,7 +369,7 @@ function NotificationItem({
                         <span>Mark as unseen</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem 
-                        onClick={(e) => handleDismiss(e, n.inquiryId)}
+                        onClick={(e) => handleDismiss(e, n.inquiryId, n.clientName)}
                         disabled={dismissingId === n.inquiryId}
                         className="text-[11px] cursor-pointer text-red-600 focus:text-red-700 focus:bg-red-50"
                       >
