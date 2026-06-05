@@ -4004,16 +4004,6 @@ export default function ClientPortalPage() {
                       ) : (
                         /* ── Read-only view ──────────────────────── */
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
-                          {projectDetails.status !== "Draft" && projectDetails.status !== "Pending Approval" && (
-                            <div className="flex items-start gap-2">
-                              <Info className="h-3.5 w-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
-                              <div>
-                                <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">Project ID</p>
-                                <p className="text-xs font-mono text-slate-700">{projectDetails.pid || "—"}</p>
-                              </div>
-                            </div>
-                          )}
-
                           <div className="flex items-start gap-2">
                             <User className="h-3.5 w-3.5 text-slate-400 mt-0.5 flex-shrink-0" />
                             <div>
