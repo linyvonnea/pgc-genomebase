@@ -495,7 +495,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData & { id?: 
       // so that the first-message email notification fires correctly when a real admin messages next.
       await addThreadMessage({
         threadId: finalInquiryId,
-        content: "Welcome to PGC Visayas! ðŸ‘‹ Your inquiry has been received. You can use this chat to ask questions about your quotation or clarify your research requirements.",
+        content: "Welcome to PGC Visayas! Your inquiry has been received. You can use this chat to ask questions about your quotation or clarify your research requirements.",
         senderId: "pgc-admin",
         senderName: "PGC Visayas Admin",
         senderRole: "admin",
