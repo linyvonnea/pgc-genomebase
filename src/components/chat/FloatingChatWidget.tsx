@@ -103,16 +103,44 @@ function OfficeStatusIndicator({
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+interface InquirySummary {
+  id: string;
+  status: string;
+  serviceType?: string;
+  createdAt?: Date | any;
+}
+
 interface FloatingChatWidgetProps {
   inquiryId: string;
   role: MessageSenderRole;
   className?: string;
+  /** When provided (client portal only), the widget aggregates unread counts
+   *  across ALL inquiry threads and shows a thread-picker tab bar. */
+  allInquiries?: InquirySummary[];
+}
+
+/** Short display label for an inquiry thread pill */
+function formatThreadLabel(inq: InquirySummary): string {
+  const service = inq.serviceType
+    ? inq.serviceType.charAt(0).toUpperCase() + inq.serviceType.slice(1)
+    : "Inquiry";
+  try {
+    const date = inq.createdAt?.toDate
+      ? inq.createdAt.toDate()
+      : new Date(inq.createdAt);
+    if (!isNaN(date.getTime())) {
+      const label = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      return `${service} · ${label}`;
+    }
+  } catch { /* ignore */ }
+  return service;
 }
 
 export default function FloatingChatWidget({
   inquiryId,
   role,
   className,
+  allInquiries,
 }: FloatingChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -123,6 +151,17 @@ export default function FloatingChatWidget({
   const [inquiryData, setInquiryData] = useState<Inquiry | null>(null);
   const [lastNotifiedUnread, setLastNotifiedUnread] = useState(0);
 
+  // Active thread — defaults to the selected inquiry but can be switched via the tab picker.
+  const [activeThreadId, setActiveThreadId] = useState(inquiryId);
+
+  // Per-thread unread map (populated only when allInquiries has multiple entries)
+  const [perThreadUnread, setPerThreadUnread] = useState<Map<string, number>>(new Map());
+
+  // Sync activeThreadId when the parent changes the selected inquiry
+  useEffect(() => {
+    setActiveThreadId(inquiryId);
+  }, [inquiryId]);
+
   // Refs so stable effects can read the latest values without being deps
   const isOpenRef = useRef(false);
   const inquiryDataRef = useRef<Inquiry | null>(null);
@@ -131,8 +170,8 @@ export default function FloatingChatWidget({
   useEffect(() => { inquiryDataRef.current = inquiryData; }, [inquiryData]);
   useEffect(() => { userRef.current = user; }, [user]);
 
-  // ---- Presence: client keyed by "client_{inquiryId}", admin by email ----
-  const clientPresenceId = `client_${inquiryId}`;
+  // ---- Presence: client keyed by "client_{activeThreadId}", admin by email ----
+  const clientPresenceId = `client_${activeThreadId}`;
   const adminPresenceId = user?.email ?? null;
 
   // Subscribe to the other party's presence
@@ -171,16 +210,40 @@ export default function FloatingChatWidget({
   }, [role, clientPresenceId, adminPresenceId]);
 
   useEffect(() => {
-    if (!inquiryId) return;
-    const unsubscribe = subscribeToInquiryById(inquiryId, (data) => {
+    if (!activeThreadId) return;
+    const unsubscribe = subscribeToInquiryById(activeThreadId, (data) => {
       setInquiryData(data);
     });
     return () => unsubscribe();
-  }, [inquiryId]);
+  }, [activeThreadId]);
+
+  // ── Multi-thread unread aggregation ───────────────────────────────────────
+  // When the client has more than one inquiry, subscribe to all threads and
+  // accumulate unread counts so the badge reflects messages across ALL inquiries.
+  const allInquiryIdKey = allInquiries?.map(i => i.id).join(",") ?? "";
+  useEffect(() => {
+    if (!allInquiries || allInquiries.length <= 1) return;
+
+    const unsubscribers: (() => void)[] = [];
+    allInquiries.forEach(({ id: threadId }) => {
+      const unsub = subscribeToThreadMessages(threadId, (messages) => {
+        const unread = messages.filter(m => !m.isRead && m.senderRole !== role).length;
+        setPerThreadUnread(prev => {
+          const next = new Map(prev);
+          next.set(threadId, unread);
+          return next;
+        });
+      });
+      unsubscribers.push(unsub);
+    });
+
+    return () => unsubscribers.forEach(u => u());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allInquiryIdKey, role]);
 
   const closeWidget = () => {
     setIsOpen(false);
-    if (searchParams.get("focus") === "messages" && searchParams.get("inquiryId") === inquiryId) {
+    if (searchParams.get("focus") === "messages" && searchParams.get("inquiryId") === activeThreadId) {
       // Create new URLSearchParams without focus and inquiryId
       const params = new URLSearchParams(searchParams.toString());
       params.delete("focus");
@@ -192,20 +255,27 @@ export default function FloatingChatWidget({
   };
 
   // Open widget and mark messages as read when navigated here via URL focus param.
-  // Only re-runs when the URL params or inquiryId change — NOT when inquiryData/user
-  // change (those are read via refs to prevent auto-dismissing the badge on every
-  // incoming admin message).
+  // Also switches to the correct thread if a different inquiryId is in the URL.
   useEffect(() => {
-    if (searchParams.get("focus") === "messages" && searchParams.get("inquiryId") === inquiryId) {
+    const focusInquiryId = searchParams.get("inquiryId");
+    if (searchParams.get("focus") === "messages" && focusInquiryId) {
+      // Switch to the focused thread if it belongs to this client
+      if (allInquiries?.some(i => i.id === focusInquiryId)) {
+        setActiveThreadId(focusInquiryId);
+      } else if (focusInquiryId === inquiryId) {
+        setActiveThreadId(inquiryId);
+      } else {
+        return; // Not our widget
+      }
       setIsOpen(true);
-      if (inquiryId) {
+      if (focusInquiryId) {
         const currentUser = userRef.current;
         const currentInquiryData = inquiryDataRef.current;
         const viewerName = role === "admin" && currentUser?.email
           ? getAdminDisplayNameWithIcon(currentUser.email)
           : undefined;
         markMessagesAsRead(
-          inquiryId,
+          focusInquiryId,
           role,
           currentUser?.email || currentUser?.uid || "SYSTEM",
           currentInquiryData?.email || undefined,
@@ -217,14 +287,14 @@ export default function FloatingChatWidget({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, inquiryId, role]);
 
-  // Stable subscription — only recreated when inquiryId or role changes.
+  // Stable subscription — only recreated when activeThreadId or role changes.
   // isOpen is intentionally read via ref so the subscription is not torn down
   // and recreated every time the chat opens/closes (which would cause Firestore
   // to fire an immediate snapshot that could mark messages as read prematurely).
   useEffect(() => {
-    if (!inquiryId) return;
+    if (!activeThreadId) return;
 
-    const unsubscribe = subscribeToThreadMessages(inquiryId, (messages) => {
+    const unsubscribe = subscribeToThreadMessages(activeThreadId, (messages) => {
       // Count messages that are NOT read and are NOT from us
       const unread = messages.filter(
         (m) => !m.isRead && m.senderRole !== role,
@@ -238,7 +308,7 @@ export default function FloatingChatWidget({
           ? getAdminDisplayNameWithIcon(currentUser.email)
           : undefined;
         markMessagesAsRead(
-          inquiryId,
+          activeThreadId,
           role,
           currentUser?.email || currentUser?.uid || "SYSTEM",
           currentInquiryData?.email || undefined,
@@ -252,7 +322,7 @@ export default function FloatingChatWidget({
 
     return () => unsubscribe();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inquiryId, role]);
+  }, [activeThreadId, role]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -292,16 +362,22 @@ export default function FloatingChatWidget({
     subscribe();
   }, [inquiryData?.email, inquiryId, role, user?.email]);
 
+  // Total unread to show on the badge: aggregate across all threads when
+  // multiple inquiries exist, otherwise use the single-thread count.
+  const totalUnreadCount = allInquiries && allInquiries.length > 1
+    ? Array.from(perThreadUnread.values()).reduce((a, b) => a + b, 0)
+    : unreadCount;
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (role !== "client") return;
 
     const nav = navigator as NavigatorWithBadge;
     if (typeof nav.setAppBadge === "function" || typeof nav.clearAppBadge === "function") {
-      if (unreadCount > 0 && typeof nav.setAppBadge === "function") {
-        nav.setAppBadge(unreadCount).catch(() => {});
+      if (totalUnreadCount > 0 && typeof nav.setAppBadge === "function") {
+        nav.setAppBadge(totalUnreadCount).catch(() => {});
       }
-      if (unreadCount === 0 && typeof nav.clearAppBadge === "function") {
+      if (totalUnreadCount === 0 && typeof nav.clearAppBadge === "function") {
         nav.clearAppBadge().catch(() => {});
       }
     }
@@ -310,19 +386,19 @@ export default function FloatingChatWidget({
     // Background push notifications when app is fully closed still need Web Push setup.
     if (
       document.visibilityState === "hidden" &&
-      unreadCount > lastNotifiedUnread &&
+      totalUnreadCount > lastNotifiedUnread &&
       Notification.permission === "granted"
     ) {
       new Notification("New message from PGC Visayas", {
-        body: `You have ${unreadCount} unread message${unreadCount > 1 ? "s" : ""}.`,
+        body: `You have ${totalUnreadCount} unread message${totalUnreadCount > 1 ? "s" : ""}.`,
         icon: "/assets/pgc-logo.png",
         badge: "/assets/pgc-logo.png",
-        tag: `inquiry-${inquiryId}`,
+        tag: `inquiry-${activeThreadId}`,
       });
     }
 
-    setLastNotifiedUnread(unreadCount);
-  }, [inquiryId, lastNotifiedUnread, role, unreadCount]);
+    setLastNotifiedUnread(totalUnreadCount);
+  }, [activeThreadId, lastNotifiedUnread, role, totalUnreadCount]);
 
   const toggleOpen = () => {
     const newOpenState = !isOpen;
@@ -340,13 +416,13 @@ export default function FloatingChatWidget({
       }
     }
 
-    // If opening, mark as read immediately
-    if (newOpenState && inquiryId) {
+    // If opening, mark as read immediately for the active thread
+    if (newOpenState && activeThreadId) {
       const viewerName = role === "admin" && user?.email
         ? getAdminDisplayNameWithIcon(user.email)
         : undefined;
       markMessagesAsRead(
-        inquiryId, 
+        activeThreadId, 
         role, 
         user?.email || user?.uid || "SYSTEM",
         inquiryData?.email || undefined,
@@ -354,6 +430,24 @@ export default function FloatingChatWidget({
         viewerName,
       ).catch(console.error);
     }
+  };
+
+  /** Switch to a different inquiry thread and mark it read immediately. */
+  const handleSwitchThread = (threadId: string) => {
+    setActiveThreadId(threadId);
+    const currentUser = userRef.current;
+    const currentInquiryData = inquiryDataRef.current;
+    const viewerName = role === "admin" && currentUser?.email
+      ? getAdminDisplayNameWithIcon(currentUser.email)
+      : undefined;
+    markMessagesAsRead(
+      threadId,
+      role,
+      currentUser?.email || currentUser?.uid || "SYSTEM",
+      currentInquiryData?.email || undefined,
+      currentInquiryData?.name || undefined,
+      viewerName,
+    ).catch(console.error);
   };
 
   return (
@@ -430,9 +524,37 @@ export default function FloatingChatWidget({
               </button>
             </div>
 
+            {/* ── Thread picker (multi-inquiry clients only) ───────────── */}
+            {allInquiries && allInquiries.length > 1 && (
+              <div className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 border-b border-blue-100 overflow-x-auto scrollbar-hide">
+                {allInquiries.map((inq) => {
+                  const threadUnread = perThreadUnread.get(inq.id) ?? 0;
+                  const isActive = inq.id === activeThreadId;
+                  return (
+                    <button
+                      key={inq.id}
+                      onClick={() => handleSwitchThread(inq.id)}
+                      className={`relative flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium transition-colors whitespace-nowrap ${
+                        isActive
+                          ? "bg-blue-600 text-white shadow-sm"
+                          : "bg-white text-blue-700 border border-blue-200 hover:bg-blue-100"
+                      }`}
+                    >
+                      {formatThreadLabel(inq)}
+                      {threadUnread > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-1 ring-white">
+                          {threadUnread > 9 ? "9+" : threadUnread}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             <div className="h-[400px] w-full bg-white flex flex-col">
               <ChatBox
-                inquiryId={inquiryId}
+                inquiryId={activeThreadId}
                 role={role}
                 variant="floating"
                 clientName={inquiryData?.name}
@@ -447,7 +569,7 @@ export default function FloatingChatWidget({
         whileTap={{ scale: 0.95 }}
         onClick={toggleOpen}
         className={`relative flex items-center justify-center p-4 text-white rounded-full shadow-lg transition-colors ${
-          !isOpen && unreadCount > 0
+          !isOpen && totalUnreadCount > 0
             ? "bg-blue-600 hover:bg-blue-700 ring-4 ring-blue-300 ring-offset-1 animate-pulse"
             : "bg-blue-600 hover:bg-blue-700"
         }`}
@@ -459,10 +581,10 @@ export default function FloatingChatWidget({
         )}
 
         {/* Unread Badge outside */}
-        {!isOpen && unreadCount > 0 && (
+        {!isOpen && totalUnreadCount > 0 && (
           <>
             <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-sm ring-2 ring-white z-10">
-              {unreadCount > 9 ? "9+" : unreadCount}
+              {totalUnreadCount > 9 ? "9+" : totalUnreadCount}
             </span>
             {/* Outer ping ring for flashing effect */}
             <span className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-red-400 animate-ping opacity-60 pointer-events-none" />
