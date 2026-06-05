@@ -11,11 +11,11 @@ export default function Head() {
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:type" content="website" />
-      <meta property="og:url" content="https://pgc-genomebase.vercel.app/inquire" />
+      <meta property="og:url" content="https://omics.pgcvisayas.upv.edu.ph/inquire" />
       <meta name="twitter:card" content="summary" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
-      <link rel="canonical" href="https://pgc-genomebase.vercel.app/inquire" />
+      <link rel="canonical" href="https://omics.pgcvisayas.upv.edu.ph/inquire" />
     </>
   );
 }

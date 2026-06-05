@@ -137,7 +137,7 @@ export default function AdminServiceReport({ projectId, clientEmail, clientName 
       // Send notification email to client
       if (clientEmail) {
         const recipientName = clientName || "Client";
-        const portalUrl = "https://pgc-genomebase.vercel.app/portal";
+        const portalUrl = "https://omics.pgcvisayas.upv.edu.ph/portal";
 
         const emailHtml = `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.6;">

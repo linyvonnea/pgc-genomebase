@@ -708,7 +708,7 @@ export async function createInquiryAction(inquiryData: InquiryFormData & { id?: 
           </div>
           
           <div style="margin-top: 20px;">
-            <a href="https://pgc-genomebase.vercel.app/admin/inquiry" style="background-color: #1e40af; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 14px;">Review in Admin Panel</a>
+            <a href="https://omics.pgcvisayas.upv.edu.ph/admin/inquiry" style="background-color: #1e40af; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block; font-weight: 600; font-size: 14px;">Review in Admin Panel</a>
           </div>
 
           <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8;">
@@ -835,7 +835,7 @@ Submitted: ${new Date().toLocaleString()}
                 <div style="background-color: #f8fafc; padding: 24px; border-radius: 8px; border-left: 4px solid #1e40af; margin: 24px 0;">
                   <h3 style="margin: 0 0 12px 0; color: #1e40af; font-size: 16px; font-weight: 700;">Next Steps</h3>
                   <p style="margin: 0 0 20px 0; font-size: 15px; color: #475569;">Monitor your request status and view quotations via the Client Portal.</p>
-                  <p style="margin: 0;"><a href="https://pgc-genomebase.vercel.app/portal" style="background-color: #1e40af; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 14px; transition: background-color 0.2s;">Access Client Portal</a></p>
+                  <p style="margin: 0;"><a href="https://omics.pgcvisayas.upv.edu.ph/portal" style="background-color: #1e40af; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600; font-size: 14px; transition: background-color 0.2s;">Access Client Portal</a></p>
                 </div>
 
                 ${!inquiryData.returnToPortal ? `
@@ -872,7 +872,7 @@ Dear ${inquiryData.name},
 Thank you for reaching out to PGC Visayas for your research needs. Our team will be reviewing your inquiry and will get back to you as soon as possible.
 
 NEXT STEPS:
-You may monitor the status of your request and view your quotation once available through our Client Portal: https://pgc-genomebase.vercel.app/portal
+You may monitor the status of your request and view your quotation once available through our Client Portal: https://omics.pgcvisayas.upv.edu.ph/portal
 
 ${!inquiryData.returnToPortal ? `ACCESS CREDENTIALS:\nEmail: ${inquiryData.email}\nPassword: ${finalInquiryId}\n\n` : ''}One of our researchers will contact you shortly if additional information is needed. In the meantime, if you have any questions, you may reply through the chatbox in the client portal.
 
@@ -1143,7 +1143,7 @@ export async function updateInquiryAction(
             </div>
             ` : ''}
 
-            <p style="margin: 0 0 20px 0;">If you require additional information, kindly review our <strong><a href="https://pgc-genomebase.vercel.app/faqs" style="color: #2563eb; text-decoration: none;">FAQs</a></strong>, or you can message us through the <strong><a href="https://pgc-genomebase.vercel.app/portal" style="color: #2563eb; text-decoration: none;">client portal chat box</a></strong>.</p>
+            <p style="margin: 0 0 20px 0;">If you require additional information, kindly review our <strong><a href="https://omics.pgcvisayas.upv.edu.ph/faqs" style="color: #2563eb; text-decoration: none;">FAQs</a></strong>, or you can message us through the <strong><a href="https://omics.pgcvisayas.upv.edu.ph/portal" style="color: #2563eb; text-decoration: none;">client portal chat box</a></strong>.</p>
             
             <p style="margin: 0 0 32px 0;">We appreciate your interest in working with us and wish you the best of luck in finding the right facility to support your research needs.</p>
             
@@ -1313,9 +1313,9 @@ export async function sendProjectCancellationEmail(
             </div>
           </div>
 
-          <p style="margin: 0 0 20px 0;">If you wish to resubmit your project, please address the review notes above and complete the submission process again through the <strong><a href="https://pgc-genomebase.vercel.app/portal" style="color: #2563eb; text-decoration: none;">client portal</a></strong>.</p>
+          <p style="margin: 0 0 20px 0;">If you wish to resubmit your project, please address the review notes above and complete the submission process again through the <strong><a href="https://omics.pgcvisayas.upv.edu.ph/portal" style="color: #2563eb; text-decoration: none;">client portal</a></strong>.</p>
           
-          <p style="margin: 0 0 20px 0;">If you have any questions or require further clarification, you may message us through the <strong>portal chat box</strong> or review our <a href="https://pgc-genomebase.vercel.app/faqs" style="color: #2563eb; text-decoration: none;">FAQs</a>.</p>
+          <p style="margin: 0 0 20px 0;">If you have any questions or require further clarification, you may message us through the <strong>portal chat box</strong> or review our <a href="https://omics.pgcvisayas.upv.edu.ph/faqs" style="color: #2563eb; text-decoration: none;">FAQs</a>.</p>
           
           <div style="border-top: 1px solid #f1f5f9; padding-top: 24px;">
             <p style="margin: 0; color: #64748b; font-size: 14px;">Yours in utilizing OMICS for a better Philippines,</p>
@@ -1369,7 +1369,7 @@ export async function sendProjectApprovalEmail(
     const { collection, doc, setDoc } = await import("firebase/firestore");
     const { db } = await import("@/lib/firebase");
 
-    const portalUrl = "https://pgc-genomebase.vercel.app/portal";
+    const portalUrl = "https://omics.pgcvisayas.upv.edu.ph/portal";
 
     const emailHtml = `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
@@ -1415,7 +1415,7 @@ export async function sendProjectApprovalEmail(
           <p style="margin: 0 0 20px 0;">
             If you encounter any issues accessing the portal or have questions about the submission
             requirements, please do not hesitate to reach out via the <strong>portal chat box</strong> or
-            check our <a href="https://pgc-genomebase.vercel.app/faqs" style="color: #2563eb; text-decoration: none;">FAQs</a>.
+            check our <a href="https://omics.pgcvisayas.upv.edu.ph/faqs" style="color: #2563eb; text-decoration: none;">FAQs</a>.
             We look forward to working with you!
           </p>
 
