@@ -278,6 +278,7 @@ interface ProjectDetails {
   title: string;
   lead: string;
   startDate: Date | string;
+  createdAt?: any; // Firestore Timestamp or Date — used as primary sort key
   sendingInstitution: string;
   fundingInstitution: string;
   status: string;
@@ -660,6 +661,7 @@ export default function ClientPortalPage() {
           title: projectData.title || "Untitled Project",
           lead: projectData.lead || "Not specified",
           startDate: projectData.startDate?.toDate?.() || projectData.startDate || new Date(),
+          createdAt: projectData.createdAt,
           sendingInstitution: projectData.sendingInstitution || "Not specified",
           fundingInstitution: projectData.fundingInstitution || "Not specified",
           status: projectData.status || "Pending",
@@ -713,6 +715,7 @@ export default function ClientPortalPage() {
             title: draftProjectRequest.title || "Draft Project",
             lead: draftProjectRequest.projectLead || "Not specified",
             startDate: draftProjectRequest.startDate?.toDate?.() || new Date(),
+            createdAt: draftProjectRequest.createdAt,
             sendingInstitution: draftProjectRequest.sendingInstitution || "Not specified",
             fundingInstitution: draftProjectRequest.fundingInstitution || "Not specified",
             status: statusLabel,
@@ -817,6 +820,7 @@ export default function ClientPortalPage() {
               title: data.title || "Untitled Project",
               lead: data.lead || "Not specified",
               startDate: data.startDate?.toDate?.() || new Date(),
+              createdAt: data.createdAt,
               sendingInstitution: data.sendingInstitution || "Not specified",
               fundingInstitution: data.fundingInstitution || "Not specified",
               status: data.status || "Pending",
@@ -984,14 +988,18 @@ export default function ClientPortalPage() {
       }
     }
 
-    const getProjectTime = (project: ProjectDetails): number => {
-      const raw = project.startDate as any;
-      const date = raw instanceof Date
-        ? raw
-        : raw?.toDate
-          ? raw.toDate()
-          : new Date(raw);
+    const toMs = (raw: any): number => {
+      if (!raw) return 0;
+      const date = raw instanceof Date ? raw : raw?.toDate ? raw.toDate() : new Date(raw);
       return isNaN(date.getTime()) ? 0 : date.getTime();
+    };
+
+    const getProjectTime = (project: ProjectDetails): number => {
+      // Prefer createdAt (when the project was actually created/submitted)
+      // so newly created projects always sort to the top.
+      const byCreated = toMs(project.createdAt);
+      if (byCreated > 0) return byCreated;
+      return toMs(project.startDate);
     };
 
     const allProjects = Array.from(byPid.values()).sort(
@@ -3447,6 +3455,11 @@ export default function ClientPortalPage() {
               projects.map((project) => {
                 if (!project || !project.pid) return null;
                 const isSelected = selectedProjectPid === project.pid;
+                // Highlight (but don't select) projects linked to the currently viewed inquiry
+                const isLinkedToCurrentInquiry =
+                  !isSelected &&
+                  !!inquiryIdParam &&
+                  project.inquiryId === inquiryIdParam;
                 const isDocsExpanded = expandedProjectDocs.has(project.pid);
                 const docs = projectDocuments.get(project.pid);
                 const quotationCount = docs?.quotations.length || 0;
@@ -3477,9 +3490,11 @@ export default function ClientPortalPage() {
                 return (
                   <div key={project.pid} className={cn(
                     "rounded-xl border transition-all duration-200 overflow-hidden group",
-                    isSelected 
-                      ? "bg-blue-50/50 border-[#166FB5] shadow-sm" 
-                      : "bg-white border-slate-200 hover:border-blue-200 hover:shadow-sm"
+                    isSelected
+                      ? "bg-blue-50/50 border-[#166FB5] shadow-sm"
+                      : isLinkedToCurrentInquiry
+                        ? "bg-amber-50/60 border-amber-300 shadow-sm"
+                        : "bg-white border-slate-200 hover:border-blue-200 hover:shadow-sm"
                   )}>
                     {/* Project Header */}
                     <div 
