@@ -215,7 +215,7 @@ export const columns = (statusCatalog: CatalogItem[] = []): ColumnDef<Inquiry>[]
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-1 group w-full cursor-help">
+              <div className="flex items-center gap-1 group w-full cursor-pointer">
                 <span className="truncate text-[11px] font-semibold text-slate-700 flex-1">
                   {name}
                 </span>
@@ -258,7 +258,7 @@ export const columns = (statusCatalog: CatalogItem[] = []): ColumnDef<Inquiry>[]
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="flex items-center gap-1 group w-full cursor-help">
+              <div className="flex items-center gap-1 group w-full cursor-pointer">
                 <span className="truncate text-[11px] text-slate-400 flex-1">
                   {email}
                 </span>
@@ -291,7 +291,7 @@ export const columns = (statusCatalog: CatalogItem[] = []): ColumnDef<Inquiry>[]
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="w-full truncate text-[11px] text-slate-500 font-medium cursor-help">
+              <div className="w-full truncate text-[11px] text-slate-500 font-medium cursor-pointer">
                 {affiliation}
               </div>
             </TooltipTrigger>

@@ -127,6 +127,7 @@ export function MessageNotificationCenter() {
   const unviewedCount = notifications.filter((n) => !n.viewed).length;
 
   return (
+    <>
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
@@ -220,7 +221,9 @@ export function MessageNotificationCenter() {
         </ScrollArea>
       </PopoverContent>
 
-      <AlertDialog
+    </Popover>
+
+    <AlertDialog
         open={confirmDismissOpen}
         onOpenChange={(nextOpen) => {
           setConfirmDismissOpen(nextOpen);
@@ -252,7 +255,7 @@ export function MessageNotificationCenter() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Popover>
+    </>
   );
 }
 
