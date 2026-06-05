@@ -3869,10 +3869,6 @@ export default function ClientPortalPage() {
 
               {/* ── Project Header ────────────────────────── */}
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                {/* Message widget for project view */}
-                {currentInquiry && (
-                  <FloatingChatWidget inquiryId={currentInquiry.id} role="client" />
-                )}
               </div>
 
                 {/* ── Project Information (collapsible) ────────────── */}
@@ -4789,10 +4785,7 @@ export default function ClientPortalPage() {
                       )}
                     </div>
 
-                                          {/* Messages / Communications (Floating) */}
-                      {currentInquiry && (
-                        <FloatingChatWidget inquiryId={currentInquiry.id} role="client" />
-                      )}
+                                          {/* Messages / Communications (Floating) — rendered globally below */}
 
                       {/* Quotation Request Details (previously Inquiry Details Summary) */}
                     {currentInquiry && (
@@ -5579,6 +5572,15 @@ export default function ClientPortalPage() {
           )}
         </main>
       </div>
+
+      {/* ── Global Chat Widget (persists across all inquiry selections) ── */}
+      {allInquiries.length > 0 && (
+        <FloatingChatWidget
+          inquiryId={currentInquiry?.id ?? allInquiries[0]?.id ?? ""}
+          role="client"
+          allInquiries={allInquiries}
+        />
+      )}
 
       {/* ═════ MODALS ═════ */}
 
