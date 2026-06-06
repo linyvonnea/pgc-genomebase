@@ -117,6 +117,9 @@ interface FloatingChatWidgetProps {
   /** When provided (client portal only), the widget aggregates unread counts
    *  across ALL inquiry threads and shows a thread-picker tab bar. */
   allInquiries?: InquirySummary[];
+  /** Called when the user switches inquiry tabs inside the widget, so the
+   *  parent can sync its own selection state (e.g. sidebar highlight). */
+  onThreadSwitch?: (threadId: string) => void;
 }
 
 /** Short display label for an inquiry thread pill */
@@ -141,6 +144,7 @@ export default function FloatingChatWidget({
   role,
   className,
   allInquiries,
+  onThreadSwitch,
 }: FloatingChatWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -435,6 +439,7 @@ export default function FloatingChatWidget({
   /** Switch to a different inquiry thread and mark it read immediately. */
   const handleSwitchThread = (threadId: string) => {
     setActiveThreadId(threadId);
+    onThreadSwitch?.(threadId);
     const currentUser = userRef.current;
     const currentInquiryData = inquiryDataRef.current;
     const viewerName = role === "admin" && currentUser?.email
