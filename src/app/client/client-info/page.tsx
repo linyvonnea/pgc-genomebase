@@ -5579,6 +5579,17 @@ export default function ClientPortalPage() {
           inquiryId={currentInquiry?.id ?? allInquiries[0]?.id ?? ""}
           role="client"
           allInquiries={allInquiries}
+          onThreadSwitch={(threadId) => {
+            if (threadId === inquiryIdParam) return;
+            userSelectedInquiryRef.current = true;
+            userWantsWorkspaceRef.current = true;
+            setSelectedProjectPid(null);
+            setProjectDetails(null);
+            const params = new URLSearchParams();
+            if (emailParam) params.set("email", emailParam);
+            params.set("inquiryId", threadId);
+            router.push(`/client/client-info?${params.toString()}`);
+          }}
         />
       )}
 
