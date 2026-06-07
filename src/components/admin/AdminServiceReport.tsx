@@ -33,14 +33,23 @@ import {
 import { toast } from "sonner";
 import useAuth from "@/hooks/useAuth";
 import { logActivity } from "@/services/activityLogService";
-import { CheckCircle2, Clock, FileText, Loader2, Trash2, Upload, Download, Paperclip, X } from "lucide-react";
+import { CheckCircle2, Clock, FileText, Loader2, Trash2, Upload, Download, Paperclip, X, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ServiceReport } from "@/services/serviceReportService";
+import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
+import { Inquiry } from "@/types/Inquiry";
+import { QuotationRecord } from "@/types/Quotation";
 
 interface Props {
   projectId: string;
   clientEmail?: string;
   clientName?: string;
+  /** Charge slips linked to the project; used to gate service-report uploads. */
+  chargeSlips?: ChargeSlipRecord[];
+  /** Inquiries linked to the project; at least one must be "Approved Client". */
+  linkedInquiries?: Inquiry[];
+  /** Quotations linked to the project; at least one must be "selected". */
+  quotations?: QuotationRecord[];
 }
 
 const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
@@ -52,7 +61,7 @@ function formatFileSize(bytes?: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function AdminServiceReport({ projectId, clientEmail, clientName }: Props) {
+export default function AdminServiceReport({ projectId, clientEmail, clientName, chargeSlips = [], linkedInquiries = [], quotations = [] }: Props) {
   const { adminInfo } = useAuth();
   const [reports, setReports] = useState<ServiceReport[]>([]);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -61,6 +70,30 @@ export default function AdminServiceReport({ projectId, clientEmail, clientName 
   const [deleting, setDeleting] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<ServiceReport | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Gate: at least one charge slip must exist and be "paid",
+  // AND at least one linked inquiry must be "Approved Client",
+  // AND at least one quotation must be "selected".
+  const hasPaidSlip = chargeSlips.some((cs) => (cs.status ?? "").toLowerCase() === "paid");
+  const hasApprovedInquiry = linkedInquiries.some((inq) => inq.status === "Approved Client");
+  const hasSelectedQuotation = quotations.some((q) => (q.status ?? "").toLowerCase() === "selected");
+  const canAttach =
+    linkedInquiries.length > 0 && hasApprovedInquiry &&
+    quotations.length > 0 && hasSelectedQuotation &&
+    chargeSlips.length > 0 && hasPaidSlip;
+  const attachBlockReason = (() => {
+    if (linkedInquiries.length === 0)
+      return "No inquiries are linked to this project. At least one inquiry with an 'Approved Client' status is required.";
+    if (!hasApprovedInquiry)
+      return "None of the linked inquiries have an 'Approved Client' status. Update the inquiry status before attaching a service report.";
+    if (quotations.length === 0)
+      return "No quotations found for this project. At least one quotation with a 'Selected' status is required.";
+    if (!hasSelectedQuotation)
+      return "None of the quotations are marked as Selected. At least one quotation must be Selected before attaching a service report.";
+    if (chargeSlips.length === 0)
+      return "No charge slips found for this project. A paid charge slip is required before attaching a service report.";
+    return "None of the charge slips are marked as Paid. At least one charge slip must be Paid before attaching a service report.";
+  })();
 
   // Real-time listener
   useEffect(() => {
@@ -387,15 +420,24 @@ Philippine Genome Center Visayas`.trim();
             </Button>
           </div>
         ) : (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-xs gap-1.5 border-dashed"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Paperclip className="h-3 w-3" />
-            Attach Service Report
-          </Button>
+          <div className="flex flex-col gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!canAttach}
+              className="h-7 text-xs gap-1.5 border-dashed disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={() => canAttach && fileInputRef.current?.click()}
+            >
+              <Paperclip className="h-3 w-3" />
+              Attach Service Report
+            </Button>
+            {!canAttach && (
+              <p className="flex items-start gap-1 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5 leading-snug">
+                <AlertCircle className="h-3 w-3 mt-0.5 shrink-0" />
+                {attachBlockReason}
+              </p>
+            )}
+          </div>
         )}
       </div>
 
