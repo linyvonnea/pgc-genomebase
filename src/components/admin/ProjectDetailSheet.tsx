@@ -407,6 +407,9 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                       projectId={project.pid}
                       clientEmail={chargeSlips[0]?.clientInfo?.email ?? quotations[0]?.email}
                       clientName={chargeSlips[0]?.clientInfo?.name ?? quotations[0]?.name}
+                      chargeSlips={chargeSlips}
+                      linkedInquiries={linkedInquiries}
+                      quotations={quotations}
                     />
                   </div>
                 )}
