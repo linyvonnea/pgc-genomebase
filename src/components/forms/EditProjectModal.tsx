@@ -31,6 +31,7 @@ import { db, storage } from "@/lib/firebase";
 import { deleteDoc, doc, getDoc, setDoc } from "firebase/firestore";
 import { ref, listAll, deleteObject } from "firebase/storage";
 import { toast } from "sonner";
+import { deleteProjectRequest } from "@/services/projectRequestService";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
@@ -267,6 +268,11 @@ export function EditProjectModal({ project, onSuccess }: EditProjectModalProps) 
       }
 
       await deleteDoc(projectRef);
+
+      // Delete corresponding projectRequests document(s) for each linked inquiry ID
+      const iid = project.iid;
+      const iids: string[] = Array.isArray(iid) ? iid : iid ? [iid] : [];
+      await Promise.allSettled(iids.map((id) => deleteProjectRequest(id)));
 
       // Log the activity
       await logActivity({
