@@ -340,6 +340,17 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                   )}
                 </div>
 
+                {/* Client Form Submissions — admin acknowledge */}
+                {project.pid && (
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <FileText className="h-3.5 w-3.5 text-orange-500" />
+                      <span className="text-xs font-semibold text-slate-700">Uploaded Completed Submission Forms</span>
+                    </div>
+                    <AdminFormSubmissions projectId={project.pid} />
+                  </div>
+                )}
+
                 {/* Charge Slips */}
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
@@ -384,17 +395,6 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                     </div>
                   )}
                 </div>
-
-                {/* Client Form Submissions — admin acknowledge */}
-                {project.pid && (
-                  <div>
-                    <div className="flex items-center gap-1.5 mb-2">
-                      <FileText className="h-3.5 w-3.5 text-orange-500" />
-                      <span className="text-xs font-semibold text-slate-700">Uploaded Completed Submission Forms</span>
-                    </div>
-                    <AdminFormSubmissions projectId={project.pid} />
-                  </div>
-                )}
 
                 {/* Service Reports — admin uploads */}
                 {project.pid && (
