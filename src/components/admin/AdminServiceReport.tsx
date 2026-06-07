@@ -71,16 +71,15 @@ export default function AdminServiceReport({ projectId, clientEmail, clientName,
   const [confirmDelete, setConfirmDelete] = useState<ServiceReport | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Gate: at least one charge slip must exist and be "paid",
-  // AND at least one linked inquiry must be "Approved Client",
-  // AND at least one quotation must be "selected".
-  const hasPaidSlip = chargeSlips.some((cs) => (cs.status ?? "").toLowerCase() === "paid");
+  // Gate: at least one linked inquiry must be "Approved Client",
+  // AND at least one quotation must be "selected",
+  // AND at least one charge slip must exist (any status).
   const hasApprovedInquiry = linkedInquiries.some((inq) => inq.status === "Approved Client");
   const hasSelectedQuotation = quotations.some((q) => (q.status ?? "").toLowerCase() === "selected");
   const canAttach =
     linkedInquiries.length > 0 && hasApprovedInquiry &&
     quotations.length > 0 && hasSelectedQuotation &&
-    chargeSlips.length > 0 && hasPaidSlip;
+    chargeSlips.length > 0;
   const attachBlockReason = (() => {
     if (linkedInquiries.length === 0)
       return "No inquiries are linked to this project. At least one inquiry with an 'Approved Client' status is required.";
@@ -90,9 +89,7 @@ export default function AdminServiceReport({ projectId, clientEmail, clientName,
       return "No quotations found for this project. At least one quotation with a 'Selected' status is required.";
     if (!hasSelectedQuotation)
       return "None of the quotations are marked as Selected. At least one quotation must be Selected before attaching a service report.";
-    if (chargeSlips.length === 0)
-      return "No charge slips found for this project. A paid charge slip is required before attaching a service report.";
-    return "None of the charge slips are marked as Paid. At least one charge slip must be Paid before attaching a service report.";
+    return "No charge slips found for this project. At least one charge slip is required before attaching a service report.";
   })();
 
   // Real-time listener
