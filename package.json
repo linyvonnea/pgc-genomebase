@@ -12,6 +12,7 @@
     "start": "next start",
     "lint": "next lint",
     "backup": "node scripts/firestore-backup.js",
+    "backfill-owner-uids": "node scripts/backfill-owner-uids.cjs",
     "restore": "node scripts/firestore-restore.js",
     "cleanup-backups": "node scripts/cleanup-old-backups.js"
   },
