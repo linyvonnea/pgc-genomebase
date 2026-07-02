@@ -882,7 +882,8 @@ function OfficeCalendarContent() {
                         holidays or closures.
                       </li>
                       <li>
-                        Activities trigger a delay-notice message to clients.
+                        Activities are visible in the office calendar only and
+                        do not trigger automated notices to clients.
                       </li>
                       <li>
                         Birthdays are calendar-only reminders and do not send
