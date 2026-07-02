@@ -102,6 +102,16 @@ service cloud.firestore {
         && (
           !('ownerUid' in request.resource.data)
           || request.resource.data.ownerUid == userUid()
+        )
+        || (
+          !isSignedIn()
+          && request.resource.data.status == 'Pending'
+          && request.resource.data.isApproved == false
+          && request.resource.data.haveSubmitted == false
+          && request.resource.data.name is string
+          && request.resource.data.email is string
+          && request.resource.data.affiliation is string
+          && request.resource.data.designation is string
         );
 
       allow read: if isAdmin()
