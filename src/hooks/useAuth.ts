@@ -25,7 +25,39 @@ export default function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let unsubscribeAdmin: (() => void) | null = null;
+
+    const ensureUserProfile = async (
+      uid: string,
+      email: string,
+      name: string,
+      photoURL: string,
+      role: "admin" | "client",
+    ) => {
+      try {
+        const userRef = doc(db, "users", uid);
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) {
+          await setDoc(userRef, {
+            uid,
+            name,
+            email,
+            photoURL,
+            role,
+            createdAt: new Date().toISOString(),
+          });
+        }
+      } catch (profileError) {
+        console.error("Failed to ensure /users profile:", profileError);
+      }
+    };
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (unsubscribeAdmin) {
+        unsubscribeAdmin();
+        unsubscribeAdmin = null;
+      }
+
       if (!firebaseUser) {
         setUser(null);
         setIsAdmin(false);
@@ -39,70 +71,96 @@ export default function useAuth() {
       const email = firebaseUser.email!;
       const uid = firebaseUser.uid;
 
+      if (!email) {
+        await ensureUserProfile(
+          uid,
+          "",
+          firebaseUser.displayName || "",
+          firebaseUser.photoURL || "",
+          "client",
+        );
+        setIsAdmin(false);
+        setAdminInfo(null);
+        setLoading(false);
+        return;
+      }
+
       // Check if admin (from "admins" collection by email)
       const adminRef = doc(db, "admins", email);
-      
-      // Use real-time listener for admin role changes
-      const unsubscribeAdmin = onSnapshot(adminRef, async (adminSnap) => {
-        if (adminSnap.exists()) {
-          const { name, position, role, status } = adminSnap.data();
 
-          if (status === "deactivated") {
+      // Use real-time listener for admin role changes
+      unsubscribeAdmin = onSnapshot(
+        adminRef,
+        async (adminSnap) => {
+          if (adminSnap.exists()) {
+            const { name, position, role, status } = adminSnap.data();
+
+            if (status === "deactivated") {
+              setIsAdmin(false);
+              setAdminInfo(null);
+              setUser(null);
+              setLoading(false);
+              await firebaseSignOut(auth);
+              return;
+            }
+
+            setIsAdmin(true);
+            setAdminInfo({ name, position, email, role: role || "viewer" });
+
+            await ensureUserProfile(
+              uid,
+              email,
+              name || firebaseUser.displayName || "",
+              firebaseUser.photoURL || "",
+              "admin",
+            );
+          } else {
             setIsAdmin(false);
             setAdminInfo(null);
-            setUser(null);
-            setLoading(false);
-            await firebaseSignOut(auth);
-            return;
-          }
 
-          setIsAdmin(true);
-          setAdminInfo({ name, position, email, role: role || "viewer" });
-
-          // Save admin in /users if not already
-          const userRef = doc(db, "users", uid);
-          const userSnap = await getDoc(userRef);
-          if (!userSnap.exists()) {
-            await setDoc(userRef, {
+            await ensureUserProfile(
               uid,
-              name,
               email,
-              photoURL: firebaseUser.photoURL || "",
-              role: "admin",
-              createdAt: new Date().toISOString(),
-            });
+              firebaseUser.displayName || "",
+              firebaseUser.photoURL || "",
+              "client",
+            );
           }
-        } else {
-          // Save non-admin as client in /users
-          const userRef = doc(db, "users", uid);
-          const userSnap = await getDoc(userRef);
-          if (!userSnap.exists()) {
-            await setDoc(userRef, {
-              uid,
-              name: firebaseUser.displayName || "",
-              email,
-              photoURL: firebaseUser.photoURL || "",
-              role: "client",
-              createdAt: new Date().toISOString(),
-            });
-          }
-        }
 
-        setLoading(false);
-      });
-      
-      // Store unsubscribe function to clean up later
-      return () => unsubscribeAdmin();
+          setLoading(false);
+        },
+        async (error) => {
+          // Non-admin users may be denied read on admins/{email}. Fall back gracefully.
+          console.warn(
+            "Admin role check failed; defaulting to client role.",
+            error,
+          );
+          setIsAdmin(false);
+          setAdminInfo(null);
+
+          await ensureUserProfile(
+            uid,
+            email,
+            firebaseUser.displayName || "",
+            firebaseUser.photoURL || "",
+            "client",
+          );
+          setLoading(false);
+        },
+      );
     });
 
-    return () => unsubscribe();
+    return () => {
+      if (unsubscribeAdmin) unsubscribeAdmin();
+      unsubscribe();
+    };
   }, []);
 
   const signIn = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
-      
+
       // Log the login activity
       try {
         await logActivity({
@@ -141,7 +199,7 @@ export default function useAuth() {
         console.error("Failed to log logout activity:", logError);
       }
     }
-    
+
     await firebaseSignOut(auth);
     setUser(null);
     setIsAdmin(false);

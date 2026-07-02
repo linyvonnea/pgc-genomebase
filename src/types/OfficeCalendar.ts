@@ -83,6 +83,7 @@ export interface OfficeDayEvent {
    */
   closedUntil?: number;
   createdBy: string; // admin email
+  createdByUid?: string; // admin uid (preferred ownership field)
   createdAt: any; // Firestore Timestamp
   updatedAt: any; // Firestore Timestamp
 }

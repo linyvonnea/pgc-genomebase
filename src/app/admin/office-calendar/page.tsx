@@ -400,6 +400,7 @@ function OfficeCalendarContent() {
             ? { closedFrom: form.closedFrom, closedUntil: form.closedUntil }
             : {}),
           createdBy: user?.email ?? "unknown",
+          ...(user?.uid ? { createdByUid: user.uid } : {}),
         });
         toast.success("Event added.");
       }
