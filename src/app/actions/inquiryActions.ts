@@ -1317,8 +1317,7 @@ Philippine Genome Center Visayas
         success: true,
         inquiryId: finalInquiryId,
         emailSent: false,
-        message:
-          "Inquiry submitted successfully, but email notification failed. Admin will be notified manually.",
+        message: "Inquiry submitted successfully.",
         error:
           emailError instanceof Error ? emailError.message : String(emailError),
       };
@@ -1338,8 +1337,8 @@ Philippine Genome Center Visayas
       emailSent: emailDocumentCreated,
       emailDocId: emailDocId,
       message: emailDocumentCreated
-        ? `Inquiry submitted successfully! Email notification sent to ${emailRecipients}. Email ID: ${emailDocId}`
-        : "Inquiry submitted successfully, but email notification may not have been sent.",
+        ? "Inquiry submitted successfully."
+        : "Inquiry submitted successfully.",
     };
   } catch (error) {
     console.error("Error creating inquiry:", error);
