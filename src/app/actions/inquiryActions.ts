@@ -56,7 +56,9 @@ function snapshotExists(snap: any): boolean {
 }
 
 function snapshotData<T = Record<string, any>>(snap: any): T | undefined {
-  return typeof snap?.data === "function" ? (snap.data() as T | undefined) : undefined;
+  return typeof snap?.data === "function"
+    ? (snap.data() as T | undefined)
+    : undefined;
 }
 
 const BIOINFO_OPTION_LABELS: Record<string, string> = {
@@ -514,12 +516,14 @@ export async function testEmailSystem() {
       if (snapshotExists(verifyDoc)) {
         const docData = snapshotData(verifyDoc);
         if (!docData) {
-          console.error("❌ VERIFICATION FAILED: Snapshot exists but data is undefined");
+          console.error(
+            "❌ VERIFICATION FAILED: Snapshot exists but data is undefined",
+          );
         } else {
-        console.log("âœ… VERIFICATION: Document confirmed in Firestore!");
-        console.log("Document data keys:", Object.keys(docData));
-        console.log("Document inquiryId:", docData.inquiryId);
-        console.log("Document to:", docData.to);
+          console.log("âœ… VERIFICATION: Document confirmed in Firestore!");
+          console.log("Document data keys:", Object.keys(docData));
+          console.log("Document inquiryId:", docData.inquiryId);
+          console.log("Document to:", docData.to);
         }
       } else {
         console.error(
