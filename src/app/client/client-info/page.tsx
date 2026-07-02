@@ -767,19 +767,30 @@ export default function ClientPortalPage() {
     );
 
     // 4. Subscribe to Clients (Approved Members)
+    const normalizedEmail = emailParam.trim().toLowerCase();
     const clientsQ = query(
       collection(db, "clients"),
       where("inquiryId", "==", inquiryIdParam),
+      where("email", "==", normalizedEmail),
     );
-    const unsubClients = onSnapshot(clientsQ, (snapshot) => {
-      const clients = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      clientsLoadedRef.current = true;
-      setFetchedClients(clients);
-      setLoading(false); // Assume data is loaded once clients return (or empty)
-    });
+    const unsubClients = onSnapshot(
+      clientsQ,
+      (snapshot) => {
+        const clients = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        clientsLoadedRef.current = true;
+        setFetchedClients(clients);
+        setLoading(false); // Data loaded successfully (or empty result)
+      },
+      (error) => {
+        console.error("Failed to subscribe to clients:", error);
+        clientsLoadedRef.current = true;
+        setFetchedClients([]);
+        setLoading(false); // Prevent infinite spinner on permission/query errors
+      },
+    );
 
     return () => {
       unsubDraftProjects();
