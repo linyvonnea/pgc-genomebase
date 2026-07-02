@@ -17,7 +17,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -137,6 +137,7 @@ export default function QuotationRequestForm() {
   const form = useForm<InquiryFormData>({
     resolver: zodResolver(inquiryFormSchema),
     defaultValues: {
+      email: "",
       name: "",
       affiliation: "",
       designation: "",
@@ -179,6 +180,16 @@ export default function QuotationRequestForm() {
     formState: { errors },
   } = form;
   const formData = watch(); // Watch all form values for reactive updates
+
+  useEffect(() => {
+    const resolvedEmail = user?.email || returnEmail || "";
+    if (resolvedEmail) {
+      setValue("email", resolvedEmail, {
+        shouldDirty: false,
+        shouldValidate: false,
+      });
+    }
+  }, [returnEmail, setValue, user?.email]);
 
   /**
    * Handles service type selection and resets service-specific fields
@@ -413,7 +424,7 @@ export default function QuotationRequestForm() {
       // Merge form data with user email and uploaded file URL
       const submissionData = {
         ...pendingData,
-        email: user?.email || "",
+        email: pendingData.email || user?.email || returnEmail || "",
         methodologyFileUrl,
         id: inquiryId, // Pass the pre-generated ID
         returnToPortal, // Skip credentials in email for returning clients
@@ -433,8 +444,7 @@ export default function QuotationRequestForm() {
         // Inquiry save succeeded. Email delivery is best-effort and should not
         // change the user-facing success state.
         toast.success("Inquiry submitted successfully!", {
-          description:
-            result.message || "Thank you for your submission. Redirecting...",
+          description: "Thank you for your submission. Redirecting...",
           duration: 4000,
         });
 
@@ -536,6 +546,7 @@ export default function QuotationRequestForm() {
           </div>
 
           <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
+            <input type="hidden" {...register("email")} />
             {/* Personal Information Section */}
             <div className="bg-gradient-to-r from-slate-50 to-blue-50/50 rounded-xl p-6 border border-slate-100">
               <h2 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-2">
