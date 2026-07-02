@@ -36,22 +36,23 @@ import {
 } from "@/services/officeCalendarService";
 import { getConfigurationSettings } from "@/services/configurationSettingsService";
 
-const THREADS_COLLECTION      = "quotationThreads";
-const MESSAGES_COLLECTION     = "threadMessages";
+const THREADS_COLLECTION = "quotationThreads";
+const MESSAGES_COLLECTION = "threadMessages";
 const AUTO_REPLY_COOLDOWN_MIN = 60; // one auto-reply per thread per hour maximum
 
 export async function POST(request: Request) {
   try {
     // ── 1. Parse and validate input ──────────────────────────────────────────
     const body = await request.json().catch(() => null);
-    const threadId = typeof body?.threadId === "string" ? body.threadId.trim() : "";
+    const threadId =
+      typeof body?.threadId === "string" ? body.threadId.trim() : "";
 
     if (!threadId || threadId.length < 4 || threadId.length > 128) {
       return NextResponse.json({ error: "Invalid threadId" }, { status: 400 });
     }
 
     // ── 2. Fetch thread — also used for throttle check ───────────────────────
-    const threadRef  = doc(db, THREADS_COLLECTION, threadId);
+    const threadRef = doc(db, THREADS_COLLECTION, threadId);
     const threadSnap = await getDoc(threadRef);
 
     if (!threadSnap.exists()) {
@@ -64,10 +65,11 @@ export async function POST(request: Request) {
     const lastAutoReplyAt: Timestamp | undefined = threadData.lastAutoReplyAt;
 
     if (lastAutoReplyAt) {
-      const cooldownMs  = AUTO_REPLY_COOLDOWN_MIN * 60 * 1000;
-      const lastReplyMs = typeof lastAutoReplyAt.toMillis === "function"
-        ? lastAutoReplyAt.toMillis()
-        : 0;
+      const cooldownMs = AUTO_REPLY_COOLDOWN_MIN * 60 * 1000;
+      const lastReplyMs =
+        typeof lastAutoReplyAt.toMillis === "function"
+          ? lastAutoReplyAt.toMillis()
+          : 0;
       if (Date.now() - lastReplyMs < cooldownMs) {
         return NextResponse.json({ ok: true, skipped: true });
       }
@@ -87,8 +89,8 @@ export async function POST(request: Request) {
 
     const availability = checkAvailabilityNow(allEvents, settings);
 
-    // If fully open with no special condition, no reply needed
-    if (availability.reason === "open") {
+    // If fully open (including office activity days), no auto-reply is needed.
+    if (availability.reason === "open" || availability.reason === "activity") {
       return NextResponse.json({ ok: true, open: true });
     }
 
@@ -117,7 +119,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, reason: availability.reason });
   } catch (error) {
     console.error("auto-reply route error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
-
