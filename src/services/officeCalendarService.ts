@@ -65,7 +65,9 @@ export async function getOfficeCalendarSettings(): Promise<OfficeCalendarSetting
     if (snap.exists()) {
       const data = snap.data();
       return {
-        weekendDays: Array.isArray(data.weekendDays) ? data.weekendDays : DEFAULT_WEEKEND_DAYS,
+        weekendDays: Array.isArray(data.weekendDays)
+          ? data.weekendDays
+          : DEFAULT_WEEKEND_DAYS,
         officeHours: data.officeHours ?? DEFAULT_OFFICE_HOURS,
         updatedAt: data.updatedAt,
         updatedBy: data.updatedBy,
@@ -80,8 +82,10 @@ export async function getOfficeCalendarSettings(): Promise<OfficeCalendarSetting
 
 /** Persist schedule settings (supports partial updates). */
 export async function saveOfficeCalendarSettings(
-  settings: Partial<Pick<OfficeCalendarSettings, "weekendDays" | "officeHours">>,
-  updatedBy: string
+  settings: Partial<
+    Pick<OfficeCalendarSettings, "weekendDays" | "officeHours">
+  >,
+  updatedBy: string,
 ): Promise<void> {
   const ref = doc(db, SETTINGS_COLLECTION, CALENDAR_SETTINGS_DOC);
   await setDoc(
@@ -91,7 +95,7 @@ export async function saveOfficeCalendarSettings(
       updatedBy,
       updatedAt: serverTimestamp(),
     },
-    { merge: true }
+    { merge: true },
   );
 }
 
@@ -99,7 +103,7 @@ export async function saveOfficeCalendarSettings(
 
 /** Add a new calendar event. Returns the new document ID. */
 export async function addOfficeEvent(
-  event: Omit<OfficeDayEvent, "id" | "createdAt" | "updatedAt">
+  event: Omit<OfficeDayEvent, "id" | "createdAt" | "updatedAt">,
 ): Promise<string> {
   const ref = await addDoc(collection(db, EVENTS_COLLECTION), {
     ...event,
@@ -112,11 +116,14 @@ export async function addOfficeEvent(
 /** Update an existing calendar event (partial update). */
 export async function updateOfficeEvent(
   id: string,
-  updates: Partial<Omit<OfficeDayEvent, "id" | "createdAt">>
+  updates: Partial<Omit<OfficeDayEvent, "id" | "createdAt">>,
 ): Promise<void> {
   const ref = doc(db, EVENTS_COLLECTION, id);
+  const sanitizedUpdates = Object.fromEntries(
+    Object.entries(updates).filter(([, value]) => value !== undefined),
+  );
   await updateDoc(ref, {
-    ...updates,
+    ...sanitizedUpdates,
     updatedAt: serverTimestamp(),
   });
 }
@@ -132,9 +139,9 @@ export async function deleteOfficeEvent(id: string): Promise<void> {
  */
 export async function getAllOfficeEvents(): Promise<OfficeDayEvent[]> {
   const snap = await getDocs(
-    query(collection(db, EVENTS_COLLECTION), orderBy("date", "asc"))
+    query(collection(db, EVENTS_COLLECTION), orderBy("date", "asc")),
   );
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as OfficeDayEvent));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as OfficeDayEvent);
 }
 
 /**
@@ -142,11 +149,13 @@ export async function getAllOfficeEvents(): Promise<OfficeDayEvent[]> {
  * Returns an unsubscribe function.
  */
 export function subscribeToOfficeEvents(
-  onChange: (events: OfficeDayEvent[]) => void
+  onChange: (events: OfficeDayEvent[]) => void,
 ): () => void {
   const q = query(collection(db, EVENTS_COLLECTION), orderBy("date", "asc"));
   return onSnapshot(q, (snap) => {
-    const events = snap.docs.map((d) => ({ id: d.id, ...d.data() } as OfficeDayEvent));
+    const events = snap.docs.map(
+      (d) => ({ id: d.id, ...d.data() }) as OfficeDayEvent,
+    );
     onChange(events);
   });
 }
@@ -159,7 +168,7 @@ export function subscribeToOfficeEvents(
  */
 export function getEventsForDate(
   date: string,
-  allEvents: OfficeDayEvent[]
+  allEvents: OfficeDayEvent[],
 ): OfficeDayEvent[] {
   const [year, month, day] = date.split("-");
   return allEvents.filter((ev) => {
@@ -183,7 +192,7 @@ export function getEventsForDate(
 export function getAvailabilityMessage(
   date: string,
   allEvents: OfficeDayEvent[],
-  weekendDays: number[]
+  weekendDays: number[],
 ): string | null {
   const dateObj = new Date(date + "T00:00:00");
   const dayOfWeek = dateObj.getDay();
@@ -229,17 +238,17 @@ export function getPhilippineDateTime(now: Date = new Date()): {
 } {
   const fmt = new Intl.DateTimeFormat("en-US", {
     timeZone: MANILA_TZ,
-    year:    "numeric",
-    month:   "2-digit",
-    day:     "2-digit",
-    hour:    "2-digit",
-    minute:  "2-digit",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
     weekday: "short",
-    hour12:  false,
+    hour12: false,
   });
 
   const parts = Object.fromEntries(
-    fmt.formatToParts(now).map((p) => [p.type, p.value])
+    fmt.formatToParts(now).map((p) => [p.type, p.value]),
   );
 
   // hour12:false can emit "24" for midnight — normalise to 0
@@ -247,7 +256,13 @@ export function getPhilippineDateTime(now: Date = new Date()): {
   if (hour === 24) hour = 0;
 
   const WEEKDAY_INDEX: Record<string, number> = {
-    Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
   };
   const dayOfWeek = WEEKDAY_INDEX[parts.weekday ?? ""] ?? 0;
 
@@ -272,7 +287,7 @@ export function getPhilippineDateTime(now: Date = new Date()): {
 export function checkAvailabilityNow(
   allEvents: OfficeDayEvent[],
   settings: OfficeCalendarSettings,
-  now: Date = new Date()
+  now: Date = new Date(),
 ): OfficeAvailabilityResult {
   const { dateStr, hour, dayOfWeek } = getPhilippineDateTime(now);
   const { weekendDays, officeHours } = settings;
@@ -283,7 +298,7 @@ export function checkAvailabilityNow(
     const display = h === 0 ? 12 : h > 12 ? h - 12 : h;
     return `${display}:00 ${suffix}`;
   };
-  const openStr  = formatHours(officeHours.start);
+  const openStr = formatHours(officeHours.start);
   const closeStr = formatHours(officeHours.end);
   const hoursNote = `Office Hours: ${openStr} – ${closeStr}, Monday to Friday`;
 
@@ -329,7 +344,8 @@ export function checkAvailabilityNow(
 
   // 4. Outside office hours (weekday but wrong time)
   if (hour < officeHours.start || hour >= officeHours.end) {
-    const timeOfDay = hour < officeHours.start ? "not yet open" : "already closed";
+    const timeOfDay =
+      hour < officeHours.start ? "not yet open" : "already closed";
     return {
       isOpen: false,
       reason: "outside_hours",
@@ -342,14 +358,15 @@ export function checkAvailabilityNow(
 
   // 5. Partial closure — a specific time window when the office is closed today
   const partial = events.find(
-    (e) => e.type === "partial_closure" &&
+    (e) =>
+      e.type === "partial_closure" &&
       typeof e.closedFrom === "number" &&
       typeof e.closedUntil === "number" &&
       hour >= e.closedFrom! &&
-      hour < e.closedUntil!
+      hour < e.closedUntil!,
   );
   if (partial) {
-    const fromStr  = formatHours(partial.closedFrom!);
+    const fromStr = formatHours(partial.closedFrom!);
     const untilStr = formatHours(partial.closedUntil!);
     const desc = partial.description ? ` ${partial.description}` : "";
     return {
