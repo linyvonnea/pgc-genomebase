@@ -1054,6 +1054,7 @@ Submitted: ${new Date().toLocaleString()}
     let emailDocId = "";
     let adminEmailError: string | null = null;
     let clientEmailError: string | null = null;
+    const emailFallbackDocs: Record<string, unknown>[] = [];
 
     if (emailRecipients.length > 0) {
       try {
@@ -1187,6 +1188,7 @@ Submitted: ${new Date().toLocaleString()}
       } catch (emailError) {
         adminEmailError =
           emailError instanceof Error ? emailError.message : String(emailError);
+        emailFallbackDocs.push(emailData as Record<string, unknown>);
         console.error("âŒ EMAIL CREATION FAILED:", emailError);
         console.error("Error type:", typeof emailError);
         console.error("Error constructor:", emailError?.constructor?.name);
@@ -1325,6 +1327,17 @@ Philippine Genome Center Visayas
       }
     } catch (error) {
       clientEmailError = error instanceof Error ? error.message : String(error);
+      if (inquiryData.email) {
+        emailFallbackDocs.push({
+          to: [inquiryData.email],
+          inquiryId: finalInquiryId,
+          message: {
+            subject: "Inquiry Received: PGC Visayas",
+            text: `Inquiry Received - PGC Visayas\n\nDear ${inquiryData.name},\n\nThank you for reaching out to PGC Visayas for your research needs. Our team will be reviewing your inquiry and will get back to you as soon as possible.`,
+            html: `<p>Inquiry Received - PGC Visayas</p><p>Dear ${inquiryData.name},</p><p>Thank you for reaching out to PGC Visayas for your research needs. Our team will be reviewing your inquiry and will get back to you as soon as possible.</p>`,
+          },
+        });
+      }
       console.error("âŒ CLIENT EMAIL FAILED:", error);
       // Continue execution even if client email fails
     }
@@ -1353,6 +1366,8 @@ Philippine Genome Center Visayas
             error:
               [adminEmailError, clientEmailError].filter(Boolean).join(" | ") ||
               undefined,
+            emailFallbackDocs:
+              emailFallbackDocs.length > 0 ? emailFallbackDocs : undefined,
           }
         : {}),
     };

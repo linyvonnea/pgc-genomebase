@@ -80,7 +80,36 @@ service cloud.firestore {
     }
 
     match /mail/{mailId} {
-      allow read, write: if isAdmin();
+      allow read, update, delete: if isAdmin();
+      allow create: if isAdmin()
+        || (
+          isSignedIn()
+          && request.resource.data.keys().hasOnly(['to', 'message', 'inquiryId'])
+          && request.resource.data.inquiryId is string
+          && request.resource.data.to is list
+          && request.resource.data.to.size() >= 1
+          && request.resource.data.to.size() <= 5
+          && request.resource.data.message is map
+          && request.resource.data.message.keys().hasOnly(['subject', 'text', 'html'])
+          && request.resource.data.message.subject is string
+          && request.resource.data.message.subject.size() > 0
+          && request.resource.data.message.subject.size() <= 200
+          && request.resource.data.message.text is string
+          && request.resource.data.message.html is string
+          && (
+            (
+              request.resource.data.to.size() == 1
+              && request.resource.data.to[0] == userEmail()
+            )
+            || (
+              request.resource.data.to[0] in ['mdayon1@up.edu.ph', 'madayon1@up.edu.ph', 'sequencing.pgc.upvisayas@up.edu.ph', 'bioinfo.pgc.upvisayas@up.edu.ph']
+              && (request.resource.data.to.size() < 2 || request.resource.data.to[1] in ['mdayon1@up.edu.ph', 'madayon1@up.edu.ph', 'sequencing.pgc.upvisayas@up.edu.ph', 'bioinfo.pgc.upvisayas@up.edu.ph'])
+              && (request.resource.data.to.size() < 3 || request.resource.data.to[2] in ['mdayon1@up.edu.ph', 'madayon1@up.edu.ph', 'sequencing.pgc.upvisayas@up.edu.ph', 'bioinfo.pgc.upvisayas@up.edu.ph'])
+              && (request.resource.data.to.size() < 4 || request.resource.data.to[3] in ['mdayon1@up.edu.ph', 'madayon1@up.edu.ph', 'sequencing.pgc.upvisayas@up.edu.ph', 'bioinfo.pgc.upvisayas@up.edu.ph'])
+              && (request.resource.data.to.size() < 5 || request.resource.data.to[4] in ['mdayon1@up.edu.ph', 'madayon1@up.edu.ph', 'sequencing.pgc.upvisayas@up.edu.ph', 'bioinfo.pgc.upvisayas@up.edu.ph'])
+            )
+          )
+        );
     }
 
     match /officeCalendar/{eventId} {
