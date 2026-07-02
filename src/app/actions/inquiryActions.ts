@@ -47,8 +47,9 @@ async function addMailDocument(data: Record<string, unknown>) {
     return { id: ref.id, path: ref.path, viaAdmin: true as const };
   }
 
-  const ref = await addDoc(collection(db, "mail"), data);
-  return { id: ref.id, path: ref.path, viaAdmin: false as const };
+  throw new Error(
+    "Firebase Admin is not initialized. Cannot write email documents to mail collection.",
+  );
 }
 
 function snapshotExists(snap: any): boolean {
@@ -785,8 +786,14 @@ export async function createInquiryAction(
         ? config.bioinformaticsWorkflowNotifications || []
         : [];
 
+    const requiredAdminRecipients = ["mdayon1@up.edu.ph"];
+
     const emailRecipients = Array.from(
-      new Set([...baseRecipients, ...bioinfoWorkflowRecipients]),
+      new Set([
+        ...baseRecipients,
+        ...bioinfoWorkflowRecipients,
+        ...requiredAdminRecipients,
+      ]),
     );
 
     console.log(

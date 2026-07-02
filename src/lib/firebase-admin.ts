@@ -7,14 +7,25 @@ function parseServiceAccountFromEnv() {
   // Option 1: full JSON string in one env var
   const rawJson = process.env.FIREBASE_SERVICE_ACCOUNT;
   if (rawJson) {
-    return JSON.parse(rawJson);
+    try {
+      return JSON.parse(rawJson);
+    } catch (error) {
+      console.error("❌ Invalid FIREBASE_SERVICE_ACCOUNT JSON:", error);
+    }
   }
 
   // Option 2: base64-encoded full JSON (common workaround for CI/CD env handling)
   const rawBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
   if (rawBase64) {
-    const decoded = Buffer.from(rawBase64, "base64").toString("utf-8");
-    return JSON.parse(decoded);
+    try {
+      const decoded = Buffer.from(rawBase64, "base64").toString("utf-8");
+      return JSON.parse(decoded);
+    } catch (error) {
+      console.error(
+        "❌ Invalid FIREBASE_SERVICE_ACCOUNT_BASE64 payload:",
+        error,
+      );
+    }
   }
 
   // Option 3: split fields
@@ -33,24 +44,42 @@ function parseServiceAccountFromEnv() {
   return null;
 }
 
+function initializeAdminApp() {
+  const serviceAccount = parseServiceAccountFromEnv();
+  if (serviceAccount) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+    console.log("✅ Firebase Admin initialized via environment variables");
+    return;
+  }
+
+  const keyPath = path.join(process.cwd(), "scripts", "serviceAccountKey.json");
+  if (fs.existsSync(keyPath)) {
+    const serviceAccountFile = JSON.parse(fs.readFileSync(keyPath, "utf-8"));
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccountFile),
+    });
+    console.log("✅ [Firebase Admin] Initialized via serviceAccountKey.json");
+    return;
+  }
+
+  // Final fallback for GCP-hosted environments using workload identity.
+  const projectId =
+    process.env.FIREBASE_PROJECT_ID ||
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  admin.initializeApp({
+    credential: admin.credential.applicationDefault(),
+    ...(projectId ? { projectId } : {}),
+  });
+  console.log(
+    "✅ [Firebase Admin] Initialized via application default credentials",
+  );
+}
+
 if (!admin.apps.length) {
   try {
-    const serviceAccount = parseServiceAccountFromEnv();
-    if (serviceAccount) {
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-      });
-      console.log("✅ Firebase Admin initialized via environment variables");
-    } else {
-      const keyPath = path.join(process.cwd(), "scripts", "serviceAccountKey.json");
-      if (fs.existsSync(keyPath)) {
-        const serviceAccount = JSON.parse(fs.readFileSync(keyPath, "utf-8"));
-        admin.initializeApp({
-          credential: admin.credential.cert(serviceAccount),
-        });
-        console.log("✅ [Firebase Admin] Initialized via serviceAccountKey.json");
-      }
-    }
+    initializeAdminApp();
   } catch (error) {
     console.error("❌ Firebase Admin initialization error:", error);
   }
@@ -66,7 +95,10 @@ export function getAdminDb() {
 
 export const adminDb = getAdminDb();
 if (!adminDb) {
-  console.error("❌ adminDb failed to initialize at module level. admin.apps.length:", admin.apps.length);
+  console.error(
+    "❌ adminDb failed to initialize at module level. admin.apps.length:",
+    admin.apps.length,
+  );
 }
 
 export function getFirestoreDb() {
@@ -91,8 +123,8 @@ export function getStorageBucket() {
     configuredBucket && configuredBucket.trim()
       ? normalizeBucketName(configuredBucket)
       : admin.app().options.projectId
-      ? `${admin.app().options.projectId}.appspot.com`
-      : "";
+        ? `${admin.app().options.projectId}.appspot.com`
+        : "";
 
   if (!bucketName) return null;
 

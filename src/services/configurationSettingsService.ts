@@ -29,6 +29,7 @@ export const DEFAULT_INQUIRY_NOTIFICATION_GROUPS: InquiryNotificationGroup[] = [
     serviceFilters: ["all"],
     recipients: [
       "sequencing.pgc.upvisayas@up.edu.ph",
+      "mdayon1@up.edu.ph",
       "madayon1@up.edu.ph",
     ],
     enabled: true,
@@ -90,17 +91,17 @@ export async function getConfigurationSettings(): Promise<ConfigurationSettings>
         ...(data.portalFeatures || {}),
       },
       inquiryNotifications:
-        (data.inquiryNotifications && data.inquiryNotifications.length > 0)
+        data.inquiryNotifications && data.inquiryNotifications.length > 0
           ? data.inquiryNotifications
           : defaults.inquiryNotifications,
-      receiptNotifications:
-        Array.isArray(data.receiptNotifications)
-          ? data.receiptNotifications
-          : defaults.receiptNotifications,
-      bioinformaticsWorkflowNotifications:
-        Array.isArray(data.bioinformaticsWorkflowNotifications)
-          ? data.bioinformaticsWorkflowNotifications
-          : [],
+      receiptNotifications: Array.isArray(data.receiptNotifications)
+        ? data.receiptNotifications
+        : defaults.receiptNotifications,
+      bioinformaticsWorkflowNotifications: Array.isArray(
+        data.bioinformaticsWorkflowNotifications,
+      )
+        ? data.bioinformaticsWorkflowNotifications
+        : [],
     };
   } catch (error) {
     console.error("Error fetching configuration settings:", error);
