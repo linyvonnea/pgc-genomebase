@@ -1040,67 +1040,197 @@ Submitted: ${new Date().toLocaleString()}
       textLength: emailData.message.text.length,
     });
 
-    // Attempt to create email document with enhanced error handling
+    // Attempt to create email documents with isolated error handling.
+    // Admin and client notifications should not block each other.
     let emailDocumentCreated = false;
+    let clientEmailSent = false;
     let emailDocId = "";
+    let adminEmailError: string | null = null;
+    let clientEmailError: string | null = null;
 
-    try {
-      console.log("EMAIL DEBUG: Attempting to create email document...");
-      console.log("EMAIL DEBUG: Firestore DB check:", {
-        isDbDefined: !!db,
-        dbType: typeof db,
-        hasCollection: typeof collection === "function",
-        hasAddDoc: typeof addDoc === "function",
-      });
-
-      // Check if Firestore connection is working
-      console.log(
-        "EMAIL DEBUG: Mail collection reference created successfully",
-      );
-
-      // Log the exact data being sent
-      console.log(
-        "EMAIL DEBUG: Email data to be sent:",
-        JSON.stringify(
-          {
-            to: emailData.to,
-            inquiryId: emailData.inquiryId,
-            hasMessage: !!emailData.message,
-            messageKeys: Object.keys(emailData.message),
-          },
-          null,
-          2,
-        ),
-      );
-
-      console.log(
-        "EMAIL DEBUG: Creating email for recipients:",
-        emailData.to.join(", "),
-      );
-
-      // Create the email document
-      console.log("EMAIL DEBUG: Calling mail write...");
-      const emailDocRef = await addMailDocument(
-        emailData as Record<string, unknown>,
-      );
-      emailDocumentCreated = true;
-      emailDocId = emailDocRef.id;
-
-      console.log("âœ… EMAIL SUCCESS: Email document created!");
-      console.log("Email Document ID:", emailDocRef.id);
-      console.log("Email Document Path:", emailDocRef.path);
-      console.log("Email Document Full Path:", `mail/${emailDocRef.id}`);
-
-      // === CLIENT CONFIRMATION EMAIL ===
-      // Send automated confirmation email to the client with credentials
+    if (emailRecipients.length > 0) {
       try {
-        if (inquiryData.email) {
-          console.log(
-            "EMAIL DEBUG: Creating client confirmation email for:",
-            inquiryData.email,
-          );
+        console.log(
+          "EMAIL DEBUG: Attempting to create admin email document...",
+        );
+        console.log("EMAIL DEBUG: Firestore DB check:", {
+          isDbDefined: !!db,
+          dbType: typeof db,
+          hasCollection: typeof collection === "function",
+          hasAddDoc: typeof addDoc === "function",
+        });
 
-          const clientEmailHtml = `
+        console.log(
+          "EMAIL DEBUG: Email data to be sent:",
+          JSON.stringify(
+            {
+              to: emailData.to,
+              inquiryId: emailData.inquiryId,
+              hasMessage: !!emailData.message,
+              messageKeys: Object.keys(emailData.message),
+            },
+            null,
+            2,
+          ),
+        );
+
+        console.log(
+          "EMAIL DEBUG: Creating email for recipients:",
+          emailData.to.join(", "),
+        );
+
+        const emailDocRef = await addMailDocument(
+          emailData as Record<string, unknown>,
+        );
+        emailDocumentCreated = true;
+        emailDocId = emailDocRef.id;
+
+        console.log("âœ… EMAIL SUCCESS: Admin email document created!");
+        console.log("Email Document ID:", emailDocRef.id);
+        console.log("Email Document Path:", emailDocRef.path);
+        console.log("Email Document Full Path:", `mail/${emailDocRef.id}`);
+
+        // Immediately verify the document exists in Firestore
+        console.log("EMAIL DEBUG: Starting immediate verification...");
+        try {
+          const verifyDoc = emailDocRef.viaAdmin
+            ? await adminDb!.collection("mail").doc(emailDocRef.id).get()
+            : await getDoc(doc(db, "mail", emailDocRef.id));
+          if (snapshotExists(verifyDoc)) {
+            const docData = snapshotData(verifyDoc);
+            if (!docData) {
+              console.error(
+                "❌ VERIFICATION FAILED: Email document exists but payload is unavailable",
+              );
+            } else {
+              console.log(
+                "âœ… VERIFICATION SUCCESS: Email document confirmed in Firestore!",
+              );
+              console.log("Verified data:", {
+                inquiryId: docData.inquiryId,
+                recipients: docData.to,
+                hasMessage: !!docData.message,
+                subject: docData.message?.subject,
+              });
+            }
+          } else {
+            console.error(
+              "âŒ VERIFICATION FAILED: Email document not found immediately after creation!",
+            );
+            console.error("Expected document at:", `mail/${emailDocRef.id}`);
+          }
+        } catch (verifyError) {
+          console.error("âŒ VERIFICATION ERROR:", verifyError);
+          console.error("Verify error details:", {
+            name: verifyError instanceof Error ? verifyError.name : "Unknown",
+            message:
+              verifyError instanceof Error
+                ? verifyError.message
+                : String(verifyError),
+          });
+        }
+
+        // Enhanced status checking with better error handling
+        setTimeout(async () => {
+          try {
+            console.log(
+              "EMAIL DEBUG: Checking email document status after 5 seconds...",
+            );
+            const emailDoc = await getDoc(doc(db, "mail", emailDocRef.id));
+
+            if (emailDoc.exists()) {
+              const emailStatus = emailDoc.data();
+              console.log(
+                "EMAIL STATUS AFTER 5s:",
+                JSON.stringify(emailStatus, null, 2),
+              );
+
+              // Check for delivery status
+              if (emailStatus.delivery) {
+                if (emailStatus.delivery.state === "SUCCESS") {
+                  console.log("âœ… EMAIL DELIVERED: Email sent successfully!");
+                } else if (emailStatus.delivery.state === "ERROR") {
+                  console.error(
+                    "âŒ EMAIL DELIVERY FAILED:",
+                    emailStatus.delivery.error,
+                  );
+                } else {
+                  console.log(
+                    "ðŸ“§ EMAIL PENDING: Email state:",
+                    emailStatus.delivery.state,
+                  );
+                }
+              } else {
+                console.log(
+                  "â³ EMAIL PENDING: No delivery status yet (still processing)",
+                );
+              }
+            } else {
+              console.log(
+                "âš ï¸ EMAIL WARNING: Email document no longer exists (may have been processed and deleted by extension)",
+              );
+            }
+          } catch (checkError) {
+            console.error(
+              "EMAIL DEBUG ERROR: Could not check email status:",
+              checkError,
+            );
+          }
+        }, 5000);
+      } catch (emailError) {
+        adminEmailError =
+          emailError instanceof Error ? emailError.message : String(emailError);
+        console.error("âŒ EMAIL CREATION FAILED:", emailError);
+        console.error("Error type:", typeof emailError);
+        console.error("Error constructor:", emailError?.constructor?.name);
+        console.error(
+          "Full error object:",
+          JSON.stringify(emailError, Object.getOwnPropertyNames(emailError)),
+        );
+        console.error("Error details:", {
+          name: emailError instanceof Error ? emailError.name : "Unknown",
+          message:
+            emailError instanceof Error
+              ? emailError.message
+              : String(emailError),
+          code: (emailError as any)?.code || "No code",
+          stack:
+            emailError instanceof Error ? emailError.stack : "No stack trace",
+        });
+
+        // Log additional debugging information
+        console.log("EMAIL DEBUG: Failure context:", {
+          hasDB: !!db,
+          dbType: typeof db,
+          hasCollection: typeof collection === "function",
+          hasAddDoc: typeof addDoc === "function",
+          emailDataSize: JSON.stringify(emailData).length,
+          emailDataKeys: Object.keys(emailData),
+          timestamp: new Date().toISOString(),
+          inquiryIdExists: !!finalInquiryId,
+        });
+
+        console.log(
+          "EMAIL DEBUG: Continuing with inquiry creation despite admin email failure",
+        );
+      }
+    } else {
+      console.warn(
+        "EMAIL DEBUG: No admin notification recipients configured for service:",
+        inquiryData.service,
+      );
+    }
+
+    // === CLIENT CONFIRMATION EMAIL ===
+    // Send automated confirmation email to the client even if admin email fails.
+    try {
+      if (inquiryData.email) {
+        console.log(
+          "EMAIL DEBUG: Creating client confirmation email for:",
+          inquiryData.email,
+        );
+
+        const clientEmailHtml = `
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.6;">
             <div style="background-color: #ffffff; padding: 0; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
               <!-- Header -->
@@ -1149,7 +1279,7 @@ Submitted: ${new Date().toLocaleString()}
           </div>
         `;
 
-          const clientEmailText = `
+        const clientEmailText = `
 Inquiry Received - PGC Visayas
 
 Dear ${inquiryData.name},
@@ -1165,166 +1295,36 @@ Yours in utilizing OMICS for a better Philippines,
 Philippine Genome Center Visayas
         `.trim();
 
-          const clientEmailData = {
-            to: [inquiryData.email],
-            inquiryId: finalInquiryId,
-            message: {
-              subject: "Inquiry Received: PGC Visayas",
-              text: clientEmailText,
-              html: clientEmailHtml,
-            },
-          };
+        const clientEmailData = {
+          to: [inquiryData.email],
+          inquiryId: finalInquiryId,
+          message: {
+            subject: "Inquiry Received: PGC Visayas",
+            text: clientEmailText,
+            html: clientEmailHtml,
+          },
+        };
 
-          await addMailDocument(clientEmailData as Record<string, unknown>);
-          console.log(
-            "âœ… EMAIL SUCCESS: Client confirmation email sent to:",
-            inquiryData.email,
-          );
-        } else {
-          console.log(
-            "âš ï¸ EMAIL WARNING: No client email provided, skipping confirmation email",
-          );
-        }
-      } catch (clientEmailError) {
-        console.error("âŒ CLIENT EMAIL FAILED:", clientEmailError);
-        // Continue execution even if client email fails
+        await addMailDocument(clientEmailData as Record<string, unknown>);
+        clientEmailSent = true;
+        console.log(
+          "âœ… EMAIL SUCCESS: Client confirmation email sent to:",
+          inquiryData.email,
+        );
+      } else {
+        console.log(
+          "âš ï¸ EMAIL WARNING: No client email provided, skipping confirmation email",
+        );
       }
-
-      // Immediately verify the document exists in Firestore
-      console.log("EMAIL DEBUG: Starting immediate verification...");
-      try {
-        const verifyDoc = emailDocRef.viaAdmin
-          ? await adminDb!.collection("mail").doc(emailDocRef.id).get()
-          : await getDoc(doc(db, "mail", emailDocRef.id));
-        if (snapshotExists(verifyDoc)) {
-          const docData = snapshotData(verifyDoc);
-          if (!docData) {
-            console.error(
-              "❌ VERIFICATION FAILED: Email document exists but payload is unavailable",
-            );
-            return;
-          }
-          console.log(
-            "âœ… VERIFICATION SUCCESS: Email document confirmed in Firestore!",
-          );
-          console.log("Verified data:", {
-            inquiryId: docData.inquiryId,
-            recipients: docData.to,
-            hasMessage: !!docData.message,
-            subject: docData.message?.subject,
-          });
-        } else {
-          console.error(
-            "âŒ VERIFICATION FAILED: Email document not found immediately after creation!",
-          );
-          console.error("Expected document at:", `mail/${emailDocRef.id}`);
-        }
-      } catch (verifyError) {
-        console.error("âŒ VERIFICATION ERROR:", verifyError);
-        console.error("Verify error details:", {
-          name: verifyError instanceof Error ? verifyError.name : "Unknown",
-          message:
-            verifyError instanceof Error
-              ? verifyError.message
-              : String(verifyError),
-        });
-      }
-
-      // Enhanced status checking with better error handling
-      setTimeout(async () => {
-        try {
-          console.log(
-            "EMAIL DEBUG: Checking email document status after 5 seconds...",
-          );
-          const emailDoc = await getDoc(doc(db, "mail", emailDocRef.id));
-
-          if (emailDoc.exists()) {
-            const emailStatus = emailDoc.data();
-            console.log(
-              "EMAIL STATUS AFTER 5s:",
-              JSON.stringify(emailStatus, null, 2),
-            );
-
-            // Check for delivery status
-            if (emailStatus.delivery) {
-              if (emailStatus.delivery.state === "SUCCESS") {
-                console.log("âœ… EMAIL DELIVERED: Email sent successfully!");
-              } else if (emailStatus.delivery.state === "ERROR") {
-                console.error(
-                  "âŒ EMAIL DELIVERY FAILED:",
-                  emailStatus.delivery.error,
-                );
-              } else {
-                console.log(
-                  "ðŸ“§ EMAIL PENDING: Email state:",
-                  emailStatus.delivery.state,
-                );
-              }
-            } else {
-              console.log(
-                "â³ EMAIL PENDING: No delivery status yet (still processing)",
-              );
-            }
-          } else {
-            console.log(
-              "âš ï¸ EMAIL WARNING: Email document no longer exists (may have been processed and deleted by extension)",
-            );
-          }
-        } catch (checkError) {
-          console.error(
-            "EMAIL DEBUG ERROR: Could not check email status:",
-            checkError,
-          );
-        }
-      }, 5000);
-    } catch (emailError) {
-      console.error("âŒ EMAIL CREATION FAILED:", emailError);
-      console.error("Error type:", typeof emailError);
-      console.error("Error constructor:", emailError?.constructor?.name);
-      console.error(
-        "Full error object:",
-        JSON.stringify(emailError, Object.getOwnPropertyNames(emailError)),
-      );
-      console.error("Error details:", {
-        name: emailError instanceof Error ? emailError.name : "Unknown",
-        message:
-          emailError instanceof Error ? emailError.message : String(emailError),
-        code: (emailError as any)?.code || "No code",
-        stack:
-          emailError instanceof Error ? emailError.stack : "No stack trace",
-      });
-
-      // Log additional debugging information
-      console.log("EMAIL DEBUG: Failure context:", {
-        hasDB: !!db,
-        dbType: typeof db,
-        hasCollection: typeof collection === "function",
-        hasAddDoc: typeof addDoc === "function",
-        emailDataSize: JSON.stringify(emailData).length,
-        emailDataKeys: Object.keys(emailData),
-        timestamp: new Date().toISOString(),
-        inquiryIdExists: !!finalInquiryId,
-      });
-
-      // Don't throw error - allow inquiry creation to continue
-      console.log(
-        "EMAIL DEBUG: Continuing with inquiry creation despite email failure",
-      );
-
-      // Return inquiry success but note email failure
-      revalidatePath("/admin/inquiry");
-      return {
-        success: true,
-        inquiryId: finalInquiryId,
-        emailSent: false,
-        message: "Inquiry submitted successfully.",
-        error:
-          emailError instanceof Error ? emailError.message : String(emailError),
-      };
+    } catch (error) {
+      clientEmailError = error instanceof Error ? error.message : String(error);
+      console.error("âŒ CLIENT EMAIL FAILED:", error);
+      // Continue execution even if client email fails
     }
 
     console.log("=== EMAIL DEBUG: Email process completed ===");
     console.log("Email document created:", emailDocumentCreated);
+    console.log("Client email sent:", clientEmailSent);
     console.log("Email document ID:", emailDocId);
 
     // Revalidate the admin inquiry page cache to show new data immediately
@@ -1334,11 +1334,20 @@ Philippine Genome Center Visayas
     return {
       success: true,
       inquiryId: finalInquiryId,
-      emailSent: emailDocumentCreated,
+      emailSent: emailDocumentCreated || clientEmailSent,
+      adminEmailSent: emailDocumentCreated,
+      clientEmailSent,
       emailDocId: emailDocId,
       message: emailDocumentCreated
         ? "Inquiry submitted successfully."
         : "Inquiry submitted successfully.",
+      ...(adminEmailError || clientEmailError
+        ? {
+            error:
+              [adminEmailError, clientEmailError].filter(Boolean).join(" | ") ||
+              undefined,
+          }
+        : {}),
     };
   } catch (error) {
     console.error("Error creating inquiry:", error);
