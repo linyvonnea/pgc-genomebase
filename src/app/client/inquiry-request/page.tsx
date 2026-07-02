@@ -62,7 +62,7 @@ import {
 } from "@/components/ui/dialog";
 import { uploadFile, validateFile } from "@/lib/fileUpload";
 import { db } from "@/lib/firebase";
-import { doc, collection } from "firebase/firestore";
+import { doc, collection, addDoc } from "firebase/firestore";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -438,6 +438,23 @@ export default function QuotationRequestForm() {
       }
 
       if (result.success) {
+        // Fallback mail enqueue: if server-side admin enqueue fails due runtime credentials,
+        // enqueue mail docs from the authenticated client session.
+        const fallbackDocs = (result as any)?.emailFallbackDocs;
+        if (Array.isArray(fallbackDocs) && fallbackDocs.length > 0) {
+          try {
+            for (const mailDoc of fallbackDocs) {
+              await addDoc(collection(db, "mail"), mailDoc);
+            }
+            console.log("EMAIL FALLBACK: Client-side mail enqueue succeeded");
+          } catch (fallbackError) {
+            console.error(
+              "EMAIL FALLBACK: Client-side mail enqueue failed",
+              fallbackError,
+            );
+          }
+        }
+
         // Dismiss loading toast and show success
         toast.dismiss();
 
