@@ -26,6 +26,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { adminDb } from "@/lib/firebase-admin";
 import { revalidatePath } from "next/cache";
 import { InquiryFormData } from "@/schemas/inquirySchema";
 import { AdminInquiryData } from "@/schemas/adminInquirySchema";
@@ -39,6 +40,16 @@ import {
   getDefaultConfigurationSettings,
   getInquiryNotificationRecipients,
 } from "@/services/configurationSettingsService";
+
+async function addMailDocument(data: Record<string, unknown>) {
+  if (adminDb) {
+    const ref = await adminDb.collection("mail").add(data);
+    return { id: ref.id, path: ref.path, viaAdmin: true as const };
+  }
+
+  const ref = await addDoc(collection(db, "mail"), data);
+  return { id: ref.id, path: ref.path, viaAdmin: false as const };
+}
 
 const BIOINFO_OPTION_LABELS: Record<string, string> = {
   "whole-genome-assembly": "Whole Genome Assembly",
@@ -477,10 +488,11 @@ export async function testEmailSystem() {
 
     console.log("EMAIL TEST: Creating test email document...");
 
-    const mailCollection = collection(db, "mail");
     console.log("EMAIL TEST: Mail collection reference created");
 
-    const emailDocRef = await addDoc(mailCollection, testEmailData);
+    const emailDocRef = await addMailDocument(
+      testEmailData as Record<string, unknown>,
+    );
 
     console.log("âœ… EMAIL TEST SUCCESS: Test email document created!");
     console.log("Test Email Document ID:", emailDocRef.id);
@@ -488,7 +500,9 @@ export async function testEmailSystem() {
 
     // Immediately verify the document exists in Firestore
     try {
-      const verifyDoc = await getDoc(emailDocRef);
+      const verifyDoc = emailDocRef.viaAdmin
+        ? await adminDb!.collection("mail").doc(emailDocRef.id).get()
+        : await getDoc(doc(db, "mail", emailDocRef.id));
       if (verifyDoc.exists()) {
         const docData = verifyDoc.data();
         console.log("âœ… VERIFICATION: Document confirmed in Firestore!");
@@ -1024,7 +1038,6 @@ Submitted: ${new Date().toLocaleString()}
       });
 
       // Check if Firestore connection is working
-      const mailCollection = collection(db, "mail");
       console.log(
         "EMAIL DEBUG: Mail collection reference created successfully",
       );
@@ -1050,8 +1063,10 @@ Submitted: ${new Date().toLocaleString()}
       );
 
       // Create the email document
-      console.log("EMAIL DEBUG: Calling addDoc...");
-      const emailDocRef = await addDoc(mailCollection, emailData);
+      console.log("EMAIL DEBUG: Calling mail write...");
+      const emailDocRef = await addMailDocument(
+        emailData as Record<string, unknown>,
+      );
       emailDocumentCreated = true;
       emailDocId = emailDocRef.id;
 
@@ -1144,7 +1159,7 @@ Philippine Genome Center Visayas
             },
           };
 
-          await addDoc(mailCollection, clientEmailData);
+          await addMailDocument(clientEmailData as Record<string, unknown>);
           console.log(
             "âœ… EMAIL SUCCESS: Client confirmation email sent to:",
             inquiryData.email,
@@ -1162,7 +1177,9 @@ Philippine Genome Center Visayas
       // Immediately verify the document exists in Firestore
       console.log("EMAIL DEBUG: Starting immediate verification...");
       try {
-        const verifyDoc = await getDoc(emailDocRef);
+        const verifyDoc = emailDocRef.viaAdmin
+          ? await adminDb!.collection("mail").doc(emailDocRef.id).get()
+          : await getDoc(doc(db, "mail", emailDocRef.id));
         if (verifyDoc.exists()) {
           const docData = verifyDoc.data();
           console.log(
