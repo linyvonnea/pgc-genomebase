@@ -51,6 +51,14 @@ async function addMailDocument(data: Record<string, unknown>) {
   return { id: ref.id, path: ref.path, viaAdmin: false as const };
 }
 
+function snapshotExists(snap: any): boolean {
+  return typeof snap?.exists === "function" ? snap.exists() : !!snap?.exists;
+}
+
+function snapshotData<T = Record<string, any>>(snap: any): T | undefined {
+  return typeof snap?.data === "function" ? (snap.data() as T | undefined) : undefined;
+}
+
 const BIOINFO_OPTION_LABELS: Record<string, string> = {
   "whole-genome-assembly": "Whole Genome Assembly",
   "metabarcoding-downstream": "Metabarcoding with Downstream Analysis",
@@ -503,12 +511,16 @@ export async function testEmailSystem() {
       const verifyDoc = emailDocRef.viaAdmin
         ? await adminDb!.collection("mail").doc(emailDocRef.id).get()
         : await getDoc(doc(db, "mail", emailDocRef.id));
-      if (verifyDoc.exists()) {
-        const docData = verifyDoc.data();
+      if (snapshotExists(verifyDoc)) {
+        const docData = snapshotData(verifyDoc);
+        if (!docData) {
+          console.error("❌ VERIFICATION FAILED: Snapshot exists but data is undefined");
+        } else {
         console.log("âœ… VERIFICATION: Document confirmed in Firestore!");
         console.log("Document data keys:", Object.keys(docData));
         console.log("Document inquiryId:", docData.inquiryId);
         console.log("Document to:", docData.to);
+        }
       } else {
         console.error(
           "âŒ VERIFICATION FAILED: Document not found in Firestore immediately after creation!",
@@ -1180,8 +1192,14 @@ Philippine Genome Center Visayas
         const verifyDoc = emailDocRef.viaAdmin
           ? await adminDb!.collection("mail").doc(emailDocRef.id).get()
           : await getDoc(doc(db, "mail", emailDocRef.id));
-        if (verifyDoc.exists()) {
-          const docData = verifyDoc.data();
+        if (snapshotExists(verifyDoc)) {
+          const docData = snapshotData(verifyDoc);
+          if (!docData) {
+            console.error(
+              "❌ VERIFICATION FAILED: Email document exists but payload is unavailable",
+            );
+            return;
+          }
           console.log(
             "âœ… VERIFICATION SUCCESS: Email document confirmed in Firestore!",
           );
