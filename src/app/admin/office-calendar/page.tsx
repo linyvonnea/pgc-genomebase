@@ -102,18 +102,15 @@ const WEEKDAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const WEEKDAY_FULL  = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const EVENT_TYPE_ICONS: Record<OfficeEventType, React.ReactNode> = {
-<<<<<<< HEAD
   holiday: <Flag className="h-3 w-3" />,
   activity: <PartyPopper className="h-3 w-3" />,
   birthday: <Cake className="h-3 w-3" />,
   closure: <AlertTriangle className="h-3 w-3" />,
   partial_closure: <Clock className="h-3 w-3" />,
-=======
   holiday:         <Flag         className="h-3 w-3" />,
   activity:        <PartyPopper  className="h-3 w-3" />,
   closure:         <AlertTriangle className="h-3 w-3" />,
   partial_closure: <Clock        className="h-3 w-3" />,
->>>>>>> a4bb989f8308f671fa0683d3c089fae7f9e3b04e
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -413,12 +410,8 @@ function OfficeCalendarContent() {
             Office Calendar
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
-<<<<<<< HEAD
             Manage holidays, activities, and closures. This data is used to
             inform clients about office availability.
-=======
-            Manage holidays, activities, and closures. This data is used to inform clients about office availability.
->>>>>>> a4bb989f8308f671fa0683d3c089fae7f9e3b04e
           </p>
         </div>
         {/* Legend */}
@@ -709,7 +702,6 @@ function OfficeCalendarContent() {
                 {sidebarOpen.info && (
                   <div className="mt-2 text-[11px] text-blue-700 leading-relaxed">
                     <ul className="space-y-1 list-disc list-inside">
-<<<<<<< HEAD
                       <li>
                         Chat widget auto-informs clients when they message on
                         holidays or closures.
@@ -720,11 +712,9 @@ function OfficeCalendarContent() {
                       <li>
                         Yearly-recurring events apply automatically each year.
                       </li>
-=======
                       <li>Chat widget auto-informs clients when they message on holidays or closures.</li>
                       <li>Activities trigger a delay-notice message to clients.</li>
                       <li>Yearly-recurring events apply automatically each year.</li>
->>>>>>> a4bb989f8308f671fa0683d3c089fae7f9e3b04e
                     </ul>
                   </div>
                 )}
@@ -906,21 +896,17 @@ function OfficeCalendarContent() {
                   form.type === "holiday"
                     ? "e.g. Independence Day"
                     : form.type === "activity"
-<<<<<<< HEAD
                       ? "e.g. Team Building Day"
                       : form.type === "birthday"
                         ? "e.g. Juan Dela Cruz Birthday"
                         : form.type === "partial_closure"
                           ? "e.g. Half Day — Morning Off"
                           : "e.g. Office Maintenance"
-=======
                     ? "e.g. Team Building Day"
                     : form.type === "partial_closure"
                     ? "e.g. Half Day — Morning Off"
                     : "e.g. Office Maintenance"
->>>>>>> a4bb989f8308f671fa0683d3c089fae7f9e3b04e
-                }
-                className="h-9"
+        className="h-9"
                 maxLength={80}
               />
             </div>
@@ -932,13 +918,10 @@ function OfficeCalendarContent() {
               </Label>
               <Textarea
                 value={form.description}
-<<<<<<< HEAD
                 onChange={(e) =>
                   setForm((f) => ({ ...f, description: e.target.value }))
                 }
-=======
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
->>>>>>> a4bb989f8308f671fa0683d3c089fae7f9e3b04e
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value
                 placeholder="Additional details visible to clients in chat..."
                 className="resize-none text-sm"
                 rows={2}

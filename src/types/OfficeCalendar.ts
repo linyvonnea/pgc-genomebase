@@ -48,13 +48,10 @@ export interface OfficeDayEvent {
    */
   closedUntil?: number;
   createdBy: string; // admin email
-<<<<<<< HEAD
   createdAt: any; // Firestore Timestamp
   updatedAt: any; // Firestore Timestamp
-=======
   createdAt: any;    // Firestore Timestamp
   updatedAt: any;    // Firestore Timestamp
->>>>>>> a4bb989f8308f671fa0683d3c089fae7f9e3b04e
 }
 
 /** Configurable office hours (24-hour format, e.g. { start: 8, end: 17 }). */
