@@ -116,7 +116,8 @@ export interface OfficeAvailabilityResult {
     | "holiday"
     | "closure"
     | "partial_closure"
-    | "activity";
+    | "activity"
+    | "birthday";
   /** Human-readable message ready to be sent to the client */
   autoReplyMessage: string;
 }

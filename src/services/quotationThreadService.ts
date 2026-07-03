@@ -1,6 +1,6 @@
 /**
  * Quotation Thread Service
- * 
+ *
  * Manages the entire lifecycle of quotations from inquiry to approval,
  * including communication between admin and client.
  */
@@ -20,6 +20,7 @@ import {
   onSnapshot,
   addDoc,
   writeBatch,
+  deleteDoc,
   deleteField,
   runTransaction,
   arrayUnion,
@@ -69,26 +70,28 @@ async function triggerPushNotify(
 /**
  * Initialize a quotation thread when an inquiry is submitted
  */
-export async function initializeQuotationThread(inquiryId: string): Promise<string> {
+export async function initializeQuotationThread(
+  inquiryId: string,
+): Promise<string> {
   try {
     // Get inquiry data
     const inquiryRef = doc(db, "inquiries", inquiryId);
     const inquirySnap = await getDoc(inquiryRef);
-    
+
     if (!inquirySnap.exists()) {
       throw new Error("Inquiry not found");
     }
-    
+
     const inquiryData = inquirySnap.data();
-    
+
     // Check if thread already exists
     const threadRef = doc(db, THREADS_COLLECTION, inquiryId);
     const threadSnap = await getDoc(threadRef);
-    
+
     if (threadSnap.exists()) {
       return inquiryId; // Thread already exists
     }
-    
+
     // Create new thread
     const thread: Omit<QuotationThread, "id"> = {
       inquiryId,
@@ -105,9 +108,9 @@ export async function initializeQuotationThread(inquiryId: string): Promise<stri
       createdAt: serverTimestamp() as Timestamp,
       updatedAt: serverTimestamp() as Timestamp,
     };
-    
+
     await setDoc(threadRef, thread);
-    
+
     // Create initial system message
     await addThreadMessage({
       threadId: inquiryId,
@@ -118,7 +121,7 @@ export async function initializeQuotationThread(inquiryId: string): Promise<stri
       senderRole: "admin",
       isRead: false,
     });
-    
+
     return inquiryId;
   } catch (error) {
     console.error("Error initializing quotation thread:", error);
@@ -129,15 +132,17 @@ export async function initializeQuotationThread(inquiryId: string): Promise<stri
 /**
  * Get a quotation thread by ID
  */
-export async function getQuotationThread(threadId: string): Promise<QuotationThread | null> {
+export async function getQuotationThread(
+  threadId: string,
+): Promise<QuotationThread | null> {
   try {
     const threadRef = doc(db, THREADS_COLLECTION, threadId);
     const threadSnap = await getDoc(threadRef);
-    
+
     if (!threadSnap.exists()) {
       return null;
     }
-    
+
     return { id: threadSnap.id, ...threadSnap.data() } as QuotationThread;
   } catch (error) {
     console.error("Error getting quotation thread:", error);
@@ -149,18 +154,24 @@ export async function getQuotationThread(threadId: string): Promise<QuotationThr
  * Get all quotation threads (for admin dashboard)
  */
 export async function getAllQuotationThreads(
-  statusFilter?: InquiryStatus[]
+  statusFilter?: InquiryStatus[],
 ): Promise<QuotationThread[]> {
   try {
     const threadsRef = collection(db, THREADS_COLLECTION);
     let q = query(threadsRef, orderBy("updatedAt", "desc"));
-    
+
     if (statusFilter && statusFilter.length > 0) {
-      q = query(threadsRef, where("status", "in", statusFilter), orderBy("updatedAt", "desc"));
+      q = query(
+        threadsRef,
+        where("status", "in", statusFilter),
+        orderBy("updatedAt", "desc"),
+      );
     }
-    
+
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as QuotationThread));
+    return snapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() }) as QuotationThread,
+    );
   } catch (error) {
     console.error("Error getting quotation threads:", error);
     throw error;
@@ -170,17 +181,21 @@ export async function getAllQuotationThreads(
 /**
  * Get threads assigned to a specific admin
  */
-export async function getAdminAssignedThreads(adminEmail: string): Promise<QuotationThread[]> {
+export async function getAdminAssignedThreads(
+  adminEmail: string,
+): Promise<QuotationThread[]> {
   try {
     const threadsRef = collection(db, THREADS_COLLECTION);
     const q = query(
       threadsRef,
       where("assignedTo", "==", adminEmail),
-      orderBy("updatedAt", "desc")
+      orderBy("updatedAt", "desc"),
     );
-    
+
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as QuotationThread));
+    return snapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() }) as QuotationThread,
+    );
   } catch (error) {
     console.error("Error getting admin assigned threads:", error);
     throw error;
@@ -192,7 +207,13 @@ export async function getAdminAssignedThreads(adminEmail: string): Promise<Quota
  * Efficient: Firestore only returns documents where unreadCount.admin > 0.
  */
 export function subscribeToAllAdminUnreadCounts(
-  callback: (unreadThreads: { inquiryId: string; clientName: string; unreadCount: number }[]) => void
+  callback: (
+    unreadThreads: {
+      inquiryId: string;
+      clientName: string;
+      unreadCount: number;
+    }[],
+  ) => void,
 ): () => void {
   const threadsRef = collection(db, THREADS_COLLECTION);
   const q = query(threadsRef, where("unreadCount.admin", ">", 0));
@@ -212,10 +233,10 @@ export function subscribeToAllAdminUnreadCounts(
  */
 export function subscribeToQuotationThread(
   threadId: string,
-  callback: (thread: QuotationThread | null) => void
+  callback: (thread: QuotationThread | null) => void,
 ): () => void {
   const threadRef = doc(db, THREADS_COLLECTION, threadId);
-  
+
   return onSnapshot(threadRef, (snapshot) => {
     if (snapshot.exists()) {
       callback({ id: snapshot.id, ...snapshot.data() } as QuotationThread);
@@ -231,7 +252,7 @@ export function subscribeToQuotationThread(
 export async function updateThreadStatus(
   threadId: string,
   status: InquiryStatus,
-  adminEmail?: string
+  adminEmail?: string,
 ): Promise<void> {
   try {
     const threadRef = doc(db, THREADS_COLLECTION, threadId);
@@ -239,7 +260,7 @@ export async function updateThreadStatus(
       status,
       updatedAt: serverTimestamp(),
     });
-    
+
     // Add system message
     const statusMessages: Record<InquiryStatus, string> = {
       pending: "Inquiry is pending review",
@@ -250,7 +271,7 @@ export async function updateThreadStatus(
       rejected: "Inquiry has been closed",
       converted: "Inquiry has been converted to a project",
     };
-    
+
     await addThreadMessage({
       threadId,
       type: "system",
@@ -272,7 +293,7 @@ export async function updateThreadStatus(
 export async function assignThreadToAdmin(
   threadId: string,
   adminEmail: string,
-  adminName: string
+  adminName: string,
 ): Promise<void> {
   try {
     const threadRef = doc(db, THREADS_COLLECTION, threadId);
@@ -281,7 +302,7 @@ export async function assignThreadToAdmin(
       assignedToName: adminName,
       updatedAt: serverTimestamp(),
     });
-    
+
     await addThreadMessage({
       threadId,
       type: "system",
@@ -315,24 +336,24 @@ function calculateQuotationTotals(
   discount?: number,
   discountPercentage?: number,
   tax?: number,
-  taxPercentage?: number
+  taxPercentage?: number,
 ) {
   const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
-  
+
   let discountAmount = discount || 0;
   if (discountPercentage) {
     discountAmount = subtotal * (discountPercentage / 100);
   }
-  
+
   const afterDiscount = subtotal - discountAmount;
-  
+
   let taxAmount = tax || 0;
   if (taxPercentage) {
     taxAmount = afterDiscount * (taxPercentage / 100);
   }
-  
+
   const totalAmount = afterDiscount + taxAmount;
-  
+
   return {
     subtotal,
     discount: discountAmount,
@@ -347,38 +368,38 @@ function calculateQuotationTotals(
 export async function createQuotationVersion(
   request: QuotationGenerationRequest,
   adminEmail: string,
-  adminName: string
+  adminName: string,
 ): Promise<QuotationVersion> {
   try {
     const thread = await getQuotationThread(request.inquiryId);
     if (!thread) {
       throw new Error("Quotation thread not found");
     }
-    
+
     const version = (thread.currentQuotationVersion || 0) + 1;
     const quotationNumber = generateQuotationNumber(request.inquiryId, version);
-    
+
     // Add IDs and calculate subtotals for items
     const items: QuotationItem[] = request.items.map((item, index) => ({
       ...item,
       id: `item-${Date.now()}-${index}`,
       subtotal: item.quantity * item.unitPrice,
     }));
-    
+
     // Calculate totals
     const totals = calculateQuotationTotals(
       items,
       request.discount,
       request.discountPercentage,
       request.tax,
-      request.taxPercentage
+      request.taxPercentage,
     );
-    
+
     // Calculate validity date
     const validityDays = request.validityDays || 30;
     const validUntil = new Date();
     validUntil.setDate(validUntil.getDate() + validityDays);
-    
+
     // Create quotation version
     const quotation: Omit<QuotationVersion, "id"> = {
       version,
@@ -400,11 +421,14 @@ export async function createQuotationVersion(
       createdAt: serverTimestamp() as Timestamp,
       updatedAt: serverTimestamp() as Timestamp,
     };
-    
+
     // Save quotation
-    const quotationRef = await addDoc(collection(db, QUOTATIONS_COLLECTION), quotation);
+    const quotationRef = await addDoc(
+      collection(db, QUOTATIONS_COLLECTION),
+      quotation,
+    );
     const quotationId = quotationRef.id;
-    
+
     // Update thread
     const threadRef = doc(db, THREADS_COLLECTION, request.inquiryId);
     await updateDoc(threadRef, {
@@ -412,7 +436,7 @@ export async function createQuotationVersion(
       [`quotations`]: [...thread.quotations, { ...quotation, id: quotationId }],
       updatedAt: serverTimestamp(),
     });
-    
+
     return { id: quotationId, ...quotation } as QuotationVersion;
   } catch (error) {
     console.error("Error creating quotation version:", error);
@@ -428,7 +452,7 @@ export async function sendQuotationToClient(
   quotationId: string,
   adminEmail: string,
   adminName: string,
-  message?: string
+  message?: string,
 ): Promise<void> {
   try {
     // Update quotation status
@@ -438,14 +462,16 @@ export async function sendQuotationToClient(
       sentAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
-    
+
     // Update thread status
     const thread = await getQuotationThread(threadId);
-    const newStatus: InquiryStatus = thread?.status === "pending" ? "quoted" : "negotiating";
+    const newStatus: InquiryStatus =
+      thread?.status === "pending" ? "quoted" : "negotiating";
     await updateThreadStatus(threadId, newStatus);
-    
+
     // Add message
-    const content = message || `Quotation ${quotationId} has been sent for your review.`;
+    const content =
+      message || `Quotation ${quotationId} has been sent for your review.`;
     await addThreadMessage({
       threadId,
       type: "quotation",
@@ -456,7 +482,7 @@ export async function sendQuotationToClient(
       isRead: false,
       quotationVersion: thread?.currentQuotationVersion,
     });
-    
+
     // Increment unread count for client
     const threadRef = doc(db, THREADS_COLLECTION, threadId);
     await updateDoc(threadRef, {
@@ -475,27 +501,30 @@ export async function sendQuotationToClient(
  * Add a message to thread
  */
 export async function addThreadMessage(
-  message: Omit<ThreadMessage, "id" | "createdAt">
+  message: Omit<ThreadMessage, "id" | "createdAt">,
 ): Promise<string> {
   try {
     const messageData = {
       ...message,
       createdAt: serverTimestamp(),
     };
-    
-    const messageRef = await addDoc(collection(db, MESSAGES_COLLECTION), messageData);
-    
+
+    const messageRef = await addDoc(
+      collection(db, MESSAGES_COLLECTION),
+      messageData,
+    );
+
     // Ensure the quotationThreads document exists — auto-create if missing.
     // This handles existing inquiries that were created before thread initialization
     // was part of the inquiry submission flow.
     const threadRef = doc(db, THREADS_COLLECTION, message.threadId);
     let thread = await getQuotationThread(message.threadId);
-    
+
     if (!thread) {
       // Fetch inquiry data to populate the thread
       const inquirySnap = await getDoc(doc(db, "inquiries", message.threadId));
       const inquiryData = inquirySnap.exists() ? inquirySnap.data() : {};
-      
+
       const newThreadData = {
         inquiryId: message.threadId,
         clientEmail: inquiryData.email || "",
@@ -512,12 +541,13 @@ export async function addThreadMessage(
       thread = { id: message.threadId, ...newThreadData };
     }
 
-    const unreadCountUpdate = message.senderRole === "admin"
-      ? { "unreadCount.client": (thread.unreadCount.client || 0) + 1 }
-      : { 
-          "unreadCount.admin": (thread.unreadCount.admin || 0) + 1,
-          dismissedByAdmin: false // Reset dismissed flag when client sends a new message
-        };
+    const unreadCountUpdate =
+      message.senderRole === "admin"
+        ? { "unreadCount.client": (thread.unreadCount.client || 0) + 1 }
+        : {
+            "unreadCount.admin": (thread.unreadCount.admin || 0) + 1,
+            dismissedByAdmin: false, // Reset dismissed flag when client sends a new message
+          };
 
     const finalUpdate = {
       ...unreadCountUpdate,
@@ -534,8 +564,14 @@ export async function addThreadMessage(
         await runTransaction(db, async (tx) => {
           const threadSnap = await tx.get(threadRef);
           if (!threadSnap.exists()) return;
-          const data = threadSnap.data() as { adminTextMessageCount?: number; firstAdminChatEmailSent?: boolean };
-          const currentCount = typeof data.adminTextMessageCount === "number" ? data.adminTextMessageCount : 0;
+          const data = threadSnap.data() as {
+            adminTextMessageCount?: number;
+            firstAdminChatEmailSent?: boolean;
+          };
+          const currentCount =
+            typeof data.adminTextMessageCount === "number"
+              ? data.adminTextMessageCount
+              : 0;
           // Use a dedicated flag so legacy threads (where the automated welcome message
           // wrongly incremented adminTextMessageCount before the system-type fix) also
           // receive the notification on the admin's first real human message.
@@ -560,10 +596,10 @@ export async function addThreadMessage(
         dismissedByAdmin: false, // Also reset on inquiry if stored there
       }).catch((err) => {
         console.error("Error updating inquiry messageState (client):", err);
-      }); 
+      });
     } else {
       // Admin sent — only change to admin_only if there are no unread client messages
-      const adminUnread = (thread.unreadCount.admin || 0);
+      const adminUnread = thread.unreadCount.admin || 0;
       if (adminUnread === 0) {
         await updateDoc(inquiryRef, {
           messageState: "admin_only",
@@ -602,7 +638,7 @@ export async function addThreadMessage(
         console.error("Failed to send first admin chat email:", error);
       }
     }
-    
+
     return messageRef.id;
   } catch (error) {
     console.error("Error adding thread message:", error);
@@ -649,7 +685,9 @@ export async function toggleReaction(
 /**
  * Get thread messages
  */
-export async function getThreadMessages(threadId: string): Promise<ThreadMessage[]> {
+export async function getThreadMessages(
+  threadId: string,
+): Promise<ThreadMessage[]> {
   try {
     const messagesRef = collection(db, MESSAGES_COLLECTION);
     const q = query(
@@ -657,9 +695,11 @@ export async function getThreadMessages(threadId: string): Promise<ThreadMessage
       where("threadId", "==", threadId),
       // orderBy("createdAt", "asc")
     );
-    
+
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ThreadMessage));
+    return snapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() }) as ThreadMessage,
+    );
   } catch (error) {
     console.error("Error getting thread messages:", error);
     throw error;
@@ -671,7 +711,7 @@ export async function getThreadMessages(threadId: string): Promise<ThreadMessage
  */
 export function subscribeToThreadMessages(
   threadId: string,
-  callback: (messages: ThreadMessage[]) => void
+  callback: (messages: ThreadMessage[]) => void,
 ): () => void {
   const messagesRef = collection(db, MESSAGES_COLLECTION);
   const q = query(
@@ -679,9 +719,11 @@ export function subscribeToThreadMessages(
     where("threadId", "==", threadId),
     // orderBy("createdAt", "asc")
   );
-  
+
   return onSnapshot(q, (snapshot) => {
-    const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ThreadMessage));
+    const messages = snapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() }) as ThreadMessage,
+    );
     messages.sort((a, b) => {
       const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
       const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
@@ -708,9 +750,10 @@ export async function markMessagesAsRead(
 
     // Reset unread count for the CURRENT user role
     const threadRef = doc(db, THREADS_COLLECTION, threadId);
-    const unreadCountUpdate = userRole === "admin"
-      ? { "unreadCount.admin": 0 }
-      : { "unreadCount.client": 0 };
+    const unreadCountUpdate =
+      userRole === "admin"
+        ? { "unreadCount.admin": 0 }
+        : { "unreadCount.client": 0 };
 
     await updateDoc(threadRef, unreadCountUpdate);
 
@@ -718,16 +761,16 @@ export async function markMessagesAsRead(
     const messages = await getThreadMessages(threadId);
     const batch = writeBatch(db);
 
-    messages.forEach(msg => {
+    messages.forEach((msg) => {
       // Logic for marking as read:
       // 1. Message must be currently unread
       // 2. Message must NOT be from current user's role
       // 3. Optional: Filter by specific sender (id/name)
       const isFromOtherParty = msg.senderRole !== userRole;
       const isUnread = !msg.isRead;
-      
+
       let shouldMark = isUnread && isFromOtherParty;
-      
+
       // If specific sender filter provided, apply it to the OTHER party's messages
       if (shouldMark && (senderId || senderName)) {
         const matchesId = senderId ? msg.senderId === senderId : true;
@@ -752,7 +795,7 @@ export async function markMessagesAsRead(
         batch.update(msgRef, updatePayload);
       }
     });
-    
+
     await batch.commit();
 
     // Denormalize message state onto the inquiries document
@@ -763,7 +806,7 @@ export async function markMessagesAsRead(
     const hasClientMessages = messages.some((m) => m.senderRole === "client");
     const hasAdminMessages = messages.some((m) => m.senderRole === "admin");
     let newState: "none" | "admin_only" | "all_read" = "none";
-    
+
     if (hasClientMessages) {
       newState = "all_read";
     } else if (hasAdminMessages) {
@@ -776,7 +819,7 @@ export async function markMessagesAsRead(
       unreadMessageCount: 0,
     }).catch((err) => {
       console.error("Error updating inquiry messageState (markRead):", err);
-    }); 
+    });
   } catch (error) {
     console.error("Error marking messages as read:", error);
     throw error;
@@ -849,7 +892,7 @@ export async function dismissThreadNotification(
 ): Promise<void> {
   try {
     const threadRef = doc(db, THREADS_COLLECTION, inquiryId);
-    
+
     // Clear the unread count and add a dismissed flag
     await updateDoc(threadRef, {
       "unreadCount.admin": 0,
@@ -861,8 +904,8 @@ export async function dismissThreadNotification(
     const inquiryRef = doc(db, "inquiries", inquiryId);
     await updateDoc(inquiryRef, {
       unreadMessageCount: 0,
-      messageState: "all_read"
-    }).catch(err => {
+      messageState: "all_read",
+    }).catch((err) => {
       console.error("Error updating inquiry state on dismiss:", err);
     });
   } catch (error) {
@@ -878,7 +921,7 @@ export async function approveQuotation(
   threadId: string,
   quotationId: string,
   clientEmail: string,
-  clientName: string
+  clientName: string,
 ): Promise<void> {
   try {
     // Update quotation
@@ -889,10 +932,10 @@ export async function approveQuotation(
       approvedBy: clientEmail,
       updatedAt: serverTimestamp(),
     });
-    
+
     // Update thread
     await updateThreadStatus(threadId, "approved");
-    
+
     // Add message
     await addThreadMessage({
       threadId,
@@ -917,7 +960,7 @@ export async function requestQuotationRevision(
   quotationId: string,
   revisionNotes: string,
   clientEmail: string,
-  clientName: string
+  clientName: string,
 ): Promise<void> {
   try {
     // Update quotation
@@ -926,10 +969,10 @@ export async function requestQuotationRevision(
       status: "revised",
       updatedAt: serverTimestamp(),
     });
-    
+
     // Update thread
     await updateThreadStatus(threadId, "negotiating");
-    
+
     // Add message
     await addThreadMessage({
       threadId,
@@ -983,7 +1026,10 @@ export async function unsendMessage(messageId: string): Promise<void> {
           } catch (error: any) {
             // Ignore if file was already deleted or doesn't exist
             if (error.code !== "storage/object-not-found") {
-              console.error(`Failed to delete storage object at ${path}:`, error);
+              console.error(
+                `Failed to delete storage object at ${path}:`,
+                error,
+              );
             }
           }
         }
@@ -999,4 +1045,35 @@ export async function unsendMessage(messageId: string): Promise<void> {
   }
 }
 
+/**
+ * Permanently delete a message document.
+ * Used for system-generated automated notices that should disappear entirely.
+ */
+export async function deleteThreadMessage(messageId: string): Promise<void> {
+  const msgRef = doc(db, MESSAGES_COLLECTION, messageId);
+  const snap = await getDoc(msgRef);
 
+  if (!snap.exists()) {
+    return;
+  }
+
+  const data = snap.data() as ThreadMessage;
+
+  if (data.attachments && data.attachments.length > 0) {
+    for (const attachment of data.attachments) {
+      const path = extractStoragePath(attachment.url);
+      if (path) {
+        try {
+          const storageRef = ref(storage, path);
+          await deleteObject(storageRef);
+        } catch (error: any) {
+          if (error.code !== "storage/object-not-found") {
+            console.error(`Failed to delete storage object at ${path}:`, error);
+          }
+        }
+      }
+    }
+  }
+
+  await deleteDoc(msgRef);
+}
