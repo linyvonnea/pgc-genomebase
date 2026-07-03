@@ -13,18 +13,39 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, Send, Clock, AlertCircle, Check, CheckCheck, Paperclip, FileText, FileSpreadsheet, File, X, Loader2, Download, Trash2, Info } from "lucide-react";
+import {
+  MessageCircle,
+  Send,
+  Clock,
+  AlertCircle,
+  Check,
+  CheckCheck,
+  Paperclip,
+  FileText,
+  FileSpreadsheet,
+  File,
+  X,
+  Loader2,
+  Download,
+  Trash2,
+  Info,
+} from "lucide-react";
 import { ThreadMessage, MessageSenderRole } from "@/types/QuotationThread";
 import {
   subscribeToThreadMessages,
   addThreadMessage,
   markMessagesAsRead,
   toggleReaction,
+  deleteThreadMessage,
   unsendMessage,
 } from "@/services/quotationThreadService";
 import { uploadFile } from "@/lib/fileUpload";
 import { format } from "date-fns";
-import { getAdminDisplayName, getAdminDisplayNameWithIcon, getClientInitials } from "@/lib/chatUtils";
+import {
+  getAdminDisplayName,
+  getAdminDisplayNameWithIcon,
+  getClientInitials,
+} from "@/lib/chatUtils";
 import EmojiPicker from "./EmojiPicker";
 
 // Allowed attachment types for chat
@@ -138,7 +159,9 @@ function AttachmentBubble({
       title={`Download ${attachment.name}`}
     >
       <FileIcon className="h-5 w-5 flex-shrink-0" />
-      <span className="text-xs font-medium truncate max-w-[160px]">{attachment.name}</span>
+      <span className="text-xs font-medium truncate max-w-[160px]">
+        {attachment.name}
+      </span>
       <Download className="h-3.5 w-3.5 flex-shrink-0 ml-auto opacity-70" />
     </button>
   );
@@ -166,7 +189,9 @@ export default function ChatBox({
   const [uploading, setUploading] = useState(false);
   const [unsendingId, setUnsendingId] = useState<string | null>(null);
   // ID of the client message whose viewer list is currently expanded
-  const [expandedViewersId, setExpandedViewersId] = useState<string | null>(null);
+  const [expandedViewersId, setExpandedViewersId] = useState<string | null>(
+    null,
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const DEFAULT_REACTIONS = ["👍", "❤️", "😮", "😂", "😥"];
@@ -175,12 +200,16 @@ export default function ChatBox({
     (value || "").trim().toLowerCase();
 
   const currentUserIdentifiers = new Set(
-    [normalizeIdentifier(user?.email), normalizeIdentifier(user?.uid)].filter(Boolean),
+    [normalizeIdentifier(user?.email), normalizeIdentifier(user?.uid)].filter(
+      Boolean,
+    ),
   );
 
   // Alias of the currently logged-in admin (used for own-message labels)
   const currentAdminAlias =
-    role === "admin" && user ? getAdminDisplayNameWithIcon(user.email || user.uid) : "";
+    role === "admin" && user
+      ? getAdminDisplayNameWithIcon(user.email || user.uid)
+      : "";
 
   // Alias derived from the message senderId (email) — always reflects actual sender
   const getMessageAdminAlias = (msg: ThreadMessage) =>
@@ -205,9 +234,10 @@ export default function ChatBox({
             .filter(Boolean);
 
           if (unreadIds.length > 0) {
-            const viewerName = role === "admin" && user.email
-              ? getAdminDisplayNameWithIcon(user.email || user.uid)
-              : undefined;
+            const viewerName =
+              role === "admin" && user.email
+                ? getAdminDisplayNameWithIcon(user.email || user.uid)
+                : undefined;
             markMessagesAsRead(
               inquiryId,
               role,
@@ -228,7 +258,10 @@ export default function ChatBox({
     }
   }, [inquiryId, user, role]);
 
-  const handleToggleReaction = async (messageId: string | undefined, emoji: string) => {
+  const handleToggleReaction = async (
+    messageId: string | undefined,
+    emoji: string,
+  ) => {
     if (!messageId || !user) return;
     try {
       await toggleReaction(messageId, emoji, user.email || user.uid);
@@ -259,7 +292,9 @@ export default function ChatBox({
     // Validate type
     const isImage = file.type.startsWith("image/");
     if (!isImage && !ALLOWED_MIME_TYPES.includes(file.type)) {
-      setError("Unsupported file type. Allowed: images, PDF, Word, Excel, PowerPoint, and text files.");
+      setError(
+        "Unsupported file type. Allowed: images, PDF, Word, Excel, PowerPoint, and text files.",
+      );
       e.target.value = "";
       return;
     }
@@ -288,14 +323,22 @@ export default function ChatBox({
       const senderDisplayName =
         role === "admin"
           ? getAdminDisplayNameWithIcon(user.email || user.uid)
-          : clientName || user.displayName || user.email?.split("@")[0] || "Client";
+          : clientName ||
+            user.displayName ||
+            user.email?.split("@")[0] ||
+            "Client";
 
       // Upload file first if present
-      let attachments: { name: string; url: string; type: string }[] | undefined;
+      let attachments:
+        | { name: string; url: string; type: string }[]
+        | undefined;
       if (fileToSend) {
         setUploading(true);
         try {
-          const url = await uploadFile(fileToSend, `chat-attachments/${inquiryId}`);
+          const url = await uploadFile(
+            fileToSend,
+            `chat-attachments/${inquiryId}`,
+          );
           attachments = [{ name: fileToSend.name, url, type: fileToSend.type }];
         } finally {
           setUploading(false);
@@ -319,7 +362,9 @@ export default function ChatBox({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ threadId: inquiryId }),
-        }).catch(() => { /* non-critical — ignore network errors */ });
+        }).catch(() => {
+          /* non-critical — ignore network errors */
+        });
       }
     } catch (error) {
       console.error("Failed to send message:", error);
@@ -336,6 +381,18 @@ export default function ChatBox({
     } catch (err) {
       console.error("Failed to unsend message:", err);
       setError("Failed to unsend message. Please try again.");
+    } finally {
+      setUnsendingId(null);
+    }
+  };
+
+  const handleDeleteAutoReply = async (messageId: string) => {
+    setUnsendingId(messageId);
+    try {
+      await deleteThreadMessage(messageId);
+    } catch (err) {
+      console.error("Failed to delete automated notice:", err);
+      setError("Failed to delete automated notice. Please try again.");
     } finally {
       setUnsendingId(null);
     }
@@ -409,9 +466,12 @@ export default function ChatBox({
                 <MessageCircle className="w-8 h-8 text-slate-200" />
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-bold text-slate-800">No messages yet.</p>
+                <p className="text-sm font-bold text-slate-800">
+                  No messages yet.
+                </p>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  Have questions about your project? Send us a message and our team will get back to you shortly.
+                  Have questions about your project? Send us a message and our
+                  team will get back to you shortly.
                 </p>
               </div>
             </div>
@@ -421,9 +481,10 @@ export default function ChatBox({
               // Layout: client messages on the left, admin messages on the right.
               // When the admin panel is open, all admin messages (regardless of sender)
               // are right-aligned to distinguish the support team from the client.
-              const isMe = role === "client"
-                ? msg.senderRole === "client"
-                : msg.senderRole === "admin";
+              const isMe =
+                role === "client"
+                  ? msg.senderRole === "client"
+                  : msg.senderRole === "admin";
 
               // Handle system messages dynamically
               if (msg.type === "system") {
@@ -438,8 +499,12 @@ export default function ChatBox({
 
               // Auto-reply availability notice
               if (msg.type === "auto_reply") {
+                const canDeleteAutoReply = role === "admin" && !!msg.id;
                 return (
-                  <div key={msg.id || idx} className="flex justify-start my-3 px-1">
+                  <div
+                    key={msg.id || idx}
+                    className="flex justify-start my-3 px-1"
+                  >
                     <div className="flex gap-2.5 max-w-[90%]">
                       <div className="flex-shrink-0 mt-0.5">
                         <div className="h-7 w-7 rounded-full bg-amber-100 border border-amber-200 flex items-center justify-center">
@@ -447,7 +512,27 @@ export default function ChatBox({
                         </div>
                       </div>
                       <div className="flex-1 rounded-2xl rounded-tl-sm border border-amber-200 bg-amber-50 px-3.5 py-2.5">
-                        <p className="text-[11px] font-semibold text-amber-700 mb-1 uppercase tracking-wide">Automated Notice</p>
+                        <div className="flex items-start justify-between gap-3 mb-1">
+                          <p className="text-[11px] font-semibold text-amber-700 uppercase tracking-wide">
+                            Automated Notice
+                          </p>
+                          {canDeleteAutoReply && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                msg.id && handleDeleteAutoReply(msg.id)
+                              }
+                              disabled={unsendingId === msg.id}
+                              className="inline-flex items-center gap-1 text-[10px] text-amber-600 hover:text-red-600 transition-colors disabled:opacity-50"
+                              title="Delete automated notice"
+                            >
+                              <Trash2 className="w-2.5 h-2.5" />
+                              {unsendingId === msg.id
+                                ? "Deleting..."
+                                : "Delete"}
+                            </button>
+                          )}
+                        </div>
                         <p className="text-[13px] text-amber-900 whitespace-pre-wrap leading-relaxed">
                           {msg.content}
                         </p>
@@ -478,7 +563,7 @@ export default function ChatBox({
               // Deduplicate viewers by email for display
               const uniqueViewers = msg.viewedBy
                 ? Array.from(
-                    new Map(msg.viewedBy.map((v) => [v.email, v])).values()
+                    new Map(msg.viewedBy.map((v) => [v.email, v])).values(),
                   )
                 : [];
               const isViewersExpanded = expandedViewersId === msg.id;
@@ -503,7 +588,9 @@ export default function ChatBox({
                           </span>
                           <Avatar className="h-4 w-4 border border-slate-100 bg-white">
                             <AvatarFallback className="bg-blue-50 text-[7px] font-bold text-blue-700">
-                              {role === "admin" ? "AD" : getClientInitials(msg.senderName)}
+                              {role === "admin"
+                                ? "AD"
+                                : getClientInitials(msg.senderName)}
                             </AvatarFallback>
                           </Avatar>
                           <span className="text-[10px] text-gray-400 flex items-center gap-1 ml-1">
@@ -529,7 +616,9 @@ export default function ChatBox({
                               </Badge>
                             )}
                             <span className="text-xs font-semibold text-gray-600">
-                              {msg.senderRole === "admin" ? getAdminDisplayNameWithIcon(msg.senderId) : msg.senderName}
+                              {msg.senderRole === "admin"
+                                ? getAdminDisplayNameWithIcon(msg.senderId)
+                                : msg.senderName}
                             </span>
                           </div>
                           <span className="text-[10px] text-gray-400 flex items-center gap-1 ml-1">
@@ -542,11 +631,13 @@ export default function ChatBox({
 
                     {/* Message bubble — clickable for admin to reveal who viewed it */}
                     <div
-                      onClick={isClickableForViewers
-                        ? () => setExpandedViewersId(
-                            isViewersExpanded ? null : (msg.id ?? null)
-                          )
-                        : undefined
+                      onClick={
+                        isClickableForViewers
+                          ? () =>
+                              setExpandedViewersId(
+                                isViewersExpanded ? null : (msg.id ?? null),
+                              )
+                          : undefined
                       }
                       className={`px-3.5 py-2.5 text-[14px] shadow-sm ${
                         isMe
@@ -564,7 +655,11 @@ export default function ChatBox({
                       {msg.attachments && msg.attachments.length > 0 && (
                         <div className="space-y-1">
                           {msg.attachments.map((att, attIdx) => (
-                            <AttachmentBubble key={attIdx} attachment={att} isMe={isMe} />
+                            <AttachmentBubble
+                              key={attIdx}
+                              attachment={att}
+                              isMe={isMe}
+                            />
                           ))}
                         </div>
                       )}
@@ -573,13 +668,19 @@ export default function ChatBox({
                         <div className="flex justify-end mt-1.5 -mb-0.5">
                           {msg.isRead ? (
                             <div className="flex items-center gap-1 group/seen bg-white/10 rounded-full px-1.5 py-0.5 ml-auto translate-x-1">
-                              <CheckCheck className="w-3 h-3 text-white" strokeWidth={3} />
+                              <CheckCheck
+                                className="w-3 h-3 text-white"
+                                strokeWidth={3}
+                              />
                               <span className="text-[8px] font-bold text-white uppercase tracking-tighter">
                                 Seen
                               </span>
                             </div>
                           ) : (
-                            <Check className="w-3 h-3 text-white/50 ml-auto" strokeWidth={3} />
+                            <Check
+                              className="w-3 h-3 text-white/50 ml-auto"
+                              strokeWidth={3}
+                            />
                           )}
                         </div>
                       )}
@@ -589,7 +690,9 @@ export default function ChatBox({
                     {isClickableForViewers && (
                       <div
                         className={`overflow-hidden transition-all duration-200 ${
-                          isViewersExpanded ? "max-h-24 opacity-100 mt-1.5" : "max-h-0 opacity-0"
+                          isViewersExpanded
+                            ? "max-h-24 opacity-100 mt-1.5"
+                            : "max-h-0 opacity-0"
                         }`}
                       >
                         {uniqueViewers.length > 0 ? (
@@ -620,22 +723,27 @@ export default function ChatBox({
                   </div>
 
                   {/* Unsend button — visible on hover for own messages only, within 24 hours */}
-                  {isMe && !msg.unsent && (() => {
-                    const sentAt = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date((msg.createdAt as any) ?? 0);
-                    const within24h = Date.now() - sentAt.getTime() < 24 * 60 * 60 * 1000;
-                    return within24h ? (
-                      <button
-                        type="button"
-                        onClick={() => msg.id && handleUnsend(msg.id)}
-                        disabled={unsendingId === msg.id}
-                        className="invisible group-hover:visible flex items-center gap-1 text-[10px] text-slate-400 hover:text-red-500 transition-colors mt-0.5 cursor-pointer disabled:opacity-50"
-                        title="Unsend message"
-                      >
-                        <Trash2 className="w-2.5 h-2.5" />
-                        {unsendingId === msg.id ? "Unsending…" : "Unsend"}
-                      </button>
-                    ) : null;
-                  })()}
+                  {isMe &&
+                    !msg.unsent &&
+                    (() => {
+                      const sentAt = msg.createdAt?.toDate
+                        ? msg.createdAt.toDate()
+                        : new Date((msg.createdAt as any) ?? 0);
+                      const within24h =
+                        Date.now() - sentAt.getTime() < 24 * 60 * 60 * 1000;
+                      return within24h ? (
+                        <button
+                          type="button"
+                          onClick={() => msg.id && handleUnsend(msg.id)}
+                          disabled={unsendingId === msg.id}
+                          className="invisible group-hover:visible flex items-center gap-1 text-[10px] text-slate-400 hover:text-red-500 transition-colors mt-0.5 cursor-pointer disabled:opacity-50"
+                          title="Unsend message"
+                        >
+                          <Trash2 className="w-2.5 h-2.5" />
+                          {unsendingId === msg.id ? "Unsending…" : "Unsend"}
+                        </button>
+                      ) : null;
+                    })()}
                 </div>
               );
             })
@@ -656,11 +764,20 @@ export default function ChatBox({
                   className="h-10 w-10 rounded object-cover border border-blue-200 flex-shrink-0"
                 />
               ) : (
-                (() => { const PendingIcon = getFileIcon(pendingFile.type); return <PendingIcon className="h-8 w-8 text-blue-500 flex-shrink-0" />; })()
+                (() => {
+                  const PendingIcon = getFileIcon(pendingFile.type);
+                  return (
+                    <PendingIcon className="h-8 w-8 text-blue-500 flex-shrink-0" />
+                  );
+                })()
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-slate-700 truncate">{pendingFile.name}</p>
-                <p className="text-[10px] text-slate-500">{(pendingFile.size / 1024).toFixed(1)} KB</p>
+                <p className="text-xs font-semibold text-slate-700 truncate">
+                  {pendingFile.name}
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  {(pendingFile.size / 1024).toFixed(1)} KB
+                </p>
               </div>
               <Button
                 type="button"
@@ -673,7 +790,10 @@ export default function ChatBox({
               </Button>
             </div>
           )}
-          <form onSubmit={handleSendMessage} className="flex w-full gap-2 items-end">
+          <form
+            onSubmit={handleSendMessage}
+            className="flex w-full gap-2 items-end"
+          >
             {/* Hidden file input */}
             <input
               ref={fileInputRef}
@@ -708,13 +828,19 @@ export default function ChatBox({
                 className="flex-1 w-full rounded-xl pl-4 pr-10 py-3 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden text-sm transition-all"
               />
               <div className="absolute right-2 bottom-2.5">
-                <EmojiPicker onEmojiSelect={(emoji) => setNewMessage((prev) => prev + emoji)} />
+                <EmojiPicker
+                  onEmojiSelect={(emoji) =>
+                    setNewMessage((prev) => prev + emoji)
+                  }
+                />
               </div>
             </div>
             <Button
               type="submit"
               size="icon"
-              disabled={(!newMessage.trim() && !pendingFile) || loading || uploading}
+              disabled={
+                (!newMessage.trim() && !pendingFile) || loading || uploading
+              }
               className="rounded-full bg-blue-600 hover:bg-blue-700 transition-colors h-10 w-10 flex-shrink-0 mb-1"
             >
               {uploading ? (
