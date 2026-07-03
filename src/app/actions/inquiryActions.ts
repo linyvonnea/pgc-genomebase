@@ -1288,28 +1288,11 @@ Submitted: ${new Date().toLocaleString()}
           </div>
         `;
 
-        const clientEmailText = `
-Inquiry Received - PGC Visayas
-
-Dear ${inquiryData.name},
-
-Thank you for reaching out to PGC Visayas for your research needs. Our team will be reviewing your inquiry and will get back to you as soon as possible.
-
-NEXT STEPS:
-You may monitor the status of your request and view your quotation once available through our Client Portal: https://omics.pgcvisayas.upv.edu.ph/portal
-
-${!inquiryData.returnToPortal ? `ACCESS CREDENTIALS:\nEmail: ${inquiryData.email}\nPassword: ${finalInquiryId}\n\n` : ""}One of our researchers will contact you shortly if additional information is needed. In the meantime, if you have any questions, you may reply through the chatbox in the client portal.
-
-Yours in utilizing OMICS for a better Philippines,
-Philippine Genome Center Visayas
-        `.trim();
-
         const clientEmailData = {
           to: [inquiryData.email],
           inquiryId: finalInquiryId,
           message: {
             subject: "Inquiry Received: PGC Visayas",
-            text: clientEmailText,
             html: clientEmailHtml,
           },
         };
@@ -1333,7 +1316,6 @@ Philippine Genome Center Visayas
           inquiryId: finalInquiryId,
           message: {
             subject: "Inquiry Received: PGC Visayas",
-            text: `Inquiry Received - PGC Visayas\n\nDear ${inquiryData.name},\n\nThank you for reaching out to PGC Visayas for your research needs. Our team will be reviewing your inquiry and will get back to you as soon as possible.`,
             html: `<p>Inquiry Received - PGC Visayas</p><p>Dear ${inquiryData.name},</p><p>Thank you for reaching out to PGC Visayas for your research needs. Our team will be reviewing your inquiry and will get back to you as soon as possible.</p>`,
           },
         });
