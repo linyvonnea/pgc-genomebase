@@ -1232,6 +1232,8 @@ Submitted: ${new Date().toLocaleString()}
 
     // === CLIENT CONFIRMATION EMAIL ===
     // Send automated confirmation email to the client even if admin email fails.
+    let clientEmailFallbackDoc: Record<string, unknown> | null = null;
+
     try {
       if (inquiryData.email) {
         console.log(
@@ -1297,6 +1299,8 @@ Submitted: ${new Date().toLocaleString()}
           },
         };
 
+        clientEmailFallbackDoc = clientEmailData as Record<string, unknown>;
+
         await addMailDocument(clientEmailData as Record<string, unknown>);
         clientEmailSent = true;
         console.log(
@@ -1310,15 +1314,8 @@ Submitted: ${new Date().toLocaleString()}
       }
     } catch (error) {
       clientEmailError = error instanceof Error ? error.message : String(error);
-      if (inquiryData.email) {
-        emailFallbackDocs.push({
-          to: [inquiryData.email],
-          inquiryId: finalInquiryId,
-          message: {
-            subject: "Inquiry Received: PGC Visayas",
-            html: `<p>Inquiry Received - PGC Visayas</p><p>Dear ${inquiryData.name},</p><p>Thank you for reaching out to PGC Visayas for your research needs. Our team will be reviewing your inquiry and will get back to you as soon as possible.</p>`,
-          },
-        });
+      if (clientEmailFallbackDoc) {
+        emailFallbackDocs.push(clientEmailFallbackDoc);
       }
       console.error("âŒ CLIENT EMAIL FAILED:", error);
       // Continue execution even if client email fails
