@@ -39,6 +39,58 @@ import {
   OfficeAvailabilityResult,
 } from "@/types/OfficeCalendar";
 
+function normalizeOfficeEventType(value: unknown): OfficeEventType {
+  if (typeof value !== "string") return "activity";
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, "_");
+
+  switch (normalized) {
+    case "holiday":
+      return "holiday";
+    case "activity":
+    case "office_activity":
+      return "activity";
+    case "birthday":
+      return "birthday";
+    case "closure":
+      return "closure";
+    case "partial_closure":
+      return "partial_closure";
+    default:
+      return "activity";
+  }
+}
+
+function toOptionalHour(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return undefined;
+}
+
+function normalizeOfficeEventDoc(
+  id: string,
+  data: Record<string, unknown>,
+): OfficeDayEvent {
+  return {
+    id,
+    date: typeof data.date === "string" ? data.date : "",
+    type: normalizeOfficeEventType(data.type),
+    title: typeof data.title === "string" ? data.title : "",
+    description: typeof data.description === "string" ? data.description : "",
+    recurringYearly: data.recurringYearly === true,
+    closedFrom: toOptionalHour(data.closedFrom),
+    closedUntil: toOptionalHour(data.closedUntil),
+    createdBy: typeof data.createdBy === "string" ? data.createdBy : "unknown",
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+  };
+}
+
 // ─── Collection / document references ────────────────────────────────────────
 
 const EVENTS_COLLECTION = "officeCalendar";
@@ -141,7 +193,9 @@ export async function getAllOfficeEvents(): Promise<OfficeDayEvent[]> {
   const snap = await getDocs(
     query(collection(db, EVENTS_COLLECTION), orderBy("date", "asc")),
   );
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as OfficeDayEvent);
+  return snap.docs.map((d) =>
+    normalizeOfficeEventDoc(d.id, d.data() as Record<string, unknown>),
+  );
 }
 
 /**
@@ -153,8 +207,8 @@ export function subscribeToOfficeEvents(
 ): () => void {
   const q = query(collection(db, EVENTS_COLLECTION), orderBy("date", "asc"));
   return onSnapshot(q, (snap) => {
-    const events = snap.docs.map(
-      (d) => ({ id: d.id, ...d.data() }) as OfficeDayEvent,
+    const events = snap.docs.map((d) =>
+      normalizeOfficeEventDoc(d.id, d.data() as Record<string, unknown>),
     );
     onChange(events);
   });
@@ -201,6 +255,7 @@ export function getAvailabilityMessage(
   const holiday = events.find((e) => e.type === "holiday");
   const closure = events.find((e) => e.type === "closure");
   const activities = events.filter((e) => e.type === "activity");
+  const birthdays = events.filter((e) => e.type === "birthday");
 
   if (holiday) {
     return `📅 ${holiday.title} — The office is closed on this day. We will be back on the next working day.`;
@@ -214,6 +269,10 @@ export function getAvailabilityMessage(
   if (activities.length > 0) {
     const list = activities.map((a) => a.title).join("; ");
     return `📋 Note: The office has scheduled activities today (${list}). Response times may be delayed.`;
+  }
+  if (birthdays.length > 0) {
+    const list = birthdays.map((b) => b.title).join("; ");
+    return `🎂 Note: Birthday celebration(s) today (${list}). Response times may be delayed.`;
   }
   return null;
 }
