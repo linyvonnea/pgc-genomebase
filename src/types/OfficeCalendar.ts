@@ -9,20 +9,55 @@
  *   settings/officeCalendar    — weekend day configuration
  */
 
-export type OfficeEventType = "holiday" | "activity" | "closure" | "partial_closure";
+export type OfficeEventType =
+  | "holiday"
+  | "activity"
+  | "birthday"
+  | "closure"
+  | "partial_closure";
 
 export const OFFICE_EVENT_LABELS: Record<OfficeEventType, string> = {
   holiday: "Holiday",
   activity: "Office Activity",
+  birthday: "Birthday",
   closure: "Office Closure",
   partial_closure: "Partial Closure",
 };
 
-export const OFFICE_EVENT_COLORS: Record<OfficeEventType, { bg: string; text: string; border: string; dot: string }> = {
-  holiday:         { bg: "bg-red-50",     text: "text-red-700",     border: "border-red-200",     dot: "bg-red-500" },
-  activity:        { bg: "bg-amber-50",   text: "text-amber-700",   border: "border-amber-200",   dot: "bg-amber-500" },
-  closure:         { bg: "bg-slate-100",  text: "text-slate-600",   border: "border-slate-200",   dot: "bg-slate-500" },
-  partial_closure: { bg: "bg-violet-50",  text: "text-violet-700",  border: "border-violet-200",  dot: "bg-violet-500" },
+export const OFFICE_EVENT_COLORS: Record<
+  OfficeEventType,
+  { bg: string; text: string; border: string; dot: string }
+> = {
+  holiday: {
+    bg: "bg-red-50",
+    text: "text-red-700",
+    border: "border-red-200",
+    dot: "bg-red-500",
+  },
+  activity: {
+    bg: "bg-amber-50",
+    text: "text-amber-700",
+    border: "border-amber-200",
+    dot: "bg-amber-500",
+  },
+  birthday: {
+    bg: "bg-pink-50",
+    text: "text-pink-700",
+    border: "border-pink-200",
+    dot: "bg-pink-500",
+  },
+  closure: {
+    bg: "bg-slate-100",
+    text: "text-slate-600",
+    border: "border-slate-200",
+    dot: "bg-slate-500",
+  },
+  partial_closure: {
+    bg: "bg-violet-50",
+    text: "text-violet-700",
+    border: "border-violet-200",
+    dot: "bg-violet-500",
+  },
 };
 
 export interface OfficeDayEvent {
@@ -48,8 +83,8 @@ export interface OfficeDayEvent {
    */
   closedUntil?: number;
   createdBy: string; // admin email
-  createdAt: any;    // Firestore Timestamp
-  updatedAt: any;    // Firestore Timestamp
+  createdAt: any; // Firestore Timestamp
+  updatedAt: any; // Firestore Timestamp
 }
 
 /** Configurable office hours (24-hour format, e.g. { start: 8, end: 17 }). */
@@ -74,7 +109,14 @@ export interface OfficeCalendarSettings {
 export interface OfficeAvailabilityResult {
   isOpen: boolean;
   /** Reason code for programmatic use */
-  reason: "open" | "outside_hours" | "weekend" | "holiday" | "closure" | "partial_closure" | "activity";
+  reason:
+    | "open"
+    | "outside_hours"
+    | "weekend"
+    | "holiday"
+    | "closure"
+    | "partial_closure"
+    | "activity";
   /** Human-readable message ready to be sent to the client */
   autoReplyMessage: string;
 }
