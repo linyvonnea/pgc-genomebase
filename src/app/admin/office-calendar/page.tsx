@@ -15,30 +15,14 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  format,
-  getDaysInMonth,
-  startOfMonth,
-  getDay,
-  addMonths,
-  subMonths,
-  isSameDay,
-  parseISO,
-  isToday,
-} from "date-fns";
+import { format, getDaysInMonth, startOfMonth, getDay, addMonths, subMonths, isSameDay, parseISO, isToday } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -115,22 +99,21 @@ import {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const WEEKDAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const WEEKDAY_FULL = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
+const WEEKDAY_FULL  = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 const EVENT_TYPE_ICONS: Record<OfficeEventType, React.ReactNode> = {
+<<<<<<< HEAD
   holiday: <Flag className="h-3 w-3" />,
   activity: <PartyPopper className="h-3 w-3" />,
   birthday: <Cake className="h-3 w-3" />,
   closure: <AlertTriangle className="h-3 w-3" />,
   partial_closure: <Clock className="h-3 w-3" />,
+=======
+  holiday:         <Flag         className="h-3 w-3" />,
+  activity:        <PartyPopper  className="h-3 w-3" />,
+  closure:         <AlertTriangle className="h-3 w-3" />,
+  partial_closure: <Clock        className="h-3 w-3" />,
+>>>>>>> a4bb989f8308f671fa0683d3c089fae7f9e3b04e
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -157,31 +140,21 @@ function EventChip({ event, onEdit, onDelete, canEdit }: EventChipProps) {
           <div
             className={cn(
               "flex items-center gap-0.5 px-1 py-0.5 rounded text-[10px] font-medium truncate max-w-full cursor-default group",
-              c.bg,
-              c.text,
-              `border ${c.border}`,
+              c.bg, c.text, `border ${c.border}`
             )}
           >
-            <span className="flex-shrink-0">
-              {EVENT_TYPE_ICONS[event.type]}
-            </span>
+            <span className="flex-shrink-0">{EVENT_TYPE_ICONS[event.type]}</span>
             <span className="truncate">{event.title}</span>
             {canEdit && (
               <span className="flex items-center gap-0.5 ml-auto flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(event);
-                  }}
+                  onClick={(e) => { e.stopPropagation(); onEdit(event); }}
                   className="hover:text-blue-600 p-0.5 rounded"
                 >
                   <Pencil className="h-2.5 w-2.5" />
                 </button>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(event);
-                  }}
+                  onClick={(e) => { e.stopPropagation(); onDelete(event); }}
                   className="hover:text-red-600 p-0.5 rounded"
                 >
                   <X className="h-2.5 w-2.5" />
@@ -192,12 +165,8 @@ function EventChip({ event, onEdit, onDelete, canEdit }: EventChipProps) {
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-[200px]">
           <p className="font-semibold text-xs">{event.title}</p>
-          {event.description && (
-            <p className="text-xs text-slate-400 mt-0.5">{event.description}</p>
-          )}
-          {event.recurringYearly && (
-            <p className="text-xs text-amber-400 mt-0.5">Recurs every year</p>
-          )}
+          {event.description && <p className="text-xs text-slate-400 mt-0.5">{event.description}</p>}
+          {event.recurringYearly && <p className="text-xs text-amber-400 mt-0.5">Recurs every year</p>}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -221,15 +190,12 @@ function OfficeCalendarContent() {
   const { canEdit, canDelete, canCreate } = usePermissions(adminInfo?.role);
 
   // ── State ──────────────────────────────────────────────────────────────────
-  const [currentMonth, setCurrentMonth] = useState<Date>(() =>
-    startOfMonth(new Date()),
-  );
-  const [allEvents, setAllEvents] = useState<OfficeDayEvent[]>([]);
-  const [weekendDays, setWeekendDays] = useState<number[]>([0, 6]);
-  const [officeHours, setOfficeHours] =
-    useState<OfficeHours>(DEFAULT_OFFICE_HOURS);
+  const [currentMonth, setCurrentMonth] = useState<Date>(() => startOfMonth(new Date()));
+  const [allEvents, setAllEvents]         = useState<OfficeDayEvent[]>([]);
+  const [weekendDays, setWeekendDays]     = useState<number[]>([0, 6]);
+  const [officeHours, setOfficeHours]     = useState<OfficeHours>(DEFAULT_OFFICE_HOURS);
   const [savingWeekends, setSavingWeekends] = useState(false);
-  const [savingHours, setSavingHours] = useState(false);
+  const [savingHours, setSavingHours]     = useState(false);
   const [loadingSettings, setLoadingSettings] = useState(true);
 
   // Sidebar collapse state
@@ -241,11 +207,11 @@ function OfficeCalendarContent() {
   });
 
   // Dialog state
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<OfficeDayEvent | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [editingEvent, setEditingEvent] = useState<OfficeDayEvent | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [dialogOpen, setDialogOpen]         = useState(false);
+  const [deleteTarget, setDeleteTarget]     = useState<OfficeDayEvent | null>(null);
+  const [selectedDate, setSelectedDate]     = useState<string | null>(null);
+  const [editingEvent, setEditingEvent]     = useState<OfficeDayEvent | null>(null);
+  const [saving, setSaving]                 = useState(false);
 
   // Form state
   const [form, setForm] = useState<{
@@ -255,14 +221,7 @@ function OfficeCalendarContent() {
     recurringYearly: boolean;
     closedFrom: number;
     closedUntil: number;
-  }>({
-    type: "holiday",
-    title: "",
-    description: "",
-    recurringYearly: false,
-    closedFrom: 12,
-    closedUntil: 13,
-  });
+  }>({ type: "holiday", title: "", description: "", recurringYearly: false, closedFrom: 12, closedUntil: 13 });
 
   // ── Real-time events subscription ─────────────────────────────────────────
   useEffect(() => {
@@ -290,13 +249,7 @@ function OfficeCalendarContent() {
     for (let i = 0; i < fdow; i++) cells.push(null);
     for (let d = 1; d <= dim; d++) cells.push(d);
     while (cells.length % 7 !== 0) cells.push(null);
-    return {
-      year: y,
-      month: m,
-      daysInMonth: dim,
-      firstDayOfWeek: fdow,
-      calCells: cells,
-    };
+    return { year: y, month: m, daysInMonth: dim, firstDayOfWeek: fdow, calCells: cells };
   }, [currentMonth]);
 
   // ── Events grouped by date string ─────────────────────────────────────────
@@ -331,13 +284,9 @@ function OfficeCalendarContent() {
       if (!e.recurringYearly) return false;
       const [, em, ed] = e.date.split("-");
       const thisYearDate = `${year}-${em}-${ed}`;
-      return (
-        thisYearDate.startsWith(prefix) && !direct.find((d) => d.id === e.id)
-      );
+      return thisYearDate.startsWith(prefix) && !direct.find((d) => d.id === e.id);
     });
-    return [...direct, ...recurring].sort((a, b) =>
-      a.date.localeCompare(b.date),
-    );
+    return [...direct, ...recurring].sort((a, b) => a.date.localeCompare(b.date));
   }, [allEvents, year, month]);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
@@ -345,14 +294,7 @@ function OfficeCalendarContent() {
   const openAddDialog = useCallback((dateStr: string) => {
     setEditingEvent(null);
     setSelectedDate(dateStr);
-    setForm({
-      type: "holiday",
-      title: "",
-      description: "",
-      recurringYearly: false,
-      closedFrom: 12,
-      closedUntil: 13,
-    });
+    setForm({ type: "holiday", title: "", description: "", recurringYearly: false, closedFrom: 12, closedUntil: 13 });
     setDialogOpen(true);
   }, []);
 
@@ -427,19 +369,14 @@ function OfficeCalendarContent() {
 
   const handleToggleWeekend = (day: number) => {
     setWeekendDays((prev) =>
-      prev.includes(day)
-        ? prev.filter((d) => d !== day)
-        : [...prev, day].sort(),
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()
     );
   };
 
   const handleSaveWeekends = async () => {
     setSavingWeekends(true);
     try {
-      await saveOfficeCalendarSettings(
-        { weekendDays },
-        user?.email ?? "unknown",
-      );
+      await saveOfficeCalendarSettings({ weekendDays }, user?.email ?? "unknown");
       toast.success("Weekend settings saved.");
     } catch {
       toast.error("Failed to save weekend settings.");
@@ -455,10 +392,7 @@ function OfficeCalendarContent() {
     }
     setSavingHours(true);
     try {
-      await saveOfficeCalendarSettings(
-        { officeHours },
-        user?.email ?? "unknown",
-      );
+      await saveOfficeCalendarSettings({ officeHours }, user?.email ?? "unknown");
       toast.success("Office hours saved.");
     } catch {
       toast.error("Failed to save office hours.");
@@ -479,8 +413,12 @@ function OfficeCalendarContent() {
             Office Calendar
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">
+<<<<<<< HEAD
             Manage holidays, activities, and closures. This data is used to
             inform clients about office availability.
+=======
+            Manage holidays, activities, and closures. This data is used to inform clients about office availability.
+>>>>>>> a4bb989f8308f671fa0683d3c089fae7f9e3b04e
           </p>
         </div>
         {/* Legend */}
@@ -489,12 +427,7 @@ function OfficeCalendarContent() {
             const c = OFFICE_EVENT_COLORS[t];
             return (
               <span key={t} className="flex items-center gap-1">
-                <span
-                  className={cn(
-                    "h-2.5 w-2.5 rounded-full flex-shrink-0",
-                    c.dot,
-                  )}
-                />
+                <span className={cn("h-2.5 w-2.5 rounded-full flex-shrink-0", c.dot)} />
                 {OFFICE_EVENT_LABELS[t]}
               </span>
             );
@@ -512,7 +445,7 @@ function OfficeCalendarContent() {
           {/* Office Hours Configuration (Moved to top-left-most) */}
           <Card className="shadow-none border-slate-200 order-first overflow-hidden">
             <button
-              onClick={() => setSidebarOpen((s) => ({ ...s, hours: !s.hours }))}
+              onClick={() => setSidebarOpen(s => ({ ...s, hours: !s.hours }))}
               className="w-full"
             >
               <CardHeader className="py-2.5 px-4 text-left hover:bg-slate-50 transition-colors cursor-pointer border-b border-transparent">
@@ -520,16 +453,11 @@ function OfficeCalendarContent() {
                   <CardTitle className="text-sm font-bold text-slate-800 tracking-tight">
                     Office Hours
                   </CardTitle>
-                  {sidebarOpen.hours ? (
-                    <ChevronUp className="h-4 w-4 text-slate-400" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 text-slate-400" />
-                  )}
+                  {sidebarOpen.hours ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
                 </div>
                 {sidebarOpen.hours && (
                   <CardDescription className="text-[11px] leading-tight mt-1 text-slate-500">
-                    Working hours in Philippine Standard Time (PST). Used for
-                    chat auto-replies.
+                    Working hours in Philippine Standard Time (PST). Used for chat auto-replies.
                   </CardDescription>
                 )}
               </CardHeader>
@@ -538,14 +466,11 @@ function OfficeCalendarContent() {
               <CardContent className="p-4 pt-3 space-y-3">
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <Label className="text-[11px] font-medium text-slate-500 mb-1 block">
-                      Opens at
-                    </Label>
+                    <Label className="text-[11px] font-medium text-slate-500 mb-1 block">Opens at</Label>
                     <Select
                       value={String(officeHours.start)}
                       onValueChange={(v) =>
-                        canEdit("officeCalendar") &&
-                        setOfficeHours((h) => ({ ...h, start: Number(v) }))
+                        canEdit("officeCalendar") && setOfficeHours((h) => ({ ...h, start: Number(v) }))
                       }
                       disabled={!canEdit("officeCalendar")}
                     >
@@ -555,27 +480,18 @@ function OfficeCalendarContent() {
                       <SelectContent>
                         {Array.from({ length: 24 }, (_, i) => (
                           <SelectItem key={i} value={String(i)}>
-                            {i === 0
-                              ? "12:00 AM"
-                              : i < 12
-                                ? `${i}:00 AM`
-                                : i === 12
-                                  ? "12:00 PM"
-                                  : `${i - 12}:00 PM`}
+                            {i === 0 ? "12:00 AM" : i < 12 ? `${i}:00 AM` : i === 12 ? "12:00 PM" : `${i - 12}:00 PM`}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-[11px] font-medium text-slate-500 mb-1 block">
-                      Closes at
-                    </Label>
+                    <Label className="text-[11px] font-medium text-slate-500 mb-1 block">Closes at</Label>
                     <Select
                       value={String(officeHours.end)}
                       onValueChange={(v) =>
-                        canEdit("officeCalendar") &&
-                        setOfficeHours((h) => ({ ...h, end: Number(v) }))
+                        canEdit("officeCalendar") && setOfficeHours((h) => ({ ...h, end: Number(v) }))
                       }
                       disabled={!canEdit("officeCalendar")}
                     >
@@ -585,13 +501,7 @@ function OfficeCalendarContent() {
                       <SelectContent>
                         {Array.from({ length: 24 }, (_, i) => (
                           <SelectItem key={i} value={String(i)}>
-                            {i === 0
-                              ? "12:00 AM"
-                              : i < 12
-                                ? `${i}:00 AM`
-                                : i === 12
-                                  ? "12:00 PM"
-                                  : `${i - 12}:00 PM`}
+                            {i === 0 ? "12:00 AM" : i < 12 ? `${i}:00 AM` : i === 12 ? "12:00 PM" : `${i - 12}:00 PM`}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -599,8 +509,7 @@ function OfficeCalendarContent() {
                   </div>
                 </div>
                 <p className="text-[10px] text-slate-400 italic">
-                  Clients messaging outside these hours will receive an
-                  automated notice.
+                  Clients messaging outside these hours will receive an automated notice.
                 </p>
                 {canEdit("officeCalendar") && (
                   <Button
@@ -610,15 +519,9 @@ function OfficeCalendarContent() {
                     className="w-full h-8 text-xs bg-[#166FB5] hover:bg-[#166FB5]/90 font-medium"
                   >
                     {savingHours ? (
-                      <>
-                        <RefreshCw className="h-3 w-3 mr-1.5 animate-spin" />
-                        Saving…
-                      </>
+                      <><RefreshCw className="h-3 w-3 mr-1.5 animate-spin" />Saving…</>
                     ) : (
-                      <>
-                        <Save className="h-3 w-3 mr-1.5" />
-                        Save Office Hours
-                      </>
+                      <><Save className="h-3 w-3 mr-1.5" />Save Office Hours</>
                     )}
                   </Button>
                 )}
@@ -629,9 +532,7 @@ function OfficeCalendarContent() {
           {/* Weekend Configuration */}
           <Card className="shadow-none border-slate-200 overflow-hidden">
             <button
-              onClick={() =>
-                setSidebarOpen((s) => ({ ...s, weekends: !s.weekends }))
-              }
+              onClick={() => setSidebarOpen(s => ({ ...s, weekends: !s.weekends }))}
               className="w-full"
             >
               <CardHeader className="py-2.5 px-4 text-left hover:bg-slate-50 transition-colors cursor-pointer">
@@ -639,16 +540,11 @@ function OfficeCalendarContent() {
                   <CardTitle className="text-sm font-bold text-slate-800 tracking-tight">
                     Weekend / Non-Working Days
                   </CardTitle>
-                  {sidebarOpen.weekends ? (
-                    <ChevronUp className="h-4 w-4 text-slate-400" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 text-slate-400" />
-                  )}
+                  {sidebarOpen.weekends ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
                 </div>
                 {sidebarOpen.weekends && (
                   <CardDescription className="text-[11px] leading-tight mt-1 text-slate-500">
-                    Select which days of the week are non-working. These days
-                    will appear highlighted on the calendar.
+                    Select which days of the week are non-working. These days will appear highlighted on the calendar.
                   </CardDescription>
                 )}
               </CardHeader>
@@ -663,39 +559,25 @@ function OfficeCalendarContent() {
                         "flex items-center gap-2 px-2 py-1 rounded-md border cursor-pointer text-xs transition-colors select-none",
                         weekendDays.includes(i)
                           ? "border-sky-300 bg-sky-50 text-sky-700 font-semibold"
-                          : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50",
+                          : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"
                       )}
                     >
                       <input
                         type="checkbox"
                         className="sr-only"
                         checked={weekendDays.includes(i)}
-                        onChange={() =>
-                          canEdit("officeCalendar") && handleToggleWeekend(i)
-                        }
+                        onChange={() => canEdit("officeCalendar") && handleToggleWeekend(i)}
                         disabled={!canEdit("officeCalendar")}
                       />
                       <span
                         className={cn(
                           "h-3 w-3 rounded-sm border flex items-center justify-center flex-shrink-0",
-                          weekendDays.includes(i)
-                            ? "border-sky-500 bg-sky-500"
-                            : "border-slate-300",
+                          weekendDays.includes(i) ? "border-sky-500 bg-sky-500" : "border-slate-300"
                         )}
                       >
                         {weekendDays.includes(i) && (
-                          <svg
-                            viewBox="0 0 12 12"
-                            className="h-2 w-2 fill-white"
-                          >
-                            <path
-                              d="M2 6l3 3 5-5"
-                              stroke="white"
-                              strokeWidth="2"
-                              fill="none"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
+                          <svg viewBox="0 0 12 12" className="h-2 w-2 fill-white">
+                            <path d="M2 6l3 3 5-5" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                         )}
                       </span>
@@ -711,15 +593,9 @@ function OfficeCalendarContent() {
                     className="w-full h-8 text-xs bg-[#166FB5] hover:bg-[#166FB5]/90 font-medium"
                   >
                     {savingWeekends ? (
-                      <>
-                        <RefreshCw className="h-3 w-3 mr-1.5 animate-spin" />
-                        Saving…
-                      </>
+                      <><RefreshCw className="h-3 w-3 mr-1.5 animate-spin" />Saving…</>
                     ) : (
-                      <>
-                        <Save className="h-3 w-3 mr-1.5" />
-                        Save Weekend Settings
-                      </>
+                      <><Save className="h-3 w-3 mr-1.5" />Save Weekend Settings</>
                     )}
                   </Button>
                 )}
@@ -730,9 +606,7 @@ function OfficeCalendarContent() {
           {/* Month Events List */}
           <Card className="shadow-none border-slate-200 overflow-hidden">
             <button
-              onClick={() =>
-                setSidebarOpen((s) => ({ ...s, events: !s.events }))
-              }
+              onClick={() => setSidebarOpen(s => ({ ...s, events: !s.events }))}
               className="w-full"
             >
               <CardHeader className="py-2.5 px-4 text-left hover:bg-slate-50 transition-colors cursor-pointer">
@@ -740,17 +614,11 @@ function OfficeCalendarContent() {
                   <CardTitle className="text-sm font-bold text-slate-800 tracking-tight">
                     {format(currentMonth, "MMMM yyyy")} Events
                   </CardTitle>
-                  {sidebarOpen.events ? (
-                    <ChevronUp className="h-4 w-4 text-slate-400" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 text-slate-400" />
-                  )}
+                  {sidebarOpen.events ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
                 </div>
                 {sidebarOpen.events && (
                   <CardDescription className="text-[11px] leading-tight mt-1 text-slate-500">
-                    {monthEvents.length === 0
-                      ? "No events this month."
-                      : `${monthEvents.length} event${monthEvents.length > 1 ? "s" : ""} scheduled.`}
+                    {monthEvents.length === 0 ? "No events this month." : `${monthEvents.length} event${monthEvents.length > 1 ? "s" : ""} scheduled.`}
                   </CardDescription>
                 )}
               </CardHeader>
@@ -762,9 +630,7 @@ function OfficeCalendarContent() {
                     <CalendarDays className="h-6 w-6 mx-auto mb-2 opacity-20" />
                     <p className="text-[11px]">No events this month</p>
                     {canCreate("officeCalendar") && (
-                      <p className="text-[10px] mt-0.5 opacity-80">
-                        Click a day on the calendar to add one.
-                      </p>
+                      <p className="text-[10px] mt-0.5 opacity-80">Click a day on the calendar to add one.</p>
                     )}
                   </div>
                 )}
@@ -775,59 +641,31 @@ function OfficeCalendarContent() {
                       key={ev.id}
                       className={cn(
                         "flex items-start gap-2 p-2 rounded-md border text-[11px]",
-                        c.bg,
-                        c.border,
+                        c.bg, c.border
                       )}
                     >
-                      <span
-                        className={cn(
-                          "h-1.5 w-1.5 rounded-full mt-1.5 flex-shrink-0",
-                          c.dot,
-                        )}
-                      />
+                      <span className={cn("h-1.5 w-1.5 rounded-full mt-1.5 flex-shrink-0", c.dot)} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1">
-                          <span className={cn("font-bold truncate", c.text)}>
-                            {ev.title}
-                          </span>
+                          <span className={cn("font-bold truncate", c.text)}>{ev.title}</span>
                           {ev.recurringYearly && (
-                            <Badge
-                              variant="outline"
-                              className="h-3.5 text-[8px] px-1 py-0 flex-shrink-0 font-normal"
-                            >
+                            <Badge variant="outline" className="h-3.5 text-[8px] px-1 py-0 flex-shrink-0 font-normal">
                               Yearly
                             </Badge>
                           )}
                         </div>
                         <p className="text-slate-500 font-medium">
-                          {format(parseISO(ev.date), "MMM d")} ·{" "}
-                          {OFFICE_EVENT_LABELS[ev.type]}
+                          {format(parseISO(ev.date), "MMM d")} · {OFFICE_EVENT_LABELS[ev.type]}
                         </p>
-                        {ev.type === "partial_closure" &&
-                          typeof ev.closedFrom === "number" &&
-                          typeof ev.closedUntil === "number" && (
-                            <div className="text-violet-600 font-bold mt-0.5">
-                              {ev.closedFrom === 0
-                                ? "12:00 AM"
-                                : ev.closedFrom < 12
-                                  ? `${ev.closedFrom}:00 AM`
-                                  : ev.closedFrom === 12
-                                    ? "12:00 PM"
-                                    : `${ev.closedFrom - 12}:00 PM`}
-                              {" – "}
-                              {ev.closedUntil === 0
-                                ? "12:00 AM"
-                                : ev.closedUntil < 12
-                                  ? `${ev.closedUntil}:00 AM`
-                                  : ev.closedUntil === 12
-                                    ? "12:00 PM"
-                                    : `${ev.closedUntil - 12}:00 PM`}
-                            </div>
-                          )}
+                        {ev.type === "partial_closure" && typeof ev.closedFrom === "number" && typeof ev.closedUntil === "number" && (
+                          <div className="text-violet-600 font-bold mt-0.5">
+                            {ev.closedFrom === 0 ? "12:00 AM" : ev.closedFrom < 12 ? `${ev.closedFrom}:00 AM` : ev.closedFrom === 12 ? "12:00 PM" : `${ev.closedFrom - 12}:00 PM`}
+                            {" – "}
+                            {ev.closedUntil === 0 ? "12:00 AM" : ev.closedUntil < 12 ? `${ev.closedUntil}:00 AM` : ev.closedUntil === 12 ? "12:00 PM" : `${ev.closedUntil - 12}:00 PM`}
+                          </div>
+                        )}
                         {ev.description && (
-                          <p className="text-slate-400 mt-1 line-clamp-2 leading-tight italic">
-                            {ev.description}
-                          </p>
+                          <p className="text-slate-400 mt-1 line-clamp-2 leading-tight italic">{ev.description}</p>
                         )}
                       </div>
                       {canEdit("officeCalendar") && (
@@ -858,25 +696,20 @@ function OfficeCalendarContent() {
           {/* Info card */}
           <Card className="shadow-none border-blue-100 bg-blue-50/50 flex-shrink-0 overflow-hidden">
             <button
-              onClick={() => setSidebarOpen((s) => ({ ...s, info: !s.info }))}
+              onClick={() => setSidebarOpen(s => ({ ...s, info: !s.info }))}
               className="w-full"
             >
               <CardContent className="py-2.5 px-4 text-left hover:bg-blue-100/30 transition-colors cursor-pointer">
                 <div className="flex items-center justify-between">
                   <div className="flex gap-2 text-xs text-blue-800">
-                    <span className="font-bold tracking-tight">
-                      How this is used
-                    </span>
+                    <span className="font-bold tracking-tight">How this is used</span>
                   </div>
-                  {sidebarOpen.info ? (
-                    <ChevronUp className="h-4 w-4 text-blue-400" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 text-blue-400" />
-                  )}
+                  {sidebarOpen.info ? <ChevronUp className="h-4 w-4 text-blue-400" /> : <ChevronDown className="h-4 w-4 text-blue-400" />}
                 </div>
                 {sidebarOpen.info && (
                   <div className="mt-2 text-[11px] text-blue-700 leading-relaxed">
                     <ul className="space-y-1 list-disc list-inside">
+<<<<<<< HEAD
                       <li>
                         Chat widget auto-informs clients when they message on
                         holidays or closures.
@@ -887,6 +720,11 @@ function OfficeCalendarContent() {
                       <li>
                         Yearly-recurring events apply automatically each year.
                       </li>
+=======
+                      <li>Chat widget auto-informs clients when they message on holidays or closures.</li>
+                      <li>Activities trigger a delay-notice message to clients.</li>
+                      <li>Yearly-recurring events apply automatically each year.</li>
+>>>>>>> a4bb989f8308f671fa0683d3c089fae7f9e3b04e
                     </ul>
                   </div>
                 )}
@@ -940,7 +778,7 @@ function OfficeCalendarContent() {
                     key={dn}
                     className={cn(
                       "text-center text-xs font-semibold py-2 text-slate-500",
-                      weekendDays.includes(i) && "text-sky-400",
+                      weekendDays.includes(i) && "text-sky-400"
                     )}
                   >
                     {dn}
@@ -952,19 +790,12 @@ function OfficeCalendarContent() {
               <div className="grid grid-cols-7 divide-x divide-y divide-slate-100">
                 {calCells.map((day, idx) => {
                   if (day === null) {
-                    return (
-                      <div
-                        key={`empty-${idx}`}
-                        className="min-h-[90px] bg-slate-50/40"
-                      />
-                    );
+                    return <div key={`empty-${idx}`} className="min-h-[90px] bg-slate-50/40" />;
                   }
 
                   const dateStr = toDateStr(year, month, day);
                   const dayEvents = eventsByDate.get(dateStr) ?? [];
-                  const isWeekend = weekendDays.includes(
-                    new Date(year, month, day).getDay(),
-                  );
+                  const isWeekend = weekendDays.includes(new Date(year, month, day).getDay());
                   const todayMark = isToday(new Date(year, month, day));
 
                   return (
@@ -973,21 +804,16 @@ function OfficeCalendarContent() {
                       className={cn(
                         "min-h-[90px] p-1.5 flex flex-col gap-0.5 transition-colors",
                         isWeekend ? "bg-sky-50/50" : "bg-white",
-                        canCreate("officeCalendar") &&
-                          "hover:bg-slate-50 cursor-pointer group",
+                        canCreate("officeCalendar") && "hover:bg-slate-50 cursor-pointer group"
                       )}
-                      onClick={() =>
-                        canCreate("officeCalendar") && openAddDialog(dateStr)
-                      }
+                      onClick={() => canCreate("officeCalendar") && openAddDialog(dateStr)}
                     >
                       {/* Day number */}
                       <div className="flex items-center justify-between">
                         <span
                           className={cn(
                             "text-xs font-semibold h-5 w-5 flex items-center justify-center rounded-full",
-                            todayMark
-                              ? "bg-[#166FB5] text-white"
-                              : "text-slate-600",
+                            todayMark ? "bg-[#166FB5] text-white" : "text-slate-600"
                           )}
                         >
                           {day}
@@ -1044,20 +870,13 @@ function OfficeCalendarContent() {
               </Label>
               <Select
                 value={form.type}
-                onValueChange={(v) =>
-                  setForm((f) => ({ ...f, type: v as OfficeEventType }))
-                }
+                onValueChange={(v) => setForm((f) => ({ ...f, type: v as OfficeEventType }))}
               >
                 <SelectTrigger className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {(
-                    Object.entries(OFFICE_EVENT_LABELS) as [
-                      OfficeEventType,
-                      string,
-                    ][]
-                  ).map(([val, label]) => {
+                  {(Object.entries(OFFICE_EVENT_LABELS) as [OfficeEventType, string][]).map(([val, label]) => {
                     const c = OFFICE_EVENT_COLORS[val];
                     return (
                       <SelectItem key={val} value={val}>
@@ -1065,9 +884,7 @@ function OfficeCalendarContent() {
                           <span className={cn("h-2 w-2 rounded-full", c.dot)} />
                           {label}
                           {val === "partial_closure" && (
-                            <span className="text-[10px] text-slate-400 ml-1">
-                              (specific hours)
-                            </span>
+                            <span className="text-[10px] text-slate-400 ml-1">(specific hours)</span>
                           )}
                         </div>
                       </SelectItem>
@@ -1084,19 +901,24 @@ function OfficeCalendarContent() {
               </Label>
               <Input
                 value={form.title}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, title: e.target.value }))
-                }
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                 placeholder={
                   form.type === "holiday"
                     ? "e.g. Independence Day"
                     : form.type === "activity"
+<<<<<<< HEAD
                       ? "e.g. Team Building Day"
                       : form.type === "birthday"
                         ? "e.g. Juan Dela Cruz Birthday"
                         : form.type === "partial_closure"
                           ? "e.g. Half Day — Morning Off"
                           : "e.g. Office Maintenance"
+=======
+                    ? "e.g. Team Building Day"
+                    : form.type === "partial_closure"
+                    ? "e.g. Half Day — Morning Off"
+                    : "e.g. Office Maintenance"
+>>>>>>> a4bb989f8308f671fa0683d3c089fae7f9e3b04e
                 }
                 className="h-9"
                 maxLength={80}
@@ -1106,14 +928,17 @@ function OfficeCalendarContent() {
             {/* Description */}
             <div className="space-y-1.5">
               <Label className="text-sm font-semibold text-slate-700">
-                Description{" "}
-                <span className="text-slate-400 font-normal">(optional)</span>
+                Description <span className="text-slate-400 font-normal">(optional)</span>
               </Label>
               <Textarea
                 value={form.description}
+<<<<<<< HEAD
                 onChange={(e) =>
                   setForm((f) => ({ ...f, description: e.target.value }))
                 }
+=======
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+>>>>>>> a4bb989f8308f671fa0683d3c089fae7f9e3b04e
                 placeholder="Additional details visible to clients in chat..."
                 className="resize-none text-sm"
                 rows={2}
@@ -1129,19 +954,14 @@ function OfficeCalendarContent() {
                   No Office Hours <span className="text-red-500">*</span>
                 </Label>
                 <p className="text-xs text-slate-400">
-                  The office will be unavailable during this time window on the
-                  selected day.
+                  The office will be unavailable during this time window on the selected day.
                 </p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-xs text-slate-500 mb-1 block">
-                      From
-                    </Label>
+                    <Label className="text-xs text-slate-500 mb-1 block">From</Label>
                     <Select
                       value={String(form.closedFrom)}
-                      onValueChange={(v) =>
-                        setForm((f) => ({ ...f, closedFrom: Number(v) }))
-                      }
+                      onValueChange={(v) => setForm((f) => ({ ...f, closedFrom: Number(v) }))}
                     >
                       <SelectTrigger className="h-9 text-sm">
                         <SelectValue />
@@ -1149,45 +969,25 @@ function OfficeCalendarContent() {
                       <SelectContent>
                         {Array.from({ length: 24 }, (_, i) => (
                           <SelectItem key={i} value={String(i)}>
-                            {i === 0
-                              ? "12:00 AM"
-                              : i < 12
-                                ? `${i}:00 AM`
-                                : i === 12
-                                  ? "12:00 PM"
-                                  : `${i - 12}:00 PM`}
+                            {i === 0 ? "12:00 AM" : i < 12 ? `${i}:00 AM` : i === 12 ? "12:00 PM" : `${i - 12}:00 PM`}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs text-slate-500 mb-1 block">
-                      Until
-                    </Label>
+                    <Label className="text-xs text-slate-500 mb-1 block">Until</Label>
                     <Select
                       value={String(form.closedUntil)}
-                      onValueChange={(v) =>
-                        setForm((f) => ({ ...f, closedUntil: Number(v) }))
-                      }
+                      onValueChange={(v) => setForm((f) => ({ ...f, closedUntil: Number(v) }))}
                     >
                       <SelectTrigger className="h-9 text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         {Array.from({ length: 24 }, (_, i) => (
-                          <SelectItem
-                            key={i}
-                            value={String(i)}
-                            disabled={i <= form.closedFrom}
-                          >
-                            {i === 0
-                              ? "12:00 AM"
-                              : i < 12
-                                ? `${i}:00 AM`
-                                : i === 12
-                                  ? "12:00 PM"
-                                  : `${i - 12}:00 PM`}
+                          <SelectItem key={i} value={String(i)} disabled={i <= form.closedFrom}>
+                            {i === 0 ? "12:00 AM" : i < 12 ? `${i}:00 AM` : i === 12 ? "12:00 PM" : `${i - 12}:00 PM`}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -1195,9 +995,7 @@ function OfficeCalendarContent() {
                   </div>
                 </div>
                 {form.closedFrom >= form.closedUntil && (
-                  <p className="text-xs text-red-500">
-                    End time must be after start time.
-                  </p>
+                  <p className="text-xs text-red-500">End time must be after start time.</p>
                 )}
               </div>
             )}
@@ -1205,55 +1003,31 @@ function OfficeCalendarContent() {
             {/* Recurring yearly */}
             <div className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5">
               <div>
-                <p className="text-sm font-medium text-slate-700">
-                  Repeat Every Year
-                </p>
-                <p className="text-xs text-slate-400">
-                  Automatically applies on the same date each year
-                </p>
+                <p className="text-sm font-medium text-slate-700">Repeat Every Year</p>
+                <p className="text-xs text-slate-400">Automatically applies on the same date each year</p>
               </div>
               <Switch
                 checked={form.recurringYearly}
-                onCheckedChange={(v) =>
-                  setForm((f) => ({ ...f, recurringYearly: v }))
-                }
+                onCheckedChange={(v) => setForm((f) => ({ ...f, recurringYearly: v }))}
               />
             </div>
           </div>
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDialogOpen(false)}
-              className="h-9"
-            >
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="h-9">
               Cancel
             </Button>
             <Button
               onClick={handleSaveEvent}
-              disabled={
-                saving ||
-                !form.title.trim() ||
-                (form.type === "partial_closure" &&
-                  form.closedFrom >= form.closedUntil)
-              }
+              disabled={saving || !form.title.trim() || (form.type === "partial_closure" && form.closedFrom >= form.closedUntil)}
               className="h-9 bg-[#166FB5] hover:bg-[#166FB5]/90"
             >
               {saving ? (
-                <>
-                  <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                  Saving…
-                </>
+                <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />Saving…</>
               ) : editingEvent ? (
-                <>
-                  <Save className="h-3.5 w-3.5 mr-1.5" />
-                  Update Event
-                </>
+                <><Save className="h-3.5 w-3.5 mr-1.5" />Update Event</>
               ) : (
-                <>
-                  <Plus className="h-3.5 w-3.5 mr-1.5" />
-                  Add Event
-                </>
+                <><Plus className="h-3.5 w-3.5 mr-1.5" />Add Event</>
               )}
             </Button>
           </DialogFooter>
@@ -1261,23 +1035,16 @@ function OfficeCalendarContent() {
       </Dialog>
 
       {/* ── Delete Confirm Dialog ────────────────────────────────────────────── */}
-      <AlertDialog
-        open={!!deleteTarget}
-        onOpenChange={(o) => !o && setDeleteTarget(null)}
-      >
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Event?</AlertDialogTitle>
             <AlertDialogDescription>
               <strong>"{deleteTarget?.title}"</strong> on{" "}
-              {deleteTarget
-                ? format(parseISO(deleteTarget.date), "MMMM d, yyyy")
-                : ""}{" "}
-              will be permanently removed.
+              {deleteTarget ? format(parseISO(deleteTarget.date), "MMMM d, yyyy") : ""} will be permanently removed.
               {deleteTarget?.recurringYearly && (
                 <span className="block mt-1 text-amber-600 font-medium">
-                  This is a recurring yearly event. Deleting it removes all
-                  future occurrences.
+                  This is a recurring yearly event. Deleting it removes all future occurrences.
                 </span>
               )}
             </AlertDialogDescription>
