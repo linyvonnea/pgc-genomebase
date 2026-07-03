@@ -31,8 +31,6 @@ import {
 import { db } from "@/lib/firebase";
 import {
   checkAvailabilityNow,
-  getEventsForDate,
-  getPhilippineDateTime,
   getOfficeCalendarSettings,
   getAllOfficeEvents,
 } from "@/services/officeCalendarService";
@@ -87,20 +85,6 @@ export async function POST(request: Request) {
     // Check if the feature is disabled in General Settings
     if (appConfig.portalFeatures.chatAutoReply === false) {
       return NextResponse.json({ ok: true, disabled: true });
-    }
-
-    const { dateStr } = getPhilippineDateTime();
-    const todayEvents = getEventsForDate(dateStr, allEvents);
-    const hasInformationalOnlyEvent = todayEvents.some(
-      (event) => event.type === "birthday" || event.type === "activity",
-    );
-
-    if (hasInformationalOnlyEvent) {
-      return NextResponse.json({
-        ok: true,
-        skipped: true,
-        reason: "informational_event",
-      });
     }
 
     const availability = checkAvailabilityNow(allEvents, settings);
