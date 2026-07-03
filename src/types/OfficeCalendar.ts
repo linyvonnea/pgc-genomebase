@@ -48,6 +48,8 @@ export interface OfficeDayEvent {
    */
   closedUntil?: number;
   createdBy: string; // admin email
+  createdAt: any; // Firestore Timestamp
+  updatedAt: any; // Firestore Timestamp
   createdAt: any;    // Firestore Timestamp
   updatedAt: any;    // Firestore Timestamp
 }
