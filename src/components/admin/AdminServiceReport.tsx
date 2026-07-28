@@ -11,6 +11,7 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
+  updateDoc,
 } from "firebase/firestore";
 import {
   ref as storageRef,
@@ -63,6 +64,8 @@ interface Props {
   quotations?: QuotationRecord[];
   /** Allow service report attachment even if no quotation is available. */
   allowWithoutQuotation?: boolean;
+  /** Remark entered for documentation purposes. */
+  serviceReportRemark?: string;
 }
 
 const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
@@ -82,6 +85,7 @@ export default function AdminServiceReport({
   linkedInquiries = [],
   quotations = [],
   allowWithoutQuotation = false,
+  serviceReportRemark = "",
 }: Props) {
   const { adminInfo } = useAuth();
   const [reports, setReports] = useState<ServiceReport[]>([]);
@@ -145,12 +149,26 @@ export default function AdminServiceReport({
       toast.error("File must be 20 MB or less.");
       return;
     }
+
+    const trimmedRemark = serviceReportRemark?.trim() || "";
+    if (allowWithoutQuotation && !trimmedRemark) {
+      toast.error("Remarks are required before uploading a service report.");
+      return;
+    }
+
     setPendingFile(file);
   };
 
   const handleUpload = async () => {
     const file = pendingFile;
     if (!file) return;
+
+    const trimmedRemark = serviceReportRemark?.trim() || "";
+    if (allowWithoutQuotation && !trimmedRemark) {
+      toast.error("Remarks are required before uploading a service report.");
+      return;
+    }
+
     setUploading(true);
     setUploadProgress(0);
     try {
@@ -174,6 +192,23 @@ export default function AdminServiceReport({
       });
 
       const fileUrl = await getDownloadURL(sRef);
+
+      const projectUpdate: Record<string, unknown> = {};
+
+      if (trimmedRemark) {
+        projectUpdate.serviceReportDocumentationRemark = trimmedRemark;
+      }
+
+      if (adminInfo?.name) {
+        projectUpdate.serviceReportUploaderName = adminInfo.name;
+      }
+      if (adminInfo?.email) {
+        projectUpdate.serviceReportUploaderEmail = adminInfo.email;
+      }
+
+      if (Object.keys(projectUpdate).length > 0) {
+        await updateDoc(doc(db, "projects", projectId), projectUpdate);
+      }
 
       await addDoc(collection(db, "projects", projectId, "serviceReports"), {
         fileName: file.name,
@@ -474,7 +509,19 @@ Philippine Genome Center Visayas`.trim();
               size="sm"
               disabled={!canAttach}
               className="h-7 text-xs gap-1.5 border-dashed disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => canAttach && fileInputRef.current?.click()}
+              onClick={() => {
+                if (!canAttach) return;
+
+                const trimmedRemark = serviceReportRemark?.trim() || "";
+                if (allowWithoutQuotation && !trimmedRemark) {
+                  toast.error(
+                    "Remarks are required before uploading a service report.",
+                  );
+                  return;
+                }
+
+                fileInputRef.current?.click();
+              }}
             >
               <Paperclip className="h-3 w-3" />
               Attach Service Report

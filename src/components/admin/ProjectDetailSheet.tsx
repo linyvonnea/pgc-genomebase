@@ -127,12 +127,22 @@ export function ProjectDetailSheet({
   ] = useState(Boolean(project?.allowServiceReportWithoutQuotation));
   const [updatingServiceReportSetting, setUpdatingServiceReportSetting] =
     useState(false);
+  const [
+    serviceReportDocumentationRemark,
+    setServiceReportDocumentationRemark,
+  ] = useState(project?.serviceReportDocumentationRemark || "");
 
   useEffect(() => {
     setAllowServiceReportWithoutQuotation(
       Boolean(project?.allowServiceReportWithoutQuotation),
     );
-  }, [project?.allowServiceReportWithoutQuotation]);
+    setServiceReportDocumentationRemark(
+      project?.serviceReportDocumentationRemark || "",
+    );
+  }, [
+    project?.allowServiceReportWithoutQuotation,
+    project?.serviceReportDocumentationRemark,
+  ]);
 
   useEffect(() => {
     if (!open || !project?.pid) return;
@@ -195,11 +205,21 @@ export function ProjectDetailSheet({
     try {
       await updateDoc(doc(db, "projects", project.pid), {
         allowServiceReportWithoutQuotation: checked,
+        serviceReportDocumentationRemark:
+          serviceReportDocumentationRemark.trim(),
+        serviceReportToggleEnabledBy:
+          checked && adminInfo?.name
+            ? adminInfo.name
+            : project.serviceReportToggleEnabledBy || null,
+        serviceReportToggleEnabledByEmail:
+          checked && adminInfo?.email
+            ? adminInfo.email
+            : project.serviceReportToggleEnabledByEmail || null,
       });
       toast.success(
         checked
-          ? "Service report uploads can now proceed without a quotation."
-          : "Quotation requirement restored for service report uploads.",
+          ? "Service report uploads can now proceed without a charge slip."
+          : "Charge slip requirement restored for service report uploads.",
       );
     } catch (error) {
       console.error(
@@ -210,6 +230,24 @@ export function ProjectDetailSheet({
       toast.error("Could not update the service report setting.");
     } finally {
       setUpdatingServiceReportSetting(false);
+    }
+  };
+
+  const handleSaveServiceReportDocumentationRemark = async () => {
+    if (!project?.pid) return;
+
+    try {
+      await updateDoc(doc(db, "projects", project.pid), {
+        serviceReportDocumentationRemark:
+          serviceReportDocumentationRemark.trim(),
+      });
+      toast.success("Documentation remark saved.");
+    } catch (error) {
+      console.error(
+        "Failed to save service report documentation remark:",
+        error,
+      );
+      toast.error("Could not save the documentation remark.");
     }
   };
 
@@ -597,15 +635,15 @@ export function ProjectDetailSheet({
                         Service Reports
                       </span>
                     </div>
-                    <div className="ml-5 mb-3 rounded-lg border border-slate-200 bg-slate-50/80 p-3">
+                    <div className="ml-5 mb-3 rounded-lg border border-slate-200 bg-slate-50/80 p-3 space-y-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="space-y-1">
                           <p className="text-xs font-semibold text-slate-700">
-                            Allow service report upload without quotation
+                            Allow service report upload without Charge Slip
                           </p>
                           <p className="text-[11px] leading-snug text-slate-500">
                             Enable this when the project should accept a service
-                            report even if no quotation is available.
+                            report even if no Charge Slip is available.
                           </p>
                         </div>
                         <Switch
@@ -618,6 +656,23 @@ export function ProjectDetailSheet({
                           }
                         />
                       </div>
+                      {allowServiceReportWithoutQuotation && (
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+                            Remarks
+                          </label>
+                          <textarea
+                            value={serviceReportDocumentationRemark}
+                            onChange={(event) =>
+                              setServiceReportDocumentationRemark(
+                                event.target.value,
+                              )
+                            }
+                            placeholder="Add a note for documentation purposes"
+                            className="min-h-20 w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-700 outline-none focus:border-blue-400"
+                          />
+                        </div>
+                      )}
                     </div>
                     <AdminServiceReport
                       projectId={project.pid}
@@ -632,6 +687,7 @@ export function ProjectDetailSheet({
                       linkedInquiries={linkedInquiries}
                       quotations={quotations}
                       allowWithoutQuotation={allowServiceReportWithoutQuotation}
+                      serviceReportRemark={serviceReportDocumentationRemark}
                     />
                   </div>
                 )}
