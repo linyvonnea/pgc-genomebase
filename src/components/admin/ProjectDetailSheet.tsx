@@ -225,24 +225,6 @@ export function ProjectDetailSheet({
     }
   };
 
-  const handleSaveServiceReportDocumentationRemark = async () => {
-    if (!project?.pid) return;
-
-    try {
-      await updateDoc(doc(db, "projects", project.pid), {
-        serviceReportDocumentationRemark:
-          serviceReportDocumentationRemark.trim(),
-      });
-      toast.success("Documentation remark saved.");
-    } catch (error) {
-      console.error(
-        "Failed to save service report documentation remark:",
-        error,
-      );
-      toast.error("Could not save the documentation remark.");
-    }
-  };
-
   if (!project) return null;
 
   const iids = Array.isArray(project.iid)
@@ -648,29 +630,23 @@ export function ProjectDetailSheet({
                           }
                         />
                       </div>
-                      <div className="space-y-2">
-                        <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">
-                          Documentation remark
-                        </label>
-                        <textarea
-                          value={serviceReportDocumentationRemark}
-                          onChange={(event) =>
-                            setServiceReportDocumentationRemark(
-                              event.target.value,
-                            )
-                          }
-                          placeholder="Add a note for documentation purposes"
-                          className="min-h-20 w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-700 outline-none focus:border-blue-400"
-                        />
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-7 text-xs"
-                          onClick={handleSaveServiceReportDocumentationRemark}
-                        >
-                          Save remark
-                        </Button>
-                      </div>
+                      {allowServiceReportWithoutQuotation && (
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+                            Remarks
+                          </label>
+                          <textarea
+                            value={serviceReportDocumentationRemark}
+                            onChange={(event) =>
+                              setServiceReportDocumentationRemark(
+                                event.target.value,
+                              )
+                            }
+                            placeholder="Add a note for documentation purposes"
+                            className="min-h-20 w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-700 outline-none focus:border-blue-400"
+                          />
+                        </div>
+                      )}
                     </div>
                     <AdminServiceReport
                       projectId={project.pid}
@@ -685,6 +661,7 @@ export function ProjectDetailSheet({
                       linkedInquiries={linkedInquiries}
                       quotations={quotations}
                       allowWithoutQuotation={allowServiceReportWithoutQuotation}
+                      serviceReportRemark={serviceReportDocumentationRemark}
                     />
                   </div>
                 )}
