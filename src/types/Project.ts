@@ -9,11 +9,17 @@ export interface Project {
   title?: string;
   projectTag?: string;
   status?: "Pending" | "Ongoing" | "Cancelled" | "Completed";
-  sendingInstitution?: "UP System" |"SUC/HEI" | "Government" | "Private/Local" | "International" | "N/A";
+  sendingInstitution?:
+    | "UP System"
+    | "SUC/HEI"
+    | "Government"
+    | "Private/Local"
+    | "International"
+    | "N/A";
   fundingCategory?: "External" | "In-House";
   fundingInstitution?: string;
   serviceRequested?: string[];
   personnelAssigned?: string;
   notes?: string;
+  allowServiceReportWithoutQuotation?: boolean;
 }
-
