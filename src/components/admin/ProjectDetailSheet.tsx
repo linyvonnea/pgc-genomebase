@@ -225,6 +225,24 @@ export function ProjectDetailSheet({
     }
   };
 
+  const handleSaveServiceReportDocumentationRemark = async () => {
+    if (!project?.pid) return;
+
+    try {
+      await updateDoc(doc(db, "projects", project.pid), {
+        serviceReportDocumentationRemark:
+          serviceReportDocumentationRemark.trim(),
+      });
+      toast.success("Documentation remark saved.");
+    } catch (error) {
+      console.error(
+        "Failed to save service report documentation remark:",
+        error,
+      );
+      toast.error("Could not save the documentation remark.");
+    }
+  };
+
   if (!project) return null;
 
   const iids = Array.isArray(project.iid)
