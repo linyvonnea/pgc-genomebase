@@ -95,8 +95,8 @@ export default function AdminServiceReport({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Gate: at least one linked inquiry must be "Approved Client",
-  // a charge slip must exist (any status), and a quotation must be selected
-  // unless the project explicitly allows service report uploads without a quotation.
+  // and either a charge slip exists or the project explicitly allows uploads
+  // without a charge slip/quotation.
   const hasApprovedInquiry = linkedInquiries.some(
     (inq) => inq.status === "Approved Client",
   );
@@ -106,14 +106,14 @@ export default function AdminServiceReport({
   const canAttach =
     linkedInquiries.length > 0 &&
     hasApprovedInquiry &&
-    chargeSlips.length > 0 &&
+    (chargeSlips.length > 0 || allowWithoutQuotation) &&
     (allowWithoutQuotation || (quotations.length > 0 && hasSelectedQuotation));
   const attachBlockReason = (() => {
     if (linkedInquiries.length === 0)
       return "No inquiries are linked to this project. At least one inquiry with an 'Approved Client' status is required.";
     if (!hasApprovedInquiry)
       return "None of the linked inquiries have an 'Approved Client' status. Update the inquiry status before attaching a service report.";
-    if (chargeSlips.length === 0)
+    if (!allowWithoutQuotation && chargeSlips.length === 0)
       return "No charge slips found for this project. At least one charge slip is required before attaching a service report.";
     if (!allowWithoutQuotation && quotations.length === 0)
       return "No quotations found for this project. At least one quotation with a 'Selected' status is required.";
