@@ -22,4 +22,5 @@ export interface Project {
   personnelAssigned?: string;
   notes?: string;
   allowServiceReportWithoutQuotation?: boolean;
+  serviceReportDocumentationRemark?: string;
 }
