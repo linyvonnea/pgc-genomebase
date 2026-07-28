@@ -66,6 +66,8 @@ interface Props {
   allowWithoutQuotation?: boolean;
   /** Remark entered for documentation purposes. */
   serviceReportRemark?: string;
+  /** Callback used to hide or show the remarks field in the parent panel. */
+  onRemarkFieldVisibilityChange?: (visible: boolean) => void;
 }
 
 const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
@@ -86,6 +88,7 @@ export default function AdminServiceReport({
   quotations = [],
   allowWithoutQuotation = false,
   serviceReportRemark = "",
+  onRemarkFieldVisibilityChange,
 }: Props) {
   const { adminInfo } = useAuth();
   const [reports, setReports] = useState<ServiceReport[]>([]);
@@ -156,6 +159,8 @@ export default function AdminServiceReport({
     const file = pendingFile;
     if (!file) return;
 
+    onRemarkFieldVisibilityChange?.(false);
+
     const trimmedRemark = serviceReportRemark?.trim() || "";
     if (allowWithoutQuotation && !trimmedRemark) {
       toast.error("Remarks are required before uploading a service report.");
@@ -186,10 +191,21 @@ export default function AdminServiceReport({
 
       const fileUrl = await getDownloadURL(sRef);
 
+      const projectUpdate: Record<string, unknown> = {};
+
       if (trimmedRemark) {
-        await updateDoc(doc(db, "projects", projectId), {
-          serviceReportDocumentationRemark: trimmedRemark,
-        });
+        projectUpdate.serviceReportDocumentationRemark = trimmedRemark;
+      }
+
+      if (adminInfo?.name) {
+        projectUpdate.serviceReportUploaderName = adminInfo.name;
+      }
+      if (adminInfo?.email) {
+        projectUpdate.serviceReportUploaderEmail = adminInfo.email;
+      }
+
+      if (Object.keys(projectUpdate).length > 0) {
+        await updateDoc(doc(db, "projects", projectId), projectUpdate);
       }
 
       await addDoc(collection(db, "projects", projectId, "serviceReports"), {
