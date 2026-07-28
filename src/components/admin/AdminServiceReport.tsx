@@ -33,7 +33,18 @@ import {
 import { toast } from "sonner";
 import useAuth from "@/hooks/useAuth";
 import { logActivity } from "@/services/activityLogService";
-import { CheckCircle2, Clock, FileText, Loader2, Trash2, Upload, Download, Paperclip, X, AlertCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock,
+  FileText,
+  Loader2,
+  Trash2,
+  Upload,
+  Download,
+  Paperclip,
+  X,
+  AlertCircle,
+} from "lucide-react";
 import { format } from "date-fns";
 import { ServiceReport } from "@/services/serviceReportService";
 import { ChargeSlipRecord } from "@/types/ChargeSlipRecord";
@@ -48,8 +59,10 @@ interface Props {
   chargeSlips?: ChargeSlipRecord[];
   /** Inquiries linked to the project; at least one must be "Approved Client". */
   linkedInquiries?: Inquiry[];
-  /** Quotations linked to the project; at least one must be "selected". */
+  /** Quotations linked to the project; at least one must be "selected" unless explicitly overridden. */
   quotations?: QuotationRecord[];
+  /** Allow service report attachment even if no quotation is available. */
+  allowWithoutQuotation?: boolean;
 }
 
 const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
@@ -61,35 +74,52 @@ function formatFileSize(bytes?: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function AdminServiceReport({ projectId, clientEmail, clientName, chargeSlips = [], linkedInquiries = [], quotations = [] }: Props) {
+export default function AdminServiceReport({
+  projectId,
+  clientEmail,
+  clientName,
+  chargeSlips = [],
+  linkedInquiries = [],
+  quotations = [],
+  allowWithoutQuotation = false,
+}: Props) {
   const { adminInfo } = useAuth();
   const [reports, setReports] = useState<ServiceReport[]>([]);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<ServiceReport | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<ServiceReport | null>(
+    null,
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Gate: at least one linked inquiry must be "Approved Client",
-  // AND at least one quotation must be "selected",
-  // AND at least one charge slip must exist (any status).
-  const hasApprovedInquiry = linkedInquiries.some((inq) => inq.status === "Approved Client");
-  const hasSelectedQuotation = quotations.some((q) => (q.status ?? "").toLowerCase() === "selected");
+  // a charge slip must exist (any status), and a quotation must be selected
+  // unless the project explicitly allows service report uploads without a quotation.
+  const hasApprovedInquiry = linkedInquiries.some(
+    (inq) => inq.status === "Approved Client",
+  );
+  const hasSelectedQuotation = quotations.some(
+    (q) => (q.status ?? "").toLowerCase() === "selected",
+  );
   const canAttach =
-    linkedInquiries.length > 0 && hasApprovedInquiry &&
-    quotations.length > 0 && hasSelectedQuotation &&
-    chargeSlips.length > 0;
+    linkedInquiries.length > 0 &&
+    hasApprovedInquiry &&
+    chargeSlips.length > 0 &&
+    (allowWithoutQuotation || (quotations.length > 0 && hasSelectedQuotation));
   const attachBlockReason = (() => {
     if (linkedInquiries.length === 0)
       return "No inquiries are linked to this project. At least one inquiry with an 'Approved Client' status is required.";
     if (!hasApprovedInquiry)
       return "None of the linked inquiries have an 'Approved Client' status. Update the inquiry status before attaching a service report.";
-    if (quotations.length === 0)
+    if (chargeSlips.length === 0)
+      return "No charge slips found for this project. At least one charge slip is required before attaching a service report.";
+    if (!allowWithoutQuotation && quotations.length === 0)
       return "No quotations found for this project. At least one quotation with a 'Selected' status is required.";
-    if (!hasSelectedQuotation)
+    if (!allowWithoutQuotation && !hasSelectedQuotation)
       return "None of the quotations are marked as Selected. At least one quotation must be Selected before attaching a service report.";
-    return "No charge slips found for this project. At least one charge slip is required before attaching a service report.";
+    return null;
   })();
 
   // Real-time listener
@@ -97,10 +127,12 @@ export default function AdminServiceReport({ projectId, clientEmail, clientName,
     if (!projectId) return;
     const q = query(
       collection(db, "projects", projectId, "serviceReports"),
-      orderBy("uploadedAt", "desc")
+      orderBy("uploadedAt", "desc"),
     );
     const unsub = onSnapshot(q, (snap) => {
-      setReports(snap.docs.map((d) => ({ id: d.id, ...d.data() } as ServiceReport)));
+      setReports(
+        snap.docs.map((d) => ({ id: d.id, ...d.data() }) as ServiceReport),
+      );
     });
     return unsub;
   }, [projectId]);
@@ -132,10 +164,12 @@ export default function AdminServiceReport({ projectId, clientEmail, clientName,
         task.on(
           "state_changed",
           (snap) => {
-            setUploadProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100));
+            setUploadProgress(
+              Math.round((snap.bytesTransferred / snap.totalBytes) * 100),
+            );
           },
           reject,
-          resolve
+          resolve,
         );
       });
 
@@ -252,7 +286,9 @@ Philippine Genome Center Visayas`.trim();
           // Storage object may already be gone — continue with Firestore delete
         }
       }
-      await deleteDoc(doc(db, "projects", projectId, "serviceReports", report.id));
+      await deleteDoc(
+        doc(db, "projects", projectId, "serviceReports", report.id),
+      );
 
       await logActivity({
         userId: adminInfo?.email || "system",
@@ -278,23 +314,22 @@ Philippine Genome Center Visayas`.trim();
     <div className="space-y-2">
       {/* Existing reports */}
       {reports.length === 0 ? (
-        <p className="text-xs text-slate-400 ml-5">No service reports uploaded yet</p>
+        <p className="text-xs text-slate-400 ml-5">
+          No service reports uploaded yet
+        </p>
       ) : (
         <div className="space-y-1 ml-5">
           {reports.map((report) => {
-            const uploadedAtDate =
-              report.uploadedAt?.toDate
-                ? format(report.uploadedAt.toDate(), "MMM d, yyyy")
-                : "";
-            const uploadedAtTime =
-              report.uploadedAt?.toDate
-                ? format(report.uploadedAt.toDate(), "h:mm a")
-                : "";
+            const uploadedAtDate = report.uploadedAt?.toDate
+              ? format(report.uploadedAt.toDate(), "MMM d, yyyy")
+              : "";
+            const uploadedAtTime = report.uploadedAt?.toDate
+              ? format(report.uploadedAt.toDate(), "h:mm a")
+              : "";
             const isReceived = report.status === "received";
-            const receivedDate =
-              report.receivedAt?.toDate
-                ? format(report.receivedAt.toDate(), "MMM d, yyyy h:mm a")
-                : "";
+            const receivedDate = report.receivedAt?.toDate
+              ? format(report.receivedAt.toDate(), "MMM d, yyyy h:mm a")
+              : "";
             return (
               <div
                 key={report.id}
@@ -314,7 +349,13 @@ Philippine Genome Center Visayas`.trim();
                     </a>
                     {uploadedAtDate && (
                       <span className="text-[10px] text-slate-400 block">
-                        {uploadedAtDate} {uploadedAtTime && <span className="text-slate-400">{uploadedAtTime}</span>} · {report.uploadedByName}
+                        {uploadedAtDate}{" "}
+                        {uploadedAtTime && (
+                          <span className="text-slate-400">
+                            {uploadedAtTime}
+                          </span>
+                        )}{" "}
+                        · {report.uploadedByName}
                       </span>
                     )}
                     {isReceived ? (
@@ -327,7 +368,9 @@ Philippine Genome Center Visayas`.trim();
                           Received
                         </Badge>
                         {receivedDate && (
-                          <span className="text-[10px] text-slate-400">{receivedDate}</span>
+                          <span className="text-[10px] text-slate-400">
+                            {receivedDate}
+                          </span>
                         )}
                       </div>
                     ) : (
@@ -353,14 +396,20 @@ Philippine Genome Center Visayas`.trim();
                   >
                     <Download className="h-3.5 w-3.5 text-slate-400 hover:text-blue-600" />
                   </a>
-                  {(!isReceived || adminInfo?.role?.toLowerCase().replace(/\s+/g, '') === 'superadmin') && (
+                  {(!isReceived ||
+                    adminInfo?.role?.toLowerCase().replace(/\s+/g, "") ===
+                      "superadmin") && (
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
                       disabled={deleting === report.id}
                       onClick={() => setConfirmDelete(report)}
-                      title={isReceived ? "Received reports can only be deleted by a Super Admin" : "Delete report"}
+                      title={
+                        isReceived
+                          ? "Received reports can only be deleted by a Super Admin"
+                          : "Delete report"
+                      }
                     >
                       {deleting === report.id ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
@@ -396,7 +445,9 @@ Philippine Genome Center Visayas`.trim();
             <div className="flex items-center gap-1.5 text-xs text-slate-700 bg-slate-50 border border-slate-200 rounded-md px-2.5 py-1.5 min-w-0 flex-1 truncate">
               <FileText className="h-3.5 w-3.5 text-blue-500 shrink-0" />
               <span className="truncate font-medium">{pendingFile.name}</span>
-              <span className="text-slate-400 shrink-0">({(pendingFile.size / 1024).toFixed(0)} KB)</span>
+              <span className="text-slate-400 shrink-0">
+                ({(pendingFile.size / 1024).toFixed(0)} KB)
+              </span>
             </div>
             <Button
               size="sm"
@@ -428,7 +479,7 @@ Philippine Genome Center Visayas`.trim();
               <Paperclip className="h-3 w-3" />
               Attach Service Report
             </Button>
-            {!canAttach && (
+            {!canAttach && attachBlockReason && (
               <p className="flex items-start gap-1 text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1.5 leading-snug">
                 <AlertCircle className="h-3 w-3 mt-0.5 shrink-0" />
                 {attachBlockReason}
@@ -439,18 +490,28 @@ Philippine Genome Center Visayas`.trim();
       </div>
 
       {/* Delete confirmation dialog */}
-      <AlertDialog open={!!confirmDelete} onOpenChange={(open) => { if (!open) setConfirmDelete(null); }}>
+      <AlertDialog
+        open={!!confirmDelete}
+        onOpenChange={(open) => {
+          if (!open) setConfirmDelete(null);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Service Report</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete{" "}
-              <span className="font-semibold text-slate-700">&ldquo;{confirmDelete?.fileName}&rdquo;</span>?
-              This action cannot be undone and the file will be permanently removed.
+              <span className="font-semibold text-slate-700">
+                &ldquo;{confirmDelete?.fileName}&rdquo;
+              </span>
+              ? This action cannot be undone and the file will be permanently
+              removed.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setConfirmDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setConfirmDelete(null)}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive hover:bg-destructive/90"
               onClick={() => {

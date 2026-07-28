@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Project } from "@/types/Project";
+import { db } from "@/lib/firebase";
+import { doc, updateDoc } from "firebase/firestore";
+import { toast } from "sonner";
 
 import { getChargeSlipsByProjectId } from "@/services/chargeSlipService";
 import { getQuotationsByInquiryId } from "@/services/quotationService";
@@ -30,6 +33,7 @@ import {
   X,
   ShieldEllipsis,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 import { EditProjectModal } from "@/components/forms/EditProjectModal";
@@ -46,13 +50,25 @@ interface ProjectDetailSheetProps {
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{label}</span>
-      <span className="text-sm font-medium text-slate-800">{value ?? <span className="text-slate-400 italic">—</span>}</span>
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+        {label}
+      </span>
+      <span className="text-sm font-medium text-slate-800">
+        {value ?? <span className="text-slate-400 italic">—</span>}
+      </span>
     </div>
   );
 }
 
-function SectionHeader({ icon, label, count }: { icon: React.ReactNode; label: string; count?: number }) {
+function SectionHeader({
+  icon,
+  label,
+  count,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  count?: number;
+}) {
   return (
     <div className="flex items-center gap-2 py-2">
       <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#166FB5] to-[#4038AF]" />
@@ -77,7 +93,13 @@ const statusColor: Record<string, string> = {
 function formatDate(value?: Date | string) {
   if (!value) return "—";
   const d = value instanceof Date ? value : new Date(value);
-  return isNaN(d.getTime()) ? "—" : d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  return isNaN(d.getTime())
+    ? "—"
+    : d.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
 }
 
 function formatFileSize(bytes?: number) {
@@ -87,13 +109,30 @@ function formatFileSize(bytes?: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }: ProjectDetailSheetProps) {
+export function ProjectDetailSheet({
+  project,
+  open,
+  onClose,
+  onProjectUpdated,
+}: ProjectDetailSheetProps) {
   const { adminInfo } = useAuth();
 
   const [quotations, setQuotations] = useState<QuotationRecord[]>([]);
   const [chargeSlips, setChargeSlips] = useState<ChargeSlipRecord[]>([]);
   const [linkedInquiries, setLinkedInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [
+    allowServiceReportWithoutQuotation,
+    setAllowServiceReportWithoutQuotation,
+  ] = useState(Boolean(project?.allowServiceReportWithoutQuotation));
+  const [updatingServiceReportSetting, setUpdatingServiceReportSetting] =
+    useState(false);
+
+  useEffect(() => {
+    setAllowServiceReportWithoutQuotation(
+      Boolean(project?.allowServiceReportWithoutQuotation),
+    );
+  }, [project?.allowServiceReportWithoutQuotation]);
 
   useEffect(() => {
     if (!open || !project?.pid) return;
@@ -110,9 +149,13 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
         const iids = Array.isArray(iid) ? iid : iid ? [iid] : [];
 
         const [qs, cs, inqs] = await Promise.all([
-          iid ? getQuotationsByInquiryId(iid).catch(() => []) : Promise.resolve([]),
+          iid
+            ? getQuotationsByInquiryId(iid).catch(() => [])
+            : Promise.resolve([]),
           getChargeSlipsByProjectId(pid).catch(() => []),
-          iids.length > 0 ? getInquiriesByIds(iids).catch(() => []) : Promise.resolve([]),
+          iids.length > 0
+            ? getInquiriesByIds(iids).catch(() => [])
+            : Promise.resolve([]),
         ]);
 
         setQuotations(qs as QuotationRecord[]);
@@ -138,16 +181,54 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
     };
 
     loadDocs();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, project?.pid]);
+
+  const handleToggleServiceReportWithoutQuotation = async (
+    checked: boolean,
+  ) => {
+    if (!project?.pid) return;
+
+    setUpdatingServiceReportSetting(true);
+    setAllowServiceReportWithoutQuotation(checked);
+
+    try {
+      await updateDoc(doc(db, "projects", project.pid), {
+        allowServiceReportWithoutQuotation: checked,
+      });
+      toast.success(
+        checked
+          ? "Service report uploads can now proceed without a quotation."
+          : "Quotation requirement restored for service report uploads.",
+      );
+    } catch (error) {
+      console.error(
+        "Failed to update service report attachment setting:",
+        error,
+      );
+      setAllowServiceReportWithoutQuotation(!checked);
+      toast.error("Could not update the service report setting.");
+    } finally {
+      setUpdatingServiceReportSetting(false);
+    }
+  };
 
   if (!project) return null;
 
-  const iids = Array.isArray(project.iid) ? project.iid : project.iid ? [project.iid] : [];
+  const iids = Array.isArray(project.iid)
+    ? project.iid
+    : project.iid
+      ? [project.iid]
+      : [];
   const status = project.status ?? "Pending";
 
   return (
-    <Sheet open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Sheet
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
+    >
       <SheetContent
         side="right"
         className="w-full sm:max-w-2xl overflow-y-auto p-0 border-l shadow-2xl"
@@ -160,10 +241,16 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                 Project Details
               </SheetTitle>
               <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="outline" className="font-mono text-[#F69122] border-[#F69122]/30 bg-[#F69122]/5 text-xs">
+                <Badge
+                  variant="outline"
+                  className="font-mono text-[#F69122] border-[#F69122]/30 bg-[#F69122]/5 text-xs"
+                >
                   {project.pid}
                 </Badge>
-                <Badge className={`text-xs border ${statusColor[status] ?? "bg-gray-50 text-gray-700 border-gray-200"}`} variant="outline">
+                <Badge
+                  className={`text-xs border ${statusColor[status] ?? "bg-gray-50 text-gray-700 border-gray-200"}`}
+                  variant="outline"
+                >
                   {status}
                 </Badge>
               </div>
@@ -176,7 +263,12 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                   onProjectUpdated?.();
                 }}
               />
-              <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className="h-8 w-8"
+              >
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -184,38 +276,62 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
         </div>
 
         <div className="px-6 py-5 space-y-6">
-
           {/* ── Project Overview ── */}
           <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
-            <SectionHeader icon={<Briefcase className="h-4 w-4 text-[#166FB5]" />} label="Project Overview" />
+            <SectionHeader
+              icon={<Briefcase className="h-4 w-4 text-[#166FB5]" />}
+              label="Project Overview"
+            />
             <Separator />
             <div className="grid grid-cols-2 gap-4">
               <InfoRow label="Year" value={project.year?.toString()} />
-              <InfoRow label="Start Date" value={formatDate(project.startDate)} />
+              <InfoRow
+                label="Start Date"
+                value={formatDate(project.startDate)}
+              />
               <InfoRow label="Project Tag" value={project.projectTag} />
             </div>
-            <InfoRow label="Project Title" value={<span className="text-sm">{project.title}</span>} />
+            <InfoRow
+              label="Project Title"
+              value={<span className="text-sm">{project.title}</span>}
+            />
             {project.notes && (
-              <InfoRow label="Notes" value={<span className="text-sm text-slate-600">{project.notes}</span>} />
+              <InfoRow
+                label="Notes"
+                value={
+                  <span className="text-sm text-slate-600">
+                    {project.notes}
+                  </span>
+                }
+              />
             )}
           </section>
 
-
-
           {/* ── People ── */}
           <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
-            <SectionHeader icon={<Users className="h-4 w-4 text-indigo-600" />} label="People" />
+            <SectionHeader
+              icon={<Users className="h-4 w-4 text-indigo-600" />}
+              label="People"
+            />
             <Separator />
             <div className="grid grid-cols-2 gap-4">
               <InfoRow label="Project Lead" value={project.lead} />
-              <InfoRow label="Personnel Assigned" value={project.personnelAssigned} />
+              <InfoRow
+                label="Personnel Assigned"
+                value={project.personnelAssigned}
+              />
             </div>
             {(project.clientNames?.length ?? 0) > 0 && (
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Clients / Members</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+                  Clients / Members
+                </span>
                 <div className="flex flex-wrap gap-1.5">
                   {project.clientNames!.map((name, i) => (
-                    <div key={i} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-100 text-xs font-medium text-indigo-700">
+                    <div
+                      key={i}
+                      className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-100 text-xs font-medium text-indigo-700"
+                    >
                       <User className="h-3 w-3" />
                       {name}
                     </div>
@@ -227,24 +343,47 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
 
           {/* ── Institution & Funding ── */}
           <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
-            <SectionHeader icon={<Building2 className="h-4 w-4 text-emerald-600" />} label="Institution & Funding" />
+            <SectionHeader
+              icon={<Building2 className="h-4 w-4 text-emerald-600" />}
+              label="Institution & Funding"
+            />
             <Separator />
             <div className="grid grid-cols-2 gap-4">
-              <InfoRow label="Sending Institution" value={project.sendingInstitution} />
-              <InfoRow label="Funding Category" value={project.fundingCategory} />
-              <InfoRow label="Funding Institution" value={project.fundingInstitution} />
-              <InfoRow label="Created At" value={formatDate(project.createdAt)} />
+              <InfoRow
+                label="Sending Institution"
+                value={project.sendingInstitution}
+              />
+              <InfoRow
+                label="Funding Category"
+                value={project.fundingCategory}
+              />
+              <InfoRow
+                label="Funding Institution"
+                value={project.fundingInstitution}
+              />
+              <InfoRow
+                label="Created At"
+                value={formatDate(project.createdAt)}
+              />
             </div>
           </section>
 
           {/* ── Services Requested ── */}
           {(project.serviceRequested?.length ?? 0) > 0 && (
             <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
-              <SectionHeader icon={<Briefcase className="h-4 w-4 text-orange-600" />} label="Services Requested" count={project.serviceRequested!.length} />
+              <SectionHeader
+                icon={<Briefcase className="h-4 w-4 text-orange-600" />}
+                label="Services Requested"
+                count={project.serviceRequested!.length}
+              />
               <Separator />
               <div className="flex flex-wrap gap-2">
                 {project.serviceRequested!.map((s) => (
-                  <Badge key={s} variant="outline" className="text-orange-700 border-orange-200 bg-orange-50 text-xs">
+                  <Badge
+                    key={s}
+                    variant="outline"
+                    className="text-orange-700 border-orange-200 bg-orange-50 text-xs"
+                  >
                     {s}
                   </Badge>
                 ))}
@@ -257,8 +396,12 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
             <div className="flex items-center gap-2 py-2">
               <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#166FB5] to-[#4038AF]" />
               <FileText className="h-4 w-4 text-slate-700" />
-              <span className="text-sm font-semibold text-slate-700">Documents</span>
-              {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400 ml-1" />}
+              <span className="text-sm font-semibold text-slate-700">
+                Documents
+              </span>
+              {loading && (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-400 ml-1" />
+              )}
             </div>
             <Separator />
 
@@ -268,28 +411,39 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                 Loading documents…
               </div>
             ) : (
-
               <div className="space-y-5">
                 {/* Inquiries - always above Quotations */}
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
                     <FileText className="h-3.5 w-3.5 text-purple-600" />
-                    <span className="text-xs font-semibold text-slate-700">Inquiries</span>
-                    <span className="text-[10px] text-slate-500">({linkedInquiries.length})</span>
+                    <span className="text-xs font-semibold text-slate-700">
+                      Inquiries
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      ({linkedInquiries.length})
+                    </span>
                   </div>
                   {linkedInquiries.length === 0 ? (
-                    <p className="text-xs text-slate-400 ml-5">No linked inquiries</p>
+                    <p className="text-xs text-slate-400 ml-5">
+                      No linked inquiries
+                    </p>
                   ) : (
                     <div className="space-y-1 ml-5">
                       {linkedInquiries.map((inq) => {
                         const inqStatus = inq.status ?? "Pending";
                         const inqColor =
-                          inqStatus === "Approved Client" ? "bg-emerald-50 border-emerald-200 text-emerald-700" :
-                          inqStatus === "Cancelled" ? "bg-rose-50 border-rose-200 text-rose-700" :
-                          inqStatus === "Ongoing Quotation" ? "bg-amber-50 border-amber-200 text-amber-700" :
-                          "bg-blue-50 border-blue-200 text-blue-700";
+                          inqStatus === "Approved Client"
+                            ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                            : inqStatus === "Cancelled"
+                              ? "bg-rose-50 border-rose-200 text-rose-700"
+                              : inqStatus === "Ongoing Quotation"
+                                ? "bg-amber-50 border-amber-200 text-amber-700"
+                                : "bg-blue-50 border-blue-200 text-blue-700";
                         return (
-                          <div key={inq.id} className="flex items-center gap-2 py-1 border-b border-slate-50 last:border-0">
+                          <div
+                            key={inq.id}
+                            className="flex items-center gap-2 py-1 border-b border-slate-50 last:border-0"
+                          >
                             <a
                               href={`/admin/inquiry/${inq.id}`}
                               target="_blank"
@@ -298,7 +452,9 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                             >
                               {inq.id}
                             </a>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium shrink-0 ${inqColor}`}>
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium shrink-0 ${inqColor}`}
+                            >
                               {inqStatus}
                             </span>
                           </div>
@@ -312,15 +468,22 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
                     <FileText className="h-3.5 w-3.5 text-purple-600" />
-                    <span className="text-xs font-semibold text-slate-700">Quotations</span>
-                    <span className="text-[10px] text-slate-500">({quotations.length})</span>
+                    <span className="text-xs font-semibold text-slate-700">
+                      Quotations
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      ({quotations.length})
+                    </span>
                   </div>
                   {quotations.length === 0 ? (
                     <p className="text-xs text-slate-400 ml-5">No quotations</p>
                   ) : (
                     <div className="space-y-1 ml-5">
                       {quotations.map((q) => (
-                        <div key={q.id} className="flex items-center gap-2 py-1 border-b border-slate-50 last:border-0">
+                        <div
+                          key={q.id}
+                          className="flex items-center gap-2 py-1 border-b border-slate-50 last:border-0"
+                        >
                           <a
                             href={`/admin/quotations/${q.referenceNumber}`}
                             target="_blank"
@@ -330,9 +493,13 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                             {q.referenceNumber}
                           </a>
                           {q.selectedForProject && q.status !== "cancelled" ? (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-medium shrink-0">Selected</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 font-medium shrink-0">
+                              Selected
+                            </span>
                           ) : q.status === "cancelled" ? (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-700 font-medium shrink-0">Cancelled</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-700 font-medium shrink-0">
+                              Cancelled
+                            </span>
                           ) : null}
                         </div>
                       ))}
@@ -345,7 +512,9 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                   <div>
                     <div className="flex items-center gap-1.5 mb-2">
                       <FileText className="h-3.5 w-3.5 text-orange-500" />
-                      <span className="text-xs font-semibold text-slate-700">Uploaded Completed Submission Forms</span>
+                      <span className="text-xs font-semibold text-slate-700">
+                        Uploaded Completed Submission Forms
+                      </span>
                     </div>
                     <AdminFormSubmissions projectId={project.pid} />
                   </div>
@@ -355,31 +524,50 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                 <div>
                   <div className="flex items-center gap-1.5 mb-2">
                     <Receipt className="h-3.5 w-3.5 text-green-600" />
-                    <span className="text-xs font-semibold text-slate-700">Charge Slips</span>
-                    <span className="text-[10px] text-slate-500">({chargeSlips.length})</span>
+                    <span className="text-xs font-semibold text-slate-700">
+                      Charge Slips
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      ({chargeSlips.length})
+                    </span>
                   </div>
                   {chargeSlips.length === 0 ? (
-                    <p className="text-xs text-slate-400 ml-5">No charge slips</p>
+                    <p className="text-xs text-slate-400 ml-5">
+                      No charge slips
+                    </p>
                   ) : (
                     <div className="space-y-1 ml-5">
                       {chargeSlips.map((cs) => {
                         const csStatus = (cs.status ?? "").toLowerCase();
                         const csBadge =
-                          csStatus === "paid" ? "bg-emerald-50 border-emerald-200 text-emerald-700" :
-                          csStatus === "validated" ? "bg-emerald-50 border-emerald-200 text-emerald-700" :
-                          csStatus === "pending" ? "bg-blue-50 border-blue-200 text-blue-700" :
-                          csStatus === "cancelled" ? "bg-rose-50 border-rose-200 text-rose-700" :
-                          csStatus === "waived" ? "bg-purple-50 border-purple-200 text-purple-700" :
-                          "bg-amber-50 border-amber-200 text-amber-700"; // processing / default
+                          csStatus === "paid"
+                            ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                            : csStatus === "validated"
+                              ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                              : csStatus === "pending"
+                                ? "bg-blue-50 border-blue-200 text-blue-700"
+                                : csStatus === "cancelled"
+                                  ? "bg-rose-50 border-rose-200 text-rose-700"
+                                  : csStatus === "waived"
+                                    ? "bg-purple-50 border-purple-200 text-purple-700"
+                                    : "bg-amber-50 border-amber-200 text-amber-700"; // processing / default
                         const csLabel =
-                          csStatus === "paid" ? "Paid" :
-                          csStatus === "validated" ? "Validated" :
-                          csStatus === "pending" ? "Pending" :
-                          csStatus === "cancelled" ? "Cancelled" :
-                          csStatus === "waived" ? "Waived" :
-                          "Processing";
+                          csStatus === "paid"
+                            ? "Paid"
+                            : csStatus === "validated"
+                              ? "Validated"
+                              : csStatus === "pending"
+                                ? "Pending"
+                                : csStatus === "cancelled"
+                                  ? "Cancelled"
+                                  : csStatus === "waived"
+                                    ? "Waived"
+                                    : "Processing";
                         return (
-                          <div key={cs.id} className="flex items-center gap-2 py-1 border-b border-slate-50 last:border-0">
+                          <div
+                            key={cs.id}
+                            className="flex items-center gap-2 py-1 border-b border-slate-50 last:border-0"
+                          >
                             <a
                               href={`/admin/charge-slips/${cs.chargeSlipNumber}`}
                               target="_blank"
@@ -388,7 +576,11 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                             >
                               {cs.chargeSlipNumber}
                             </a>
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium shrink-0 ${csBadge}`}>{csLabel}</span>
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium shrink-0 ${csBadge}`}
+                            >
+                              {csLabel}
+                            </span>
                           </div>
                         );
                       })}
@@ -401,34 +593,70 @@ export function ProjectDetailSheet({ project, open, onClose, onProjectUpdated }:
                   <div>
                     <div className="flex items-center gap-1.5 mb-2">
                       <ShieldEllipsis className="h-3.5 w-3.5 text-blue-600" />
-                      <span className="text-xs font-semibold text-slate-700">Service Reports</span>
+                      <span className="text-xs font-semibold text-slate-700">
+                        Service Reports
+                      </span>
+                    </div>
+                    <div className="ml-5 mb-3 rounded-lg border border-slate-200 bg-slate-50/80 p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="space-y-1">
+                          <p className="text-xs font-semibold text-slate-700">
+                            Allow service report upload without quotation
+                          </p>
+                          <p className="text-[11px] leading-snug text-slate-500">
+                            Enable this when the project should accept a service
+                            report even if no quotation is available.
+                          </p>
+                        </div>
+                        <Switch
+                          checked={allowServiceReportWithoutQuotation}
+                          onCheckedChange={
+                            handleToggleServiceReportWithoutQuotation
+                          }
+                          disabled={
+                            !project.pid || updatingServiceReportSetting
+                          }
+                        />
+                      </div>
                     </div>
                     <AdminServiceReport
                       projectId={project.pid}
-                      clientEmail={chargeSlips[0]?.clientInfo?.email ?? quotations[0]?.email}
-                      clientName={chargeSlips[0]?.clientInfo?.name ?? quotations[0]?.name}
+                      clientEmail={
+                        chargeSlips[0]?.clientInfo?.email ??
+                        quotations[0]?.email
+                      }
+                      clientName={
+                        chargeSlips[0]?.clientInfo?.name ?? quotations[0]?.name
+                      }
                       chargeSlips={chargeSlips}
                       linkedInquiries={linkedInquiries}
                       quotations={quotations}
+                      allowWithoutQuotation={allowServiceReportWithoutQuotation}
                     />
                   </div>
                 )}
-
-
               </div>
             )}
           </section>
 
           {/* ── Metadata ── */}
           <section className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
-            <SectionHeader icon={<CalendarDays className="h-4 w-4 text-slate-500" />} label="Metadata" />
+            <SectionHeader
+              icon={<CalendarDays className="h-4 w-4 text-slate-500" />}
+              label="Metadata"
+            />
             <Separator />
             <div className="grid grid-cols-2 gap-4">
-              <InfoRow label="Project ID (PID)" value={<span className="font-mono text-xs">{project.pid}</span>} />
-              <InfoRow label="Record Created" value={formatDate(project.createdAt)} />
+              <InfoRow
+                label="Project ID (PID)"
+                value={<span className="font-mono text-xs">{project.pid}</span>}
+              />
+              <InfoRow
+                label="Record Created"
+                value={formatDate(project.createdAt)}
+              />
             </div>
           </section>
-
         </div>
       </SheetContent>
     </Sheet>
