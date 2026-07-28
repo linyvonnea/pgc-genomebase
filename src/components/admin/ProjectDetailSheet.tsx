@@ -131,8 +131,6 @@ export function ProjectDetailSheet({
     serviceReportDocumentationRemark,
     setServiceReportDocumentationRemark,
   ] = useState(project?.serviceReportDocumentationRemark || "");
-  const [serviceReportInputVisible, setServiceReportInputVisible] =
-    useState(true);
 
   useEffect(() => {
     setAllowServiceReportWithoutQuotation(
@@ -640,24 +638,23 @@ export function ProjectDetailSheet({
                           }
                         />
                       </div>
-                      {allowServiceReportWithoutQuotation &&
-                        serviceReportInputVisible && (
-                          <div className="space-y-2">
-                            <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">
-                              Remarks
-                            </label>
-                            <textarea
-                              value={serviceReportDocumentationRemark}
-                              onChange={(event) =>
-                                setServiceReportDocumentationRemark(
-                                  event.target.value,
-                                )
-                              }
-                              placeholder="Add a note for documentation purposes"
-                              className="min-h-20 w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-700 outline-none focus:border-blue-400"
-                            />
-                          </div>
-                        )}
+                      {allowServiceReportWithoutQuotation && (
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+                            Remarks
+                          </label>
+                          <textarea
+                            value={serviceReportDocumentationRemark}
+                            onChange={(event) =>
+                              setServiceReportDocumentationRemark(
+                                event.target.value,
+                              )
+                            }
+                            placeholder="Add a note for documentation purposes"
+                            className="min-h-20 w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-700 outline-none focus:border-blue-400"
+                          />
+                        </div>
+                      )}
                     </div>
                     <AdminServiceReport
                       projectId={project.pid}
@@ -673,9 +670,6 @@ export function ProjectDetailSheet({
                       quotations={quotations}
                       allowWithoutQuotation={allowServiceReportWithoutQuotation}
                       serviceReportRemark={serviceReportDocumentationRemark}
-                      onRemarkFieldVisibilityChange={
-                        setServiceReportInputVisible
-                      }
                     />
                   </div>
                 )}

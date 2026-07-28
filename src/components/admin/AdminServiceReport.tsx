@@ -66,8 +66,6 @@ interface Props {
   allowWithoutQuotation?: boolean;
   /** Remark entered for documentation purposes. */
   serviceReportRemark?: string;
-  /** Callback used to hide or show the remarks field in the parent panel. */
-  onRemarkFieldVisibilityChange?: (visible: boolean) => void;
 }
 
 const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
@@ -88,7 +86,6 @@ export default function AdminServiceReport({
   quotations = [],
   allowWithoutQuotation = false,
   serviceReportRemark = "",
-  onRemarkFieldVisibilityChange,
 }: Props) {
   const { adminInfo } = useAuth();
   const [reports, setReports] = useState<ServiceReport[]>([]);
@@ -152,14 +149,19 @@ export default function AdminServiceReport({
       toast.error("File must be 20 MB or less.");
       return;
     }
+
+    const trimmedRemark = serviceReportRemark?.trim() || "";
+    if (allowWithoutQuotation && !trimmedRemark) {
+      toast.error("Remarks are required before uploading a service report.");
+      return;
+    }
+
     setPendingFile(file);
   };
 
   const handleUpload = async () => {
     const file = pendingFile;
     if (!file) return;
-
-    onRemarkFieldVisibilityChange?.(false);
 
     const trimmedRemark = serviceReportRemark?.trim() || "";
     if (allowWithoutQuotation && !trimmedRemark) {
@@ -507,7 +509,19 @@ Philippine Genome Center Visayas`.trim();
               size="sm"
               disabled={!canAttach}
               className="h-7 text-xs gap-1.5 border-dashed disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => canAttach && fileInputRef.current?.click()}
+              onClick={() => {
+                if (!canAttach) return;
+
+                const trimmedRemark = serviceReportRemark?.trim() || "";
+                if (allowWithoutQuotation && !trimmedRemark) {
+                  toast.error(
+                    "Remarks are required before uploading a service report.",
+                  );
+                  return;
+                }
+
+                fileInputRef.current?.click();
+              }}
             >
               <Paperclip className="h-3 w-3" />
               Attach Service Report
