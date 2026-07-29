@@ -1,5 +1,6 @@
 export interface Client {
   cid?: string;
+  inquiryId?: string;
   name?: string;
   email?: string;
   affiliation?: string;
@@ -8,7 +9,7 @@ export interface Client {
   phoneNumber?: string;
   affiliationAddress?: string;
   pid?: string[];
-  createdAt?: string |Date;
+  createdAt?: string | Date;
   haveSubmitted?: boolean;
   isContactPerson?: boolean;
   year?: number;

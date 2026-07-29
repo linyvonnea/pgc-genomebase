@@ -21,6 +21,7 @@ export const clientSchema = z.object({
   affiliation: z.string().nullable().optional(),
   affiliationAddress: z.string().nullable().optional(),
   cid: z.string().nullable().optional(),
+  inquiryId: z.string().nullable().optional(),
   createdAt: z.date().or(z.string()).nullable().optional(),
   designation: z.string().nullable().optional(),
   email: z.string().nullable().optional(),
@@ -28,7 +29,10 @@ export const clientSchema = z.object({
   isContactPerson: z.boolean().or(z.string()).nullable().optional(),
   name: z.string().nullable().optional(),
   phoneNumber: z.string().nullable().optional(),
-  pid: z.union([z.string(), z.array(z.string())]).nullable().optional(),
+  pid: z
+    .union([z.string(), z.array(z.string())])
+    .nullable()
+    .optional(),
   projectName: z.string().nullable().optional(),
   sex: z.enum(["F", "M", "Other", ""]).nullable().optional(),
   year: z.number().or(z.string()).nullable().optional(),

@@ -14,13 +14,9 @@ import { QuotationRecord } from "@/types/Quotation";
 import { sanitizeObject } from "@/lib/sanitizeObject";
 import { calculateItemTotal } from "@/lib/calculatePrice";
 import { getServiceCatalog } from "@/services/serviceCatalogService";
-import {
-  getClientById,
-  getProjectById,
-} from "@/services/clientProjectService";
-import {
-  generateNextChargeSlipNumber,
-} from "@/services/chargeSlipService";
+import { getClientById, getProjectById } from "@/services/clientProjectService";
+import { getInquiryById } from "@/services/inquiryService";
+import { generateNextChargeSlipNumber } from "@/services/chargeSlipService";
 import { saveChargeSlipAction } from "@/app/actions/chargeSlipActions";
 
 import { SelectedService as StrictSelectedService } from "@/types/SelectedService";
@@ -60,7 +56,10 @@ import { Loader2 } from "lucide-react";
 import { getActiveCatalogItems } from "@/services/catalogSettingsService";
 import { CatalogItem } from "@/types/CatalogSettings";
 
-export type EditableSelectedService = Omit<StrictSelectedService, "quantity"  | "price"> & {
+export type EditableSelectedService = Omit<
+  StrictSelectedService,
+  "quantity" | "price"
+> & {
   quantity: number | "";
   price: number;
 };
@@ -78,9 +77,12 @@ function ChargeSlipBuilderInner({
   projectData?: any;
   onSubmit: (data: any) => void;
 }) {
-  const [selectedServices, setSelectedServices] = useState<EditableSelectedService[]>([]);
+  const [selectedServices, setSelectedServices] = useState<
+    EditableSelectedService[]
+  >([]);
   const [isInternal, setIsInternal] = useState(false);
-  const [useAffiliationAsClientName, setUseAffiliationAsClientName] = useState(false);
+  const [useAffiliationAsClientName, setUseAffiliationAsClientName] =
+    useState(false);
   const [openPreview, setOpenPreview] = useState(false);
   const [search, setSearch] = useState("");
   const [showSelectedOnly, setShowSelectedOnly] = useState(false);
@@ -111,20 +113,91 @@ function ChargeSlipBuilderInner({
     enabled: !!effectiveClientId,
   });
 
+  const clientRecord = useMemo(
+    () => sanitizeObject(clientData || fetchedClient || {}),
+    [clientData, fetchedClient],
+  );
+
+  const inquiryId =
+    typeof clientRecord?.inquiryId === "string" ? clientRecord.inquiryId : "";
+
+  const { data: fetchedInquiry } = useQuery({
+    queryKey: ["inquiry", inquiryId],
+    queryFn: () => getInquiryById(inquiryId),
+    enabled: !!inquiryId,
+  });
+
   // Use primary project (first pid) if no specific projectId provided
-  const client = useMemo(() => sanitizeObject(clientData || fetchedClient || {}), [clientData, fetchedClient]);
+  const client = useMemo(() => {
+    const base = sanitizeObject(clientRecord || {});
+    if (!base || typeof base !== "object") return null;
+
+    const baseClient = base as Record<string, unknown>;
+    const inquiryFallback = fetchedInquiry
+      ? {
+          name: fetchedInquiry.name || (baseClient.name as string | undefined),
+          affiliation:
+            fetchedInquiry.affiliation ||
+            (baseClient.affiliation as string | undefined),
+          designation:
+            fetchedInquiry.designation ||
+            (baseClient.designation as string | undefined),
+          email:
+            fetchedInquiry.email ||
+            (baseClient.email as string | undefined) ||
+            "",
+        }
+      : {};
+
+    const pidValue = baseClient.pid;
+    const normalizedPid = Array.isArray(pidValue)
+      ? pidValue.filter((item): item is string => typeof item === "string")
+      : typeof pidValue === "string"
+        ? [pidValue]
+        : [];
+
+    return {
+      ...(baseClient as Record<string, unknown>),
+      ...inquiryFallback,
+      pid: normalizedPid,
+      name:
+        (baseClient.name as string | undefined) ||
+        (inquiryFallback as { name?: string }).name ||
+        "Unknown Client",
+      affiliation:
+        (baseClient.affiliation as string | undefined) ||
+        (inquiryFallback as { affiliation?: string }).affiliation ||
+        "No Institution",
+      designation:
+        (baseClient.designation as string | undefined) ||
+        (inquiryFallback as { designation?: string }).designation ||
+        "No Designation",
+      email:
+        (baseClient.email as string | undefined) ||
+        (inquiryFallback as { email?: string }).email ||
+        "",
+    };
+  }, [clientRecord, fetchedInquiry]);
 
   // Get the effective project ID - prioritize URL param, then primary project from client's pid array
   let effectiveProjectId = urlProjectId;
 
   // If projectId from URL contains comma-separated values, use only the first one (primary)
-  if (effectiveProjectId && effectiveProjectId.includes(',')) {
-    effectiveProjectId = effectiveProjectId.split(',')[0].trim();
-    console.log("Multiple PIDs detected in URL, using primary:", effectiveProjectId);
+  if (effectiveProjectId && effectiveProjectId.includes(",")) {
+    effectiveProjectId = effectiveProjectId.split(",")[0].trim();
+    console.log(
+      "Multiple PIDs detected in URL, using primary:",
+      effectiveProjectId,
+    );
   }
 
   // If still no projectId, get from client's primary pid
-  if (!effectiveProjectId && client && Array.isArray(client.pid) && client.pid.length > 0) {
+  if (
+    !effectiveProjectId &&
+    client &&
+    Array.isArray(client.pid) &&
+    client.pid.length > 0
+  ) {
     effectiveProjectId = client.pid[0];
     console.log("Using primary project ID from client:", effectiveProjectId);
   }
@@ -140,7 +213,9 @@ function ChargeSlipBuilderInner({
   // Log warning if client data is missing
   useEffect(() => {
     if (effectiveClientId && !client?.name) {
-      console.warn(`Client data not found or incomplete for CID: ${effectiveClientId}`);
+      console.warn(
+        `Client data not found or incomplete for CID: ${effectiveClientId}`,
+      );
     }
   }, [effectiveClientId, client]);
 
@@ -167,36 +242,36 @@ function ChargeSlipBuilderInner({
 
   const updateQuantity = (id: string, qty: number | "") => {
     setSelectedServices((prev) =>
-      prev.map((svc) => (svc.id === id ? { ...svc, quantity: qty } : svc))
+      prev.map((svc) => (svc.id === id ? { ...svc, quantity: qty } : svc)),
     );
   };
 
   const updateSamples = (id: string, samples: number | "") => {
     setSelectedServices((prev) =>
-      prev.map((svc) => (svc.id === id ? { ...svc, samples } : svc))
+      prev.map((svc) => (svc.id === id ? { ...svc, samples } : svc)),
     );
   };
 
-// for new price textbox
+  // for new price textbox
   const updatePrice = (id: string, price: number | "") => {
     const priceValue = typeof price === "number" ? price : 0;
     setSelectedServices((prev) =>
-      prev.map((svc) => (svc.id === id ? { ...svc, price: priceValue } : svc))
+      prev.map((svc) => (svc.id === id ? { ...svc, price: priceValue } : svc)),
     );
   };
 
   const updateParticipants = (id: string, participants: number | "") => {
     setSelectedServices((prev) =>
-      prev.map((svc) => (svc.id === id ? { ...svc, participants } : svc))
+      prev.map((svc) => (svc.id === id ? { ...svc, participants } : svc)),
     );
   };
 
   const handleQuotationSelect = (quote: QuotationRecord) => {
     // Sync pricing and formatting options from quotation
-    if (typeof quote.isInternal === 'boolean') {
+    if (typeof quote.isInternal === "boolean") {
       setIsInternal(quote.isInternal);
     }
-    if (typeof quote.useAffiliationAsClientName === 'boolean') {
+    if (typeof quote.useAffiliationAsClientName === "boolean") {
       setUseAffiliationAsClientName(quote.useAffiliationAsClientName);
     }
 
@@ -213,7 +288,9 @@ function ChargeSlipBuilderInner({
     // Reset flags when deselecting
     setIsInternal(false);
     setUseAffiliationAsClientName(false);
-    setSelectedServices((prev) => prev.filter((s) => !quote.services.some((qs) => qs.id === s.id)));
+    setSelectedServices((prev) =>
+      prev.filter((s) => !quote.services.some((qs) => qs.id === s.id)),
+    );
   };
   const cleanedServices: StrictSelectedService[] = selectedServices
     .filter((s) => typeof s.quantity === "number" && s.quantity > 0)
@@ -222,25 +299,28 @@ function ChargeSlipBuilderInner({
   const subtotal = cleanedServices.reduce((sum, item) => {
     const serviceType = item.type.toLowerCase();
 
-    if (serviceType.includes('bioinformatics') || serviceType.includes('bioinfo')) {
+    if (
+      serviceType.includes("bioinformatics") ||
+      serviceType.includes("bioinfo")
+    ) {
       // Use samples for bioinformatics
       const samples = (item as any).samples ?? 1;
       const samplesAmount = calculateItemTotal(samples, item.price, {
         minQuantity: (item as any).minQuantity,
         additionalUnitPrice: (item as any).additionalUnitPrice,
       });
-      return sum + (samplesAmount * item.quantity);
-    } else if (serviceType.includes('training')) {
+      return sum + samplesAmount * item.quantity;
+    } else if (serviceType.includes("training")) {
       // Use participants for training
       const participants = (item as any).participants ?? 1;
       const participantsAmount = calculateItemTotal(participants, item.price, {
         minQuantity: (item as any).minParticipants,
         additionalUnitPrice: (item as any).additionalParticipantPrice,
       });
-      return sum + (participantsAmount * item.quantity);
+      return sum + participantsAmount * item.quantity;
     } else {
       // Default calculation for other services
-      return sum + (item.price * item.quantity);
+      return sum + item.price * item.quantity;
     }
   }, 0);
   const discount = isInternal ? subtotal * 0.12 : 0;
@@ -257,11 +337,12 @@ function ChargeSlipBuilderInner({
 
   const groupedByType = useMemo(() => {
     const result: Record<string, ServiceItem[]> = {};
-    const selectedIds = new Set(selectedServices.map(s => s.id));
+    const selectedIds = new Set(selectedServices.map((s) => s.id));
 
     for (const item of catalog) {
       // Filter by search
-      const matchesSearch = !search || item.name.toLowerCase().includes(search.toLowerCase());
+      const matchesSearch =
+        !search || item.name.toLowerCase().includes(search.toLowerCase());
       // Filter by selected if showSelectedOnly is true
       const matchesFilter = !showSelectedOnly || selectedIds.has(item.id);
 
@@ -291,10 +372,8 @@ function ChargeSlipBuilderInner({
           const quantity = isSelected?.quantity ?? "";
           const price = isSelected?.price ?? 0;
           const amount =
-            isSelected && typeof quantity === "number"
-              ? price * quantity
-              : 0;
-// for new price textbox
+            isSelected && typeof quantity === "number" ? price * quantity : 0;
+          // for new price textbox
           return (
             <TableRow key={item.id}>
               <TableCell>
@@ -310,7 +389,9 @@ function ChargeSlipBuilderInner({
                 <Input
                   type="number"
                   value={price}
-                  onChange={(e) => updateQuantity(item.id, Number(e.target.value))}
+                  onChange={(e) =>
+                    updateQuantity(item.id, Number(e.target.value))
+                  }
                   className="w-24"
                   disabled={!isSelected}
                 />
@@ -319,13 +400,22 @@ function ChargeSlipBuilderInner({
                 <Input
                   type="number"
                   value={quantity}
-                  onChange={(e) => updateQuantity(item.id, e.target.value === "" ? "" : Number(e.target.value))}
+                  onChange={(e) =>
+                    updateQuantity(
+                      item.id,
+                      e.target.value === "" ? "" : Number(e.target.value),
+                    )
+                  }
                   className="w-20"
                   disabled={!isSelected}
                 />
               </TableCell>
               <TableCell className="text-right">
-                ₱{amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                ₱
+                {amount.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </TableCell>
             </TableRow>
           );
@@ -338,7 +428,8 @@ function ChargeSlipBuilderInner({
     const lower = raw.toLowerCase();
     if (lower.includes("equipment")) return "equipment";
     if (lower.includes("lab")) return "laboratory";
-    if (lower.includes("bioinformatics") || lower.includes("bioinfo")) return "bioinformatics";
+    if (lower.includes("bioinformatics") || lower.includes("bioinfo"))
+      return "bioinformatics";
     if (lower.includes("retail")) return "retail";
     if (lower.includes("training")) return "training";
     return lower; // fallback
@@ -350,7 +441,9 @@ function ChargeSlipBuilderInner({
       const rawRecord = {
         id: chargeSlipNumber,
         chargeSlipNumber,
-        cid: client?.cid || effectiveClientId,
+        cid:
+          (client as { cid?: string } | null | undefined)?.cid ||
+          effectiveClientId,
         projectId: effectiveProjectId,
         client,
         project,
@@ -373,7 +466,9 @@ function ChargeSlipBuilderInner({
         discount,
         total,
 
-        categories: Array.from(new Set(cleanedServices.map((s) => normalizeCategory(s.category)))),
+        categories: Array.from(
+          new Set(cleanedServices.map((s) => normalizeCategory(s.category))),
+        ),
       };
 
       const record = sanitizeObject(rawRecord) as ChargeSlipRecord;
@@ -387,7 +482,7 @@ function ChargeSlipBuilderInner({
 
       const result = await saveChargeSlipAction(record, {
         name: adminInfo.name || adminInfo.email!,
-        email: adminInfo.email!
+        email: adminInfo.email!,
       });
 
       if (!result.success) {
@@ -395,14 +490,18 @@ function ChargeSlipBuilderInner({
       }
 
       // Invalidate charge slip history to refresh the list
-      queryClient.invalidateQueries({ queryKey: ["chargeSlipHistory", effectiveProjectId] });
+      queryClient.invalidateQueries({
+        queryKey: ["chargeSlipHistory", effectiveProjectId],
+      });
 
       toast.success("Charge slip saved successfully!");
       setOpenPreview(false);
       onSubmit?.(record);
     } catch (error) {
       console.error("Failed to save charge slip:", error);
-      toast.error(`Failed to save charge slip: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to save charge slip: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     } finally {
       setSaving(false);
     }
@@ -415,7 +514,10 @@ function ChargeSlipBuilderInner({
         <div className="mb-6">
           <h1 className="text-xl font-semibold mb-2">Build Charge Slip for:</h1>
           <Accordion type="single" collapsible defaultValue="client-info">
-            <AccordionItem value="client-info" className="border rounded-lg overflow-hidden shadow-sm">
+            <AccordionItem
+              value="client-info"
+              className="border rounded-lg overflow-hidden shadow-sm"
+            >
               <AccordionTrigger className="px-4 py-3 hover:no-underline bg-white text-base font-semibold">
                 Client Information
               </AccordionTrigger>
@@ -424,40 +526,66 @@ function ChargeSlipBuilderInner({
                   <table className="w-full text-sm">
                     <tbody>
                       <tr>
-                        <td className="py-2 pr-4 text-muted-foreground w-40">Charge Slip Number</td>
-                        <td className="py-2 font-mono font-bold text-slate-700">{chargeSlipNumber}</td>
+                        <td className="py-2 pr-4 text-muted-foreground w-40">
+                          Charge Slip Number
+                        </td>
+                        <td className="py-2 font-mono font-bold text-slate-700">
+                          {chargeSlipNumber}
+                        </td>
                       </tr>
                       <tr>
-                        <td className="py-2 pr-4 text-muted-foreground">Client Name</td>
-                        <td className="py-2 font-semibold text-slate-900">{clientInfo.name}</td>
+                        <td className="py-2 pr-4 text-muted-foreground">
+                          Client Name
+                        </td>
+                        <td className="py-2 font-semibold text-slate-900">
+                          {clientInfo.name}
+                        </td>
                       </tr>
                       <tr>
-                        <td className="py-2 pr-4 text-muted-foreground">Institution</td>
-                        <td className="py-2 text-slate-700">{clientInfo.institution}</td>
+                        <td className="py-2 pr-4 text-muted-foreground">
+                          Institution
+                        </td>
+                        <td className="py-2 text-slate-700">
+                          {clientInfo.institution}
+                        </td>
                       </tr>
                       <tr>
-                        <td className="py-2 pr-4 text-muted-foreground">Designation</td>
-                        <td className="py-2 text-slate-700">{clientInfo.designation}</td>
+                        <td className="py-2 pr-4 text-muted-foreground">
+                          Designation
+                        </td>
+                        <td className="py-2 text-slate-700">
+                          {clientInfo.designation}
+                        </td>
                       </tr>
                       <tr>
-                        <td className="py-2 pr-4 text-muted-foreground">Email</td>
-                        <td className="py-2 text-slate-700">{clientInfo.email || "N/A"}</td>
+                        <td className="py-2 pr-4 text-muted-foreground">
+                          Email
+                        </td>
+                        <td className="py-2 text-slate-700">
+                          {clientInfo.email || "N/A"}
+                        </td>
                       </tr>
                     </tbody>
                   </table>
                   <div className="flex items-center gap-2 pt-2">
                     <Checkbox
                       checked={useAffiliationAsClientName}
-                      onCheckedChange={val => setUseAffiliationAsClientName(!!val)}
+                      onCheckedChange={(val) =>
+                        setUseAffiliationAsClientName(!!val)
+                      }
                     />
-                    <span className="text-sm">Display affiliation as client name in PDF</span>
+                    <span className="text-sm">
+                      Display affiliation as client name in PDF
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 pt-2">
                     <Checkbox
                       checked={isInternal}
-                      onCheckedChange={val => setIsInternal(!!val)}
+                      onCheckedChange={(val) => setIsInternal(!!val)}
                     />
-                    <span className="text-sm">Internal Client (Apply 12% discount)</span>
+                    <span className="text-sm">
+                      Internal Client (Apply 12% discount)
+                    </span>
                   </div>
                 </div>
               </AccordionContent>
@@ -516,34 +644,45 @@ function ChargeSlipBuilderInner({
       <div className="flex-[1] min-w-[320px] max-w-[420px] shrink-0 sticky top-6 h-fit border p-4 rounded-md shadow-sm bg-white">
         <h3 className="text-lg font-bold mb-2">Summary</h3>
         <p className="text-sm text-muted-foreground mb-2">
-          {cleanedServices.length} {cleanedServices.length === 1 ? 'service' : 'services'} selected
+          {cleanedServices.length}{" "}
+          {cleanedServices.length === 1 ? "service" : "services"} selected
         </p>
         <Separator className="mb-2" />
         {cleanedServices.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <p className="text-sm">No services selected</p>
-            <p className="text-xs mt-1">Select services from the list to continue</p>
+            <p className="text-xs mt-1">
+              Select services from the list to continue
+            </p>
           </div>
         ) : (
           <>
             {Object.entries(
-              cleanedServices.reduce((acc, item) => {
-                const category = item.category;
-                if (!acc[category]) acc[category] = [];
-                acc[category].push(item);
-                return acc;
-              }, {} as Record<string, typeof cleanedServices>)
+              cleanedServices.reduce(
+                (acc, item) => {
+                  const category = item.category;
+                  if (!acc[category]) acc[category] = [];
+                  acc[category].push(item);
+                  return acc;
+                },
+                {} as Record<string, typeof cleanedServices>,
+              ),
             ).map(([category, items]) => (
               <div key={category} className="mb-3">
                 <p className="text-xs font-semibold text-gray-600 uppercase mb-1">
                   {category} ({items.length})
                 </p>
                 {items.map((item) => (
-                  <div key={item.id} className="flex justify-between text-sm mb-1 pl-2">
+                  <div
+                    key={item.id}
+                    className="flex justify-between text-sm mb-1 pl-2"
+                  >
                     <span className="truncate">
                       {item.name} x {item.quantity}
                     </span>
-                    <span className="font-medium">₱{(item.price * item.quantity).toFixed(2)}</span>
+                    <span className="font-medium">
+                      ₱{(item.price * item.quantity).toFixed(2)}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -632,8 +771,8 @@ function ChargeSlipBuilderInner({
         {project?.iid && (
           <>
             <Separator className="my-6" />
-            <QuotationHistoryPanel 
-              inquiryId={project.iid} 
+            <QuotationHistoryPanel
+              inquiryId={project.iid}
               showCheckboxes={true}
               onSelectQuotation={handleQuotationSelect}
               onDeselectQuotation={handleQuotationDeselect}
@@ -645,7 +784,10 @@ function ChargeSlipBuilderInner({
   );
 }
 
-class ChargeSlipErrorBoundary extends React.Component<any, { hasError: boolean; error?: any }> {
+class ChargeSlipErrorBoundary extends React.Component<
+  any,
+  { hasError: boolean; error?: any }
+> {
   constructor(props: any) {
     super(props);
     this.state = { hasError: false };
@@ -660,8 +802,12 @@ class ChargeSlipErrorBoundary extends React.Component<any, { hasError: boolean; 
     if (this.state.hasError) {
       return (
         <div className="p-6">
-          <h2 className="text-xl font-semibold text-red-600">Failed to load Charge Slip Builder</h2>
-          <pre className="mt-4 text-sm text-gray-700 break-words">{String(this.state.error)}</pre>
+          <h2 className="text-xl font-semibold text-red-600">
+            Failed to load Charge Slip Builder
+          </h2>
+          <pre className="mt-4 text-sm text-gray-700 break-words">
+            {String(this.state.error)}
+          </pre>
         </div>
       );
     }
