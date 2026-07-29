@@ -20,6 +20,9 @@ export interface ServiceReport {
   uploadedAt: Timestamp | null;
   uploadedBy: string;
   uploadedByName: string;
+  uploadedByEmail?: string | null;
+  documentationRemark?: string | null;
+  exceptionEnabled?: boolean;
   projectId: string;
   status?: "pending" | "received";
   receivedAt?: Timestamp | null;
@@ -31,17 +34,17 @@ const subCollection = (pid: string) =>
   collection(db, "projects", pid, "serviceReports");
 
 export async function getServiceReportsByProjectId(
-  pid: string
+  pid: string,
 ): Promise<ServiceReport[]> {
   const snap = await getDocs(
-    query(subCollection(pid), orderBy("uploadedAt", "desc"))
+    query(subCollection(pid), orderBy("uploadedAt", "desc")),
   );
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as ServiceReport));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }) as ServiceReport);
 }
 
 export async function addServiceReport(
   pid: string,
-  data: Omit<ServiceReport, "id" | "uploadedAt">
+  data: Omit<ServiceReport, "id" | "uploadedAt">,
 ): Promise<string> {
   const ref = await addDoc(subCollection(pid), {
     ...data,
@@ -52,7 +55,7 @@ export async function addServiceReport(
 
 export async function deleteServiceReport(
   pid: string,
-  reportId: string
+  reportId: string,
 ): Promise<void> {
   await deleteDoc(doc(db, "projects", pid, "serviceReports", reportId));
 }
@@ -61,7 +64,7 @@ export async function markServiceReportReceived(
   pid: string,
   reportId: string,
   receivedBy: string,
-  receivedByName: string
+  receivedByName: string,
 ): Promise<void> {
   await updateDoc(doc(db, "projects", pid, "serviceReports", reportId), {
     status: "received",

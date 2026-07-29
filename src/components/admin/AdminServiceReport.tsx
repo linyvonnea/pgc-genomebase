@@ -219,6 +219,9 @@ export default function AdminServiceReport({
         uploadedAt: serverTimestamp(),
         uploadedBy: adminInfo?.email || "system",
         uploadedByName: adminInfo?.name || "Admin",
+        uploadedByEmail: adminInfo?.email || null,
+        documentationRemark: trimmedRemark || null,
+        exceptionEnabled: allowWithoutQuotation,
         projectId,
       });
 

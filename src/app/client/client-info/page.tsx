@@ -5370,6 +5370,13 @@ export default function ClientPortalPage() {
                                   const reportKey = `${selectedProjectPid}:${item.id}`;
                                   const isReceiving =
                                     receivingReportId === reportKey;
+                                  const isExceptionReport = Boolean(
+                                    item.exceptionEnabled ||
+                                      item.documentationRemark ||
+                                      item.uploadedByEmail ||
+                                      (projectDetails as any)
+                                        ?.allowServiceReportWithoutQuotation,
+                                  );
                                   return (
                                     <div
                                       key={item.id}
@@ -5416,6 +5423,26 @@ export default function ClientPortalPage() {
                                               </span>
                                             )}
                                           </Badge>
+                                        ) : isExceptionReport ? (
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-8 text-xs px-3 gap-1 border-blue-200 text-blue-700 hover:bg-blue-50"
+                                            disabled={isReceiving}
+                                            onClick={() =>
+                                              handleReceiveServiceReport(
+                                                selectedProjectPid,
+                                                item,
+                                              )
+                                            }
+                                          >
+                                            {isReceiving ? (
+                                              <Loader2 className="h-3 w-3 animate-spin" />
+                                            ) : (
+                                              <Download className="h-3 w-3" />
+                                            )}
+                                            Receive
+                                          </Button>
                                         ) : !allChargeSlipsSettled ? (
                                           <TooltipProvider delayDuration={100}>
                                             <Tooltip>
