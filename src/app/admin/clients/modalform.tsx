@@ -1,7 +1,7 @@
 // Admin Client Modal Form
 // Modal form for adding a new client in the admin panel, with project linking and validation.
 
-'use client';
+"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -11,13 +11,25 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { UserPlus, FolderOpen, User, Briefcase, Save } from "lucide-react";
 import { Client } from "@/types/Client";
 import { clientSchema as baseClientSchema } from "@/schemas/clientSchema";
-import { db } from "@/lib/firebase"; 
+import { db } from "@/lib/firebase";
 import { toast } from "sonner";
-import { doc, setDoc, serverTimestamp, updateDoc, arrayUnion } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  serverTimestamp,
+  updateDoc,
+  arrayUnion,
+} from "firebase/firestore";
 import { getNextCid, checkCidExists } from "@/services/clientService";
 import { getProjects } from "@/services/projectsService";
 import { getInquiries } from "@/services/inquiryService";
@@ -27,30 +39,40 @@ import { logActivity } from "@/services/activityLogService";
 import useAuth from "@/hooks/useAuth";
 
 // Extended client schema for admin modal validation
-const clientSchema = baseClientSchema.extend({
-  affiliation: z.string().min(1, "Affiliation is required"),
-  year: z.coerce.number().int().min(2000),
-  name: z.string().min(1, "Name is required"),
-  sex: z.enum(["F", "M", "Other"], { required_error: "Sex is required" }),
-  phoneNumber: z
-    .string()
-    .min(1, "Mobile number is required")
-    .refine(
-      (val) => /^\d{11}$/.test(val) || val === "N/A",
-      "Enter a valid 11-digit mobile number or 'N/A'"
-    ),
-  designation: z.string().min(1, "Designation is required"),
-  email: z.string().email("Invalid email"),
-  affiliationAddress: z.string().optional(),
-}).omit({ createdAt: true });
+const clientSchema = baseClientSchema
+  .extend({
+    affiliation: z.string().min(1, "Affiliation is required"),
+    year: z.coerce.number().int().min(2000),
+    name: z.string().min(1, "Name is required"),
+    sex: z.enum(["F", "M", "Other"], { required_error: "Sex is required" }),
+    phoneNumber: z
+      .string()
+      .min(1, "Mobile number is required")
+      .refine(
+        (val) => /^\d{11}$/.test(val) || val === "N/A",
+        "Enter a valid 11-digit mobile number or 'N/A'",
+      ),
+    designation: z.string().min(1, "Designation is required"),
+    email: z.string().email("Invalid email"),
+    affiliationAddress: z.string().optional(),
+  })
+  .omit({ createdAt: true });
 
-type ClientFormData = Omit<z.infer<typeof clientSchema>, 'sex'> & { sex: "F" | "M" | "Other" | "" };
+type ClientFormData = Omit<z.infer<typeof clientSchema>, "sex"> & {
+  sex: "F" | "M" | "Other" | "";
+};
 
 // Modal form component for adding a client
-export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Client) => void; onClose?: () => void }) {
+export function ClientFormModal({
+  onSubmit,
+  onClose,
+}: {
+  onSubmit?: (data: Client) => void;
+  onClose?: () => void;
+}) {
   const { adminInfo } = useAuth();
   const cidInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Form state
   const [formData, setFormData] = useState<ClientFormData>({
     year: new Date().getFullYear(),
@@ -62,13 +84,17 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
     sex: "",
     phoneNumber: "",
   });
-  
+
   const [cid, setCid] = useState<string>("");
   const [isCidChecking, setIsCidChecking] = useState(false);
   const [cidError, setCidError] = useState<string>("");
 
-  const [errors, setErrors] = useState<Partial<Record<keyof ClientFormData, string>>>({});
-  const [projectOptions, setProjectOptions] = useState<{ pid: string; title?: string }[]>([]);
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof ClientFormData, string>>
+  >({});
+  const [projectOptions, setProjectOptions] = useState<
+    { pid: string; title?: string }[]
+  >([]);
   const [selectedPid, setSelectedPid] = useState<string>("");
   const [projectSearch, setProjectSearch] = useState("");
   const [inquiryOptions, setInquiryOptions] = useState<Inquiry[]>([]);
@@ -85,7 +111,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
         createdAt: serverTimestamp(),
       };
       await setDoc(docRef, clientData);
-      
+
       // Log the activity
       await logActivity({
         userId: adminInfo?.email || "system",
@@ -98,7 +124,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
         description: `Created client: ${data.name || data.cid}`,
         changesAfter: clientData,
       });
-      
+
       return data;
     },
     onSuccess: (data) => {
@@ -129,7 +155,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
     };
     generateCid();
   }, [formData.year]);
-  
+
   // Fetch project and inquiry options for dropdowns
   useEffect(() => {
     getProjects().then((projects) => {
@@ -143,9 +169,9 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
   // Handle inquiry selection - auto-populate form fields
   const handleInquirySelect = (inquiryId: string) => {
     setSelectedInquiry(inquiryId);
-    const inquiry = inquiryOptions.find(inq => inq.id === inquiryId);
+    const inquiry = inquiryOptions.find((inq) => inq.id === inquiryId);
     if (inquiry) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         name: inquiry.name || "",
         email: inquiry.email || "",
@@ -158,38 +184,43 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
   // Handle form submit: validate, save client, update project
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate CID
     if (!cid) {
       setCidError("Client ID is required");
       return;
     }
-    
+
     // Check if CID already exists
     setIsCidChecking(true);
     const cidExists = await checkCidExists(cid);
     setIsCidChecking(false);
-    
+
     if (cidExists) {
-      setCidError("This Client ID already exists. Please choose a different ID.");
+      setCidError(
+        "This Client ID already exists. Please choose a different ID.",
+      );
       // Scroll to the CID field and focus it
-      cidInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      cidInputRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
       cidInputRef.current?.focus();
       return;
     }
-    
+
     // Validate that Project ID is selected
     if (!selectedPid) {
       toast.error("Please select a Project ID");
       return;
     }
-    
+
     // Validate sex is not empty
     if (!formData.sex) {
       setErrors({ ...errors, sex: "Sex is required" });
       return;
     }
-    
+
     const result = clientSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors: Partial<Record<keyof ClientFormData, string>> = {};
@@ -204,11 +235,18 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
         const clientData: Client = {
           ...result.data,
           cid: cid,
+          inquiryId: result.data.inquiryId || undefined,
           year: result.data.year,
           pid: selectedPid ? [selectedPid] : [],
           // normalize fields that must be boolean | undefined on the Client type
-          haveSubmitted: typeof (result.data as any).haveSubmitted === "boolean" ? (result.data as any).haveSubmitted : false,
-          isContactPerson: typeof (result.data as any).isContactPerson === "boolean" ? (result.data as any).isContactPerson : false,
+          haveSubmitted:
+            typeof (result.data as any).haveSubmitted === "boolean"
+              ? (result.data as any).haveSubmitted
+              : false,
+          isContactPerson:
+            typeof (result.data as any).isContactPerson === "boolean"
+              ? (result.data as any).isContactPerson
+              : false,
           status: "Approved",
         };
         await mutation.mutateAsync(clientData);
@@ -216,7 +254,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
         if (selectedPid && clientData.name) {
           const projectRef = doc(db, "projects", selectedPid);
           await updateDoc(projectRef, {
-            clientNames: arrayUnion(clientData.name)
+            clientNames: arrayUnion(clientData.name),
           });
         }
       } catch (err) {
@@ -227,10 +265,7 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
   };
 
   // Handle form field changes
-  const handleChange = (
-    name: keyof ClientFormData,
-    value: string
-  ) => {
+  const handleChange = (name: keyof ClientFormData, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -241,14 +276,15 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
   const filteredProjectOptions = projectOptions.filter(
     (proj) =>
       proj.pid.toLowerCase().includes(projectSearch.toLowerCase()) ||
-      (proj.title?.toLowerCase().includes(projectSearch.toLowerCase()) ?? false)
+      (proj.title?.toLowerCase().includes(projectSearch.toLowerCase()) ??
+        false),
   );
 
   // Filter inquiry options by search
   const filteredInquiryOptions = inquiryOptions.filter(
     (inq) =>
       inq.name?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
-      inq.affiliation?.toLowerCase().includes(inquirySearch.toLowerCase())
+      inq.affiliation?.toLowerCase().includes(inquirySearch.toLowerCase()),
   );
 
   return (
@@ -259,7 +295,9 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
           <div className="p-1.5 bg-amber-50 rounded-md">
             <UserPlus className="h-4 w-4 text-amber-600" />
           </div>
-          <h3 className="text-sm font-semibold text-gray-700">Quick Fill from Inquiry</h3>
+          <h3 className="text-sm font-semibold text-gray-700">
+            Quick Fill from Inquiry
+          </h3>
         </div>
         <Separator />
       </div>
@@ -271,11 +309,23 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
           <SelectTrigger className="h-9 w-full">
             <SelectValue placeholder="Select inquiry to auto-fill">
               {selectedInquiry ? (
-                <div className="flex flex-col items-start" title={inquiryOptions.find(i => i.id === selectedInquiry)?.affiliation}>
-                  <span className="font-medium text-sm">{inquiryOptions.find(i => i.id === selectedInquiry)?.name}</span>
-                  {inquiryOptions.find(i => i.id === selectedInquiry)?.affiliation && (
+                <div
+                  className="flex flex-col items-start"
+                  title={
+                    inquiryOptions.find((i) => i.id === selectedInquiry)
+                      ?.affiliation
+                  }
+                >
+                  <span className="font-medium text-sm">
+                    {inquiryOptions.find((i) => i.id === selectedInquiry)?.name}
+                  </span>
+                  {inquiryOptions.find((i) => i.id === selectedInquiry)
+                    ?.affiliation && (
                     <span className="text-xs text-gray-500 truncate max-w-[250px]">
-                      {inquiryOptions.find(i => i.id === selectedInquiry)?.affiliation}
+                      {
+                        inquiryOptions.find((i) => i.id === selectedInquiry)
+                          ?.affiliation
+                      }
                     </span>
                   )}
                 </div>
@@ -289,18 +339,27 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
               <Input
                 placeholder="Search by Name or Affiliation..."
                 value={inquirySearch}
-                onChange={e => setInquirySearch(e.target.value)}
+                onChange={(e) => setInquirySearch(e.target.value)}
                 className="h-9 text-sm"
               />
             </div>
             <div className="max-h-[240px] overflow-y-auto">
               {filteredInquiryOptions.length > 0 ? (
                 filteredInquiryOptions.map((inq) => (
-                  <SelectItem key={inq.id} value={inq.id || ""} className="text-sm">
+                  <SelectItem
+                    key={inq.id}
+                    value={inq.id || ""}
+                    className="text-sm"
+                  >
                     <div className="flex flex-col py-1">
-                      <span className="font-medium text-gray-900">{inq.name}</span>
+                      <span className="font-medium text-gray-900">
+                        {inq.name}
+                      </span>
                       {inq.affiliation && (
-                        <span className="text-xs text-gray-500 truncate max-w-[350px]" title={inq.affiliation}>
+                        <span
+                          className="text-xs text-gray-500 truncate max-w-[350px]"
+                          title={inq.affiliation}
+                        >
                           {inq.affiliation}
                         </span>
                       )}
@@ -320,19 +379,21 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
       {/* Client ID - Editable */}
       <div>
         <Label className="text-xs">Client ID</Label>
-        <Input 
+        <Input
           ref={cidInputRef}
-          name="cid" 
-          value={cid} 
+          name="cid"
+          value={cid}
           onChange={(e) => {
             setCid(e.target.value);
             setCidError("");
-          }} 
-          className="h-9 font-mono bg-green-50" 
+          }}
+          className="h-9 font-mono bg-green-50"
           placeholder="CL-2026-001"
         />
         {cidError && <p className="text-red-500 text-xs mt-1">{cidError}</p>}
-        <p className="text-xs text-gray-500 mt-1">Auto-generated, but can be edited</p>
+        <p className="text-xs text-gray-500 mt-1">
+          Auto-generated, but can be edited
+        </p>
       </div>
 
       {/* Project Information Section */}
@@ -341,23 +402,32 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
           <div className="p-1.5 bg-blue-50 rounded-md">
             <FolderOpen className="h-4 w-4 text-blue-600" />
           </div>
-          <h3 className="text-sm font-semibold text-gray-700">Project Information</h3>
+          <h3 className="text-sm font-semibold text-gray-700">
+            Project Information
+          </h3>
         </div>
         <Separator />
       </div>
 
       {/* Project ID Dropdown with search */}
       <div>
-        <Label className="text-xs">Project ID <span className="text-red-500">*</span></Label>
+        <Label className="text-xs">
+          Project ID <span className="text-red-500">*</span>
+        </Label>
         <Select value={selectedPid} onValueChange={setSelectedPid}>
           <SelectTrigger className="h-9 w-full">
             <SelectValue placeholder="Select or search project">
               {selectedPid ? (
-                <div className="flex flex-col items-start" title={projectOptions.find(p => p.pid === selectedPid)?.title}>
+                <div
+                  className="flex flex-col items-start"
+                  title={
+                    projectOptions.find((p) => p.pid === selectedPid)?.title
+                  }
+                >
                   <span className="font-medium text-sm">{selectedPid}</span>
-                  {projectOptions.find(p => p.pid === selectedPid)?.title && (
+                  {projectOptions.find((p) => p.pid === selectedPid)?.title && (
                     <span className="text-xs text-gray-500 truncate max-w-[250px]">
-                      {projectOptions.find(p => p.pid === selectedPid)?.title}
+                      {projectOptions.find((p) => p.pid === selectedPid)?.title}
                     </span>
                   )}
                 </div>
@@ -371,18 +441,27 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
               <Input
                 placeholder="Search by Project ID or Title..."
                 value={projectSearch}
-                onChange={e => setProjectSearch(e.target.value)}
+                onChange={(e) => setProjectSearch(e.target.value)}
                 className="h-9 text-sm"
               />
             </div>
             <div className="max-h-[240px] overflow-y-auto">
               {filteredProjectOptions.length > 0 ? (
                 filteredProjectOptions.map((proj) => (
-                  <SelectItem key={proj.pid} value={proj.pid} className="text-sm">
+                  <SelectItem
+                    key={proj.pid}
+                    value={proj.pid}
+                    className="text-sm"
+                  >
                     <div className="flex flex-col py-1">
-                      <span className="font-medium text-gray-900">{proj.pid}</span>
+                      <span className="font-medium text-gray-900">
+                        {proj.pid}
+                      </span>
                       {proj.title && (
-                        <span className="text-xs text-gray-500 truncate max-w-[350px]" title={proj.title}>
+                        <span
+                          className="text-xs text-gray-500 truncate max-w-[350px]"
+                          title={proj.title}
+                        >
                           {proj.title}
                         </span>
                       )}
@@ -405,21 +484,27 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
           <div className="p-1.5 bg-green-50 rounded-md">
             <User className="h-4 w-4 text-green-600" />
           </div>
-          <h3 className="text-sm font-semibold text-gray-700">Personal Information</h3>
+          <h3 className="text-sm font-semibold text-gray-700">
+            Personal Information
+          </h3>
         </div>
         <Separator />
       </div>
 
       {/* Name Field */}
       <div>
-        <Label className="text-xs">Full Name <span className="text-red-500">*</span></Label>
+        <Label className="text-xs">
+          Full Name <span className="text-red-500">*</span>
+        </Label>
         <Input
           value={formData.name}
           onChange={(e) => handleChange("name", e.target.value)}
           placeholder="Enter full name"
           className="h-9"
         />
-        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+        {errors.name && (
+          <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+        )}
       </div>
 
       {/* Email Field */}
@@ -432,14 +517,23 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
           placeholder="Enter email address"
           className="h-9"
         />
-        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+        {errors.email && (
+          <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         {/* Sex Field */}
         <div>
-          <Label className="text-xs">Sex <span className="text-red-500">*</span></Label>
-          <Select value={formData.sex} onValueChange={(val) => handleChange("sex", val as ClientFormData["sex"])}>
+          <Label className="text-xs">
+            Sex <span className="text-red-500">*</span>
+          </Label>
+          <Select
+            value={formData.sex}
+            onValueChange={(val) =>
+              handleChange("sex", val as ClientFormData["sex"])
+            }
+          >
             <SelectTrigger className="h-9">
               <SelectValue placeholder="Select" />
             </SelectTrigger>
@@ -449,19 +543,25 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
               <SelectItem value="Other">Other</SelectItem>
             </SelectContent>
           </Select>
-          {errors.sex && <p className="text-red-500 text-xs mt-1">{errors.sex}</p>}
+          {errors.sex && (
+            <p className="text-red-500 text-xs mt-1">{errors.sex}</p>
+          )}
         </div>
 
         {/* Mobile Number Field */}
         <div>
-          <Label className="text-xs">Mobile Number <span className="text-red-500">*</span></Label>
+          <Label className="text-xs">
+            Mobile Number <span className="text-red-500">*</span>
+          </Label>
           <Input
             value={formData.phoneNumber}
             onChange={(e) => handleChange("phoneNumber", e.target.value)}
             placeholder="09191234567 or N/A"
             className="h-9"
           />
-          {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>}
+          {errors.phoneNumber && (
+            <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>
+          )}
         </div>
       </div>
 
@@ -471,21 +571,28 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
           <div className="p-1.5 bg-purple-50 rounded-md">
             <Briefcase className="h-4 w-4 text-purple-600" />
           </div>
-          <h3 className="text-sm font-semibold text-gray-700">Professional Information</h3>
+          <h3 className="text-sm font-semibold text-gray-700">
+            Professional Information
+          </h3>
         </div>
         <Separator />
       </div>
 
       {/* Affiliation Field */}
       <div>
-        <Label className="text-xs">Affiliation (Department & Institution) <span className="text-red-500">*</span></Label>
+        <Label className="text-xs">
+          Affiliation (Department & Institution){" "}
+          <span className="text-red-500">*</span>
+        </Label>
         <Input
           value={formData.affiliation}
           onChange={(e) => handleChange("affiliation", e.target.value)}
           placeholder="e.g. Division of Biological Sciences - UPV CAS"
           className="h-9"
         />
-        {errors.affiliation && <p className="text-red-500 text-xs mt-1">{errors.affiliation}</p>}
+        {errors.affiliation && (
+          <p className="text-red-500 text-xs mt-1">{errors.affiliation}</p>
+        )}
       </div>
 
       {/* Affiliation Address Field */}
@@ -497,37 +604,45 @@ export function ClientFormModal({ onSubmit, onClose }: { onSubmit?: (data: Clien
           placeholder="Enter complete address"
           className="h-9"
         />
-        {errors.affiliationAddress && <p className="text-red-500 text-xs mt-1">{errors.affiliationAddress}</p>}
+        {errors.affiliationAddress && (
+          <p className="text-red-500 text-xs mt-1">
+            {errors.affiliationAddress}
+          </p>
+        )}
       </div>
 
       {/* Designation Field */}
       <div>
-        <Label className="text-xs">Designation <span className="text-red-500">*</span></Label>
+        <Label className="text-xs">
+          Designation <span className="text-red-500">*</span>
+        </Label>
         <Input
           value={formData.designation}
           onChange={(e) => handleChange("designation", e.target.value)}
           placeholder="Enter job title or position"
           className="h-9"
         />
-        {errors.designation && <p className="text-red-500 text-xs mt-1">{errors.designation}</p>}
+        {errors.designation && (
+          <p className="text-red-500 text-xs mt-1">{errors.designation}</p>
+        )}
       </div>
 
       {/* Save Button */}
       <DialogFooter className="pt-3 mt-3">
         <Separator className="mb-4" />
         <div className="flex gap-3 justify-end w-full">
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             onClick={onClose}
             disabled={mutation.isPending}
             className="min-w-[100px]"
           >
             Cancel
           </Button>
-          <Button 
-            type="submit" 
-            disabled={mutation.isPending} 
+          <Button
+            type="submit"
+            disabled={mutation.isPending}
             className="min-w-[120px] bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md"
           >
             {mutation.isPending ? (
