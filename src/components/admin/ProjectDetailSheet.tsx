@@ -259,6 +259,19 @@ export function ProjectDetailSheet({
       ? [project.iid]
       : [];
   const status = project.status ?? "Pending";
+  const hasApprovedInquiry = linkedInquiries.some(
+    (inq) => inq.status === "Approved Client",
+  );
+  const hasSelectedQuotation = quotations.some(
+    (q) => (q.status ?? "").toLowerCase() === "selected",
+  );
+  const canAttachServiceReport =
+    linkedInquiries.length > 0 &&
+    hasApprovedInquiry &&
+    (chargeSlips.length > 0 || allowServiceReportWithoutQuotation) &&
+    (allowServiceReportWithoutQuotation ||
+      (quotations.length > 0 && hasSelectedQuotation));
+  const showServiceReportExceptionSection = !canAttachServiceReport;
 
   return (
     <Sheet
@@ -635,45 +648,48 @@ export function ProjectDetailSheet({
                         Service Reports
                       </span>
                     </div>
-                    <div className="ml-5 mb-3 rounded-lg border border-slate-200 bg-slate-50/80 p-3 space-y-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="space-y-1">
-                          <p className="text-xs font-semibold text-slate-700">
-                            Allow service report upload without Charge Slip
-                          </p>
-                          <p className="text-[11px] leading-snug text-slate-500">
-                            Enable this when the project should accept a service
-                            report even if no Charge Slip is available.
-                          </p>
-                        </div>
-                        <Switch
-                          checked={allowServiceReportWithoutQuotation}
-                          onCheckedChange={
-                            handleToggleServiceReportWithoutQuotation
-                          }
-                          disabled={
-                            !project.pid || updatingServiceReportSetting
-                          }
-                        />
-                      </div>
-                      {allowServiceReportWithoutQuotation && (
-                        <div className="space-y-2">
-                          <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">
-                            Remarks
-                          </label>
-                          <textarea
-                            value={serviceReportDocumentationRemark}
-                            onChange={(event) =>
-                              setServiceReportDocumentationRemark(
-                                event.target.value,
-                              )
+                    {showServiceReportExceptionSection && (
+                      <div className="ml-5 mb-3 rounded-lg border border-slate-200 bg-slate-50/80 p-3 space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="space-y-1">
+                            <p className="text-xs font-semibold text-slate-700">
+                              Allow service report upload without Charge Slip
+                            </p>
+                            <p className="text-[11px] leading-snug text-slate-500">
+                              Enable this when the project should accept a
+                              service report even if no Charge Slip is
+                              available.
+                            </p>
+                          </div>
+                          <Switch
+                            checked={allowServiceReportWithoutQuotation}
+                            onCheckedChange={
+                              handleToggleServiceReportWithoutQuotation
                             }
-                            placeholder="Add a note for documentation purposes"
-                            className="min-h-20 w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-700 outline-none focus:border-blue-400"
+                            disabled={
+                              !project.pid || updatingServiceReportSetting
+                            }
                           />
                         </div>
-                      )}
-                    </div>
+                        {allowServiceReportWithoutQuotation && (
+                          <div className="space-y-2">
+                            <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+                              Remarks
+                            </label>
+                            <textarea
+                              value={serviceReportDocumentationRemark}
+                              onChange={(event) =>
+                                setServiceReportDocumentationRemark(
+                                  event.target.value,
+                                )
+                              }
+                              placeholder="Add a note for documentation purposes"
+                              className="min-h-20 w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-700 outline-none focus:border-blue-400"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
                     <AdminServiceReport
                       projectId={project.pid}
                       clientEmail={
