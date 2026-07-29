@@ -64,8 +64,6 @@ interface Props {
   quotations?: QuotationRecord[];
   /** Allow service report attachment even if no quotation is available. */
   allowWithoutQuotation?: boolean;
-  /** Remark entered for documentation purposes. */
-  serviceReportRemark?: string;
 }
 
 const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
@@ -85,7 +83,6 @@ export default function AdminServiceReport({
   linkedInquiries = [],
   quotations = [],
   allowWithoutQuotation = false,
-  serviceReportRemark = "",
 }: Props) {
   const { adminInfo } = useAuth();
   const [reports, setReports] = useState<ServiceReport[]>([]);
@@ -150,24 +147,12 @@ export default function AdminServiceReport({
       return;
     }
 
-    const trimmedRemark = serviceReportRemark?.trim() || "";
-    if (allowWithoutQuotation && !trimmedRemark) {
-      toast.error("Remarks are required before uploading a service report.");
-      return;
-    }
-
     setPendingFile(file);
   };
 
   const handleUpload = async () => {
     const file = pendingFile;
     if (!file) return;
-
-    const trimmedRemark = serviceReportRemark?.trim() || "";
-    if (allowWithoutQuotation && !trimmedRemark) {
-      toast.error("Remarks are required before uploading a service report.");
-      return;
-    }
 
     setUploading(true);
     setUploadProgress(0);
@@ -195,10 +180,6 @@ export default function AdminServiceReport({
 
       const projectUpdate: Record<string, unknown> = {};
 
-      if (trimmedRemark) {
-        projectUpdate.serviceReportDocumentationRemark = trimmedRemark;
-      }
-
       if (adminInfo?.name) {
         projectUpdate.serviceReportUploaderName = adminInfo.name;
       }
@@ -220,7 +201,6 @@ export default function AdminServiceReport({
         uploadedBy: adminInfo?.email || "system",
         uploadedByName: adminInfo?.name || "Admin",
         uploadedByEmail: adminInfo?.email || null,
-        documentationRemark: trimmedRemark || null,
         exceptionEnabled: allowWithoutQuotation,
         projectId,
       });
@@ -514,14 +494,6 @@ Philippine Genome Center Visayas`.trim();
               className="h-7 text-xs gap-1.5 border-dashed disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={() => {
                 if (!canAttach) return;
-
-                const trimmedRemark = serviceReportRemark?.trim() || "";
-                if (allowWithoutQuotation && !trimmedRemark) {
-                  toast.error(
-                    "Remarks are required before uploading a service report.",
-                  );
-                  return;
-                }
 
                 fileInputRef.current?.click();
               }}
