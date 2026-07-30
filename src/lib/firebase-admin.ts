@@ -44,45 +44,61 @@ function parseServiceAccountFromEnv() {
   return null;
 }
 
+let adminInitAttempted = false;
+
 function initializeAdminApp() {
+  if (adminInitAttempted) return;
+  adminInitAttempted = true;
+
   const serviceAccount = parseServiceAccountFromEnv();
   if (serviceAccount) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
-    console.log("✅ Firebase Admin initialized via environment variables");
-    return;
+    try {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+      console.log("✅ Firebase Admin initialized via environment variables");
+      return;
+    } catch (error) {
+      console.error("❌ Firebase Admin init from env failed:", error);
+    }
   }
 
   const keyPath = path.join(process.cwd(), "scripts", "serviceAccountKey.json");
   if (fs.existsSync(keyPath)) {
-    const serviceAccountFile = JSON.parse(fs.readFileSync(keyPath, "utf-8"));
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccountFile),
-    });
-    console.log("✅ [Firebase Admin] Initialized via serviceAccountKey.json");
-    return;
+    try {
+      const serviceAccountFile = JSON.parse(fs.readFileSync(keyPath, "utf-8"));
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccountFile),
+      });
+      console.log("✅ [Firebase Admin] Initialized via serviceAccountKey.json");
+      return;
+    } catch (error) {
+      console.error(
+        "❌ Firebase Admin init from service account file failed:",
+        error,
+      );
+    }
   }
 
-  // Final fallback for GCP-hosted environments using workload identity.
-  const projectId =
-    process.env.FIREBASE_PROJECT_ID ||
-    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-  admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
-    ...(projectId ? { projectId } : {}),
-  });
-  console.log(
-    "✅ [Firebase Admin] Initialized via application default credentials",
-  );
-}
-
-if (!admin.apps.length) {
   try {
-    initializeAdminApp();
+    // Final fallback for GCP-hosted environments using workload identity.
+    const projectId =
+      process.env.FIREBASE_PROJECT_ID ||
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+    admin.initializeApp({
+      credential: admin.credential.applicationDefault(),
+      ...(projectId ? { projectId } : {}),
+    });
+    console.log(
+      "✅ [Firebase Admin] Initialized via application default credentials",
+    );
   } catch (error) {
     console.error("❌ Firebase Admin initialization error:", error);
   }
+}
+
+if (!admin.apps.length) {
+  initializeAdminApp();
 }
 
 // Add an exported getter to handle lazy initialization during Fast Refresh or lazy loading
