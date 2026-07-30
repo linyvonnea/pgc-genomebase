@@ -14,7 +14,6 @@ export interface Inquiry {
   affiliation: string;
   designation: string;
   email?: string;
-  uuid?: string | null;
 
   // Service type
   serviceType?:
@@ -81,6 +80,7 @@ export interface Inquiry {
   numberOfParticipants?: number | null;
 
   // System fields
+  uuid?: string | null;
   haveSubmitted?: boolean;
   hasOpenedQuotation?: boolean;
   hasLoggedIn?: boolean;
