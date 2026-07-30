@@ -1,12 +1,24 @@
 /**
  * Inquiry Service
- * 
+ *
  * This service handles all database operations related to user inquiries.
  * It provides functions to retrieve inquiry data from Firestore and handles
  * data transformation between Firestore documents and TypeScript objects.
  */
 
-import { collection, getDocs, query, orderBy, doc, getDoc, onSnapshot, updateDoc, serverTimestamp, where, documentId } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  doc,
+  getDoc,
+  onSnapshot,
+  updateDoc,
+  serverTimestamp,
+  where,
+  documentId,
+} from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Inquiry } from "@/types/Inquiry";
 
@@ -16,14 +28,17 @@ import { Inquiry } from "@/types/Inquiry";
 function mapDocToInquiry(id: string, data: any): Inquiry {
   return {
     id: id,
-    createdAt: data.createdAt?.toDate?.() ?? (data.createdAt ? new Date(data.createdAt) : new Date()),
+    createdAt:
+      data.createdAt?.toDate?.() ??
+      (data.createdAt ? new Date(data.createdAt) : new Date()),
     name: data.name || "Unknown",
     status: data.status || "Pending",
     isApproved: data.isApproved || false,
     affiliation: data.affiliation || "",
     designation: data.designation || "",
-    email: data.email ?? "", 
-    
+    email: data.email ?? "",
+    uuid: data.uuid ?? null,
+
     // Include new service selection fields
     serviceType: data.serviceType || null,
     species: data.species || null,
@@ -35,11 +50,11 @@ function mapDocToInquiry(id: string, data: any): Inquiry {
     bioinformaticsDetails: data.bioinformaticsDetails || null,
     bioinfoOptions: data.bioinfoOptions || null,
     individualAssayDetails: data.individualAssayDetails || null,
-    
+
     // Retail projects fields
     retailItems: data.retailItems || null,
     retailItemDetails: data.retailItemDetails || null,
-    
+
     // Legacy/Service-specific fields
     workflows: data.workflows || [],
     additionalInfo: data.additionalInfo || null,
@@ -51,24 +66,26 @@ function mapDocToInquiry(id: string, data: any): Inquiry {
     trainingPrograms: data.trainingPrograms || null,
     targetTrainingDate: data.targetTrainingDate || null,
     numberOfParticipants: data.numberOfParticipants || null,
-    
+
     // System fields
     haveSubmitted: data.haveSubmitted || false,
     hasOpenedQuotation: data.hasOpenedQuotation || false,
     hasLoggedIn: data.hasLoggedIn || false,
-    messageState: data.messageState || 'none',
+    messageState: data.messageState || "none",
     unreadMessageCount: data.unreadMessageCount || 0,
-    cancelledAt: data.cancelledAt?.toDate?.() ?? (data.cancelledAt ? new Date(data.cancelledAt) : null),
+    cancelledAt:
+      data.cancelledAt?.toDate?.() ??
+      (data.cancelledAt ? new Date(data.cancelledAt) : null),
     cancelledBy: data.cancelledBy || null,
-    cancellationReason: data.cancellationReason || null
+    cancellationReason: data.cancellationReason || null,
   };
 }
 
 /**
  * Retrieves all inquiries from Firestore, ordered by creation date (newest first)
- * 
+ *
  * @returns Promise<Inquiry[]> - Array of inquiry objects, empty array if error occurs
- * 
+ *
  * Features:
  * - Handles Firestore Timestamp conversion to JavaScript Date objects
  * - Provides fallback values for missing or undefined fields
@@ -78,7 +95,7 @@ function mapDocToInquiry(id: string, data: any): Inquiry {
 export async function getInquiries(): Promise<Inquiry[]> {
   try {
     console.log("Attempting to connect to Firestore...");
-    
+
     // Create a reference to the 'inquiries' collection
     // NOTE: Do NOT use orderBy here — Firestore silently excludes documents
     // that are missing the ordered field, which would hide older inquiries.
@@ -86,21 +103,20 @@ export async function getInquiries(): Promise<Inquiry[]> {
     const inquiriesRef = collection(db, "inquiries");
     const q = query(inquiriesRef);
     const querySnapshot = await getDocs(q);
-    
+
     const inquiries: Inquiry[] = [];
-    
+
     // Process each document in the query results
     querySnapshot.forEach((doc) => {
       inquiries.push(mapDocToInquiry(doc.id, doc.data()));
     });
-    
+
     // Additional sorting in memory as a backup (Firestore query should handle this)
     // Ensures consistent ordering even if Firestore ordering fails
     inquiries.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-    
+
     console.log(`Successfully processed ${inquiries.length} inquiries`);
     return inquiries;
-    
   } catch (error) {
     console.error("Error fetching inquiries:", error);
     return [];
@@ -109,11 +125,11 @@ export async function getInquiries(): Promise<Inquiry[]> {
 
 /**
  * Retrieves a specific inquiry by its document ID
- * 
+ *
  * @param id - The Firestore document ID of the inquiry to retrieve
  * @returns Promise<Inquiry> - The inquiry object if found
  * @throws Error if the inquiry is not found or if there's a database error
- * 
+ *
  * Note: Unlike getInquiries(), this function throws errors rather than
  * returning empty results, allowing calling code to handle specific error cases
  */
@@ -141,7 +157,7 @@ export async function getInquiriesByIds(ids: string[]): Promise<Inquiry[]> {
   if (!ids || ids.length === 0) return [];
 
   try {
-    const validIds = ids.filter(id => id && id.trim().length > 0);
+    const validIds = ids.filter((id) => id && id.trim().length > 0);
     if (validIds.length === 0) return [];
 
     // Firestore 'in' query limit is 30.
@@ -150,7 +166,7 @@ export async function getInquiriesByIds(ids: string[]): Promise<Inquiry[]> {
     const q = query(inquiriesRef, where(documentId(), "in", constrainedIds));
     const querySnapshot = await getDocs(q);
 
-    return querySnapshot.docs.map(doc => mapDocToInquiry(doc.id, doc.data()));
+    return querySnapshot.docs.map((doc) => mapDocToInquiry(doc.id, doc.data()));
   } catch (error) {
     console.error("Error fetching inquiries by IDs:", error);
     return [];
@@ -159,14 +175,14 @@ export async function getInquiriesByIds(ids: string[]): Promise<Inquiry[]> {
 
 /**
  * Subscribes to changes in a single inquiry document
- * 
+ *
  * @param id - The Firestore document ID of the inquiry to monitor
  * @param callback - Function called with the updated Inquiry object
  * @returns Unsubscribe function to stop listening
  */
 export function subscribeToInquiryById(
   id: string,
-  callback: (inquiry: Inquiry | null) => void
+  callback: (inquiry: Inquiry | null) => void,
 ): () => void {
   const docRef = doc(db, "inquiries", id);
 
@@ -183,21 +199,21 @@ export function subscribeToInquiryById(
     (error) => {
       console.error(`Error in inquiry subscription for ${id}:`, error);
       callback(null);
-    }
+    },
   );
 }
 
 /**
  * Subscribe to real-time inquiry updates
- * 
+ *
  * @param callback - Function called with updated inquiries array
  * @returns Unsubscribe function to stop listening
- * 
+ *
  * This enables real-time updates without page refresh.
  * Call the returned function when component unmounts to clean up.
  */
 export function subscribeToInquiries(
-  callback: (inquiries: Inquiry[]) => void
+  callback: (inquiries: Inquiry[]) => void,
 ): () => void {
   const inquiriesRef = collection(db, "inquiries");
   // NOTE: Do NOT use orderBy here — Firestore silently excludes documents
@@ -208,18 +224,20 @@ export function subscribeToInquiries(
   return onSnapshot(
     q,
     (snapshot) => {
-      const inquiries: Inquiry[] = snapshot.docs.map((doc) => mapDocToInquiry(doc.id, doc.data()));
-      
+      const inquiries: Inquiry[] = snapshot.docs.map((doc) =>
+        mapDocToInquiry(doc.id, doc.data()),
+      );
+
       // Sort in memory: newest first
       inquiries.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-      
+
       callback(inquiries);
     },
     (error) => {
       console.error("Error in inquiry subscription:", error);
       // On error, call callback with empty array
       callback([]);
-    }
+    },
   );
 }
 
@@ -229,8 +247,8 @@ export function subscribeToInquiries(
  * @param status - The new status to set
  */
 export async function updateInquiryStatus(
-  inquiryId: string, 
-  status: Inquiry['status']
+  inquiryId: string,
+  status: Inquiry["status"],
 ): Promise<void> {
   try {
     const inquiryRef = doc(db, "inquiries", inquiryId);
@@ -248,7 +266,7 @@ export async function updateInquiryStatus(
  */
 export async function cancelInquiryByClient(
   inquiryId: string,
-  reason?: string | null
+  reason?: string | null,
 ): Promise<void> {
   try {
     const inquiryRef = doc(db, "inquiries", inquiryId);
@@ -267,19 +285,22 @@ export async function cancelInquiryByClient(
 
 /**
  * Marks an inquiry as having the client logged in.
- * 
+ *
  * @param inquiryId - The ID of the inquiry to update
  */
 export async function markInquiryAsLoggedIn(inquiryId: string): Promise<void> {
   if (!inquiryId) return;
-  
+
   try {
     const inquiryRef = doc(db, "inquiries", inquiryId);
-    await updateDoc(inquiryRef, { 
-      hasLoggedIn: true 
+    await updateDoc(inquiryRef, {
+      hasLoggedIn: true,
     });
     console.log(`[Firestore] Inquiry ${inquiryId} marked as logged in.`);
   } catch (error) {
-    console.error(`[Firestore] Error marking inquiry ${inquiryId} as logged in:`, error);
+    console.error(
+      `[Firestore] Error marking inquiry ${inquiryId} as logged in:`,
+      error,
+    );
   }
 }

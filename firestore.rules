@@ -31,6 +31,31 @@ service cloud.firestore {
       return adminByEmail() || adminByUid();
     }
 
+    function userProfileExists() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(userUid()));
+    }
+
+    function userRole() {
+      return userProfileExists()
+        ? get(/databases/$(database)/documents/users/$(userUid())).data.role
+        : null;
+    }
+
+    function isClientOrAdmin() {
+      return isSignedIn()
+        && (userRole() == 'admin' || userRole() == 'client');
+    }
+
+    function isAdminRole() {
+      return isSignedIn() && userRole() == 'admin';
+    }
+
+    function inquiryUuidMatchesUser(inquiryDocPath) {
+      return isSignedIn()
+        && exists(/databases/$(database)/documents/inquiries/$(inquiryDocPath))
+        && get(/databases/$(database)/documents/inquiries/$(inquiryDocPath)).data.uuid == userUid();
+    }
+
     // Ownership helper during migration (uid-first, email fallback).
     function ownsByUidOrEmail(uidValue, emailValue) {
       return isSignedIn() && (
@@ -127,33 +152,20 @@ service cloud.firestore {
 
     match /inquiries/{inquiryId} {
       allow create: if isSignedIn()
-        && request.resource.data.email == userEmail()
+        && isClientOrAdmin()
+        && request.resource.data.uuid == userUid();
+
+      allow read: if isSignedIn()
+        && isClientOrAdmin()
+        && (isAdminRole() || resource.data.uuid == userUid());
+
+      allow update, delete: if isSignedIn()
+        && isClientOrAdmin()
         && (
-          !('ownerUid' in request.resource.data)
-          || request.resource.data.ownerUid == userUid()
-        )
-        || (
-          !isSignedIn()
-          && request.resource.data.status == 'Pending'
-          && request.resource.data.isApproved == false
-          && request.resource.data.haveSubmitted == false
-          && request.resource.data.name is string
-          && request.resource.data.email is string
-          && request.resource.data.affiliation is string
-          && request.resource.data.designation is string
-        );
-
-      allow read: if isAdmin()
-        || ownsByUidOrEmail(resource.data.ownerUid, resource.data.email);
-
-      allow update, delete: if isAdmin()
-        || (
-          ownsByUidOrEmail(resource.data.ownerUid, resource.data.email)
-          && request.resource.data.email == resource.data.email
-          && (
-            !('ownerUid' in request.resource.data)
-            || request.resource.data.ownerUid == resource.data.ownerUid
-            || request.resource.data.ownerUid == userUid()
+          isAdminRole()
+          || (
+            resource.data.uuid == userUid()
+            && request.resource.data.uuid == userUid()
           )
         );
     }
