@@ -8,7 +8,12 @@ import { Timestamp } from "firebase/firestore";
 /**
  * Allowed service categories in charge slips.
  */
-export type ValidCategory = "equipment" | "retail" | "bioinformatics" | "laboratory" | "training";
+export type ValidCategory =
+  | "equipment"
+  | "retail"
+  | "bioinformatics"
+  | "laboratory"
+  | "training";
 
 /**
  * Constant array of valid service categories (for UI/filtering/validation).
@@ -50,6 +55,7 @@ export interface ChargeSlipRecord {
     email: string;
     address?: string; // Optional address field
   };
+  uuid?: string | null;
 
   // Firestore-compatible timestamp fields
   dateIssued?: string | Timestamp | null;
@@ -71,7 +77,11 @@ export interface ChargeSlipRecord {
   orStatus?: "Pending" | "Validated" | null;
   showOfficialReceipts?: boolean; // Toggle visibility of uploaded official receipts
   /** Accumulated OR entries from partial payments, appended on each admin acknowledgment */
-  orEntries?: Array<{ orNumber: string; orDate: string; acknowledgedAt: Timestamp }>;
+  orEntries?: Array<{
+    orNumber: string;
+    orDate: string;
+    acknowledgedAt: Timestamp;
+  }>;
   /** Timestamp when an admin manually confirmed the payment as validated */
   paidValidatedAt?: Timestamp | null;
   /** Email of the admin who confirmed payment */

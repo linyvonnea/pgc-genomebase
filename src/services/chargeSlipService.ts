@@ -20,6 +20,50 @@ import { Project } from "@/types/Project";
 
 const CHARGE_SLIPS_COLLECTION = "chargeSlips";
 
+function normalizeEmail(value?: string | null): string {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+async function resolveUuidFromEmail(
+  email?: string | null,
+): Promise<string | null> {
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return null;
+
+  try {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("email", "==", normalizedEmail));
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      const userData = snapshot.docs[0].data() as { uid?: string };
+      if (typeof userData?.uid === "string" && userData.uid) {
+        return userData.uid;
+      }
+
+      return snapshot.docs[0].id || null;
+    }
+
+    const allUsersSnapshot = await getDocs(usersRef);
+    for (const userDoc of allUsersSnapshot.docs) {
+      const userData = userDoc.data() as { email?: string; uid?: string };
+      const storedEmail = normalizeEmail(userData.email);
+      if (storedEmail === normalizedEmail) {
+        return typeof userData?.uid === "string" && userData.uid
+          ? userData.uid
+          : userDoc.id || null;
+      }
+    }
+  } catch (error) {
+    console.warn(
+      `[Firestore] Unable to resolve uuid for charge slip email ${normalizedEmail}:`,
+      error,
+    );
+  }
+
+  return null;
+}
+
 // Helper to safely convert timestamps only if defined
 const safeTimestamp = (value: any) =>
   value ? convertToTimestamp(value) : convertToTimestamp(new Date());
@@ -29,36 +73,36 @@ const normalizeTimestamp = (value: any): Timestamp => {
   if (!value) {
     return Timestamp.fromDate(new Date());
   }
-  
+
   // Already a Firestore Timestamp
   if (value instanceof Timestamp) {
     return value;
   }
-  
+
   // Malformed timestamp with _seconds and _nanoseconds
   if (value._seconds !== undefined) {
     const seconds = value._seconds || 0;
     const nanoseconds = value._nanoseconds || 0;
     return new Timestamp(seconds, nanoseconds);
   }
-  
+
   // Date object or string
   if (value instanceof Date) {
     return Timestamp.fromDate(value);
   }
-  
-  if (typeof value === 'string') {
+
+  if (typeof value === "string") {
     return Timestamp.fromDate(new Date(value));
   }
-  
+
   // Fallback
   return Timestamp.fromDate(new Date());
 };
 
 // Helper to remove undefined values from an object
 const removeUndefined = (obj: any): any => {
-  if (!obj || typeof obj !== 'object') return obj;
-  
+  if (!obj || typeof obj !== "object") return obj;
+
   const cleaned: any = {};
   for (const [key, value] of Object.entries(obj)) {
     if (value !== undefined) {
@@ -70,7 +114,10 @@ const removeUndefined = (obj: any): any => {
 
 export async function getAllChargeSlips(): Promise<ChargeSlipRecord[]> {
   const snapshot = await getDocs(
-    query(collection(db, CHARGE_SLIPS_COLLECTION), orderBy("dateIssued", "desc"))
+    query(
+      collection(db, CHARGE_SLIPS_COLLECTION),
+      orderBy("dateIssued", "desc"),
+    ),
   );
 
   return snapshot.docs.map((docSnap) => {
@@ -98,7 +145,9 @@ export async function getAllChargeSlips(): Promise<ChargeSlipRecord[]> {
   });
 }
 
-export async function getChargeSlipById(id: string): Promise<ChargeSlipRecord | null> {
+export async function getChargeSlipById(
+  id: string,
+): Promise<ChargeSlipRecord | null> {
   const docRef = doc(db, CHARGE_SLIPS_COLLECTION, id);
   const snap = await getDoc(docRef);
 
@@ -123,41 +172,55 @@ export async function getChargeSlipById(id: string): Promise<ChargeSlipRecord | 
   };
 }
 
-export async function deleteChargeSlip(chargeSlipNumber: string): Promise<void> {
+export async function deleteChargeSlip(
+  chargeSlipNumber: string,
+): Promise<void> {
   const docRef = doc(db, CHARGE_SLIPS_COLLECTION, chargeSlipNumber);
   await deleteDoc(docRef);
 }
 
 export async function saveChargeSlip(slip: ChargeSlipRecord): Promise<string> {
   const docRef = doc(db, CHARGE_SLIPS_COLLECTION, slip.chargeSlipNumber);
+  const resolvedUuid = await resolveUuidFromEmail(
+    slip.clientInfo?.email || slip.client?.email || null,
+  );
 
   const payload: any = {
     ...slip,
+    uuid: resolvedUuid ?? slip.uuid ?? "",
     dateIssued: safeTimestamp(slip.dateIssued),
     dateOfOR: slip.dateOfOR ? convertToTimestamp(slip.dateOfOR) : null,
     createdAt: safeTimestamp(slip.createdAt || new Date()),
-    client: slip.client ? removeUndefined({
-      ...slip.client,
-      createdAt: normalizeTimestamp(slip.client.createdAt),
-    }) : null,
-    project: slip.project ? removeUndefined({
-      ...slip.project,
-      createdAt: normalizeTimestamp(slip.project.createdAt),
-      startDate: slip.project.startDate ? normalizeTimestamp(slip.project.startDate) : null,
-    }) : null,
+    client: slip.client
+      ? removeUndefined({
+          ...slip.client,
+          createdAt: normalizeTimestamp(slip.client.createdAt),
+        })
+      : null,
+    project: slip.project
+      ? removeUndefined({
+          ...slip.project,
+          createdAt: normalizeTimestamp(slip.project.createdAt),
+          startDate: slip.project.startDate
+            ? normalizeTimestamp(slip.project.startDate)
+            : null,
+        })
+      : null,
   };
 
   await setDoc(docRef, payload);
   return slip.chargeSlipNumber;
 }
 
-export async function getChargeSlipsByClientId(clientId: string): Promise<ChargeSlipRecord[]> {
+export async function getChargeSlipsByClientId(
+  clientId: string,
+): Promise<ChargeSlipRecord[]> {
   // Use top-level "cid" field to avoid requiring a composite Firestore index.
   // Older records store client ID in both "cid" (top-level) and "client.cid" (nested);
   // querying the top-level field works for all records without an explicit index.
   const q = query(
     collection(db, CHARGE_SLIPS_COLLECTION),
-    where("cid", "==", clientId)
+    where("cid", "==", clientId),
   );
 
   const snapshot = await getDocs(q);
@@ -183,11 +246,14 @@ export async function getChargeSlipsByClientId(clientId: string): Promise<Charge
 
   // Sort descending by chargeSlipNumber in JavaScript to avoid composite index
   return results.sort((a, b) =>
-    (b.chargeSlipNumber ?? "").localeCompare(a.chargeSlipNumber ?? "")
+    (b.chargeSlipNumber ?? "").localeCompare(a.chargeSlipNumber ?? ""),
   );
 }
 
-export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRecord>) {
+export async function updateChargeSlip(
+  id: string,
+  updates: Partial<ChargeSlipRecord>,
+) {
   const docRef = doc(db, CHARGE_SLIPS_COLLECTION, id);
 
   const updatedData: any = {};
@@ -218,10 +284,14 @@ export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRe
   // Support accumulating OR entries and updating the latest OR number
   if ("orNumber" in updates) updatedData.orNumber = updates.orNumber;
   if ("orEntries" in updates) updatedData.orEntries = updates.orEntries;
-  if ("showOfficialReceipts" in updates) updatedData.showOfficialReceipts = updates.showOfficialReceipts;
-  if ("paidValidatedAt" in updates) updatedData.paidValidatedAt = updates.paidValidatedAt ?? null;
-  if ("paidValidatedBy" in updates) updatedData.paidValidatedBy = updates.paidValidatedBy ?? null;
-  if ("paidValidatedByName" in updates) updatedData.paidValidatedByName = updates.paidValidatedByName ?? null;
+  if ("showOfficialReceipts" in updates)
+    updatedData.showOfficialReceipts = updates.showOfficialReceipts;
+  if ("paidValidatedAt" in updates)
+    updatedData.paidValidatedAt = updates.paidValidatedAt ?? null;
+  if ("paidValidatedBy" in updates)
+    updatedData.paidValidatedBy = updates.paidValidatedBy ?? null;
+  if ("paidValidatedByName" in updates)
+    updatedData.paidValidatedByName = updates.paidValidatedByName ?? null;
 
   if ("createdAt" in updates) {
     updatedData.createdAt = safeTimestamp(updates.createdAt);
@@ -248,13 +318,25 @@ export async function updateChargeSlip(id: string, updates: Partial<ChargeSlipRe
   await updateDoc(docRef, updatedData);
 }
 
-export async function getChargeSlipsByProjectId(projectId: string): Promise<ChargeSlipRecord[]> {
+export async function getChargeSlipsByProjectId(
+  projectId: string,
+): Promise<ChargeSlipRecord[]> {
   // Query both the top-level "projectId" field (newer records) and "project.pid"
   // nested field (older records) since older charge slips may not have the
   // top-level field populated.
   const [snap1, snap2] = await Promise.all([
-    getDocs(query(collection(db, CHARGE_SLIPS_COLLECTION), where("projectId", "==", projectId))),
-    getDocs(query(collection(db, CHARGE_SLIPS_COLLECTION), where("project.pid", "==", projectId))),
+    getDocs(
+      query(
+        collection(db, CHARGE_SLIPS_COLLECTION),
+        where("projectId", "==", projectId),
+      ),
+    ),
+    getDocs(
+      query(
+        collection(db, CHARGE_SLIPS_COLLECTION),
+        where("project.pid", "==", projectId),
+      ),
+    ),
   ]);
 
   const seen = new Set<string>();
@@ -297,17 +379,19 @@ export async function getChargeSlipsByProjectId(projectId: string): Promise<Char
  * Generates the next charge slip number for a given year.
  * Format: CS-YYYY-XXX (zero-padded to 3 digits while < 1000; from 1000 upward no padding)
  */
-export async function generateNextChargeSlipNumber(year: number): Promise<string> {
+export async function generateNextChargeSlipNumber(
+  year: number,
+): Promise<string> {
   const prefix = `CS-${year}`;
-  const lower = `${prefix}-`;                  // inclusive: "CS-2025-"
-  const upper = `CS-${year + 1}-`;             // exclusive: "CS-2026-"
+  const lower = `${prefix}-`; // inclusive: "CS-2025-"
+  const upper = `CS-${year + 1}-`; // exclusive: "CS-2026-"
 
   const qRef = query(
     collection(db, CHARGE_SLIPS_COLLECTION),
     where("chargeSlipNumber", ">=", lower),
     where("chargeSlipNumber", "<", upper),
     orderBy("chargeSlipNumber", "desc"),
-    limit(1)
+    limit(1),
   );
 
   const snapshot = await getDocs(qRef);
