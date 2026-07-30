@@ -1544,6 +1544,7 @@ export async function updateInquiryAction(
     const oldDoc = await getDoc(docRef);
     const oldData = oldDoc.exists() ? oldDoc.data() : null;
 
+    const resolvedUuid = await resolveUuidFromEmail(data.email);
     const updateData: any = {
       name: data.name,
       email: data.email,
@@ -1551,6 +1552,7 @@ export async function updateInquiryAction(
       designation: data.designation,
       status: data.status,
       isApproved: data.status === "Approved Client",
+      uuid: resolvedUuid ?? oldData?.uuid ?? null,
     };
 
     // Update only the editable fields

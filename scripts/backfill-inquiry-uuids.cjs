@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /*
- * Backfill inquiry uuid values from Firebase Authentication users.
+ * Backfill uuid values for existing inquiry documents using the users collection.
  *
  * Usage:
  *   node scripts/backfill-inquiry-uuids.cjs
@@ -28,61 +28,65 @@ function normalizeEmail(value) {
   return typeof value === "string" ? value.trim().toLowerCase() : "";
 }
 
+async function loadEmailToUidMap() {
+  const usersSnap = await db.collection("users").get();
+  const map = new Map();
+
+  usersSnap.forEach((docSnap) => {
+    const data = docSnap.data() || {};
+    const uid =
+      typeof data.uid === "string" && data.uid ? data.uid : docSnap.id;
+    const email = normalizeEmail(data.email);
+    if (uid && email) {
+      map.set(email, uid);
+    }
+  });
+
+  return map;
+}
+
 async function main() {
   console.log("\nStarting inquiry UUID backfill...");
   console.log(`Mode: ${DRY_RUN ? "DRY RUN" : "APPLY"}`);
 
-  const inquiriesSnap = await db.collection("inquiries").get();
+  const emailToUid = await loadEmailToUidMap();
+  console.log(
+    `Loaded ${emailToUid.size} email->uid mappings from users collection.`,
+  );
+
+  const snap = await db.collection("inquiries").get();
   let scanned = 0;
-  let updated = 0;
+  let patched = 0;
   let skipped = 0;
-  let missing = 0;
 
   const batch = db.batch();
   let pendingWrites = 0;
 
-  for (const docSnap of inquiriesSnap.docs) {
+  for (const docSnap of snap.docs) {
     scanned += 1;
     const data = docSnap.data() || {};
     const email = normalizeEmail(data.email);
-    const existingUuid = typeof data.uuid === "string" ? data.uuid.trim() : "";
 
-    if (!email) {
+    if (!email || data.uuid) {
       skipped += 1;
       continue;
     }
 
-    if (existingUuid) {
-      skipped += 1;
-      continue;
-    }
-
-    let uid = "";
-    try {
-      const userRecord = await admin.auth().getUserByEmail(email);
-      uid = userRecord?.uid || "";
-    } catch (error) {
-      if (error?.code !== "auth/user-not-found") {
-        console.warn(`Unable to resolve auth user for ${email}:`, error);
-      }
-    }
-
+    const uid = emailToUid.get(email);
     if (!uid) {
-      missing += 1;
+      skipped += 1;
+      continue;
     }
 
+    patched += 1;
     if (!DRY_RUN) {
       batch.update(docSnap.ref, { uuid: uid });
       pendingWrites += 1;
-      updated += 1;
     }
 
     if (!DRY_RUN && pendingWrites >= 450) {
       await batch.commit();
       pendingWrites = 0;
-      // Create a fresh batch after committing the previous one.
-      // eslint-disable-next-line no-global-assign
-      batch = db.batch();
     }
   }
 
@@ -91,10 +95,9 @@ async function main() {
   }
 
   console.log("\nBackfill summary:");
-  console.log(`- scanned: ${scanned}`);
-  console.log(`- updated: ${updated}`);
-  console.log(`- skipped: ${skipped}`);
-  console.log(`- missing-auth-match: ${missing}`);
+  console.log(`- scanned=${scanned}`);
+  console.log(`- patched=${patched}`);
+  console.log(`- skipped=${skipped}`);
   console.log("\nDone.");
 }
 
