@@ -136,27 +136,24 @@ async function resolveUuidFromEmail(
 
   try {
     const usersRef = collection(db, "users");
-    const q = query(usersRef, where("email", "==", normalizedEmail));
-    const snapshot = await getDocs(q);
+    const snapshot = await getDocs(usersRef);
 
-    if (!snapshot.empty) {
-      const userData = snapshot.docs[0].data() as { uid?: string };
+    for (const userDoc of snapshot.docs) {
+      const userData = userDoc.data() as {
+        email?: string | null;
+        uid?: string | null;
+      };
+
+      const storedEmail = normalizeEmail(userData.email);
+      if (storedEmail !== normalizedEmail) {
+        continue;
+      }
+
       if (typeof userData?.uid === "string" && userData.uid) {
         return userData.uid;
       }
 
-      return snapshot.docs[0].id || null;
-    }
-
-    const allUsersSnapshot = await getDocs(usersRef);
-    for (const userDoc of allUsersSnapshot.docs) {
-      const userData = userDoc.data() as { email?: string; uid?: string };
-      const storedEmail = normalizeEmail(userData.email);
-      if (storedEmail === normalizedEmail) {
-        return typeof userData?.uid === "string" && userData.uid
-          ? userData.uid
-          : userDoc.id || null;
-      }
+      return userDoc.id || null;
     }
   } catch (error) {
     console.warn(
