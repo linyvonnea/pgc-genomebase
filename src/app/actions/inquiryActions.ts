@@ -29,7 +29,7 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { adminDb } from "@/lib/firebase-admin";
+import admin, { adminDb } from "@/lib/firebase-admin";
 import { revalidatePath } from "next/cache";
 import { InquiryFormData } from "@/schemas/inquirySchema";
 import { AdminInquiryData } from "@/schemas/adminInquirySchema";
@@ -114,6 +114,54 @@ const formatWorkflowType = (workflowType?: string): string => {
 const formatServiceType = (serviceType: string): string => {
   return serviceType.charAt(0).toUpperCase() + serviceType.slice(1);
 };
+
+async function resolveInquiryUuid(
+  email?: string | null,
+): Promise<string | null> {
+  const normalizedEmail =
+    typeof email === "string" ? email.trim().toLowerCase() : "";
+  if (!normalizedEmail) return null;
+
+  try {
+    const userRecord = await admin.auth().getUserByEmail(normalizedEmail);
+    return userRecord?.uid || null;
+  } catch (error: any) {
+    if (error?.code === "auth/user-not-found") {
+      return null;
+    }
+
+    console.warn(
+      `Unable to resolve auth UID for inquiry email ${normalizedEmail}:`,
+      error,
+    );
+  }
+
+  if (!adminDb) return null;
+
+  try {
+    const userSnapshot = await adminDb
+      .collection("users")
+      .where("email", "==", normalizedEmail)
+      .limit(1)
+      .get();
+
+    if (!userSnapshot.empty) {
+      const userData = userSnapshot.docs[0].data() as { uid?: string };
+      if (typeof userData?.uid === "string" && userData.uid) {
+        return userData.uid;
+      }
+
+      return userSnapshot.docs[0].id || null;
+    }
+  } catch (fallbackError) {
+    console.warn(
+      `Unable to resolve Firestore user UID for inquiry email ${normalizedEmail}:`,
+      fallbackError,
+    );
+  }
+
+  return null;
+}
 
 const formatSpecies = (species?: string, otherSpecies?: string): string => {
   if (!species) return "";
@@ -632,6 +680,7 @@ export async function createInquiryAction(
       affiliation: inquiryData.affiliation,
       designation: inquiryData.designation,
       email: inquiryData.email,
+      uuid: resolvedUuid ?? "",
 
       // New Service Selection Fields
       species: inquiryData.species || null,
@@ -1429,6 +1478,7 @@ export async function createAdminInquiryAction(
       email: data.email,
       affiliation: data.affiliation,
       designation: data.designation,
+      uuid: resolvedUuid ?? "",
       status: data.status,
       isApproved: data.status === "Approved Client", // Auto-approve if status is 'Approved Client'
       createdAt: serverTimestamp(),
