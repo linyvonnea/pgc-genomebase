@@ -686,6 +686,14 @@ export async function createInquiryAction(
       finalInquiryId = docRef.id;
     }
 
+    if (resolvedUuid) {
+      await setDoc(
+        doc(db, "inquiries", finalInquiryId),
+        { uuid: resolvedUuid },
+        { merge: true },
+      );
+    }
+
     // Log activity as best-effort only (must not block inquiry submission).
     try {
       await logActivity({
