@@ -11,6 +11,7 @@ export interface QuotationRecord {
   institution: string;
   designation: string;
   email: string;
+  uuid?: string | null;
   services: SelectedService[]; // Each service must include a fixed quantity
   isInternal: boolean;
   useInternalPrice?: boolean;

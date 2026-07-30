@@ -1,4 +1,3 @@
-
 import {
   collection,
   query,
@@ -16,39 +15,83 @@ import {
 import { db } from "@/lib/firebase";
 import { QuotationRecord } from "@/types/Quotation";
 
+function normalizeEmail(value?: string | null): string {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+async function resolveUuidFromEmail(
+  email?: string | null,
+): Promise<string | null> {
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return null;
+
+  try {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("email", "==", normalizedEmail));
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      const userData = snapshot.docs[0].data() as { uid?: string };
+      if (typeof userData?.uid === "string" && userData.uid) {
+        return userData.uid;
+      }
+
+      return snapshot.docs[0].id || null;
+    }
+
+    const allUsersSnapshot = await getDocs(usersRef);
+    for (const userDoc of allUsersSnapshot.docs) {
+      const userData = userDoc.data() as { email?: string; uid?: string };
+      const storedEmail = normalizeEmail(userData.email);
+      if (storedEmail === normalizedEmail) {
+        return typeof userData?.uid === "string" && userData.uid
+          ? userData.uid
+          : userDoc.id || null;
+      }
+    }
+  } catch (error) {
+    console.warn(
+      `[Firestore] Unable to resolve uuid for quotation email ${normalizedEmail}:`,
+      error,
+    );
+  }
+
+  return null;
+}
+
 /**
  * Get all quotations related to a specific inquiry ID or a list of inquiry IDs.
  */
 export async function getQuotationsByInquiryId(
-  inquiryId: string | string[]
+  inquiryId: string | string[],
 ): Promise<QuotationRecord[]> {
   const quotationsRef = collection(db, "quotations");
-  
+
   let q;
   if (Array.isArray(inquiryId)) {
     if (inquiryId.length === 0) return [];
     // Firestore "in" query limited to 30 elements
-    const ids = inquiryId.filter(id => id && id.trim().length > 0);
+    const ids = inquiryId.filter((id) => id && id.trim().length > 0);
     if (ids.length === 0) return [];
-    
+
     // For now support up to 30, if more we'd need to chunk
     q = query(
       quotationsRef,
       where("inquiryId", "in", ids.slice(0, 30)),
-      orderBy("dateIssued", "desc")
+      orderBy("dateIssued", "desc"),
     );
   } else {
     q = query(
       quotationsRef,
       where("inquiryId", "==", inquiryId),
-      orderBy("dateIssued", "desc")
+      orderBy("dateIssued", "desc"),
     );
   }
 
   const snapshot = await getDocs(q);
 
   console.log(
-    `[Firestore] Found ${snapshot.size} quotations for inquiryId: ${inquiryId}`
+    `[Firestore] Found ${snapshot.size} quotations for inquiryId: ${inquiryId}`,
   );
 
   const records: QuotationRecord[] = [];
@@ -74,11 +117,13 @@ export async function getQuotationsByInquiryId(
  * Get all quotations related to a specific client name.
  */
 export async function getQuotationsByClientName(
-  clientName: string
+  clientName: string,
 ): Promise<QuotationRecord[]> {
   // Return empty array if clientName is empty or invalid
   if (!clientName || clientName.trim().length === 0) {
-    console.log("[Firestore] Empty client name provided, returning empty array");
+    console.log(
+      "[Firestore] Empty client name provided, returning empty array",
+    );
     return [];
   }
 
@@ -86,13 +131,13 @@ export async function getQuotationsByClientName(
   const q = query(
     quotationsRef,
     where("name", "==", clientName),
-    orderBy("dateIssued", "desc")
+    orderBy("dateIssued", "desc"),
   );
 
   const snapshot = await getDocs(q);
 
   console.log(
-    `[Firestore] Found ${snapshot.size} quotations for client: ${clientName}`
+    `[Firestore] Found ${snapshot.size} quotations for client: ${clientName}`,
   );
 
   const records: QuotationRecord[] = [];
@@ -120,7 +165,14 @@ export async function getQuotationsByClientName(
  */
 export async function saveQuotationToFirestore(quotation: QuotationRecord) {
   const docRef = doc(db, "quotations", quotation.referenceNumber);
-  await setDoc(docRef, { status: "pending", selectedForProject: "", ...quotation });
+  const resolvedUuid = await resolveUuidFromEmail(quotation.email);
+
+  await setDoc(docRef, {
+    status: "pending",
+    selectedForProject: "",
+    ...quotation,
+    uuid: resolvedUuid ?? quotation.uuid ?? "",
+  });
 }
 
 /**
@@ -131,18 +183,18 @@ export async function saveQuotationToFirestore(quotation: QuotationRecord) {
 export async function updateQuotationStatus(
   referenceNumber: string,
   status: "pending" | "selected" | "completed" | "cancelled",
-  inquiryId?: string
+  inquiryId?: string,
 ): Promise<void> {
   const docRef = doc(db, "quotations", referenceNumber);
-  
+
   const updateData: Record<string, any> = { status };
-  
+
   if (status === "selected" && inquiryId) {
     updateData.selectedForProject = inquiryId;
   } else if (status === "cancelled" || status === "pending") {
     updateData.selectedForProject = "";
   }
-  
+
   await setDoc(docRef, updateData, { merge: true });
 }
 
@@ -151,7 +203,7 @@ export async function updateQuotationStatus(
  */
 export async function markQuotationAsSelected(
   referenceNumber: string,
-  projectId: string
+  projectId: string,
 ): Promise<void> {
   const docRef = doc(db, "quotations", referenceNumber);
   await setDoc(
@@ -160,7 +212,7 @@ export async function markQuotationAsSelected(
       selectedForProject: projectId,
       status: "selected",
     },
-    { merge: true }
+    { merge: true },
   );
 }
 
@@ -169,11 +221,11 @@ export async function markQuotationAsSelected(
  * Called when admin cancels a project submission so the client can choose again.
  */
 export async function resetSelectedQuotationForInquiry(
-  inquiryId: string
+  inquiryId: string,
 ): Promise<void> {
   const q = query(
     collection(db, "quotations"),
-    where("selectedForProject", "==", inquiryId)
+    where("selectedForProject", "==", inquiryId),
   );
   const snapshot = await getDocs(q);
   if (snapshot.empty) return;
@@ -182,9 +234,9 @@ export async function resetSelectedQuotationForInquiry(
       setDoc(
         docSnap.ref,
         { status: "pending", selectedForProject: "" },
-        { merge: true }
-      )
-    )
+        { merge: true },
+      ),
+    ),
   );
 }
 
@@ -200,7 +252,7 @@ export async function deleteQuotation(refNumber: string): Promise<void> {
  * Get a single quotation by its reference number (document ID).
  */
 export async function getQuotationByReferenceNumber(
-  refNumber: string
+  refNumber: string,
 ): Promise<QuotationRecord | null> {
   const docRef = doc(db, "quotations", refNumber);
   const snapshot = await getDoc(docRef);
@@ -256,7 +308,7 @@ export async function getAllQuotations(): Promise<QuotationRecord[]> {
  *    currentYear = 2027  => VMENF-Q-2027-1000  (no padding ≥ 1000)
  */
 export async function generateNextReferenceNumber(
-  currentYear: number
+  currentYear: number,
 ): Promise<string> {
   const prefixForYear = `VMENF-Q-${currentYear}`;
 
@@ -264,7 +316,7 @@ export async function generateNextReferenceNumber(
   const qRef = query(
     collection(db, "quotations"),
     orderBy("referenceNumber", "desc"),
-    limit(1)
+    limit(1),
   );
 
   const snapshot = await getDocs(qRef);
@@ -291,19 +343,22 @@ export async function generateNextReferenceNumber(
 
 /**
  * Marks an inquiry as having its quotation opened/seen by the client.
- * 
+ *
  * @param inquiryId - The Firestore document ID of the inquiry to update
  */
 export async function markQuotationAsSeen(inquiryId: string): Promise<void> {
   if (!inquiryId) return;
-  
+
   try {
     const inquiryRef = doc(db, "inquiries", inquiryId);
-    await updateDoc(inquiryRef, { 
-      hasOpenedQuotation: true 
+    await updateDoc(inquiryRef, {
+      hasOpenedQuotation: true,
     });
     console.log(`[Firestore] Inquiry ${inquiryId} marked as quotation seen.`);
   } catch (error) {
-    console.error(`[Firestore] Error marking inquiry ${inquiryId} as seen:`, error);
+    console.error(
+      `[Firestore] Error marking inquiry ${inquiryId} as seen:`,
+      error,
+    );
   }
 }
