@@ -24,6 +24,9 @@ import {
   deleteDoc,
   getDoc,
   setDoc,
+  getDocs,
+  query,
+  where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { adminDb } from "@/lib/firebase-admin";
@@ -60,6 +63,50 @@ function snapshotData<T = Record<string, any>>(snap: any): T | undefined {
   return typeof snap?.data === "function"
     ? (snap.data() as T | undefined)
     : undefined;
+}
+
+function normalizeEmail(value?: string | null): string {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+async function resolveUuidFromEmail(
+  email?: string | null,
+): Promise<string | null> {
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return null;
+
+  try {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("email", "==", normalizedEmail));
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      const userData = snapshot.docs[0].data() as { uid?: string };
+      if (typeof userData?.uid === "string" && userData.uid) {
+        return userData.uid;
+      }
+
+      return snapshot.docs[0].id || null;
+    }
+
+    const allUsersSnapshot = await getDocs(usersRef);
+    for (const userDoc of allUsersSnapshot.docs) {
+      const userData = userDoc.data() as { email?: string; uid?: string };
+      const storedEmail = normalizeEmail(userData.email);
+      if (storedEmail === normalizedEmail) {
+        return typeof userData?.uid === "string" && userData.uid
+          ? userData.uid
+          : userDoc.id || null;
+      }
+    }
+  } catch (error) {
+    console.warn(
+      `[Firestore] Unable to resolve uuid for inquiry email ${normalizedEmail}:`,
+      error,
+    );
+  }
+
+  return null;
 }
 
 const BIOINFO_OPTION_LABELS: Record<string, string> = {
@@ -578,6 +625,7 @@ export async function createInquiryAction(
     // Transform the form data to match the expected database structure
     // This ensures all required fields are present with proper defaults
     const currentDate = new Date();
+    const resolvedUuid = await resolveUuidFromEmail(inquiryData.email);
     const transformedData = {
       // Core inquiry information
       name: inquiryData.name,
@@ -618,6 +666,7 @@ export async function createInquiryAction(
       // System fields with defaults
       createdAt: serverTimestamp(), // Firestore server timestamp
       status: "Pending", // Default status for new inquiries
+      uuid: resolvedUuid ?? "",
       isApproved: false, // Default approval status
       serviceType: inquiryData.service, // Store the service type for reference
       haveSubmitted: false, // Track if user has submitted client-project form
@@ -1373,6 +1422,7 @@ export async function createAdminInquiryAction(
 ) {
   try {
     // Transform admin data to database format with defaults for service fields
+    const resolvedUuid = await resolveUuidFromEmail(data.email);
     const transformedData = {
       // Core fields from admin form
       name: data.name,
@@ -1383,6 +1433,7 @@ export async function createAdminInquiryAction(
       isApproved: data.status === "Approved Client", // Auto-approve if status is 'Approved Client'
       createdAt: serverTimestamp(),
       haveSubmitted: false,
+      uuid: resolvedUuid ?? "",
 
       // Default values for service-specific fields since this is admin-created
       workflows: [],
