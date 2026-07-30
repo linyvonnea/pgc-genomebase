@@ -3,7 +3,10 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getQuotationsByInquiryId, getQuotationsByClientName } from "@/services/quotationService";
+import {
+  getQuotationsByInquiryId,
+  getQuotationsByClientName,
+} from "@/services/quotationService";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
@@ -29,26 +32,36 @@ type QuotationHistoryPanelProps = {
   showCheckboxes?: boolean;
 };
 
-export function QuotationHistoryPanel({ 
-  inquiryId, 
-  clientName, 
+export function QuotationHistoryPanel({
+  inquiryId,
+  clientName,
   onSelectQuotation,
   onDeselectQuotation,
-  showCheckboxes = false 
+  showCheckboxes = false,
 }: QuotationHistoryPanelProps) {
-  const [selectedQuotationId, setSelectedQuotationId] = useState<string | null>(null);
+  const [selectedQuotationId, setSelectedQuotationId] = useState<string | null>(
+    null,
+  );
 
-  const normalizedInquiryId = Array.isArray(inquiryId) ? inquiryId[0] : inquiryId;
-  const hasInquiryId: boolean =
-    typeof normalizedInquiryId === "string" && normalizedInquiryId.trim().length > 0;
-  const hasClientName: boolean =
+  const normalizedInquiryId = Array.isArray(inquiryId)
+    ? inquiryId[0]
+    : inquiryId;
+  const hasInquiryId =
+    typeof normalizedInquiryId === "string" &&
+    normalizedInquiryId.trim().length > 0;
+  const hasClientName =
     typeof clientName === "string" && clientName.trim().length > 0;
-  const shouldFetch: boolean = hasInquiryId || hasClientName;
-  
+  const shouldFetch = Boolean(hasInquiryId || hasClientName);
+
   // Prioritize inquiryId if available, otherwise use clientName
   const useInquiryId = hasInquiryId;
-  
-  const { data: history = [], isLoading, error, isFetched } = useQuery<QuotationRecord[]>({
+
+  const {
+    data: history = [],
+    isLoading,
+    error,
+    isFetched,
+  } = useQuery<QuotationRecord[]>({
     queryKey: useInquiryId
       ? ["quotationHistory", "inquiry", normalizedInquiryId]
       : ["quotationHistory", "client", clientName],
@@ -65,23 +78,38 @@ export function QuotationHistoryPanel({
 
   if (error) {
     console.error(" [HistoryPanel] Error fetching quotation history:", error);
-    return <div className="text-red-500 text-sm">Failed to load quotation history.</div>;
+    return (
+      <div className="text-red-500 text-sm">
+        Failed to load quotation history.
+      </div>
+    );
   }
 
   if (!shouldFetch) {
-    return <div className="text-sm text-muted-foreground">No inquiry or client information available.</div>;
+    return (
+      <div className="text-sm text-muted-foreground">
+        No inquiry or client information available.
+      </div>
+    );
   }
 
-  if (isLoading) return <div className="text-sm text-muted-foreground">Loading history...</div>;
+  if (isLoading)
+    return (
+      <div className="text-sm text-muted-foreground">Loading history...</div>
+    );
 
   if (history.length === 0) {
     return (
       <div className="text-sm text-muted-foreground">
-        No past quotations yet for {useInquiryId ? (
-          <code>{Array.isArray(inquiryId) ? inquiryId.join(", ") : inquiryId}</code>
+        No past quotations yet for{" "}
+        {useInquiryId ? (
+          <code>
+            {Array.isArray(inquiryId) ? inquiryId.join(", ") : inquiryId}
+          </code>
         ) : (
           <code>{clientName}</code>
-        )}.
+        )}
+        .
       </div>
     );
   }
@@ -100,25 +128,39 @@ export function QuotationHistoryPanel({
     <div className="space-y-4">
       <h4 className="text-sm font-semibold">
         Quotation History
-        {showCheckboxes && <span className="text-xs text-muted-foreground ml-2">(Select to auto-populate services)</span>}
+        {showCheckboxes && (
+          <span className="text-xs text-muted-foreground ml-2">
+            (Select to auto-populate services)
+          </span>
+        )}
       </h4>
       <ScrollArea className="max-h-80 pr-2">
         <div className="space-y-3">
           {history.map((quote, index) => (
-            <Card key={index} className="p-3 border flex justify-between items-start gap-3">
+            <Card
+              key={index}
+              className="p-3 border flex justify-between items-start gap-3"
+            >
               {showCheckboxes && (
                 <div className="flex items-start pt-1">
                   <Checkbox
                     checked={selectedQuotationId === quote.referenceNumber}
-                    onCheckedChange={(checked) => handleCheckboxChange(quote, checked as boolean)}
+                    onCheckedChange={(checked) =>
+                      handleCheckboxChange(quote, checked as boolean)
+                    }
                   />
                 </div>
               )}
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <div className="font-medium text-sm">{quote.referenceNumber}</div>
+                  <div className="font-medium text-sm">
+                    {quote.referenceNumber}
+                  </div>
                   {quote.selectedForProject && (
-                    <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white text-xs px-1 py-0.5 flex items-center justify-center rounded-full w-5 h-5">
+                    <Badge
+                      variant="default"
+                      className="bg-green-600 hover:bg-green-700 text-white text-xs px-1 py-0.5 flex items-center justify-center rounded-full w-5 h-5"
+                    >
                       <CheckCircle2 className="w-4 h-4" />
                     </Badge>
                   )}
@@ -127,15 +169,13 @@ export function QuotationHistoryPanel({
                   Issued: {new Date(quote.dateIssued).toLocaleString()}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  {quote.services.length} service{quote.services.length !== 1 ? 's' : ''}
+                  {quote.services.length} service
+                  {quote.services.length !== 1 ? "s" : ""}
                 </div>
               </div>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="text-sm px-2 h-auto"
-                  >
+                  <Button variant="ghost" className="text-sm px-2 h-auto">
                     <FileTextIcon className="w-4 h-4 mr-1" /> PDF
                   </Button>
                 </DialogTrigger>
