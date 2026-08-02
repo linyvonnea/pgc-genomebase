@@ -26,7 +26,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { adminDb } from "@/lib/firebase-admin";
+import admin, { adminDb } from "@/lib/firebase-admin";
 import { revalidatePath } from "next/cache";
 import { InquiryFormData } from "@/schemas/inquirySchema";
 import { AdminInquiryData } from "@/schemas/adminInquirySchema";
@@ -119,6 +119,18 @@ async function resolveInquiryUuid(
     typeof email === "string" ? email.trim().toLowerCase() : "";
   if (!normalizedEmail) return null;
 
+  try {
+    const userRecord = await admin.auth().getUserByEmail(normalizedEmail);
+    return userRecord?.uid || null;
+  } catch (error: any) {
+    if (error?.code !== "auth/user-not-found") {
+      console.warn(
+        `Unable to resolve auth UID for inquiry email ${normalizedEmail}:`,
+        error,
+      );
+    }
+  }
+
   if (!adminDb) return null;
 
   try {
@@ -133,25 +145,8 @@ async function resolveInquiryUuid(
       if (typeof userData?.uid === "string" && userData.uid) {
         return userData.uid;
       }
-      return null;
-    }
 
-    // Fallback for legacy records where email casing was not normalized.
-    const allUsersSnapshot = await adminDb.collection("users").get();
-    for (const userDoc of allUsersSnapshot.docs) {
-      const userData = userDoc.data() as { email?: string; uid?: string };
-      const storedEmail =
-        typeof userData?.email === "string"
-          ? userData.email.trim().toLowerCase()
-          : "";
-
-      if (storedEmail !== normalizedEmail) continue;
-
-      if (typeof userData?.uid === "string" && userData.uid) {
-        return userData.uid;
-      }
-
-      return null;
+      return userSnapshot.docs[0].id || null;
     }
 
     // Fallback for legacy records where email casing was not normalized.
