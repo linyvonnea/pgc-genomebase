@@ -677,7 +677,6 @@ export async function createInquiryAction(
       affiliation: inquiryData.affiliation,
       designation: inquiryData.designation,
       email: inquiryData.email,
-      uuid: resolvedUuid ?? "",
 
       // New Service Selection Fields
       species: inquiryData.species || null,
@@ -1483,7 +1482,6 @@ export async function createAdminInquiryAction(
       email: data.email,
       affiliation: data.affiliation,
       designation: data.designation,
-      uuid: resolvedUuid ?? "",
       status: data.status,
       isApproved: data.status === "Approved Client", // Auto-approve if status is 'Approved Client'
       createdAt: serverTimestamp(),
