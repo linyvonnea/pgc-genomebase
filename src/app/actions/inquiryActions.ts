@@ -23,7 +23,10 @@ import {
   updateDoc,
   deleteDoc,
   getDoc,
+  getDocs,
+  query,
   setDoc,
+  where,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { adminDb } from "@/lib/firebase-admin";
@@ -189,6 +192,47 @@ const formatSpecies = (species?: string, otherSpecies?: string): string => {
     .join(" ");
   return otherSpecies ? `${speciesLabel} (${otherSpecies})` : speciesLabel;
 };
+
+function normalizeEmail(value?: string | null): string {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+async function resolveUuidFromEmail(
+  email?: string | null,
+): Promise<string | null> {
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return null;
+
+  try {
+    const usersRef = collection(db, "users");
+    const snapshot = await getDocs(usersRef);
+
+    for (const userDoc of snapshot.docs) {
+      const userData = userDoc.data() as {
+        email?: string | null;
+        uid?: string | null;
+      };
+
+      const storedEmail = normalizeEmail(userData.email);
+      if (storedEmail !== normalizedEmail) {
+        continue;
+      }
+
+      if (typeof userData?.uid === "string" && userData.uid) {
+        return userData.uid;
+      }
+
+      return userDoc.id || null;
+    }
+  } catch (error) {
+    console.warn(
+      `[Firestore] Unable to resolve uuid for inquiry email ${normalizedEmail}:`,
+      error,
+    );
+  }
+
+  return null;
+}
 
 const formatTrainingProgram = (program: string): string => {
   if (program === "others-customized") {
@@ -647,7 +691,7 @@ export async function createInquiryAction(
     // Transform the form data to match the expected database structure
     // This ensures all required fields are present with proper defaults
     const currentDate = new Date();
-    const resolvedUuid = await resolveInquiryUuid(inquiryData.email);
+    const resolvedUuid = await resolveUuidFromEmail(inquiryData.email);
     const transformedData = {
       // Core inquiry information
       name: inquiryData.name,
@@ -1452,7 +1496,7 @@ export async function createAdminInquiryAction(
 ) {
   try {
     // Transform admin data to database format with defaults for service fields
-    const resolvedUuid = await resolveInquiryUuid(data.email);
+    const resolvedUuid = await resolveUuidFromEmail(data.email);
     const transformedData = {
       // Core fields from admin form
       name: data.name,
@@ -1524,7 +1568,7 @@ export async function updateInquiryAction(
     const oldDoc = await getDoc(docRef);
     const oldData = oldDoc.exists() ? oldDoc.data() : null;
 
-    const resolvedUuid = await resolveInquiryUuid(data.email);
+    const resolvedUuid = await resolveUuidFromEmail(data.email);
     const updateData: any = {
       name: data.name,
       email: data.email,
