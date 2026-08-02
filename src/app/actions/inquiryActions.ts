@@ -123,14 +123,12 @@ async function resolveInquiryUuid(
     const userRecord = await admin.auth().getUserByEmail(normalizedEmail);
     return userRecord?.uid || null;
   } catch (error: any) {
-    if (error?.code === "auth/user-not-found") {
-      return null;
+    if (error?.code !== "auth/user-not-found") {
+      console.warn(
+        `Unable to resolve auth UID for inquiry email ${normalizedEmail}:`,
+        error,
+      );
     }
-
-    console.warn(
-      `Unable to resolve auth UID for inquiry email ${normalizedEmail}:`,
-      error,
-    );
   }
 
   if (!adminDb) return null;
@@ -149,6 +147,24 @@ async function resolveInquiryUuid(
       }
 
       return userSnapshot.docs[0].id || null;
+    }
+
+    // Fallback for legacy records where email casing was not normalized.
+    const allUsersSnapshot = await adminDb.collection("users").get();
+    for (const userDoc of allUsersSnapshot.docs) {
+      const userData = userDoc.data() as { email?: string; uid?: string };
+      const storedEmail =
+        typeof userData?.email === "string"
+          ? userData.email.trim().toLowerCase()
+          : "";
+
+      if (storedEmail !== normalizedEmail) continue;
+
+      if (typeof userData?.uid === "string" && userData.uid) {
+        return userData.uid;
+      }
+
+      return userDoc.id || null;
     }
   } catch (fallbackError) {
     console.warn(
