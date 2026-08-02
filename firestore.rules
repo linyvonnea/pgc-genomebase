@@ -28,7 +28,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return adminByEmail() || adminByUid();
+      return isAdminRole() || adminByEmail() || adminByUid();
     }
 
     function userProfileExists() {
@@ -79,12 +79,28 @@ service cloud.firestore {
     function canAccessLinkedInquiry(inquiryIdValue) {
       return isSignedIn()
         && isClientOrAdmin()
-        && inquiryIdValue is string
-        && inquiryIdValue != ''
-        && exists(/databases/$(database)/documents/inquiries/$(inquiryIdValue))
         && (
-          get(/databases/$(database)/documents/inquiries/$(inquiryIdValue)).data.uuid == userUid()
-          || get(/databases/$(database)/documents/inquiries/$(inquiryIdValue)).data.email == userEmail()
+          isAdminRole()
+          || (
+            inquiryIdValue is string
+            && inquiryIdValue != ''
+            && exists(/databases/$(database)/documents/inquiries/$(inquiryIdValue))
+            && (
+              get(/databases/$(database)/documents/inquiries/$(inquiryIdValue)).data.uuid == userUid()
+              || get(/databases/$(database)/documents/inquiries/$(inquiryIdValue)).data.email == userEmail()
+            )
+          )
+        );
+    }
+
+    function canAccessLinkedInquiryDoc(inquiryIdValue, uuidValue, emailValue) {
+      return isSignedIn()
+        && isClientOrAdmin()
+        && (
+          isAdminRole()
+          || hasOwnedUuid(uuidValue)
+          || (emailValue != null && emailValue == userEmail())
+          || canAccessLinkedInquiry(inquiryIdValue)
         );
     }
 
@@ -387,8 +403,7 @@ service cloud.firestore {
           || hasOwnedUuid(request.resource.data.uuid)
         );
 
-      allow read: if canAccessUuidDoc(resource.data.uuid)
-        || canAccessLinkedInquiry(resource.data.iid);
+      allow read: if canAccessLinkedInquiryDoc(resource.data.iid, resource.data.uuid, resource.data.email);
 
       allow update, delete: if isSignedIn()
         && isClientOrAdmin()
@@ -491,7 +506,7 @@ service cloud.firestore {
           || hasOwnedUuid(request.resource.data.uuid)
         );
 
-      allow read: if canAccessUuidDoc(resource.data.uuid);
+      allow read: if canAccessLinkedInquiryDoc(resource.data.inquiryId, resource.data.uuid, resource.data.email);
 
       allow update, delete: if isSignedIn()
         && isClientOrAdmin()
