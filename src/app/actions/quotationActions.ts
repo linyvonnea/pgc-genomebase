@@ -13,6 +13,43 @@ import { collection, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { adminDb } from "@/lib/firebase-admin";
 
+function normalizeEmail(value?: string | null): string {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+async function resolveUidFromUsersByEmail(
+  email?: string | null,
+): Promise<string | null> {
+  if (!adminDb) return null;
+
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return null;
+
+  const exactMatch = await adminDb
+    .collection("users")
+    .where("email", "==", normalizedEmail)
+    .limit(1)
+    .get();
+
+  if (!exactMatch.empty) {
+    const userData = exactMatch.docs[0].data() as { uid?: string };
+    return typeof userData?.uid === "string" && userData.uid
+      ? userData.uid
+      : null;
+  }
+
+  const allUsersSnapshot = await adminDb.collection("users").get();
+  for (const userDoc of allUsersSnapshot.docs) {
+    const userData = userDoc.data() as { email?: string; uid?: string };
+    if (normalizeEmail(userData.email) !== normalizedEmail) continue;
+    return typeof userData?.uid === "string" && userData.uid
+      ? userData.uid
+      : null;
+  }
+
+  return null;
+}
+
 export async function saveQuotationAction(
   quotation: QuotationRecord,
   userInfo: { name: string; email: string },
@@ -29,28 +66,15 @@ export async function saveQuotationAction(
         // Send email to client about quotation availability
         const inquiry = await getInquiryById(quotation.inquiryId);
 
-        // Keep inquiry ownership in sync during quotation send by copying
-        // the already-saved quotation uuid to the linked inquiry doc.
-        if (adminDb && cleanedQuotation.referenceNumber) {
-          const savedQuotationSnap = await adminDb
-            .collection("quotations")
-            .doc(cleanedQuotation.referenceNumber)
-            .get();
-
-          const savedQuotationData = savedQuotationSnap.exists
-            ? (savedQuotationSnap.data() as { uuid?: string | null })
-            : null;
-          const quotationUuid =
-            typeof savedQuotationData?.uuid === "string" &&
-            savedQuotationData.uuid.trim()
-              ? savedQuotationData.uuid
-              : null;
-
-          if (quotationUuid) {
+        // Keep inquiry ownership in sync during quotation send by deriving
+        // uuid from users.email -> users.uid using inquiry email.
+        if (adminDb && inquiry?.email) {
+          const resolvedUid = await resolveUidFromUsersByEmail(inquiry.email);
+          if (resolvedUid) {
             await adminDb
               .collection("inquiries")
               .doc(quotation.inquiryId)
-              .set({ uuid: quotationUuid }, { merge: true });
+              .set({ uuid: resolvedUid }, { merge: true });
           }
         }
 
