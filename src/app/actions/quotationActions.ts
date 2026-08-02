@@ -1,17 +1,71 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { saveQuotationToFirestore, getAllQuotations } from "@/services/quotationService";
+import {
+  saveQuotationToFirestore,
+  getAllQuotations,
+} from "@/services/quotationService";
 import { updateInquiryStatus, getInquiryById } from "@/services/inquiryService";
 import { QuotationRecord } from "@/types/Quotation";
 import { logActivity } from "@/services/activityLogService";
 import { sanitizeObject } from "@/lib/sanitizeObject";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { adminDb } from "@/lib/firebase-admin";
+
+function normalizeEmail(value?: string | null): string {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+async function resolveUidFromUsersByEmail(
+  email?: string | null,
+): Promise<string | null> {
+  if (!adminDb) return null;
+
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return null;
+
+  try {
+    const userSnapshot = await adminDb
+      .collection("users")
+      .where("email", "==", normalizedEmail)
+      .limit(1)
+      .get();
+
+    if (!userSnapshot.empty) {
+      const userData = userSnapshot.docs[0].data() as { uid?: string };
+      if (typeof userData?.uid === "string" && userData.uid) {
+        return userData.uid;
+      }
+
+      return userSnapshot.docs[0].id || null;
+    }
+
+    // Fallback for legacy users where email might not be normalized.
+    const allUsersSnapshot = await adminDb.collection("users").get();
+    for (const userDoc of allUsersSnapshot.docs) {
+      const userData = userDoc.data() as { email?: string; uid?: string };
+      if (normalizeEmail(userData.email) !== normalizedEmail) continue;
+
+      if (typeof userData?.uid === "string" && userData.uid) {
+        return userData.uid;
+      }
+
+      return userDoc.id || null;
+    }
+  } catch (error) {
+    console.warn(
+      `[Quotation] Unable to resolve uid from users for email ${normalizedEmail}:`,
+      error,
+    );
+  }
+
+  return null;
+}
 
 export async function saveQuotationAction(
   quotation: QuotationRecord,
-  userInfo: { name: string; email: string }
+  userInfo: { name: string; email: string },
 ) {
   try {
     const cleanedQuotation = sanitizeObject(quotation) as QuotationRecord;
@@ -24,9 +78,21 @@ export async function saveQuotationAction(
 
         // Send email to client about quotation availability
         const inquiry = await getInquiryById(quotation.inquiryId);
+
+        // Keep inquiry ownership in sync during quotation send.
+        if (inquiry?.email && adminDb) {
+          const resolvedUid = await resolveUidFromUsersByEmail(inquiry.email);
+          if (resolvedUid) {
+            await adminDb
+              .collection("inquiries")
+              .doc(quotation.inquiryId)
+              .set({ uuid: resolvedUid }, { merge: true });
+          }
+        }
+
         if (inquiry && inquiry.email) {
           const mailCollection = collection(db, "mail");
-          
+
           const clientEmailHtml = `
             <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.6;">
               <div style="background-color: #f1f5f9; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -68,10 +134,12 @@ Philippine Genome Center Visayas
             message: {
               subject: "Quotation Available: PGC Visayas",
               text: clientEmailText,
-              html: clientEmailHtml
-            }
+              html: clientEmailHtml,
+            },
           });
-          console.log(`✅ Quotation availability email sent to ${inquiry.email}`);
+          console.log(
+            `✅ Quotation availability email sent to ${inquiry.email}`,
+          );
 
           // In-app notification
           await addDoc(collection(db, "clientNotifications"), {
@@ -101,8 +169,8 @@ Philippine Genome Center Visayas
       changesAfter: quotation,
     });
 
-    revalidatePath('/admin/quotations');
-    revalidatePath('/admin/inquiries');
+    revalidatePath("/admin/quotations");
+    revalidatePath("/admin/inquiries");
     return { success: true };
   } catch (error) {
     console.error("Error saving quotation:", error);
