@@ -24,9 +24,7 @@ import {
   approveMemberApproval,
   rejectMemberApproval,
 } from "@/services/memberApprovalService";
-import {
-  getProjectRequestsByStatus,
-} from "@/services/projectRequestService";
+import { getProjectRequestsByStatus } from "@/services/projectRequestService";
 import {
   getClientRequestsByInquiry,
   ClientRequest,
@@ -35,7 +33,7 @@ import { sendProjectApprovalEmail } from "@/app/actions/inquiryActions";
 import { ApprovalStatus } from "@/types/MemberApproval";
 import useAuth from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDoc, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import {
   Users,
@@ -104,7 +102,8 @@ export default function MemberApprovalsPage() {
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("pending");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedApproval, setSelectedApproval] = useState<CombinedApproval | null>(null);
+  const [selectedApproval, setSelectedApproval] =
+    useState<CombinedApproval | null>(null);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [reviewNotes, setReviewNotes] = useState("");
   const [processing, setProcessing] = useState(false);
@@ -113,51 +112,88 @@ export default function MemberApprovalsPage() {
 
   // Email → existing Firestore client data (populated when review dialog opens)
   const [existingClientsByEmail, setExistingClientsByEmail] = useState<
-    Record<string, { cid: string; name: string; affiliation: string; phoneNumber: string; affiliationAddress: string }>
+    Record<
+      string,
+      {
+        cid: string;
+        name: string;
+        affiliation: string;
+        phoneNumber: string;
+        affiliationAddress: string;
+      }
+    >
   >({});
   // Email → admin decision: 'update' existing CID or assign 'new' CID
-  const [memberCidDecisions, setMemberCidDecisions] = useState<Record<string, 'update' | 'new'>>({});
+  const [memberCidDecisions, setMemberCidDecisions] = useState<
+    Record<string, "update" | "new">
+  >({});
 
   const normalizeEmail = (value?: string) => value?.trim().toLowerCase() || "";
 
   // Fetch existing client records from Firestore for a list of emails
-  const fetchExistingClientsByEmails = useCallback(async (emails: string[]) => {
-    const unique = [...new Set(emails.map(normalizeEmail).filter(Boolean))];
-    if (unique.length === 0) return {};
-    const result: Record<string, { cid: string; name: string; affiliation: string; phoneNumber: string; affiliationAddress: string }> = {};
-    // Firestore 'in' supports up to 30 values
-    const chunks: string[][] = [];
-    for (let i = 0; i < unique.length; i += 30) chunks.push(unique.slice(i, i + 30));
-    for (const chunk of chunks) {
-      const snap = await getDocs(query(collection(db, "clients"), where("email", "in", chunk)));
-      snap.forEach((d) => {
-        const data = d.data() as any;
-        const email = normalizeEmail(data.email);
-        if (email && !result[email]) {
-          result[email] = { cid: data.cid || d.id, name: data.name || "", affiliation: data.affiliation || "", phoneNumber: data.phoneNumber || "", affiliationAddress: data.affiliationAddress || "" };
+  const fetchExistingClientsByEmails = useCallback(
+    async (emails: string[]) => {
+      const unique = [...new Set(emails.map(normalizeEmail).filter(Boolean))];
+      if (unique.length === 0) return {};
+      const result: Record<
+        string,
+        {
+          cid: string;
+          name: string;
+          affiliation: string;
+          phoneNumber: string;
+          affiliationAddress: string;
         }
+      > = {};
+      // Firestore 'in' supports up to 30 values
+      const chunks: string[][] = [];
+      for (let i = 0; i < unique.length; i += 30)
+        chunks.push(unique.slice(i, i + 30));
+      for (const chunk of chunks) {
+        const snap = await getDocs(
+          query(collection(db, "clients"), where("email", "in", chunk)),
+        );
+        snap.forEach((d) => {
+          const data = d.data() as any;
+          const email = normalizeEmail(data.email);
+          if (email && !result[email]) {
+            result[email] = {
+              cid: data.cid || d.id,
+              name: data.name || "",
+              affiliation: data.affiliation || "",
+              phoneNumber: data.phoneNumber || "",
+              affiliationAddress: data.affiliationAddress || "",
+            };
+          }
+        });
+      }
+      return result;
+    },
+    [normalizeEmail],
+  );
+
+  const getExistingProjectMemberEmails = useCallback(
+    async (projectPid?: string) => {
+      if (!projectPid) return new Set<string>();
+
+      const clientsQ = query(
+        collection(db, "clients"),
+        where("pid", "array-contains", projectPid),
+      );
+      const clientsSnap = await getDocs(clientsQ);
+
+      const emails = new Set<string>();
+      clientsSnap.forEach((docSnap) => {
+        const email = normalizeEmail(
+          (docSnap.data() as { email?: string }).email,
+        );
+        if (email) emails.add(email);
       });
-    }
-    return result;
-  }, [normalizeEmail]);
 
-  const getExistingProjectMemberEmails = useCallback(async (projectPid?: string) => {
-    if (!projectPid) return new Set<string>();
-
-    const clientsQ = query(
-      collection(db, "clients"),
-      where("pid", "array-contains", projectPid)
-    );
-    const clientsSnap = await getDocs(clientsQ);
-
-    const emails = new Set<string>();
-    clientsSnap.forEach((docSnap) => {
-      const email = normalizeEmail((docSnap.data() as { email?: string }).email);
-      if (email) emails.add(email);
-    });
-
-    return emails;
-  }, []);
+      return emails;
+    },
+    [],
+  );
 
   const normalizedSearchQuery = searchQuery.trim().toLowerCase();
   const filteredApprovals = normalizedSearchQuery
@@ -171,14 +207,16 @@ export default function MemberApprovalsPage() {
           member?.formData?.affiliationAddress,
         ]);
 
-        const clientRequestFields = (approval.clientRequests || []).flatMap((request) => [
-          request?.name,
-          request?.email,
-          request?.affiliation,
-          request?.designation,
-          request?.phoneNumber,
-          request?.affiliationAddress,
-        ]);
+        const clientRequestFields = (approval.clientRequests || []).flatMap(
+          (request) => [
+            request?.name,
+            request?.email,
+            request?.affiliation,
+            request?.designation,
+            request?.phoneNumber,
+            request?.affiliationAddress,
+          ],
+        );
 
         const combinedText = [
           approval.type,
@@ -207,15 +245,27 @@ export default function MemberApprovalsPage() {
       })
     : approvals;
 
-  const statusOrder: Record<string, number> = { pending: 0, draft: 1, approved: 2, cancelled: 3, rejected: 3 };
+  const statusOrder: Record<string, number> = {
+    pending: 0,
+    draft: 1,
+    approved: 2,
+    cancelled: 3,
+    rejected: 3,
+  };
   const sortedApprovals = [...filteredApprovals].sort((a, b) => {
     let cmp = 0;
     if (sortBy === "date") {
       const aTime = a.submittedAt
-        ? (typeof a.submittedAt.toDate === "function" ? a.submittedAt.toDate() : new Date(a.submittedAt)).getTime()
+        ? (typeof a.submittedAt.toDate === "function"
+            ? a.submittedAt.toDate()
+            : new Date(a.submittedAt)
+          ).getTime()
         : 0;
       const bTime = b.submittedAt
-        ? (typeof b.submittedAt.toDate === "function" ? b.submittedAt.toDate() : new Date(b.submittedAt)).getTime()
+        ? (typeof b.submittedAt.toDate === "function"
+            ? b.submittedAt.toDate()
+            : new Date(b.submittedAt)
+          ).getTime()
         : 0;
       cmp = aTime - bTime;
     } else if (sortBy === "title") {
@@ -231,12 +281,12 @@ export default function MemberApprovalsPage() {
     try {
       // Fetch traditional member approvals
       const memberApprovals = await getAllMemberApprovals(
-        filterStatus === "all" ? undefined : filterStatus
+        filterStatus === "all" ? undefined : filterStatus,
       );
 
       // Fetch project requests filtered by status
       const projectRequests = await getProjectRequestsByStatus(
-        filterStatus === "all" ? "all" : filterStatus
+        filterStatus === "all" ? "all" : filterStatus,
       );
       console.log("Fetched project requests:", projectRequests);
 
@@ -244,13 +294,18 @@ export default function MemberApprovalsPage() {
       const projectApprovalsPromises = projectRequests.map(async (pr) => {
         try {
           // Map UI filter 'cancelled' to clientRequests 'rejected' status
-          const clientStatus = filterStatus === "all" ? undefined : (filterStatus === "cancelled" ? "cancelled" : filterStatus as any);
+          const clientStatus =
+            filterStatus === "all"
+              ? undefined
+              : filterStatus === "cancelled"
+                ? "cancelled"
+                : (filterStatus as any);
           // Get client requests matching the project request status (or all if filtering for all)
           const clientRequests = await getClientRequestsByInquiry(
             pr.inquiryId,
-            clientStatus
+            clientStatus,
           );
-          
+
           return {
             id: pr.id || pr.inquiryId,
             type: "project" as const,
@@ -288,7 +343,10 @@ export default function MemberApprovalsPage() {
             })),
           };
         } catch (error) {
-          console.error(`Error fetching client requests for ${pr.inquiryId}:`, error);
+          console.error(
+            `Error fetching client requests for ${pr.inquiryId}:`,
+            error,
+          );
           // Return a basic approval without client requests if there's an error
           return {
             id: pr.id || pr.inquiryId,
@@ -326,22 +384,24 @@ export default function MemberApprovalsPage() {
       });
 
       // Convert member approvals to combined format
-      const memberApprovalsCombined: CombinedApproval[] = memberApprovals.map((ma) => ({
-        id: ma.id!,
-        type: "member" as const,
-        inquiryId: ma.inquiryId,
-        projectTitle: ma.projectTitle,
-        projectPid: ma.projectPid,
-        submittedBy: ma.submittedBy,
-        submittedByName: ma.submittedByName,
-        status: ma.status,
-        submittedAt: ma.submittedAt,
-        reviewedAt: ma.reviewedAt,
-        reviewedBy: ma.reviewedBy,
-        reviewedByName: ma.reviewedByName,
-        reviewNotes: ma.reviewNotes,
-        members: ma.members,
-      }));
+      const memberApprovalsCombined: CombinedApproval[] = memberApprovals.map(
+        (ma) => ({
+          id: ma.id!,
+          type: "member" as const,
+          inquiryId: ma.inquiryId,
+          projectTitle: ma.projectTitle,
+          projectPid: ma.projectPid,
+          submittedBy: ma.submittedBy,
+          submittedByName: ma.submittedByName,
+          status: ma.status,
+          submittedAt: ma.submittedAt,
+          reviewedAt: ma.reviewedAt,
+          reviewedBy: ma.reviewedBy,
+          reviewedByName: ma.reviewedByName,
+          reviewNotes: ma.reviewNotes,
+          members: ma.members,
+        }),
+      );
 
       // Combine both types
       const combined = [...projectApprovals, ...memberApprovalsCombined];
@@ -365,7 +425,8 @@ export default function MemberApprovalsPage() {
       setApprovals(combined);
     } catch (error) {
       console.error("Failed to fetch approvals:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       toast.error(`Failed to load approval requests: ${errorMessage}`);
       setApprovals([]); // Clear approvals on error
     } finally {
@@ -380,7 +441,7 @@ export default function MemberApprovalsPage() {
   const handleApprove = async () => {
     if (!selectedApproval?.id) return;
     setProcessing(true);
-    
+
     try {
       if (selectedApproval.type === "member") {
         // Traditional member approval — pass admin's per-member CID decisions
@@ -389,26 +450,27 @@ export default function MemberApprovalsPage() {
           user?.email || "",
           adminInfo?.name || user?.displayName || "",
           reviewNotes,
-          memberCidDecisions
+          memberCidDecisions,
         );
         toast.success(
-          `Approved! ${generatedCids.length} client ID(s) generated: ${generatedCids.join(", ")}`
+          `Approved! ${generatedCids.length} client ID(s) generated: ${generatedCids.join(", ")}`,
         );
       } else if (selectedApproval.type === "project") {
         // New project + members approval
         await approveProjectRequest(selectedApproval);
       }
-      
+
       // Close dialog and reset state first
       setShowReviewDialog(false);
       setSelectedApproval(null);
       setReviewNotes("");
-      
+
       // Then refresh the list
       await fetchApprovals();
     } catch (error) {
       console.error("Approve error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       toast.error(`Failed to approve: ${errorMessage}`);
     } finally {
       setProcessing(false);
@@ -419,25 +481,33 @@ export default function MemberApprovalsPage() {
   const handleOpenReview = async (approval: CombinedApproval) => {
     try {
       if (approval.type === "member") {
-        const existingEmails = await getExistingProjectMemberEmails(approval.projectPid);
+        const existingEmails = await getExistingProjectMemberEmails(
+          approval.projectPid,
+        );
 
-        const additionalMembers = (approval.members || []).filter((member: any) => {
-          if (member.isPrimary) return false;
+        const additionalMembers = (approval.members || []).filter(
+          (member: any) => {
+            if (member.isPrimary) return false;
 
-          const cid = String(member.cid || "").trim();
-          if (cid && cid !== "draft" && cid !== "pending") return false;
+            const cid = String(member.cid || "").trim();
+            if (cid && cid !== "draft" && cid !== "pending") return false;
 
-          const memberEmail = normalizeEmail(member.formData?.email);
-          return memberEmail ? !existingEmails.has(memberEmail) : true;
-        });
+            const memberEmail = normalizeEmail(member.formData?.email);
+            return memberEmail ? !existingEmails.has(memberEmail) : true;
+          },
+        );
 
         // Fetch existing client data for all member emails
-        const memberEmails = additionalMembers.map((m: any) => m.formData?.email).filter(Boolean);
+        const memberEmails = additionalMembers
+          .map((m: any) => m.formData?.email)
+          .filter(Boolean);
         const existingData = await fetchExistingClientsByEmails(memberEmails);
         setExistingClientsByEmail(existingData);
         // Default decision for each matched email: 'update'
-        const defaults: Record<string, 'update' | 'new'> = {};
-        Object.keys(existingData).forEach((email) => { defaults[email] = 'update'; });
+        const defaults: Record<string, "update" | "new"> = {};
+        Object.keys(existingData).forEach((email) => {
+          defaults[email] = "update";
+        });
         setMemberCidDecisions(defaults);
 
         setSelectedApproval({
@@ -453,7 +523,10 @@ export default function MemberApprovalsPage() {
       // For cancelled submissions, members are now reset to "draft" (so client can re-edit).
       // Fetch all members regardless of status so admin can still review them.
       const clientStatus = undefined;
-      const clientRequests = await getClientRequestsByInquiry(approval.inquiryId, clientStatus as any);
+      const clientRequests = await getClientRequestsByInquiry(
+        approval.inquiryId,
+        clientStatus as any,
+      );
 
       // Map clientRequests into members array for display
       const members = clientRequests.map((cr) => ({
@@ -472,11 +545,16 @@ export default function MemberApprovalsPage() {
       }));
 
       // Fetch existing client data for project-type members too
-      const projectMemberEmails = clientRequests.map((cr) => cr.email).filter(Boolean);
-      const existingProjectData = await fetchExistingClientsByEmails(projectMemberEmails);
+      const projectMemberEmails = clientRequests
+        .map((cr) => cr.email)
+        .filter(Boolean);
+      const existingProjectData =
+        await fetchExistingClientsByEmails(projectMemberEmails);
       setExistingClientsByEmail(existingProjectData);
-      const projectDefaults: Record<string, 'update' | 'new'> = {};
-      Object.keys(existingProjectData).forEach((email) => { projectDefaults[email] = 'update'; });
+      const projectDefaults: Record<string, "update" | "new"> = {};
+      Object.keys(existingProjectData).forEach((email) => {
+        projectDefaults[email] = "update";
+      });
       setMemberCidDecisions(projectDefaults);
 
       setSelectedApproval({ ...approval, clientRequests, members });
@@ -500,19 +578,24 @@ export default function MemberApprovalsPage() {
     // Import required services
     const { getNextPid } = await import("@/services/projectsService");
     const { getNextCid } = await import("@/services/clientService");
-    const { updateProjectRequestStatus } = await import("@/services/projectRequestService");
-    const { approveClientRequest, approveAllClientRequestsByInquiry } = await import("@/services/clientRequestService");
-    const { doc, setDoc, updateDoc, serverTimestamp, Timestamp } = await import("firebase/firestore");
+    const { updateProjectRequestStatus } = await import(
+      "@/services/projectRequestService"
+    );
+    const { approveClientRequest, approveAllClientRequestsByInquiry } =
+      await import("@/services/clientRequestService");
+    const { doc, setDoc, updateDoc, serverTimestamp, Timestamp } = await import(
+      "firebase/firestore"
+    );
     const { db } = await import("@/lib/firebase");
 
     const year = new Date().getFullYear();
-    
+
     // Generate PID
     const pid = await getNextPid(year);
 
     // Convert startDate to proper Timestamp
     let startDate = approval.projectData.startDate;
-    if (startDate && typeof startDate.toDate === 'function') {
+    if (startDate && typeof startDate.toDate === "function") {
       startDate = Timestamp.fromDate(startDate.toDate());
     }
 
@@ -528,11 +611,16 @@ export default function MemberApprovalsPage() {
       const decision = memberCidDecisions[normalizedReqEmail];
 
       let cid: string;
-      if (existingClient && decision !== 'new') {
+      if (existingClient && decision !== "new") {
         // Reuse existing CID
         cid = existingClient.cid;
         // Update existing client record with submitted data
-        const { doc: firestoreDoc, updateDoc: firestoreUpdateDoc, serverTimestamp: firestoreTimestamp, arrayUnion } = await import("firebase/firestore");
+        const {
+          doc: firestoreDoc,
+          updateDoc: firestoreUpdateDoc,
+          serverTimestamp: firestoreTimestamp,
+          arrayUnion,
+        } = await import("firebase/firestore");
         await firestoreUpdateDoc(firestoreDoc(db, "clients", cid), {
           name: clientReq.name,
           affiliation: clientReq.affiliation || "",
@@ -566,22 +654,50 @@ export default function MemberApprovalsPage() {
         });
       }
 
-      memberCids.push({ email: clientReq.email, cid, isPrimary: clientReq.isPrimary || false });
+      memberCids.push({
+        email: clientReq.email,
+        cid,
+        isPrimary: clientReq.isPrimary || false,
+      });
 
       // Update clientRequest status
       await approveClientRequest(
         approval.inquiryId,
         clientReq.email,
         cid,
-        user?.email || ""
+        user?.email || "",
       );
     }
 
+    // Resolve project ownership uuid from linked inquiry.
+    let projectUuid: string | null = null;
+    if (approval.inquiryId) {
+      try {
+        const inquirySnap = await getDoc(
+          doc(db, "inquiries", approval.inquiryId),
+        );
+        if (inquirySnap.exists()) {
+          const inquiryData = inquirySnap.data() as { uuid?: string | null };
+          if (
+            typeof inquiryData?.uuid === "string" &&
+            inquiryData.uuid.trim()
+          ) {
+            projectUuid = inquiryData.uuid;
+          }
+        }
+      } catch (uuidError) {
+        console.error("Error resolving project uuid from inquiry:", uuidError);
+      }
+    }
+
     // Create project document
-    const clientNames = approval.clientRequests.map((cr) => cr.name || "Unknown");
+    const clientNames = approval.clientRequests.map(
+      (cr) => cr.name || "Unknown",
+    );
     await setDoc(doc(db, "projects", pid), {
       pid,
       iid: approval.inquiryId,
+      uuid: projectUuid,
       title: approval.projectData.title || "",
       projectLead: approval.projectData.projectLead || "",
       startDate: startDate,
@@ -600,7 +716,7 @@ export default function MemberApprovalsPage() {
       "approved",
       user?.email || "",
       pid,
-      primaryCid
+      primaryCid,
     );
 
     // Update inquiry status to "Approved Client"
@@ -611,7 +727,9 @@ export default function MemberApprovalsPage() {
           isApproved: true,
           updatedAt: serverTimestamp(),
         });
-        console.log(`✅ Inquiry ${approval.inquiryId} updated to Approved Client`);
+        console.log(
+          `✅ Inquiry ${approval.inquiryId} updated to Approved Client`,
+        );
       }
     } catch (inquiryError) {
       console.error("Error updating inquiry status:", inquiryError);
@@ -621,8 +739,13 @@ export default function MemberApprovalsPage() {
     // Ensure all pending clientRequests for this inquiry are approved
     try {
       if (approval.inquiryId) {
-        await approveAllClientRequestsByInquiry(approval.inquiryId, user?.email || "");
-        console.log(`✅ clientRequests for inquiry ${approval.inquiryId} updated to approved`);
+        await approveAllClientRequestsByInquiry(
+          approval.inquiryId,
+          user?.email || "",
+        );
+        console.log(
+          `✅ clientRequests for inquiry ${approval.inquiryId} updated to approved`,
+        );
       }
     } catch (clientReqError) {
       console.error("Error updating clientRequests status:", clientReqError);
@@ -631,13 +754,15 @@ export default function MemberApprovalsPage() {
 
     // Send approval email to the primary member (project submitter)
     try {
-      const { sendProjectApprovalEmail } = await import("@/app/actions/inquiryActions");
+      const { sendProjectApprovalEmail } = await import(
+        "@/app/actions/inquiryActions"
+      );
       await sendProjectApprovalEmail(
         approval.submittedBy,
         approval.submittedByName || approval.submittedBy,
         approval.projectTitle,
         pid,
-        approval.inquiryId
+        approval.inquiryId,
       );
       console.log("✅ Approval email sent to", approval.submittedBy);
     } catch (emailError) {
@@ -647,10 +772,9 @@ export default function MemberApprovalsPage() {
 
     // Success message
     const cidList = memberCids.map((m) => m.cid).join(", ");
-    toast.success(
-      `Project approved! PID: ${pid} | CIDs: ${cidList}`,
-      { duration: 6000 }
-    );
+    toast.success(`Project approved! PID: ${pid} | CIDs: ${cidList}`, {
+      duration: 6000,
+    });
   };
 
   const handleReject = async () => {
@@ -660,7 +784,7 @@ export default function MemberApprovalsPage() {
       return;
     }
     setProcessing(true);
-    
+
     try {
       if (selectedApproval.type === "member") {
         // Traditional member rejection (now "cancelled")
@@ -668,24 +792,30 @@ export default function MemberApprovalsPage() {
           selectedApproval.id,
           user?.email || "",
           adminInfo?.name || user?.displayName || "",
-          reviewNotes
+          reviewNotes,
         );
       } else if (selectedApproval.type === "project") {
         // Delete the project request entirely so client re-selects quotation and re-fills project info
-        const { deleteProjectRequest } = await import("@/services/projectRequestService");
+        const { deleteProjectRequest } = await import(
+          "@/services/projectRequestService"
+        );
         await deleteProjectRequest(selectedApproval.inquiryId);
 
         // Reset client requests to draft (keeps member info so client doesn't re-type everything)
-        const { cancelAllClientRequestsByInquiry } = await import("@/services/clientRequestService");
+        const { cancelAllClientRequestsByInquiry } = await import(
+          "@/services/clientRequestService"
+        );
         await cancelAllClientRequestsByInquiry(
           selectedApproval.inquiryId,
           user?.email || "",
-          reviewNotes
+          reviewNotes,
         );
 
         // Remove "selected" status from the associated quotation so client can choose again
         try {
-          const { resetSelectedQuotationForInquiry } = await import("@/services/quotationService");
+          const { resetSelectedQuotationForInquiry } = await import(
+            "@/services/quotationService"
+          );
           await resetSelectedQuotationForInquiry(selectedApproval.inquiryId);
         } catch (qError) {
           console.warn("Could not reset quotation selected status:", qError);
@@ -693,30 +823,42 @@ export default function MemberApprovalsPage() {
 
         // Revert the inquiry status back to "Ongoing Quotation" so "Proceed with Service" reappears
         try {
-          const { updateInquiryStatus } = await import("@/app/actions/inquiryActions");
-          await updateInquiryStatus(selectedApproval.inquiryId, "Ongoing Quotation");
+          const { updateInquiryStatus } = await import(
+            "@/app/actions/inquiryActions"
+          );
+          await updateInquiryStatus(
+            selectedApproval.inquiryId,
+            "Ongoing Quotation",
+          );
         } catch (iqError) {
           console.warn("Could not reset inquiry status:", iqError);
         }
       }
-      
+
       // Send cancellation email
       try {
-        const { sendProjectCancellationEmail } = await import("@/app/actions/inquiryActions");
+        const { sendProjectCancellationEmail } = await import(
+          "@/app/actions/inquiryActions"
+        );
         await sendProjectCancellationEmail(
           selectedApproval.submittedBy,
           selectedApproval.submittedByName || selectedApproval.submittedBy,
           selectedApproval.projectTitle,
           reviewNotes,
-          selectedApproval.inquiryId
+          selectedApproval.inquiryId,
         );
-        console.log("✅ Cancellation email sent to", selectedApproval.submittedBy);
+        console.log(
+          "✅ Cancellation email sent to",
+          selectedApproval.submittedBy,
+        );
       } catch (emailError) {
         console.error("Failed to send cancellation email:", emailError);
         // Don't toast error here, the rejection itself succeeded
       }
-      
-      toast.success("Submission cancelled. The client has been notified via email.");
+
+      toast.success(
+        "Submission cancelled. The client has been notified via email.",
+      );
       setShowReviewDialog(false);
       setSelectedApproval(null);
       setReviewNotes("");
@@ -763,7 +905,12 @@ export default function MemberApprovalsPage() {
     if (!date) return "—";
     try {
       // Handle Firestore Timestamp objects
-      if (date && typeof date === 'object' && 'toDate' in date && typeof date.toDate === 'function') {
+      if (
+        date &&
+        typeof date === "object" &&
+        "toDate" in date &&
+        typeof date.toDate === "function"
+      ) {
         return date.toDate().toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
@@ -782,7 +929,7 @@ export default function MemberApprovalsPage() {
         minute: "2-digit",
       });
     } catch (error) {
-      console.error('Error formatting date:', error, date);
+      console.error("Error formatting date:", error, date);
       return "—";
     }
   };
@@ -799,7 +946,8 @@ export default function MemberApprovalsPage() {
             Projects Approval
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Review and approve project submissions and team member registrations from the client portal
+            Review and approve project submissions and team member registrations
+            from the client portal
           </p>
         </div>
       </div>
@@ -818,8 +966,13 @@ export default function MemberApprovalsPage() {
           </div>
 
           <div className="flex items-center gap-1.5">
-            <span className="text-sm text-slate-500 whitespace-nowrap">Sort by:</span>
-            <Select value={sortBy} onValueChange={(v) => setSortBy(v as "date" | "title" | "status")}>
+            <span className="text-sm text-slate-500 whitespace-nowrap">
+              Sort by:
+            </span>
+            <Select
+              value={sortBy}
+              onValueChange={(v) => setSortBy(v as "date" | "title" | "status")}
+            >
               <SelectTrigger className="h-9 w-[140px] bg-white">
                 <SelectValue />
               </SelectTrigger>
@@ -832,7 +985,9 @@ export default function MemberApprovalsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))}
+              onClick={() =>
+                setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+              }
               className="h-9 w-9 p-0 shrink-0 bg-white"
               title={
                 sortOrder === "asc"
@@ -840,26 +995,50 @@ export default function MemberApprovalsPage() {
                   : "Currently descending — click for ascending"
               }
             >
-              {sortOrder === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+              {sortOrder === "asc" ? (
+                <ArrowUp className="h-4 w-4" />
+              ) : (
+                <ArrowDown className="h-4 w-4" />
+              )}
             </Button>
           </div>
         </div>
 
         <div className="flex gap-2 flex-wrap items-center">
-          {(["pending", "approved", "cancelled", "draft", "all"] as FilterStatus[]).map((status) => (
+          {(
+            [
+              "pending",
+              "approved",
+              "cancelled",
+              "draft",
+              "all",
+            ] as FilterStatus[]
+          ).map((status) => (
             <Button
               key={status}
               variant={filterStatus === status ? "default" : "outline"}
               size="sm"
               onClick={() => setFilterStatus(status)}
-              className={filterStatus === status ? "bg-[#166FB5] text-white" : "text-slate-600 bg-white"}
+              className={
+                filterStatus === status
+                  ? "bg-[#166FB5] text-white"
+                  : "text-slate-600 bg-white"
+              }
             >
               {status === "pending" && <Clock className="h-3.5 w-3.5 mr-1.5" />}
-              {status === "approved" && <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />}
-              {(status === "rejected" || status === "cancelled") && <XCircle className="h-3.5 w-3.5 mr-1.5" />}
-              {status === "draft" && <AlertCircle className="h-3.5 w-3.5 mr-1.5" />}
+              {status === "approved" && (
+                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+              )}
+              {(status === "rejected" || status === "cancelled") && (
+                <XCircle className="h-3.5 w-3.5 mr-1.5" />
+              )}
+              {status === "draft" && (
+                <AlertCircle className="h-3.5 w-3.5 mr-1.5" />
+              )}
               {status === "all" && <Filter className="h-3.5 w-3.5 mr-1.5" />}
-              <span className="capitalize">{status === "rejected" ? "Cancelled" : status}</span>
+              <span className="capitalize">
+                {status === "rejected" ? "Cancelled" : status}
+              </span>
             </Button>
           ))}
         </div>
@@ -887,8 +1066,8 @@ export default function MemberApprovalsPage() {
                 {searchQuery.trim()
                   ? "Try a different keyword or clear the search input."
                   : filterStatus === "pending"
-                  ? "There are no pending project or member approvals at this time."
-                  : "No approval requests match the current filter."}
+                    ? "There are no pending project or member approvals at this time."
+                    : "No approval requests match the current filter."}
               </p>
             </div>
           </CardContent>
@@ -959,13 +1138,17 @@ export default function MemberApprovalsPage() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-slate-500">Sending Institution:</span>{" "}
+                        <span className="text-slate-500">
+                          Sending Institution:
+                        </span>{" "}
                         <span className="font-medium text-slate-800">
                           {approval.projectData.sendingInstitution}
                         </span>
                       </div>
                       <div className="col-span-2">
-                        <span className="text-slate-500">Funding Institution:</span>{" "}
+                        <span className="text-slate-500">
+                          Funding Institution:
+                        </span>{" "}
                         <span className="font-medium text-slate-800">
                           {approval.projectData.fundingInstitution}
                         </span>
@@ -975,33 +1158,47 @@ export default function MemberApprovalsPage() {
                 )}
                 {(() => {
                   const seenEmails = new Set<string>();
-                  const uniqueMembers = (approval.members || []).filter(member => {
-                    const email = member.formData?.email?.toLowerCase()?.trim();
-                    if (!email) return true;
-                    if (seenEmails.has(email)) return false;
-                    seenEmails.add(email);
-                    return true;
-                  });
+                  const uniqueMembers = (approval.members || []).filter(
+                    (member) => {
+                      const email = member.formData?.email
+                        ?.toLowerCase()
+                        ?.trim();
+                      if (!email) return true;
+                      if (seenEmails.has(email)) return false;
+                      seenEmails.add(email);
+                      return true;
+                    },
+                  );
 
                   // For project type, we want to prioritize validated primary members
                   // If we have both, only keep the validated one
                   let filteredMembers = uniqueMembers;
                   if (approval.type === "project") {
-                    const primaryMembers = uniqueMembers.filter(m => m.isPrimary);
+                    const primaryMembers = uniqueMembers.filter(
+                      (m) => m.isPrimary,
+                    );
                     if (primaryMembers.length > 1) {
-                        const validatedPrimary = primaryMembers.find(m => m.isValidated);
-                        if (validatedPrimary) {
-                            filteredMembers = uniqueMembers.filter(m => !m.isPrimary || m === validatedPrimary);
-                        }
+                      const validatedPrimary = primaryMembers.find(
+                        (m) => m.isValidated,
+                      );
+                      if (validatedPrimary) {
+                        filteredMembers = uniqueMembers.filter(
+                          (m) => !m.isPrimary || m === validatedPrimary,
+                        );
+                      }
                     }
                   }
 
                   // If member count is still 0 for an approved project, check if we have data in clientRequests
-                  const displayMembers = filteredMembers.length > 0 
-                    ? filteredMembers 
-                    : (approval.clientRequests || []).map(cr => ({
-                        formData: { name: cr.name || "Unnamed", email: cr.email }
-                      }));
+                  const displayMembers =
+                    filteredMembers.length > 0
+                      ? filteredMembers
+                      : (approval.clientRequests || []).map((cr) => ({
+                          formData: {
+                            name: cr.name || "Unnamed",
+                            email: cr.email,
+                          },
+                        }));
 
                   return (
                     <div className="flex items-center gap-2 text-sm text-slate-600">
@@ -1014,7 +1211,9 @@ export default function MemberApprovalsPage() {
                       <span className="text-slate-400">•</span>
                       <span>
                         {approval.type === "project"
-                          ? displayMembers.map((m: any) => m.formData.name || "Unnamed").join(", ")
+                          ? displayMembers
+                              .map((m: any) => m.formData.name || "Unnamed")
+                              .join(", ")
                           : displayMembers
                               .filter((m: any) => !m.isPrimary)
                               .map((m: any) => m.formData.name || "Unnamed")
@@ -1025,8 +1224,8 @@ export default function MemberApprovalsPage() {
                 })()}
                 {approval.reviewedBy && (
                   <div className="mt-2 text-xs text-slate-500">
-                    Reviewed by {approval.reviewedByName || approval.reviewedBy} on{" "}
-                    {formatDate(approval.reviewedAt)}
+                    Reviewed by {approval.reviewedByName || approval.reviewedBy}{" "}
+                    on {formatDate(approval.reviewedAt)}
                     {approval.reviewNotes && (
                       <span className="block mt-1 italic text-slate-400">
                         &ldquo;{approval.reviewNotes}&rdquo;
@@ -1046,12 +1245,15 @@ export default function MemberApprovalsPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3 text-xl">
               <ShieldCheck className="h-6 w-6 text-[#166FB5]" />
-              {selectedApproval?.type === "project" ? "Review New Project Submission" : "Review Member Submission"}
+              {selectedApproval?.type === "project"
+                ? "Review New Project Submission"
+                : "Review Member Submission"}
             </DialogTitle>
             <DialogDescription>
               {selectedApproval?.type === "project" ? (
                 <>
-                  Review the new project and team members submitted for approval.
+                  Review the new project and team members submitted for
+                  approval.
                 </>
               ) : (
                 <>
@@ -1072,46 +1274,57 @@ export default function MemberApprovalsPage() {
           {selectedApproval && (
             <div className="space-y-4 py-4">
               {/* Project Info for project-type approvals */}
-              {selectedApproval.type === "project" && selectedApproval.projectData && (
-                <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                  <h3 className="text-sm font-semibold text-purple-900 flex items-center gap-2 mb-3">
-                    <FileText className="h-4 w-4" />
-                    Project Details
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="col-span-2">
-                      <span className="text-purple-700 font-medium">Title:</span>{" "}
-                      <span className="font-semibold text-purple-900">
-                        {selectedApproval.projectData.title}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-purple-700 font-medium">Project Lead:</span>{" "}
-                      <span className="text-purple-900">
-                        {selectedApproval.projectData.projectLead}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-purple-700 font-medium">Start Date:</span>{" "}
-                      <span className="text-purple-900">
-                        {formatDate(selectedApproval.projectData.startDate)}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-purple-700 font-medium">Sending Institution:</span>{" "}
-                      <span className="text-purple-900">
-                        {selectedApproval.projectData.sendingInstitution}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-purple-700 font-medium">Funding Institution:</span>{" "}
-                      <span className="text-purple-900">
-                        {selectedApproval.projectData.fundingInstitution}
-                      </span>
+              {selectedApproval.type === "project" &&
+                selectedApproval.projectData && (
+                  <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                    <h3 className="text-sm font-semibold text-purple-900 flex items-center gap-2 mb-3">
+                      <FileText className="h-4 w-4" />
+                      Project Details
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="col-span-2">
+                        <span className="text-purple-700 font-medium">
+                          Title:
+                        </span>{" "}
+                        <span className="font-semibold text-purple-900">
+                          {selectedApproval.projectData.title}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-purple-700 font-medium">
+                          Project Lead:
+                        </span>{" "}
+                        <span className="text-purple-900">
+                          {selectedApproval.projectData.projectLead}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-purple-700 font-medium">
+                          Start Date:
+                        </span>{" "}
+                        <span className="text-purple-900">
+                          {formatDate(selectedApproval.projectData.startDate)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-purple-700 font-medium">
+                          Sending Institution:
+                        </span>{" "}
+                        <span className="text-purple-900">
+                          {selectedApproval.projectData.sendingInstitution}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-purple-700 font-medium">
+                          Funding Institution:
+                        </span>{" "}
+                        <span className="text-purple-900">
+                          {selectedApproval.projectData.fundingInstitution}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {/* Submission Info */}
               <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
@@ -1119,7 +1332,8 @@ export default function MemberApprovalsPage() {
                   <div>
                     <span className="text-slate-500">Submitted by:</span>{" "}
                     <span className="font-medium text-slate-800">
-                      {selectedApproval.submittedByName || selectedApproval.submittedBy}
+                      {selectedApproval.submittedByName ||
+                        selectedApproval.submittedBy}
                     </span>
                   </div>
                   <div>
@@ -1150,166 +1364,225 @@ export default function MemberApprovalsPage() {
                         Array.from(
                           new Map(
                             (selectedApproval.members || []).map((m) => [
-                              m.formData?.email?.toLowerCase() || Math.random().toString(),
+                              m.formData?.email?.toLowerCase() ||
+                                Math.random().toString(),
                               m,
-                            ])
-                          ).values()
+                            ]),
+                          ).values(),
                         ).length
                       })`
                     : `Team Members (${
-                        (selectedApproval.members || []).filter((m) => !m.isPrimary).length
+                        (selectedApproval.members || []).filter(
+                          (m) => !m.isPrimary,
+                        ).length
                       })`}
                 </h3>
                 {(() => {
-                  const items = selectedApproval.type === "project"
-                    ? Array.from(
-                        (selectedApproval.members || []).reduce((acc: Map<string, any>, member: any) => {
-                          const email = member.formData?.email?.toLowerCase();
-                          if (!email) {
-                            acc.set(Math.random().toString(), member);
-                            return acc;
-                          }
+                  const items =
+                    selectedApproval.type === "project"
+                      ? Array.from(
+                          (selectedApproval.members || []).reduce(
+                            (acc: Map<string, any>, member: any) => {
+                              const email =
+                                member.formData?.email?.toLowerCase();
+                              if (!email) {
+                                acc.set(Math.random().toString(), member);
+                                return acc;
+                              }
 
-                          const existing = acc.get(email);
-                          // Prioritize validated members
-                          if (!existing || (!existing.isValidated && member.isValidated)) {
-                            acc.set(email, member);
-                          }
-                          return acc;
-                        }, new Map())
-                      ).map((entry: any) => entry[1])
-                    : (selectedApproval.members || []).filter((m: any) => !m.isPrimary);
+                              const existing = acc.get(email);
+                              // Prioritize validated members
+                              if (
+                                !existing ||
+                                (!existing.isValidated && member.isValidated)
+                              ) {
+                                acc.set(email, member);
+                              }
+                              return acc;
+                            },
+                            new Map(),
+                          ),
+                        ).map((entry: any) => entry[1])
+                      : (selectedApproval.members || []).filter(
+                          (m: any) => !m.isPrimary,
+                        );
 
                   if (items.length === 0) {
                     return (
                       <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
-                        No additional members pending CID issuance for this submission.
+                        No additional members pending CID issuance for this
+                        submission.
                       </div>
                     );
                   }
 
                   return (items as any[]).map((member, idx) => {
                     const memberEmail = normalizeEmail(member.formData?.email);
-                    const existingClient = memberEmail ? existingClientsByEmail[memberEmail] : undefined;
-                    const decision = memberEmail ? memberCidDecisions[memberEmail] ?? 'update' : undefined;
+                    const existingClient = memberEmail
+                      ? existingClientsByEmail[memberEmail]
+                      : undefined;
+                    const decision = memberEmail
+                      ? (memberCidDecisions[memberEmail] ?? "update")
+                      : undefined;
 
                     return (
-                    <Card
-                      key={member.tempId || idx}
-                      className={existingClient ? "border-2 border-amber-400 bg-amber-50/30" : "border border-slate-200"}
-                    >
-                      <CardContent className="p-4">
-                        {/* Existing client banner */}
-                        {existingClient && (
-                          <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 space-y-2">
+                      <Card
+                        key={member.tempId || idx}
+                        className={
+                          existingClient
+                            ? "border-2 border-amber-400 bg-amber-50/30"
+                            : "border border-slate-200"
+                        }
+                      >
+                        <CardContent className="p-4">
+                          {/* Existing client banner */}
+                          {existingClient && (
+                            <div className="mb-3 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2.5 space-y-2">
+                              <div className="flex items-center gap-2">
+                                <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                                <span className="text-sm font-semibold text-amber-800">
+                                  Existing client found —{" "}
+                                  <span className="font-mono text-amber-900">
+                                    {existingClient.cid}
+                                  </span>
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-amber-700 pl-6">
+                                <span>
+                                  <span className="font-semibold">Name:</span>{" "}
+                                  {existingClient.name || "—"}
+                                </span>
+                                <span>
+                                  <span className="font-semibold">
+                                    Affiliation:
+                                  </span>{" "}
+                                  {existingClient.affiliation || "—"}
+                                </span>
+                                <span>
+                                  <span className="font-semibold">Phone:</span>{" "}
+                                  {existingClient.phoneNumber || "—"}
+                                </span>
+                                <span className="col-span-2">
+                                  <span className="font-semibold">
+                                    Address:
+                                  </span>{" "}
+                                  {existingClient.affiliationAddress || "—"}
+                                </span>
+                              </div>
+                              {/* Admin decision radio */}
+                              <div className="pl-6 flex flex-col gap-1.5 pt-1 border-t border-amber-200">
+                                <p className="text-xs font-semibold text-amber-800 mb-0.5">
+                                  How should this member be registered?
+                                </p>
+                                <label className="flex items-start gap-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name={`cid-decision-${memberEmail}`}
+                                    value="update"
+                                    checked={decision === "update"}
+                                    onChange={() =>
+                                      setMemberCidDecisions((prev) => ({
+                                        ...prev,
+                                        [memberEmail]: "update",
+                                      }))
+                                    }
+                                    className="mt-0.5 accent-amber-600"
+                                  />
+                                  <span className="text-xs text-amber-900">
+                                    <span className="font-semibold">
+                                      Update existing CID ({existingClient.cid})
+                                    </span>{" "}
+                                    — overwrite name, affiliation, phone &amp;
+                                    address with submitted data
+                                  </span>
+                                </label>
+                                <label className="flex items-start gap-2 cursor-pointer">
+                                  <input
+                                    type="radio"
+                                    name={`cid-decision-${memberEmail}`}
+                                    value="new"
+                                    checked={decision === "new"}
+                                    onChange={() =>
+                                      setMemberCidDecisions((prev) => ({
+                                        ...prev,
+                                        [memberEmail]: "new",
+                                      }))
+                                    }
+                                    className="mt-0.5 accent-amber-600"
+                                  />
+                                  <span className="text-xs text-amber-900">
+                                    <span className="font-semibold">
+                                      Assign a new CID
+                                    </span>{" "}
+                                    — create a separate client record (e.g.
+                                    different affiliation or project)
+                                  </span>
+                                </label>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex items-start justify-between mb-3">
+                            <h4 className="font-semibold text-slate-800 flex items-center gap-2">
+                              <User className="h-4 w-4 text-[#166FB5]" />
+                              {member.formData.name || "Unnamed"}
+                              {member.isPrimary &&
+                                selectedApproval.type === "project" && (
+                                  <Badge className="bg-amber-100 text-amber-700 border-amber-200 border ml-2">
+                                    Primary Member
+                                  </Badge>
+                                )}
+                            </h4>
+                            <Badge
+                              className={
+                                member.isValidated
+                                  ? "bg-blue-100 text-blue-700 border-blue-200 border"
+                                  : "bg-yellow-100 text-yellow-700 border-yellow-200 border"
+                              }
+                            >
+                              {member.isValidated ? "Validated" : "Draft"}
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3 text-sm">
                             <div className="flex items-center gap-2">
-                              <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />
-                              <span className="text-sm font-semibold text-amber-800">
-                                Existing client found —{" "}
-                                <span className="font-mono text-amber-900">{existingClient.cid}</span>
+                              <Mail className="h-3.5 w-3.5 text-slate-400" />
+                              <span className="text-slate-700">
+                                {member.formData.email || "—"}
                               </span>
                             </div>
-                            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xs text-amber-700 pl-6">
-                              <span><span className="font-semibold">Name:</span> {existingClient.name || "—"}</span>
-                              <span><span className="font-semibold">Affiliation:</span> {existingClient.affiliation || "—"}</span>
-                              <span><span className="font-semibold">Phone:</span> {existingClient.phoneNumber || "—"}</span>
-                              <span className="col-span-2"><span className="font-semibold">Address:</span> {existingClient.affiliationAddress || "—"}</span>
+                            <div className="flex items-center gap-2">
+                              <Phone className="h-3.5 w-3.5 text-slate-400" />
+                              <span className="text-slate-700">
+                                {member.formData.phoneNumber || "—"}
+                              </span>
                             </div>
-                            {/* Admin decision radio */}
-                            <div className="pl-6 flex flex-col gap-1.5 pt-1 border-t border-amber-200">
-                              <p className="text-xs font-semibold text-amber-800 mb-0.5">How should this member be registered?</p>
-                              <label className="flex items-start gap-2 cursor-pointer">
-                                <input
-                                  type="radio"
-                                  name={`cid-decision-${memberEmail}`}
-                                  value="update"
-                                  checked={decision === 'update'}
-                                  onChange={() => setMemberCidDecisions((prev) => ({ ...prev, [memberEmail]: 'update' }))}
-                                  className="mt-0.5 accent-amber-600"
-                                />
-                                <span className="text-xs text-amber-900">
-                                  <span className="font-semibold">Update existing CID ({existingClient.cid})</span>
-                                  {" "}— overwrite name, affiliation, phone &amp; address with submitted data
-                                </span>
-                              </label>
-                              <label className="flex items-start gap-2 cursor-pointer">
-                                <input
-                                  type="radio"
-                                  name={`cid-decision-${memberEmail}`}
-                                  value="new"
-                                  checked={decision === 'new'}
-                                  onChange={() => setMemberCidDecisions((prev) => ({ ...prev, [memberEmail]: 'new' }))}
-                                  className="mt-0.5 accent-amber-600"
-                                />
-                                <span className="text-xs text-amber-900">
-                                  <span className="font-semibold">Assign a new CID</span>
-                                  {" "}— create a separate client record (e.g. different affiliation or project)
-                                </span>
-                              </label>
+                            <div className="flex items-center gap-2">
+                              <Building2 className="h-3.5 w-3.5 text-slate-400" />
+                              <span className="text-slate-700">
+                                {member.formData.affiliation || "—"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Briefcase className="h-3.5 w-3.5 text-slate-400" />
+                              <span className="text-slate-700">
+                                {member.formData.designation || "—"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 col-span-2">
+                              <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                              <span className="text-slate-700">
+                                {member.formData.affiliationAddress || "—"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <User className="h-3.5 w-3.5 text-slate-400" />
+                              <span className="text-slate-700">
+                                Sex: {member.formData.sex || "—"}
+                              </span>
                             </div>
                           </div>
-                        )}
-
-                        <div className="flex items-start justify-between mb-3">
-                          <h4 className="font-semibold text-slate-800 flex items-center gap-2">
-                            <User className="h-4 w-4 text-[#166FB5]" />
-                            {member.formData.name || "Unnamed"}
-                            {member.isPrimary && selectedApproval.type === "project" && (
-                              <Badge className="bg-amber-100 text-amber-700 border-amber-200 border ml-2">
-                                Primary Member
-                              </Badge>
-                            )}
-                          </h4>
-                          <Badge
-                            className={
-                              member.isValidated
-                                ? "bg-blue-100 text-blue-700 border-blue-200 border"
-                                : "bg-yellow-100 text-yellow-700 border-yellow-200 border"
-                            }
-                          >
-                            {member.isValidated ? "Validated" : "Draft"}
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-3.5 w-3.5 text-slate-400" />
-                            <span className="text-slate-700">
-                              {member.formData.email || "—"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-3.5 w-3.5 text-slate-400" />
-                            <span className="text-slate-700">
-                              {member.formData.phoneNumber || "—"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Building2 className="h-3.5 w-3.5 text-slate-400" />
-                            <span className="text-slate-700">
-                              {member.formData.affiliation || "—"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Briefcase className="h-3.5 w-3.5 text-slate-400" />
-                            <span className="text-slate-700">
-                              {member.formData.designation || "—"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 col-span-2">
-                            <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                            <span className="text-slate-700">
-                              {member.formData.affiliationAddress || "—"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <User className="h-3.5 w-3.5 text-slate-400" />
-                            <span className="text-slate-700">
-                              Sex: {member.formData.sex || "—"}
-                            </span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
                     );
                   });
                 })()}
@@ -1319,7 +1592,10 @@ export default function MemberApprovalsPage() {
               {selectedApproval.status === "pending" && (
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold text-slate-700">
-                    Review Notes <span className="text-slate-400 font-normal">(required for cancellation)</span>
+                    Review Notes{" "}
+                    <span className="text-slate-400 font-normal">
+                      (required for cancellation)
+                    </span>
                   </Label>
                   <Textarea
                     value={reviewNotes}
@@ -1336,7 +1612,8 @@ export default function MemberApprovalsPage() {
                   <span className="text-slate-500">
                     Previously reviewed by{" "}
                     <span className="font-medium text-slate-700">
-                      {selectedApproval.reviewedByName || selectedApproval.reviewedBy}
+                      {selectedApproval.reviewedByName ||
+                        selectedApproval.reviewedBy}
                     </span>{" "}
                     on {formatDate(selectedApproval.reviewedAt)}
                   </span>
