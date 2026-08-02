@@ -115,6 +115,75 @@ const formatServiceType = (serviceType: string): string => {
   return serviceType.charAt(0).toUpperCase() + serviceType.slice(1);
 };
 
+async function resolveInquiryUuid(
+  email?: string | null,
+): Promise<string | null> {
+  const normalizedEmail =
+    typeof email === "string" ? email.trim().toLowerCase() : "";
+  if (!normalizedEmail) return null;
+
+  if (!adminDb) return null;
+
+  try {
+    const userSnapshot = await adminDb
+      .collection("users")
+      .where("email", "==", normalizedEmail)
+      .limit(1)
+      .get();
+
+    if (!userSnapshot.empty) {
+      const userData = userSnapshot.docs[0].data() as { uid?: string };
+      if (typeof userData?.uid === "string" && userData.uid) {
+        return userData.uid;
+      }
+      return null;
+    }
+
+    // Fallback for legacy records where email casing was not normalized.
+    const allUsersSnapshot = await adminDb.collection("users").get();
+    for (const userDoc of allUsersSnapshot.docs) {
+      const userData = userDoc.data() as { email?: string; uid?: string };
+      const storedEmail =
+        typeof userData?.email === "string"
+          ? userData.email.trim().toLowerCase()
+          : "";
+
+      if (storedEmail !== normalizedEmail) continue;
+
+      if (typeof userData?.uid === "string" && userData.uid) {
+        return userData.uid;
+      }
+
+      return null;
+    }
+
+    // Fallback for legacy records where email casing was not normalized.
+    const allUsersSnapshot = await adminDb.collection("users").get();
+    for (const userDoc of allUsersSnapshot.docs) {
+      const userData = userDoc.data() as { email?: string; uid?: string };
+      const storedEmail =
+        typeof userData?.email === "string"
+          ? userData.email.trim().toLowerCase()
+          : "";
+
+      if (storedEmail !== normalizedEmail) continue;
+
+      if (typeof userData?.uid === "string" && userData.uid) {
+        return userData.uid;
+      }
+
+      return userDoc.id || null;
+    }
+  } catch (fallbackError) {
+    console.warn(
+      `Unable to resolve Firestore user UID for inquiry email ${normalizedEmail}:`,
+      fallbackError,
+    );
+  }
+
+  return null;
+}
+
 const formatSpecies = (species?: string, otherSpecies?: string): string => {
   if (!species) return "";
   const speciesLabel = species

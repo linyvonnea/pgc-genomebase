@@ -1,17 +1,21 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { saveQuotationToFirestore, getAllQuotations } from "@/services/quotationService";
+import {
+  saveQuotationToFirestore,
+  getAllQuotations,
+} from "@/services/quotationService";
 import { updateInquiryStatus, getInquiryById } from "@/services/inquiryService";
 import { QuotationRecord } from "@/types/Quotation";
 import { logActivity } from "@/services/activityLogService";
 import { sanitizeObject } from "@/lib/sanitizeObject";
 import { collection, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { adminDb } from "@/lib/firebase-admin";
 
 export async function saveQuotationAction(
   quotation: QuotationRecord,
-  userInfo: { name: string; email: string }
+  userInfo: { name: string; email: string },
 ) {
   try {
     const cleanedQuotation = sanitizeObject(quotation) as QuotationRecord;
@@ -24,9 +28,35 @@ export async function saveQuotationAction(
 
         // Send email to client about quotation availability
         const inquiry = await getInquiryById(quotation.inquiryId);
+
+        // Keep inquiry ownership in sync during quotation send by copying
+        // the already-saved quotation uuid to the linked inquiry doc.
+        if (adminDb && cleanedQuotation.referenceNumber) {
+          const savedQuotationSnap = await adminDb
+            .collection("quotations")
+            .doc(cleanedQuotation.referenceNumber)
+            .get();
+
+          const savedQuotationData = savedQuotationSnap.exists
+            ? (savedQuotationSnap.data() as { uuid?: string | null })
+            : null;
+          const quotationUuid =
+            typeof savedQuotationData?.uuid === "string" &&
+            savedQuotationData.uuid.trim()
+              ? savedQuotationData.uuid
+              : null;
+
+          if (quotationUuid) {
+            await adminDb
+              .collection("inquiries")
+              .doc(quotation.inquiryId)
+              .set({ uuid: quotationUuid }, { merge: true });
+          }
+        }
+
         if (inquiry && inquiry.email) {
           const mailCollection = collection(db, "mail");
-          
+
           const clientEmailHtml = `
             <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; color: #334155; line-height: 1.6;">
               <div style="background-color: #f1f5f9; padding: 24px; border-radius: 8px; border: 1px solid #e2e8f0;">
@@ -68,10 +98,12 @@ Philippine Genome Center Visayas
             message: {
               subject: "Quotation Available: PGC Visayas",
               text: clientEmailText,
-              html: clientEmailHtml
-            }
+              html: clientEmailHtml,
+            },
           });
-          console.log(`✅ Quotation availability email sent to ${inquiry.email}`);
+          console.log(
+            `✅ Quotation availability email sent to ${inquiry.email}`,
+          );
 
           // In-app notification
           await addDoc(collection(db, "clientNotifications"), {
@@ -101,8 +133,8 @@ Philippine Genome Center Visayas
       changesAfter: quotation,
     });
 
-    revalidatePath('/admin/quotations');
-    revalidatePath('/admin/inquiries');
+    revalidatePath("/admin/quotations");
+    revalidatePath("/admin/inquiries");
     return { success: true };
   } catch (error) {
     console.error("Error saving quotation:", error);
