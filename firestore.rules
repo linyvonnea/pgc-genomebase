@@ -53,6 +53,19 @@ service cloud.firestore {
       return isAdminRole() || isClientRole();
     }
 
+    function hasOwnedUuid(uuidValue) {
+      return isSignedIn()
+        && isClientOrAdmin()
+        && uuidValue != null
+        && uuidValue == userUid();
+    }
+
+    function canAccessUuidDoc(uuidValue) {
+      return isSignedIn()
+        && isClientOrAdmin()
+        && (isAdminRole() || hasOwnedUuid(uuidValue));
+    }
+
     // Ownership helper during migration (uid-first, email fallback).
     function ownsByUidOrEmail(uidValue, emailValue) {
       return isSignedIn() && (
@@ -150,19 +163,21 @@ service cloud.firestore {
     match /inquiries/{inquiryId} {
       allow create: if isSignedIn()
         && isClientOrAdmin()
-        && request.resource.data.uuid == userUid();
+        && (
+          (isAdminRole() && request.resource.data.uuid is string)
+          || hasOwnedUuid(request.resource.data.uuid)
+        );
 
-      allow read: if isSignedIn()
-        && isClientOrAdmin()
-        && (isAdminRole() || resource.data.uuid == userUid());
+      allow read: if canAccessUuidDoc(resource.data.uuid);
 
       allow update, delete: if isSignedIn()
         && isClientOrAdmin()
         && (
           isAdminRole()
           || (
-            resource.data.uuid == userUid()
-            && request.resource.data.uuid == userUid()
+            hasOwnedUuid(resource.data.uuid)
+            && hasOwnedUuid(request.resource.data.uuid)
+            && request.resource.data.uuid == resource.data.uuid
           )
         );
     }
@@ -321,13 +336,47 @@ service cloud.firestore {
     }
 
     match /quotations/{quotationId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      allow create: if isSignedIn()
+        && isClientOrAdmin()
+        && (
+          (isAdminRole() && request.resource.data.uuid is string)
+          || hasOwnedUuid(request.resource.data.uuid)
+        );
+
+      allow read: if canAccessUuidDoc(resource.data.uuid);
+
+      allow update, delete: if isSignedIn()
+        && isClientOrAdmin()
+        && (
+          isAdminRole()
+          || (
+            hasOwnedUuid(resource.data.uuid)
+            && hasOwnedUuid(request.resource.data.uuid)
+            && request.resource.data.uuid == resource.data.uuid
+          )
+        );
     }
 
     match /projects/{projectId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      allow create: if isSignedIn()
+        && isClientOrAdmin()
+        && (
+          (isAdminRole() && request.resource.data.uuid is string)
+          || hasOwnedUuid(request.resource.data.uuid)
+        );
+
+      allow read: if canAccessUuidDoc(resource.data.uuid);
+
+      allow update, delete: if isSignedIn()
+        && isClientOrAdmin()
+        && (
+          isAdminRole()
+          || (
+            hasOwnedUuid(resource.data.uuid)
+            && hasOwnedUuid(request.resource.data.uuid)
+            && request.resource.data.uuid == resource.data.uuid
+          )
+        );
 
       match /officialReceipts/{receiptId} {
         allow read: if isSignedIn();
@@ -412,8 +461,25 @@ service cloud.firestore {
     }
 
     match /chargeSlips/{chargeSlipId} {
-      allow read: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      allow create: if isSignedIn()
+        && isClientOrAdmin()
+        && (
+          (isAdminRole() && request.resource.data.uuid is string)
+          || hasOwnedUuid(request.resource.data.uuid)
+        );
+
+      allow read: if canAccessUuidDoc(resource.data.uuid);
+
+      allow update, delete: if isSignedIn()
+        && isClientOrAdmin()
+        && (
+          isAdminRole()
+          || (
+            hasOwnedUuid(resource.data.uuid)
+            && hasOwnedUuid(request.resource.data.uuid)
+            && request.resource.data.uuid == resource.data.uuid
+          )
+        );
     }
 
     match /receipts/{receiptId} {
