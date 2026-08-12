@@ -333,26 +333,47 @@ export function QuotationPDF({
           <View style={styles.signature}>
             <Text>Sincerely,</Text>
             {(() => {
-              const name = preparedBy.name.trim().toUpperCase();
+              const rawName = preparedBy.name || "";
+              const normalizedName = rawName
+                .trim()
+                .toUpperCase()
+                .replace(/[.,]/g, "")
+                .replace(/\s+/g, " ");
               let signatureSrc = null;
 
-              if (name.includes("CARMEL"))
+              const isMatch = (...keywords: string[]) =>
+                keywords.every((keyword) => normalizedName.includes(keyword));
+
+              if (isMatch("CARMEL"))
                 signatureSrc = "/assets/signature_carmel.png";
-              else if (name.includes("ALBERT") && name.includes("NOBLEZADA"))
+              else if (isMatch("ALBERT", "NOBLEZADA"))
                 signatureSrc = "/assets/signature_noblezada.png";
-              else if (name.includes("CRISTINE") && name.includes("FLORECE"))
+              else if (
+                isMatch("CRISTINE", "FLORECE") ||
+                normalizedName.includes("CHRISTINE FLORECE") ||
+                normalizedName.includes("CRISTINE FLORECE")
+              )
                 signatureSrc = "/assets/signature_florece.png";
-              else if (name.includes("CAMILLE") && name.includes("MUEDA"))
+              else if (isMatch("CAMILLE", "MUEDA"))
                 signatureSrc = "/assets/signature_mueda.png";
-              else if (name.includes("MICAH") && name.includes("LOJERA"))
+              else if (isMatch("MICAH", "LOJERA"))
                 signatureSrc = "/assets/signature_lojera.png";
-              else if (name.includes("JASMINE") && name.includes("VELO"))
+              else if (isMatch("JASMINE", "VELO"))
                 signatureSrc = "/assets/signature_velo.png";
-              else if (name.includes("KARL") && name.includes("TENIZO"))
+              else if (isMatch("KARL", "TENIZO"))
                 signatureSrc = "/assets/signature_tenizo.png";
-              else if (name.includes("MERLITO") && name.includes("DAYON"))
+              else if (
+                isMatch("MERLITO", "DAYON") ||
+                normalizedName.includes("MERLITO DAYON") ||
+                normalizedName.includes("MERLITO A DAYON") ||
+                normalizedName.includes("MERLITO A DAYON JR") ||
+                normalizedName.includes("MERLITO A DAYON JR.") ||
+                normalizedName.includes("MERLITO P. DAYON") ||
+                normalizedName.includes("MERLITO A. DAYON JR") ||
+                normalizedName.includes("MERLITO A. DAYON JR.")
+              )
                 signatureSrc = "/assets/signature_dayon.png";
-              else if (name.includes("VICTOR") && name.includes("FERRIOLS"))
+              else if (isMatch("VICTOR", "FERRIOLS"))
                 signatureSrc = "/assets/signature_ferriols.png";
 
               return (
