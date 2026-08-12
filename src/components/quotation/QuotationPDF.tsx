@@ -122,6 +122,67 @@ function formatMoney(num: number) {
   result = integer + result;
   return result + "." + decimal;
 }
+
+function normalizeSignatureName(name: string) {
+  return (name || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[.,]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase();
+}
+
+function getSignatureAssetByName(name: string): string | null {
+  const normalized = normalizeSignatureName(name);
+  const exactMatches: Record<string, string> = {
+    CARMEL: "/assets/signature_carmel.png",
+    "ALBERT NOBLEZADA": "/assets/signature_noblezada.png",
+    "CRISTINE FLORECE": "/assets/signature_florece.png",
+    "CHRISTINE FLORECE": "/assets/signature_florece.png",
+    "CAMILLE MUEDA": "/assets/signature_mueda.png",
+    "MICAH LOJERA": "/assets/signature_lojera.png",
+    "JASMINE VELO": "/assets/signature_velo.png",
+    "KARL TENIZO": "/assets/signature_tenizo.png",
+    "MERLITO DAYON": "/assets/signature_dayon.png",
+    "MERLITO A DAYON": "/assets/signature_dayon.png",
+    "MERLITO A DAYON JR": "/assets/signature_dayon.png",
+    "MERLITO DAYON JR": "/assets/signature_dayon.png",
+    "VICTOR FERRIOLS": "/assets/signature_ferriols.png",
+  };
+
+  if (exactMatches[normalized]) return exactMatches[normalized];
+
+  if (normalized.includes("CARMEL")) return "/assets/signature_carmel.png";
+  if (normalized.includes("ALBERT") && normalized.includes("NOBLEZADA"))
+    return "/assets/signature_noblezada.png";
+  if (
+    (normalized.includes("CRISTINE") && normalized.includes("FLORECE")) ||
+    (normalized.includes("CHRISTINE") && normalized.includes("FLORECE"))
+  ) {
+    return "/assets/signature_florece.png";
+  }
+  if (normalized.includes("CAMILLE") && normalized.includes("MUEDA"))
+    return "/assets/signature_mueda.png";
+  if (normalized.includes("MICAH") && normalized.includes("LOJERA"))
+    return "/assets/signature_lojera.png";
+  if (normalized.includes("JASMINE") && normalized.includes("VELO"))
+    return "/assets/signature_velo.png";
+  if (normalized.includes("KARL") && normalized.includes("TENIZO"))
+    return "/assets/signature_tenizo.png";
+  if (
+    (normalized.includes("MERLITO") && normalized.includes("DAYON")) ||
+    (normalized.includes("MERLITO A") && normalized.includes("DAYON")) ||
+    (normalized.includes("MERLITO A.") && normalized.includes("DAYON"))
+  ) {
+    return "/assets/signature_dayon.png";
+  }
+  if (normalized.includes("VICTOR") && normalized.includes("FERRIOLS"))
+    return "/assets/signature_ferriols.png";
+
+  return null;
+}
+
 const r2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
 
 type ServiceLike = SelectedService & {
@@ -333,48 +394,7 @@ export function QuotationPDF({
           <View style={styles.signature}>
             <Text>Sincerely,</Text>
             {(() => {
-              const rawName = preparedBy.name || "";
-              const normalizedName = rawName
-                .trim()
-                .toUpperCase()
-                .replace(/[.,]/g, "")
-                .replace(/\s+/g, " ");
-              let signatureSrc = null;
-
-              const isMatch = (...keywords: string[]) =>
-                keywords.every((keyword) => normalizedName.includes(keyword));
-
-              if (isMatch("CARMEL"))
-                signatureSrc = "/assets/signature_carmel.png";
-              else if (isMatch("ALBERT", "NOBLEZADA"))
-                signatureSrc = "/assets/signature_noblezada.png";
-              else if (
-                isMatch("CRISTINE", "FLORECE") ||
-                normalizedName.includes("CHRISTINE FLORECE") ||
-                normalizedName.includes("CRISTINE FLORECE")
-              )
-                signatureSrc = "/assets/signature_florece.png";
-              else if (isMatch("CAMILLE", "MUEDA"))
-                signatureSrc = "/assets/signature_mueda.png";
-              else if (isMatch("MICAH", "LOJERA"))
-                signatureSrc = "/assets/signature_lojera.png";
-              else if (isMatch("JASMINE", "VELO"))
-                signatureSrc = "/assets/signature_velo.png";
-              else if (isMatch("KARL", "TENIZO"))
-                signatureSrc = "/assets/signature_tenizo.png";
-              else if (
-                isMatch("MERLITO", "DAYON") ||
-                normalizedName.includes("MERLITO DAYON") ||
-                normalizedName.includes("MERLITO A DAYON") ||
-                normalizedName.includes("MERLITO A DAYON JR") ||
-                normalizedName.includes("MERLITO A DAYON JR.") ||
-                normalizedName.includes("MERLITO P. DAYON") ||
-                normalizedName.includes("MERLITO A. DAYON JR") ||
-                normalizedName.includes("MERLITO A. DAYON JR.")
-              )
-                signatureSrc = "/assets/signature_dayon.png";
-              else if (isMatch("VICTOR", "FERRIOLS"))
-                signatureSrc = "/assets/signature_ferriols.png";
+              const signatureSrc = getSignatureAssetByName(preparedBy.name);
 
               return (
                 <View>
