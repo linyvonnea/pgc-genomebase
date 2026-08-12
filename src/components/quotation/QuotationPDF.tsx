@@ -1,36 +1,111 @@
 // src/app/components/quotation/QuotationPDF.tsx
 "use client";
 
-import { Page, Text, View, Document, StyleSheet, Image } from "@react-pdf/renderer";
+import {
+  Page,
+  Text,
+  View,
+  Document,
+  StyleSheet,
+  Image,
+} from "@react-pdf/renderer";
 import { SelectedService } from "@/types/Quotation";
 import { pgcLogo, schoolLogo } from "@/assets/logosBase64";
 import { signatureCarmel } from "@/assets/signatures";
 
 const styles = StyleSheet.create({
   page: { padding: 36, fontSize: 10, fontFamily: "Helvetica", lineHeight: 1.4 },
-  logoRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 },
+  logoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
   logo: { width: 45, height: 45 },
   pgcLogo: { width: 150, height: 45, objectFit: "contain" },
-  title: { fontSize: 14, fontWeight: "bold", textAlign: "center", marginVertical: 4 },
+  title: {
+    fontSize: 14,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginVertical: 4,
+  },
   subtitle: { fontSize: 10, textAlign: "center", marginBottom: 16 },
   section: { marginBottom: 10 },
   label: { fontWeight: "bold" },
-  table: { width: "100%", borderTop: "1pt solid black", borderLeft: "1pt solid black" },
+  table: {
+    width: "100%",
+    borderTop: "1pt solid black",
+    borderLeft: "1pt solid black",
+  },
   tableRow: { flexDirection: "row" },
   tableHeader: { fontWeight: "bold", backgroundColor: "#eee" },
-  headerCell: { flex: 1, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
-  cell: { flex: 1, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
-  serviceCell: { flex: 3, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
-  unitCell: { flex: 1, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
-  priceCell: { flex: 1, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
-  qtyCell: { flex: 0.6, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
-  amountCell: { flex: 1.2, padding: 4, borderRight: "1pt solid black", borderBottom: "1pt solid black" },
-  categoryHeader: { padding: 4, fontWeight: "bold", backgroundColor: "#f0f0f0", borderBottom: "1pt solid black", fontSize: 10 },
-  summary: { marginTop: 12, alignItems: "flex-end", textAlign: "right", gap: 2 },
+  headerCell: {
+    flex: 1,
+    padding: 4,
+    borderRight: "1pt solid black",
+    borderBottom: "1pt solid black",
+  },
+  cell: {
+    flex: 1,
+    padding: 4,
+    borderRight: "1pt solid black",
+    borderBottom: "1pt solid black",
+  },
+  serviceCell: {
+    flex: 3,
+    padding: 4,
+    borderRight: "1pt solid black",
+    borderBottom: "1pt solid black",
+  },
+  unitCell: {
+    flex: 1,
+    padding: 4,
+    borderRight: "1pt solid black",
+    borderBottom: "1pt solid black",
+  },
+  priceCell: {
+    flex: 1,
+    padding: 4,
+    borderRight: "1pt solid black",
+    borderBottom: "1pt solid black",
+  },
+  qtyCell: {
+    flex: 0.6,
+    padding: 4,
+    borderRight: "1pt solid black",
+    borderBottom: "1pt solid black",
+  },
+  amountCell: {
+    flex: 1.2,
+    padding: 4,
+    borderRight: "1pt solid black",
+    borderBottom: "1pt solid black",
+  },
+  categoryHeader: {
+    padding: 4,
+    fontWeight: "bold",
+    backgroundColor: "#f0f0f0",
+    borderBottom: "1pt solid black",
+    fontSize: 10,
+  },
+  summary: {
+    marginTop: 12,
+    alignItems: "flex-end",
+    textAlign: "right",
+    gap: 2,
+  },
   italicNote: { fontStyle: "italic", fontSize: 9, marginTop: 2 },
   signature: { marginTop: 20, fontSize: 10, marginBottom: 40 },
   footerSection: { marginTop: 16, marginBottom: 40 },
-  pageNumber: { position: "absolute", fontSize: 10, bottom: 20, left: 0, right: 0, textAlign: "center", color: "#333" },
+  pageNumber: {
+    position: "absolute",
+    fontSize: 10,
+    bottom: 20,
+    left: 0,
+    right: 0,
+    textAlign: "center",
+    color: "#333",
+  },
 });
 
 function formatMoney(num: number) {
@@ -75,7 +150,12 @@ export function QuotationPDF({
   useAffiliationAsClientName, // <-- NEW
 }: {
   services: SelectedService[];
-  clientInfo: { name: string; institution: string; designation: string; email: string };
+  clientInfo: {
+    name: string;
+    institution: string;
+    designation: string;
+    email: string;
+  };
   referenceNumber: string;
   useInternalPrice: boolean;
   preparedBy: { name: string; position: string };
@@ -85,7 +165,9 @@ export function QuotationPDF({
 }) {
   const safeServices: ServiceLike[] = (services ?? []).filter(
     (s): s is ServiceLike =>
-      s != null && typeof (s as any).price === "number" && typeof (s as any).quantity === "number"
+      s != null &&
+      typeof (s as any).price === "number" &&
+      typeof (s as any).quantity === "number",
   );
   // Debug: Log services with descriptions
   /*console.log('PDF Services:', safeServices.map(s => ({
@@ -94,14 +176,20 @@ export function QuotationPDF({
     hasDescription: !!(s as any).description
   })));*/
   // group by category (fallback to "Uncategorized")
-  const groupedByCategory = safeServices.reduce<Record<string, ServiceLike[]>>((acc, svc) => {
-    const key = svc.category && svc.category.trim() ? svc.category : "Uncategorized";
-    (acc[key] ||= []).push(svc);
-    return acc;
-  }, {});
+  const groupedByCategory = safeServices.reduce<Record<string, ServiceLike[]>>(
+    (acc, svc) => {
+      const key =
+        svc.category && svc.category.trim() ? svc.category : "Uncategorized";
+      (acc[key] ||= []).push(svc);
+      return acc;
+    },
+    {},
+  );
 
   // Default math (new quotes): 12% of subtotal if internal
-  const computedSubtotal = r2(safeServices.reduce((sum, s) => sum + s.price * s.quantity, 0));
+  const computedSubtotal = r2(
+    safeServices.reduce((sum, s) => sum + s.price * s.quantity, 0),
+  );
   const computedDiscount = useInternalPrice ? r2(computedSubtotal * 0.12) : 0;
   const computedTotal = r2(computedSubtotal - computedDiscount);
 
@@ -118,25 +206,49 @@ export function QuotationPDF({
           <Image src={pgcLogo} style={styles.pgcLogo} />
         </View>
         <Text style={styles.title}>QUOTATION FORM</Text>
-        <Text style={styles.subtitle}>(Valid for 30 days from the date of issue)</Text>
+        <Text style={styles.subtitle}>
+          (Valid for 30 days from the date of issue)
+        </Text>
 
         <View style={styles.section}>
-          <Text><Text style={styles.label}>Reference No:</Text> {referenceNumber}</Text>
+          <Text>
+            <Text style={styles.label}>Reference No:</Text> {referenceNumber}
+          </Text>
           {dateOfIssue && (
-            <Text><Text style={styles.label}>Date Issued:</Text> {dateOfIssue}</Text>
+            <Text>
+              <Text style={styles.label}>Date Issued:</Text> {dateOfIssue}
+            </Text>
           )}
-          <Text><Text style={styles.label}>Client Name:</Text> {useAffiliationAsClientName ? clientInfo.institution : clientInfo.name}</Text>
+          <Text>
+            <Text style={styles.label}>Client Name:</Text>{" "}
+            {useAffiliationAsClientName
+              ? clientInfo.institution
+              : clientInfo.name}
+          </Text>
           {!useAffiliationAsClientName && (
-            <Text><Text style={styles.label}>Institution:</Text> {clientInfo.institution}</Text>
+            <Text>
+              <Text style={styles.label}>Institution:</Text>{" "}
+              {clientInfo.institution}
+            </Text>
           )}
-          <Text><Text style={styles.label}>Designation:</Text> {clientInfo.designation}</Text>
-          <Text><Text style={styles.label}>Email:</Text> {clientInfo.email}</Text>
-          <Text><Text style={styles.label}>Applied 12% Discount:</Text> {useInternalPrice ? "Yes" : "No"}</Text>
+          <Text>
+            <Text style={styles.label}>Designation:</Text>{" "}
+            {clientInfo.designation}
+          </Text>
+          <Text>
+            <Text style={styles.label}>Email:</Text> {clientInfo.email}
+          </Text>
+          <Text>
+            <Text style={styles.label}>Applied 12% Discount:</Text>{" "}
+            {useInternalPrice ? "Yes" : "No"}
+          </Text>
         </View>
 
         <Text style={{ marginBottom: 10 }}>
           Dear Valued Client,{"\n"}
-          Thank you for choosing the Philippine Genome Center Visayas for your research and training needs. We are pleased to quote you the following:
+          Thank you for choosing the Philippine Genome Center Visayas for your
+          research and training needs. We are pleased to quote you the
+          following:
         </Text>
 
         <View style={styles.table}>
@@ -160,21 +272,30 @@ export function QuotationPDF({
                     <View style={styles.tableRow}>
                       <Text style={styles.serviceCell}>{svc.name}</Text>
                       <Text style={styles.unitCell}>{svc.unit}</Text>
-                      <Text style={styles.priceCell}>{formatMoney(svc.price)}</Text>
+                      <Text style={styles.priceCell}>
+                        {formatMoney(svc.price)}
+                      </Text>
                       <Text style={styles.qtyCell}>{svc.quantity}</Text>
-                      <Text style={styles.amountCell}>{formatMoney(amount)}</Text>
+                      <Text style={styles.amountCell}>
+                        {formatMoney(amount)}
+                      </Text>
                     </View>
                     {description && (
                       <View style={styles.tableRow}>
-                        <Text style={[styles.serviceCell, {
-                          flex: 5.8,
-                          fontSize: 8,
-                          fontStyle: "italic",
-                          paddingLeft: 12,
-                          color: "#666",
-                          paddingTop: 2,
-                          paddingBottom: 4
-                        }]}>
+                        <Text
+                          style={[
+                            styles.serviceCell,
+                            {
+                              flex: 5.8,
+                              fontSize: 8,
+                              fontStyle: "italic",
+                              paddingLeft: 12,
+                              color: "#666",
+                              paddingTop: 2,
+                              paddingBottom: 4,
+                            },
+                          ]}
+                        >
                           {description}
                         </Text>
                       </View>
@@ -189,18 +310,24 @@ export function QuotationPDF({
         <View style={styles.summary}>
           <Text>Subtotal: PHP {formatMoney(subtotal)}</Text>
           {useInternalPrice && discount > 0 ? (
-            <Text>12% Discount (Internal Client): -PHP {formatMoney(discount)}</Text>
+            <Text>
+              12% Discount (Internal Client): -PHP {formatMoney(discount)}
+            </Text>
           ) : null}
-          <Text style={{ fontWeight: "bold" }}>TOTAL: PHP {formatMoney(total)}</Text>
+          <Text style={{ fontWeight: "bold" }}>
+            TOTAL: PHP {formatMoney(total)}
+          </Text>
         </View>
 
         <View style={styles.footerSection} wrap={false}>
           <Text style={styles.italicNote}>Quote Validity: 30 days</Text>
           <Text style={styles.italicNote}>
-            Total cost does not include re-runs (if applicable). Prices are subject to change without prior notice.
+            Total cost does not include re-runs (if applicable). Prices are
+            subject to change without prior notice.
           </Text>
           <Text style={styles.italicNote}>
-            *12% Discount is applicable only to the following: UP Constituents, Students, and Active PGC Visayas Consortium Members.
+            *12% Discount is applicable only to the following: UP Constituents,
+            Students, and Active PGC Visayas Consortium Members.
           </Text>
 
           <View style={styles.signature}>
@@ -209,32 +336,62 @@ export function QuotationPDF({
               const name = preparedBy.name.trim().toUpperCase();
               let signatureSrc = null;
 
-              if (name.includes("CARMEL")) signatureSrc = "/assets/signature_carmel.png";
-              else if (name.includes("ALBERT") && name.includes("NOBLEZADA")) signatureSrc = "/assets/signature_noblezada.png";
-              else if (name.includes("CAMILLE") && name.includes("MUEDA")) signatureSrc = "/assets/signature_mueda.png";
-              else if (name.includes("MICAH") && name.includes("LOJERA")) signatureSrc = "/assets/signature_lojera.png";
-              else if (name.includes("JASMINE") && name.includes("VELO")) signatureSrc = "/assets/signature_velo.png";
-              else if (name.includes("KARL") && name.includes("TENIZO")) signatureSrc = "/assets/signature_tenizo.png";
-              else if (name.includes("VICTOR") && name.includes("FERRIOLS")) signatureSrc = "/assets/signature_ferriols.png";
-              else if (name.includes("CHRISTINE") && name.includes("FLORECE")) signatureSrc = "/assets/signature_florece.png";
-              else if (name.includes("MERLITO") && name.includes("DAYON")) signatureSrc = "/assets/signature_dayon.png";
+              if (name.includes("CARMEL"))
+                signatureSrc = "/assets/signature_carmel.png";
+              else if (name.includes("ALBERT") && name.includes("NOBLEZADA"))
+                signatureSrc = "/assets/signature_noblezada.png";
+              else if (name.includes("CRISTINE") && name.includes("FLORECE"))
+                signatureSrc = "/assets/signature_florece.png";
+              else if (name.includes("CAMILLE") && name.includes("MUEDA"))
+                signatureSrc = "/assets/signature_mueda.png";
+              else if (name.includes("MICAH") && name.includes("LOJERA"))
+                signatureSrc = "/assets/signature_lojera.png";
+              else if (name.includes("JASMINE") && name.includes("VELO"))
+                signatureSrc = "/assets/signature_velo.png";
+              else if (name.includes("KARL") && name.includes("TENIZO"))
+                signatureSrc = "/assets/signature_tenizo.png";
+              else if (name.includes("MERLITO") && name.includes("DAYON"))
+                signatureSrc = "/assets/signature_dayon.png";
+              else if (name.includes("VICTOR") && name.includes("FERRIOLS"))
+                signatureSrc = "/assets/signature_ferriols.png";
 
               return (
                 <View>
                   {signatureSrc ? (
-                    <Image src={signatureSrc} style={{ width: 100, height: 40, marginTop: 5, marginBottom: -15 }} />
+                    <Image
+                      src={signatureSrc}
+                      style={{
+                        width: 100,
+                        height: 40,
+                        marginTop: 5,
+                        marginBottom: -15,
+                      }}
+                    />
                   ) : null}
-                  <Text style={{ fontWeight: "bold", marginTop: signatureSrc ? 0 : 16 }}>{preparedBy.name}</Text>
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      marginTop: signatureSrc ? 0 : 16,
+                    }}
+                  >
+                    {preparedBy.name}
+                  </Text>
                 </View>
               );
             })()}
-            <Text><Text style={{ fontStyle: "italic" }}>{preparedBy.position}</Text></Text>
+            <Text>
+              <Text style={{ fontStyle: "italic" }}>{preparedBy.position}</Text>
+            </Text>
           </View>
         </View>
 
-        <Text style={styles.pageNumber} fixed render={({ pageNumber, totalPages }) => (
-          `Page ${pageNumber} of ${totalPages}`
-        )} />
+        <Text
+          style={styles.pageNumber}
+          fixed
+          render={({ pageNumber, totalPages }) =>
+            `Page ${pageNumber} of ${totalPages}`
+          }
+        />
       </Page>
     </Document>
   );
