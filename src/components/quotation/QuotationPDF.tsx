@@ -216,6 +216,8 @@ export function QuotationPDF({
               else if (name.includes("JASMINE") && name.includes("VELO")) signatureSrc = "/assets/signature_velo.png";
               else if (name.includes("KARL") && name.includes("TENIZO")) signatureSrc = "/assets/signature_tenizo.png";
               else if (name.includes("VICTOR") && name.includes("FERRIOLS")) signatureSrc = "/assets/signature_ferriols.png";
+              else if (name.includes("CHRISTINE") && name.includes("FLORECE")) signatureSrc = "/assets/signature_florece.png";
+              else if (name.includes("MERLITO") && name.includes("DAYON")) signatureSrc = "/assets/signature_dayon.png";
 
               return (
                 <View>
