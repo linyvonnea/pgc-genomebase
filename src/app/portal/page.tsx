@@ -232,13 +232,11 @@ export default function ClientVerifyPage() {
 
         if (withCustomPw) {
           authenticated = true;
-        } else if (sorted.length > 0) {
-          // 2. Only the original (first/oldest) inquiry ID is a valid password —
-          //    new inquiry IDs created inside the portal are NOT accepted.
-          const primary = sorted[0];
-          if (!primary.data().customPassword && inquiryId === primary.id) {
-            authenticated = true;
-          }
+        } else if (!allDocs.some((d) => d.data().customPassword)) {
+          // 2. Before a custom password is set, any inquiry ID belonging to
+          //    this Google account is a valid portal password. This includes
+          //    IDs for inquiries created after the original inquiry.
+          authenticated = allDocs.some((d) => inquiryId === d.id);
         }
 
         if (authenticated && sorted.length > 0) {
