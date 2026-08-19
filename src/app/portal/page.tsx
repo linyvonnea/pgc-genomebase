@@ -196,16 +196,34 @@ export default function ClientVerifyPage() {
           resolvedInquiryId = directDoc.id;
         }
       } else {
-        // Regular clients: query by uuid first so it aligns with Firestore owner rules.
-        const snap = await getDocs(
-          query(
-            collection(db, "inquiries"),
-            where("uuid", "==", googleUser.uid),
+        // Regular clients: prefer UUID ownership, but fall back to the
+        // authenticated email for inquiries created before the user profile
+        // finished initializing and therefore have uuid: null.
+        const [uuidSnap, emailSnap] = await Promise.all([
+          getDocs(
+            query(
+              collection(db, "inquiries"),
+              where("uuid", "==", googleUser.uid),
+            ),
           ),
+          getDocs(
+            query(
+              collection(db, "inquiries"),
+              where("email", "==", googleUser.email),
+            ),
+          ),
+        ]);
+
+        const docsById = new Map(
+          [...uuidSnap.docs, ...emailSnap.docs].map((inquiryDoc) => [
+            inquiryDoc.id,
+            inquiryDoc,
+          ]),
         );
+        const clientInquiryDocs = [...docsById.values()];
 
         const normalizedGoogleEmail = googleUser.email.trim().toLowerCase();
-        const allDocs = snap.docs.filter((d) => {
+        const allDocs = clientInquiryDocs.filter((d) => {
           const inquiryEmail = (d.data().email as string | undefined)
             ?.trim()
             .toLowerCase();
