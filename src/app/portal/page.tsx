@@ -196,16 +196,27 @@ export default function ClientVerifyPage() {
           resolvedInquiryId = directDoc.id;
         }
       } else {
-        // Regular clients: query by uuid first so it aligns with Firestore owner rules.
-        const snap = await getDocs(
-          query(
-            collection(db, "inquiries"),
-            where("uuid", "==", googleUser.uid),
+        // UUID is optional on inquiries. Resolve the entered inquiry ID
+        // directly, then verify ownership through the signed-in email.
+        const [directInquiryDoc, emailSnap] = await Promise.all([
+          getDoc(doc(db, "inquiries", inquiryId)),
+          getDocs(
+            query(
+              collection(db, "inquiries"),
+              where("email", "==", googleUser.email),
+            ),
           ),
+        ]);
+
+        const docsById = new Map(
+          [
+            ...emailSnap.docs,
+            ...(directInquiryDoc.exists() ? [directInquiryDoc] : []),
+          ].map((inquiryDoc) => [inquiryDoc.id, inquiryDoc]),
         );
 
         const normalizedGoogleEmail = googleUser.email.trim().toLowerCase();
-        const allDocs = snap.docs.filter((d) => {
+        const allDocs = [...docsById.values()].filter((d) => {
           const inquiryEmail = (d.data().email as string | undefined)
             ?.trim()
             .toLowerCase();
@@ -232,13 +243,9 @@ export default function ClientVerifyPage() {
 
         if (withCustomPw) {
           authenticated = true;
-        } else if (sorted.length > 0) {
-          // 2. Only the original (first/oldest) inquiry ID is a valid password —
-          //    new inquiry IDs created inside the portal are NOT accepted.
-          const primary = sorted[0];
-          if (!primary.data().customPassword && inquiryId === primary.id) {
-            authenticated = true;
-          }
+        } else if (!allDocs.some((d) => d.data().customPassword)) {
+          // Before a custom password is set, any owned inquiry ID is valid.
+          authenticated = allDocs.some((d) => inquiryId === d.id);
         }
 
         if (authenticated && sorted.length > 0) {
