@@ -196,15 +196,12 @@ export default function ClientVerifyPage() {
           resolvedInquiryId = directDoc.id;
         }
       } else {
-        // Regular clients: prefer UUID ownership, but fall back to the
-        // authenticated email for inquiries created before the user profile
-        // finished initializing and therefore have uuid: null.
-        const [uuidSnap, emailSnap] = await Promise.all([
-          getDocs(
-            query(
-              collection(db, "inquiries"),
-              where("uuid", "==", googleUser.uid),
-            ),
+        // Regular clients authenticate by their signed-in email. UUID is
+        // optional on inquiry records and must not block portal login.
+        const snap = await getDocs(
+          query(
+            collection(db, "inquiries"),
+            where("email", "==", googleUser.email),
           ),
           getDocs(
             query(
