@@ -196,11 +196,12 @@ export default function ClientVerifyPage() {
           resolvedInquiryId = directDoc.id;
         }
       } else {
-        // Regular clients: query by uuid first so it aligns with Firestore owner rules.
+        // Regular clients authenticate by their signed-in email. UUID is
+        // optional on inquiry records and must not block portal login.
         const snap = await getDocs(
           query(
             collection(db, "inquiries"),
-            where("uuid", "==", googleUser.uid),
+            where("email", "==", googleUser.email),
           ),
         );
 
