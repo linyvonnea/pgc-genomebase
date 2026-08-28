@@ -214,6 +214,7 @@ export default function ClientVerifyPage() {
             ...(directInquiryDoc.exists() ? [directInquiryDoc] : []),
           ].map((inquiryDoc) => [inquiryDoc.id, inquiryDoc]),
         );
+        const clientInquiryDocs = [...docsById.values()];
 
         const normalizedGoogleEmail = googleUser.email.trim().toLowerCase();
         const allDocs = [...docsById.values()].filter((d) => {
