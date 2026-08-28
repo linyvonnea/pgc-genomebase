@@ -196,16 +196,10 @@ export default function ClientVerifyPage() {
           resolvedInquiryId = directDoc.id;
         }
       } else {
-        // Regular clients: prefer UUID ownership, but fall back to the
-        // authenticated email for inquiries created before the user profile
-        // finished initializing and therefore have uuid: null.
-        const [uuidSnap, emailSnap] = await Promise.all([
-          getDocs(
-            query(
-              collection(db, "inquiries"),
-              where("uuid", "==", googleUser.uid),
-            ),
-          ),
+        // UUID is optional on inquiries. Resolve the entered inquiry ID
+        // directly, then verify ownership through the signed-in email.
+        const [directInquiryDoc, emailSnap] = await Promise.all([
+          getDoc(doc(db, "inquiries", inquiryId)),
           getDocs(
             query(
               collection(db, "inquiries"),
@@ -215,15 +209,15 @@ export default function ClientVerifyPage() {
         ]);
 
         const docsById = new Map(
-          [...uuidSnap.docs, ...emailSnap.docs].map((inquiryDoc) => [
-            inquiryDoc.id,
-            inquiryDoc,
-          ]),
+          [
+            ...emailSnap.docs,
+            ...(directInquiryDoc.exists() ? [directInquiryDoc] : []),
+          ].map((inquiryDoc) => [inquiryDoc.id, inquiryDoc]),
         );
         const clientInquiryDocs = [...docsById.values()];
 
         const normalizedGoogleEmail = googleUser.email.trim().toLowerCase();
-        const allDocs = clientInquiryDocs.filter((d) => {
+        const allDocs = [...docsById.values()].filter((d) => {
           const inquiryEmail = (d.data().email as string | undefined)
             ?.trim()
             .toLowerCase();
@@ -251,9 +245,7 @@ export default function ClientVerifyPage() {
         if (withCustomPw) {
           authenticated = true;
         } else if (!allDocs.some((d) => d.data().customPassword)) {
-          // 2. Before a custom password is set, any inquiry ID belonging to
-          //    this Google account is a valid portal password. This includes
-          //    IDs for inquiries created after the original inquiry.
+          // Before a custom password is set, any owned inquiry ID is valid.
           authenticated = allDocs.some((d) => inquiryId === d.id);
         }
 
